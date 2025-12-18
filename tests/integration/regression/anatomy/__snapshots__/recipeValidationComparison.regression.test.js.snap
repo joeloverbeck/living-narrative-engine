@@ -586,16 +586,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 property objects valid",
     },
     {
-      "check": "recipe_usage",
-      "details": {
-        "referencingEntities": [
-          "isekai:hero",
-        ],
-        "totalCount": 1,
-      },
-      "message": "Recipe is referenced by 1 entity definition(s)",
-    },
-    {
       "check": "SLOT_KEY_UNIQUENESS_SKIP",
       "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
     },
@@ -608,7 +598,19 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
   "suggestions": [],
   "timestamp": "<redacted>",
-  "warnings": [],
+  "warnings": [
+    {
+      "check": "recipe_usage",
+      "details": {
+        "hint": "Entity definitions should have: "anatomy:body": { "recipeId": "anatomy:human_male" }",
+        "recipeId": "anatomy:human_male",
+      },
+      "message": "Recipe 'anatomy:human_male' is not referenced by any entity definitions",
+      "severity": "warning",
+      "suggestion": "Verify that the recipeId matches what entity definitions expect",
+      "type": "RECIPE_UNUSED",
+    },
+  ],
 }
 `;
 
@@ -794,16 +796,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 property objects valid",
     },
     {
-      "check": "recipe_usage",
-      "details": {
-        "referencingEntities": [
-          "isekai:hero",
-        ],
-        "totalCount": 1,
-      },
-      "message": "Recipe is referenced by 1 entity definition(s)",
-    },
-    {
       "check": "SLOT_KEY_UNIQUENESS_SKIP",
       "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
     },
@@ -816,6 +808,18 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
   "suggestions": [],
   "timestamp": "<redacted>",
-  "warnings": [],
+  "warnings": [
+    {
+      "check": "recipe_usage",
+      "details": {
+        "hint": "Entity definitions should have: "anatomy:body": { "recipeId": "anatomy:human_male" }",
+        "recipeId": "anatomy:human_male",
+      },
+      "message": "Recipe 'anatomy:human_male' is not referenced by any entity definitions",
+      "severity": "warning",
+      "suggestion": "Verify that the recipeId matches what entity definitions expect",
+      "type": "RECIPE_UNUSED",
+    },
+  ],
 }
 `;

@@ -101,6 +101,8 @@ export class SummaryPanelView {
       <span>You have unsaved changes</span>
     `;
     this.#unsavedIndicator.hidden = true;
+    // Inline display guard so the warning stays hidden even if CSS overrides [hidden]
+    this.#unsavedIndicator.style.display = 'none';
 
     this.#saveButton = document.createElement('button');
     this.#saveButton.className = 'summary-panel__save-button';
@@ -159,7 +161,9 @@ export class SummaryPanelView {
     this.#renderLoadOrder(loadOrder, isLoading);
 
     // Update unsaved indicator
-    this.#unsavedIndicator.hidden = !hasUnsavedChanges || isSaving;
+    const shouldShowUnsaved = hasUnsavedChanges && !isSaving && !isLoading;
+    this.#unsavedIndicator.hidden = !shouldShowUnsaved;
+    this.#unsavedIndicator.style.display = shouldShowUnsaved ? 'flex' : 'none';
 
     // Update save button
     this.#saveButton.disabled = !hasUnsavedChanges || isSaving || isLoading;

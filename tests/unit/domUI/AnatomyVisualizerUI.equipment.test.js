@@ -219,7 +219,8 @@ describe('AnatomyVisualizerUI - Equipment Handling', () => {
 
       // Assert
       expect(result).toEqual({
-        success: false,
+        success: true,
+        hasEquipment: false,
         message: 'Clothing service not available',
       });
     });
@@ -348,12 +349,12 @@ describe('AnatomyVisualizerUI - Equipment Handling', () => {
         slotId: 'torso',
         layers: [
           {
-            layerName: 'base',
-            items: [{ entityId: 'shirt-456', name: 'Shirt' }],
-          },
-          {
             layerName: 'outer',
             items: [{ entityId: 'jacket-789', name: 'Jacket' }],
+          },
+          {
+            layerName: 'base',
+            items: [{ entityId: 'shirt-456', name: 'Shirt' }],
           },
         ],
       });

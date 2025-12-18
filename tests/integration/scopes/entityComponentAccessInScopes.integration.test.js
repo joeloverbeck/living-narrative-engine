@@ -370,9 +370,9 @@ describe('Entity Component Access in Scope Filtering Integration', () => {
     it('should replicate companionship:potential_leaders scope pattern', async () => {
       // This test replicates the exact pattern from companionship:potential_leaders scope
       // that was failing in the original bug report
-      const locationId = 'isekai:adventurers_guild_instance';
-      const actorId = 'isekai:hero_instance';
-      const targetId = 'isekai:ninja_instance';
+      const locationId = 'test:adventurers_guild_instance';
+      const actorId = 'test:hero_instance';
+      const targetId = 'test:ninja_instance';
 
       entityManager.createEntityInstance('test:location', {
         instanceId: locationId,

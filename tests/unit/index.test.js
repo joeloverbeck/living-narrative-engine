@@ -119,7 +119,6 @@ describe('Index.html - Main Menu', () => {
       const expectedButtons = [
         'Mod Manager',
         'Start New Game',
-        'Load Game',
         'Anatomy Visualizer',
         'Change LLM',
         'Character Concepts Manager',
@@ -143,7 +142,6 @@ describe('Index.html - Main Menu', () => {
       const buttonConfigs = [
         { id: 'mod-manager-button', text: 'Mod Manager' },
         { id: 'start-button', text: 'Start New Game' },
-        { id: 'load-button', text: 'Load Game' },
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
         { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
@@ -185,7 +183,6 @@ describe('Index.html - Main Menu', () => {
       const buttonConfigs = [
         { id: 'mod-manager-button', href: 'mod-manager.html' },
         { id: 'start-button', href: 'game.html' },
-        { id: 'load-button', href: 'game.html?load=true' },
         { id: 'anatomy-button', href: 'anatomy-visualizer.html' },
         {
           id: 'character-concepts-button',

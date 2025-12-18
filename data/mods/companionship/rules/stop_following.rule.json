@@ -92,14 +92,19 @@
               "then_actions": [
                 {
                   "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                  "comment": "This event is for other characters to observe.",
+                  "comment": "Dispatch the event with perspective-aware descriptions (self-action pattern).",
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
+                    "actor_description": "I stop following {context.oldLeaderName.text}. I am now independent again.",
                     "perception_type": "state.observable_change",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{context.oldFollowingData.leaderId}",
-                    "involved_entities": []
+                    "log_entry": true,
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear someone declaring their independence from service nearby."
+                    }
                   }
                 }
               ]

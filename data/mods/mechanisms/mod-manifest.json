@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "mechanisms",
   "version": "1.0.0",
-  "name": "Mechanisms",
-  "description": "Core mechanisms like openable/lockable states shared by other mods.",
+  "name": "Mechanisms System",
+  "description": "Components related to entity mechanisms, such as if an entity is openable.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

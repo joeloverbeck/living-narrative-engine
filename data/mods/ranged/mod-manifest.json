@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "ranged",
   "version": "1.0.0",
-  "name": "Ranged Combat",
-  "description": "Ranged combat actions including throwing items at targets",
+  "name": "Ranged",
+  "description": "Ranged combat actions such sa throwing items at targets.",
   "actionPurpose": "Attack targets at a distance by throwing items from inventory.",
   "actionConsiderWhen": "Combat situations requiring ranged attacks, throwing weapons at enemies, or when melee engagement is not possible or desired.",
   "dependencies": [

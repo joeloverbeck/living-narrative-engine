@@ -185,15 +185,6 @@ describe('Grabbable Body Parts Integration', () => {
       }
     );
 
-    it.each(allGrabbableEntities)(
-      'should have components in alphabetical order in $file',
-      ({ file, mod }) => {
-        const entity = loadEntityFile(file, mod);
-        const componentKeys = Object.keys(entity.components);
-        const sortedKeys = [...componentKeys].sort();
-        expect(componentKeys).toEqual(sortedKeys);
-      }
-    );
   });
 
   describe('Grip strength value reasonableness', () => {

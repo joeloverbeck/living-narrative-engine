@@ -3,7 +3,7 @@
   "id": "anatomy-creatures",
   "version": "1.0.0",
   "name": "Creature Anatomy",
-  "description": "Non-human anatomy definitions including blueprints, recipes, and body part entities for various creature types: feline, centaur, dragon, spider, tortoise, avian, kraken/cephalopod, eldritch, amphibian, and mustelid creatures.",
+  "description": "Non-human anatomy definitions including blueprints, recipes, and body part entities for various creature types.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -13,6 +13,14 @@
     },
     {
       "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "damage-types",
       "version": "^1.0.0"
     }
   ],

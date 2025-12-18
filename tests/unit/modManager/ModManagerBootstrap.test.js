@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
-// Create a mock logger instance
+// Create mock logger instance
 const mockLoggerInstance = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -12,47 +12,134 @@ const mockLoggerInstance = {
   error: jest.fn(),
 };
 
-// Mock ConsoleLogger with a factory function
+// Mock ConsoleLogger
 jest.mock('../../../src/logging/consoleLogger.js', () => {
-  return jest.fn(() => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }));
+  return jest.fn(() => mockLoggerInstance);
+});
+
+// Mock all services
+const mockModDiscoveryService = {
+  discoverMods: jest.fn(),
+  getModById: jest.fn(),
+  clearCache: jest.fn(),
+};
+
+const mockModGraphService = {
+  buildGraph: jest.fn(),
+  setExplicitMods: jest.fn(),
+  getLoadOrder: jest.fn(),
+  getModStatus: jest.fn(),
+};
+
+const mockWorldDiscoveryService = {
+  discoverWorlds: jest.fn(),
+};
+
+const mockConfigPersistenceService = {
+  loadConfig: jest.fn(),
+  saveConfig: jest.fn(),
+  hasChanges: jest.fn(),
+  cancelPendingSave: jest.fn(),
+};
+
+jest.mock('../../../src/modManager/services/ModDiscoveryService.js', () => {
+  const mock = jest.fn(() => mockModDiscoveryService);
+  return {
+    __esModule: true,
+    ModDiscoveryService: mock,
+    default: mock,
+  };
+});
+
+jest.mock('../../../src/modManager/services/ModGraphService.js', () => {
+  const mock = jest.fn(() => mockModGraphService);
+  return {
+    __esModule: true,
+    ModGraphService: mock,
+    default: mock,
+  };
+});
+
+jest.mock('../../../src/modManager/services/WorldDiscoveryService.js', () => {
+  const mock = jest.fn(() => mockWorldDiscoveryService);
+  return {
+    __esModule: true,
+    WorldDiscoveryService: mock,
+    default: mock,
+  };
+});
+
+jest.mock('../../../src/modManager/services/ConfigPersistenceService.js', () => {
+  const mock = jest.fn(() => mockConfigPersistenceService);
+  return {
+    __esModule: true,
+    ConfigPersistenceService: mock,
+    default: mock,
+  };
+});
+
+// Mock controller
+const mockControllerInstance = {
+  initialize: jest.fn(),
+  subscribe: jest.fn(),
+  getState: jest.fn(),
+  destroy: jest.fn(),
+};
+
+jest.mock('../../../src/modManager/controllers/ModManagerController.js', () => {
+  const mock = jest.fn(() => mockControllerInstance);
+  return {
+    __esModule: true,
+    ModManagerController: mock,
+    default: mock,
+  };
 });
 
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { ModManagerBootstrap } from '../../../src/modManager/ModManagerBootstrap.js';
+import ModDiscoveryService from '../../../src/modManager/services/ModDiscoveryService.js';
+import ModGraphService from '../../../src/modManager/services/ModGraphService.js';
+import WorldDiscoveryService from '../../../src/modManager/services/WorldDiscoveryService.js';
+import ConfigPersistenceService from '../../../src/modManager/services/ConfigPersistenceService.js';
+import ModManagerController from '../../../src/modManager/controllers/ModManagerController.js';
 
 describe('ModManagerBootstrap', () => {
   let bootstrap;
-  let originalDocument;
-  let loggerMock;
+  let mockIndicators;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Create fresh mock logger for each test
-    loggerMock = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    ConsoleLogger.mockReturnValue(loggerMock);
+    // Setup default mock behavior
+    mockControllerInstance.initialize.mockResolvedValue(undefined);
+    mockControllerInstance.getState.mockReturnValue({
+      availableMods: [{ id: 'core' }, { id: 'test_mod' }],
+      activeMods: [],
+      resolvedMods: ['core'],
+      selectedWorld: 'core:core',
+      availableWorlds: [],
+      hasUnsavedChanges: false,
+      isLoading: false,
+      isSaving: false,
+      error: null,
+      searchQuery: '',
+      filterCategory: 'all',
+    });
+    mockControllerInstance.subscribe.mockImplementation((callback) => {
+      // Call callback with loaded state
+      callback(mockControllerInstance.getState());
+      return () => {};
+    });
+
+    // Mock document.querySelectorAll before creating bootstrap
+    mockIndicators = [{ textContent: '' }, { textContent: '' }];
+    jest.spyOn(document, 'querySelectorAll').mockReturnValue(mockIndicators);
 
     bootstrap = new ModManagerBootstrap();
-
-    // Mock document for DOM operations
-    originalDocument = global.document;
-    global.document = {
-      querySelectorAll: jest.fn(() => []),
-    };
   });
 
   afterEach(() => {
-    global.document = originalDocument;
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -69,7 +156,7 @@ describe('ModManagerBootstrap', () => {
     it('should log initialization message', async () => {
       await bootstrap.initialize();
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
         '[ModManagerBootstrap] Initializing Mod Manager...'
       );
     });
@@ -77,70 +164,142 @@ describe('ModManagerBootstrap', () => {
     it('should log success message on completion', async () => {
       await bootstrap.initialize();
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
         '[ModManagerBootstrap] Mod Manager initialized successfully'
       );
     });
 
-    it('should register logger in container', async () => {
+    it('should register all services', async () => {
       await bootstrap.initialize();
 
-      expect(loggerMock.debug).toHaveBeenCalledWith(
-        '[ModManagerBootstrap] Registering services...'
+      expect(ModDiscoveryService).toHaveBeenCalledWith({
+        logger: mockLoggerInstance,
+      });
+      expect(ModGraphService).toHaveBeenCalledWith({
+        logger: mockLoggerInstance,
+      });
+      expect(WorldDiscoveryService).toHaveBeenCalledWith({
+        logger: mockLoggerInstance,
+        modDiscoveryService: mockModDiscoveryService,
+      });
+      expect(ConfigPersistenceService).toHaveBeenCalledWith({
+        logger: mockLoggerInstance,
+      });
+    });
+
+    it('should create controller with all dependencies', async () => {
+      await bootstrap.initialize();
+
+      expect(ModManagerController).toHaveBeenCalledWith({
+        logger: mockLoggerInstance,
+        modDiscoveryService: mockModDiscoveryService,
+        modGraphService: mockModGraphService,
+        worldDiscoveryService: mockWorldDiscoveryService,
+        configPersistenceService: mockConfigPersistenceService,
+      });
+    });
+
+    it('should call controller.initialize()', async () => {
+      await bootstrap.initialize();
+
+      expect(mockControllerInstance.initialize).toHaveBeenCalled();
+    });
+
+    it('should subscribe to controller state changes', async () => {
+      await bootstrap.initialize();
+
+      expect(mockControllerInstance.subscribe).toHaveBeenCalledWith(
+        expect.any(Function)
       );
     });
 
-    it('should log controller initialization debug message', async () => {
+    it('should update loading indicators with mod count after successful load', async () => {
       await bootstrap.initialize();
 
-      expect(loggerMock.debug).toHaveBeenCalledWith(
-        '[ModManagerBootstrap] Initializing controller...'
-      );
-    });
-
-    it('should log data loading debug message', async () => {
-      await bootstrap.initialize();
-
-      expect(loggerMock.debug).toHaveBeenCalledWith(
-        '[ModManagerBootstrap] Loading initial data...'
-      );
-    });
-
-    it('should update loading indicators to ready state', async () => {
-      const mockIndicator = { textContent: '' };
-      global.document.querySelectorAll = jest.fn(() => [mockIndicator]);
-
-      await bootstrap.initialize();
-
-      expect(global.document.querySelectorAll).toHaveBeenCalledWith(
+      // Verify querySelectorAll was called
+      expect(document.querySelectorAll).toHaveBeenCalledWith(
         '.loading-indicator'
       );
-      expect(mockIndicator.textContent).toBe(
-        'No data loaded yet. Services not connected.'
-      );
+
+      // Should show "Loaded X mods" message
+      mockIndicators.forEach((indicator) => {
+        expect(indicator.textContent).toBe('Loaded 2 mods');
+      });
+    });
+
+    it('should not show placeholder message after successful load', async () => {
+      await bootstrap.initialize();
+
+      mockIndicators.forEach((indicator) => {
+        expect(indicator.textContent).not.toBe(
+          'No data loaded yet. Services not connected.'
+        );
+      });
     });
   });
 
   describe('initialize error handling', () => {
-    it('should log error and rethrow on failure', async () => {
-      // Create a bootstrap that will fail
-      const testError = new Error('Test initialization error');
+    it('should log error and rethrow on controller initialization failure', async () => {
+      const testError = new Error('Controller init failed');
+      mockControllerInstance.initialize.mockRejectedValue(testError);
 
-      // Make logger.debug throw to simulate failure
-      loggerMock.debug = jest.fn(() => {
-        throw testError;
-      });
+      await expect(bootstrap.initialize()).rejects.toThrow(testError);
 
-      // Create new bootstrap with failing logger
-      ConsoleLogger.mockReturnValue(loggerMock);
-      const failingBootstrap = new ModManagerBootstrap();
-
-      await expect(failingBootstrap.initialize()).rejects.toThrow(testError);
-
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        '[ModManagerBootstrap] Initialization failed',
+      expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+        '[ModManagerBootstrap] Failed to load initial data',
         testError
       );
+    });
+
+    it('should update loading indicators to error state on failure', async () => {
+      const testError = new Error('API connection failed');
+      mockControllerInstance.initialize.mockRejectedValue(testError);
+
+      try {
+        await bootstrap.initialize();
+      } catch {
+        // Expected to throw
+      }
+
+      mockIndicators.forEach((indicator) => {
+        expect(indicator.textContent).toBe('Failed to load data.');
+      });
+    });
+  });
+
+  describe('state change handling', () => {
+    it('should show loading state when isLoading is true', async () => {
+      mockControllerInstance.subscribe.mockImplementation((callback) => {
+        callback({
+          availableMods: [],
+          isLoading: true,
+          error: null,
+        });
+        return () => {};
+      });
+
+      await bootstrap.initialize();
+
+      mockIndicators.forEach((indicator) => {
+        expect(indicator.textContent).toBe('Loading mods...');
+      });
+    });
+
+    it('should show error message from state when error exists', async () => {
+      mockControllerInstance.subscribe.mockImplementation((callback) => {
+        callback({
+          availableMods: [],
+          isLoading: false,
+          error: 'API returned 500',
+        });
+        return () => {};
+      });
+
+      await bootstrap.initialize();
+
+      mockIndicators.forEach((indicator) => {
+        expect(indicator.textContent).toBe('API returned 500');
+      });
     });
   });
 
@@ -150,46 +309,43 @@ describe('ModManagerBootstrap', () => {
 
       bootstrap.destroy();
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
         '[ModManagerBootstrap] Destroying Mod Manager...'
       );
     });
 
-    it('should clear the container', async () => {
+    it('should call controller.destroy()', async () => {
       await bootstrap.initialize();
 
-      // Should not throw
-      expect(() => bootstrap.destroy()).not.toThrow();
+      bootstrap.destroy();
+
+      expect(mockControllerInstance.destroy).toHaveBeenCalled();
     });
 
     it('should handle destroy without prior initialization', () => {
-      // Should not throw even without initialization
       expect(() => bootstrap.destroy()).not.toThrow();
     });
   });
 
   describe('loading state updates', () => {
     it('should update multiple loading indicators', async () => {
-      const mockIndicators = [
+      const manyIndicators = [
         { textContent: '' },
         { textContent: '' },
         { textContent: '' },
       ];
-      global.document.querySelectorAll = jest.fn(() => mockIndicators);
+      document.querySelectorAll.mockReturnValue(manyIndicators);
 
       await bootstrap.initialize();
 
-      mockIndicators.forEach((indicator) => {
-        expect(indicator.textContent).toBe(
-          'No data loaded yet. Services not connected.'
-        );
+      manyIndicators.forEach((indicator) => {
+        expect(indicator.textContent).toBe('Loaded 2 mods');
       });
     });
 
     it('should handle no loading indicators gracefully', async () => {
-      global.document.querySelectorAll = jest.fn(() => []);
+      document.querySelectorAll.mockReturnValue([]);
 
-      // Should not throw when no indicators exist
       await expect(bootstrap.initialize()).resolves.not.toThrow();
     });
   });
@@ -198,9 +354,11 @@ describe('ModManagerBootstrap', () => {
     it('should create a Map-based container (lightweight)', async () => {
       await bootstrap.initialize();
 
-      // Container should be created (internal implementation detail)
-      // We verify through the successful initialization
-      expect(loggerMock.info).toHaveBeenCalledWith(
+      // Container should be created and services registered
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
+        '[ModManagerBootstrap] Registering services...'
+      );
+      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
         '[ModManagerBootstrap] Mod Manager initialized successfully'
       );
     });

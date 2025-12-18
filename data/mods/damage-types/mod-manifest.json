@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "damage-types",
   "version": "1.0.0",
-  "name": "Damage Types System",
-  "description": "Components for entity damage capabilities",
+  "name": "Damage Types",
+  "description": "Components for entity damage capabilities.",
   "dependencies": [{ "id": "core", "version": ">=1.0.0" }],
   "content": {
     "components": ["damage_capabilities.component.json"]

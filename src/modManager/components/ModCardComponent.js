@@ -8,6 +8,7 @@
  * @property {'explicit'|'dependency'|'core'|'inactive'} status
  * @property {boolean} isExplicit
  * @property {boolean} isDependency
+ * @property {boolean} hasExplicitDependents
  */
 
 /**
@@ -32,9 +33,10 @@ export class ModCardComponent {
    * Create a mod card element
    * @param {import('../services/ModDiscoveryService.js').ModMetadata} mod
    * @param {ModDisplayInfo} displayInfo
+   * @param {((modId: string) => string)|null} [getModName=null] - Optional function to resolve mod ID to name
    * @returns {HTMLElement}
    */
-  createCard(mod, displayInfo) {
+  createCard(mod, displayInfo, getModName = null) {
     const card = document.createElement('article');
     card.className = this.#getCardClasses(displayInfo);
     card.setAttribute('role', 'listitem');
@@ -62,7 +64,13 @@ export class ModCardComponent {
     header.className = 'mod-card-header';
 
     const name = document.createElement('span');
-    name.className = 'mod-card-name';
+    if (mod.actionVisual) {
+      name.className = 'mod-card-name mod-card-name-tag';
+      name.style.backgroundColor = mod.actionVisual.backgroundColor;
+      name.style.color = mod.actionVisual.textColor;
+    } else {
+      name.className = 'mod-card-name';
+    }
     name.textContent = mod.name;
 
     const version = document.createElement('span');
@@ -89,7 +97,7 @@ export class ModCardComponent {
     description.textContent = mod.description;
 
     // Dependencies
-    const deps = this.#createDependenciesElement(mod.dependencies);
+    const deps = this.#createDependenciesElement(mod.dependencies, getModName);
 
     content.appendChild(header);
     content.appendChild(description);
@@ -126,7 +134,8 @@ export class ModCardComponent {
     );
     if (checkbox) {
       checkbox.checked = isActive;
-      checkbox.disabled = isCore || displayInfo.isDependency;
+      // Disable for core, pure dependencies, or explicit mods with explicit dependents
+      checkbox.disabled = isCore || displayInfo.isDependency || displayInfo.hasExplicitDependents;
       checkbox.setAttribute('aria-checked', String(isActive));
     }
 
@@ -237,7 +246,8 @@ export class ModCardComponent {
     checkbox.className = 'mod-card__checkbox';
     checkbox.id = `mod-checkbox-${modId}`;
     checkbox.checked = isActive;
-    checkbox.disabled = isCore || displayInfo.isDependency;
+    // Disable for core, pure dependencies, or explicit mods with explicit dependents
+    checkbox.disabled = isCore || displayInfo.isDependency || displayInfo.hasExplicitDependents;
     checkbox.setAttribute('aria-checked', String(isActive));
     checkbox.setAttribute(
       'aria-label',
@@ -277,7 +287,13 @@ export class ModCardComponent {
         badgeText = 'Dependency';
         break;
       case 'explicit':
-        // No badge for explicitly selected mods (they're just "active")
+        // Explicit mods with explicit dependents show "Required" badge
+        if (displayInfo.hasExplicitDependents) {
+          badgeClass += ' required';
+          badgeText = 'Required';
+          break;
+        }
+        // No badge for regular explicitly selected mods (they're just "active")
         return null;
       case 'inactive':
       default:
@@ -305,18 +321,41 @@ export class ModCardComponent {
   /**
    * Create dependencies element
    * @param {Array<{id: string, version: string}>} dependencies
+   * @param {((modId: string) => string)|null} [getModName=null] - Optional function to resolve mod ID to name
    * @returns {HTMLSpanElement|null}
    */
-  #createDependenciesElement(dependencies) {
+  #createDependenciesElement(dependencies, getModName = null) {
     if (!dependencies || dependencies.length === 0) {
       return null;
     }
 
-    const depList = dependencies.map((d) => d.id).join(', ');
+    // Resolve names for display (fall back to IDs if resolver not provided)
+    const depNames = dependencies.map((d) => {
+      if (getModName) {
+        const name = getModName(d.id);
+        return name || d.id;
+      }
+      return d.id;
+    });
+
+    // Create tooltip with both names and IDs: "Name (id), Name2 (id2)"
+    const tooltipParts = dependencies.map((d) => {
+      if (getModName) {
+        const name = getModName(d.id);
+        return name && name !== d.id ? `${name} (${d.id})` : d.id;
+      }
+      return d.id;
+    });
+    const tooltipText = `Dependencies: ${tooltipParts.join(', ')}`;
+
+    // Display text: "4 dependencies - Name1, Name2, Name3, Name4"
+    const depList = depNames.join(', ');
+    const countText = `${dependencies.length} ${dependencies.length === 1 ? 'dependency' : 'dependencies'}`;
+    const displayText = `${countText} - ${depList}`;
 
     const span = document.createElement('span');
     span.className = 'mod-card-dependencies';
-    span.setAttribute('title', `Dependencies: ${depList}`);
+    span.setAttribute('title', tooltipText);
 
     const icon = document.createElement('span');
     icon.setAttribute('aria-hidden', 'true');
@@ -324,15 +363,13 @@ export class ModCardComponent {
 
     const srText = document.createElement('span');
     srText.className = 'visually-hidden';
-    srText.textContent = 'Depends on: ';
+    srText.textContent = `Depends on: ${depList}`;
 
-    const count = document.createTextNode(
-      `${dependencies.length} ${dependencies.length === 1 ? 'dependency' : 'dependencies'}`
-    );
+    const text = document.createTextNode(displayText);
 
     span.appendChild(icon);
     span.appendChild(srText);
-    span.appendChild(count);
+    span.appendChild(text);
 
     return span;
   }

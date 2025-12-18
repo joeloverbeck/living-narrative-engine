@@ -79,6 +79,36 @@ describe('IfCoLocatedHandler', () => {
         });
       }).toThrow();
     });
+
+    test('should accept lazy resolver function for operationInterpreter', async () => {
+      // Create a lazy resolver function that returns the mock interpreter
+      const lazyResolver = () => mockOperationInterpreter;
+
+      const handlerWithResolver = new IfCoLocatedHandler({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        operationInterpreter: lazyResolver,
+        safeEventDispatcher: mockSafeEventDispatcher,
+      });
+
+      expect(handlerWithResolver).toBeInstanceOf(IfCoLocatedHandler);
+
+      // Verify it works by executing with co-located entities
+      const params = {
+        entity_ref_a: 'entity-1',
+        entity_ref_b: 'entity-2',
+        then_actions: [{ type: 'TEST_ACTION', params: {} }],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ locationId: 'location-1' })
+        .mockReturnValueOnce({ locationId: 'location-1' });
+
+      await handlerWithResolver.execute(params, executionContext);
+
+      // The lazy resolver should be invoked and execute nested operations
+      expect(mockOperationInterpreter.execute).toHaveBeenCalled();
+    });
   });
 
   describe('Parameter Validation', () => {

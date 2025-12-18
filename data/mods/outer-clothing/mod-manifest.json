@@ -3,7 +3,7 @@
   "id": "outer-clothing",
   "version": "1.0.0",
   "name": "Outer Clothing",
-  "description": "Outer layer clothing entities",
+  "description": "Entities for the \"outer\" clothing layer.",
   "author": "Living Narrative Engine",
   "dependencies": [
     {

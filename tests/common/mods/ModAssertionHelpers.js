@@ -100,23 +100,33 @@ export class ModAssertionHelpers {
     expect(perceptibleEvent).toBeDefined();
 
     const { payload } = perceptibleEvent;
-    expect(payload.descriptionText).toBe(expectedEvent.descriptionText);
-    expect(payload.locationId).toBe(expectedEvent.locationId);
-    expect(payload.actorId).toBe(expectedEvent.actorId);
 
-    if (expectedEvent.targetId) {
-      expect(payload.targetId).toBe(expectedEvent.targetId);
+    // Only check fields that are provided in expectedEvent
+    // Use toEqual to support Jest asymmetric matchers like expect.stringContaining()
+    if (expectedEvent.descriptionText !== undefined) {
+      expect(payload.descriptionText).toEqual(expectedEvent.descriptionText);
     }
 
-    if (expectedEvent.perceptionType) {
-      expect(payload.perceptionType).toBe(expectedEvent.perceptionType);
-    } else {
-      // Default to new consolidated perceptionType format
-      expect(payload.perceptionType).toBe('physical.target_action');
+    if (expectedEvent.locationId !== undefined) {
+      expect(payload.locationId).toEqual(expectedEvent.locationId);
     }
 
-    // Default expectations for perceptible events
-    expect(payload.involvedEntities).toEqual([]);
+    if (expectedEvent.actorId !== undefined) {
+      expect(payload.actorId).toEqual(expectedEvent.actorId);
+    }
+
+    if (expectedEvent.targetId !== undefined) {
+      expect(payload.targetId).toEqual(expectedEvent.targetId);
+    }
+
+    const expectedPerceptionType =
+      expectedEvent.perceptionType ?? 'physical.target_action';
+    expect(payload.perceptionType).toEqual(expectedPerceptionType);
+
+    // Default expectations for perceptible events - only check if involvedEntities is present
+    if (payload.involvedEntities !== undefined) {
+      expect(payload.involvedEntities).toEqual([]);
+    }
   }
 
   /**

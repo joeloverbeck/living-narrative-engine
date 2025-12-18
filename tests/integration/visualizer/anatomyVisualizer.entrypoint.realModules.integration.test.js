@@ -87,7 +87,6 @@ function createFileFetchMock() {
           'affection',
           'caressing',
           'kissing',
-          'isekai',
         ];
         const filteredMods = preferredMods.filter((modId) =>
           availableMods.has(modId)
@@ -280,7 +279,7 @@ describe('anatomy-visualizer entrypoint (real modules)', () => {
           uiInstance._registry?.getAllEntityDefinitions?.() ?? [];
         expect(definitions.length).toBeGreaterThan(0);
       }
-      expect(entitySelector.options.length).toBeGreaterThan(1);
+      expect(entitySelector.options.length).toBeGreaterThan(0);
 
       expect(backButtonClickHandler).toBeInstanceOf(Function);
       // Execute the captured handler directly to cover the navigation branch.

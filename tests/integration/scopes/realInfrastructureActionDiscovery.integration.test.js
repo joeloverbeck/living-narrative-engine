@@ -79,9 +79,9 @@ describe('Spatial Index Synchronization Timing Bug', () => {
 
   it('SimpleEntityManager works correctly (baseline)', () => {
     const simpleEntityManager = new SimpleEntityManager();
-    const actorId = 'isekai:hero_instance';
-    const targetId = 'isekai:ninja_instance';
-    const locationId = 'isekai:adventurers_guild_instance';
+    const actorId = 'test:hero_instance';
+    const targetId = 'test:ninja_instance';
+    const locationId = 'test:adventurers_guild_instance';
 
     const entities = [
       {
@@ -134,9 +134,9 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       locationQueryService,
     });
 
-    const locationId = 'isekai:adventurers_guild_instance';
-    const actorId = 'isekai:hero_instance';
-    const targetId = 'isekai:ninja_instance';
+    const locationId = 'test:adventurers_guild_instance';
+    const actorId = 'test:hero_instance';
+    const targetId = 'test:ninja_instance';
 
     // CREATE ENTITIES FIRST (this is what happens during world initialization)
     console.log('Creating location entity...');
@@ -231,9 +231,9 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       locationQueryService,
     });
 
-    const locationId = 'isekai:adventurers_guild_instance';
-    const actorId = 'isekai:hero_instance';
-    const targetId = 'isekai:ninja_instance';
+    const locationId = 'test:adventurers_guild_instance';
+    const actorId = 'test:hero_instance';
+    const targetId = 'test:ninja_instance';
 
     // NOW create entities - SpatialIndexSynchronizer will listen to the events
     entityManager.createEntityInstance('test:location', {
@@ -289,9 +289,9 @@ describe('Spatial Index Synchronization Timing Bug', () => {
       locationQueryService,
     });
 
-    const locationId = 'isekai:adventurers_guild_instance';
-    const actorId = 'isekai:hero_instance';
-    const targetId = 'isekai:ninja_instance';
+    const locationId = 'test:adventurers_guild_instance';
+    const actorId = 'test:hero_instance';
+    const targetId = 'test:ninja_instance';
 
     // Create entities first (simulating world initialization)
     entityManager.createEntityInstance('test:location', {

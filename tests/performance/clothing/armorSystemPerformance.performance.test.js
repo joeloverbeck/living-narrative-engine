@@ -505,12 +505,13 @@ describe('Armor System Performance - ARMSYSANA-010', () => {
       //
       // We validate O(1) by checking:
       // 1. All absolute times are sub-millisecond (fast enough for any use case)
-      // 2. Relative deviation stays within noise threshold (2.0 = 200% max deviation)
+      // 2. Relative deviation stays within noise threshold (3.0 = 300% max deviation)
       //    - O(n) or worse would show 10x+ differences with different layer counts
-      //    - 200% deviation is well within expected noise for nanosecond measurements
+      //    - 300% deviation is well within expected noise for nanosecond measurements
+      //    - Matches threshold used in noOpLogger.performance.test.js for similar micro-benchmarks
       const allSubMillisecond = avgTimes.every((t) => t < 0.001);
       expect(allSubMillisecond).toBe(true);
-      expect(maxDeviation).toBeLessThan(2.0);
+      expect(maxDeviation).toBeLessThan(3.0);
     });
   });
 

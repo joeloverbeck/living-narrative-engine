@@ -110,25 +110,24 @@ class MockSchemaValidator {
 }
 // --- End Reusable Mocks ---
 
-// Corrected Isekai Mod Manifest Content
-const isekaiManifestContent = {
+// Corrected Generic Mod Manifest Content
+const genericManifestContent = {
   $schema: 'schema://living-narrative-engine/mod-manifest.schema.json',
-  id: 'isekai',
+  id: 'generic-mod',
   version: '1.0.0',
-  name: 'isekai',
+  name: 'Generic Mod',
   description:
-    'Contains the definitions of a demo scenario based on a fantasy setting.',
-  author: 'joeloverbeck',
+    'A generic mod for testing purposes.',
+  author: 'tester',
   gameVersion: '>=0.0.1',
   content: {
     actions: [],
     components: [],
     conditions: [],
     entityDefinitions: [
-      'hero.character.json',
-      'sidekick.character.json',
-      'adventurers_guild.location.json',
-      'town.location.json',
+      'hero.definition.json',
+      'villain.definition.json',
+      'location.definition.json',
     ],
     entityInstances: [],
     events: [],
@@ -137,7 +136,7 @@ const isekaiManifestContent = {
   },
 };
 
-describe('ModManifestLoader Isekai Content Validation', () => {
+describe('ModManifestLoader Generic Content Validation', () => {
   let modManifestLoader;
   let schemaValidator;
 
@@ -150,17 +149,12 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     );
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       // Default fetch mock for most tests, overridden where necessary
-      if (path === 'data/mods/isekai/mod-manifest.json') {
+      if (path === 'data/mods/generic-mod/mod-manifest.json') {
         return Promise.resolve(
-          JSON.parse(JSON.stringify(isekaiManifestContent))
+          JSON.parse(JSON.stringify(genericManifestContent))
         ); // Deep clone
       }
-      // Allow other paths to be tested or throw an error for unexpected paths
-      // This was a bit too restrictive before, so making it more flexible
-      // return Promise.reject(new Error(`Unexpected path in default mock: ${path}`));
-      // For tests that expect specific rejections, they will re-mock fetch.
-      // For general schema tests, they might mock a generic valid response.
-      return Promise.resolve({ id: 'generic-test-mod', content: {} });
+      return Promise.resolve({ id: 'other-test-mod', content: {} });
     });
 
     schemaValidator = new MockSchemaValidator(); // Uses the generic schema internally
@@ -190,41 +184,40 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     );
   });
 
-  test('should correctly load and parse the isekai mod manifest with updated entityDefinitions', async () => {
+  test('should correctly load and parse the generic mod manifest with updated entityDefinitions', async () => {
     // Act
     const loadedManifests = await modManifestLoader.loadRequestedManifests([
-      'isekai',
+      'generic-mod',
     ]);
 
     // Assert
     // 1. Check if the fetch was called correctly
     expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
-      'data/mods/isekai/mod-manifest.json'
+      'data/mods/generic-mod/mod-manifest.json'
     );
 
     // 2. Check the returned map
     expect(loadedManifests).toBeInstanceOf(Map);
-    expect(loadedManifests.has('isekai')).toBe(true);
+    expect(loadedManifests.has('generic-mod')).toBe(true);
 
     // 3. Get the manifest data from the map
-    const isekaiDataFromLoader = loadedManifests.get('isekai');
-    expect(isekaiDataFromLoader).toBeDefined();
-    expect(isekaiDataFromLoader.id).toBe('isekai');
-    expect(isekaiDataFromLoader.content).toBeDefined();
+    const genericDataFromLoader = loadedManifests.get('generic-mod');
+    expect(genericDataFromLoader).toBeDefined();
+    expect(genericDataFromLoader.id).toBe('generic-mod');
+    expect(genericDataFromLoader.content).toBeDefined();
 
     // 4. THE KEY ASSERTION: Check the entityDefinitions
-    expect(isekaiDataFromLoader.content.entityDefinitions).toEqual([
-      'hero.character.json',
-      'sidekick.character.json',
-      'adventurers_guild.location.json',
-      'town.location.json',
+    expect(genericDataFromLoader.content.entityDefinitions).toEqual([
+      'hero.definition.json',
+      'villain.definition.json',
+      'location.definition.json',
     ]);
 
     // 5. Check if it was stored in the registry (optional, but good practice)
     expect(mockDataRegistry.store).toHaveBeenCalledWith(
       'mod_manifests', // Assuming this is the category used by ModManifestLoader
-      'isekai',
-      isekaiManifestContent // Or expect.objectContaining(isekaiManifestContent)
+      'generic-mod',
+      genericManifestContent // Or expect.objectContaining(genericManifestContent)
     );
 
     // 6. Ensure no schema validation errors were logged for this successful case
@@ -241,30 +234,30 @@ describe('ModManifestLoader Isekai Content Validation', () => {
   });
 
   test('should use resolved path from pathResolver for fetching', async () => {
-    const specificPath = 'custom/path/to/isekai/mod-manifest.json';
+    const specificPath = 'custom/path/to/generic-mod/mod-manifest.json';
     mockPathResolver.resolveModManifestPath.mockReturnValue(specificPath);
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       // Need to re-mock for this specific path
       if (path === specificPath) {
         return Promise.resolve(
-          JSON.parse(JSON.stringify(isekaiManifestContent))
+          JSON.parse(JSON.stringify(genericManifestContent))
         );
       }
       return Promise.reject(new Error(`Unexpected path: ${path}`));
     });
 
-    await modManifestLoader.loadRequestedManifests(['isekai']);
+    await modManifestLoader.loadRequestedManifests(['generic-mod']);
 
     expect(mockPathResolver.resolveModManifestPath).toHaveBeenCalledWith(
-      'isekai'
+      'generic-mod'
     );
     expect(mockDataFetcher.fetch).toHaveBeenCalledWith(specificPath);
   });
 
   test('should log an error and throw if manifest ID does not match requested ID', async () => {
     const mismatchedManifest = {
-      ...isekaiManifestContent,
-      id: 'not-isekai', // Mismatched ID
+      ...genericManifestContent,
+      id: 'not-generic-mod', // Mismatched ID
     };
     // Specific mock for this test case
     mockDataFetcher.fetch.mockResolvedValue(
@@ -272,20 +265,20 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     );
 
     await expect(
-      modManifestLoader.loadRequestedManifests(['isekai'])
+      modManifestLoader.loadRequestedManifests(['generic-mod'])
     ).rejects.toThrow(
       // Corrected error message to match actual thrown error
-      "ModManifestLoader.loadRequestedManifests: manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
+      "ModManifestLoader.loadRequestedManifests: manifest ID 'not-generic-mod' does not match expected mod ID 'generic-mod'."
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_ID_MISMATCH',
       // Corrected expected log message to match actual logged error
       expect.stringContaining(
-        "manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
+        "manifest ID 'not-generic-mod' does not match expected mod ID 'generic-mod'."
       ),
       // Corrected metadata object to match what is actually logged
-      { modId: 'isekai', path: 'data/mods/isekai/mod-manifest.json' }
+      { modId: 'generic-mod', path: 'data/mods/generic-mod/mod-manifest.json' }
     );
   });
 
@@ -296,20 +289,20 @@ describe('ModManifestLoader Isekai Content Validation', () => {
 
     // MODIFIED: Expect a throw
     await expect(
-      modManifestLoader.loadRequestedManifests(['isekai'])
+      modManifestLoader.loadRequestedManifests(['generic-mod'])
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'isekai'. Path: data/mods/isekai/mod-manifest.json. Reason: Network Error"
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'generic-mod'. Path: data/mods/generic-mod/mod-manifest.json. Reason: Network Error"
     );
 
     // MODIFIED: Expect logger.error to have been called
     expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_FETCH_FAIL',
       expect.stringContaining(
-        "Critical error - could not fetch manifest for requested mod 'isekai'"
+        "Critical error - could not fetch manifest for requested mod 'generic-mod'"
       ),
       {
-        modId: 'isekai',
-        path: 'data/mods/isekai/mod-manifest.json',
+        modId: 'generic-mod',
+        path: 'data/mods/generic-mod/mod-manifest.json',
         reason: 'Network Error',
       }
     );
@@ -318,7 +311,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
   });
 
   test('should log an error and throw if schema validation fails', async () => {
-    const invalidManifest = { ...isekaiManifestContent, version: undefined }; // Missing required 'version'
+    const invalidManifest = { ...genericManifestContent, version: undefined }; // Missing required 'version'
     mockDataFetcher.fetch.mockResolvedValue(
       JSON.parse(JSON.stringify(invalidManifest))
     );
@@ -331,18 +324,18 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     schemaValidator.getValidator = jest.fn().mockReturnValue(mockValidatorFn);
 
     await expect(
-      modManifestLoader.loadRequestedManifests(['isekai'])
+      modManifestLoader.loadRequestedManifests(['generic-mod'])
     ).rejects.toThrow(
-      "manifest for 'isekai' failed schema validation. See log for Ajv error details."
+      "manifest for 'generic-mod' failed schema validation. See log for Ajv error details."
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_SCHEMA_INVALID',
       expect.stringContaining(
-        "manifest for 'isekai' failed schema validation."
+        "manifest for 'generic-mod' failed schema validation."
       ),
       expect.objectContaining({
-        modId: 'isekai',
+        modId: 'generic-mod',
         schemaId: 'schema://living-narrative-engine/mod-manifest.schema.json',
       })
     );

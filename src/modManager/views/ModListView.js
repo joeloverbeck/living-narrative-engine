@@ -147,9 +147,10 @@ export class ModListView {
    * @param {object} options Render options
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} options.mods Mods to display, in UI order
    * @param {(modId: string) => ModDisplayInfo} options.getModDisplayInfo Resolver for per-mod display state
+   * @param {((modId: string) => string)|null} [options.getModName=null] Optional resolver for mod ID to name
    * @param {boolean} options.isLoading Loading state toggle
    */
-  render({ mods, getModDisplayInfo, isLoading }) {
+  render({ mods, getModDisplayInfo, getModName = null, isLoading }) {
     this.#loadingElement.hidden = !isLoading;
     this.#listElement.hidden = isLoading;
     this.#emptyElement.hidden = true;
@@ -173,7 +174,7 @@ export class ModListView {
     }
 
     this.#currentMods = mods.map((m) => m.id);
-    this.#renderMods(mods, getModDisplayInfo);
+    this.#renderMods(mods, getModDisplayInfo, getModName);
   }
 
   /**
@@ -206,13 +207,14 @@ export class ModListView {
    *
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} mods Mods to render
    * @param {(modId: string) => ModDisplayInfo} getModDisplayInfo Card state resolver
+   * @param {((modId: string) => string)|null} getModName Optional mod name resolver
    */
-  #renderMods(mods, getModDisplayInfo) {
+  #renderMods(mods, getModDisplayInfo, getModName) {
     const fragment = document.createDocumentFragment();
 
     for (const mod of mods) {
       const displayInfo = getModDisplayInfo(mod.id);
-      const card = this.#modCardComponent.createCard(mod, displayInfo);
+      const card = this.#modCardComponent.createCard(mod, displayInfo, getModName);
       fragment.appendChild(card);
     }
 

@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "deference",
   "version": "1.0.0",
-  "name": "Deference & Submission",
+  "name": "Deference",
   "description": "Actions that express deference by kneeling, crawling forward, and returning to your feet while maintaining respectful posture links.",
   "actionPurpose": "Show respect or submission by kneeling before someone, approaching them on hands and knees, or rising back to a neutral stance.",
   "actionConsiderWhen": "Demonstrating reverence, formal respect, or submissive intent toward another actor in the scene.",

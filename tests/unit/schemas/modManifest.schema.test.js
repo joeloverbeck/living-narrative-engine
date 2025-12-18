@@ -11,8 +11,35 @@ import addFormats from 'ajv-formats';
 // Import the schemas and a valid fixture
 import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
-import validIsekaiManifest from '../../../data/mods/isekai/mod-manifest.json'; // Assuming the corrected isekai manifest is here
 import validPerceptionManifest from '../../../data/mods/perception/mod-manifest.json';
+
+const validGenericManifest = {
+  $schema: 'schema://living-narrative-engine/mod-manifest.schema.json',
+  id: 'generic_mod',
+  version: '1.0.0',
+  name: 'Generic Mod',
+  description: 'A generic mod for testing purposes.',
+  author: 'tester',
+  gameVersion: '>=0.0.1',
+  content: {
+    actions: [],
+    components: [],
+    conditions: [],
+    entities: {
+      definitions: [
+        'hero.definition.json',
+        'villain.definition.json',
+        'location.definition.json',
+      ],
+      instances: [],
+    },
+    events: [],
+    macros: [],
+    rules: [],
+    worlds: ['generic.world.json'],
+    portraits: ['portraits/hero.png'],
+  },
+};
 
 describe('JSON-Schema – Mod Manifest', () => {
   /** @type {import('ajv').ValidateFunction} */
@@ -35,8 +62,8 @@ describe('JSON-Schema – Mod Manifest', () => {
   /* ── VALID CASES ──────────────────────────────────────────────────────── */
 
   describe('Valid Manifests', () => {
-    test('✓ should validate the complete and correct "isekai" mod manifest', () => {
-      const ok = validate(validIsekaiManifest);
+    test('✓ should validate a complete and correct generic mod manifest', () => {
+      const ok = validate(validGenericManifest);
       if (!ok) {
         console.error('Validation Errors:', validate.errors);
       }
@@ -66,7 +93,7 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✓ should validate with empty content categories', () => {
       const manifestWithEmptyContent = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         content: {
           actions: [],
           components: [],
@@ -161,7 +188,7 @@ describe('JSON-Schema – Mod Manifest', () => {
 
   describe('Invalid Manifests', () => {
     test('✗ should NOT validate if required "id" property is missing', () => {
-      const invalidManifest = { ...validIsekaiManifest };
+      const invalidManifest = { ...validGenericManifest };
       delete invalidManifest.id;
       expect(validate(invalidManifest)).toBe(false);
       expect(validate.errors).toContainEqual(
@@ -172,7 +199,7 @@ describe('JSON-Schema – Mod Manifest', () => {
     });
 
     test('✗ should NOT validate if required "version" property is missing', () => {
-      const invalidManifest = { ...validIsekaiManifest };
+      const invalidManifest = { ...validGenericManifest };
       delete invalidManifest.version;
       expect(validate(invalidManifest)).toBe(false);
       expect(validate.errors).toContainEqual(
@@ -184,7 +211,7 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✗ should NOT validate an unknown property at the root level', () => {
       const invalidManifest = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         unknownProperty: 'should_fail',
       };
       expect(validate(invalidManifest)).toBe(false);
@@ -198,9 +225,9 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✗ should NOT validate an unknown property in the "content" object', () => {
       const invalidManifest = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         content: {
-          ...validIsekaiManifest.content,
+          ...validGenericManifest.content,
           sounds: ['sound/theme.mp3'], // Not a valid content category
         },
       };
@@ -216,9 +243,9 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✗ should NOT validate an unknown property in the "content.entities" object', () => {
       const invalidManifest = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         content: {
-          ...validIsekaiManifest.content,
+          ...validGenericManifest.content,
           entities: {
             definitions: [],
             instances: [],
@@ -238,9 +265,9 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✗ should NOT validate file paths that are not valid relative paths', () => {
       const invalidManifest = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         content: {
-          ...validIsekaiManifest.content,
+          ...validGenericManifest.content,
           worlds: ['/absolute/path/world.json'], // Starts with a slash
         },
       };
@@ -274,9 +301,9 @@ describe('JSON-Schema – Mod Manifest', () => {
 
     test('✗ should NOT validate file paths that contain ".."', () => {
       const invalidManifest = {
-        ...validIsekaiManifest,
+        ...validGenericManifest,
         content: {
-          ...validIsekaiManifest.content,
+          ...validGenericManifest.content,
           portraits: ['../another_mod/portrait.png'], // Contains ".."
         },
       };

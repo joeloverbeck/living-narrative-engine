@@ -53,7 +53,6 @@ describe('ActivityMetadataCollectionSystem - Direct Usage Validation (Batch 5)',
       expect(metadataSystem).toBeDefined();
       expect(metadataSystem.collectActivityMetadata).toBeInstanceOf(Function);
       expect(metadataSystem.collectInlineMetadata).toBeInstanceOf(Function);
-      expect(metadataSystem.collectDedicatedMetadata).toBeInstanceOf(Function);
       expect(metadataSystem.deduplicateActivitiesBySignature).toBeInstanceOf(
         Function
       );
@@ -123,11 +122,10 @@ describe('ActivityMetadataCollectionSystem - Direct Usage Validation (Batch 5)',
       expect(inlineMetadata[1].sourceComponent).toBe('positioning:kneeling');
     });
 
-    it('should collect dedicated metadata correctly via DI-resolved service', () => {
+    it('should ignore legacy dedicated metadata components gracefully', () => {
       const mockEntity = {
         id: 'test_entity',
-        hasComponent: (componentId) =>
-          componentId === 'activity:description_metadata',
+        componentTypeIds: ['activity:description_metadata'],
         getComponentData: (componentId) => {
           if (componentId === 'activity:description_metadata') {
             return {
@@ -138,22 +136,15 @@ describe('ActivityMetadataCollectionSystem - Direct Usage Validation (Batch 5)',
               targetRole: 'entityId',
             };
           }
-          if (componentId === 'positioning:kneeling') {
-            return {
-              entityId: 'target_entity',
-            };
-          }
+
           return null;
         },
+        hasComponent: () => true,
       };
 
-      const dedicatedMetadata =
-        metadataSystem.collectDedicatedMetadata(mockEntity);
+      const inlineMetadata = metadataSystem.collectInlineMetadata(mockEntity);
 
-      expect(dedicatedMetadata).toHaveLength(1);
-      expect(dedicatedMetadata[0].type).toBe('dedicated');
-      expect(dedicatedMetadata[0].sourceComponent).toBe('positioning:kneeling');
-      expect(dedicatedMetadata[0].verb).toBe('kneeling before');
+      expect(inlineMetadata).toEqual([]);
     });
 
     it('should deduplicate activities correctly via DI-resolved service', () => {

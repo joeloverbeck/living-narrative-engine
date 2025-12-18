@@ -40,9 +40,9 @@
             Game Operations
           </h2>
           <p class="category-description">
-            Start playing or continue your adventure
+            Manage your mods or start new game
           </p>
-          <div class="button-grid button-grid--3col">
+          <div class="button-grid button-grid--2col button-grid--centered">
             <button
               id="mod-manager-button"
               class="menu-button nav-button nav-button--game"
@@ -56,13 +56,6 @@
             >
               <span class="button-icon" aria-hidden="true">🎮</span>
               <span class="button-text">Start New Game</span>
-            </button>
-            <button
-              id="load-button"
-              class="menu-button nav-button nav-button--game"
-            >
-              <span class="button-icon" aria-hidden="true">📁</span>
-              <span class="button-text">Load Game</span>
             </button>
           </div>
         </section>
@@ -237,9 +230,6 @@
         });
       document.getElementById('start-button').addEventListener('click', () => {
         window.location.href = 'game.html';
-      });
-      document.getElementById('load-button').addEventListener('click', () => {
-        window.location.href = 'game.html?load=true';
       });
       document
         .getElementById('anatomy-button')

@@ -68,65 +68,8 @@ describe('AjvSchemaValidator World Schema Tests', () => {
       expect(result.errors).toBeNull();
     });
 
-    it('should validate the actual isekai world file', async () => {
-      // Arrange - Load schemas manually
-      const schemasDir = path.join(process.cwd(), 'data', 'schemas');
+    // Test case 'should validate the actual isekai world file' removed as the mod has been deleted.
 
-      // Load schemas in dependency order
-      const commonSchema = JSON.parse(
-        fs.readFileSync(path.join(schemasDir, 'common.schema.json'), 'utf8')
-      );
-      const entityInstanceSchema = JSON.parse(
-        fs.readFileSync(
-          path.join(schemasDir, 'entity-instance.schema.json'),
-          'utf8'
-        )
-      );
-      const worldSchema = JSON.parse(
-        fs.readFileSync(path.join(schemasDir, 'world.schema.json'), 'utf8')
-      );
-
-      // Add schemas to validator
-      await schemaValidator.addSchema(commonSchema, commonSchema.$id);
-      await schemaValidator.addSchema(
-        entityInstanceSchema,
-        entityInstanceSchema.$id
-      );
-      await schemaValidator.addSchema(worldSchema, worldSchema.$id);
-
-      // Load the actual isekai world file
-      const isekaiWorldPath = path.join(
-        process.cwd(),
-        'data',
-        'mods',
-        'isekai',
-        'worlds',
-        'isekai.world.json'
-      );
-      const isekaiWorldData = JSON.parse(
-        fs.readFileSync(isekaiWorldPath, 'utf8')
-      );
-
-      // Act
-      const result = schemaValidator.validate(worldSchema.$id, isekaiWorldData);
-
-      // Debug: Log the validation result
-      if (!result.isValid) {
-        console.log('Isekai world validation failed:');
-        console.log(
-          'Isekai world data:',
-          JSON.stringify(isekaiWorldData, null, 2)
-        );
-        console.log(
-          'Validation errors:',
-          JSON.stringify(result.errors, null, 2)
-        );
-      }
-
-      // Assert
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toBeNull();
-    });
 
     it('should provide detailed error information for invalid world files', async () => {
       // Arrange - Load schemas manually

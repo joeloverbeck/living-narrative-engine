@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "sex-core",
   "version": "1.0.0",
-  "name": "Sex Core - Shared Sexual Scaffolding",
-  "description": "Foundational sexual intimacy helpers shared across specialized intimacy modules.",
+  "name": "Sex - Core",
+  "description": "Foundational sexual intimacy scopes.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

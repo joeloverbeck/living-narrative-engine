@@ -481,6 +481,8 @@ class ModReferenceExtractor {
       });
     } else if (obj && typeof obj === 'object') {
       for (const [key, value] of Object.entries(obj)) {
+        // Also analyze object keys for mod references (e.g., component names like "movement:exits")
+        this._extractModReferencesFromString(key, references, `${path}.<key>`);
         this._traverseObject(value, `${path}.${key}`, references, fileType);
       }
     }

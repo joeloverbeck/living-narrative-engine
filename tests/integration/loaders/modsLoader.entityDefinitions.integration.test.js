@@ -73,7 +73,71 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   let loadResult;
   let loadedInstances;
 
+  const MOD_ID = 'test-mod-defs-integrity';
+  const MODS_BASE_PATH = './data/mods';
+  const MOD_DIR = path.join(MODS_BASE_PATH, MOD_ID);
+  const DEFINITIONS_DIR = path.join(MOD_DIR, 'entities/definitions');
+  const INSTANCES_DIR = path.join(MOD_DIR, 'entities/instances');
+
+  // Test Data
+  const manifestContent = {
+    id: MOD_ID,
+    name: 'Test Mod Defs Integrity',
+    version: '1.0.0',
+    content: {
+      entities: {
+        definitions: ['hero.definition.json', 'villain.definition.json'],
+        instances: ['hero_instance.json'],
+      },
+    },
+  };
+
+  const heroDefinitionContent = {
+    id: 'hero',
+    components: {
+      'core:name': { text: 'Hero' },
+    },
+  };
+  const villainDefinitionContent = {
+    id: 'villain',
+    components: {
+      'core:name': { text: 'Villain' },
+    },
+  };
+
+  const heroInstanceContent = {
+    instanceId: `${MOD_ID}:hero_instance`,
+    definitionId: `${MOD_ID}:hero`,
+  };
+
   beforeAll(async () => {
+    // Setup test files
+    if (!fs.existsSync(MODS_BASE_PATH)) {
+      fs.mkdirSync(MODS_BASE_PATH, { recursive: true });
+    }
+    if (fs.existsSync(MOD_DIR)) {
+      fs.rmSync(MOD_DIR, { recursive: true, force: true });
+    }
+    fs.mkdirSync(DEFINITIONS_DIR, { recursive: true });
+    fs.mkdirSync(INSTANCES_DIR, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(MOD_DIR, 'mod-manifest.json'),
+      JSON.stringify(manifestContent, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(DEFINITIONS_DIR, 'hero.definition.json'),
+      JSON.stringify(heroDefinitionContent, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(DEFINITIONS_DIR, 'villain.definition.json'),
+      JSON.stringify(villainDefinitionContent, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(INSTANCES_DIR, 'hero_instance.json'),
+      JSON.stringify(heroInstanceContent, null, 2)
+    );
+
     // Ensure logger is defined first and used everywhere
     logger = new ConsoleLogger('info');
     // Set up DI container and register all loaders as in production
@@ -147,7 +211,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
     modsLoader = container.resolve(tokens.ModsLoader);
 
-    // Load the isekai mod and store data for later assertions
+    // Load the mod and store data for later assertions
     loadResult = await modsLoader.loadMods('test-world', [MOD_ID]);
 
     // DEBUG: Log all entity_definitions in the registry after loading
@@ -158,9 +222,16 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     loadedInstances = registry.getAll('entityInstances');
   });
 
+  afterAll(() => {
+    // Cleanup
+    if (fs.existsSync(MOD_DIR)) {
+      fs.rmSync(MOD_DIR, { recursive: true, force: true });
+    }
+  });
+
   it('loads mods successfully', () => {
     expect(loadResult).toEqual({
-      finalModOrder: ['core', 'descriptors', 'anatomy', 'isekai'],
+      finalModOrder: ['core', MOD_ID],
       totals: expect.any(Object),
       incompatibilities: 0,
     });
@@ -170,24 +241,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     const ids = loadedInstances.map((i) => i.instanceId);
     expect(ids).toEqual(
       expect.arrayContaining([
-        'isekai:adventurers_guild_instance',
-        'isekai:hero_instance',
-        'isekai:ninja_instance',
-        'isekai:receptionist_instance',
-        'isekai:sidekick_instance',
-        'isekai:town_instance',
+        `${MOD_ID}:hero_instance`,
       ])
     );
   });
-
-  const MOD_ID = 'isekai';
-  const MODS_BASE_PATH = './data/mods';
-  const DEFINITIONS_DIR = path.join(
-    MODS_BASE_PATH,
-    MOD_ID,
-    'entities/definitions'
-  );
-  const INSTANCES_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/instances');
 
   it('should load all entity definitions listed in the mod manifest', () => {
     const manifest = JSON.parse(
@@ -202,8 +259,11 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       const filePath = path.join(DEFINITIONS_DIR, file);
       const entityData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       const entityId = entityData.id;
+      const namespacedEntityId = entityId.includes(':')
+        ? entityId
+        : `${MOD_ID}:${entityId}`;
 
-      const entity = registry.get('entityDefinitions', entityId);
+      const entity = registry.get('entityDefinitions', namespacedEntityId);
       if (!entity) {
         console.error(
           `DEBUG: Entity not found for file: ${file}, entityId: ${entityId}`

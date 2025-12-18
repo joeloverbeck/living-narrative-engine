@@ -18,7 +18,7 @@ describe('ModManagerController', () => {
   let mockLogger;
   /** @type {jest.Mocked<{discoverMods: jest.Mock}>} */
   let mockModDiscoveryService;
-  /** @type {jest.Mocked<{buildGraph: jest.Mock, setExplicitMods: jest.Mock, getLoadOrder: jest.Mock, getModStatus: jest.Mock, calculateActivation: jest.Mock, calculateDeactivation: jest.Mock}>} */
+  /** @type {jest.Mocked<{buildGraph: jest.Mock, setExplicitMods: jest.Mock, getLoadOrder: jest.Mock, getModStatus: jest.Mock, hasExplicitDependents: jest.Mock, calculateActivation: jest.Mock, calculateDeactivation: jest.Mock}>} */
   let mockModGraphService;
   /** @type {jest.Mocked<{discoverWorlds: jest.Mock}>} */
   let mockWorldDiscoveryService;
@@ -70,6 +70,7 @@ describe('ModManagerController', () => {
       setExplicitMods: jest.fn(),
       getLoadOrder: jest.fn().mockReturnValue(['core', 'base-mod']),
       getModStatus: jest.fn().mockReturnValue('inactive'),
+      hasExplicitDependents: jest.fn().mockReturnValue(false),
       calculateActivation: jest
         .fn()
         .mockReturnValue({ valid: true, dependencies: [] }),
@@ -727,6 +728,36 @@ describe('ModManagerController', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ModManagerController destroyed'
       );
+    });
+  });
+
+  describe('getModName', () => {
+    beforeEach(async () => {
+      await controller.initialize();
+    });
+
+    it('should return mod name for valid mod ID', () => {
+      const name = controller.getModName('base-mod');
+
+      expect(name).toBe('Base Mod');
+    });
+
+    it('should return mod ID as fallback for unknown mod', () => {
+      const name = controller.getModName('nonexistent-mod');
+
+      expect(name).toBe('nonexistent-mod');
+    });
+
+    it('should return mod name for core mod', () => {
+      const name = controller.getModName('core');
+
+      expect(name).toBe('Core');
+    });
+
+    it('should return mod name for any available mod', () => {
+      const name = controller.getModName('feature-mod');
+
+      expect(name).toBe('Feature Mod');
     });
   });
 

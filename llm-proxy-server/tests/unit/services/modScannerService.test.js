@@ -315,6 +315,7 @@ describe('ModScannerService', () => {
         dependencies: [],
         conflicts: [],
         hasWorlds: false,
+        actionVisual: null,
       });
     });
 
@@ -324,6 +325,217 @@ describe('ModScannerService', () => {
       fs.readdir.mockRejectedValue(accessError);
 
       await expect(service.scanMods()).rejects.toThrow('Access denied');
+    });
+  });
+
+  describe('actionVisual extraction', () => {
+    test('extracts actionVisual from first action with visual property', async () => {
+      const mockEntries = [{ name: 'visual-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'visual_mod',
+        name: 'Visual Mod',
+        version: '1.0.0',
+      };
+
+      const actionWithVisual = {
+        id: 'visual-mod:test-action',
+        visual: {
+          backgroundColor: '#006064',
+          textColor: '#e0f7fa',
+          hoverBackgroundColor: '#00838f',
+          hoverTextColor: '#ffffff',
+        },
+      };
+
+      // Track readdir calls to distinguish between mod dirs and actions dirs
+      let readdirCallCount = 0;
+      fs.readdir.mockImplementation((dirPath) => {
+        readdirCallCount++;
+        if (readdirCallCount === 1) {
+          // First call - mod directory listing
+          return Promise.resolve(mockEntries);
+        }
+        // Second call - actions directory listing
+        return Promise.resolve(['test.action.json']);
+      });
+
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('mod-manifest.json')) {
+          return Promise.resolve(JSON.stringify(manifest));
+        }
+        if (filePath.includes('.action.json')) {
+          return Promise.resolve(JSON.stringify(actionWithVisual));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      fs.stat.mockRejectedValue({ code: 'ENOENT' });
+
+      const mods = await service.scanMods();
+
+      expect(mods[0].actionVisual).toEqual({
+        backgroundColor: '#006064',
+        textColor: '#e0f7fa',
+      });
+    });
+
+    test('returns null actionVisual when no actions have visual property', async () => {
+      const mockEntries = [{ name: 'no-visual-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'no_visual_mod',
+        name: 'No Visual Mod',
+        version: '1.0.0',
+      };
+
+      const actionWithoutVisual = {
+        id: 'no-visual-mod:test-action',
+        name: 'Test Action',
+      };
+
+      let readdirCallCount = 0;
+      fs.readdir.mockImplementation(() => {
+        readdirCallCount++;
+        if (readdirCallCount === 1) {
+          return Promise.resolve(mockEntries);
+        }
+        return Promise.resolve(['test.action.json']);
+      });
+
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('mod-manifest.json')) {
+          return Promise.resolve(JSON.stringify(manifest));
+        }
+        if (filePath.includes('.action.json')) {
+          return Promise.resolve(JSON.stringify(actionWithoutVisual));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      fs.stat.mockRejectedValue({ code: 'ENOENT' });
+
+      const mods = await service.scanMods();
+
+      expect(mods[0].actionVisual).toBeNull();
+    });
+
+    test('returns null actionVisual when actions directory does not exist', async () => {
+      const mockEntries = [{ name: 'no-actions-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'no_actions_mod',
+        name: 'No Actions Mod',
+        version: '1.0.0',
+      };
+
+      let readdirCallCount = 0;
+      fs.readdir.mockImplementation(() => {
+        readdirCallCount++;
+        if (readdirCallCount === 1) {
+          return Promise.resolve(mockEntries);
+        }
+        // Actions directory doesn't exist
+        const error = new Error('ENOENT');
+        error.code = 'ENOENT';
+        return Promise.reject(error);
+      });
+
+      fs.readFile.mockResolvedValue(JSON.stringify(manifest));
+      fs.stat.mockRejectedValue({ code: 'ENOENT' });
+
+      const mods = await service.scanMods();
+
+      expect(mods[0].actionVisual).toBeNull();
+    });
+
+    test('handles malformed action JSON files gracefully', async () => {
+      const mockEntries = [{ name: 'bad-action-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'bad_action_mod',
+        name: 'Bad Action Mod',
+        version: '1.0.0',
+      };
+
+      let readdirCallCount = 0;
+      fs.readdir.mockImplementation(() => {
+        readdirCallCount++;
+        if (readdirCallCount === 1) {
+          return Promise.resolve(mockEntries);
+        }
+        return Promise.resolve(['bad.action.json', 'good.action.json']);
+      });
+
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('mod-manifest.json')) {
+          return Promise.resolve(JSON.stringify(manifest));
+        }
+        if (filePath.includes('bad.action.json')) {
+          return Promise.resolve('{ invalid json }');
+        }
+        if (filePath.includes('good.action.json')) {
+          return Promise.resolve(
+            JSON.stringify({
+              id: 'good-action',
+              visual: {
+                backgroundColor: '#123456',
+                textColor: '#ffffff',
+              },
+            })
+          );
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      fs.stat.mockRejectedValue({ code: 'ENOENT' });
+
+      const mods = await service.scanMods();
+
+      // Should skip the malformed file and return visual from good action
+      expect(mods[0].actionVisual).toEqual({
+        backgroundColor: '#123456',
+        textColor: '#ffffff',
+      });
+    });
+
+    test('requires both backgroundColor and textColor for valid actionVisual', async () => {
+      const mockEntries = [{ name: 'partial-visual-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'partial_visual_mod',
+        name: 'Partial Visual Mod',
+        version: '1.0.0',
+      };
+
+      const actionWithPartialVisual = {
+        id: 'partial-action',
+        visual: {
+          backgroundColor: '#006064',
+          // Missing textColor
+        },
+      };
+
+      let readdirCallCount = 0;
+      fs.readdir.mockImplementation(() => {
+        readdirCallCount++;
+        if (readdirCallCount === 1) {
+          return Promise.resolve(mockEntries);
+        }
+        return Promise.resolve(['partial.action.json']);
+      });
+
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('mod-manifest.json')) {
+          return Promise.resolve(JSON.stringify(manifest));
+        }
+        if (filePath.includes('.action.json')) {
+          return Promise.resolve(JSON.stringify(actionWithPartialVisual));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      fs.stat.mockRejectedValue({ code: 'ENOENT' });
+
+      const mods = await service.scanMods();
+
+      expect(mods[0].actionVisual).toBeNull();
     });
   });
 });

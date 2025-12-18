@@ -6,6 +6,15 @@
  */
 
 import ConsoleLogger from '../logging/consoleLogger.js';
+import ModDiscoveryService from './services/ModDiscoveryService.js';
+import ModGraphService from './services/ModGraphService.js';
+import WorldDiscoveryService from './services/WorldDiscoveryService.js';
+import ConfigPersistenceService from './services/ConfigPersistenceService.js';
+import ModManagerController from './controllers/ModManagerController.js';
+import ModListView from './views/ModListView.js';
+import SummaryPanelView from './views/SummaryPanelView.js';
+import WorldListView from './views/WorldListView.js';
+import ModCardComponent from './components/ModCardComponent.js';
 
 /**
  * Bootstraps the Mod Manager application with lightweight dependency injection
@@ -14,10 +23,21 @@ export class ModManagerBootstrap {
   #logger;
   #container;
   #controller;
+  #modListView;
+  #summaryPanelView;
+  #worldListView;
+  #modCardComponent;
+  #backButtonHandler;
+  #navigationHandler;
 
-  constructor() {
+  /**
+   * @param {{ navigationHandler?: (targetUrl: string) => void }} [options] - Optional configuration
+   */
+  constructor({ navigationHandler } = {}) {
     // ConsoleLogger takes log level, not namespace string
     this.#logger = new ConsoleLogger('INFO');
+    this.#navigationHandler =
+      navigationHandler ?? ((targetUrl) => window.location.assign(targetUrl));
   }
 
   /**
@@ -38,7 +58,13 @@ export class ModManagerBootstrap {
       // Step 3: Create and initialize controller
       await this.#initializeController();
 
-      // Step 4: Load initial data
+      // Step 4: Initialize view components
+      this.#initializeViews();
+
+      // Step 5: Wire navigation controls
+      this.#initializeNavigation();
+
+      // Step 6: Load initial data and render
       await this.#loadInitialData();
 
       this.#logger.info(
@@ -69,14 +95,29 @@ export class ModManagerBootstrap {
   async #registerServices() {
     this.#logger.debug('[ModManagerBootstrap] Registering services...');
 
-    // Services will be registered here by MODMANIMP-008 to 011
-    // Placeholder registrations:
+    // Register logger first
     this.#container.set('logger', this.#logger);
 
-    // TODO: Register ModDiscoveryService (MODMANIMP-008)
-    // TODO: Register ModGraphService (MODMANIMP-009)
-    // TODO: Register WorldDiscoveryService (MODMANIMP-010)
-    // TODO: Register ConfigPersistenceService (MODMANIMP-011)
+    // Create services with dependencies
+    const modDiscoveryService = new ModDiscoveryService({
+      logger: this.#logger,
+    });
+    const modGraphService = new ModGraphService({
+      logger: this.#logger,
+    });
+    const worldDiscoveryService = new WorldDiscoveryService({
+      logger: this.#logger,
+      modDiscoveryService,
+    });
+    const configPersistenceService = new ConfigPersistenceService({
+      logger: this.#logger,
+    });
+
+    // Register in container
+    this.#container.set('modDiscoveryService', modDiscoveryService);
+    this.#container.set('modGraphService', modGraphService);
+    this.#container.set('worldDiscoveryService', worldDiscoveryService);
+    this.#container.set('configPersistenceService', configPersistenceService);
   }
 
   /**
@@ -87,11 +128,86 @@ export class ModManagerBootstrap {
   async #initializeController() {
     this.#logger.debug('[ModManagerBootstrap] Initializing controller...');
 
-    // Controller will be created here by MODMANIMP-012
-    // TODO: Create ModManagerController with dependencies
+    // Create controller with all required dependencies
+    this.#controller = new ModManagerController({
+      logger: this.#container.get('logger'),
+      modDiscoveryService: this.#container.get('modDiscoveryService'),
+      modGraphService: this.#container.get('modGraphService'),
+      worldDiscoveryService: this.#container.get('worldDiscoveryService'),
+      configPersistenceService: this.#container.get('configPersistenceService'),
+    });
+  }
 
-    // Placeholder: Store reference for later use
-    this.#controller = null;
+  /**
+   * Initialize all view components
+   */
+  #initializeViews() {
+    this.#logger.debug('[ModManagerBootstrap] Initializing views...');
+
+    // Create shared mod card component
+    this.#modCardComponent = new ModCardComponent({
+      logger: this.#logger,
+    });
+
+    // Get container elements from DOM
+    const modListContainer = document.getElementById('mod-list');
+    const summaryPanelContainer =
+      /** @type {HTMLElement|null} */ (document.querySelector('.summary-panel'));
+    const worldListContainer = document.getElementById('world-list');
+
+    // Create ModListView
+    if (modListContainer) {
+      this.#modListView = new ModListView({
+        container: modListContainer,
+        logger: this.#logger,
+        onModToggle: (modId) => this.#controller.toggleMod(modId),
+        modCardComponent: this.#modCardComponent,
+      });
+    }
+
+    // Create SummaryPanelView
+    if (summaryPanelContainer) {
+      this.#summaryPanelView = new SummaryPanelView({
+        container: summaryPanelContainer,
+        logger: this.#logger,
+        onSave: () => this.#controller.saveConfiguration(),
+      });
+    }
+
+    // Create WorldListView
+    if (worldListContainer) {
+      this.#worldListView = new WorldListView({
+        container: worldListContainer,
+        logger: this.#logger,
+        onWorldSelect: (worldId) => this.#controller.selectWorld(worldId),
+      });
+    }
+  }
+
+  /**
+   * Wire up navigation controls
+   */
+  #initializeNavigation() {
+    const backButton = document.getElementById('back-button');
+    if (!backButton) {
+      this.#logger.warn(
+        '[ModManagerBootstrap] Back button not found; skipping navigation binding'
+      );
+      return;
+    }
+
+    this.#backButtonHandler = () => {
+      try {
+        this.#navigationHandler('index.html');
+      } catch (error) {
+        this.#logger.warn(
+          '[ModManagerBootstrap] Failed to navigate back to menu',
+          error
+        );
+      }
+    };
+
+    backButton.addEventListener('click', this.#backButtonHandler);
   }
 
   /**
@@ -102,28 +218,83 @@ export class ModManagerBootstrap {
   async #loadInitialData() {
     this.#logger.debug('[ModManagerBootstrap] Loading initial data...');
 
-    // Initial data loading will be implemented by controller
-    // TODO: Load current game.json configuration
-    // TODO: Fetch available mods from API
-    // TODO: Build dependency graph
-    // TODO: Render initial UI state
+    try {
+      // Controller.initialize() fetches mods, config, builds graph, discovers worlds
+      await this.#controller.initialize();
 
-    // For now, update loading indicators
-    this.#updateLoadingState('ready');
+      // Subscribe to state changes to update UI
+      this.#controller.subscribe((state) => {
+        this.#renderUI(state);
+      });
+    } catch (error) {
+      this.#logger.error(
+        '[ModManagerBootstrap] Failed to load initial data',
+        error
+      );
+      // Update loading indicators with error state
+      const loadingIndicators = document.querySelectorAll('.loading-indicator');
+      loadingIndicators.forEach((indicator) => {
+        indicator.textContent = 'Failed to load data.';
+      });
+      throw error;
+    }
   }
 
   /**
-   * Update UI loading state
+   * Render all UI views with current state
    *
-   * @param {string} state - Current state: 'loading' | 'ready' | 'error'
+   * @param {import('./controllers/ModManagerController.js').ModManagerState} state - Current controller state
    */
-  #updateLoadingState(state) {
+  #renderUI(state) {
+    // Update loading indicators (backwards compatibility)
+    this.#updateLoadingIndicators(state);
+
+    // Render mod list
+    if (this.#modListView) {
+      this.#modListView.render({
+        mods: state.availableMods || [],
+        getModDisplayInfo: (modId) => this.#controller.getModDisplayInfo(modId),
+        getModName: (modId) => this.#controller.getModName(modId),
+        isLoading: state.isLoading,
+      });
+    }
+
+    // Render summary panel
+    if (this.#summaryPanelView) {
+      this.#summaryPanelView.render({
+        loadOrder: state.resolvedMods || [],
+        activeCount: (state.resolvedMods || []).length,
+        hasUnsavedChanges: state.hasUnsavedChanges,
+        isSaving: state.isSaving,
+        isLoading: state.isLoading,
+      });
+    }
+
+    // Render world list
+    if (this.#worldListView) {
+      this.#worldListView.render({
+        worlds: state.availableWorlds || [],
+        selectedWorld: state.selectedWorld,
+        isLoading: state.isLoading,
+      });
+    }
+  }
+
+  /**
+   * Update loading indicator text
+   *
+   * @param {import('./controllers/ModManagerController.js').ModManagerState} state - Current controller state
+   */
+  #updateLoadingIndicators(state) {
     const loadingIndicators = document.querySelectorAll('.loading-indicator');
     loadingIndicators.forEach((indicator) => {
-      if (state === 'ready') {
-        indicator.textContent = 'No data loaded yet. Services not connected.';
-      } else if (state === 'error') {
-        indicator.textContent = 'Failed to load data.';
+      if (state.isLoading) {
+        indicator.textContent = 'Loading mods...';
+      } else if (state.error) {
+        indicator.textContent = state.error;
+      } else {
+        const modCount = state.availableMods?.length || 0;
+        indicator.textContent = `Loaded ${modCount} mods`;
       }
     });
   }
@@ -133,9 +304,31 @@ export class ModManagerBootstrap {
    */
   destroy() {
     this.#logger.info('[ModManagerBootstrap] Destroying Mod Manager...');
+
+    // Destroy views
+    if (this.#modListView?.destroy) {
+      this.#modListView.destroy();
+    }
+    if (this.#summaryPanelView?.destroy) {
+      this.#summaryPanelView.destroy();
+    }
+    if (this.#worldListView?.destroy) {
+      this.#worldListView.destroy();
+    }
+
+    // Remove navigation handlers
+    const backButton = document.getElementById('back-button');
+    if (backButton && this.#backButtonHandler) {
+      backButton.removeEventListener('click', this.#backButtonHandler);
+    }
+    this.#backButtonHandler = null;
+
+    // Destroy controller
     if (this.#controller?.destroy) {
       this.#controller.destroy();
     }
+
+    // Clear container
     if (this.#container) {
       this.#container.clear();
     }

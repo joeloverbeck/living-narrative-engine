@@ -327,6 +327,96 @@ describe('graphUtils', () => {
     });
   });
 
+  describe('buildDependencyGraph - unrequested mod filtering', () => {
+    it('should not include mods that share dependencies but were not requested', () => {
+      // BUG REPRODUCTION: If mod-a depends on shared-dep, and mod-b also depends on shared-dep,
+      // but only mod-a is requested, mod-b should NOT appear in the graph.
+      const requestedIds = ['mod-a'];
+      const manifestsMap = new Map([
+        ['core', { id: 'core', dependencies: [] }],
+        ['mod-a', { id: 'mod-a', dependencies: [{ id: 'shared-dep', required: true }] }],
+        ['shared-dep', { id: 'shared-dep', dependencies: [] }],
+        ['mod-b', { id: 'mod-b', dependencies: [{ id: 'shared-dep', required: true }] }], // NOT requested
+      ]);
+
+      const { nodes } = buildDependencyGraph(requestedIds, manifestsMap);
+
+      expect(nodes.has('mod-a')).toBe(true);
+      expect(nodes.has('shared-dep')).toBe(true);
+      expect(nodes.has(CORE_MOD_ID)).toBe(true);
+      expect(nodes.has('mod-b')).toBe(false); // SHOULD NOT be included
+    });
+
+    it('should include all transitive dependencies of requested mods', () => {
+      const requestedIds = ['mod-a'];
+      const manifestsMap = new Map([
+        ['core', { id: 'core', dependencies: [] }],
+        ['mod-a', { id: 'mod-a', dependencies: [{ id: 'mod-b', required: true }] }],
+        ['mod-b', { id: 'mod-b', dependencies: [{ id: 'mod-c', required: true }] }],
+        ['mod-c', { id: 'mod-c', dependencies: [] }],
+        ['unrelated', { id: 'unrelated', dependencies: [] }], // NOT in dependency chain
+      ]);
+
+      const { nodes, edges } = buildDependencyGraph(requestedIds, manifestsMap);
+
+      expect(nodes.has('mod-a')).toBe(true);
+      expect(nodes.has('mod-b')).toBe(true);
+      expect(nodes.has('mod-c')).toBe(true);
+      expect(nodes.has('unrelated')).toBe(false); // Should NOT be included
+      // Verify edges are correct
+      expect(edges.get('mod-b').has('mod-a')).toBe(true);
+      expect(edges.get('mod-c').has('mod-b')).toBe(true);
+    });
+
+    it('should not include mods that only share transitive dependencies', () => {
+      // Scenario: dredgers depends on anatomy, sex-core also depends on anatomy
+      // Only dredgers is requested, sex-core should NOT appear
+      const requestedIds = ['dredgers'];
+      const manifestsMap = new Map([
+        ['core', { id: 'core', dependencies: [] }],
+        ['dredgers', { id: 'dredgers', dependencies: [{ id: 'anatomy', required: true }] }],
+        ['anatomy', { id: 'anatomy', dependencies: [{ id: 'descriptors', required: true }] }],
+        ['descriptors', { id: 'descriptors', dependencies: [] }],
+        ['sex-core', { id: 'sex-core', dependencies: [{ id: 'anatomy', required: true }] }], // NOT requested
+        ['hexing', { id: 'hexing', dependencies: [{ id: 'anatomy', required: true }] }], // NOT requested
+      ]);
+
+      const { nodes } = buildDependencyGraph(requestedIds, manifestsMap);
+
+      // Should include: core, dredgers, anatomy, descriptors
+      expect(nodes.has('core')).toBe(true);
+      expect(nodes.has('dredgers')).toBe(true);
+      expect(nodes.has('anatomy')).toBe(true);
+      expect(nodes.has('descriptors')).toBe(true);
+
+      // Should NOT include: sex-core, hexing
+      expect(nodes.has('sex-core')).toBe(false);
+      expect(nodes.has('hexing')).toBe(false);
+    });
+
+    it('should handle diamond dependencies correctly without including unrequested mods', () => {
+      // Diamond: A depends on B and C, both B and C depend on D
+      // Unrelated mod E also depends on D but shouldn't be included
+      const requestedIds = ['a'];
+      const manifestsMap = new Map([
+        ['core', { id: 'core', dependencies: [] }],
+        ['a', { id: 'a', dependencies: [{ id: 'b', required: true }, { id: 'c', required: true }] }],
+        ['b', { id: 'b', dependencies: [{ id: 'd', required: true }] }],
+        ['c', { id: 'c', dependencies: [{ id: 'd', required: true }] }],
+        ['d', { id: 'd', dependencies: [] }],
+        ['e', { id: 'e', dependencies: [{ id: 'd', required: true }] }], // NOT requested
+      ]);
+
+      const { nodes } = buildDependencyGraph(requestedIds, manifestsMap);
+
+      expect(nodes.has('a')).toBe(true);
+      expect(nodes.has('b')).toBe(true);
+      expect(nodes.has('c')).toBe(true);
+      expect(nodes.has('d')).toBe(true);
+      expect(nodes.has('e')).toBe(false); // SHOULD NOT be included
+    });
+  });
+
   describe('createMinHeap', () => {
     it('should create an empty heap', () => {
       const heap = createMinHeap((x) => x);

@@ -3,7 +3,7 @@
   "id": "furniture",
   "version": "1.0.0",
   "name": "Furniture",
-  "description": "Provides reusable furniture entity definitions including beds, sofas, chairs, and benches with positioning capabilities.",
+  "description": "Provides reusable furniture entity definitions including beds, sofas, chairs, etc. with positioning capabilities.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

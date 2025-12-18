@@ -19,6 +19,7 @@
  * @property {ModDependency[]} dependencies - Required mods
  * @property {string[]} conflicts - Conflicting mod IDs
  * @property {boolean} hasWorlds - Whether mod contains worlds
+ * @property {{backgroundColor: string, textColor: string}|null} actionVisual - Visual styling from first action
  */
 
 /**

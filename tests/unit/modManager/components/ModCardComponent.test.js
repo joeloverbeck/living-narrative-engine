@@ -33,6 +33,7 @@ describe('ModCardComponent', () => {
     dependencies: [],
     conflicts: [],
     hasWorlds: false,
+    actionVisual: null,
     ...overrides,
   });
 
@@ -599,6 +600,155 @@ describe('ModCardComponent', () => {
     });
   });
 
+  describe('dependency name resolution', () => {
+    it('should display dependency names when resolver is provided', () => {
+      const mod = createMod({
+        dependencies: [{ id: 'core', version: '^1.0.0' }],
+      });
+      const getModName = jest.fn((id) => (id === 'core' ? 'Core System' : id));
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.textContent).toContain('1 dependency - Core System');
+      expect(getModName).toHaveBeenCalledWith('core');
+    });
+
+    it('should show tooltip with both names and IDs', () => {
+      const mod = createMod({
+        dependencies: [{ id: 'core', version: '^1.0.0' }],
+      });
+      const getModName = jest.fn((id) => (id === 'core' ? 'Core System' : id));
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.getAttribute('title')).toBe(
+        'Dependencies: Core System (core)'
+      );
+    });
+
+    it('should fall back to ID when name not found', () => {
+      const mod = createMod({
+        dependencies: [{ id: 'unknown_mod', version: '^1.0.0' }],
+      });
+      const getModName = jest.fn(() => null);
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.textContent).toContain('1 dependency - unknown_mod');
+    });
+
+    it('should display IDs when no resolver provided (backward compatibility)', () => {
+      const mod = createMod({
+        dependencies: [{ id: 'core', version: '^1.0.0' }],
+      });
+
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.textContent).toContain('1 dependency - core');
+    });
+
+    it('should display multiple dependency names comma-separated', () => {
+      const mod = createMod({
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'skills', version: '^1.0.0' },
+          { id: 'perception', version: '^1.0.0' },
+        ],
+      });
+      const getModName = jest.fn((id) => {
+        const names = {
+          core: 'Core System',
+          skills: 'Skills',
+          perception: 'Perception',
+        };
+        return names[id] || id;
+      });
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.textContent).toContain(
+        '3 dependencies - Core System, Skills, Perception'
+      );
+    });
+
+    it('should format tooltip with all names and IDs for multiple dependencies', () => {
+      const mod = createMod({
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'skills', version: '^1.0.0' },
+        ],
+      });
+      const getModName = jest.fn((id) => {
+        const names = { core: 'Core System', skills: 'Skills' };
+        return names[id] || id;
+      });
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.getAttribute('title')).toBe(
+        'Dependencies: Core System (core), Skills (skills)'
+      );
+    });
+
+    it('should not show redundant ID in tooltip when name equals ID', () => {
+      const mod = createMod({
+        dependencies: [{ id: 'core', version: '^1.0.0' }],
+      });
+      // Return same value as ID - should not duplicate
+      const getModName = jest.fn(() => 'core');
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      // When name === id, tooltip should just show the id, not "core (core)"
+      expect(depsElement.getAttribute('title')).toBe('Dependencies: core');
+    });
+
+    it('should handle mixed known and unknown dependencies', () => {
+      const mod = createMod({
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'unknown_mod', version: '^1.0.0' },
+        ],
+      });
+      const getModName = jest.fn((id) => {
+        if (id === 'core') return 'Core System';
+        return null; // Unknown mod returns null
+      });
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const depsElement = card.querySelector('.mod-card-dependencies');
+      expect(depsElement.textContent).toContain(
+        '2 dependencies - Core System, unknown_mod'
+      );
+    });
+
+    it('should include screen reader text with resolved names', () => {
+      const mod = createMod({
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'skills', version: '^1.0.0' },
+        ],
+      });
+      const getModName = jest.fn((id) => {
+        const names = { core: 'Core System', skills: 'Skills' };
+        return names[id] || id;
+      });
+
+      const card = component.createCard(mod, createDisplayInfo(), getModName);
+
+      const srText = card.querySelector('.visually-hidden');
+      expect(srText.textContent).toBe('Depends on: Core System, Skills');
+    });
+  });
+
   describe('integration with ModListView expectations', () => {
     it('uses mod-card__checkbox class expected by ModListView', () => {
       const card = component.createCard(createMod(), createDisplayInfo());
@@ -621,6 +771,68 @@ describe('ModCardComponent', () => {
       const card = component.createCard(mod, createDisplayInfo());
 
       expect(card.dataset.modId).toBe('specific-mod-id');
+    });
+  });
+
+  describe('actionVisual styling', () => {
+    it('should apply tag styling when mod has actionVisual', () => {
+      const mod = createMod({
+        actionVisual: {
+          backgroundColor: '#006064',
+          textColor: '#e0f7fa',
+        },
+      });
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const nameEl = card.querySelector('.mod-card-name');
+      expect(nameEl).not.toBeNull();
+      expect(nameEl.classList.contains('mod-card-name-tag')).toBe(true);
+    });
+
+    it('should not apply tag styling when mod has no actionVisual', () => {
+      const mod = createMod({ actionVisual: null });
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const nameEl = card.querySelector('.mod-card-name');
+      expect(nameEl).not.toBeNull();
+      expect(nameEl.classList.contains('mod-card-name-tag')).toBe(false);
+    });
+
+    it('should set inline backgroundColor and color from actionVisual', () => {
+      const mod = createMod({
+        actionVisual: {
+          backgroundColor: '#123456',
+          textColor: '#fedcba',
+        },
+      });
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const nameEl = card.querySelector('.mod-card-name');
+      expect(nameEl.style.backgroundColor).toBe('rgb(18, 52, 86)');
+      expect(nameEl.style.color).toBe('rgb(254, 220, 186)');
+    });
+
+    it('should not set inline styles when actionVisual is null', () => {
+      const mod = createMod({ actionVisual: null });
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const nameEl = card.querySelector('.mod-card-name');
+      expect(nameEl.style.backgroundColor).toBe('');
+      expect(nameEl.style.color).toBe('');
+    });
+
+    it('should preserve mod name text with actionVisual styling', () => {
+      const mod = createMod({
+        name: 'Styled Mod',
+        actionVisual: {
+          backgroundColor: '#ff0000',
+          textColor: '#00ff00',
+        },
+      });
+      const card = component.createCard(mod, createDisplayInfo());
+
+      const nameEl = card.querySelector('.mod-card-name');
+      expect(nameEl.textContent).toBe('Styled Mod');
     });
   });
 });

@@ -3,7 +3,7 @@
   "id": "items",
   "version": "1.0.0",
   "name": "Items System",
-  "description": "Core items and inventory system; container interactions are provided by the containers mod.",
+  "description": "Core items and inventory system.",
   "actionPurpose": "Interact with objects through pickup, examination, use, and transfer between characters.",
   "actionConsiderWhen": "Managing inventory, examining interesting objects, sharing items with others, or using functional items. Use the containers mod to store or retrieve items.",
   "author": "Living Narrative Engine",
@@ -22,7 +22,7 @@
       "version": "1.0.0"
     },
     {
-      "id": "anatomy",
+      "id": "descriptors",
       "version": "1.0.0"
     }
   ],

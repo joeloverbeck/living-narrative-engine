@@ -3,7 +3,7 @@
   "id": "item-transfer",
   "version": "1.0.0",
   "name": "Item Transfer",
-  "description": "Actions for transferring items between characters. Separated from the Items mod to isolate combinatorial explosion of give/receive actions.",
+  "description": "Actions for transferring items between characters.",
   "actionPurpose": "Transfer items between characters through giving and receiving.",
   "actionConsiderWhen": "Wanting to share items with other characters, give gifts, or hand over objects.",
   "author": "Living Narrative Engine",

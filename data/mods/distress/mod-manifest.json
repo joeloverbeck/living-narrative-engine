@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "distress",
   "version": "0.1.0",
-  "name": "Distress – Vulnerable Gestures",
+  "name": "Distress",
   "description": "Emotionally charged gestures that express desperation, pleading, or internalized overwhelm.",
   "actionPurpose": "Express emotional vulnerability through desperate or overwhelmed physical gestures.",
   "actionConsiderWhen": "Feeling overwhelmed, seeking comfort, expressing desperation, or showing emotional vulnerability.",

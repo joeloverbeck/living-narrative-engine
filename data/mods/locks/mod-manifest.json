@@ -3,7 +3,7 @@
   "id": "locks",
   "version": "1.0.0",
   "name": "Locks",
-  "description": "Keyed connection locks and shared lock state for blockers.",
+  "description": "Actions related to locking and unlocking blockers.",
   "author": "Living Narrative Engine",
   "gameVersion": "0.0.1",
   "dependencies": [

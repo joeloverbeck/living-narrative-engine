@@ -121,6 +121,7 @@ export class ModManagerController {
 
   /**
    * Initialize controller and load initial data
+   *
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -173,6 +174,7 @@ export class ModManagerController {
 
   /**
    * Toggle a mod's activation state
+   *
    * @param {string} modId - Mod to toggle
    * @returns {Promise<void>}
    */
@@ -194,6 +196,7 @@ export class ModManagerController {
 
   /**
    * Activate a mod and its dependencies
+   *
    * @param {string} modId
    */
   async #activateMod(modId) {
@@ -247,6 +250,7 @@ export class ModManagerController {
 
   /**
    * Deactivate a mod
+   *
    * @param {string} modId
    */
   async #deactivateMod(modId) {
@@ -283,6 +287,7 @@ export class ModManagerController {
   /**
    * Handle world selection after mod changes
    * Uses validator if available, otherwise falls back to existing logic
+   *
    * @param {string[]} resolvedMods - The new resolved mod list
    * @returns {Promise<{availableWorlds: import('../services/WorldDiscoveryService.js').WorldInfo[], selectedWorld: string}>}
    */
@@ -314,6 +319,7 @@ export class ModManagerController {
 
   /**
    * Select a world
+   *
    * @param {string} worldId - World ID in format modId:worldId
    */
   selectWorld(worldId) {
@@ -333,6 +339,7 @@ export class ModManagerController {
 
   /**
    * Save current configuration
+   *
    * @returns {Promise<boolean>}
    */
   async saveConfiguration() {
@@ -378,6 +385,7 @@ export class ModManagerController {
 
   /**
    * Update search query
+   *
    * @param {string} query
    */
   setSearchQuery(query) {
@@ -386,6 +394,7 @@ export class ModManagerController {
 
   /**
    * Update filter category
+   *
    * @param {'all'|'active'|'inactive'} category
    */
   setFilterCategory(category) {
@@ -394,6 +403,7 @@ export class ModManagerController {
 
   /**
    * Get filtered mods based on search and filter
+   *
    * @returns {import('../services/ModDiscoveryService.js').ModMetadata[]}
    */
   getFilteredMods() {
@@ -422,8 +432,9 @@ export class ModManagerController {
 
   /**
    * Get enhanced mod info with status
+   *
    * @param {string} modId
-   * @returns {{status: string, isExplicit: boolean, isDependency: boolean}}
+   * @returns {{status: string, isExplicit: boolean, isDependency: boolean, hasExplicitDependents: boolean}}
    */
   getModDisplayInfo(modId) {
     const status = this.#modGraphService.getModStatus(modId);
@@ -431,11 +442,24 @@ export class ModManagerController {
       status,
       isExplicit: this.#state.activeMods.includes(modId),
       isDependency: status === 'dependency',
+      hasExplicitDependents: this.#modGraphService.hasExplicitDependents(modId),
     };
   }
 
   /**
+   * Get mod name by ID
+   *
+   * @param {string} modId - Mod ID to look up
+   * @returns {string} Mod name or ID as fallback if not found
+   */
+  getModName(modId) {
+    const mod = this.#state.availableMods.find((m) => m.id === modId);
+    return mod?.name || modId;
+  }
+
+  /**
    * Check for conflicts among currently active mods
+   *
    * @returns {import('../logic/ConflictDetector.js').ConflictReport}
    */
   checkConflicts() {
@@ -450,6 +474,7 @@ export class ModManagerController {
 
   /**
    * Subscribe to state changes
+   *
    * @param {(state: ModManagerState) => void} listener
    * @returns {() => void} Unsubscribe function
    */
@@ -462,6 +487,7 @@ export class ModManagerController {
 
   /**
    * Get current state (immutable copy)
+   *
    * @returns {ModManagerState}
    */
   getState() {
@@ -470,12 +496,14 @@ export class ModManagerController {
 
   /**
    * Check if configuration has changed
+   *
    * @param {string[]} activeMods
    * @param {string} selectedWorld
    * @returns {boolean}
    */
   #hasChanges(activeMods, selectedWorld) {
-    if (!this.#savedConfig) return true;
+    // If config hasn't been loaded yet, there can't be any changes
+    if (!this.#savedConfig) return false;
 
     const currentConfig = {
       mods: ['core', ...activeMods],
@@ -490,6 +518,7 @@ export class ModManagerController {
 
   /**
    * Update state and notify listeners
+   *
    * @param {Partial<ModManagerState>} updates
    */
   #updateState(updates) {

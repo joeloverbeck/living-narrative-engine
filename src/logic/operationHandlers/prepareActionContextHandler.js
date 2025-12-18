@@ -74,8 +74,9 @@ class PrepareActionContextHandler extends BaseOperationHandler {
     const actorName = this.#resolveEntityName(actorId);
 
     // 2. Resolve target name
+    // Support both single-target (targetId) and multi-target (primaryId) action patterns
     // @ts-ignore - Payload structure is dynamic
-    const targetId = event.payload.targetId;
+    const targetId = event.payload.targetId || event.payload.primaryId;
     const targetName = this.#resolveEntityName(targetId);
 
     // 3. Query actor position for locationId

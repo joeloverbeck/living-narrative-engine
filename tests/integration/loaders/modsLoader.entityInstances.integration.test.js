@@ -78,16 +78,84 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   let container;
   let validatedEventDispatcher;
 
-  const MOD_ID = 'isekai';
+  const MOD_ID = 'test-mod-integrity';
   const MODS_BASE_PATH = './data/mods';
-  const INSTANCES_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/instances');
-  const WORLD_FILE = path.join(
-    MODS_BASE_PATH,
-    MOD_ID,
-    'worlds/isekai.world.json'
-  );
+  const MOD_DIR = path.join(MODS_BASE_PATH, MOD_ID);
+  const INSTANCES_DIR = path.join(MOD_DIR, 'entities/instances');
+  const DEFINITIONS_DIR = path.join(MOD_DIR, 'entities/definitions');
+  const WORLDS_DIR = path.join(MOD_DIR, 'worlds');
+  const WORLD_FILE = path.join(WORLDS_DIR, 'test.world.json');
+
+  // Test Data
+  const manifestContent = {
+    id: MOD_ID,
+    name: 'Test Mod Integrity',
+    version: '1.0.0',
+    content: {
+      entities: {
+        definitions: ['hero.definition.json'],
+        instances: ['hero_instance.json'],
+      },
+      worlds: ['test.world.json'],
+    },
+  };
+
+  const heroDefinitionContent = {
+    id: 'hero',
+    components: {
+      'core:name': { text: 'Hero' },
+      'core:position': { locationId: 'default_loc' },
+    },
+  };
+
+  const heroInstanceContent = {
+    instanceId: `${MOD_ID}:hero_instance`,
+    definitionId: `${MOD_ID}:hero`,
+    componentOverrides: {
+      'core:position': { locationId: 'override_loc' },
+    },
+  };
+
+  const worldContent = {
+    id: 'test-world',
+    instances: [
+      {
+        instanceId: `${MOD_ID}:hero_instance`,
+        definitionId: `${MOD_ID}:hero`,
+      },
+    ],
+  };
 
   beforeAll(async () => {
+    // Setup test files
+    if (!fs.existsSync(MODS_BASE_PATH)) {
+      fs.mkdirSync(MODS_BASE_PATH, { recursive: true });
+    }
+    if (fs.existsSync(MOD_DIR)) {
+      fs.rmSync(MOD_DIR, { recursive: true, force: true });
+    }
+    fs.mkdirSync(INSTANCES_DIR, { recursive: true });
+    fs.mkdirSync(DEFINITIONS_DIR, { recursive: true });
+    fs.mkdirSync(WORLDS_DIR, { recursive: true });
+
+    const manifestPath = path.join(MOD_DIR, 'mod-manifest.json');
+    fs.writeFileSync(
+      manifestPath,
+      JSON.stringify(manifestContent, null, 2)
+    );
+    console.log('Created mod file at:', manifestPath);
+    console.log('File exists?', fs.existsSync(manifestPath));
+
+    fs.writeFileSync(
+      path.join(DEFINITIONS_DIR, 'hero.definition.json'),
+      JSON.stringify(heroDefinitionContent, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(INSTANCES_DIR, 'hero_instance.json'),
+      JSON.stringify(heroInstanceContent, null, 2)
+    );
+    fs.writeFileSync(WORLD_FILE, JSON.stringify(worldContent, null, 2));
+
     logger = new ConsoleLogger('info');
     container = new AppContainer();
     container.register(tokens.ILogger, logger);
@@ -150,6 +218,14 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     );
     modsLoader = container.resolve(tokens.ModsLoader);
     await modsLoader.loadMods('test-world', [MOD_ID]);
+  });
+
+  afterAll(() => {
+    console.log('Outer afterAll running. Deleting files.');
+    // Cleanup test files
+    if (fs.existsSync(MOD_DIR)) {
+      fs.rmSync(MOD_DIR, { recursive: true, force: true });
+    }
   });
 
   it('should load all entity instances listed in the mod manifest and make them retrievable', () => {
@@ -230,327 +306,706 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     expect(result.entities.length).toBe(expectedInstanceCount);
   });
 
-  it('should not throw, log warning, and dispatch system error if a referenced instance definition is missing', async () => {
-    const originalWorldData = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
-    const worldName = originalWorldData.id;
-    const missingInstanceId = 'isekai:instance_with_missing_definition';
+    it('should not throw, log warning, and dispatch system error if a referenced instance definition is missing', async () => {
 
-    const modifiedWorldData = JSON.parse(JSON.stringify(originalWorldData));
-    modifiedWorldData.instances.push({
-      instanceId: missingInstanceId,
-      definitionId: 'core:character',
-    });
+      const originalWorldData = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
 
-    const mockRepository = {
-      getWorld: jest.fn(() => modifiedWorldData),
-      getEntityInstanceDefinition: jest.fn((instanceId) => {
-        if (instanceId === missingInstanceId) {
-          return undefined; // Simulate this specific instance definition is missing
-        }
-        return registry.get('entityInstances', instanceId);
-      }),
-      getEntityDefinition: jest.fn(
-        (defId) =>
-          registry.get('entityDefinitions', defId) ||
-          new EntityDefinition(defId, { components: {} })
-      ),
-      getComponentDefinition: jest.fn(() => ({})),
-      get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
-    };
+      const worldName = originalWorldData.id;
 
-    const localMockValidatedEventDispatcher =
-      createMockValidatedEventDispatcherForIntegration();
-    const warnSpy = jest.spyOn(testLogger, 'warn');
-    const dispatchSpy = jest.spyOn(
-      localMockValidatedEventDispatcher,
-      'dispatch'
-    );
+      const missingInstanceId = `${MOD_ID}:instance_with_missing_definition`;
 
-    const entityManager = new EntityManager({
-      logger: testLogger,
-      registry,
-      dispatcher: localMockValidatedEventDispatcher,
-      validator: { validate: () => ({ isValid: true }) },
-    });
-    const mockWorldContext = {};
-    const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
+  
 
-    const mockEventDispatchService = {
-      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
-      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
-      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
-    };
+      const modifiedWorldData = JSON.parse(JSON.stringify(originalWorldData));
 
-    const worldInitializer = new WorldInitializer({
-      entityManager,
-      worldContext: mockWorldContext,
-      gameDataRepository: mockRepository,
-      validatedEventDispatcher: localMockValidatedEventDispatcher,
-      eventDispatchService: mockEventDispatchService,
-      logger: testLogger,
-      scopeRegistry: mockScopeRegistry,
-    });
+      modifiedWorldData.instances.push({
 
-    const result = await worldInitializer.initializeWorldEntities(worldName);
+        instanceId: missingInstanceId,
 
-    // Expected successful instances are those from the original world data that are valid
-    const originalInstanceEntries =
-      JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')).instances || [];
-    const expectedSuccessfulInstances = originalInstanceEntries.filter(
-      (inst) => inst && inst.instanceId
-    ).length;
+        definitionId: 'core:character',
 
-    expect(result.instantiatedCount).toBe(expectedSuccessfulInstances);
-    expect(result.entities.length).toBe(expectedSuccessfulInstances);
-    expect(result.failedCount).toBe(1);
-    expect(result.totalProcessed).toBe(modifiedWorldData.instances.length);
+      });
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `WorldInitializer (Pass 1): Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'. Skipping.`
-      )
-    );
+  
 
-    // Find the specific call for SYSTEM_ERROR_OCCURRED_ID
-    const systemErrorCall = dispatchSpy.mock.calls.find(
-      (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
-    );
+      const mockRepository = {
 
-    expect(systemErrorCall).toBeDefined(); // Ensure the event was dispatched
+        getWorld: jest.fn(() => modifiedWorldData),
 
-    expect(systemErrorCall[1]).toEqual(
-      expect.objectContaining({
-        message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
-        details: expect.objectContaining({
-          statusCode: 404,
-          raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
-          type: 'MissingResource',
-          resourceType: 'EntityInstanceDefinition',
-          resourceId: missingInstanceId,
+        getEntityInstanceDefinition: jest.fn((instanceId) => {
+
+          if (instanceId === missingInstanceId) {
+
+            return undefined; // Simulate this specific instance definition is missing
+
+          }
+
+          return registry.get('entityInstances', instanceId);
+
         }),
-      })
-    );
-    expect(systemErrorCall[2]).toBeUndefined(); // safeDispatchError doesn't pass a third arg by default
 
-    warnSpy.mockRestore();
-    dispatchSpy.mockRestore();
-  });
-});
+        getEntityDefinition: jest.fn(
 
-describe('Integration: EntityInstance componentOverrides are respected during world initialization', () => {
-  const MODS_BASE_PATH_LOCAL = './data/mods';
-  const MOD_ID_LOCAL = 'isekai';
-  const WORLD_FILE_LOCAL = path.join(
-    MODS_BASE_PATH_LOCAL,
-    MOD_ID_LOCAL,
-    'worlds/isekai.world.json'
-  );
+          (defId) =>
 
-  let localContainer;
-  let localRegistry;
-  let localLogger;
-  let localMockValidatedEventDispatcher;
-  // Intentionally not using 'container' or 'registry' from outer scope due to ReferenceErrors in this nested describe.
+            registry.get('entityDefinitions', defId) ||
 
-  beforeAll(async () => {
-    localLogger = new ConsoleLogger('info'); // Or use testLogger if preferred and it's in scope
-    localContainer = new AppContainer();
-    localContainer.register(tokens.ILogger, localLogger);
+            new EntityDefinition(defId, { components: {} })
 
-    localMockValidatedEventDispatcher =
-      createMockValidatedEventDispatcherForIntegration();
-    localContainer.register(
-      tokens.IValidatedEventDispatcher,
-      localMockValidatedEventDispatcher
-    );
+        ),
 
-    // Register mock safe event dispatcher
-    localContainer.register(tokens.ISafeEventDispatcher, {
-      dispatch: jest.fn(),
-    });
-    // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
-    localContainer.register(tokens.OperationRegistry, {
-      get: jest.fn().mockReturnValue(undefined),
-      has: jest.fn().mockReturnValue(false),
-      register: jest.fn(),
-    });
+        getComponentDefinition: jest.fn(() => ({})),
 
-    registerLoaders(localContainer); // Registers ManifestPhase, ContentPhase, etc.
-    localContainer.register(
-      tokens.IDataFetcher,
-      createMockDataFetcher({ fromDisk: true })
-    );
+        get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
 
-    const schemaValidator = new AjvSchemaValidator({ logger: localLogger });
-    // Add all necessary schemas (ensure these paths are correct relative to this file or adjust)
-    await schemaValidator.addSchema(
-      commonSchema,
-      'schema://living-narrative-engine/common.schema.json'
-    );
-    await schemaValidator.addSchema(
-      modManifestSchema,
-      'schema://living-narrative-engine/mod-manifest.schema.json'
-    );
-    await schemaValidator.addSchema(
-      entityDefinitionSchema,
-      'schema://living-narrative-engine/entity-definition.schema.json'
-    );
-    await schemaValidator.addSchema(
-      entityInstanceSchema,
-      'schema://living-narrative-engine/entity-instance.schema.json'
-    );
-    // Add any other schemas that might be needed by the loaded content
-    localContainer.register(tokens.ISchemaValidator, schemaValidator);
+      };
 
-    localRegistry = localContainer.resolve(tokens.IDataRegistry);
-    if (!localRegistry) {
-      throw new Error(
-        'Failed to resolve localRegistry in componentOverrides beforeAll'
+  
+
+      const localMockValidatedEventDispatcher =
+
+        createMockValidatedEventDispatcherForIntegration();
+
+      const warnSpy = jest.spyOn(testLogger, 'warn');
+
+      const dispatchSpy = jest.spyOn(
+
+        localMockValidatedEventDispatcher,
+
+        'dispatch'
+
       );
-    }
 
-    // Load the 'isekai' mod data into localRegistry
-    // Mock phases might not be strictly necessary if we only care about specific content types
-    // and their loaders (EntityDefinitionLoader, EntityInstanceLoader) work correctly.
-    const phases = [
-      new MockSchemaPhase(localLogger), // Assuming these mock phases are defined in the file
-      new MockGameConfigPhase(localLogger),
-      localContainer.resolve(tokens.ManifestPhase),
-      localContainer.resolve(tokens.ContentPhase), // This phase loads entity defs/instances
-      new MockWorldPhase(localLogger),
-      new MockSummaryPhase(localLogger),
-    ];
-    const session = makeSession(phases); // makeSession must be accessible
+  
 
-    const modsLoaderForTest = new ModsLoader({
-      logger: localLogger,
-      cache: localContainer.resolve(tokens.ILoadCache),
-      session,
-      registry: localRegistry,
+      const entityManager = new EntityManager({
+
+        logger: testLogger,
+
+        registry,
+
+        dispatcher: localMockValidatedEventDispatcher,
+
+        validator: { validate: () => ({ isValid: true }) },
+
+      });
+
+      const mockWorldContext = {};
+
+      const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
+
+  
+
+      const mockEventDispatchService = {
+
+        dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+
+        safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+
+        dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+
+      };
+
+  
+
+      const worldInitializer = new WorldInitializer({
+
+        entityManager,
+
+        worldContext: mockWorldContext,
+
+        gameDataRepository: mockRepository,
+
+        validatedEventDispatcher: localMockValidatedEventDispatcher,
+
+        eventDispatchService: mockEventDispatchService,
+
+        logger: testLogger,
+
+        scopeRegistry: mockScopeRegistry,
+
+      });
+
+  
+
+      const result = await worldInitializer.initializeWorldEntities(worldName);
+
+  
+
+      // Expected successful instances are those from the original world data that are valid
+
+      const originalInstanceEntries =
+
+        JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')).instances || [];
+
+      const expectedSuccessfulInstances = originalInstanceEntries.filter(
+
+        (inst) => inst && inst.instanceId
+
+      ).length;
+
+  
+
+      expect(result.instantiatedCount).toBe(expectedSuccessfulInstances);
+
+      expect(result.entities.length).toBe(expectedSuccessfulInstances);
+
+      expect(result.failedCount).toBe(1);
+
+      expect(result.totalProcessed).toBe(modifiedWorldData.instances.length);
+
+  
+
+      expect(warnSpy).toHaveBeenCalledWith(
+
+        expect.stringContaining(
+
+          `WorldInitializer (Pass 1): Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'. Skipping.`
+
+        )
+
+      );
+
+  
+
+      // Find the specific call for SYSTEM_ERROR_OCCURRED_ID
+
+      const systemErrorCall = dispatchSpy.mock.calls.find(
+
+        (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
+
+      );
+
+  
+
+      expect(systemErrorCall).toBeDefined(); // Ensure the event was dispatched
+
+  
+
+      expect(systemErrorCall[1]).toEqual(
+
+        expect.objectContaining({
+
+          message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
+
+          details: expect.objectContaining({
+
+            statusCode: 404,
+
+            raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
+
+            type: 'MissingResource',
+
+            resourceType: 'EntityInstanceDefinition',
+
+            resourceId: missingInstanceId,
+
+          }),
+
+        })
+
+      );
+
+      expect(systemErrorCall[2]).toBeUndefined(); // safeDispatchError doesn't pass a third arg by default
+
+  
+
+      warnSpy.mockRestore();
+
+      dispatchSpy.mockRestore();
+
     });
 
-    // Using a different worldId for this isolated load to avoid potential conflicts if any global state existed.
-    const loadResult = await modsLoaderForTest.loadMods('test-world-co', [
+  describe('Integration: EntityInstance componentOverrides are respected during world initialization', () => {
+
+    const MODS_BASE_PATH_LOCAL = './data/mods';
+
+    const MOD_ID_LOCAL = 'test-mod-integrity';
+
+    const WORLD_FILE_LOCAL = path.join(
+
+      MODS_BASE_PATH_LOCAL,
+
       MOD_ID_LOCAL,
-    ]);
-    if (loadResult.incompatibilities > 0) {
-      console.warn(
-        'Component Overrides Test: Incompatibilities found during isolated mod load:',
-        loadResult
+
+      'worlds/test.world.json'
+
+    );
+
+  
+
+    let localContainer;
+
+    let localRegistry;
+
+    let localLogger;
+
+    let localMockValidatedEventDispatcher;
+
+    // Intentionally not using 'container' or 'registry' from outer scope due to ReferenceErrors in this nested describe.
+
+  
+
+    beforeAll(async () => {
+
+      localLogger = new ConsoleLogger('info'); // Or use testLogger if preferred and it's in scope
+
+      localContainer = new AppContainer();
+
+      localContainer.register(tokens.ILogger, localLogger);
+
+  
+
+      localMockValidatedEventDispatcher =
+
+        createMockValidatedEventDispatcherForIntegration();
+
+      localContainer.register(
+
+        tokens.IValidatedEventDispatcher,
+
+        localMockValidatedEventDispatcher
+
       );
-    }
-    // Verify that entity instances are loaded, e.g. for 'isekai:hero_override_pos'
-    // const heroOverride = localRegistry.get('entityInstances', 'isekai:hero_override_pos');
-    // if (!heroOverride) {
-    //   console.warn("Component Overrides Test: isekai:hero_override_pos not found in localRegistry after load. Check mod content and loader paths.");
-    // }
-  });
 
-  it('should create entities with per-instance core:position from componentOverrides', async () => {
-    if (!localRegistry) {
-      throw new Error(
-        'localRegistry is undefined in componentOverrides test. Check nested beforeAll setup.'
+  
+
+      // Register mock safe event dispatcher
+
+      localContainer.register(tokens.ISafeEventDispatcher, {
+
+        dispatch: jest.fn(),
+
+      });
+
+      // Register mock OperationRegistry (required by RuleLoader via loadersRegistrations)
+
+      localContainer.register(tokens.OperationRegistry, {
+
+        get: jest.fn().mockReturnValue(undefined),
+
+        has: jest.fn().mockReturnValue(false),
+
+        register: jest.fn(),
+
+      });
+
+  
+
+              const mockData = {
+
+  
+
+                './data/mods/test-mod-integrity/mod-manifest.json': manifestContent,
+
+  
+
+                './data/mods/test-mod-integrity/entities/definitions/hero.definition.json':
+
+  
+
+                  heroDefinitionContent,
+
+  
+
+                './data/mods/test-mod-integrity/entities/instances/hero_instance.json':
+
+  
+
+                  heroInstanceContent,
+
+  
+
+              };
+
+  
+
+      
+
+  
+
+          registerLoaders(localContainer); // Registers ManifestPhase, ContentPhase, etc.
+
+  
+
+          localContainer.register(
+
+  
+
+            tokens.IDataFetcher,
+
+  
+
+            createMockDataFetcher({ fromDisk: false, pathToResponse: mockData })
+
+  
+
+          );
+
+  
+
+      const schemaValidator = new AjvSchemaValidator({ logger: localLogger });
+
+      // Add all necessary schemas (ensure these paths are correct relative to this file or adjust)
+
+      await schemaValidator.addSchema(
+
+        commonSchema,
+
+        'schema://living-narrative-engine/common.schema.json'
+
       );
-    }
-    if (!localContainer) {
-      throw new Error(
-        'localContainer is undefined in componentOverrides test. Check nested beforeAll setup.'
+
+      await schemaValidator.addSchema(
+
+        modManifestSchema,
+
+        'schema://living-narrative-engine/mod-manifest.schema.json'
+
       );
-    }
 
-    const worldData = JSON.parse(fs.readFileSync(WORLD_FILE_LOCAL, 'utf8'));
-    const worldName = worldData.id;
+      await schemaValidator.addSchema(
 
-    const mockRepository = {
-      getWorld: jest.fn(() => worldData),
-      getEntityInstanceDefinition: jest.fn((instanceId) =>
-        localRegistry.get('entityInstances', instanceId)
-      ),
-      getEntityDefinition: jest.fn((defId) => {
-        const def = localRegistry.get('entityDefinitions', defId);
-        if (def) return def;
-        // Fallback for definitions not found in the 'isekai' mod but potentially referenced
-        return new EntityDefinition(defId, {
-          components: {
-            'core:position': { locationId: 'default-definition-location' },
-          },
-        });
-      }),
-      getComponentDefinition: jest.fn(() => ({})), // Assuming component definitions are not the focus here
-      get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
-    };
+        entityDefinitionSchema,
 
-    // Use a fresh mock dispatcher for this test if desired, or the one from beforeAll.
-    const currentTestDispatcher =
-      createMockValidatedEventDispatcherForIntegration();
-    const entityManager = new EntityManager({
-      logger: testLogger, // Can use global testLogger or localLogger
-      registry: localRegistry,
-      dispatcher: currentTestDispatcher,
-      validator: { validate: () => ({ isValid: true }) },
-    });
-    const mockWorldContext = {};
-    const mockScopeRegistry = new ScopeRegistry({ logger: testLogger }); // Or localLogger
+        'schema://living-narrative-engine/entity-definition.schema.json'
 
-    const mockEventDispatchService = {
-      dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
-      safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
-      dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
-    };
+      );
 
-    const worldInitializer = new WorldInitializer({
-      entityManager,
-      worldContext: mockWorldContext,
-      gameDataRepository: mockRepository,
-      validatedEventDispatcher: currentTestDispatcher,
-      eventDispatchService: mockEventDispatchService,
-      logger: testLogger, // Or localLogger
-      scopeRegistry: mockScopeRegistry,
-    });
+      await schemaValidator.addSchema(
 
-    const result = await worldInitializer.initializeWorldEntities(worldName);
+        entityInstanceSchema,
 
-    const expectedInstanceCount = worldData.instances.filter(
-      (inst) => inst && inst.instanceId
-    ).length;
-    expect(result.instantiatedCount).toBe(expectedInstanceCount);
-    expect(result.failedCount).toBe(0);
-    expect(result.totalProcessed).toBe(worldData.instances.length);
-    expect(result.entities.length).toBe(expectedInstanceCount);
+        'schema://living-narrative-engine/entity-instance.schema.json'
 
-    for (const entity of result.entities) {
-      expect(entity.id).toBeDefined(); // Entity id should be defined
-      const pos = entity.getComponentData('core:position');
+      );
 
-      const sourceInstanceDef = localRegistry.get('entityInstances', entity.id); // From .instance.json
-      expect(sourceInstanceDef).toBeDefined(); // Instance definition for ${entity.id} should exist in localRegistry.
+      // Add any other schemas that might be needed by the loaded content
 
-      const baseEntityDef = entity.instanceData.definition; // Actual base .definition.json used by the entity instance
-      expect(baseEntityDef).toBeDefined(); // Base entity definition for ${entity.definitionId} (linked to instance ${entity.id}) should exist.
+      localContainer.register(tokens.ISchemaValidator, schemaValidator);
 
-      const hasOverridePosition =
-        sourceInstanceDef.componentOverrides &&
-        sourceInstanceDef.componentOverrides['core:position'];
-      const hasBasePosition =
-        baseEntityDef.components && baseEntityDef.components['core:position'];
+  
 
-      let expectedLocationId;
-      if (hasOverridePosition) {
-        expectedLocationId =
-          sourceInstanceDef.componentOverrides['core:position'].locationId;
-      } else if (hasBasePosition) {
-        expectedLocationId =
-          baseEntityDef.components['core:position'].locationId;
-      } else {
-        // Entity is not expected to have core:position at all
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(pos).toBeUndefined();
-        continue;
+      localRegistry = localContainer.resolve(tokens.IDataRegistry);
+
+      if (!localRegistry) {
+
+        throw new Error(
+
+          'Failed to resolve localRegistry in componentOverrides beforeAll'
+
+        );
+
       }
 
-      expect(pos).toBeTruthy();
-      expect(pos?.locationId).toBe(expectedLocationId);
-    }
+  
+
+      // Load the 'test-mod-integrity' mod data into localRegistry
+
+      // Mock phases might not be strictly necessary if we only care about specific content types
+
+      // and their loaders (EntityDefinitionLoader, EntityInstanceLoader) work correctly.
+
+      const phases = [
+
+        new MockSchemaPhase(localLogger), // Assuming these mock phases are defined in the file
+
+        new MockGameConfigPhase(localLogger),
+
+        localContainer.resolve(tokens.ManifestPhase),
+
+        localContainer.resolve(tokens.ContentPhase), // This phase loads entity defs/instances
+
+        new MockWorldPhase(localLogger),
+
+        new MockSummaryPhase(localLogger),
+
+      ];
+
+      const session = makeSession(phases); // makeSession must be accessible
+
+  
+
+      const modsLoaderForTest = new ModsLoader({
+
+        logger: localLogger,
+
+        cache: localContainer.resolve(tokens.ILoadCache),
+
+        session,
+
+        registry: localRegistry,
+
+      });
+
+  
+
+          // Using a different worldId for this isolated load to avoid potential conflicts if any global state existed.
+
+  
+
+          const manifestPathCheck = path.join(MODS_BASE_PATH_LOCAL, MOD_ID_LOCAL, 'mod-manifest.json');
+
+  
+
+          console.log('Inner beforeAll check: Manifest path:', manifestPathCheck);
+
+  
+
+          console.log('Inner beforeAll check: Exists?', fs.existsSync(manifestPathCheck));
+
+  
+
+          console.log('Inner beforeAll check: Resolved path:', path.resolve(manifestPathCheck));
+
+  
+
+      
+
+  
+
+          const loadResult = await modsLoaderForTest.loadMods('test-world-co', [
+
+  
+
+            MOD_ID_LOCAL,
+
+  
+
+          ]);
+
+      if (loadResult.incompatibilities > 0) {
+
+        console.warn(
+
+          'Component Overrides Test: Incompatibilities found during isolated mod load:',
+
+          loadResult
+
+        );
+
+      }
+
+      // Verify that entity instances are loaded
+
+      // const heroOverride = localRegistry.get('entityInstances', 'test-mod-integrity:hero_instance');
+
+    });
+
+  
+
+    it('should create entities with per-instance core:position from componentOverrides', async () => {
+
+      if (!localRegistry) {
+
+        throw new Error(
+
+          'localRegistry is undefined in componentOverrides test. Check nested beforeAll setup.'
+
+        );
+
+      }
+
+      if (!localContainer) {
+
+        throw new Error(
+
+          'localContainer is undefined in componentOverrides test. Check nested beforeAll setup.'
+
+        );
+
+      }
+
+  
+
+      const worldData = JSON.parse(fs.readFileSync(WORLD_FILE_LOCAL, 'utf8'));
+
+      const worldName = worldData.id;
+
+  
+
+      const mockRepository = {
+
+        getWorld: jest.fn(() => worldData),
+
+        getEntityInstanceDefinition: jest.fn((instanceId) =>
+
+          localRegistry.get('entityInstances', instanceId)
+
+        ),
+
+        getEntityDefinition: jest.fn((defId) => {
+
+          const def = localRegistry.get('entityDefinitions', defId);
+
+          if (def) return def;
+
+          // Fallback for definitions not found in the mod but potentially referenced
+
+          return new EntityDefinition(defId, {
+
+            components: {
+
+              'core:position': { locationId: 'default-definition-location' },
+
+            },
+
+          });
+
+        }),
+
+        getComponentDefinition: jest.fn(() => ({})), // Assuming component definitions are not the focus here
+
+        get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
+
+      };
+
+  
+
+      // Use a fresh mock dispatcher for this test if desired, or the one from beforeAll.
+
+      const currentTestDispatcher =
+
+        createMockValidatedEventDispatcherForIntegration();
+
+      const entityManager = new EntityManager({
+
+        logger: testLogger, // Can use global testLogger or localLogger
+
+        registry: localRegistry,
+
+        dispatcher: currentTestDispatcher,
+
+        validator: { validate: () => ({ isValid: true }) },
+
+      });
+
+      const mockWorldContext = {};
+
+      const mockScopeRegistry = new ScopeRegistry({ logger: testLogger }); // Or localLogger
+
+  
+
+      const mockEventDispatchService = {
+
+        dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
+
+        safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
+
+        dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
+
+      };
+
+  
+
+      const worldInitializer = new WorldInitializer({
+
+        entityManager,
+
+        worldContext: mockWorldContext,
+
+        gameDataRepository: mockRepository,
+
+        validatedEventDispatcher: currentTestDispatcher,
+
+        eventDispatchService: mockEventDispatchService,
+
+        logger: testLogger, // Or localLogger
+
+        scopeRegistry: mockScopeRegistry,
+
+      });
+
+  
+
+      const result = await worldInitializer.initializeWorldEntities(worldName);
+
+  
+
+      const expectedInstanceCount = worldData.instances.filter(
+
+        (inst) => inst && inst.instanceId
+
+      ).length;
+
+      expect(result.instantiatedCount).toBe(expectedInstanceCount);
+
+      expect(result.failedCount).toBe(0);
+
+      expect(result.totalProcessed).toBe(worldData.instances.length);
+
+      expect(result.entities.length).toBe(expectedInstanceCount);
+
+  
+
+      for (const entity of result.entities) {
+
+        expect(entity.id).toBeDefined(); // Entity id should be defined
+
+        const pos = entity.getComponentData('core:position');
+
+  
+
+        const sourceInstanceDef = localRegistry.get('entityInstances', entity.id); // From .instance.json
+
+        expect(sourceInstanceDef).toBeDefined(); // Instance definition for ${entity.id} should exist in localRegistry.
+
+  
+
+        const baseEntityDef = entity.instanceData.definition; // Actual base .definition.json used by the entity instance
+
+        expect(baseEntityDef).toBeDefined(); // Base entity definition for ${entity.definitionId} (linked to instance ${entity.id}) should exist.
+
+  
+
+        const hasOverridePosition =
+
+          sourceInstanceDef.componentOverrides &&
+
+          sourceInstanceDef.componentOverrides['core:position'];
+
+        const hasBasePosition =
+
+          baseEntityDef.components && baseEntityDef.components['core:position'];
+
+  
+
+        let expectedLocationId;
+
+        if (hasOverridePosition) {
+
+          expectedLocationId =
+
+            sourceInstanceDef.componentOverrides['core:position'].locationId;
+
+        } else if (hasBasePosition) {
+
+          expectedLocationId =
+
+            baseEntityDef.components['core:position'].locationId;
+
+        } else {
+
+          // Entity is not expected to have core:position at all
+
+          // eslint-disable-next-line jest/no-conditional-expect
+
+          expect(pos).toBeUndefined();
+
+          continue;
+
+        }
+
+  
+
+        expect(pos).toBeTruthy();
+
+        expect(pos?.locationId).toBe(expectedLocationId);
+
+      }
+
+    });
+
   });
 });
 

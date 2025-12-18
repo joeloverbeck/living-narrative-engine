@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "caressing",
   "version": "1.0.0",
-  "name": "Caressing - Sensual Touch Actions",
+  "name": "Caressing",
   "description": "Flirtatious and sensual touching that creates or escalates sexual tension. More intimate than affection, distinct from kissing through touch-based interaction.",
   "actionPurpose": "Engage in sensual, flirtatious touching that builds or escalates sexual tension through intimate caresses.",
   "actionConsiderWhen": "Escalating romantic tension, initiating physical intimacy, expressing desire through touch, or deepening a sensual encounter.",
