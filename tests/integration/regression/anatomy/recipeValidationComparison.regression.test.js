@@ -172,11 +172,16 @@ describe('Recipe Validation Comparison Regression Suite', () => {
           'pattern_matching',
           'preferred_part_sockets',
           'property_schemas',
-          'recipe_usage',
           'SLOT_KEY_UNIQUENESS_SKIP',
           'socket_slot_compatibility',
         ].sort()
       );
+
+      // recipe_usage is now a warning because isekai:hero was removed
+      expect(
+        normalizedCli.warnings.some((w) => w.check === 'recipe_usage')
+      ).toBe(true);
+
       expect(normalizedCli).toMatchSnapshot('valid humanoid report');
     });
 
