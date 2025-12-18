@@ -4,9 +4,9 @@
  */
 
 /**
- * @typedef {Object} SummaryPanelViewOptions
+ * @typedef {object} SummaryPanelViewOptions
  * @property {HTMLElement} container - Container element
- * @property {Object} logger - Logger instance
+ * @property {object} logger - Logger instance
  * @property {() => Promise<void>} onSave - Callback for save action
  */
 
@@ -18,7 +18,11 @@ export class SummaryPanelView {
   #logger;
   #onSave;
   #countElement;
+  #explicitCountElement;
+  #dependencyCountElement;
   #loadOrderElement;
+  #hotspotsSection;
+  #healthSection;
   #saveButton;
   #unsavedIndicator;
 
@@ -55,19 +59,68 @@ export class SummaryPanelView {
     header.className = 'summary-panel__title';
     header.textContent = 'Configuration Summary';
 
-    // Stats section
-    const statsSection = document.createElement('section');
-    statsSection.className = 'summary-panel__stats';
-    statsSection.setAttribute('aria-label', 'Mod statistics');
+    // Quick Stats section with row layout
+    const quickStatsSection = document.createElement('section');
+    quickStatsSection.className = 'summary-panel__quick-stats';
+    quickStatsSection.setAttribute('aria-label', 'Mod statistics');
 
+    const statsRow = document.createElement('div');
+    statsRow.className = 'summary-panel__stats-row';
+
+    // Active mods stat
     this.#countElement = document.createElement('div');
     this.#countElement.className = 'summary-panel__stat';
     this.#countElement.innerHTML = `
-      <span class="summary-panel__stat-label">Active Mods</span>
       <span class="summary-panel__stat-value" id="active-mod-count">0</span>
+      <span class="summary-panel__stat-label">Active</span>
     `;
 
-    statsSection.appendChild(this.#countElement);
+    // Divider
+    const divider1 = document.createElement('span');
+    divider1.className = 'summary-panel__stat-divider';
+    divider1.setAttribute('aria-hidden', 'true');
+    divider1.textContent = '|';
+
+    // Explicit mods stat
+    this.#explicitCountElement = document.createElement('div');
+    this.#explicitCountElement.className = 'summary-panel__stat';
+    this.#explicitCountElement.innerHTML = `
+      <span class="summary-panel__stat-value" id="explicit-mod-count">0</span>
+      <span class="summary-panel__stat-label">Explicit</span>
+    `;
+
+    // Divider
+    const divider2 = document.createElement('span');
+    divider2.className = 'summary-panel__stat-divider';
+    divider2.setAttribute('aria-hidden', 'true');
+    divider2.textContent = '|';
+
+    // Dependency mods stat
+    this.#dependencyCountElement = document.createElement('div');
+    this.#dependencyCountElement.className = 'summary-panel__stat';
+    this.#dependencyCountElement.innerHTML = `
+      <span class="summary-panel__stat-value" id="dependency-mod-count">0</span>
+      <span class="summary-panel__stat-label">Deps</span>
+    `;
+
+    statsRow.appendChild(this.#countElement);
+    statsRow.appendChild(divider1);
+    statsRow.appendChild(this.#explicitCountElement);
+    statsRow.appendChild(divider2);
+    statsRow.appendChild(this.#dependencyCountElement);
+    quickStatsSection.appendChild(statsRow);
+
+    // Hotspots section (placeholder - content rendered dynamically)
+    this.#hotspotsSection = document.createElement('section');
+    this.#hotspotsSection.className =
+      'summary-panel__section summary-panel__section--collapsible';
+    this.#hotspotsSection.setAttribute('aria-label', 'Dependency hotspots');
+
+    // Health section (placeholder - content rendered dynamically)
+    this.#healthSection = document.createElement('section');
+    this.#healthSection.className =
+      'summary-panel__section summary-panel__section--collapsible';
+    this.#healthSection.setAttribute('aria-label', 'Dependency health');
 
     // Load order section
     const loadOrderSection = document.createElement('section');
@@ -118,7 +171,9 @@ export class SummaryPanelView {
 
     // Assemble panel
     this.#container.appendChild(header);
-    this.#container.appendChild(statsSection);
+    this.#container.appendChild(quickStatsSection);
+    this.#container.appendChild(this.#hotspotsSection);
+    this.#container.appendChild(this.#healthSection);
     this.#container.appendChild(loadOrderSection);
     this.#container.appendChild(saveSection);
   }
@@ -141,21 +196,63 @@ export class SummaryPanelView {
 
   /**
    * Render the summary panel
-   * @param {Object} options
+   *
+   * @param {object} options
    * @param {string[]} options.loadOrder - Ordered list of mod IDs
    * @param {number} options.activeCount - Number of active mods
+   * @param {number} [options.explicitCount] - Number of explicitly enabled mods
+   * @param {number} [options.dependencyCount] - Number of auto-enabled dependency mods
+   * @param {Array<{modId: string, dependentCount: number}>} [options.hotspots] - Top dependency hotspots
+   * @param {object|null} [options.healthStatus] - Dependency health status from ModStatisticsService
+   * @param {boolean} [options.healthStatus.hasCircularDeps] - Whether circular dependencies exist
+   * @param {string[]} [options.healthStatus.missingDeps] - List of missing dependencies
+   * @param {boolean} [options.healthStatus.loadOrderValid] - Whether load order is valid
+   * @param {string[]} [options.healthStatus.warnings] - Warning messages
+   * @param {string[]} [options.healthStatus.errors] - Error messages
    * @param {boolean} options.hasUnsavedChanges
    * @param {boolean} options.isSaving
    * @param {boolean} options.isLoading
    */
-  render({ loadOrder, activeCount, hasUnsavedChanges, isSaving, isLoading }) {
-    // Update count
+  render({
+    loadOrder,
+    activeCount,
+    explicitCount = 0,
+    dependencyCount = 0,
+    hotspots = [],
+    healthStatus = null,
+    hasUnsavedChanges,
+    isSaving,
+    isLoading,
+  }) {
+    // Update active count
     const countValue = this.#countElement.querySelector(
       '.summary-panel__stat-value'
     );
     if (countValue) {
       countValue.textContent = String(activeCount);
     }
+
+    // Update explicit count
+    const explicitValue = this.#explicitCountElement.querySelector(
+      '.summary-panel__stat-value'
+    );
+    if (explicitValue) {
+      explicitValue.textContent = String(explicitCount);
+    }
+
+    // Update dependency count
+    const dependencyValue = this.#dependencyCountElement.querySelector(
+      '.summary-panel__stat-value'
+    );
+    if (dependencyValue) {
+      dependencyValue.textContent = String(dependencyCount);
+    }
+
+    // Update hotspots section
+    this.#renderHotspotsSection(hotspots);
+
+    // Update health section
+    this.#renderHealthSection(healthStatus);
 
     // Update load order list
     this.#renderLoadOrder(loadOrder, isLoading);
@@ -172,6 +269,7 @@ export class SummaryPanelView {
 
   /**
    * Render the load order list
+   *
    * @param {string[]} loadOrder
    * @param {boolean} isLoading
    */
@@ -206,7 +304,215 @@ export class SummaryPanelView {
   }
 
   /**
+   * Render the dependency hotspots section
+   *
+   * @param {Array<{modId: string, dependentCount: number}>} hotspots
+   */
+  #renderHotspotsSection(hotspots) {
+    this.#hotspotsSection.innerHTML = '';
+
+    // Section header (collapsible button)
+    const header = document.createElement('button');
+    header.className = 'summary-panel__section-header';
+    header.type = 'button';
+    header.setAttribute('aria-expanded', 'true');
+    header.innerHTML = `
+      <span class="summary-panel__section-title">Dependency Hotspots</span>
+      <span class="summary-panel__section-toggle" aria-hidden="true">▼</span>
+    `;
+
+    // Section content
+    const content = document.createElement('div');
+    content.className = 'summary-panel__section-content';
+
+    if (hotspots.length === 0) {
+      content.innerHTML =
+        '<p class="summary-panel__hotspots-empty">No dependency hotspots</p>';
+    } else {
+      const list = document.createElement('ol');
+      list.className = 'summary-panel__hotspots-list';
+
+      for (const { modId, dependentCount } of hotspots) {
+        const item = document.createElement('li');
+        item.className = 'summary-panel__hotspot-item';
+        item.innerHTML = `
+          <span class="summary-panel__hotspot-name">${this.#escapeHtml(modId)}</span>
+          <span class="summary-panel__hotspot-count">${dependentCount} dependents</span>
+        `;
+        list.appendChild(item);
+      }
+
+      content.appendChild(list);
+    }
+
+    // Toggle behavior
+    header.addEventListener('click', () => {
+      const isExpanded = header.getAttribute('aria-expanded') === 'true';
+      header.setAttribute('aria-expanded', String(!isExpanded));
+      content.classList.toggle('summary-panel__section-content--collapsed');
+      const toggle = header.querySelector('.summary-panel__section-toggle');
+      if (toggle) {
+        toggle.textContent = isExpanded ? '▶' : '▼';
+      }
+    });
+
+    this.#hotspotsSection.appendChild(header);
+    this.#hotspotsSection.appendChild(content);
+  }
+
+  /**
+   * Render the dependency health section
+   *
+   * @param {object|null} healthStatus
+   */
+  #renderHealthSection(healthStatus) {
+    this.#healthSection.innerHTML = '';
+
+    // Hide section if no health status
+    if (!healthStatus) {
+      this.#healthSection.hidden = true;
+      return;
+    }
+    this.#healthSection.hidden = false;
+
+    // Determine overall health state for styling
+    const hasErrors = healthStatus.errors && healthStatus.errors.length > 0;
+    const hasWarnings =
+      healthStatus.warnings && healthStatus.warnings.length > 0;
+
+    // Section header (collapsible button)
+    const header = document.createElement('button');
+    header.className = 'summary-panel__section-header';
+    if (hasErrors) {
+      header.classList.add('summary-panel__section-header--error');
+    } else if (hasWarnings) {
+      header.classList.add('summary-panel__section-header--warning');
+    }
+    header.type = 'button';
+    header.setAttribute('aria-expanded', 'true');
+    header.innerHTML = `
+      <span class="summary-panel__section-title">Dependency Health</span>
+      <span class="summary-panel__section-toggle" aria-hidden="true">▼</span>
+    `;
+
+    // Section content
+    const content = document.createElement('div');
+    content.className = 'summary-panel__section-content';
+
+    // Health check list
+    const healthList = document.createElement('ul');
+    healthList.className = 'summary-panel__health-list';
+
+    // Circular dependencies check
+    healthList.appendChild(
+      this.#createHealthItem(
+        !healthStatus.hasCircularDeps,
+        healthStatus.hasCircularDeps
+          ? 'Circular dependencies detected'
+          : 'No circular dependencies'
+      )
+    );
+
+    // Missing dependencies check
+    const hasMissing =
+      healthStatus.missingDeps && healthStatus.missingDeps.length > 0;
+    healthList.appendChild(
+      this.#createHealthItem(
+        !hasMissing,
+        hasMissing
+          ? `Missing dependencies: ${healthStatus.missingDeps.length}`
+          : 'All dependencies resolved'
+      )
+    );
+
+    // Load order validity check
+    healthList.appendChild(
+      this.#createHealthItem(
+        healthStatus.loadOrderValid,
+        healthStatus.loadOrderValid
+          ? 'Load order is valid'
+          : 'Load order has issues'
+      )
+    );
+
+    content.appendChild(healthList);
+
+    // Error messages
+    if (hasErrors) {
+      const errorContainer = document.createElement('div');
+      errorContainer.className = 'summary-panel__health-messages';
+      for (const error of healthStatus.errors) {
+        const errorEl = document.createElement('p');
+        errorEl.className = 'summary-panel__health-error';
+        errorEl.textContent = error; // textContent is XSS-safe
+        errorContainer.appendChild(errorEl);
+      }
+      content.appendChild(errorContainer);
+    }
+
+    // Warning messages
+    if (hasWarnings) {
+      const warningContainer = document.createElement('div');
+      warningContainer.className = 'summary-panel__health-messages';
+      for (const warning of healthStatus.warnings) {
+        const warningEl = document.createElement('p');
+        warningEl.className = 'summary-panel__health-warning';
+        warningEl.textContent = warning; // textContent is XSS-safe
+        warningContainer.appendChild(warningEl);
+      }
+      content.appendChild(warningContainer);
+    }
+
+    // Summary counts
+    const summary = document.createElement('div');
+    summary.className = 'summary-panel__health-summary';
+    const errorCount = healthStatus.errors?.length || 0;
+    const warningCount = healthStatus.warnings?.length || 0;
+    summary.innerHTML = `
+      <span class="summary-panel__health-summary-item">
+        <span class="summary-panel__health-summary-count">${errorCount}</span> errors
+      </span>
+      <span class="summary-panel__health-summary-item">
+        <span class="summary-panel__health-summary-count">${warningCount}</span> warnings
+      </span>
+    `;
+    content.appendChild(summary);
+
+    // Toggle behavior
+    header.addEventListener('click', () => {
+      const isExpanded = header.getAttribute('aria-expanded') === 'true';
+      header.setAttribute('aria-expanded', String(!isExpanded));
+      content.classList.toggle('summary-panel__section-content--collapsed');
+      const toggle = header.querySelector('.summary-panel__section-toggle');
+      if (toggle) {
+        toggle.textContent = isExpanded ? '▶' : '▼';
+      }
+    });
+
+    this.#healthSection.appendChild(header);
+    this.#healthSection.appendChild(content);
+  }
+
+  /**
+   * Create a health check list item
+   *
+   * @param {boolean} isHealthy - Whether this check passed
+   * @param {string} message - Description of the check
+   * @returns {HTMLElement}
+   */
+  #createHealthItem(isHealthy, message) {
+    const item = document.createElement('li');
+    item.className = `summary-panel__health-item summary-panel__health-item--${isHealthy ? 'ok' : 'fail'}`;
+    item.innerHTML = `
+      <span class="summary-panel__health-icon" aria-hidden="true">${isHealthy ? '✓' : '✗'}</span>
+      <span class="summary-panel__health-text">${this.#escapeHtml(message)}</span>
+    `;
+    return item;
+  }
+
+  /**
    * Set saving state for button
+   *
    * @param {boolean} isSaving
    */
   #setSaving(isSaving) {
@@ -247,6 +553,7 @@ export class SummaryPanelView {
 
   /**
    * Show save error feedback
+   *
    * @param {string} message
    */
   showSaveError(message) {
@@ -269,6 +576,7 @@ export class SummaryPanelView {
 
   /**
    * Escape HTML to prevent XSS
+   *
    * @param {string} text
    * @returns {string}
    */

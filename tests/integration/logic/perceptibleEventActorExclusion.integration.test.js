@@ -4,8 +4,6 @@
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
-import { PERCEPTION_LOG_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
@@ -17,62 +15,30 @@ const makeLogger = () => ({
 
 const makeDispatcher = () => ({ dispatch: jest.fn() });
 
-const makeEntityManager = () => ({
-  getEntitiesInLocation: jest.fn(),
-  hasComponent: jest.fn(),
-  getComponentData: jest.fn(),
-  addComponent: jest.fn(),
-  batchAddComponentsOptimized: jest.fn(),
-});
-
 describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
   let logger;
   let dispatcher;
-  let entityManager;
-  let logHandler;
   let dispatchHandler;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
-    entityManager = makeEntityManager();
 
-    logHandler = new AddPerceptionLogEntryHandler({
-      logger,
-      entityManager,
-      safeEventDispatcher: dispatcher,
-    });
-
+    // Current architecture: DispatchPerceptibleEventHandler only dispatches events.
+    // Log entry creation is handled by log_perceptible_events.rule.json which
+    // triggers ADD_PERCEPTION_LOG_ENTRY operation in response to core:perceptible_event.
     dispatchHandler = new DispatchPerceptibleEventHandler({
       dispatcher,
       logger,
-      addPerceptionLogEntryHandler: logHandler,
     });
 
     jest.clearAllMocks();
   });
 
-  test('end-to-end: actor examines item briefly, excluded from broadcast', async () => {
+  test('end-to-end: actor examines item briefly, excluded from broadcast - event dispatched with exclusion data', async () => {
     // Arrange
     const locationId = 'loc:tavern';
     const actorId = 'npc:alice';
-    const otherActors = ['npc:bob', 'npc:charlie'];
-
-    entityManager.getEntitiesInLocation.mockReturnValue(
-      new Set([actorId, ...otherActors])
-    );
-
-    // All actors have perception logs
-    entityManager.hasComponent.mockReturnValue(true);
-    entityManager.getComponentData.mockReturnValue({
-      maxEntries: 50,
-      logEntries: [],
-    });
-
-    entityManager.batchAddComponentsOptimized.mockResolvedValue({
-      updateCount: 2,
-      errors: [],
-    });
 
     const params = {
       location_id: locationId,
@@ -82,15 +48,12 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       contextual_data: {
         excludedActorIds: [actorId], // Alice doesn't see her own brief examination
       },
-      log_entry: true,
     };
 
     // Act
     await dispatchHandler.execute(params, {});
 
-    // Assert
-
-    // 1. Event dispatched with exclusion data
+    // Assert - Event dispatched with exclusion data in contextualData
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
@@ -104,49 +67,11 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         }),
       })
     );
-
-    // 2. Only Bob and Charlie get the log entry (Alice excluded)
-    expect(entityManager.getEntitiesInLocation).toHaveBeenCalledWith(
-      locationId
-    );
-
-    // 3. Batch update called with only Bob and Charlie
-    expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          instanceId: 'npc:bob',
-          componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
-        }),
-        expect.objectContaining({
-          instanceId: 'npc:charlie',
-          componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
-        }),
-      ]),
-      true
-    );
-
-    // 4. Alice not in batch update
-    const batchSpecs =
-      entityManager.batchAddComponentsOptimized.mock.calls[0][0];
-    expect(batchSpecs).toHaveLength(2);
-    expect(batchSpecs.every((spec) => spec.instanceId !== actorId)).toBe(true);
   });
 
-  test('multiple perceptible events with different exclusions', async () => {
+  test('multiple perceptible events with different exclusions - each event dispatched correctly', async () => {
     // Arrange
     const locationId = 'loc:tavern';
-    const actors = ['npc:alice', 'npc:bob', 'npc:charlie', 'npc:dave'];
-
-    entityManager.getEntitiesInLocation.mockReturnValue(new Set(actors));
-    entityManager.hasComponent.mockReturnValue(true);
-    entityManager.getComponentData.mockReturnValue({
-      maxEntries: 50,
-      logEntries: [],
-    });
-    entityManager.batchAddComponentsOptimized.mockResolvedValue({
-      updateCount: actors.length,
-      errors: [],
-    });
 
     // Act - Event 1: Alice speaks (exclude Alice)
     await dispatchHandler.execute(
@@ -156,7 +81,6 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         perception_type: 'communication.speech',
         actor_id: 'npc:alice',
         contextual_data: { excludedActorIds: ['npc:alice'] },
-        log_entry: true,
       },
       {}
     );
@@ -169,63 +93,41 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         perception_type: 'item.examine',
         actor_id: 'npc:bob',
         contextual_data: { excludedActorIds: ['npc:bob'] },
-        log_entry: true,
       },
       {}
     );
 
-    // Assert
+    // Assert - Both events dispatched with correct exclusions
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(2);
 
-    // Event 1: Bob, Charlie, Dave get log (Alice excluded)
-    const event1Specs =
-      entityManager.batchAddComponentsOptimized.mock.calls[0][0];
-    expect(event1Specs).toHaveLength(3);
-    expect(event1Specs.every((spec) => spec.instanceId !== 'npc:alice')).toBe(
-      true
-    );
-    expect(event1Specs.some((spec) => spec.instanceId === 'npc:bob')).toBe(
-      true
-    );
-    expect(event1Specs.some((spec) => spec.instanceId === 'npc:charlie')).toBe(
-      true
-    );
-    expect(event1Specs.some((spec) => spec.instanceId === 'npc:dave')).toBe(
-      true
+    // Event 1: Alice excluded
+    expect(dispatcher.dispatch).toHaveBeenNthCalledWith(
+      1,
+      'core:perceptible_event',
+      expect.objectContaining({
+        actorId: 'npc:alice',
+        contextualData: expect.objectContaining({
+          excludedActorIds: ['npc:alice'],
+        }),
+      })
     );
 
-    // Event 2: Alice, Charlie, Dave get log (Bob excluded)
-    const event2Specs =
-      entityManager.batchAddComponentsOptimized.mock.calls[1][0];
-    expect(event2Specs).toHaveLength(3);
-    expect(event2Specs.every((spec) => spec.instanceId !== 'npc:bob')).toBe(
-      true
-    );
-    expect(event2Specs.some((spec) => spec.instanceId === 'npc:alice')).toBe(
-      true
-    );
-    expect(event2Specs.some((spec) => spec.instanceId === 'npc:charlie')).toBe(
-      true
-    );
-    expect(event2Specs.some((spec) => spec.instanceId === 'npc:dave')).toBe(
-      true
+    // Event 2: Bob excluded
+    expect(dispatcher.dispatch).toHaveBeenNthCalledWith(
+      2,
+      'core:perceptible_event',
+      expect.objectContaining({
+        actorId: 'npc:bob',
+        contextualData: expect.objectContaining({
+          excludedActorIds: ['npc:bob'],
+        }),
+      })
     );
   });
 
   test('backward compatibility: events without excludedActorIds work as before', async () => {
     // Arrange
     const locationId = 'loc:tavern';
-    const actors = ['npc:alice', 'npc:bob', 'npc:charlie'];
-
-    entityManager.getEntitiesInLocation.mockReturnValue(new Set(actors));
-    entityManager.hasComponent.mockReturnValue(true);
-    entityManager.getComponentData.mockReturnValue({
-      maxEntries: 50,
-      logEntries: [],
-    });
-    entityManager.batchAddComponentsOptimized.mockResolvedValue({
-      updateCount: actors.length,
-      errors: [],
-    });
 
     const params = {
       location_id: locationId,
@@ -233,15 +135,12 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       perception_type: 'state.observable_change',
       actor_id: 'npc:environment',
       // No contextual_data at all (backward compatible)
-      log_entry: true,
     };
 
     // Act
     await dispatchHandler.execute(params, {});
 
-    // Assert
-
-    // 1. Event dispatched with default empty arrays
+    // Assert - Event dispatched with default empty arrays
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
@@ -251,12 +150,6 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         }),
       })
     );
-
-    // 2. All actors receive the log entry
-    const batchSpecs =
-      entityManager.batchAddComponentsOptimized.mock.calls[0][0];
-    expect(batchSpecs).toHaveLength(3);
-    expect(batchSpecs.map((s) => s.instanceId).sort()).toEqual(actors.sort());
   });
 
   test('mutual exclusivity: error when both recipientIds and excludedActorIds provided', async () => {
@@ -270,7 +163,6 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         recipientIds: ['npc:bob'],
         excludedActorIds: ['npc:charlie'],
       },
-      log_entry: true,
     };
 
     // Act
@@ -292,73 +184,53 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
 
     // 2. Event NOT dispatched (only error)
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
-
-    // 3. Log handler NOT called
-    expect(entityManager.getEntitiesInLocation).not.toHaveBeenCalled();
   });
 
-  test('batch optimization: single event emitted with exclusions', async () => {
+  test('event payload includes all required fields', async () => {
     // Arrange
     const locationId = 'loc:tavern';
-    const actors = ['npc:alice', 'npc:bob', 'npc:charlie', 'npc:dave'];
-
-    entityManager.getEntitiesInLocation.mockReturnValue(new Set(actors));
-    entityManager.hasComponent.mockReturnValue(true);
-    entityManager.getComponentData.mockReturnValue({
-      maxEntries: 50,
-      logEntries: [],
-    });
-
-    // Track if batchAddComponentsOptimized was called
-    const batchAddSpy = jest.fn().mockResolvedValue({
-      updateCount: 3,
-      errors: [],
-    });
-    entityManager.batchAddComponentsOptimized = batchAddSpy;
+    const actorId = 'npc:alice';
+    const targetId = 'npc:bob';
 
     const params = {
       location_id: locationId,
-      description_text: 'Alice examines the ancient tome in detail.',
+      description_text: 'Alice examines the ancient tome.',
       perception_type: 'item.examine',
-      actor_id: 'npc:alice',
+      actor_id: actorId,
+      target_id: targetId,
+      involved_entities: ['item:tome'],
       contextual_data: {
-        excludedActorIds: ['npc:alice'], // Exclude Alice
+        excludedActorIds: [actorId],
       },
-      log_entry: true,
     };
 
     // Act
     await dispatchHandler.execute(params, {});
 
-    // Assert
-
-    // 1. Batch method called exactly once
-    expect(batchAddSpy).toHaveBeenCalledTimes(1);
-
-    // 2. Called with emit = true (single batch event)
-    expect(batchAddSpy).toHaveBeenCalledWith(
-      expect.any(Array),
-      true // emit single batch event
+    // Assert - All payload fields present
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        eventName: 'core:perceptible_event',
+        locationId,
+        descriptionText: 'Alice examines the ancient tome.',
+        perceptionType: 'item.examine',
+        actorId,
+        targetId,
+        involvedEntities: ['item:tome'],
+        timestamp: expect.any(String),
+        senseAware: true,
+        contextualData: expect.objectContaining({
+          recipientIds: [],
+          excludedActorIds: [actorId],
+        }),
+      })
     );
-
-    // 3. Only non-excluded actors in batch (Bob, Charlie, Dave)
-    const batchSpecs = batchAddSpy.mock.calls[0][0];
-    expect(batchSpecs).toHaveLength(3);
-    expect(batchSpecs.every((spec) => spec.instanceId !== 'npc:alice')).toBe(
-      true
-    );
-
-    // 4. Individual addComponent NOT called (batch optimization working)
-    expect(entityManager.addComponent).not.toHaveBeenCalled();
   });
 
-  test('edge case: exclude all actors in location', async () => {
+  test('edge case: exclude all actors - event still dispatched', async () => {
     // Arrange
     const locationId = 'loc:small_room';
-    const actors = ['npc:alice', 'npc:bob'];
-
-    entityManager.getEntitiesInLocation.mockReturnValue(new Set(actors));
-    entityManager.hasComponent.mockReturnValue(true);
 
     const params = {
       location_id: locationId,
@@ -368,27 +240,85 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       contextual_data: {
         excludedActorIds: ['npc:alice', 'npc:bob'], // Exclude everyone
       },
-      log_entry: true,
     };
 
     // Act
     await dispatchHandler.execute(params, {});
 
-    // Assert
-
-    // 1. Event still dispatched
+    // Assert - Event still dispatched (log creation handled by rule)
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
-      expect.any(Object)
+      expect.objectContaining({
+        locationId,
+        contextualData: expect.objectContaining({
+          excludedActorIds: ['npc:alice', 'npc:bob'],
+        }),
+      })
     );
 
-    // 2. No batch update (no recipients after exclusion)
-    expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
-    expect(entityManager.addComponent).not.toHaveBeenCalled();
-
-    // 3. Debug log indicates all actors excluded
+    // Debug log shows event was dispatched
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('All actors excluded')
+      'DISPATCH_PERCEPTIBLE_EVENT: dispatching event',
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          locationId,
+        }),
+      })
+    );
+  });
+
+  test('perspective-aware descriptions passed through to event payload', async () => {
+    // Arrange
+    const params = {
+      location_id: 'loc:tavern',
+      description_text: 'Alice removes Bob\'s shoes.',
+      perception_type: 'physical.target_action',
+      actor_id: 'npc:alice',
+      target_id: 'npc:bob',
+      actor_description: 'I remove Bob\'s shoes.',
+      target_description: 'Alice removes my shoes.',
+    };
+
+    // Act
+    await dispatchHandler.execute(params, {});
+
+    // Assert - Perspective descriptions included in payload
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        actorDescription: 'I remove Bob\'s shoes.',
+        targetDescription: 'Alice removes my shoes.',
+      })
+    );
+  });
+
+  test('sense-aware parameters passed through to event payload', async () => {
+    // Arrange
+    const params = {
+      location_id: 'loc:tavern',
+      description_text: 'A loud crash echoes through the room.',
+      perception_type: 'state.observable_change',
+      actor_id: 'npc:environment',
+      sense_aware: true,
+      alternate_descriptions: {
+        hearing: 'You hear a loud crash.',
+        sight: null, // Cannot be seen
+      },
+    };
+
+    // Act
+    await dispatchHandler.execute(params, {});
+
+    // Assert - Sense-aware parameters in payload
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        senseAware: true,
+        alternateDescriptions: {
+          hearing: 'You hear a loud crash.',
+          sight: null,
+        },
+      })
     );
   });
 });

@@ -78,6 +78,24 @@ const mockModGraphService = {
     if (modId === 'dredgers') return { status: 'explicit', isExplicit: true, isDependency: false };
     return { status: 'inactive', isExplicit: false, isDependency: false };
   }),
+  getAllNodes: jest.fn().mockReturnValue(new Map()),
+};
+
+const mockModStatisticsService = {
+  invalidateCache: jest.fn(),
+  getGraphService: jest.fn().mockReturnValue(mockModGraphService),
+  isCacheValid: jest.fn().mockReturnValue(false),
+  getDependencyHotspots: jest.fn().mockReturnValue([
+    { modId: 'core', dependentCount: 2 },
+    { modId: 'positioning', dependentCount: 1 },
+  ]),
+  getHealthStatus: jest.fn().mockReturnValue({
+    hasCircularDeps: false,
+    missingDeps: [],
+    loadOrderValid: true,
+    warnings: [],
+    errors: [],
+  }),
 };
 
 const mockWorldDiscoveryService = {
@@ -105,6 +123,15 @@ jest.mock('../../../src/modManager/services/ModGraphService.js', () => {
   return {
     __esModule: true,
     ModGraphService: mock,
+    default: mock,
+  };
+});
+
+jest.mock('../../../src/modManager/services/ModStatisticsService.js', () => {
+  const mock = jest.fn(() => mockModStatisticsService);
+  return {
+    __esModule: true,
+    ModStatisticsService: mock,
     default: mock,
   };
 });

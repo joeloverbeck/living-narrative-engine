@@ -2,7 +2,6 @@
   "mods": [
     "core",
     "dredgers",
-    "affection",
     "companionship",
     "containers",
     "deference",
@@ -30,7 +29,8 @@
     "sex-physical-control",
     "sex-vaginal-penetration",
     "violence",
-    "warding"
+    "warding",
+    "affection"
   ],
   "startWorld": "dredgers:dredgers"
 }

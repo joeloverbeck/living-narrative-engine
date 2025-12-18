@@ -92,12 +92,14 @@ const namespacedIdArb = fc
   .tuple(namespacedSegmentArb, namespacedSegmentArb)
   .map(([namespace, id]) => `${namespace}:${id}`);
 
+const timestampRange = {
+  min: new Date('2000-01-01T00:00:00.000Z').getTime(),
+  max: new Date('2099-12-31T23:59:59.999Z').getTime(),
+};
+
 const timestampArb = fc
-  .date({
-    min: new Date('2000-01-01T00:00:00.000Z'),
-    max: new Date('2099-12-31T23:59:59.999Z'),
-  })
-  .map((date) => date.toISOString());
+  .integer(timestampRange)
+  .map((ms) => new Date(ms).toISOString());
 
 const legacyNoteArb = fc.record({
   text: fc.string({ minLength: 1, maxLength: 240 }),

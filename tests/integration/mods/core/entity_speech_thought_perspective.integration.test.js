@@ -6,7 +6,7 @@
  * - Speech rule includes actor_description for first-person perspective
  * - Speech rule includes alternate_descriptions for sensory fallbacks
  * - Thought rule does NOT include actor_description (thoughts go via DISPATCH_THOUGHT)
- * - Both rules include log_entry: true
+ * - Both rules dispatch perceptible events (log entry creation handled by log_perceptible_events.rule.json)
  *
  * @see tickets/DISPEREVEUPG-007-core.md
  */
@@ -66,17 +66,6 @@ describe('Core Communication Rules - Perspective-Aware Perception', () => {
       // Speech should have auditory and limited fallbacks
       expect(alternates.auditory).toBeDefined();
       expect(alternates.limited).toBeDefined();
-    });
-
-    it('should have log_entry set to true', () => {
-      const ifOperation = entitySpeechRule.actions.find(
-        (action) => action.type === 'IF'
-      );
-      const dispatchOp = ifOperation.parameters.then_actions.find(
-        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
-      );
-
-      expect(dispatchOp.parameters.log_entry).toBe(true);
     });
 
     it('should maintain third-person description_text for observers', () => {
@@ -149,17 +138,6 @@ describe('Core Communication Rules - Perspective-Aware Perception', () => {
       expect(alternates.telepathic).toBeUndefined();
     });
 
-    it('should have log_entry set to true', () => {
-      const ifOperation = entityThoughtRule.actions.find(
-        (action) => action.type === 'IF'
-      );
-      const dispatchOp = ifOperation.parameters.then_actions.find(
-        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
-      );
-
-      expect(dispatchOp.parameters.log_entry).toBe(true);
-    });
-
     it('should maintain third-person description_text for observers', () => {
       const ifOperation = entityThoughtRule.actions.find(
         (action) => action.type === 'IF'
@@ -220,7 +198,7 @@ describe('Core Communication Rules - Perspective-Aware Perception', () => {
       );
 
       // Both should have these common fields
-      ['location_id', 'description_text', 'perception_type', 'actor_id', 'log_entry', 'alternate_descriptions'].forEach(
+      ['location_id', 'description_text', 'perception_type', 'actor_id', 'alternate_descriptions'].forEach(
         (field) => {
           expect(speechDispatch.parameters[field]).toBeDefined();
           expect(thoughtDispatch.parameters[field]).toBeDefined();

@@ -2,17 +2,18 @@
  * @file Handler for DISPATCH_PERCEPTIBLE_EVENT operation
  *
  * Emits standardized perceptible events (actions/events that can be observed by nearby entities)
- * with support for explicit recipient/exclusion lists and optional perception log entries.
+ * with support for explicit recipient/exclusion lists. Perception log entries are handled
+ * by the log_perceptible_events.rule.json rule that listens to core:perceptible_event.
  *
  * Operation flow:
  * 1. Validate required parameters (location_id, description_text, perception_type, actor_id)
  * 2. Normalize contextual_data with recipientIds/excludedActorIds (mutually exclusive)
  * 3. Build standardized payload with timestamp and involved entities
  * 4. Dispatch core:perceptible_event through event bus
- * 5. Optionally log entry via AddPerceptionLogEntryHandler if log_entry=true
  *
  * Related files:
  * @see data/schemas/operations/dispatchPerceptibleEvent.schema.json - Operation schema
+ * @see data/mods/core/rules/log_perceptible_events.rule.json - Rule that logs perceptible events
  * @see src/dependencyInjection/tokens/tokens-core.js - DispatchPerceptibleEventHandler token
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
@@ -21,7 +22,6 @@
 
 // --- Type Imports -----------------------------------------------------------
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./addPerceptionLogEntryHandler.js').default} AddPerceptionLogEntryHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -30,7 +30,6 @@ import {
   validateLocationId,
   normalizeEntityIds,
   validateRecipientExclusionExclusivity,
-  buildLogEntry,
 } from '../../utils/handlerUtils/perceptionParamsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import {
@@ -56,7 +55,6 @@ const EVENT_ID = 'core:perceptible_event';
  * @property {object=} contextual_data      - Optional contextual data object.
  * @property {string[]=} contextual_data.recipientIds - Explicit recipients (mutually exclusive with excludedActorIds).
  * @property {string[]=} contextual_data.excludedActorIds - Actors to exclude from broadcast (mutually exclusive with recipientIds).
- * @property {boolean=} log_entry           - If true, also log via AddPerceptionLogEntryHandler.
  */
 
 /**
@@ -67,16 +65,13 @@ class DispatchPerceptibleEventHandler {
   #dispatcher;
   /** @type {ILogger} */
   #logger;
-  /** @type {AddPerceptionLogEntryHandler} */
-  #logHandler;
 
   /**
    * @param {object} deps
    * @param {ISafeEventDispatcher} deps.dispatcher - Dispatcher used to emit events.
    * @param {ILogger} deps.logger - Logger instance.
-   * @param {AddPerceptionLogEntryHandler} deps.addPerceptionLogEntryHandler - Handler used for optional logging.
    */
-  constructor({ dispatcher, logger, addPerceptionLogEntryHandler }) {
+  constructor({ dispatcher, logger }) {
     if (!dispatcher?.dispatch) {
       throw new Error(
         'DispatchPerceptibleEventHandler requires ISafeEventDispatcher'
@@ -85,20 +80,14 @@ class DispatchPerceptibleEventHandler {
     if (!logger?.debug) {
       throw new Error('DispatchPerceptibleEventHandler requires ILogger');
     }
-    if (!addPerceptionLogEntryHandler?.execute) {
-      throw new Error(
-        'DispatchPerceptibleEventHandler requires AddPerceptionLogEntryHandler'
-      );
-    }
 
     this.#dispatcher = dispatcher;
     this.#logger = logger;
-    this.#logHandler = addPerceptionLogEntryHandler;
   }
 
   /**
-   * Build the event payload and dispatch. If `log_entry` is true, also invoke
-   * {@link AddPerceptionLogEntryHandler} to store the log entry for observers.
+   * Build the event payload and dispatch. Perception log entries are created
+   * by the log_perceptible_events.rule.json rule that listens to core:perceptible_event.
    *
    * @param {DispatchPerceptibleEventParams} params - Resolved parameters.
    * @param {ExecutionContext} executionContext - Execution context (unused).
@@ -123,7 +112,6 @@ class DispatchPerceptibleEventHandler {
       target_id = null,
       involved_entities = [],
       contextual_data = {},
-      log_entry = false,
       actor_description,
       target_description,
     } = params;
@@ -234,43 +222,19 @@ class DispatchPerceptibleEventHandler {
       involvedEntities: Array.isArray(involved_entities)
         ? involved_entities
         : [],
-      contextualData: {
-        ...normalizedContextualData,
-        skipRuleLogging: log_entry, // Skip rule logging when handler logs directly
-      },
+      // Perspective-aware descriptions for actor/target routing
+      actorDescription: actor_description ?? null,
+      targetDescription: target_description ?? null,
+      // Sense-aware filtering parameters
+      alternateDescriptions: params.alternate_descriptions ?? null,
+      senseAware: params.sense_aware ?? true,
+      contextualData: normalizedContextualData,
     };
 
     this.#logger.debug('DISPATCH_PERCEPTIBLE_EVENT: dispatching event', {
       payload,
     });
     this.#dispatcher.dispatch(EVENT_ID, payload);
-
-    if (log_entry) {
-      // Use shared utility to build standardized log entry
-      const entry = buildLogEntry({
-        descriptionText: description_text,
-        timestamp,
-        perceptionType: validatedPerceptionType,
-        actorId: actor_id,
-        targetId: target_id,
-        involvedEntities: involved_entities,
-      });
-
-      await this.#logHandler.execute({
-        location_id: validatedLocationId,
-        entry,
-        originating_actor_id: actor_id,
-        recipient_ids: normalizedContextualData.recipientIds,
-        excluded_actor_ids: normalizedContextualData.excludedActorIds,
-        // Pass sense-aware filtering parameters
-        alternate_descriptions: params.alternate_descriptions,
-        sense_aware: params.sense_aware ?? true,
-        // Pass perspective-aware descriptions for actor/target routing
-        actor_description,
-        target_description,
-        target_id,
-      });
-    }
   }
 }
 

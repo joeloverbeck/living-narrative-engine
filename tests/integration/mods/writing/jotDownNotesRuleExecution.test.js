@@ -244,6 +244,37 @@ describe('writing:jot_down_notes action integration', () => {
       expectSuccessfulTurnEnd(testFixture.events);
     });
 
+    it('includes perspective-aware fields for actor-specific routing', async () => {
+      const scenario = setupJotDownNotesScenario('Diana', 'study', true);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
+
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
+
+      const jotNotesEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'communication.notes'
+      );
+      expect(jotNotesEvent).toBeDefined();
+
+      // Verify perspective-aware routing fields are set
+      // description_text is third-person for observers
+      expect(jotNotesEvent.payload.descriptionText).toBe(
+        'Diana jots down notes on Field Notebook using pencil.'
+      );
+      // actor_id is set for perspective-aware routing
+      expect(jotNotesEvent.payload.actorId).toBe('test:actor1');
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+
     it('only dispatches expected events (no unexpected side effects)', async () => {
       const scenario = setupJotDownNotesScenario('Dave', 'station', true);
       testFixture.reset([

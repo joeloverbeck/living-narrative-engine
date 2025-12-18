@@ -53,7 +53,6 @@
               "perception_type": "communication.speech",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
-              "log_entry": true,
               "involved_entities": [],
               "alternate_descriptions": {
                 "auditory": "{context.speakerNameComponent.text} speaks, but I cannot make out the words.",

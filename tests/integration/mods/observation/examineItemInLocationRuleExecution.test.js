@@ -97,8 +97,10 @@ describe('observation:examine_item_in_location rule execution', () => {
         (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toBe(
-        'Bob examines horseshoe-1: A rusty iron horseshoe.'
+        'Bob examines horseshoe-1.'
       );
       expect(examineEvent.payload.descriptionText).not.toContain('their');
 
@@ -131,8 +133,10 @@ describe('observation:examine_item_in_location rule execution', () => {
         (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toBe(
-        'Frank examines heavy_furniture: A massive oak wardrobe'
+        'Frank examines heavy_furniture.'
       );
       expect(examineEvent.payload.descriptionText).not.toContain('their');
 
@@ -168,8 +172,10 @@ describe('observation:examine_item_in_location rule execution', () => {
         (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toBe(
-        'Charlie examines old-book: An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.'
+        'Charlie examines old-book.'
       );
       expect(examineEvent.payload.descriptionText).not.toContain('their');
 
@@ -201,11 +207,13 @@ describe('observation:examine_item_in_location rule execution', () => {
       expect(examineEvent.payload.perceptionType).toBe('item.examine');
       expect(examineEvent.payload.actorId).toBe('test:actor1');
       expect(examineEvent.payload.targetId).toBe('tool-1');
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description ("A well-worn hammer.") is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toContain('Dave');
       expect(examineEvent.payload.descriptionText).not.toContain('their');
       expect(examineEvent.payload.descriptionText).toContain('tool-1');
-      expect(examineEvent.payload.descriptionText).toContain(
-        'A well-worn hammer.'
+      expect(examineEvent.payload.descriptionText).toBe(
+        'Dave examines tool-1.'
       );
 
       expectSuccessfulTurnEnd(testFixture.events);
@@ -306,8 +314,9 @@ describe('observation:examine_item_in_location rule execution', () => {
           e.payload.targetId === 'map-1'
       );
       expect(firstExamineEvent).toBeDefined();
-      expect(firstExamineEvent.payload.descriptionText).toContain(
-        'A treasure map.'
+      // Per payload contract: descriptionText is brief third-person message
+      expect(firstExamineEvent.payload.descriptionText).toBe(
+        'Henry examines map-1.'
       );
       expect(firstExamineEvent.payload.descriptionText).not.toContain('their');
 
@@ -324,8 +333,9 @@ describe('observation:examine_item_in_location rule execution', () => {
           e.payload.targetId === 'compass-1'
       );
       expect(secondExamineEvent).toBeDefined();
-      expect(secondExamineEvent.payload.descriptionText).toContain(
-        'A brass compass.'
+      // Per payload contract: descriptionText is brief third-person message
+      expect(secondExamineEvent.payload.descriptionText).toBe(
+        'Henry examines compass-1.'
       );
       expect(secondExamineEvent.payload.descriptionText).not.toContain('their');
 

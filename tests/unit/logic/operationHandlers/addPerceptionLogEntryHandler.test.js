@@ -1423,13 +1423,15 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledTimes(3);
 
-      // Target should receive filtered target_description (tactile fallback from filter service)
+      // Target should receive target_description (custom text takes priority over filtered observer text)
+      // This ensures target sees "Bob caresses my cheek" not filtered tactile fallback
       const targetCall = em.addComponent.mock.calls.find(
         (call) => call[0] === TARGET_ID
       );
       expect(targetCall[2].logEntries[0].descriptionText).toBe(
-        'You feel a touch on your cheek.'
+        'Bob caresses my cheek gently.'
       );
+      // perceivedVia still reflects the sense from filter service
       expect(targetCall[2].logEntries[0].perceivedVia).toBe('tactile');
     });
 

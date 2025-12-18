@@ -175,26 +175,48 @@
   border-bottom: var(--border-width) solid var(--panel-border-color);
 }
 
-.summary-panel__stats {
+/* Quick Stats Section */
+.summary-panel__quick-stats {
+  padding: var(--spacing-sm) 0;
+  border-bottom: var(--border-width) solid var(--panel-border-color);
   margin-bottom: var(--spacing-md);
+}
+
+.summary-panel__stats-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
 }
 
 .summary-panel__stat {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: var(--spacing-sm) 0;
+  min-width: 3rem;
 }
 
 .summary-panel__stat-label {
+  font-size: var(--font-size-small);
   color: var(--secondary-text-color);
-  font-size: var(--font-size-base);
+  text-transform: uppercase;
 }
 
 .summary-panel__stat-value {
   font-size: var(--font-size-large);
   font-weight: bold;
   color: var(--accent-color-primary);
+}
+
+.summary-panel__stat-divider {
+  color: var(--secondary-text-color);
+  opacity: 0.5;
+}
+
+/* Legacy stats section (kept for backwards compatibility) */
+.summary-panel__stats {
+  margin-bottom: var(--spacing-md);
 }
 
 .summary-panel__section-title {
@@ -255,6 +277,169 @@
   text-align: center;
   color: var(--secondary-text-color);
   font-style: italic;
+}
+
+/* Collapsible Sections */
+.summary-panel__section {
+  margin-bottom: var(--spacing-md);
+}
+
+.summary-panel__section--collapsible {
+  border: var(--border-width) solid var(--panel-border-color);
+  border-radius: var(--border-radius-md);
+}
+
+.summary-panel__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--secondary-bg-color);
+  border: none;
+  cursor: pointer;
+  color: var(--primary-text-color);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  font-family: var(--font-ui);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  transition: background-color 0.2s ease;
+}
+
+.summary-panel__section-header:hover {
+  background: var(--panel-bg-color);
+}
+
+.summary-panel__section-header:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+}
+
+.summary-panel__section-toggle {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+}
+
+.summary-panel__section-content {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-panel__section-content--collapsed {
+  display: none;
+}
+
+/* Hotspots List */
+.summary-panel__hotspots-list {
+  list-style: decimal;
+  margin: 0;
+  padding-left: var(--spacing-lg);
+}
+
+.summary-panel__hotspot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__hotspot-name {
+  color: var(--primary-text-color);
+  font-family: var(--font-mono);
+}
+
+.summary-panel__hotspot-count {
+  color: var(--secondary-text-color);
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__hotspots-empty {
+  color: var(--secondary-text-color);
+  font-style: italic;
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+}
+
+/* Health Section */
+.summary-panel__section-header--error {
+  border-left: 3px solid var(--error-color, #dc3545);
+  padding-left: calc(var(--spacing-md) - 3px);
+}
+
+.summary-panel__section-header--warning {
+  border-left: 3px solid var(--warning-color, #ffc107);
+  padding-left: calc(var(--spacing-md) - 3px);
+}
+
+.summary-panel__health-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-panel__health-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__health-icon {
+  width: 1.2em;
+  text-align: center;
+  font-weight: bold;
+}
+
+.summary-panel__health-item--ok .summary-panel__health-icon {
+  color: var(--success-color, #28a745);
+}
+
+.summary-panel__health-item--fail .summary-panel__health-icon {
+  color: var(--error-color, #dc3545);
+}
+
+.summary-panel__health-text {
+  color: var(--primary-text-color);
+}
+
+.summary-panel__health-messages {
+  background-color: var(--surface-bg-color, rgba(0, 0, 0, 0.05));
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.summary-panel__health-error {
+  color: var(--error-color, #dc3545);
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__health-warning {
+  color: var(--warning-text-color, #856404);
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__health-summary {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+  font-size: var(--font-size-small);
+}
+
+.summary-panel__health-summary-item {
+  color: var(--secondary-text-color);
+}
+
+.summary-panel__health-summary-count {
+  font-weight: bold;
+  color: var(--primary-text-color);
 }
 
 .summary-panel__save {

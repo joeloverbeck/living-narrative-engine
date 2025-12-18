@@ -52,7 +52,6 @@
               "perception_type": "communication.thought",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
-              "log_entry": true,
               "involved_entities": [],
               "alternate_descriptions": {
                 "limited": "I sense {context.thinkerNameComponent.text} is distracted."

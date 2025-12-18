@@ -43,13 +43,17 @@
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Log examination with full description for observers",
+      "comment": "Log examination with perspective-aware descriptions for actor only",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actorName} examines {context.itemName}: {context.itemDescription.text}",
+        "description_text": "{context.actorName} examines {context.itemName}.",
+        "actor_description": "I examine {context.itemName} closely: {context.itemDescription.text}",
         "perception_type": "item.examine",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear someone inspecting something nearby."
+        },
         "contextual_data": {
           "recipientIds": [
             "{event.payload.actorId}"

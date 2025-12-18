@@ -58,8 +58,7 @@
         "perception_type": "physical.self_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
-        "log_entry": true,
-        "alternate_descriptions": {
+                "alternate_descriptions": {
           "auditory": "You hear the rustle of clothing and shifting of weight as someone changes position nearby."
         }
       }

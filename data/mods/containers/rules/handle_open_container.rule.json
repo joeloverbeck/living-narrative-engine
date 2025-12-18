@@ -85,8 +85,7 @@
                     "perception_type": "error.action_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
-                    "log_entry": true,
-                    "contextual_data": {
+                                        "contextual_data": {
                       "reason": "missing_key"
                     }
                   }
