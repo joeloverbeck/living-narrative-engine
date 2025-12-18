@@ -71,7 +71,7 @@ class PerceptionFilterService {
       'ILightingStateService',
       this.#logger,
       {
-        requiredMethods: ['getLightingState'],
+        requiredMethods: ['getLocationLightingState'],
       }
     );
 
@@ -109,7 +109,8 @@ class PerceptionFilterService {
     const primarySense = getPrimarySense(perceptionType);
 
     // Get lighting state for visual checks
-    const lightingState = this.#lightingStateService.getLightingState(locationId);
+    const { isLit } = this.#lightingStateService.getLocationLightingState(locationId);
+    const lightingState = isLit ? 'lit' : 'dark';
 
     this.#logger.debug(
       `filterEventForRecipients: type=${perceptionType}, primarySense=${primarySense}, ` +

@@ -73,7 +73,7 @@ describe('PerceptionFilterService', () => {
     };
 
     mockLightingStateService = {
-      getLightingState: jest.fn().mockReturnValue('lit'),
+      getLocationLightingState: jest.fn().mockReturnValue({ isLit: true, lightSources: [] }),
     };
 
     service = new PerceptionFilterService({
@@ -176,7 +176,7 @@ describe('PerceptionFilterService', () => {
           descriptionText: 'Alice enters the room.',
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('lit');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: true, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: true })
         );
@@ -206,7 +206,7 @@ describe('PerceptionFilterService', () => {
           descriptionText: 'Alice enters the room.',
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('dark');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: false, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: true, canHear: true })
         );
@@ -232,7 +232,7 @@ describe('PerceptionFilterService', () => {
           },
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('dark');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: false, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: true, canHear: true })
         );
@@ -266,7 +266,7 @@ describe('PerceptionFilterService', () => {
           },
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('lit');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: true, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: false, canHear: true })
         );
@@ -422,7 +422,7 @@ describe('PerceptionFilterService', () => {
 
         // Recipient can only feel, and movement.arrival fallbacks are auditory, tactile
         // Since no tactile fallback is provided and auditory not available, use limited
-        mockLightingStateService.getLightingState.mockReturnValue('lit');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: true, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: false, canHear: false, canSmell: false })
         );
@@ -453,7 +453,7 @@ describe('PerceptionFilterService', () => {
           // No alternate_descriptions provided
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('dark');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: false, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: true, canHear: true })
         );
@@ -486,7 +486,7 @@ describe('PerceptionFilterService', () => {
           },
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('lit');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: true, lightSources: [] });
 
         // Different capabilities for different recipients
         mockSensoryCapabilityService.getSensoryCapabilities.mockImplementation(
@@ -579,7 +579,7 @@ describe('PerceptionFilterService', () => {
           descriptionText: 'A shadowy figure enters.',
         });
 
-        mockLightingStateService.getLightingState.mockReturnValue('dim');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: true, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: true })
         );
@@ -612,7 +612,7 @@ describe('PerceptionFilterService', () => {
         });
 
         // Recipient can't see (dark) but can smell
-        mockLightingStateService.getLightingState.mockReturnValue('dark');
+        mockLightingStateService.getLocationLightingState.mockReturnValue({ isLit: false, lightSources: [] });
         mockSensoryCapabilityService.getSensoryCapabilities.mockReturnValue(
           createCapabilities({ canSee: false, canHear: false, canSmell: true })
         );

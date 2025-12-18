@@ -76,12 +76,17 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.logMessage}",
+              "actor_description": "I try to take {context.itemName}, but I cannot carry any more.",
+              "alternate_descriptions": {
+                "auditory": "I hear a frustrated attempt to take something."
+              },
               "perception_type": "error.action_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
               "involved_entities": [
                 "{event.payload.secondaryId}"
               ],
+              "log_entry": true,
               "contextual_data": {
                 "reason": "{context.capacityCheck.reason}"
               }
@@ -180,8 +185,55 @@
             }
           },
           {
-            "comment": "Display success message and end turn",
-            "macro": "core:logSuccessAndEndTurn"
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Log successful take with perspective-aware descriptions",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "actor_description": "I reach into {context.containerName} and take {context.itemName}.",
+              "alternate_descriptions": {
+                "auditory": "I hear something being removed from a container."
+              },
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{context.targetId}",
+              "involved_entities": [
+                "{event.payload.secondaryId}"
+              ],
+              "log_entry": true
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message in UI",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Emit action success event",
+            "parameters": {
+              "eventType": "core:action_success",
+              "payload": {
+                "eventName": "core:action_success",
+                "actionId": "{event.payload.actionId}",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}",
+                "success": true
+              }
+            }
+          },
+          {
+            "type": "END_TURN",
+            "comment": "End turn after successful take",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": true
+            }
           }
         ]
       }

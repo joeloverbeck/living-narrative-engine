@@ -104,10 +104,13 @@ const createMockSensoryCapabilityService = (capabilities = new Map()) => ({
 
 /**
  * Creates a mock lighting state service.
- * @param {string} defaultLighting - Default lighting state
+ * @param {string} defaultLighting - Default lighting state ('dark', 'normal', etc.)
  */
 const createMockLightingStateService = (defaultLighting = 'normal') => ({
-  getLightingState: jest.fn(() => defaultLighting),
+  getLocationLightingState: jest.fn(() => ({
+    isLit: defaultLighting !== 'dark',
+    lightSources: [],
+  })),
 });
 
 /**

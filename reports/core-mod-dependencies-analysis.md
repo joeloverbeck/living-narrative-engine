@@ -1,7 +1,7 @@
 # Core Mod Dependency Violation Analysis
 
 **Generated**: 2025-10-04
-**Validation Tool**: `npm run validate:ecosystem`
+**Validation Tool**: `npm run validate`
 **Issue**: Core mod contains 3 cross-reference violations to other mods
 
 ---
@@ -181,17 +181,17 @@ The event definition was placed in the core mod's events directory despite being
 - [ ] Move `limb_detached.event.json` to anatomy mod
 - [ ] Update anatomy manifest to include the event
 - [ ] Remove from core manifest
-- [ ] Verify with `npm run validate:ecosystem`
+- [ ] Verify with `npm run validate`
 
 ### Phase 2: Documentation Cleanup (NEXT)
 
 - [ ] Update `attempt_action.event.json` example to use `core:item_example`
 - [ ] Update `player_turn_prompt.event.json` description to use generic example
-- [ ] Verify with `npm run validate:ecosystem`
+- [ ] Verify with `npm run validate`
 
 ### Phase 3: Validation (FINAL)
 
-- [ ] Run full validation suite: `npm run validate:ecosystem`
+- [ ] Run full validation suite: `npm run validate`
 - [ ] Confirm zero violations for core mod
 - [ ] Run integration tests to ensure no breakage
 - [ ] Document changes in commit message
@@ -225,7 +225,7 @@ Mod core has 0 cross-reference violations
 Consider adding ecosystem validation to pre-commit hooks to catch these violations early:
 
 ```bash
-npm run validate:ecosystem
+npm run validate
 ```
 
 ### 2. Documentation Standards
@@ -245,7 +245,7 @@ Conduct a review to ensure all event/component/action definitions are in the cor
 
 ### Validation Tests
 
-1. Run `npm run validate:ecosystem` - should report 0 violations
+1. Run `npm run validate` - should report 0 violations
 2. Check that core mod has no extracted references
 3. Verify anatomy mod correctly includes limb_detached event
 
@@ -276,7 +276,7 @@ These changes will restore architectural integrity while maintaining full functi
 
 ## References
 
-- Validation script: `scripts/validateModReferences.js`
+- Validation script: `scripts/validateMods.js`
 - Core mod manifest: `data/mods/core/mod-manifest.json`
 - Anatomy mod manifest: `data/mods/anatomy/mod-manifest.json`
 - Mod loading configuration: `data/game.json`

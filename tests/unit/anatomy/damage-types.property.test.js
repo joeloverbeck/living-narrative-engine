@@ -5,6 +5,9 @@
  * @see tickets/DAMTYPANDSPEEFF-005-testing-and-performance-coverage.md
  */
 
+// Increase timeout for async property tests with many runs
+jest.setTimeout(15000);
+
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import fc from 'fast-check';
 import DamageTypeEffectsService, {

@@ -76,12 +76,17 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.logMessage}",
+              "actor_description": "I try to put {context.itemName} on {context.containerName}, but it won't fit.",
+              "alternate_descriptions": {
+                "auditory": "I hear a failed attempt to store something."
+              },
               "perception_type": "error.action_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
               "involved_entities": [
                 "{event.payload.secondaryId}"
               ],
+              "log_entry": true,
               "contextual_data": {
                 "reason": "{context.capacityCheck.reason}"
               }
@@ -180,8 +185,56 @@
             }
           },
           {
-            "comment": "Display success message and end turn",
-            "macro": "core:logSuccessAndEndTurn"
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Log successful placement with perspective-aware descriptions",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "actor_description": "I place {context.itemName} on {context.containerName}.",
+              "alternate_descriptions": {
+                "auditory": "I hear something being placed on a surface.",
+                "tactile": "I sense an item being set down nearby."
+              },
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{context.targetId}",
+              "involved_entities": [
+                "{event.payload.secondaryId}"
+              ],
+              "log_entry": true
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message in UI",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Emit action success event",
+            "parameters": {
+              "eventType": "core:action_success",
+              "payload": {
+                "eventName": "core:action_success",
+                "actionId": "{event.payload.actionId}",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}",
+                "success": true
+              }
+            }
+          },
+          {
+            "type": "END_TURN",
+            "comment": "End turn after successful placement",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": true
+            }
           }
         ]
       }

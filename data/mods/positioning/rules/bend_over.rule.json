@@ -54,6 +54,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} bends over {context.surfaceName}.",
+        "actor_description": "I bend over {context.surfaceName}, lowering my upper body.",
         "perception_type": "physical.self_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",

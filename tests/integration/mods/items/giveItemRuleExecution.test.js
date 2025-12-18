@@ -288,6 +288,32 @@ describe('item-transfer:give_item action integration', () => {
         scenario.transferItem.id
       );
     });
+
+    it('sets perceptible event targetId to the recipient (not the item)', async () => {
+      const scenario = testFixture.createInventoryTransfer({
+        roomId: 'hall',
+        roomName: 'Hall',
+        giver: { id: 'test:actor1', name: 'Giver' },
+        receiver: { id: 'test:actor2', name: 'Receiver' },
+        item: { id: 'gift-1', name: 'gift-1', weight: 0.2 },
+      });
+
+      testFixture.reset(scenario.entities);
+
+      await testFixture.executeAction(scenario.giver.id, scenario.receiver.id, {
+        additionalPayload: { secondaryId: scenario.transferItem.id },
+      });
+
+      const perceptibleEvent = testFixture.events.find(
+        (event) => event.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.targetId).toBe(scenario.receiver.id);
+      expect(perceptibleEvent.payload.targetId).not.toBe(
+        scenario.transferItem.id
+      );
+    });
   });
 
   describe('turn management', () => {

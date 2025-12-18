@@ -6,7 +6,7 @@ Source for the browser runtime lives in `src/` (engine, AI, UI entry points, and
 
 ## Build, Test, and Development Commands
 
-Run `npm run dev` to boot the engine alongside the proxy in watch mode; use `npm run start:all` for production-like manual testing. `npm run build` emits optimized bundles, and `npm run build:clean` resets stale artifacts. Content teams should validate data with `npm run validate:ecosystem` (fast variant `validate:quick`, hard gate `validate:strict`). Generate new modules via `npm run create-mod` and refresh manifests with `npm run update-manifest:validate`.
+Run `npm run dev` to boot the engine alongside the proxy in watch mode; use `npm run start:all` for production-like manual testing. `npm run build` emits optimized bundles, and `npm run build:clean` resets stale artifacts. Content teams should validate data with `npm run validate` (fast variant `validate:fast`, hard gate `validate:strict`). Generate new modules via `npm run create-mod` and refresh manifests with `npm run update-manifest:validate`.
 
 There are known issues with force exits when running tests, which we haven't been able to solve. Run individual test suites with --runInBand to prevent this. When executing a subset of tests (single files or targeted suites), ignore coverage thresholds—only enforce coverage on full-suite runs like `npm run test:ci`.
 

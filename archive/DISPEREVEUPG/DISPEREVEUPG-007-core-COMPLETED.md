@@ -1,16 +1,62 @@
 # DISPEREVEUPG-007: Core Rules (Speech & Thought) - Perspective Upgrade
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** High (Priority 2)
 **Estimated Effort:** 0.5 days
 **Dependencies:** None
 **Parent:** DISPEREVEUPG-000
+**Completed:** 2025-12-18
 
 ---
 
 ## Objective
 
 Upgrade the 2 core communication rules (speech and thought) to support perspective-aware perception with `actor_description` and `alternate_descriptions`.
+
+---
+
+## Outcome
+
+### Ticket Corrections Made
+
+During implementation, the following discrepancies were identified and corrected in the ticket itself before proceeding with code changes:
+
+1. **Invalid `telepathic` alternate type**: The original ticket proposed using `"telepathic"` in `alternate_descriptions`, but the schema (`dispatchPerceptibleEvent.schema.json`) only allows: `auditory`, `tactile`, `olfactory`, `limited`. Corrected to use `limited` instead.
+
+2. **Thought perception model clarified**: The original ticket suggested adding `actor_description` to thoughts, but the ticket's own notes correctly questioned this. Design decision validated: thoughts should NOT have `actor_description` because thoughts are already delivered to the actor via `DISPATCH_THOUGHT` operation - adding them to the perceptible event would pollute the perception log.
+
+### Actual Changes
+
+#### `data/mods/core/rules/entity_speech.rule.json`
+- Added `actor_description`: `"I say: \"{event.payload.speechContent}\""`
+- Added `alternate_descriptions` with `auditory` and `limited` fallbacks
+- Set `log_entry: true`
+- Added `contextual_data` with speechContent
+
+#### `data/mods/core/rules/entity_thought.rule.json`
+- **Did NOT add** `actor_description` (per validated design decision)
+- Added `alternate_descriptions` with `limited` fallback only
+- Set `log_entry: true`
+- Added `contextual_data` with thoughts
+
+### Tests Added
+
+Created `tests/integration/mods/core/entity_speech_thought_perspective.integration.test.js` with 13 tests verifying:
+- Speech rule includes `actor_description` for first-person perspective
+- Speech rule includes `alternate_descriptions` with valid sensory types
+- Thought rule does NOT include `actor_description`
+- Thought rule does NOT use invalid `telepathic` type
+- Both rules include `log_entry: true`
+- Both rules maintain third-person `description_text` for observers
+- Thought rule still dispatches via `DISPATCH_THOUGHT` operation
+
+### Validation Results
+
+- JSON syntax validation: PASSED
+- Mod validation (`npm run validate:mod:core`): 0 violations
+- Core integration tests: 35 tests PASSED
+- New perspective tests: 13 tests PASSED
+- Full unit test suite: 40,304 tests PASSED
 
 ---
 
@@ -45,7 +91,7 @@ Upgrade the 2 core communication rules (speech and thought) to support perspecti
 ### Pattern: Self-Action (Actor + Observers)
 
 Both rules are self-actions where the actor produces communication. Each DISPATCH_PERCEPTIBLE_EVENT must include:
-- `actor_description` (first-person)
+- `actor_description` (first-person) - **for speech only**
 - `alternate_descriptions` (appropriate sensory fallbacks)
 
 No `target_description` is needed as these are self-actions (though speech may be directed at someone).
@@ -57,11 +103,12 @@ No `target_description` is needed as these are self-actions (though speech may b
 **Upgrade:**
 ```json
 {
-  "description_text": "{context.actorName} says: \"{context.speechContent}\"",
-  "actor_description": "I speak: \"{context.speechContent}\"",
+  "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+  "actor_description": "I say: \"{event.payload.speechContent}\"",
+  "log_entry": true,
   "alternate_descriptions": {
-    "auditory": "I hear {context.actorName} speaking nearby.",
-    "limited": "I sense someone speaking, but cannot make out the words."
+    "auditory": "{context.speakerNameComponent.text} speaks, but I cannot make out the words.",
+    "limited": "I sense someone speaking nearby."
   }
 }
 ```
@@ -72,18 +119,23 @@ No `target_description` is needed as these are self-actions (though speech may b
 
 **Current:** DISPATCH_PERCEPTIBLE_EVENT for internal thought
 
+**Design Decision (validated):**
+1. Other actors shouldn't know what another character is thinking - the content remains private.
+2. There should NOT be `actor_description` for one's own thoughts, as thoughts are already registered via DISPATCH_THOUGHT to the thoughts component independently; adding them as perceptible log messages would pollute the perceptible log.
+3. The `telepathic` alternate type is NOT valid per schema - only `auditory`, `tactile`, `olfactory`, and `limited` are allowed.
+
 **Upgrade:**
 ```json
 {
-  "description_text": "{context.actorName} thinks: \"{context.thoughtContent}\"",
-  "actor_description": "I think to myself: \"{context.thoughtContent}\"",
+  "description_text": "{context.thinkerNameComponent.text} is lost in thought.",
+  "log_entry": true,
   "alternate_descriptions": {
-    "telepathic": "I sense {context.actorName}'s thoughts nearby."
+    "limited": "I sense {context.thinkerNameComponent.text} is distracted."
   }
 }
 ```
 
-**Note:** Thoughts are typically only perceivable by the actor themselves or through special telepathic abilities. The `actor_description` ensures the thinker always receives their own thought. The `telepathic` alternate provides a fallback for entities with mind-reading capabilities.
+**Note:** Thoughts are private by default. The perceptible event only conveys that someone *appears* thoughtful to observers - not the thought content. No `actor_description` is added since the actor already receives their thoughts via the DISPATCH_THOUGHT operation. The `limited` fallback provides a vague awareness for entities with partial perception.
 
 ---
 
@@ -100,7 +152,6 @@ Speech has unique perception requirements:
 ### Thought Perception Logic
 
 Thoughts are private by default:
-1. **Actor**: Always receives their own thought (first-person)
 2. **Others**: Only receive if they have telepathic capabilities
 3. **Standard observers**: Receive nothing (thought is private)
 

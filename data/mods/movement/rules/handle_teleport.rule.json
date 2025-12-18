@@ -95,10 +95,15 @@
                   "parameters": {
                     "location_id": "{context.actorPositionComponentPreTeleport.locationId}",
                     "description_text": "{context.actorNameComponent.text} vanishes from {context.originLocationNameComponent.text}, disappearing entirely.",
+                    "actor_description": "I feel the world blur as I teleport away from {context.originLocationNameComponent.text}.",
                     "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear a sudden displacement of air nearby.",
+                      "tactile": "I feel a strange disturbance in the air as something vanishes."
+                    }
                   }
                 },
                 {
@@ -132,10 +137,15 @@
                   "parameters": {
                     "location_id": "{context.resolvedTargetLocationId}",
                     "description_text": "{context.actorNameComponent.text} materializes suddenly, as if from nowhere.",
+                    "actor_description": "I materialize at {context.destinationLocationNameComponent.text}, the world snapping back into focus.",
                     "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear a sudden displacement of air as something appears.",
+                      "tactile": "I feel a brief rush of air as a presence materializes."
+                    }
                   }
                 },
                 {

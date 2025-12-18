@@ -155,7 +155,7 @@ Failure Tracking:
 
 - `GoalLoader` now emits per-mutation debug logs whenever `normalizeGoalData` mutates incoming content. Each entry uses the `goal-normalization.mutation` (or `.warning`) tag and includes `{ modId, filename, mutation, allowDefaults }`, so you can grep logs for specific files or extension output.
 - Set `GOAL_LOADER_NORMALIZATION_DIAGNOSTICS=0` in your environment to suppress the per-mutation chatter when fuzzing data locally. The loader still counts mutations internally and emits a single `goal-normalization.summary` log at `info` with `{ goalsProcessed, goalsWithMutations, goalsRejected, totalMutations, fieldsAutoFilled, warningsEmitted }` plus timing metadata.
-- CI/integration harnesses can call `goalLoader.getNormalizationDiagnosticsSnapshot()` after `loadItemsForMod()` to retrieve the same summary payload without parsing logs. Use it to fail builds when `goalsRejected` spikes or when the ratio of `fieldsAutoFilled` to `goalsProcessed` exceeds the thresholds in `validate:ecosystem`.
+- CI/integration harnesses can call `goalLoader.getNormalizationDiagnosticsSnapshot()` after `loadItemsForMod()` to retrieve the same summary payload without parsing logs. Use it to fail builds when `goalsRejected` spikes or when the ratio of `fieldsAutoFilled` to `goalsProcessed` exceeds the thresholds in `validate`.
 - When `GOAL_LOADER_ALLOW_DEFAULTS=1` is set, each diagnostic log also includes `allowDefaults: true` so dashboards can distinguish deliberate permissive-mode fixes from unexpected coercions.
 
 ### State Diff Viewer
