@@ -42,7 +42,7 @@ describe('positioning:get_up_from_lying action discovery', () => {
     it('should forbid being_fucked_vaginally component', () => {
       expect(getUpFromLyingAction.forbidden_components).toBeDefined();
       expect(getUpFromLyingAction.forbidden_components.actor).toEqual([
-        'positioning:being_fucked_vaginally',
+        'sex-states:being_fucked_vaginally',
         'positioning:being_restrained',
       ]);
     });

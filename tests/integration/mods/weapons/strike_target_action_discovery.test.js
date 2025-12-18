@@ -67,9 +67,9 @@ describe('strike_target action definition', () => {
       );
     });
 
-    it('should forbid actor with positioning:giving_blowjob', () => {
+    it('should forbid actor with sex-states:giving_blowjob', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 

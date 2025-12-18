@@ -20,10 +20,10 @@
       "positioning:sitting_on",
       "positioning:straddling_waist",
       "positioning:hugging",
-      "positioning:giving_blowjob",
-      "positioning:receiving_blowjob",
+      "sex-states:giving_blowjob",
+      "sex-states:receiving_blowjob",
       "positioning:doing_complex_performance",
-      "positioning:fucking_anally",
+      "sex-states:fucking_anally",
       "positioning:lying_down",
       "positioning:being_restrained",
       "positioning:restraining"

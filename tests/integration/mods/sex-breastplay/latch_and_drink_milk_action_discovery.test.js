@@ -86,7 +86,7 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
         'sex-breastplay:is_lactating',
       ]);
       expect(latchAndDrinkMilkAction.forbidden_components.actor).toEqual([
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
       ]);
 
       expect(latchAndDrinkMilkAction.visual).toEqual({

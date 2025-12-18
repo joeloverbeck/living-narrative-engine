@@ -291,111 +291,6 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
     });
   });
 
-  describe('Report Generation', () => {
-    it('should generate single mod report with violations', async () => {
-      const report = {
-        modId: 'positioning',
-        hasViolations: true,
-        violations: [
-          {
-            violatingMod: 'positioning',
-            referencedMod: 'intimacy',
-            referencedComponent: 'kissing',
-            message:
-              "Mod positioning references intimacy:kissing but doesn't declare intimacy as a dependency",
-            suggestedFix: 'Add "intimacy" to dependencies in mod-manifest.json',
-          },
-        ],
-        declaredDependencies: ['core'],
-        referencedMods: ['intimacy'],
-        missingDependencies: ['intimacy'],
-        summary: {
-          totalReferences: 1,
-          uniqueModsReferenced: 1,
-          violationCount: 1,
-          missingDependencyCount: 1,
-        },
-      };
-
-      const reportText = validator.generateReport(report);
-
-      expect(reportText).toContain(
-        "Cross-Reference Validation Report for 'positioning'"
-      );
-      expect(reportText).toContain('❌ 1 cross-reference violations detected');
-      expect(reportText).toContain('📦 Missing dependency: intimacy');
-      expect(reportText).toContain('References component: kissing');
-      expect(reportText).toContain('Add "intimacy" to dependencies');
-    });
-
-    it('should generate single mod report without violations', async () => {
-      const report = {
-        modId: 'positioning',
-        hasViolations: false,
-        violations: [],
-        declaredDependencies: ['core', 'anatomy'],
-        referencedMods: ['core', 'anatomy'],
-        missingDependencies: [],
-        summary: {
-          totalReferences: 2,
-          uniqueModsReferenced: 2,
-          violationCount: 0,
-          missingDependencyCount: 0,
-        },
-      };
-
-      const reportText = validator.generateReport(report);
-
-      expect(reportText).toContain('✅ No cross-reference violations detected');
-      expect(reportText).toContain('References to 2 mods');
-      expect(reportText).toContain('2 total component references');
-      expect(reportText).toContain(
-        'All references properly declared as dependencies'
-      );
-    });
-
-    it('should generate ecosystem report with violations', async () => {
-      const results = new Map();
-      results.set('positioning', {
-        modId: 'positioning',
-        hasViolations: true,
-        violations: [
-          { referencedMod: 'intimacy', referencedComponent: 'kissing' },
-        ],
-        missingDependencies: ['intimacy'],
-      });
-      results.set('anatomy', {
-        modId: 'anatomy',
-        hasViolations: false,
-        violations: [],
-        missingDependencies: [],
-      });
-
-      const reportText = validator.generateReport(results);
-
-      expect(reportText).toContain(
-        'Living Narrative Engine - Cross-Reference Validation Report'
-      );
-      expect(reportText).toContain('❌ Found 1 violations across 1 mods');
-      expect(reportText).toContain('Violation Summary:');
-      expect(reportText).toContain('positioning');
-      expect(reportText).toContain('intimacy');
-    });
-
-    it('should generate ecosystem report without violations', async () => {
-      const results = new Map();
-      results.set('mod1', { hasViolations: false, violations: [] });
-      results.set('mod2', { hasViolations: false, violations: [] });
-
-      const reportText = validator.generateReport(results);
-
-      expect(reportText).toContain(
-        '✅ No cross-reference violations detected in ecosystem'
-      );
-      expect(reportText).toContain('📊 Validated 2 mods successfully');
-    });
-  });
-
   describe('Dependency Declaration Parsing', () => {
     it('should include core as implicit dependency', async () => {
       mockReferenceExtractor.extractReferences.mockResolvedValue(new Map());
@@ -534,6 +429,220 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
 
       expect(report.violations).toHaveLength(100);
       expect(report.missingDependencies).toHaveLength(100);
+    });
+  });
+
+  describe('Unused Dependency Detection', () => {
+    it('should detect dependencies declared but not referenced', async () => {
+      // Mock reference extraction - only references core
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      // Mock manifest declares core, modA, and modB but only uses core
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'modA', version: '^1.0.0' },
+          { id: 'modB', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('modA', { id: 'modA' });
+      manifestsMap.set('modB', { id: 'modB' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.hasViolations).toBe(true);
+      expect(report.unusedDependencies).toEqual(
+        expect.arrayContaining(['modA', 'modB'])
+      );
+      expect(report.unusedDependencies).toHaveLength(2);
+      expect(report.summary.unusedDependencyCount).toBe(2);
+    });
+
+    it('should not flag core as unused even when not explicitly referenced', async () => {
+      // Mock reference extraction - no external references
+      const extractedRefs = new Map();
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      // Mock manifest only declares core
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [{ id: 'core', version: '^1.0.0' }],
+      });
+      manifestsMap.set('core', { id: 'core' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.hasViolations).toBe(false);
+      expect(report.unusedDependencies).toEqual([]);
+      expect(report.summary.unusedDependencyCount).toBe(0);
+    });
+
+    it('should handle multiple unused dependencies', async () => {
+      // Mock reference extraction - only uses core
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      // Mock manifest declares many unused dependencies
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'modA', version: '^1.0.0' },
+          { id: 'modB', version: '^1.0.0' },
+          { id: 'modC', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('modA', { id: 'modA' });
+      manifestsMap.set('modB', { id: 'modB' });
+      manifestsMap.set('modC', { id: 'modC' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.unusedDependencies).toHaveLength(3);
+      expect(report.unusedDependencies).toEqual(
+        expect.arrayContaining(['modA', 'modB', 'modC'])
+      );
+    });
+
+    it('should set hasViolations to true when unused dependencies exist', async () => {
+      // Mock reference extraction - no violations, but unused dep
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'unusedMod', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('unusedMod', { id: 'unusedMod' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      // No missing dependencies, no violations, but has unused deps
+      expect(report.violations).toHaveLength(0);
+      expect(report.missingDependencies).toHaveLength(0);
+      expect(report.unusedDependencies).toHaveLength(1);
+      expect(report.hasViolations).toBe(true);
+    });
+
+    it('should not flag dependencies that are actually used', async () => {
+      // Mock reference extraction - uses all declared dependencies
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+      extractedRefs.set('anatomy', new Set(['body']));
+      extractedRefs.set('clothing', new Set(['outfit']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'anatomy', version: '^1.0.0' },
+          { id: 'clothing', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('anatomy', { id: 'anatomy' });
+      manifestsMap.set('clothing', { id: 'clothing' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.hasViolations).toBe(false);
+      expect(report.unusedDependencies).toEqual([]);
+    });
+
+    it('should return unused dependencies sorted alphabetically', async () => {
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'zmod', version: '^1.0.0' },
+          { id: 'amod', version: '^1.0.0' },
+          { id: 'mmod', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('zmod', { id: 'zmod' });
+      manifestsMap.set('amod', { id: 'amod' });
+      manifestsMap.set('mmod', { id: 'mmod' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.unusedDependencies).toEqual(['amod', 'mmod', 'zmod']);
+    });
+
+    it('should detect both missing and unused dependencies simultaneously', async () => {
+      // References modA (not declared) but not modB (declared but unused)
+      const extractedRefs = new Map();
+      extractedRefs.set('core', new Set(['actor']));
+      extractedRefs.set('modA', new Set(['componentA']));
+
+      mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
+
+      const manifestsMap = new Map();
+      manifestsMap.set('testmod', {
+        id: 'testmod',
+        dependencies: [
+          { id: 'core', version: '^1.0.0' },
+          { id: 'modB', version: '^1.0.0' }, // declared but not used
+        ],
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('modA', { id: 'modA' });
+      manifestsMap.set('modB', { id: 'modB' });
+
+      const report = await validator.validateModReferences(
+        '/test/mods/testmod',
+        manifestsMap
+      );
+
+      expect(report.hasViolations).toBe(true);
+      expect(report.missingDependencies).toEqual(['modA']);
+      expect(report.unusedDependencies).toEqual(['modB']);
     });
   });
 });

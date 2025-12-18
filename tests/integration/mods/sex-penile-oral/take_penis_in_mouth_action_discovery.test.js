@@ -107,7 +107,7 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
     // Manually add giving_blowjob component to actor using entity ID
     testFixture.entityManager.addComponent(
       actorId,
-      'positioning:giving_blowjob',
+      'sex-states:giving_blowjob',
       {
         receiving_entity_id: 'some_other_entity',
         initiated: true,

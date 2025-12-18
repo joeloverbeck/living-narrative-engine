@@ -15,7 +15,7 @@
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:receiving_blowjob"]
+    "actor": ["sex-states:receiving_blowjob"]
   },
   "template": "pull {primary}'s head onto your bare penis",
   "prerequisites": [

@@ -33,14 +33,14 @@
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:fucking_vaginally"
+        "component_type": "sex-states:fucking_vaginally"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:being_fucked_vaginally"
+        "component_type": "sex-states:being_fucked_vaginally"
       }
     },
     {

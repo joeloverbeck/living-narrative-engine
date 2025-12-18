@@ -60,7 +60,44 @@
       }
     },
     {
-      "macro": "core:logSuccessAndEndTurn"
+      "type": "SET_VARIABLE",
+      "comment": "Set success message for display event.",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} throws themselves to the ground in grief."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Broadcast sense-aware perceptible event with actor description and auditory/tactile fallbacks.",
+      "parameters": {
+        "location_id": "{context.locationId}",
+        "description_text": "{context.actorName} throws themselves to the ground in grief.",
+        "actor_description": "I throw myself to the ground, overcome with grief.",
+        "perception_type": "physical.self_action",
+        "actor_id": "{event.payload.actorId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the thud of someone falling to the ground nearby.",
+          "tactile": "I feel vibrations as someone hits the ground nearby."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message to UI.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.successMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
     }
   ]
 }

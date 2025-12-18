@@ -28,7 +28,7 @@
       "positioning:restraining",
       "positioning:fallen"
     ],
-    "primary": ["positioning:lying_down", "positioning:giving_blowjob"]
+    "primary": ["positioning:lying_down", "sex-states:giving_blowjob"]
   },
   "template": "place yourself behind {target}",
   "prerequisites": [

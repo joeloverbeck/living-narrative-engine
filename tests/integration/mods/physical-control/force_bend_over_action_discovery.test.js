@@ -145,8 +145,8 @@ describe('physical-control:force_bend_over action discovery', () => {
           'positioning:straddling_waist',
           'positioning:hugging',
           'positioning:being_hugged',
-          'positioning:receiving_blowjob',
-          'positioning:giving_blowjob',
+          'sex-states:receiving_blowjob',
+          'sex-states:giving_blowjob',
         ])
       );
       expect(forceBendOverAction.forbidden_components.primary).toEqual(
@@ -202,7 +202,7 @@ describe('physical-control:force_bend_over action discovery', () => {
     it('fails validation when the actor has a forbidden component state', () => {
       setupScenario(testFixture, {
         actorComponents: {
-          'positioning:giving_blowjob': {
+          'sex-states:giving_blowjob': {
             receiving_entity_id: PRIMARY_ID,
             initiated: true,
           },

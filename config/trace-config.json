@@ -3,8 +3,8 @@
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": false,
-    "tracedActions": ["first-aid:disinfect_wounded_part"],
-    "outputDirectory": "./traces/first-aid",
+    "tracedActions": ["movement:feel_your_way_to_an_exit"],
+    "outputDirectory": "./traces/feel-your-way",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

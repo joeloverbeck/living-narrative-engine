@@ -48,7 +48,7 @@ describe('positioning:lie_down action discovery', () => {
         'positioning:bending_over',
         'positioning:kneeling_before',
         'positioning:lying_down',
-        'positioning:fucking_anally',
+        'sex-states:fucking_anally',
         'positioning:being_restrained',
         'positioning:restraining',
         'positioning:fallen',
@@ -161,7 +161,7 @@ describe('positioning:lie_down action discovery', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Alice is actively fucking someone anally
-      scenario.actor.components['positioning:fucking_anally'] = {
+      scenario.actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
       };

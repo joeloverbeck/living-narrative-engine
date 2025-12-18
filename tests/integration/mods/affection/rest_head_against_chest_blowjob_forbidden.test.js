@@ -86,7 +86,7 @@ describe('affection:rest_head_against_chest - giving_blowjob forbidden component
       const scenario = testFixture.createCloseActors(['Nina', 'Olivia']);
 
       // Target is giving a blowjob
-      scenario.target.components['positioning:giving_blowjob'] = {
+      scenario.target.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.actor.id,
         initiated: true,
         consented: true,
@@ -100,7 +100,7 @@ describe('affection:rest_head_against_chest - giving_blowjob forbidden component
       // The action should be blocked by target validation with forbidden component error
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, scenario.target.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 
@@ -128,13 +128,13 @@ describe('affection:rest_head_against_chest - giving_blowjob forbidden component
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
       // Paula is receiving a blowjob from Quinn
-      actor.components['positioning:receiving_blowjob'] = {
+      actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: targetGiving.id,
         consented: true,
       };
 
       // Quinn is giving a blowjob to Paula
-      targetGiving.components['positioning:giving_blowjob'] = {
+      targetGiving.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actor.id,
         initiated: true,
         consented: true,
@@ -165,7 +165,7 @@ describe('affection:rest_head_against_chest - giving_blowjob forbidden component
 
       await expect(async () => {
         await testFixture.executeAction(actor.id, targetGiving.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 });

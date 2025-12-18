@@ -38,8 +38,8 @@ describe('Integration: LLM Prompt Debug Panel', () => {
         <div id="ticker-actor-queue"></div>
       </div>
       <div id="action-buttons"></div>
-      <div id="perception-log-output">
-        <ul id="perception-log-list"></ul>
+      <div id="perception-log-widget">
+        <div id="perception-log-content"></div>
       </div>
     `;
 

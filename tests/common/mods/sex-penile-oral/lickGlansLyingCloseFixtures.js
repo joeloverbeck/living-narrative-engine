@@ -73,7 +73,7 @@ export function buildLickGlansLyingCloseScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       target_id: primaryId,
     });
   }
@@ -250,7 +250,7 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
 
         // Check not currently fucking actor vaginally
         const fuckingVaginally =
-          partner.components?.['positioning:fucking_vaginally'];
+          partner.components?.['sex-states:fucking_vaginally'];
         if (fuckingVaginally?.target_id === actorId) {
           return false;
         }

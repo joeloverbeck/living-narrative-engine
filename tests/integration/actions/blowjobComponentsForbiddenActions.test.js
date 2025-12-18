@@ -3,7 +3,7 @@
  * @description Validates the fix where actors receiving blowjobs should NOT be able to perform
  * intimate actions on the person giving them a blowjob.
  *
- * Tests all 14 actions that were updated to include positioning:giving_blowjob in forbidden_components.
+ * Tests all 14 actions that were updated to include sex-states:giving_blowjob in forbidden_components.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -43,13 +43,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
     // Actor is receiving blowjob from TargetGiving
-    actor.components['positioning:receiving_blowjob'] = {
+    actor.components['sex-states:receiving_blowjob'] = {
       giving_entity_id: targetGiving.id,
       consented: true,
     };
 
     // TargetGiving is giving blowjob to Actor
-    targetGiving.components['positioning:giving_blowjob'] = {
+    targetGiving.components['sex-states:giving_blowjob'] = {
       receiving_entity_id: actor.id,
       initiated: true,
       consented: true,
@@ -198,19 +198,19 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
   describe('Verification of all 14 action configurations', () => {
     it('kiss_neck_sensually should have giving_blowjob in forbidden_components.target', () => {
       expect(kissNeckSensuallyAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
     it('lick_lips should have giving_blowjob in forbidden_components.target', () => {
       expect(lickLipsAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
     it('bend_over should have giving_blowjob in forbidden_components.actor', () => {
       expect(bendOverAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -246,7 +246,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
 
       await expect(async () => {
         await testFixture.executeAction(actor.id, targetGiving.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should allow when target does NOT have giving_blowjob component', async () => {
@@ -301,7 +301,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
 
       await expect(async () => {
         await testFixture.executeAction(actor.id, targetGiving.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should allow when target does NOT have giving_blowjob component', async () => {
@@ -360,7 +360,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is giving blowjob (forbidden)
-      actor.components['positioning:giving_blowjob'] = {
+      actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: target.id,
         initiated: true,
         consented: true,
@@ -373,7 +373,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
 
       await expect(async () => {
         await testFixture.executeAction(actor.id, surface.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should allow when actor does NOT have giving_blowjob component', async () => {

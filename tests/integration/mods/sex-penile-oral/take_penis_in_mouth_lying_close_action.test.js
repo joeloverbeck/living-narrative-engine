@@ -89,8 +89,8 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action execution', () 
     });
 
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).toHaveComponent('positioning:giving_blowjob');
-    expect(actor).toHaveComponentData('positioning:giving_blowjob', {
+    expect(actor).toHaveComponent('sex-states:giving_blowjob');
+    expect(actor).toHaveComponentData('sex-states:giving_blowjob', {
       receiving_entity_id: primaryId,
       initiated: true,
     });
@@ -106,8 +106,8 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action execution', () 
     });
 
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).toHaveComponent('positioning:receiving_blowjob');
-    expect(primary).toHaveComponentData('positioning:receiving_blowjob', {
+    expect(primary).toHaveComponent('sex-states:receiving_blowjob');
+    expect(primary).toHaveComponentData('sex-states:receiving_blowjob', {
       giving_entity_id: actorId,
       consented: true,
     });

@@ -13,7 +13,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:hugging",
-      "positioning:giving_blowjob",
+      "sex-states:giving_blowjob",
       "positioning:doing_complex_performance",
       "positioning:bending_over",
       "positioning:being_restrained",

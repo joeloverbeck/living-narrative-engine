@@ -4,14 +4,14 @@
 sex-vaginal-penetration:actors_fucking_me_vaginally := actor.components.positioning:closeness.partners[][
   {
     "and": [
-      {"!!": {"var": "actor.components.positioning:being_fucked_vaginally"}},
-      {"!!": {"var": "entity.components.positioning:fucking_vaginally"}},
+      {"!!": {"var": "actor.components.sex-states:being_fucked_vaginally"}},
+      {"!!": {"var": "entity.components.sex-states:fucking_vaginally"}},
       {"==": [
-        {"var": "actor.components.positioning:being_fucked_vaginally.actorId"},
+        {"var": "actor.components.sex-states:being_fucked_vaginally.actorId"},
         {"var": "entity.id"}
       ]},
       {"==": [
-        {"var": "entity.components.positioning:fucking_vaginally.targetId"},
+        {"var": "entity.components.sex-states:fucking_vaginally.targetId"},
         {"var": "actor.id"}
       ]}
     ]

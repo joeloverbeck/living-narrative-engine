@@ -15,7 +15,7 @@
     "target": ["sex-breastplay:is_lactating"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["sex-states:giving_blowjob"]
   },
   "template": "nurse at {target}'s breast",
   "prerequisites": [],

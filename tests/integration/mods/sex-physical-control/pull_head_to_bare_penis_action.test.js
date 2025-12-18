@@ -262,16 +262,16 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
 
     // Verify PRIMARY has giving_blowjob component (they are giving oral sex)
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).toHaveComponent('positioning:giving_blowjob');
-    expect(primary).toHaveComponentData('positioning:giving_blowjob', {
+    expect(primary).toHaveComponent('sex-states:giving_blowjob');
+    expect(primary).toHaveComponentData('sex-states:giving_blowjob', {
       receiving_entity_id: actorId,
       initiated: false, // Actor initiated, not primary
     });
 
     // Verify ACTOR has receiving_blowjob component (they are receiving oral sex)
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).toHaveComponent('positioning:receiving_blowjob');
-    expect(actor).toHaveComponentData('positioning:receiving_blowjob', {
+    expect(actor).toHaveComponent('sex-states:receiving_blowjob');
+    expect(actor).toHaveComponentData('sex-states:receiving_blowjob', {
       giving_entity_id: primaryId,
       consented: true,
     });
@@ -294,10 +294,10 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
 
     // Verify no blowjob components were added
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).not.toHaveComponent('positioning:receiving_blowjob');
+    expect(actor).not.toHaveComponent('sex-states:receiving_blowjob');
 
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).not.toHaveComponent('positioning:giving_blowjob');
+    expect(primary).not.toHaveComponent('sex-states:giving_blowjob');
 
     // Verify no success events dispatched
     expect(testFixture.events).not.toHaveActionSuccess();

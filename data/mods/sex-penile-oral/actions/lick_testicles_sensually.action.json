@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness", "positioning:kneeling_before"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["sex-states:giving_blowjob"]
   },
   "template": "lick {target}'s testicles sensually",
   "prerequisites": [],

@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-states",
+  "version": "1.0.0",
+  "name": "Sex States",
+  "description": "Base components for sexual engagement states.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "being_fucked_anally.component.json",
+      "being_fucked_vaginally.component.json",
+      "fucking_anally.component.json",
+      "fucking_vaginally.component.json",
+      "giving_blowjob.component.json",
+      "receiving_blowjob.component.json"
+    ]
+  }
+}

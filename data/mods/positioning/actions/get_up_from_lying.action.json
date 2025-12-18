@@ -9,7 +9,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:being_fucked_vaginally",
+      "sex-states:being_fucked_vaginally",
       "positioning:being_restrained"
     ]
   },

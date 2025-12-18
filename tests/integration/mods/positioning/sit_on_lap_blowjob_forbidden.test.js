@@ -81,15 +81,15 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
   });
 
   describe('Action structure validation', () => {
-    it('sit_on_lap_from_sitting_facing should have positioning:giving_blowjob as forbidden component', () => {
+    it('sit_on_lap_from_sitting_facing should have sex-states:giving_blowjob as forbidden component', () => {
       expect(sitOnLapFacingAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('sit_on_lap_from_sitting_facing_away should have positioning:giving_blowjob as forbidden component', () => {
+    it('sit_on_lap_from_sitting_facing_away should have sex-states:giving_blowjob as forbidden component', () => {
       expect(sitOnLapFacingAwayAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -172,7 +172,7 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:closeness'] = { partners: [actor.id] };
 
         // Actor is giving a blowjob
-        actor.components['positioning:giving_blowjob'] = {
+        actor.components['sex-states:giving_blowjob'] = {
           receiving_entity_id: target.id,
           initiated: true,
           consented: true,
@@ -269,7 +269,7 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:closeness'] = { partners: [actor.id] };
 
         // Actor is giving a blowjob
-        actor.components['positioning:giving_blowjob'] = {
+        actor.components['sex-states:giving_blowjob'] = {
           receiving_entity_id: target.id,
           initiated: true,
           consented: true,

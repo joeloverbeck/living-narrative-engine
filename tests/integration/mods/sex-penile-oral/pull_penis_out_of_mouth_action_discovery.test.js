@@ -44,7 +44,7 @@ function buildPullPenisOutOfMouthScenario(options = {}) {
     .asActor();
 
   if (includeGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: mismatchedReferences ? 'someone_else' : PRIMARY_ID,
       initiated: true,
     });
@@ -61,7 +61,7 @@ function buildPullPenisOutOfMouthScenario(options = {}) {
     .asActor();
 
   if (targetHasReceivingBlowjob) {
-    primaryBuilder.withComponent('positioning:receiving_blowjob', {
+    primaryBuilder.withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: mismatchedReferences ? 'someone_else' : ACTOR_ID,
       consented: true,
     });
@@ -97,7 +97,7 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const givingBlowjob = actor?.components?.['positioning:giving_blowjob'];
+      const givingBlowjob = actor?.components?.['sex-states:giving_blowjob'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -120,7 +120,7 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
       }
 
       const receivingBlowjob =
-        receivingEntity.components?.['positioning:receiving_blowjob'];
+        receivingEntity.components?.['sex-states:receiving_blowjob'];
       if (!receivingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -262,7 +262,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action discovery', () => {
       .asActor()
       .kneelingBefore(PRIMARY_ID) // KEY: Actor is kneeling
       .closeToEntity(PRIMARY_ID)
-      .withComponent('positioning:giving_blowjob', {
+      .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: PRIMARY_ID,
         initiated: true,
       });
@@ -273,7 +273,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action discovery', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(ACTOR_ID)
-      .withComponent('positioning:receiving_blowjob', {
+      .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: ACTOR_ID,
         consented: true,
       });

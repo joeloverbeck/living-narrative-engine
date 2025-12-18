@@ -10,4 +10,4 @@ The `sex-penile-manual` module extracts all hand-based penis stimulation flows f
 
 ## Relationship to `sex-core`
 
-`sex-core` owns foundational components (such as `positioning:being_fucked_vaginally`) and neutral posture scopes consumed by every penile interaction. This module focuses on flavor-specific interactions and depends on those shared assets instead of duplicating them.
+`sex-core` owns foundational components (such as `sex-states:being_fucked_vaginally`) and neutral posture scopes consumed by every penile interaction. This module focuses on flavor-specific interactions and depends on those shared assets instead of duplicating them.

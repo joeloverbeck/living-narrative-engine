@@ -104,7 +104,7 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
           'core:actor': {},
           'core:position': { locationId: 'room1' },
           'vampirism:is_vampire': {},
-          'positioning:giving_blowjob': {
+          'sex-states:giving_blowjob': {
             target_id: 'victim1',
           },
         },

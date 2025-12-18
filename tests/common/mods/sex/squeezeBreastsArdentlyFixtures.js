@@ -46,7 +46,7 @@ export const SQUEEZE_BREASTS_ARDENTLY_ROOM_ID = 'garnet_suite';
  * @typedef {object} SqueezeBreastsArdentlyScenarioOptions
  * @property {boolean} [includeCloseness=true] - Whether both partners start in closeness.
  * @property {boolean} [includeBreastAnatomy=true] - Whether the target should include breast anatomy parts.
- * @property {boolean} [actorGivingBlowjob=false] - Whether the actor has the positioning:giving_blowjob component.
+ * @property {boolean} [actorGivingBlowjob=false] - Whether the actor has the sex-states:giving_blowjob component.
  * @property {boolean} [targetFacingAwayFromActor=false] - Whether the target is facing away from the actor (actor behind target).
  * @property {boolean} [actorFacingAwayFromTarget=false] - Whether the actor is facing away from the target.
  * @property {boolean} [breastsCovered=false] - Whether both chest sockets should be treated as covered by clothing.
@@ -98,7 +98,7 @@ export function buildSqueezeBreastsArdentlyScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: targetId,
       initiated: true,
     });

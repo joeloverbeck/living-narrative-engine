@@ -45,7 +45,7 @@ function buildPullPenisOutOfMouthScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(PRIMARY_ID)
-    .withComponent('positioning:giving_blowjob', {
+    .withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: PRIMARY_ID,
       initiated: true,
     })
@@ -57,7 +57,7 @@ function buildPullPenisOutOfMouthScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(ACTOR_ID)
-    .withComponent('positioning:receiving_blowjob', {
+    .withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: ACTOR_ID,
       consented: true,
     })
@@ -89,7 +89,7 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const givingBlowjob = actor?.components?.['positioning:giving_blowjob'];
+      const givingBlowjob = actor?.components?.['sex-states:giving_blowjob'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -109,7 +109,7 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
       }
 
       const receivingBlowjob =
-        receivingEntity.components?.['positioning:receiving_blowjob'];
+        receivingEntity.components?.['sex-states:receiving_blowjob'];
       if (!receivingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -195,9 +195,9 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
     const primaryBefore =
       testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorBefore.components['positioning:giving_blowjob']).toBeDefined();
+    expect(actorBefore.components['sex-states:giving_blowjob']).toBeDefined();
     expect(
-      primaryBefore.components['positioning:receiving_blowjob']
+      primaryBefore.components['sex-states:receiving_blowjob']
     ).toBeDefined();
 
     await testFixture.executeAction(actorId, primaryId, {
@@ -207,9 +207,9 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
     // Verify components removed after action
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorAfter.components['positioning:giving_blowjob']).toBeUndefined();
+    expect(actorAfter.components['sex-states:giving_blowjob']).toBeUndefined();
     expect(
-      primaryAfter.components['positioning:receiving_blowjob']
+      primaryAfter.components['sex-states:receiving_blowjob']
     ).toBeUndefined();
   });
 
@@ -225,7 +225,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
       .atLocation('bedroom1')
       .withLocationComponent('bedroom1')
       .asActor()
-      .withComponent('positioning:giving_blowjob', {
+      .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: SECONDARY_PRIMARY_ID,
         initiated: true,
       })
@@ -236,7 +236,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
       .atLocation('bedroom1')
       .withLocationComponent('bedroom1')
       .asActor()
-      .withComponent('positioning:receiving_blowjob', {
+      .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: SECONDARY_ACTOR_ID,
         consented: true,
       })
@@ -257,10 +257,10 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
     const secondaryPrimaryAfter =
       testFixture.entityManager.getEntityInstance(SECONDARY_PRIMARY_ID);
     expect(
-      secondaryActorAfter.components['positioning:giving_blowjob']
+      secondaryActorAfter.components['sex-states:giving_blowjob']
     ).toBeDefined();
     expect(
-      secondaryPrimaryAfter.components['positioning:receiving_blowjob']
+      secondaryPrimaryAfter.components['sex-states:receiving_blowjob']
     ).toBeDefined();
   });
 
@@ -271,7 +271,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
 
     // Verify components exist before action
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actorBefore.components['positioning:giving_blowjob']).toBeDefined();
+    expect(actorBefore.components['sex-states:giving_blowjob']).toBeDefined();
 
     // Dispatch a different action event manually (won't match our condition)
     testFixture.testEnv.eventBus.dispatch({
@@ -285,7 +285,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
 
     // Verify components still exist (rule didn't fire)
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actorAfter.components['positioning:giving_blowjob']).toBeDefined();
+    expect(actorAfter.components['sex-states:giving_blowjob']).toBeDefined();
 
     // Verify no success event was dispatched
     const successEvents = testFixture.events.filter(
@@ -302,9 +302,9 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
     // Verify components exist (simulating post-initiation state)
     const actorMid = testFixture.entityManager.getEntityInstance(actorId);
     const primaryMid = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorMid.components['positioning:giving_blowjob']).toBeDefined();
+    expect(actorMid.components['sex-states:giving_blowjob']).toBeDefined();
     expect(
-      primaryMid.components['positioning:receiving_blowjob']
+      primaryMid.components['sex-states:receiving_blowjob']
     ).toBeDefined();
 
     // Execute pull out action
@@ -315,9 +315,9 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
     // Verify components removed (workflow complete)
     const actorFinal = testFixture.entityManager.getEntityInstance(actorId);
     const primaryFinal = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorFinal.components['positioning:giving_blowjob']).toBeUndefined();
+    expect(actorFinal.components['sex-states:giving_blowjob']).toBeUndefined();
     expect(
-      primaryFinal.components['positioning:receiving_blowjob']
+      primaryFinal.components['sex-states:receiving_blowjob']
     ).toBeUndefined();
 
     // Verify success event

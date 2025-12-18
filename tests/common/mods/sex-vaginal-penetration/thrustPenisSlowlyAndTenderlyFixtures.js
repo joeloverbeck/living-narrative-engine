@@ -58,10 +58,10 @@ export function buildPenetrationScenario(options = {}) {
   }
 
   if (includePenetrationComponents) {
-    actorBuilder.withComponent('positioning:fucking_vaginally', {
+    actorBuilder.withComponent('sex-states:fucking_vaginally', {
       targetId: targetId,
     });
-    targetBuilder.withComponent('positioning:being_fucked_vaginally', {
+    targetBuilder.withComponent('sex-states:being_fucked_vaginally', {
       actorId: actorId,
     });
   }
@@ -157,7 +157,7 @@ function resolveBeingFuckedVaginallyScope(testFixture, context) {
     }
 
     const beingFucked =
-      partner.components?.['positioning:being_fucked_vaginally'];
+      partner.components?.['sex-states:being_fucked_vaginally'];
     if (!beingFucked) {
       return false;
     }

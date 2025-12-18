@@ -53,13 +53,13 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Exec
     // Verify prerequisites
     const initialActorComponent = testFixture.entityManager.getComponentData(
       'alice',
-      'positioning:fucking_vaginally'
+      'sex-states:fucking_vaginally'
     );
     expect(initialActorComponent).toEqual({ targetId: 'beth' });
 
     const initialTargetComponent = testFixture.entityManager.getComponentData(
       'beth',
-      'positioning:being_fucked_vaginally'
+      'sex-states:being_fucked_vaginally'
     );
     expect(initialTargetComponent).toEqual({ actorId: 'alice' });
 
@@ -71,13 +71,13 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Exec
     // Assert: Components remain unchanged (state preserved)
     const finalActorComponent = testFixture.entityManager.getComponentData(
       'alice',
-      'positioning:fucking_vaginally'
+      'sex-states:fucking_vaginally'
     );
     expect(finalActorComponent).toEqual({ targetId: 'beth' });
 
     const finalTargetComponent = testFixture.entityManager.getComponentData(
       'beth',
-      'positioning:being_fucked_vaginally'
+      'sex-states:being_fucked_vaginally'
     );
     expect(finalTargetComponent).toEqual({ actorId: 'alice' });
   });
@@ -125,7 +125,7 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Exec
       // Verify state remains consistent
       const actorComponent = testFixture.entityManager.getComponentData(
         'alice',
-        'positioning:fucking_vaginally'
+        'sex-states:fucking_vaginally'
       );
       expect(actorComponent).toEqual({ targetId: 'beth' });
     }

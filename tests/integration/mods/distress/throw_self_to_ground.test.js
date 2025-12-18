@@ -116,5 +116,23 @@ describe('distress:throw_self_to_ground', () => {
         },
       });
     });
+
+    it('emits sense-aware perceptible event with actor description and fallbacks', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Clara', 'Dan']);
+
+      await testFixture.executeAction(scenario.actor.id, null);
+
+      testFixture.assertPerceptibleEvent({
+        descriptionText: 'Clara throws themselves to the ground in grief.',
+        actorDescription: 'I throw myself to the ground, overcome with grief.',
+        perceptionType: 'physical.self_action',
+        actorId: scenario.actor.id,
+        targetId: null,
+        alternateDescriptions: {
+          auditory: 'I hear the thud of someone falling to the ground nearby.',
+          tactile: 'I feel vibrations as someone hits the ground nearby.',
+        },
+      });
+    });
   });
 });

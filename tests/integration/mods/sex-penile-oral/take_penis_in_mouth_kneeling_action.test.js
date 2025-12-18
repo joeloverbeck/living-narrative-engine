@@ -250,16 +250,16 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
 
     // Verify actor has giving_blowjob component with correct entity reference
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).toHaveComponent('positioning:giving_blowjob');
-    expect(actor).toHaveComponentData('positioning:giving_blowjob', {
+    expect(actor).toHaveComponent('sex-states:giving_blowjob');
+    expect(actor).toHaveComponentData('sex-states:giving_blowjob', {
       receiving_entity_id: primaryId,
       initiated: true,
     });
 
     // Verify primary has receiving_blowjob component with correct entity reference
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).toHaveComponent('positioning:receiving_blowjob');
-    expect(primary).toHaveComponentData('positioning:receiving_blowjob', {
+    expect(primary).toHaveComponent('sex-states:receiving_blowjob');
+    expect(primary).toHaveComponentData('sex-states:receiving_blowjob', {
       giving_entity_id: actorId,
       consented: true,
     });
@@ -274,7 +274,7 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
       .withName('Old Receiver')
       .atLocation('bedroom1')
       .asActor()
-      .withComponent('positioning:receiving_blowjob', {
+      .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: primaryId,
         consented: true,
       })
@@ -285,7 +285,7 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
       .withName('Old Giver')
       .atLocation('bedroom1')
       .asActor()
-      .withComponent('positioning:giving_blowjob', {
+      .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: actorId,
         initiated: true,
       })
@@ -293,14 +293,14 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
 
     // Update primary to be giving blowjob to oldReceivingEntity
     const primaryEntity = entities.find((e) => e.id === primaryId);
-    primaryEntity.components['positioning:giving_blowjob'] = {
+    primaryEntity.components['sex-states:giving_blowjob'] = {
       receiving_entity_id: 'old_receiver',
       initiated: true,
     };
 
     // Update actor to be receiving blowjob from oldGivingEntity
     const actorEntity = entities.find((e) => e.id === actorId);
-    actorEntity.components['positioning:receiving_blowjob'] = {
+    actorEntity.components['sex-states:receiving_blowjob'] = {
       giving_entity_id: 'old_giver',
       consented: true,
     };
@@ -316,24 +316,24 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
     // Verify cleanup happened
     const oldReceiver =
       testFixture.entityManager.getEntityInstance('old_receiver');
-    expect(oldReceiver).not.toHaveComponent('positioning:receiving_blowjob');
+    expect(oldReceiver).not.toHaveComponent('sex-states:receiving_blowjob');
 
     const oldGiver = testFixture.entityManager.getEntityInstance('old_giver');
-    expect(oldGiver).not.toHaveComponent('positioning:giving_blowjob');
+    expect(oldGiver).not.toHaveComponent('sex-states:giving_blowjob');
 
     // Verify new relationship established
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).not.toHaveComponent('positioning:receiving_blowjob');
-    expect(actor).toHaveComponent('positioning:giving_blowjob');
-    expect(actor).toHaveComponentData('positioning:giving_blowjob', {
+    expect(actor).not.toHaveComponent('sex-states:receiving_blowjob');
+    expect(actor).toHaveComponent('sex-states:giving_blowjob');
+    expect(actor).toHaveComponentData('sex-states:giving_blowjob', {
       receiving_entity_id: primaryId,
       initiated: true,
     });
 
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).not.toHaveComponent('positioning:giving_blowjob');
-    expect(primary).toHaveComponent('positioning:receiving_blowjob');
-    expect(primary).toHaveComponentData('positioning:receiving_blowjob', {
+    expect(primary).not.toHaveComponent('sex-states:giving_blowjob');
+    expect(primary).toHaveComponent('sex-states:receiving_blowjob');
+    expect(primary).toHaveComponentData('sex-states:receiving_blowjob', {
       giving_entity_id: actorId,
       consented: true,
     });
@@ -357,9 +357,9 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
 
     // Verify no blowjob components added
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).not.toHaveComponent('positioning:giving_blowjob');
+    expect(actor).not.toHaveComponent('sex-states:giving_blowjob');
 
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).not.toHaveComponent('positioning:receiving_blowjob');
+    expect(primary).not.toHaveComponent('sex-states:receiving_blowjob');
   });
 });

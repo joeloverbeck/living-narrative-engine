@@ -138,7 +138,8 @@ class ModCrossReferenceValidator {
         modId,
         extractedReferences,
         declaredDependencies,
-        violations
+        violations,
+        manifestsMap
       );
 
       this._logger.info(
@@ -256,7 +257,8 @@ class ModCrossReferenceValidator {
         modId,
         extractedReferences,
         declaredDependencies,
-        violations
+        violations,
+        manifestsMap
       );
 
       this._logger.info(
@@ -318,20 +320,6 @@ class ModCrossReferenceValidator {
     }
 
     return results;
-  }
-
-  /**
-   * Generates a comprehensive violation report for user consumption
-   *
-   * @param {ValidationReport|Map<string, ValidationReport>} reportOrReports - Single report or ecosystem results
-   * @returns {string} Human-readable violation report
-   */
-  generateReport(reportOrReports) {
-    if (reportOrReports instanceof Map) {
-      return this._generateEcosystemReport(reportOrReports);
-    } else {
-      return this._generateSingleModReport(reportOrReports);
-    }
   }
 
   /**
@@ -717,23 +705,41 @@ class ModCrossReferenceValidator {
    * @param {ModReferenceMap} references - Extracted references
    * @param {Set<string>} declaredDeps - Declared dependencies
    * @param {CrossReferenceViolation[]} violations - Detected violations
+   * @param {Map<string, object>} [manifestsMap] - All mod manifests (optional, for filtering non-existent mods)
    * @returns {ValidationReport} Complete validation report
    */
-  _generateValidationReport(modId, references, declaredDeps, violations) {
+  _generateValidationReport(
+    modId,
+    references,
+    declaredDeps,
+    violations,
+    manifestsMap = null
+  ) {
     const referencedMods = Array.from(references.keys())
       .filter((refMod) => refMod !== modId) // Filter out self-references
+      .filter((refMod) => !manifestsMap || manifestsMap.has(refMod)) // Filter out non-existent mods if manifestsMap provided
       .sort();
     const missingDependencies = referencedMods.filter(
       (refMod) => !declaredDeps.has(refMod)
     );
 
+    // Detect unused dependencies (declared but not referenced)
+    // Exclude 'core' as it's always a valid implicit dependency
+    const unusedDependencies = Array.from(declaredDeps)
+      .filter((dep) => dep !== 'core' && !referencedMods.includes(dep))
+      .sort();
+
     return {
       modId,
-      hasViolations: violations.length > 0,
+      hasViolations:
+        violations.length > 0 ||
+        missingDependencies.length > 0 ||
+        unusedDependencies.length > 0,
       violations,
       declaredDependencies: Array.from(declaredDeps).sort(),
       referencedMods,
       missingDependencies,
+      unusedDependencies,
       summary: {
         totalReferences: Array.from(references.values()).reduce(
           (sum, components) => sum + components.size,
@@ -742,168 +748,9 @@ class ModCrossReferenceValidator {
         uniqueModsReferenced: referencedMods.length,
         violationCount: violations.length,
         missingDependencyCount: missingDependencies.length,
+        unusedDependencyCount: unusedDependencies.length,
       },
     };
-  }
-
-  /**
-   * Generates human-readable report for single mod
-   *
-   * @private
-   * @param {ValidationReport} report - Validation report
-   * @returns {string} Formatted report
-   */
-  _generateSingleModReport(report) {
-    const lines = [];
-
-    lines.push(`Cross-Reference Validation Report for '${report.modId}'`);
-    lines.push('='.repeat(50));
-    lines.push('');
-
-    if (!report.hasViolations) {
-      lines.push('✅ No cross-reference violations detected');
-      lines.push('');
-      lines.push(`Summary:`);
-      lines.push(`  - References to ${report.referencedMods.length} mods`);
-      lines.push(
-        `  - ${report.summary.totalReferences} total component references`
-      );
-      lines.push(`  - All references properly declared as dependencies`);
-      return lines.join('\n');
-    }
-
-    lines.push(
-      `❌ ${report.violations.length} cross-reference violations detected`
-    );
-    lines.push('');
-
-    // Group violations by referenced mod
-    const violationsByMod = new Map();
-    report.violations.forEach((violation) => {
-      if (!violationsByMod.has(violation.referencedMod)) {
-        violationsByMod.set(violation.referencedMod, []);
-      }
-      violationsByMod.get(violation.referencedMod).push(violation);
-    });
-
-    lines.push('Violations:');
-    for (const [referencedMod, violations] of violationsByMod) {
-      lines.push(`  📦 Missing dependency: ${referencedMod}`);
-      violations.forEach((violation) => {
-        lines.push(
-          `    - References component: ${violation.referencedComponent}`
-        );
-      });
-      lines.push(
-        `    💡 Fix: Add "${referencedMod}" to dependencies in mod-manifest.json`
-      );
-      lines.push('');
-    }
-
-    lines.push('Current Dependencies:');
-    if (report.declaredDependencies.length > 0) {
-      report.declaredDependencies.forEach((dep) => {
-        lines.push(`  - ${dep}`);
-      });
-    } else {
-      lines.push('  (none declared)');
-    }
-    lines.push('');
-
-    lines.push('Referenced Mods:');
-    if (report.referencedMods.length > 0) {
-      report.referencedMods.forEach((mod) => {
-        const status = report.declaredDependencies.includes(mod) ? '✅' : '❌';
-        lines.push(`  ${status} ${mod}`);
-      });
-    } else {
-      lines.push('  (no external references found)');
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Generates ecosystem-wide violation report
-   *
-   * @private
-   * @param {Map<string, ValidationReport>} results - Validation results by mod
-   * @returns {string} Formatted ecosystem report
-   */
-  _generateEcosystemReport(results) {
-    const lines = [];
-    const modsWithViolations = Array.from(results.entries()).filter(
-      ([, report]) => report.hasViolations
-    );
-
-    lines.push('Living Narrative Engine - Cross-Reference Validation Report');
-    lines.push('='.repeat(60));
-    lines.push('');
-
-    if (modsWithViolations.length === 0) {
-      lines.push('✅ No cross-reference violations detected in ecosystem');
-      lines.push(`📊 Validated ${results.size} mods successfully`);
-      return lines.join('\n');
-    }
-
-    const totalViolations = modsWithViolations.reduce(
-      (sum, [, report]) => sum + report.violations.length,
-      0
-    );
-
-    lines.push(
-      `❌ Found ${totalViolations} violations across ${modsWithViolations.length} mods`
-    );
-    lines.push('');
-
-    // Summary table
-    lines.push('Violation Summary:');
-    lines.push(
-      'Mod'.padEnd(20) + 'Violations'.padEnd(12) + 'Missing Dependencies'
-    );
-    lines.push('-'.repeat(60));
-
-    modsWithViolations
-      .sort((a, b) => b[1].violations.length - a[1].violations.length) // Sort by violation count
-      .forEach(([modId, report]) => {
-        const violationCount = report.violations.length.toString();
-        const missingDeps = report.missingDependencies.join(', ');
-        lines.push(modId.padEnd(20) + violationCount.padEnd(12) + missingDeps);
-      });
-
-    lines.push('');
-    lines.push('Detailed Violations:');
-    lines.push('='.repeat(30));
-
-    // Detailed violations for each mod
-    modsWithViolations.forEach(([modId, report]) => {
-      lines.push('');
-      lines.push(`📦 ${modId}:`);
-
-      const violationsByMod = new Map();
-      report.violations.forEach((violation) => {
-        if (!violationsByMod.has(violation.referencedMod)) {
-          violationsByMod.set(violation.referencedMod, []);
-        }
-        violationsByMod.get(violation.referencedMod).push(violation);
-      });
-
-      for (const [referencedMod, violations] of violationsByMod) {
-        lines.push(`  ❌ Missing dependency: ${referencedMod}`);
-        violations.forEach((violation) => {
-          lines.push(`    - ${violation.referencedComponent}`);
-        });
-      }
-    });
-
-    lines.push('');
-    lines.push('📋 Next Steps:');
-    lines.push("1. Review each mod's manifest file (mod-manifest.json)");
-    lines.push('2. Add missing dependencies to the dependencies array');
-    lines.push('3. Ensure version constraints are appropriate');
-    lines.push('4. Re-run validation to confirm fixes');
-
-    return lines.join('\n');
   }
 
   /**

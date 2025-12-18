@@ -421,9 +421,9 @@ describe('ViolationReporter multi-format integration', () => {
       colors: false,
       showSuggestions: false,
     });
-    expect(consoleReport).toContain('Violation Summary by Mod:');
+    expect(consoleReport).toContain('Violation Summary:');
     expect(consoleReport).toContain('aggregated');
-    expect(consoleReport).toContain('Missing Dependencies');
+    expect(consoleReport).toContain('Missing Deps');
 
     const jsonSummary = JSON.parse(
       reporter.generateReport(crossReferenceMap, 'json')

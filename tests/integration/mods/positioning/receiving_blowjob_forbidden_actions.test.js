@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that positioning actions are correctly forbidden when actor is receiving a blowjob.
  * @description Ensures that positioning actions (bend over, turn your back, step back) are not available when the acting actor
- * has the positioning:receiving_blowjob component.
+ * has the sex-states:receiving_blowjob component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -37,21 +37,21 @@ describe('positioning actions forbidden when receiving blowjob', () => {
   });
 
   describe('Action structure validation', () => {
-    it('bend_over should have positioning:receiving_blowjob as forbidden component', () => {
+    it('bend_over should have sex-states:receiving_blowjob as forbidden component', () => {
       expect(bendOverAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
+        'sex-states:receiving_blowjob'
       );
     });
 
-    it('turn_your_back should have positioning:receiving_blowjob as forbidden component', () => {
+    it('turn_your_back should have sex-states:receiving_blowjob as forbidden component', () => {
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
+        'sex-states:receiving_blowjob'
       );
     });
 
-    it('step_back should have positioning:receiving_blowjob as forbidden component', () => {
+    it('step_back should have sex-states:receiving_blowjob as forbidden component', () => {
       expect(stepBackAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
+        'sex-states:receiving_blowjob'
       );
     });
   });
@@ -143,7 +143,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       // The action has mouth-available prerequisite that affects discovery,
       // but the key validation is the forbidden_components configuration.
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
+        'sex-states:receiving_blowjob'
       );
     });
   });
@@ -216,7 +216,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
 
       // Add receiving_blowjob component to actor
-      scenario.actor.components['positioning:receiving_blowjob'] = {
+      scenario.actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: scenario.target.id,
         consented: true,
       };
@@ -240,7 +240,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Jack']);
 
       // Add receiving_blowjob component to actor
-      scenario.actor.components['positioning:receiving_blowjob'] = {
+      scenario.actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: scenario.target.id,
         consented: true,
       };
@@ -262,7 +262,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       // step_back has specific required components and prerequisites that make it
       // complex to test in isolation, but the key validation is the forbidden_components.
       expect(stepBackAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
+        'sex-states:receiving_blowjob'
       );
     });
   });

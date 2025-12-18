@@ -45,7 +45,7 @@ function buildEjaculateInMouthScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(PRIMARY_ID)
-    .withComponent('positioning:receiving_blowjob', {
+    .withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: PRIMARY_ID,
       consented: true,
     })
@@ -57,7 +57,7 @@ function buildEjaculateInMouthScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(ACTOR_ID)
-    .withComponent('positioning:giving_blowjob', {
+    .withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: ACTOR_ID,
       initiated: true,
     })
@@ -90,7 +90,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const receivingBlowjob =
-        actor?.components?.['positioning:receiving_blowjob'];
+        actor?.components?.['sex-states:receiving_blowjob'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -110,7 +110,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const givingBlowjob =
-        givingEntity.components?.['positioning:giving_blowjob'];
+        givingEntity.components?.['sex-states:giving_blowjob'];
       if (!givingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -197,10 +197,10 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
     const primaryBefore =
       testFixture.entityManager.getEntityInstance(primaryId);
     expect(
-      actorBefore.components['positioning:receiving_blowjob']
+      actorBefore.components['sex-states:receiving_blowjob']
     ).toBeDefined();
     expect(
-      primaryBefore.components['positioning:giving_blowjob']
+      primaryBefore.components['sex-states:giving_blowjob']
     ).toBeDefined();
 
     await testFixture.executeAction(actorId, primaryId, {
@@ -211,16 +211,16 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
     expect(
-      actorAfter.components['positioning:receiving_blowjob']
+      actorAfter.components['sex-states:receiving_blowjob']
     ).toBeDefined();
-    expect(primaryAfter.components['positioning:giving_blowjob']).toBeDefined();
+    expect(primaryAfter.components['sex-states:giving_blowjob']).toBeDefined();
 
     // Verify component data is preserved
     expect(
-      actorAfter.components['positioning:receiving_blowjob'].giving_entity_id
+      actorAfter.components['sex-states:receiving_blowjob'].giving_entity_id
     ).toBe(primaryId);
     expect(
-      primaryAfter.components['positioning:giving_blowjob'].receiving_entity_id
+      primaryAfter.components['sex-states:giving_blowjob'].receiving_entity_id
     ).toBe(actorId);
   });
 
@@ -242,7 +242,7 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(PRIMARY_ID_2)
-      .withComponent('positioning:receiving_blowjob', {
+      .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: PRIMARY_ID_2,
         consented: true,
       })
@@ -254,7 +254,7 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(ACTOR_ID_2)
-      .withComponent('positioning:giving_blowjob', {
+      .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: ACTOR_ID_2,
         initiated: true,
       })
@@ -275,16 +275,16 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
       testFixture.entityManager.getEntityInstance(PRIMARY_ID_2);
 
     expect(
-      actor2After.components['positioning:receiving_blowjob']
+      actor2After.components['sex-states:receiving_blowjob']
     ).toBeDefined();
     expect(
-      primary2After.components['positioning:giving_blowjob']
+      primary2After.components['sex-states:giving_blowjob']
     ).toBeDefined();
     expect(
-      actor2After.components['positioning:receiving_blowjob'].giving_entity_id
+      actor2After.components['sex-states:receiving_blowjob'].giving_entity_id
     ).toBe(PRIMARY_ID_2);
     expect(
-      primary2After.components['positioning:giving_blowjob'].receiving_entity_id
+      primary2After.components['sex-states:giving_blowjob'].receiving_entity_id
     ).toBe(ACTOR_ID_2);
   });
 
@@ -313,9 +313,9 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
     expect(
-      actorAfter.components['positioning:receiving_blowjob']
+      actorAfter.components['sex-states:receiving_blowjob']
     ).toBeDefined();
-    expect(primaryAfter.components['positioning:giving_blowjob']).toBeDefined();
+    expect(primaryAfter.components['sex-states:giving_blowjob']).toBeDefined();
   });
 
   it('maintains ongoing blowjob state through multiple ejaculation actions', async () => {
@@ -341,10 +341,10 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
     const primaryAfterFirst =
       testFixture.entityManager.getEntityInstance(primaryId);
     expect(
-      actorAfterFirst.components['positioning:receiving_blowjob']
+      actorAfterFirst.components['sex-states:receiving_blowjob']
     ).toBeDefined();
     expect(
-      primaryAfterFirst.components['positioning:giving_blowjob']
+      primaryAfterFirst.components['sex-states:giving_blowjob']
     ).toBeDefined();
 
     // Clear events and execute action second time
@@ -367,10 +367,10 @@ describe('sex-penile-oral:ejaculate_in_mouth action integration', () => {
     const primaryAfterSecond =
       testFixture.entityManager.getEntityInstance(primaryId);
     expect(
-      actorAfterSecond.components['positioning:receiving_blowjob']
+      actorAfterSecond.components['sex-states:receiving_blowjob']
     ).toBeDefined();
     expect(
-      primaryAfterSecond.components['positioning:giving_blowjob']
+      primaryAfterSecond.components['sex-states:giving_blowjob']
     ).toBeDefined();
   });
 });

@@ -43,13 +43,13 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
       getAllComponentTypesForEntity: (entityId) => {
         // Return components based on entity ID for test scenarios
         if (entityId === 'target_giving_blowjob') {
-          return ['core:actor', 'positioning:giving_blowjob'];
+          return ['core:actor', 'sex-states:giving_blowjob'];
         }
         if (entityId === 'target_normal') {
           return ['core:actor'];
         }
         if (entityId === 'target_receiving_blowjob') {
-          return ['core:actor', 'positioning:receiving_blowjob'];
+          return ['core:actor', 'sex-states:receiving_blowjob'];
         }
         return [];
       },
@@ -64,29 +64,29 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
   describe('Action structure validation', () => {
     it('kiss_cheek should have giving_blowjob forbidden for BOTH actor and target', () => {
       expect(kissCheeAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
       expect(kissCheeAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
     it('kiss_neck_sensually should have giving_blowjob forbidden for BOTH actor and target', () => {
       expect(kissNeckAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
       // Updated per issue: now also has target forbidden
       expect(kissNeckAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
     it('kiss_forehead_gently should have giving_blowjob forbidden for BOTH actor and target', () => {
       expect(kissForeheadAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
       expect(kissForeheadAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -104,7 +104,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
 
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('forbidden component');
-      expect(result.reason).toContain('positioning:giving_blowjob');
+      expect(result.reason).toContain('sex-states:giving_blowjob');
     });
 
     it('should ACCEPT target WITHOUT giving_blowjob component (kiss_cheek)', () => {
@@ -132,7 +132,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
 
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('forbidden component');
-      expect(result.reason).toContain('positioning:giving_blowjob');
+      expect(result.reason).toContain('sex-states:giving_blowjob');
     });
 
     it('should ACCEPT target WITHOUT giving_blowjob component (kiss_forehead)', () => {
@@ -247,7 +247,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
         id: 'test:legacy_with_target_forbidden',
         forbidden_components: {
           actor: ['test:component_a'],
-          target: ['positioning:giving_blowjob'],
+          target: ['sex-states:giving_blowjob'],
         },
       };
 
@@ -262,7 +262,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
         mockEntityManager.getAllComponentTypesForEntity;
       mockEntityManager.getAllComponentTypesForEntity = (entityId) => {
         if (entityId === 'target_giving_blowjob') {
-          return ['core:actor', 'positioning:giving_blowjob'];
+          return ['core:actor', 'sex-states:giving_blowjob'];
         }
         return originalGetComponents(entityId);
       };
@@ -275,7 +275,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
       // Should fail validation because primary target has forbidden component
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('forbidden component');
-      expect(result.reason).toContain('positioning:giving_blowjob');
+      expect(result.reason).toContain('sex-states:giving_blowjob');
 
       // Restore mock
       mockEntityManager.getAllComponentTypesForEntity = originalGetComponents;
@@ -286,7 +286,7 @@ describe('Hybrid Actor+Target Forbidden Components Validation', () => {
         id: 'test:legacy_with_target_forbidden',
         forbidden_components: {
           actor: ['test:component_a'],
-          target: ['positioning:giving_blowjob'],
+          target: ['sex-states:giving_blowjob'],
         },
       };
 

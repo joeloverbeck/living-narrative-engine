@@ -154,7 +154,7 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
       );
 
       // Target is giving a blowjob
-      scenario.target.components['positioning:giving_blowjob'] = {
+      scenario.target.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.actor.id,
         initiated: true,
         consented: true,
@@ -167,7 +167,7 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
       // The action should be blocked by target validation with forbidden component error
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, scenario.target.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 
@@ -196,13 +196,13 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Alex is receiving a blowjob from Blair
-      actorData.entity.components['positioning:receiving_blowjob'] = {
+      actorData.entity.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: targetGivingData.entity.id,
         consented: true,
       };
 
       // Blair is giving a blowjob to Alex
-      targetGivingData.entity.components['positioning:giving_blowjob'] = {
+      targetGivingData.entity.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actorData.entity.id,
         initiated: true,
         consented: true,
@@ -245,7 +245,7 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
           actorData.entity.id,
           targetGivingData.entity.id
         );
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 });

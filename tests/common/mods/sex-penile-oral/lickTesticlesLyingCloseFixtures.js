@@ -84,7 +84,7 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       target_id: primaryId,
     });
   }
@@ -122,7 +122,7 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (targetFuckingActor) {
-    primaryBuilder.withComponent('positioning:fucking_vaginally', {
+    primaryBuilder.withComponent('sex-states:fucking_vaginally', {
       targetId: actorId,
     });
   }
@@ -242,7 +242,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
         // Check not currently fucking actor vaginally
         const fuckingVaginally =
-          partnerEntity.components['positioning:fucking_vaginally'];
+          partnerEntity.components['sex-states:fucking_vaginally'];
         if (fuckingVaginally?.targetId === actorId) return false;
 
         return true;

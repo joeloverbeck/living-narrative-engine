@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_fucked_vaginally", "positioning:bending_over"]
+    "actor": ["sex-states:being_fucked_vaginally", "positioning:bending_over"]
   },
   "template": "pump {target}'s penis",
   "prerequisites": [],

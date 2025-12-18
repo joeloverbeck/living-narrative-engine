@@ -105,7 +105,7 @@ describe('caressing:caress_cheek_softly action discovery', () => {
         'positioning:closeness',
       ]);
       expect(caressСheekSoftlyAction.forbidden_components.actor).toEqual([
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
       ]);
     });
 
@@ -188,7 +188,7 @@ describe('caressing:caress_cheek_softly action discovery', () => {
 
     it('is not available during blowjob', () => {
       const scenario = testFixture.createCloseActors(['Sophie', 'Jack']);
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         targetId: scenario.target.id,
       };
 

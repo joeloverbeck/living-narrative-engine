@@ -430,6 +430,110 @@ describe('core_handle_follow rule integration', () => {
     // modified when a follow cycle is detected.
   });
 
+  describe('sense-aware perception (DISPEREVEUPG)', () => {
+    /**
+     * Note: The perspective-aware description parameters (actor_description,
+     * target_description, alternate_descriptions) are passed to the log handler
+     * by DispatchPerceptibleEventHandler, not included in the event payload.
+     * These integration tests verify the rule correctly dispatches perceptible
+     * events with the expected payload structure.
+     */
+
+    it('verifies follow.rule.json has sense-aware DISPATCH_PERCEPTIBLE_EVENT', () => {
+      // Verify the rule JSON has the correct operation type
+      const findDispatchPerceptibleEvent = (actions) => {
+        for (const action of actions) {
+          if (action.type === 'DISPATCH_PERCEPTIBLE_EVENT') {
+            return action;
+          }
+          if (action.type === 'IF' && action.parameters?.then_actions) {
+            const found = findDispatchPerceptibleEvent(action.parameters.then_actions);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const dispatchAction = findDispatchPerceptibleEvent(followRule.actions);
+      expect(dispatchAction).not.toBeNull();
+      expect(dispatchAction.parameters).toHaveProperty('actor_description');
+      expect(dispatchAction.parameters).toHaveProperty('target_description');
+      expect(dispatchAction.parameters).toHaveProperty('alternate_descriptions');
+      expect(dispatchAction.parameters.alternate_descriptions).toHaveProperty('auditory');
+    });
+
+    it('dispatches perceptible event with correct description text', async () => {
+      testEnv.reset([
+        {
+          id: 'f1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Squire' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+            [ACTOR_COMPONENT_ID]: {},
+          },
+        },
+        {
+          id: 'l1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Lord Byron' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+            [ACTOR_COMPONENT_ID]: {},
+          },
+        },
+      ]);
+
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
+        actorId: 'f1',
+        actionId: 'companionship:follow',
+        targetId: 'l1',
+        originalInput: 'follow l1',
+      });
+
+      const perceptibleEvent = testEnv.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.descriptionText).toContain('Squire');
+      expect(perceptibleEvent.payload.descriptionText).toContain('Lord Byron');
+    });
+
+    it('dispatches perceptible event with correct perception type', async () => {
+      testEnv.reset([
+        {
+          id: 'f1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Follower' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+            [ACTOR_COMPONENT_ID]: {},
+          },
+        },
+        {
+          id: 'l1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Leader' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+            [ACTOR_COMPONENT_ID]: {},
+          },
+        },
+      ]);
+
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
+        actorId: 'f1',
+        actionId: 'companionship:follow',
+        targetId: 'l1',
+        originalInput: 'follow l1',
+      });
+
+      const perceptibleEvent = testEnv.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.perceptionType).toBe('physical.target_action');
+    });
+  });
+
   it('leader cannot follow follower after being followed', async () => {
     testEnv.reset([
       {

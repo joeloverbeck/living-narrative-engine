@@ -144,7 +144,7 @@ describe('item-handling:pick_up_item prerequisites', () => {
         'positioning:bending_over'
       );
       expect(pickUpItemAction.forbidden_components.actor).toContain(
-        'positioning:being_fucked_vaginally'
+        'sex-states:being_fucked_vaginally'
       );
     });
   });

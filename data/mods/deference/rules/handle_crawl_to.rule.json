@@ -47,26 +47,51 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Crawl to action with perspective-aware descriptions",
       "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.logMessage}",
+        "actor_description": "I crawl submissively to {context.targetName} until we're close.",
+        "target_description": "{context.actorName} crawls submissively toward me until we're close.",
+        "perception_type": "state_change_observable",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the sounds of shuffling and fabric dragging as someone crawls nearby."
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
       "parameters": {
-        "variable_name": "perceptionType",
-        "value": "state_change_observable"
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Mark action as successful",
       "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
+        "eventType": "core:action_success",
+        "payload": {
+          "actionId": "deference:crawl_to",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
       }
     },
-    { "macro": "core:logSuccessAndEndTurn" }
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful crawl to",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
   ]
 }

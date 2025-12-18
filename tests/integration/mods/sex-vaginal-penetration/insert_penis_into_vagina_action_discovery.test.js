@@ -219,10 +219,10 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
     }
 
     if (includePenetrationComponent) {
-      actorBuilder.withComponent('positioning:fucking_vaginally', {
+      actorBuilder.withComponent('sex-states:fucking_vaginally', {
         targetId: 'beth',
       });
-      targetBuilder.withComponent('positioning:being_fucked_vaginally', {
+      targetBuilder.withComponent('sex-states:being_fucked_vaginally', {
         actorId: 'alice',
       });
     }
@@ -432,8 +432,8 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
     it('should forbid actors already penetrating vaginally or receiving blowjob', () => {
       expect(insertPenisIntoVaginaAction.forbidden_components.actor).toEqual([
-        'positioning:fucking_vaginally',
-        'positioning:receiving_blowjob',
+        'sex-states:fucking_vaginally',
+        'sex-states:receiving_blowjob',
       ]);
     });
 
@@ -617,7 +617,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
       // Add receiving_blowjob component to the actor
       const actorEntity = entities.find((e) => e.id === 'alice');
-      actorEntity.components['positioning:receiving_blowjob'] = {
+      actorEntity.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: 'beth',
         consented: true,
       };

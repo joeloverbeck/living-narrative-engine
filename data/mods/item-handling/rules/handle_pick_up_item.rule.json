@@ -55,29 +55,23 @@
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get current timestamp",
-            "parameters": {
-              "result_variable": "currentTimestamp"
-            }
-          },
-          {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Log failed pickup for observers",
+            "comment": "Log failed pickup with perspective-aware descriptions",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} tried to pick up {context.itemName}, but can't carry it.",
               "actor_description": "I try to pick up {context.itemName}, but I cannot carry any more.",
-              "alternate_descriptions": {
-                "auditory": "I hear a frustrated attempt to pick something up."
-              },
               "perception_type": "error.action_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
               "involved_entities": [
                 "{event.payload.targetId}"
               ],
-                            "contextual_data": {
+              "alternate_descriptions": {
+                "auditory": "I hear a frustrated attempt to pick something up.",
+                "tactile": "I sense frustrated movement nearby as someone struggles with something."
+              },
+              "contextual_data": {
                 "reason": "{context.capacityCheck.reason}"
               }
             }
@@ -140,42 +134,11 @@
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get current timestamp",
-            "parameters": {
-              "result_variable": "currentTimestamp"
-            }
-          },
-          {
             "type": "SET_VARIABLE",
-            "comment": "Prepare success message for macro",
+            "comment": "Prepare success message",
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} picks up {context.itemName}."
-            }
-          },
-          {
-            "type": "SET_VARIABLE",
-            "comment": "Set perception type for macro",
-            "parameters": {
-              "variable_name": "perceptionType",
-              "value": "item.pickup"
-            }
-          },
-          {
-            "type": "SET_VARIABLE",
-            "comment": "Set location for macro",
-            "parameters": {
-              "variable_name": "locationId",
-              "value": "{context.actorPosition.locationId}"
-            }
-          },
-          {
-            "type": "SET_VARIABLE",
-            "comment": "Set target for macro",
-            "parameters": {
-              "variable_name": "targetId",
-              "value": "{event.payload.targetId}"
             }
           },
           {
@@ -189,17 +152,16 @@
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Log successful pickup with perspective-aware descriptions",
             "parameters": {
-              "location_id": "{context.locationId}",
+              "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.logMessage}",
               "actor_description": "I pick up {context.itemName} and add it to my inventory.",
+              "perception_type": "item.pickup",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
               "alternate_descriptions": {
                 "auditory": "I hear something being picked up from the ground.",
-                "tactile": "I sense someone retrieving an item nearby."
-              },
-              "perception_type": "{context.perceptionType}",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{context.targetId}",
-              "log_entry": true
+                "tactile": "I sense movement near the ground as someone retrieves an item."
+              }
             }
           },
           {
@@ -218,7 +180,6 @@
             "parameters": {
               "eventType": "core:action_success",
               "payload": {
-                "eventName": "core:action_success",
                 "actionId": "{event.payload.actionId}",
                 "actorId": "{event.payload.actorId}",
                 "targetId": "{event.payload.targetId}",

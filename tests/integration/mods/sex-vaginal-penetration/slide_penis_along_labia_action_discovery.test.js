@@ -213,7 +213,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
     }
 
     if (actorFuckingVaginally) {
-      actorBuilder.withComponent('positioning:fucking_vaginally', {
+      actorBuilder.withComponent('sex-states:fucking_vaginally', {
         targetId: 'beth',
       });
     }
@@ -630,7 +630,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
 
     // Add receiving_blowjob component to the actor
     const actorEntity = entities.find((e) => e.id === 'alice');
-    actorEntity.components['positioning:receiving_blowjob'] = {
+    actorEntity.components['sex-states:receiving_blowjob'] = {
       giving_entity_id: 'beth',
       consented: true,
     };

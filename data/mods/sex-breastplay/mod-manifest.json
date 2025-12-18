@@ -10,23 +10,11 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "anatomy",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "clothing",
+      "id": "sex-states",
       "version": "^1.0.0"
     },
     {
       "id": "positioning",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "caressing",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "sex-core",
       "version": "^1.0.0"
     }
   ],
@@ -73,7 +61,9 @@
       "actors_with_breasts_facing_each_other_or_away.scope",
       "actors_with_breasts_in_intimacy.scope"
     ],
-    "components": ["is_lactating.component.json"],
+    "components": [
+      "is_lactating.component.json"
+    ],
     "events": [],
     "macros": [],
     "entities": {

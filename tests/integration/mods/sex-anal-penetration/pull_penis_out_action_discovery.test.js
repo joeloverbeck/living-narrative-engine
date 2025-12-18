@@ -44,7 +44,7 @@ function buildPullPenisOutScenario(options = {}) {
     .asActor();
 
   if (includeFuckingAnally) {
-    actorBuilder.withComponent('positioning:fucking_anally', {
+    actorBuilder.withComponent('sex-states:fucking_anally', {
       being_fucked_entity_id: mismatchedReferences
         ? 'someone_else'
         : PRIMARY_ID,
@@ -63,7 +63,7 @@ function buildPullPenisOutScenario(options = {}) {
     .asActor();
 
   if (targetHasBeingFuckedAnally) {
-    primaryBuilder.withComponent('positioning:being_fucked_anally', {
+    primaryBuilder.withComponent('sex-states:being_fucked_anally', {
       fucking_entity_id: mismatchedReferences ? 'someone_else' : ACTOR_ID,
       consented: true,
     });
@@ -99,7 +99,7 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const fuckingAnally = actor?.components?.['positioning:fucking_anally'];
+      const fuckingAnally = actor?.components?.['sex-states:fucking_anally'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -120,7 +120,7 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       }
 
       const beingFuckedAnally =
-        receivingEntity.components?.['positioning:being_fucked_anally'];
+        receivingEntity.components?.['sex-states:being_fucked_anally'];
       if (!beingFuckedAnally) {
         return { success: true, value: new Set() };
       }
@@ -261,7 +261,7 @@ describe('sex-anal-penetration:pull_penis_out action discovery', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(PRIMARY_ID)
-      .withComponent('positioning:fucking_anally', {
+      .withComponent('sex-states:fucking_anally', {
         being_fucked_entity_id: PRIMARY_ID,
         initiated: true,
       });
@@ -272,7 +272,7 @@ describe('sex-anal-penetration:pull_penis_out action discovery', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(ACTOR_ID)
-      .withComponent('positioning:being_fucked_anally', {
+      .withComponent('sex-states:being_fucked_anally', {
         fucking_entity_id: ACTOR_ID,
         consented: true,
       });

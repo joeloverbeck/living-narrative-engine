@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness", "positioning:receiving_blowjob"]
+    "actor": ["positioning:closeness", "sex-states:receiving_blowjob"]
   },
   "forbidden_components": {},
   "template": "guide {primary}'s blowjob with your hand",

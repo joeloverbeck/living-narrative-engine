@@ -8,7 +8,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["sex-states:giving_blowjob"]
   },
   "template": "caress {target}'s cheek softly",
   "prerequisites": [],

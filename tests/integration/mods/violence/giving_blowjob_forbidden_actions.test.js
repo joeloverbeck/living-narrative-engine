@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that violence actions are correctly forbidden when actor is giving a blowjob.
  * @description Ensures that violence actions (slap, sucker punch) are not available when the acting actor
- * has the positioning:giving_blowjob component.
+ * has the sex-states:giving_blowjob component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -30,15 +30,15 @@ describe('violence actions forbidden when giving blowjob', () => {
   });
 
   describe('Action structure validation', () => {
-    it('slap should have positioning:giving_blowjob as forbidden component', () => {
+    it('slap should have sex-states:giving_blowjob as forbidden component', () => {
       expect(slapAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('sucker_punch should have positioning:giving_blowjob as forbidden component', () => {
+    it('sucker_punch should have sex-states:giving_blowjob as forbidden component', () => {
       expect(suckerPunchAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -56,10 +56,10 @@ describe('violence actions forbidden when giving blowjob', () => {
       // 1. Structure validation (tested above)
       // 2. Blocking when giving_blowjob component present (tested below)
       expect(slapAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
       expect(suckerPunchAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -123,7 +123,7 @@ describe('violence actions forbidden when giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Eve', 'Frank']);
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -145,7 +145,7 @@ describe('violence actions forbidden when giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,

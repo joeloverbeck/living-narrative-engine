@@ -327,6 +327,18 @@ describe('deference:kneel_before action integration', () => {
     expect(perceptibleEvent.payload.locationId).toBe('castle_hall');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
     expect(perceptibleEvent.payload.targetId).toBe('test:target1');
+
+    // Validate sense-aware perspective fields
+    expect(perceptibleEvent.payload.actorDescription).toBe(
+      'I kneel before Queen Guinevere.'
+    );
+    expect(perceptibleEvent.payload.targetDescription).toBe(
+      'Sir Galahad kneels before me.'
+    );
+    expect(perceptibleEvent.payload.alternateDescriptions).toEqual({
+      auditory:
+        'I hear the rustle of clothing and the sound of someone lowering to their knees nearby.',
+    });
   });
 
   it('handles multiple actors in same location', async () => {

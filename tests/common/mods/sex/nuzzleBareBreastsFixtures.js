@@ -53,7 +53,7 @@ export const NUZZLE_BARE_BREASTS_ROOM_ID = 'velvet_suite';
  * @typedef {object} NuzzleBareBreastsScenarioOptions
  * @property {boolean} [includeCloseness=true] - Whether both partners should start in closeness.
  * @property {boolean} [includeBreastAnatomy=true] - Whether the target should include breast anatomy parts.
- * @property {boolean} [actorGivingBlowjob=false] - Whether the actor should have the positioning:giving_blowjob component.
+ * @property {boolean} [actorGivingBlowjob=false] - Whether the actor should have the sex-states:giving_blowjob component.
  */
 
 /**
@@ -97,7 +97,7 @@ export function buildNuzzleBareBreastsScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: targetId,
       initiated: true,
     });

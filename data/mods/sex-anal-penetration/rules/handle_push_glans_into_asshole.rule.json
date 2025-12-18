@@ -35,11 +35,11 @@
         "entity_ref": "actor",
         "pairs": [
           {
-            "component_type": "positioning:fucking_anally",
+            "component_type": "sex-states:fucking_anally",
             "result_variable": "actorExistingFuckingAnallyComponent"
           },
           {
-            "component_type": "positioning:being_fucked_anally",
+            "component_type": "sex-states:being_fucked_anally",
             "result_variable": "actorExistingBeingFuckedAnallyComponent"
           }
         ]
@@ -51,11 +51,11 @@
         "entity_ref": "primary",
         "pairs": [
           {
-            "component_type": "positioning:fucking_anally",
+            "component_type": "sex-states:fucking_anally",
             "result_variable": "primaryExistingFuckingAnallyComponent"
           },
           {
-            "component_type": "positioning:being_fucked_anally",
+            "component_type": "sex-states:being_fucked_anally",
             "result_variable": "primaryExistingBeingFuckedAnallyComponent"
           }
         ]
@@ -72,7 +72,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingFuckingAnallyComponent.being_fucked_entity_id}",
-              "component_type": "positioning:being_fucked_anally"
+              "component_type": "sex-states:being_fucked_anally"
             }
           }
         ]
@@ -89,7 +89,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingBeingFuckedAnallyComponent.fucking_entity_id}",
-              "component_type": "positioning:fucking_anally"
+              "component_type": "sex-states:fucking_anally"
             }
           }
         ]
@@ -106,7 +106,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.primaryExistingFuckingAnallyComponent.being_fucked_entity_id}",
-              "component_type": "positioning:being_fucked_anally"
+              "component_type": "sex-states:being_fucked_anally"
             }
           }
         ]
@@ -123,7 +123,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.primaryExistingBeingFuckedAnallyComponent.fucking_entity_id}",
-              "component_type": "positioning:fucking_anally"
+              "component_type": "sex-states:fucking_anally"
             }
           }
         ]
@@ -133,35 +133,35 @@
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:fucking_anally"
+        "component_type": "sex-states:fucking_anally"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:being_fucked_anally"
+        "component_type": "sex-states:being_fucked_anally"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:fucking_anally"
+        "component_type": "sex-states:fucking_anally"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:being_fucked_anally"
+        "component_type": "sex-states:being_fucked_anally"
       }
     },
     {
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:fucking_anally",
+        "component_type": "sex-states:fucking_anally",
         "value": {
           "being_fucked_entity_id": "{event.payload.primaryId}",
           "initiated": true
@@ -172,7 +172,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:being_fucked_anally",
+        "component_type": "sex-states:being_fucked_anally",
         "value": {
           "fucking_entity_id": "{event.payload.actorId}",
           "consented": true

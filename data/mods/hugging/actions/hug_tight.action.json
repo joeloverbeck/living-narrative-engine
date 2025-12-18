@@ -11,7 +11,7 @@
     "actor": [
       "positioning:hugging",
       "positioning:being_hugged",
-      "positioning:giving_blowjob",
+      "sex-states:giving_blowjob",
       "positioning:restraining"
     ],
     "primary": ["positioning:being_hugged"]

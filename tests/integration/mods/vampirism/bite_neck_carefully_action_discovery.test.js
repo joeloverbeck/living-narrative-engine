@@ -203,7 +203,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         target_id: scenario.target.id,
       };
 

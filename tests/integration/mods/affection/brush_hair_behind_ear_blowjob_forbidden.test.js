@@ -104,9 +104,9 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
   });
 
   describe('Action structure validation', () => {
-    it('should have positioning:giving_blowjob as forbidden component', () => {
+    it('should have sex-states:giving_blowjob as forbidden component', () => {
       expect(brushHairBehindEarAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -136,7 +136,7 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
       );
 
       // Actor is giving a blowjob
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,

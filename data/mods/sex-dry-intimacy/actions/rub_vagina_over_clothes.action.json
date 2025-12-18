@@ -20,7 +20,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "primary": ["positioning:giving_blowjob"]
+    "primary": ["sex-states:giving_blowjob"]
   },
   "template": "rub {primary}'s vagina over the {secondary}",
   "prerequisites": [],

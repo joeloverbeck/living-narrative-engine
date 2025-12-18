@@ -8,7 +8,7 @@
     "actor": ["vampirism:is_vampire"]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"]
+    "actor": ["positioning:biting_neck", "sex-states:giving_blowjob"]
   },
   "template": "bare your fangs menacingly at {target}",
   "visual": {

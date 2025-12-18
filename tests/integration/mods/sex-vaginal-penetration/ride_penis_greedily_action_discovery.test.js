@@ -62,7 +62,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
     it('requires active vaginal penetration posture and forbids seating conflicts', () => {
       expect(ridePenisGreedilyAction.required_components.actor).toEqual([
         'positioning:closeness',
-        'positioning:being_fucked_vaginally',
+        'sex-states:being_fucked_vaginally',
       ]);
       expect(ridePenisGreedilyAction.forbidden_components.actor).toEqual([
         'positioning:sitting_on',

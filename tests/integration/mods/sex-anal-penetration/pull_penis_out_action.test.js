@@ -45,7 +45,7 @@ function buildPullPenisOutScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(PRIMARY_ID)
-    .withComponent('positioning:fucking_anally', {
+    .withComponent('sex-states:fucking_anally', {
       being_fucked_entity_id: PRIMARY_ID,
       initiated: true,
     })
@@ -57,7 +57,7 @@ function buildPullPenisOutScenario() {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .closeToEntity(ACTOR_ID)
-    .withComponent('positioning:being_fucked_anally', {
+    .withComponent('sex-states:being_fucked_anally', {
       fucking_entity_id: ACTOR_ID,
       consented: true,
     })
@@ -89,7 +89,7 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const fuckingAnally = actor?.components?.['positioning:fucking_anally'];
+      const fuckingAnally = actor?.components?.['sex-states:fucking_anally'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -109,7 +109,7 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       }
 
       const beingFuckedAnally =
-        receivingEntity.components?.['positioning:being_fucked_anally'];
+        receivingEntity.components?.['sex-states:being_fucked_anally'];
       if (!beingFuckedAnally) {
         return { success: true, value: new Set() };
       }
@@ -195,9 +195,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
     const primaryBefore =
       testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorBefore.components['positioning:fucking_anally']).toBeDefined();
+    expect(actorBefore.components['sex-states:fucking_anally']).toBeDefined();
     expect(
-      primaryBefore.components['positioning:being_fucked_anally']
+      primaryBefore.components['sex-states:being_fucked_anally']
     ).toBeDefined();
 
     await testFixture.executeAction(actorId, primaryId, {
@@ -207,9 +207,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     // Verify components removed after action
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorAfter.components['positioning:fucking_anally']).toBeUndefined();
+    expect(actorAfter.components['sex-states:fucking_anally']).toBeUndefined();
     expect(
-      primaryAfter.components['positioning:being_fucked_anally']
+      primaryAfter.components['sex-states:being_fucked_anally']
     ).toBeUndefined();
   });
 
@@ -225,7 +225,7 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
       .atLocation('bedroom1')
       .withLocationComponent('bedroom1')
       .asActor()
-      .withComponent('positioning:fucking_anally', {
+      .withComponent('sex-states:fucking_anally', {
         being_fucked_entity_id: SECONDARY_PRIMARY_ID,
         initiated: true,
       })
@@ -236,7 +236,7 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
       .atLocation('bedroom1')
       .withLocationComponent('bedroom1')
       .asActor()
-      .withComponent('positioning:being_fucked_anally', {
+      .withComponent('sex-states:being_fucked_anally', {
         fucking_entity_id: SECONDARY_ACTOR_ID,
         consented: true,
       })
@@ -257,10 +257,10 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     const secondaryPrimaryAfter =
       testFixture.entityManager.getEntityInstance(SECONDARY_PRIMARY_ID);
     expect(
-      secondaryActorAfter.components['positioning:fucking_anally']
+      secondaryActorAfter.components['sex-states:fucking_anally']
     ).toBeDefined();
     expect(
-      secondaryPrimaryAfter.components['positioning:being_fucked_anally']
+      secondaryPrimaryAfter.components['sex-states:being_fucked_anally']
     ).toBeDefined();
   });
 
@@ -271,7 +271,7 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
 
     // Verify components exist before action
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actorBefore.components['positioning:fucking_anally']).toBeDefined();
+    expect(actorBefore.components['sex-states:fucking_anally']).toBeDefined();
 
     // Dispatch a different action event manually (won't match our condition)
     testFixture.testEnv.eventBus.dispatch({
@@ -285,7 +285,7 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
 
     // Verify components still exist (rule didn't fire)
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actorAfter.components['positioning:fucking_anally']).toBeDefined();
+    expect(actorAfter.components['sex-states:fucking_anally']).toBeDefined();
 
     // Verify no success event was dispatched
     const successEvents = testFixture.events.filter(
@@ -302,9 +302,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     // Verify components exist (simulating post-initiation state)
     const actorMid = testFixture.entityManager.getEntityInstance(actorId);
     const primaryMid = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorMid.components['positioning:fucking_anally']).toBeDefined();
+    expect(actorMid.components['sex-states:fucking_anally']).toBeDefined();
     expect(
-      primaryMid.components['positioning:being_fucked_anally']
+      primaryMid.components['sex-states:being_fucked_anally']
     ).toBeDefined();
 
     // Execute pull out action
@@ -315,9 +315,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     // Verify components removed (workflow complete)
     const actorFinal = testFixture.entityManager.getEntityInstance(actorId);
     const primaryFinal = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(actorFinal.components['positioning:fucking_anally']).toBeUndefined();
+    expect(actorFinal.components['sex-states:fucking_anally']).toBeUndefined();
     expect(
-      primaryFinal.components['positioning:being_fucked_anally']
+      primaryFinal.components['sex-states:being_fucked_anally']
     ).toBeUndefined();
 
     // Verify success event

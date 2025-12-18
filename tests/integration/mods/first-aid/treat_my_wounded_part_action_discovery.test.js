@@ -137,7 +137,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorGivingBlowjob) {
-      actorBuilder.withComponent('positioning:giving_blowjob', {});
+      actorBuilder.withComponent('sex-states:giving_blowjob', {});
     }
 
     if (actorDoingComplexPerformance) {
@@ -277,7 +277,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(treatMyAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
         'positioning:hugging',
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'positioning:bending_over',
         'positioning:being_restrained',
@@ -363,7 +363,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:giving_blowjob', () => {
+  it('is hidden when actor has sex-states:giving_blowjob', () => {
     loadScenario({ actorGivingBlowjob: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);

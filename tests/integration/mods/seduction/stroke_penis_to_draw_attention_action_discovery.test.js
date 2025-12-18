@@ -165,8 +165,8 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
       expect(strokePenisToDrawAttentionAction.forbidden_components).toEqual({
         actor: [
           'positioning:hugging',
-          'positioning:receiving_blowjob',
-          'positioning:fucking_anally',
+          'sex-states:receiving_blowjob',
+          'sex-states:fucking_anally',
           'positioning:restraining',
         ],
       });
@@ -213,7 +213,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
 
       // Add fucking_anally component to the actor
       const actor = testFixture.entityManager.getEntityInstance(actorId);
-      actor.components['positioning:fucking_anally'] = {
+      actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
       };

@@ -101,7 +101,7 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Disc
       .withBody('aliceGroin')
       .closeToEntity('beth')
       .closeToEntity('carol')
-      .withComponent('positioning:fucking_vaginally', { targetId: 'beth' })
+      .withComponent('sex-states:fucking_vaginally', { targetId: 'beth' })
       .asActor()
       .build();
 
@@ -110,7 +110,7 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Disc
       .atLocation('bedroom')
       .withBody('bethPelvis')
       .closeToEntity('alice')
-      .withComponent('positioning:being_fucked_vaginally', { actorId: 'alice' })
+      .withComponent('sex-states:being_fucked_vaginally', { actorId: 'alice' })
       .asActor()
       .build();
 

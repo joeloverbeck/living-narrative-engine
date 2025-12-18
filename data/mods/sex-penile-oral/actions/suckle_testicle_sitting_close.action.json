@@ -15,7 +15,7 @@
     "primary": ["positioning:sitting_on", "positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["sex-states:giving_blowjob"]
   },
   "template": "suckle on {primary}'s testicle",
   "prerequisites": [],

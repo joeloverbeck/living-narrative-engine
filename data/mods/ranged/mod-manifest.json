@@ -8,6 +8,10 @@
   "actionConsiderWhen": "Combat situations requiring ranged attacks, throwing weapons at enemies, or when melee engagement is not possible or desired.",
   "dependencies": [
     {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "core",
       "version": "1.0.0"
     },
@@ -17,10 +21,6 @@
     },
     {
       "id": "skills",
-      "version": "1.0.0"
-    },
-    {
-      "id": "damage-types",
       "version": "1.0.0"
     },
     {

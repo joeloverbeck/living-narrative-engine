@@ -32,6 +32,7 @@ import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandl
 import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import RebuildLeaderListCacheHandler from '../../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import {
   FOLLOWING_COMPONENT_ID,
@@ -135,6 +136,10 @@ describe('Example Rule Test with Utilities', () => {
         logger: testEnv.logger,
       }),
       SET_VARIABLE: new SetVariableHandler({ logger: testEnv.logger }),
+      DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+        dispatcher: testEnv.safeEventDispatcher,
+        logger: testEnv.logger,
+      }),
       // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
       REGENERATE_DESCRIPTION: {
         execute: jest.fn().mockResolvedValue(undefined),

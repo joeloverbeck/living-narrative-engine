@@ -459,7 +459,7 @@ describe('ViolationReporter', () => {
 
       const lines = report.split('\n');
       const summaryStart = lines.findIndex((line) =>
-        line.includes('Violation Summary by Mod:')
+        line.includes('Violation Summary:')
       );
       const highViolationsLine = lines.findIndex((line) =>
         line.includes('high_violations')

@@ -120,14 +120,14 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action integration', 
 
     const actorComponent = testFixture.entityManager.getComponentData(
       'alice',
-      'positioning:fucking_vaginally'
+      'sex-states:fucking_vaginally'
     );
     expect(actorComponent).toBeDefined();
     expect(actorComponent).toEqual({ targetId: 'beth' });
 
     const targetComponent = testFixture.entityManager.getComponentData(
       'beth',
-      'positioning:being_fucked_vaginally'
+      'sex-states:being_fucked_vaginally'
     );
 
     expect(targetComponent).toBeDefined();

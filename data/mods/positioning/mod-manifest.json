@@ -12,6 +12,10 @@
     {
       "id": "core",
       "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -20,8 +24,6 @@
       "allows_lying_on.component.json",
       "allows_sitting.component.json",
       "being_bitten_in_neck.component.json",
-      "being_fucked_anally.component.json",
-      "being_fucked_vaginally.component.json",
       "being_hugged.component.json",
       "being_restrained.component.json",
       "bending_over.component.json",
@@ -30,13 +32,9 @@
       "doing_complex_performance.component.json",
       "facing_away.component.json",
       "fallen.component.json",
-      "fucking_anally.component.json",
-      "fucking_vaginally.component.json",
-      "giving_blowjob.component.json",
       "hugging.component.json",
       "kneeling_before.component.json",
       "lying_down.component.json",
-      "receiving_blowjob.component.json",
       "restraining.component.json",
       "sitting_on.component.json",
       "straddling_waist.component.json",

@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:giving_blowjob", "positioning:closeness"]
+    "actor": ["sex-states:giving_blowjob", "positioning:closeness"]
   },
   "forbidden_components": {},
   "template": "slowly pull {primary}'s cock out of your mouth",

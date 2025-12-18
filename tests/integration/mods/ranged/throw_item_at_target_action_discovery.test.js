@@ -101,7 +101,7 @@ describe('throw_item_at_target action definition', () => {
 
     it('should forbid giving_blowjob state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 

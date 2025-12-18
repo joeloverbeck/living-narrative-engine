@@ -8,8 +8,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:hugging",
-      "positioning:receiving_blowjob",
-      "positioning:fucking_anally",
+      "sex-states:receiving_blowjob",
+      "sex-states:fucking_anally",
       "positioning:restraining"
     ]
   },
