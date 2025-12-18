@@ -29,6 +29,13 @@ const mockModGraphService = {
   setExplicitMods: jest.fn(),
   getLoadOrder: jest.fn(),
   getModStatus: jest.fn(),
+  getAllNodes: jest.fn().mockReturnValue(new Map()),
+};
+
+const mockModStatisticsService = {
+  invalidateCache: jest.fn(),
+  getGraphService: jest.fn().mockReturnValue(mockModGraphService),
+  isCacheValid: jest.fn().mockReturnValue(false),
 };
 
 const mockWorldDiscoveryService = {
@@ -56,6 +63,15 @@ jest.mock('../../../src/modManager/services/ModGraphService.js', () => {
   return {
     __esModule: true,
     ModGraphService: mock,
+    default: mock,
+  };
+});
+
+jest.mock('../../../src/modManager/services/ModStatisticsService.js', () => {
+  const mock = jest.fn(() => mockModStatisticsService);
+  return {
+    __esModule: true,
+    ModStatisticsService: mock,
     default: mock,
   };
 });
@@ -99,6 +115,9 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { ModManagerBootstrap } from '../../../src/modManager/ModManagerBootstrap.js';
 import ModDiscoveryService from '../../../src/modManager/services/ModDiscoveryService.js';
 import ModGraphService from '../../../src/modManager/services/ModGraphService.js';
+// ModStatisticsService import is mocked; keeping import pattern consistent with other services
+// eslint-disable-next-line no-unused-vars
+import ModStatisticsService from '../../../src/modManager/services/ModStatisticsService.js';
 import WorldDiscoveryService from '../../../src/modManager/services/WorldDiscoveryService.js';
 import ConfigPersistenceService from '../../../src/modManager/services/ConfigPersistenceService.js';
 import ModManagerController from '../../../src/modManager/controllers/ModManagerController.js';

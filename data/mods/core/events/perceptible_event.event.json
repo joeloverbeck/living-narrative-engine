@@ -60,6 +60,42 @@
         "description": "Optional. A flexible field for additional, structured data specific to the perceptionType. This could include details like the exact words spoken, the specific item definition ID for a pickup, or the direction of movement for an exit. Useful for more advanced AI reasoning.",
         "additionalProperties": true,
         "default": {}
+      },
+      "actorDescription": {
+        "type": ["string", "null"],
+        "description": "First-person description delivered to the actor. The actor always receives this regardless of sensory state (they know what they're doing)."
+      },
+      "targetDescription": {
+        "type": ["string", "null"],
+        "description": "Target-perspective description delivered to the target entity. Sensory filtering still applies."
+      },
+      "alternateDescriptions": {
+        "type": ["object", "null"],
+        "description": "Alternative event descriptions for different sensory contexts (auditory, tactile, olfactory, limited).",
+        "properties": {
+          "auditory": {
+            "type": "string",
+            "description": "Description when perceived through hearing"
+          },
+          "tactile": {
+            "type": "string",
+            "description": "Description when perceived through touch"
+          },
+          "olfactory": {
+            "type": "string",
+            "description": "Description when perceived through smell"
+          },
+          "limited": {
+            "type": "string",
+            "description": "Fallback description when primary and specific senses are unavailable"
+          }
+        },
+        "additionalProperties": false
+      },
+      "senseAware": {
+        "type": "boolean",
+        "description": "When true (default), applies sense-based filtering. When false, all recipients receive event regardless of sensory state.",
+        "default": true
       }
     },
     "additionalProperties": false

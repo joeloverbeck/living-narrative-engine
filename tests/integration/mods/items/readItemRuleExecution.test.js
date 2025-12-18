@@ -6,7 +6,6 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import readItemRule from '../../../../data/mods/items/rules/handle_read_item.rule.json' assert { type: 'json' };
 import eventIsActionReadItem from '../../../../data/mods/items/conditions/event-is-action-read-item.condition.json' assert { type: 'json' };
 
@@ -79,7 +78,7 @@ describe('items:read_item action integration', () => {
   });
 
   describe('successful reading scenarios', () => {
-    it('delivers readable text privately when item is in inventory', async () => {
+    it('delivers readable text via single perceptible event with actor routing', async () => {
       const scenario = setupReadItemScenario('Alice', 'library', [
         {
           id: 'journal-entry-1',
@@ -91,23 +90,26 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'journal-entry-1');
 
-      // Find the private event directed at the actor
-      const perceptibleEvent = testFixture.events.find(
+      // Single-dispatch pattern: only ONE perceptible event
+      const perceptibleEvents = testFixture.events.filter(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item.examine' &&
-          event.payload.contextualData?.recipientIds?.includes('test:actor1')
+          event.payload.perceptionType === 'item.examine'
       );
+      expect(perceptibleEvents).toHaveLength(1);
 
-      expect(perceptibleEvent).toBeDefined();
+      const perceptibleEvent = perceptibleEvents[0];
+      // description_text is for observers (third-person, no readable content)
       expect(perceptibleEvent.payload.descriptionText).toBe(
-        'Alice reads journal-entry-1: Entry 1: Supplies are running low.'
+        'Alice reads journal-entry-1.'
       );
+      // actor_id is set for perspective-aware routing
       expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
       expect(perceptibleEvent.payload.targetId).toBe('journal-entry-1');
-      expect(perceptibleEvent.payload.contextualData?.recipientIds).toEqual([
-        'test:actor1',
-      ]);
+      // Readable text is in contextual data for internal routing
+      expect(perceptibleEvent.payload.contextualData.readableText).toBe(
+        'Entry 1: Supplies are running low.'
+      );
 
       const successMessage = testFixture.events.find(
         (event) => event.eventType === 'core:display_successful_action_result'
@@ -142,17 +144,21 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'notice-board');
 
-      // Find the private event directed at the actor
+      // Single-dispatch pattern: only ONE perceptible event
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.targetId === 'notice-board' &&
-          event.payload.contextualData?.recipientIds?.includes('test:actor1')
+          event.payload.targetId === 'notice-board'
       );
 
       expect(perceptibleEvent).toBeDefined();
+      // description_text is third-person for observers
       expect(perceptibleEvent.payload.descriptionText).toBe(
-        'Bob reads notice-board: Notice: All patrols report to the captain.'
+        'Bob reads notice-board.'
+      );
+      // Readable text is in contextual data
+      expect(perceptibleEvent.payload.contextualData.readableText).toBe(
+        'Notice: All patrols report to the captain.'
       );
 
       const itemAfter =
@@ -161,7 +167,7 @@ describe('items:read_item action integration', () => {
       expect(itemAfter.components['core:position'].locationId).toBe('study');
     });
 
-    it('preserves multi-sentence readable text verbatim', async () => {
+    it('preserves multi-sentence readable text in contextual data', async () => {
       const scenario = setupReadItemScenario('Clara', 'archive', [
         {
           id: 'ancient-scroll',
@@ -173,20 +179,24 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'ancient-scroll');
 
-      // Find the private event directed at the actor
+      // Single-dispatch pattern: only ONE perceptible event
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.targetId === 'ancient-scroll' &&
-          event.payload.contextualData?.recipientIds?.includes('test:actor1')
+          event.payload.targetId === 'ancient-scroll'
       );
       expect(perceptibleEvent).toBeDefined();
+      // description_text is third-person (no readable content)
       expect(perceptibleEvent.payload.descriptionText).toBe(
-        'Clara reads ancient-scroll: Line one whispers secrets. Line two warns of danger. Line three promises treasure.'
+        'Clara reads ancient-scroll.'
+      );
+      // Readable text is preserved verbatim in contextual data
+      expect(perceptibleEvent.payload.contextualData.readableText).toBe(
+        'Line one whispers secrets. Line two warns of danger. Line three promises treasure.'
       );
     });
 
-    it('delivers private text only to acting actor and public text to observers', async () => {
+    it('sets actor_id for perspective-aware routing to deliver content', async () => {
       const scenario = setupReadItemScenario('Darius', 'archives', [
         {
           id: 'sealed-letter',
@@ -232,55 +242,26 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'sealed-letter');
 
-      // Find all perceptible events
+      // Single-dispatch pattern: only ONE perceptible event
       const perceptibleEvents = testFixture.events.filter(
         (event) => event.eventType === 'core:perceptible_event'
       );
+      expect(perceptibleEvents).toHaveLength(1);
 
-      const perceptionLogHandler = new AddPerceptionLogEntryHandler({
-        entityManager: testFixture.entityManager,
-        logger: testFixture.logger,
-        safeEventDispatcher: { dispatch: () => {} },
-      });
-
-      // Simulate event processing for logs
-      for (const event of perceptibleEvents) {
-        await perceptionLogHandler.execute({
-          location_id: event.payload.locationId,
-          entry: {
-            descriptionText: event.payload.descriptionText,
-            timestamp: event.payload.timestamp,
-            perceptionType: event.payload.perceptionType,
-            actorId: event.payload.actorId,
-            targetId: event.payload.targetId,
-            involvedEntities: event.payload.involvedEntities,
-          },
-          originating_actor_id: event.payload.actorId,
-          recipient_ids: event.payload.contextualData?.recipientIds,
-          excluded_actor_ids: event.payload.contextualData?.excludedActorIds,
-        });
-      }
-
-      // Verify OBSERVER Log (Should see public message only)
-      const observerEntity =
-        testFixture.entityManager.getEntityInstance('observer-1');
-      const observerLog =
-        observerEntity.components['core:perception_log'].logEntries;
-      
-      expect(observerLog).toHaveLength(1);
-      expect(observerLog[0].descriptionText).toBe('Darius reads sealed-letter.');
-      // Should NOT see the private content
-      expect(observerLog[0].descriptionText).not.toContain('midnight');
-
-      // Verify ACTOR Log (Should see private message)
-      // Note: Actor might see public message IF not excluded, but our rule excludes them.
-      const actorEntity =
-        testFixture.entityManager.getEntityInstance('test:actor1');
-      const actorLog =
-        actorEntity.components['core:perception_log'].logEntries;
-      
-      expect(actorLog).toHaveLength(1);
-      expect(actorLog[0].descriptionText).toContain('midnight');
+      const perceptibleEvent = perceptibleEvents[0];
+      // description_text is third-person for observers (no private content)
+      expect(perceptibleEvent.payload.descriptionText).toBe(
+        'Darius reads sealed-letter.'
+      );
+      expect(perceptibleEvent.payload.descriptionText).not.toContain(
+        'midnight'
+      );
+      // actor_id is set for perspective-aware routing
+      expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
+      // Private content is in contextual data for internal routing
+      expect(perceptibleEvent.payload.contextualData.readableText).toBe(
+        'Darius, meet me at midnight behind the chapel.'
+      );
     });
   });
 

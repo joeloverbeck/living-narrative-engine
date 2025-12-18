@@ -100,8 +100,7 @@
                     "perception_type": "state.observable_change",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{context.oldFollowingData.leaderId}",
-                    "log_entry": true,
-                    "involved_entities": [],
+                                        "involved_entities": [],
                     "alternate_descriptions": {
                       "auditory": "I hear someone declaring their independence from service nearby."
                     }

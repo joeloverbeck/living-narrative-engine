@@ -295,7 +295,7 @@ describe('Sense-Aware Operation Schema Extensions', () => {
       expect(validateDispatch.errors).toBeDefined();
     });
 
-    it('rejects sense_aware with non-boolean value', () => {
+    it('accepts sense_aware placeholder string for runtime resolution', () => {
       const operation = {
         type: 'DISPATCH_PERCEPTIBLE_EVENT',
         parameters: {
@@ -303,7 +303,26 @@ describe('Sense-Aware Operation Schema Extensions', () => {
           description_text: 'Bob waves.',
           perception_type: 'social.gesture',
           actor_id: 'actor:bob',
-          sense_aware: 'yes',
+          sense_aware: '{event.payload.senseAware}',
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      if (!valid) {
+        console.error('AJV validation errors:', validateDispatch.errors);
+      }
+      expect(valid).toBe(true);
+    });
+
+    it('rejects sense_aware with non-boolean, non-string value', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob waves.',
+          perception_type: 'social.gesture',
+          actor_id: 'actor:bob',
+          sense_aware: 123,
         },
       };
 

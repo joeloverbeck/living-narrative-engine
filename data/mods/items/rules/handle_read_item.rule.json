@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_read_item",
-  "comment": "Handles the read_item action by delivering readable text privately to the actor.",
+  "comment": "Handles the read_item action with perspective-aware perception (actor gets first-person with content, observers get third-person)",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-read-item"
@@ -52,50 +52,29 @@
         "then_actions": [
           {
             "type": "SET_VARIABLE",
-            "comment": "Prepare public message (no content)",
+            "comment": "Prepare observer message (third-person, no content)",
             "parameters": {
-              "variable_name": "publicMessage",
+              "variable_name": "observerMessage",
               "value": "{context.actorName} reads {context.itemName}."
             }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Public message visible to all EXCEPT actor",
+            "comment": "Read action with perspective-aware descriptions - actor gets first-person with content",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.publicMessage}",
+              "description_text": "{context.observerMessage}",
+              "actor_description": "I read {context.itemName}. It says: {context.itemReadable.text}",
               "perception_type": "item.examine",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear pages being turned nearby.",
+                "tactile": "I sense someone handling a document or book nearby."
+              },
               "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.actorId}"
-                ]
+                "readableText": "{context.itemReadable.text}"
               }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Send readable text as a private perception",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} reads {context.itemName}: {context.itemReadable.text}",
-              "perception_type": "item.examine",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.actorId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "SET_VARIABLE",
-            "comment": "Prepare success message for UI",
-            "parameters": {
-              "variable_name": "successMessage",
-              "value": "{context.actorName} reads {context.itemName}."
             }
           },
           {
@@ -104,7 +83,7 @@
             "parameters": {
               "eventType": "core:display_successful_action_result",
               "payload": {
-                "message": "{context.successMessage}"
+                "message": "{context.observerMessage}"
               }
             }
           },

@@ -98,8 +98,7 @@
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "log_entry": true,
-              "alternate_descriptions": {
+                            "alternate_descriptions": {
                 "auditory": "I hear a faint humming and sense magical energy nearby.",
                 "tactile": "I feel a wave of supernatural cold pass through the area."
               }
@@ -155,8 +154,7 @@
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "log_entry": true,
-              "alternate_descriptions": {
+                            "alternate_descriptions": {
                 "auditory": "I hear a faint humming and sense magical energy nearby.",
                 "tactile": "I feel a wave of supernatural cold pass through the area."
               }

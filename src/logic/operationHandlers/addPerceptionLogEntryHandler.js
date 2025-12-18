@@ -291,12 +291,17 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
       // Apply sense filtering if needed (unless skipped for actor)
       let finalEntry;
+      const hasCustomDescription = descriptionForRecipient !== entry.descriptionText;
       if (!skipSenseFiltering && filteredRecipientsMap) {
         const filtered = filteredRecipientsMap.get(id);
         if (filtered) {
+          // Custom descriptions (target_description) take priority over filtered observer text
+          // This ensures target sees "Pitch removes my shoes" not "Pitch removes Cress's shoes"
           finalEntry = {
             ...entry,
-            descriptionText: filtered.descriptionText ?? descriptionForRecipient,
+            descriptionText: hasCustomDescription
+              ? descriptionForRecipient
+              : (filtered.descriptionText ?? entry.descriptionText),
             perceivedVia: filtered.sense,
           };
         } else {

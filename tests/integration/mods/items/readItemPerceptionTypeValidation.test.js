@@ -63,10 +63,12 @@ describe('items:read_item perception type validation', () => {
     expect(errorEvents).toHaveLength(0);
 
     // Assert: Verify perceptible event was dispatched with correct perception type
+    // Note: After refactoring, events are broadcast to location (no explicit recipientIds)
+    // and log entry creation is handled by log_perceptible_events.rule.json
     const perceptibleEvent = testFixture.events.find(
       (event) =>
         event.eventType === 'core:perceptible_event' &&
-        event.payload.contextualData?.recipientIds?.includes('test:actor1')
+        event.payload.perceptionType === 'item.examine'
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe('item.examine');
@@ -79,10 +81,6 @@ describe('items:read_item perception type validation', () => {
       perceptionType: 'item.examine',
       actorId: 'test:actor1',
       targetId: 'test_letter',
-      involvedEntities: expect.any(Array),
-      contextualData: expect.objectContaining({
-        recipientIds: ['test:actor1'],
-      }),
     });
 
     // Assert: Verify the action completed successfully

@@ -229,6 +229,37 @@ describe('writing:sign_document action integration', () => {
       expectSuccessfulTurnEnd(testFixture.events);
     });
 
+    it('includes perspective-aware fields for actor-specific routing', async () => {
+      const scenario = setupSignDocumentScenario('Diana', 'study', true);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.document,
+        scenario.pencil,
+      ]);
+
+      await testFixture.executeAction('test:actor1', 'contract-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
+
+      const signEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'communication.notes'
+      );
+      expect(signEvent).toBeDefined();
+
+      // Verify perspective-aware routing fields are set
+      // description_text is third-person for observers
+      expect(signEvent.payload.descriptionText).toBe(
+        'Diana signs Employment Contract using pencil.'
+      );
+      // actor_id is set for perspective-aware routing
+      expect(signEvent.payload.actorId).toBe('test:actor1');
+
+      expectSuccessfulTurnEnd(testFixture.events);
+    });
+
     it('only dispatches expected events (no unexpected side effects)', async () => {
       const scenario = setupSignDocumentScenario('Dave', 'station', true);
       testFixture.reset([

@@ -92,8 +92,10 @@ describe('observation:examine_owned_item rule execution', () => {
         (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toBe(
-        'Alice examines their letter-1: A weathered letter.'
+        'Alice examines their letter-1.'
       );
       expect(examineEvent.payload.locationId).toBe('saloon1');
       expect(examineEvent.payload.actorId).toBe('test:actor1');
@@ -134,8 +136,9 @@ describe('observation:examine_owned_item rule execution', () => {
         (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
+      // Per payload contract: descriptionText is brief third-person message
       expect(examineEvent.payload.descriptionText).toBe(
-        'Charlie examines their old-book: An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.'
+        'Charlie examines their old-book.'
       );
 
       expectSuccessfulTurnEnd(testFixture.events);
@@ -165,11 +168,13 @@ describe('observation:examine_owned_item rule execution', () => {
       expect(examineEvent.payload.perceptionType).toBe('item.examine');
       expect(examineEvent.payload.actorId).toBe('test:actor1');
       expect(examineEvent.payload.targetId).toBe('tool-1');
+      // Per payload contract: descriptionText is brief third-person message
+      // Item description ("A well-worn hammer.") is in actor_description (not in payload)
       expect(examineEvent.payload.descriptionText).toContain('Dave');
       expect(examineEvent.payload.descriptionText).toContain('their');
       expect(examineEvent.payload.descriptionText).toContain('tool-1');
-      expect(examineEvent.payload.descriptionText).toContain(
-        'A well-worn hammer.'
+      expect(examineEvent.payload.descriptionText).toBe(
+        'Dave examines their tool-1.'
       );
 
       expectSuccessfulTurnEnd(testFixture.events);
@@ -274,10 +279,10 @@ describe('observation:examine_owned_item rule execution', () => {
           e.payload.targetId === 'map-1'
       );
       expect(firstExamineEvent).toBeDefined();
-      expect(firstExamineEvent.payload.descriptionText).toContain(
-        'A treasure map.'
+      // Per payload contract: descriptionText is brief third-person message
+      expect(firstExamineEvent.payload.descriptionText).toBe(
+        'Henry examines their map-1.'
       );
-      expect(firstExamineEvent.payload.descriptionText).toContain('their');
 
       // Examine second item
       const secondActionStart = testFixture.events.length;
@@ -292,10 +297,10 @@ describe('observation:examine_owned_item rule execution', () => {
           e.payload.targetId === 'compass-1'
       );
       expect(secondExamineEvent).toBeDefined();
-      expect(secondExamineEvent.payload.descriptionText).toContain(
-        'A brass compass.'
+      // Per payload contract: descriptionText is brief third-person message
+      expect(secondExamineEvent.payload.descriptionText).toBe(
+        'Henry examines their compass-1.'
       );
-      expect(secondExamineEvent.payload.descriptionText).toContain('their');
 
       const examineEvents = testFixture.events.filter(
         (event) =>

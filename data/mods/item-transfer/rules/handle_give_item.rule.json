@@ -80,8 +80,7 @@
               "perception_type": "error.action_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "log_entry": true,
-              "alternate_descriptions": {
+                            "alternate_descriptions": {
                 "auditory": "I hear a failed attempt to transfer something."
               },
               "involved_entities": [
@@ -187,8 +186,7 @@
               "perception_type": "item.transfer",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "log_entry": true,
-              "alternate_descriptions": {
+                            "alternate_descriptions": {
                 "auditory": "I hear something being handed over nearby."
               }
             }

@@ -231,7 +231,6 @@ beforeAll(async () => {
     IValidatedEventDispatcher,
     ISafeEventDispatcher,
     IEntityManager,
-    AddPerceptionLogEntryHandler: AddPerceptionLogEntryHandlerToken,
     RebuildLeaderListCacheHandler: RebuildLeaderListCacheHandlerToken,
     JsonLogicEvaluationService: JsonLogicEvaluationServiceToken,
     OperationInterpreter: OperationInterpreterToken,
@@ -293,10 +292,6 @@ beforeAll(async () => {
       dependencies: [
         { property: 'dispatcher', token: ISafeEventDispatcher },
         { property: 'logger', token: ILogger },
-        {
-          property: 'addPerceptionLogEntryHandler',
-          token: AddPerceptionLogEntryHandlerToken,
-        },
       ],
     },
     {

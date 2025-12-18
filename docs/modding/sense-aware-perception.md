@@ -102,7 +102,6 @@ To make your rules sense-aware, add `alternate_descriptions` to your `DISPATCH_P
     "description_text": "Bob does a handstand, balancing upside-down.",
     "perception_type": "physical.self_action",
     "actor_id": "{context.actorId}",
-    "log_entry": true,
     "alternate_descriptions": {
       "auditory": "You hear sounds of exertion and shuffling nearby."
     }
@@ -119,10 +118,10 @@ To make your rules sense-aware, add `alternate_descriptions` to your `DISPATCH_P
   "parameters": {
     "location_id": "{context.actorPosition.locationId}",
     "description_text": "{context.actorName} bends over {context.surfaceName}.",
+    "actor_description": "I bend over {context.surfaceName}, lowering my upper body.",
     "perception_type": "physical.self_action",
     "actor_id": "{event.payload.actorId}",
     "target_id": "{event.payload.targetId}",
-    "log_entry": true,
     "alternate_descriptions": {
       "auditory": "You hear the rustle of clothing and shifting of weight as someone changes position nearby."
     }
@@ -170,7 +169,6 @@ Two optional parameters allow perspective-aware messaging:
     "actor_description": "I do a handstand, balancing upside-down.",
     "perception_type": "physical.self_action",
     "actor_id": "{event.payload.actorId}",
-    "log_entry": true,
     "alternate_descriptions": {
       "auditory": "I hear sounds of exertion nearby."
     }
@@ -191,7 +189,6 @@ Two optional parameters allow perspective-aware messaging:
     "perception_type": "social.affection",
     "actor_id": "{event.payload.actorId}",
     "target_id": "{event.payload.targetId}",
-    "log_entry": true,
     "alternate_descriptions": {
       "auditory": "I hear a soft rustling sound nearby.",
       "tactile": "I feel a gentle touch."
@@ -221,7 +218,6 @@ If you previously used two operations to deliver different messages to actors an
       "description_text": "{context.actorName} drinks from {context.containerName}.",
       "perception_type": "consumption.consume",
       "actor_id": "{event.payload.actorId}",
-      "log_entry": true,
       "contextual_data": { "excludedActorIds": ["{event.payload.actorId}"] }
     }
   },
@@ -232,7 +228,6 @@ If you previously used two operations to deliver different messages to actors an
       "description_text": "I drink from {context.containerName}. The liquid tastes bitter.",
       "perception_type": "consumption.consume",
       "actor_id": "{event.payload.actorId}",
-      "log_entry": true,
       "contextual_data": { "recipientIds": ["{event.payload.actorId}"] }
     }
   }
@@ -248,8 +243,7 @@ If you previously used two operations to deliver different messages to actors an
     "description_text": "{context.actorName} drinks from {context.containerName}.",
     "actor_description": "I drink from {context.containerName}. The liquid tastes bitter.",
     "perception_type": "consumption.consume",
-    "actor_id": "{event.payload.actorId}",
-    "log_entry": true
+    "actor_id": "{event.payload.actorId}"
   }
 }
 ```
@@ -379,3 +373,166 @@ If your rule uses a macro like `core:logSuccessAndEndTurn`, you'll need to repla
 ```
 
 No changes are required for backward compatibility - rules without `alternate_descriptions` use existing behavior.
+
+## Rule Pattern Quick Reference
+
+When upgrading rules to the perspective-aware system, use the appropriate pattern based on your rule type:
+
+| Rule Type | Pattern | actor_description | target_description | alternate_descriptions |
+|-----------|---------|-------------------|--------------------|-----------------------|
+| Actor-to-Actor | Full | ✅ Required | ✅ Required | ✅ Required |
+| Self-Action | Self | ✅ Required | ❌ N/A | ✅ Required |
+| Object Interaction | Object | ✅ Required | ❌ N/A | ✅ Required |
+
+### Pattern A: Actor-to-Actor Action
+
+Use for: physical-control, social actions, first-aid on others, item transfer between actors.
+
+**Real Example (from handle_restrain_target.rule.json):**
+
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.actorPosition.locationId}",
+    "description_text": "{context.actorName} restrains {context.targetName}, preventing them from moving freely.",
+    "actor_description": "I restrain {context.targetName}, preventing them from moving freely.",
+    "target_description": "{context.actorName} restrains me, preventing me from moving freely.",
+    "perception_type": "physical.target_action",
+    "actor_id": "{event.payload.actorId}",
+    "target_id": "{event.payload.targetId}",
+    "alternate_descriptions": {
+      "auditory": "I hear the sounds of a struggle nearby.",
+      "tactile": "I feel the vibrations of scuffling nearby."
+    }
+  }
+}
+```
+
+### Pattern B: Self-Action
+
+Use for: movement, positioning, self-treatment, speech, thought.
+
+**Real Example (from entity_speech.rule.json):**
+
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.speakerPositionComponent.locationId}",
+    "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+    "actor_description": "I say: \"{event.payload.speechContent}\"",
+    "perception_type": "communication.speech",
+    "actor_id": "{event.payload.entityId}",
+    "target_id": null,
+    "alternate_descriptions": {
+      "auditory": "{context.speakerNameComponent.text} speaks, but I cannot make out the words.",
+      "limited": "I sense someone speaking nearby."
+    }
+  }
+}
+```
+
+### Pattern C: Object Interaction
+
+Use for: containers, items, writing, locks, observation.
+
+**Real Example (from handle_drink_entirely.rule.json):**
+
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.actorPosition.locationId}",
+    "description_text": "{context.actorName} drinks entirely from {context.containerName}, emptying it.",
+    "actor_description": "I drink entirely from {context.containerName}, draining it completely. {context.drinkResult.flavorText}",
+    "perception_type": "consumption.consume",
+    "actor_id": "{event.payload.actorId}",
+    "target_id": "{event.payload.targetId}",
+    "alternate_descriptions": {
+      "auditory": "I hear someone drinking nearby, finishing a beverage."
+    }
+  }
+}
+```
+
+## Alternate Description Guidelines
+
+When choosing which `alternate_descriptions` to include, consider the sensory reality of the action:
+
+| Fallback Type | When to Use | Example Scenarios |
+|---------------|-------------|-------------------|
+| `auditory` | Action produces sound | Speech, movement, physical struggle, drinking, opening containers |
+| `tactile` | Action produces vibration or can be felt | Heavy footsteps, falling, physical combat, nearby explosions |
+| `olfactory` | Action produces smell | Food, drinks, chemicals, fire, decay |
+| `limited` | Partial perception fallback | Speech (sensing someone talks but not words), presence detection |
+| `telepathic` | Mind-sensing fallback | Thoughts, supernatural communication |
+
+**Guidelines:**
+- **auditory** is the most common fallback (most actions make some sound)
+- **tactile** is appropriate for physical actions with impact
+- **olfactory** is rare but appropriate for food, drinks, chemicals
+- **limited** is useful for communication when auditory fails
+- Only include fallbacks that realistically apply to the action
+
+## Testing Upgraded Rules
+
+### Event Payload Contract
+
+When writing tests for rules with `DISPATCH_PERCEPTIBLE_EVENT`, all parameters (including perspective-aware and sense-aware ones) are included in the broadcast event payload. The payload contains both the standard fields and the sense-aware/perspective-aware fields.
+
+**Important**: The `DISPATCH_PERCEPTIBLE_EVENT` operation dispatches `core:perceptible_event`, which is then picked up by `log_perceptible_events.rule.json` to add entries to perception logs via `ADD_PERCEPTION_LOG_ENTRY`. All perceptible events are automatically logged - there is no need for any "log_entry" flag.
+
+#### What Appears in Event Payload
+
+| Rule Parameter | Payload Field | Notes |
+|----------------|---------------|-------|
+| `location_id` | `locationId` | Required |
+| `description_text` | `descriptionText` | Third-person for observers |
+| `perception_type` | `perceptionType` | Validated against registry |
+| `actor_id` | `actorId` | Required |
+| `target_id` | `targetId` | Optional, defaults to `null` |
+| `involved_entities` | `involvedEntities` | Optional array |
+| `contextual_data.*` | `contextualData.*` | Custom data passed through |
+| `actor_description` | `actorDescription` | First-person for actor, or `null` |
+| `target_description` | `targetDescription` | Second-person for target, or `null` |
+| `alternate_descriptions` | `alternateDescriptions` | Fallback descriptions object, or `null` |
+| `sense_aware` | `senseAware` | Boolean, defaults to `true` |
+
+#### Correct Test Assertions
+
+```javascript
+// ✅ CORRECT - Validate standard payload fields
+expect(perceptibleEvent.payload.descriptionText).toBe('Alice reads the letter.');
+expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
+expect(perceptibleEvent.payload.targetId).toBe('letter-1');
+expect(perceptibleEvent.payload.perceptionType).toBe('item.examine');
+expect(perceptibleEvent.payload.locationId).toBe('study');
+
+// ✅ CORRECT - Check custom contextual data (if any was passed)
+expect(perceptibleEvent.payload.contextualData.readableText).toBe('Secret content');
+
+// ✅ CORRECT - Validate perspective-aware fields
+expect(perceptibleEvent.payload.actorDescription).toBe('I read the letter carefully.');
+expect(perceptibleEvent.payload.targetDescription).toBeNull(); // Letter is an object, not an actor
+
+// ✅ CORRECT - Validate sense-aware fields
+expect(perceptibleEvent.payload.senseAware).toBe(true);
+expect(perceptibleEvent.payload.alternateDescriptions).toEqual({
+  auditory: 'I hear the rustle of paper nearby.'
+});
+```
+
+#### What You CAN Test
+
+1. **All payload fields** - Standard fields plus perspective-aware and sense-aware fields
+2. **Rule behavior** - Component changes, state updates, turn handling
+3. **Event dispatch** - That the event was dispatched with correct type
+4. **Custom contextual data** - Any fields you pass in `contextual_data`
+5. **Perspective descriptions** - `actorDescription`, `targetDescription` values
+6. **Sense-aware configuration** - `senseAware` and `alternateDescriptions` values
+
+#### What Requires Separate Testing
+
+1. **Actual sense-aware filtering behavior** - The filtering logic that determines which description a recipient receives based on their sensory capabilities. This is handled by the perception system after the event is dispatched.
+2. **Perception log entry content** - The actual log entries written to each recipient's perception log, which may differ based on sense filtering.

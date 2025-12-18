@@ -86,8 +86,7 @@
               "perception_type": "state.observable_change",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "log_entry": true,
-              "involved_entities": [],
+                            "involved_entities": [],
               "alternate_descriptions": {
                 "auditory": "I hear words of dismissal spoken nearby."
               }

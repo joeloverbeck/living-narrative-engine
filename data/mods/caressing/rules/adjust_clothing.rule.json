@@ -41,8 +41,7 @@
         "perception_type": "social.affection",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{context.targetId}",
-        "log_entry": true,
-        "alternate_descriptions": {
+                "alternate_descriptions": {
           "auditory": "I hear the rustle of fabric being adjusted nearby."
         }
       }

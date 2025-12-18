@@ -8,6 +8,7 @@
 import ConsoleLogger from '../logging/consoleLogger.js';
 import ModDiscoveryService from './services/ModDiscoveryService.js';
 import ModGraphService from './services/ModGraphService.js';
+import ModStatisticsService from './services/ModStatisticsService.js';
 import WorldDiscoveryService from './services/WorldDiscoveryService.js';
 import ConfigPersistenceService from './services/ConfigPersistenceService.js';
 import ModManagerController from './controllers/ModManagerController.js';
@@ -112,10 +113,15 @@ export class ModManagerBootstrap {
     const configPersistenceService = new ConfigPersistenceService({
       logger: this.#logger,
     });
+    const modStatisticsService = new ModStatisticsService({
+      modGraphService,
+      logger: this.#logger,
+    });
 
     // Register in container
     this.#container.set('modDiscoveryService', modDiscoveryService);
     this.#container.set('modGraphService', modGraphService);
+    this.#container.set('modStatisticsService', modStatisticsService);
     this.#container.set('worldDiscoveryService', worldDiscoveryService);
     this.#container.set('configPersistenceService', configPersistenceService);
   }
@@ -261,9 +267,29 @@ export class ModManagerBootstrap {
 
     // Render summary panel
     if (this.#summaryPanelView) {
+      // Calculate quick stats from graph
+      const modGraphService = this.#container.get('modGraphService');
+      const nodes = modGraphService.getAllNodes();
+      let explicitCount = 0;
+      let dependencyCount = 0;
+
+      for (const [, node] of nodes) {
+        if (node.status === 'explicit') explicitCount++;
+        if (node.status === 'dependency') dependencyCount++;
+      }
+
+      // Get dependency hotspots and health status from statistics service
+      const modStatisticsService = this.#container.get('modStatisticsService');
+      const hotspots = modStatisticsService.getDependencyHotspots(5);
+      const healthStatus = modStatisticsService.getHealthStatus();
+
       this.#summaryPanelView.render({
         loadOrder: state.resolvedMods || [],
         activeCount: (state.resolvedMods || []).length,
+        explicitCount,
+        dependencyCount,
+        hotspots,
+        healthStatus,
         hasUnsavedChanges: state.hasUnsavedChanges,
         isSaving: state.isSaving,
         isLoading: state.isLoading,

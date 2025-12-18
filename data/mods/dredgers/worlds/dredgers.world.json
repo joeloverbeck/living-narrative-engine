@@ -143,16 +143,7 @@
             "instanceId": "dredgers:kestrel_brune_instance"
         },
         {
-            "instanceId": "dredgers:cress_siltwell_instance"
-        },
-        {
             "instanceId": "dredgers:saffi_two_tides_instance"
-        },
-        {
-            "instanceId": "dredgers:pitch_instance"
-        },
-        {
-            "instanceId": "dredgers:hobb_rusk_instance"
         }
     ]
 }

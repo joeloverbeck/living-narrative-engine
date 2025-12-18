@@ -119,13 +119,17 @@
                 },
                 {
                   "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                  "comment": "Announce failed unlock due to missing key.",
+                  "comment": "Announce failed unlock due to missing key with perspective-aware descriptions.",
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.logMessage}",
+                    "actor_description": "I try to unlock {target}, but I don't have the matching key.",
                     "perception_type": "error.action_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
+                                        "alternate_descriptions": {
+                      "auditory": "I hear a frustrated attempt to unlock something."
+                    },
                     "involved_entities": [
                       "{event.payload.secondaryId}"
                     ],
@@ -178,13 +182,17 @@
                       },
                       {
                         "type": "DISPATCH_PERCEPTIBLE_EVENT",
-                        "comment": "Announce no-op unlock attempt.",
+                        "comment": "Announce no-op unlock attempt with perspective-aware descriptions.",
                         "parameters": {
                           "location_id": "{context.actorPosition.locationId}",
                           "description_text": "{context.logMessage}",
+                          "actor_description": "I check {target}, but it's already unlocked.",
                           "perception_type": "error.action_failed",
                           "actor_id": "{event.payload.actorId}",
                           "target_id": "{event.payload.targetId}",
+                                                    "alternate_descriptions": {
+                            "auditory": "I hear someone checking a lock nearby."
+                          },
                           "involved_entities": [
                             "{event.payload.secondaryId}"
                           ],
@@ -283,14 +291,38 @@
                         }
                       },
                       {
-                        "type": "SET_VARIABLE",
+                        "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                        "comment": "Unlock action with perspective-aware descriptions.",
                         "parameters": {
-                          "variable_name": "targetId",
-                          "value": "{event.payload.targetId}"
+                          "location_id": "{context.actorPosition.locationId}",
+                          "description_text": "{context.logMessage}",
+                          "actor_description": "I unlock {context.targetName} with {context.keyName}, feeling the mechanism release.",
+                          "perception_type": "connection.unlock",
+                          "actor_id": "{event.payload.actorId}",
+                          "target_id": "{event.payload.targetId}",
+                                                    "alternate_descriptions": {
+                            "auditory": "I hear the click of a lock disengaging nearby.",
+                            "tactile": "I sense the vibration of a mechanism unlocking."
+                          }
                         }
                       },
                       {
-                        "macro": "core:logSuccessAndEndTurn"
+                        "type": "DISPATCH_EVENT",
+                        "comment": "Display success message in UI.",
+                        "parameters": {
+                          "eventType": "core:display_successful_action_result",
+                          "payload": {
+                            "message": "{context.logMessage}"
+                          }
+                        }
+                      },
+                      {
+                        "type": "END_TURN",
+                        "comment": "End turn after successful unlock.",
+                        "parameters": {
+                          "entityId": "{event.payload.actorId}",
+                          "success": true
+                        }
                       }
                     ]
                   }

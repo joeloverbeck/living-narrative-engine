@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_jot_down_notes",
-  "comment": "Handles jot_down_notes action with simple messaging (no content modification)",
+  "comment": "Handles jot_down_notes action with perspective-aware perception (actor gets first-person confirmation, observers get third-person)",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "writing:event-is-action-jot-down-notes"
@@ -42,21 +42,25 @@
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Prepare message for both perceptible and success events",
+      "comment": "Prepare observer message (third-person)",
       "parameters": {
-        "variable_name": "actionMessage",
+        "variable_name": "observerMessage",
         "value": "{context.actorName} jots down notes on {context.notebookName} using {context.utensilName}."
       }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Public observation of writing",
+      "comment": "Jot notes action with perspective-aware descriptions - actor gets first-person confirmation",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actionMessage}",
+        "description_text": "{context.observerMessage}",
+        "actor_description": "I jot down notes on {context.notebookName} using {context.utensilName}.",
         "perception_type": "communication.notes",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the scratching of writing nearby."
+        },
         "involved_entities": ["{event.payload.secondaryId}"]
       }
     },
@@ -66,7 +70,7 @@
       "parameters": {
         "eventType": "core:display_successful_action_result",
         "payload": {
-          "message": "{context.actionMessage}"
+          "message": "{context.observerMessage}"
         }
       }
     },

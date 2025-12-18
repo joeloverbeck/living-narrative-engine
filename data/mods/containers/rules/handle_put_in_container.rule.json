@@ -86,8 +86,7 @@
               "involved_entities": [
                 "{event.payload.secondaryId}"
               ],
-              "log_entry": true,
-              "contextual_data": {
+                            "contextual_data": {
                 "reason": "{context.capacityCheck.reason}"
               }
             }

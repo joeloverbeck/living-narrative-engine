@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_remove_clothing",
-  "comment": "Handles the 'clothing:remove_clothing' action. Removes the selected clothing item and dispatches descriptive text.",
+  "comment": "Handles the 'clothing:remove_clothing' action with perspective-aware perception (actor gets first-person description).",
   "event_type": "core:attempt_action",
   "condition": { "condition_ref": "clothing:event-is-action-remove-clothing" },
   "actions": [
@@ -53,34 +53,44 @@
           },
           {
             "type": "SET_VARIABLE",
+            "comment": "Prepare observer message (third-person)",
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} removes their {context.targetName}."
             }
           },
           {
-            "type": "SET_VARIABLE",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Remove clothing action with perspective-aware descriptions",
             "parameters": {
-              "variable_name": "perceptionType",
-              "value": "physical.target_action"
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.logMessage}",
+              "actor_description": "I remove my {context.targetName}.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the rustling of fabric as someone undresses nearby."
+              }
             }
           },
           {
-            "type": "SET_VARIABLE",
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message in UI",
             "parameters": {
-              "variable_name": "locationId",
-              "value": "{context.actorPosition.locationId}"
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
             }
           },
           {
-            "type": "SET_VARIABLE",
+            "type": "END_TURN",
+            "comment": "End turn after successful remove",
             "parameters": {
-              "variable_name": "targetId",
-              "value": "{event.payload.targetId}"
+              "entityId": "{event.payload.actorId}",
+              "success": true
             }
-          },
-          {
-            "macro": "core:logSuccessAndEndTurn"
           }
         ],
         "else_actions": [

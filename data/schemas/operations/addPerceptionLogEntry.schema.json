@@ -89,13 +89,24 @@
           "description": "The ID of the target entity, if any. Used to route target_description to the correct recipient."
         },
         "alternate_descriptions": {
-          "type": "object",
-          "description": "Alternative descriptions passed from dispatch operation"
+          "description": "Alternative descriptions passed from dispatch operation. Accepts literal object or placeholder string that resolves to object at runtime.",
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
         },
         "sense_aware": {
-          "type": "boolean",
+          "description": "Whether to apply sense filtering. Accepts literal boolean or placeholder string that resolves to boolean at runtime.",
           "default": true,
-          "description": "Whether to apply sense filtering"
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string", "minLength": 1 }
+          ]
         }
       },
       "required": ["location_id", "entry"],

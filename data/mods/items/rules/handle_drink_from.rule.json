@@ -59,7 +59,6 @@
         "perception_type": "consumption.consume",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
-        "log_entry": true,
         "alternate_descriptions": {
           "auditory": "I hear gulping sounds nearby."
         },

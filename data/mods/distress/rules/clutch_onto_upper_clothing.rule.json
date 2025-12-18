@@ -64,8 +64,7 @@
         "perception_type": "physical.target_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.primaryId}",
-        "log_entry": true,
-        "alternate_descriptions": {
+                "alternate_descriptions": {
           "auditory": "I hear fabric being grabbed and someone in distress."
         }
       }

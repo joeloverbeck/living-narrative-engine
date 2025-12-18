@@ -64,10 +64,6 @@
           "type": "object",
           "default": {}
         },
-        "log_entry": {
-          "type": "boolean",
-          "default": false
-        },
         "alternate_descriptions": {
           "type": "object",
           "description": "Alternative event descriptions for different sensory contexts",
@@ -92,9 +88,12 @@
           "additionalProperties": false
         },
         "sense_aware": {
-          "type": "boolean",
+          "description": "When true (default), applies sense-based filtering. When false, all recipients receive the event regardless of sensory state. Accepts literal boolean or placeholder string that resolves to boolean at runtime.",
           "default": true,
-          "description": "When true (default), applies sense-based filtering. When false, all recipients receive the event regardless of sensory state (useful for debugging or special cases)."
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string", "minLength": 1 }
+          ]
         }
       },
       "required": [

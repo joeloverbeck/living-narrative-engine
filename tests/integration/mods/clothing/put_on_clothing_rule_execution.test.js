@@ -80,6 +80,7 @@ describe('clothing:put_on_clothing rule execution', () => {
       'Alex puts on shirt.'
     );
     expect(perceptibleEvent.payload.targetId).toBe(clothing.id);
+    expect(perceptibleEvent.payload.perceptionType).toBe('physical.self_action');
 
     const equippedEvent = testFixture.events.find(
       (e) => e.eventType === 'clothing:equipped'

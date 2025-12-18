@@ -1,10 +1,11 @@
 # DISPEREVEUPG-011: Documentation Update & Final Verification
 
-**Status:** Ready
+**Status:** ✅ COMPLETED
 **Priority:** Final
 **Estimated Effort:** 0.5 days
 **Dependencies:** DISPEREVEUPG-001 through DISPEREVEUPG-010 (all implementation tickets complete)
 **Parent:** DISPEREVEUPG-000
+**Completed:** 2025-12-18
 
 ---
 
@@ -79,30 +80,31 @@ Update `docs/modding/sense-aware-perception.md` with:
 Before marking this ticket complete, verify:
 
 ### Rule Verification
-- [ ] All 33 rules contain `actor_description`
-- [ ] Actor-to-Actor rules contain `target_description`
-- [ ] All rules contain `alternate_descriptions` with at least `auditory`
-- [ ] No rules use `core:logSuccessAndEndTurn` macro (replaced with inline)
-- [ ] Bug fix verified: `handle_pick_up_item` has `target_id`
+- [x] All 33 rules contain `actor_description`
+- [x] Actor-to-Actor rules contain `target_description`
+- [x] All rules contain `alternate_descriptions` with at least `auditory`
+- [x] No rules use `core:logSuccessAndEndTurn` macro (replaced with inline)
+- [x] Bug fix verified: `handle_pick_up_item` has `target_id`
 
 ### Test Verification
-- [ ] All mod validations pass:
+- [x] All mod validations pass:
   ```bash
   npm run validate
   ```
-- [ ] All integration tests pass:
+- [x] All integration tests pass:
   ```bash
   npm run test:integration
   ```
-- [ ] Full test suite passes:
+- [x] Full test suite passes:
   ```bash
   npm run test:ci
   ```
 
 ### Documentation Verification
-- [ ] `docs/modding/sense-aware-perception.md` is updated
-- [ ] Examples are accurate and match actual rule implementations
-- [ ] Pattern table is complete and correct
+- [x] `docs/modding/sense-aware-perception.md` is updated
+- [x] Examples are accurate and match actual rule implementations
+- [x] Pattern table is complete and correct
+- [x] Testing guidance section added (from payload contract spec)
 
 ---
 
@@ -186,3 +188,33 @@ dispatchOps.forEach((op, i) => {
 - Documentation to update: `docs/modding/sense-aware-perception.md`
 - Reference implementations: `handle_drink_from.rule.json`, `handle_corrupting_gaze.rule.json`
 - All upgraded rules in `data/mods/*/rules/`
+
+---
+
+## Outcome
+
+### What Was Actually Done vs Originally Planned
+
+**Originally Planned:**
+- Update documentation with examples, pattern reference table, and alternate description guidelines
+
+**Actually Done:**
+- All originally planned items completed
+- Added **Testing Guidance** section with event payload contract information from `specs/dispatch-perceptible-event-payload-contract.spec.md`
+- This critical addition prevents recurring test failures caused by developers incorrectly assuming perspective-aware parameters appear in broadcast event payloads
+
+**Documentation Changes:**
+1. Added "Rule Pattern Quick Reference" table showing when to use each pattern
+2. Added three real-world examples from upgraded rules:
+   - Actor-to-Actor: `handle_restrain_target.rule.json`
+   - Self-Action: `entity_speech.rule.json`
+   - Object Interaction: `handle_drink_entirely.rule.json`
+3. Added "Alternate Description Guidelines" table with when to use each fallback type
+4. Added comprehensive "Testing Upgraded Rules" section covering:
+   - Event payload contract (what appears vs what doesn't)
+   - Correct test assertions examples
+   - Incorrect assertions to avoid
+   - What can and cannot be tested via event payload
+
+**Files Modified:**
+- `docs/modding/sense-aware-perception.md` - Added ~170 lines of documentation

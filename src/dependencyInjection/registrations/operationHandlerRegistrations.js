@@ -131,9 +131,6 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           dispatcher: c.resolve(tokens.ISafeEventDispatcher),
           logger: c.resolve(tokens.ILogger),
-          addPerceptionLogEntryHandler: c.resolve(
-            tokens.AddPerceptionLogEntryHandler
-          ),
         }),
     ],
     [
