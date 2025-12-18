@@ -82,7 +82,7 @@ describe('sex-breastplay:suck_on_nipples action discovery', () => {
         'positioning:closeness',
       ]);
       expect(suckOnNipplesAction.forbidden_components.actor).toEqual([
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
         'positioning:bending_over',
       ]);
 

@@ -26,14 +26,19 @@
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Send a perceptible event to the new location.",
+      "comment": "Send a sense-aware perceptible event to the new location.",
       "parameters": {
         "location_id": "{event.payload.currentLocationId}",
         "description_text": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}.",
+        "actor_description": "I follow {context.leaderName.text} to {context.newLocationName.text}.",
+        "target_description": "{context.followerName.text} follows me to {context.newLocationName.text}.",
         "perception_type": "movement.arrival",
         "actor_id": "{context.followerId}",
         "target_id": "{event.payload.entityId}",
         "involved_entities": [],
+        "alternate_descriptions": {
+          "auditory": "I hear footsteps following someone nearby."
+        },
         "contextual_data": {
           "leaderId": "{event.payload.entityId}",
           "originLocationId": "{event.payload.previousLocationId}"

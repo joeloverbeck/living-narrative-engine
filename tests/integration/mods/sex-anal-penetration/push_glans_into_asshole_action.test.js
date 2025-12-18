@@ -105,16 +105,16 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
 
     // Verify actor has fucking_anally component with correct entity reference
     const actor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(actor).toHaveComponent('positioning:fucking_anally');
-    expect(actor).toHaveComponentData('positioning:fucking_anally', {
+    expect(actor).toHaveComponent('sex-states:fucking_anally');
+    expect(actor).toHaveComponentData('sex-states:fucking_anally', {
       being_fucked_entity_id: primaryId,
       initiated: true,
     });
 
     // Verify primary has being_fucked_anally component with correct entity reference
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
-    expect(primary).toHaveComponent('positioning:being_fucked_anally');
-    expect(primary).toHaveComponentData('positioning:being_fucked_anally', {
+    expect(primary).toHaveComponent('sex-states:being_fucked_anally');
+    expect(primary).toHaveComponentData('sex-states:being_fucked_anally', {
       fucking_entity_id: actorId,
       consented: true,
     });
@@ -128,7 +128,7 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
       .withName('Old Fucker')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:fucking_anally', {
+      .withComponent('sex-states:fucking_anally', {
         being_fucked_entity_id: actorId,
         initiated: true,
       })
@@ -139,7 +139,7 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
       .withName('Old Target')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:being_fucked_anally', {
+      .withComponent('sex-states:being_fucked_anally', {
         fucking_entity_id: primaryId,
         consented: true,
       })
@@ -150,7 +150,7 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     // Actor has being_fucked_anally (actor is being fucked by old_fucker)
     const actorEntity = entities.find((e) => e.id === actorId);
     if (!actorEntity.components) actorEntity.components = {};
-    actorEntity.components['positioning:being_fucked_anally'] = {
+    actorEntity.components['sex-states:being_fucked_anally'] = {
       fucking_entity_id: 'old_fucker',
       consented: true,
     };
@@ -158,7 +158,7 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     // Primary has fucking_anally (primary is fucking old_target)
     const primaryEntity = entities.find((e) => e.id === primaryId);
     if (!primaryEntity.components) primaryEntity.components = {};
-    primaryEntity.components['positioning:fucking_anally'] = {
+    primaryEntity.components['sex-states:fucking_anally'] = {
       being_fucked_entity_id: 'old_target',
       initiated: true,
     };
@@ -172,17 +172,17 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
 
     // Verify old_fucker no longer has fucking_anally component
     const oldFucker = testFixture.entityManager.getEntityInstance('old_fucker');
-    expect(oldFucker).not.toHaveComponent('positioning:fucking_anally');
+    expect(oldFucker).not.toHaveComponent('sex-states:fucking_anally');
 
     // Verify old_target no longer has being_fucked_anally component
     const oldTarget = testFixture.entityManager.getEntityInstance('old_target');
-    expect(oldTarget).not.toHaveComponent('positioning:being_fucked_anally');
+    expect(oldTarget).not.toHaveComponent('sex-states:being_fucked_anally');
 
     // Verify actor no longer has being_fucked_anally, but now has fucking_anally with primary
     const updatedActor = testFixture.entityManager.getEntityInstance(actorId);
-    expect(updatedActor).not.toHaveComponent('positioning:being_fucked_anally');
-    expect(updatedActor).toHaveComponent('positioning:fucking_anally');
-    expect(updatedActor).toHaveComponentData('positioning:fucking_anally', {
+    expect(updatedActor).not.toHaveComponent('sex-states:being_fucked_anally');
+    expect(updatedActor).toHaveComponent('sex-states:fucking_anally');
+    expect(updatedActor).toHaveComponentData('sex-states:fucking_anally', {
       being_fucked_entity_id: primaryId,
       initiated: true,
     });
@@ -190,10 +190,10 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     // Verify primary no longer has fucking_anally with old_target, but now has being_fucked_anally with actor
     const updatedPrimary =
       testFixture.entityManager.getEntityInstance(primaryId);
-    expect(updatedPrimary).not.toHaveComponent('positioning:fucking_anally');
-    expect(updatedPrimary).toHaveComponent('positioning:being_fucked_anally');
+    expect(updatedPrimary).not.toHaveComponent('sex-states:fucking_anally');
+    expect(updatedPrimary).toHaveComponent('sex-states:being_fucked_anally');
     expect(updatedPrimary).toHaveComponentData(
-      'positioning:being_fucked_anally',
+      'sex-states:being_fucked_anally',
       {
         fucking_entity_id: actorId,
         consented: true,
@@ -232,8 +232,8 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     const alice = testFixture.entityManager.getEntityInstance('alice');
     const bob = testFixture.entityManager.getEntityInstance('bob');
 
-    expect(alice).not.toHaveComponent('positioning:fucking_anally');
-    expect(bob).not.toHaveComponent('positioning:being_fucked_anally');
+    expect(alice).not.toHaveComponent('sex-states:fucking_anally');
+    expect(bob).not.toHaveComponent('sex-states:being_fucked_anally');
   });
 
   it('maintains ongoing anal sex state for correct pair', async () => {
@@ -250,14 +250,14 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     const actor = testFixture.entityManager.getEntityInstance(actorId);
     const primary = testFixture.entityManager.getEntityInstance(primaryId);
 
-    expect(actor).toHaveComponent('positioning:fucking_anally');
-    expect(actor).toHaveComponentData('positioning:fucking_anally', {
+    expect(actor).toHaveComponent('sex-states:fucking_anally');
+    expect(actor).toHaveComponentData('sex-states:fucking_anally', {
       being_fucked_entity_id: primaryId,
       initiated: true,
     });
 
-    expect(primary).toHaveComponent('positioning:being_fucked_anally');
-    expect(primary).toHaveComponentData('positioning:being_fucked_anally', {
+    expect(primary).toHaveComponent('sex-states:being_fucked_anally');
+    expect(primary).toHaveComponentData('sex-states:being_fucked_anally', {
       fucking_entity_id: actorId,
       consented: true,
     });

@@ -1,24 +1,24 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:fucking_anally",
-  "description": "Marks an actor who is actively penetrating another entity's asshole, preventing conflicting genital actions.",
+  "id": "sex-states:giving_blowjob",
+  "description": "Marks an actor who is actively performing oral sex on another entity's penis, preventing conflicting mouth engagement actions.",
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["being_fucked_entity_id", "initiated"],
+    "required": ["receiving_entity_id", "initiated"],
     "properties": {
-      "being_fucked_entity_id": {
+      "receiving_entity_id": {
         "type": "string",
-        "description": "The ID of the entity being anally penetrated",
+        "description": "The ID of the entity receiving oral sex",
         "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
       },
       "initiated": {
         "type": "boolean",
-        "description": "Whether this entity initiated the anal penetration"
+        "description": "Whether this entity initiated the blowjob interaction"
       },
       "consented": {
         "type": "boolean",
-        "description": "Whether the penetrating entity consents to continue the interaction",
+        "description": "Whether the giving entity consents to continue the interaction",
         "default": true
       },
       "activityMetadata": {
@@ -33,20 +33,20 @@
           },
           "template": {
             "type": "string",
-            "default": "{actor} is anally penetrating {target}",
+            "default": "{actor} is performing oral sex on {target}",
             "description": "Template string with placeholders: {actor} for the entity with this component, {target} for the entity referenced by targetRole property"
           },
           "targetRole": {
             "type": "string",
-            "default": "being_fucked_entity_id",
-            "description": "Property name in this component's data containing the target entity ID. Defaults to 'being_fucked_entity_id' for the entity being anally penetrated."
+            "default": "receiving_entity_id",
+            "description": "Property name in this component's data containing the target entity ID. Defaults to 'receiving_entity_id' for the entity receiving oral sex."
           },
           "priority": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "default": 82,
-            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Very high priority (82) for highly explicit sexual act, higher than oral sex (80)."
+            "default": 80,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Very high priority (80) for highly explicit sexual act."
           }
         }
       }

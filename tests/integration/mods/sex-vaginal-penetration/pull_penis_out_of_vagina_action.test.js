@@ -22,7 +22,7 @@ function createPenetrationScenario() {
     .atLocation('bedroom')
     .withBody('aliceGroin')
     .closeToEntity('beth')
-    .withComponent('positioning:fucking_vaginally', { targetId: 'beth' })
+    .withComponent('sex-states:fucking_vaginally', { targetId: 'beth' })
     .asActor()
     .build();
 
@@ -31,7 +31,7 @@ function createPenetrationScenario() {
     .atLocation('bedroom')
     .withBody('bethPelvis')
     .closeToEntity('alice')
-    .withComponent('positioning:being_fucked_vaginally', { actorId: 'alice' })
+    .withComponent('sex-states:being_fucked_vaginally', { actorId: 'alice' })
     .asActor()
     .build();
 
@@ -95,7 +95,7 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     expect(
       testFixture.entityManager.hasComponent(
         'alice',
-        'positioning:fucking_vaginally'
+        'sex-states:fucking_vaginally'
       )
     ).toBe(true);
 
@@ -106,7 +106,7 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     expect(
       testFixture.entityManager.hasComponent(
         'alice',
-        'positioning:fucking_vaginally'
+        'sex-states:fucking_vaginally'
       )
     ).toBe(false);
   });
@@ -118,7 +118,7 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     expect(
       testFixture.entityManager.hasComponent(
         'beth',
-        'positioning:being_fucked_vaginally'
+        'sex-states:being_fucked_vaginally'
       )
     ).toBe(true);
 
@@ -129,7 +129,7 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     expect(
       testFixture.entityManager.hasComponent(
         'beth',
-        'positioning:being_fucked_vaginally'
+        'sex-states:being_fucked_vaginally'
       )
     ).toBe(false);
   });
@@ -157,13 +157,13 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
 
     const initialActorComponent = testFixture.entityManager.getComponentData(
       'alice',
-      'positioning:fucking_vaginally'
+      'sex-states:fucking_vaginally'
     );
     expect(initialActorComponent).toEqual({ targetId: 'beth' });
 
     const initialTargetComponent = testFixture.entityManager.getComponentData(
       'beth',
-      'positioning:being_fucked_vaginally'
+      'sex-states:being_fucked_vaginally'
     );
     expect(initialTargetComponent).toEqual({ actorId: 'alice' });
 
@@ -174,13 +174,13 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     expect(
       testFixture.entityManager.hasComponent(
         'alice',
-        'positioning:fucking_vaginally'
+        'sex-states:fucking_vaginally'
       )
     ).toBe(false);
     expect(
       testFixture.entityManager.hasComponent(
         'beth',
-        'positioning:being_fucked_vaginally'
+        'sex-states:being_fucked_vaginally'
       )
     ).toBe(false);
   });

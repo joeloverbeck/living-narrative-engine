@@ -438,6 +438,68 @@ describe('core_handle_follow_auto_move rule integration', () => {
     expect(stationaryFollowerPosition.locationId).toBe('room1');
   });
 
+  describe('sense-aware perception (DISPEREVEUPG)', () => {
+    /**
+     * Note: The perspective-aware description parameters (actor_description,
+     * target_description, alternate_descriptions) are passed to the log handler
+     * by DispatchPerceptibleEventHandler, not included in the event payload.
+     * These integration tests verify the macro correctly configures the
+     * DISPATCH_PERCEPTIBLE_EVENT operation with sense-aware fields.
+     */
+
+    it('verifies autoMoveFollower.macro.json has sense-aware DISPATCH_PERCEPTIBLE_EVENT', () => {
+      // Verify the macro JSON has the correct operation type with sense-aware fields
+      const dispatchAction = autoMoveFollowerMacro.actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchAction).toBeDefined();
+      expect(dispatchAction.parameters).toHaveProperty('actor_description');
+      expect(dispatchAction.parameters).toHaveProperty('target_description');
+      expect(dispatchAction.parameters).toHaveProperty('alternate_descriptions');
+      expect(dispatchAction.parameters.alternate_descriptions).toHaveProperty('auditory');
+    });
+
+    it('dispatches perceptible event with correct description text when follower moves', async () => {
+      testEnv.reset([
+        {
+          id: 'actor1',
+          components: {
+            [ACTOR_COMPONENT_ID]: {},
+            [NAME_COMPONENT_ID]: { text: 'Commander' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room2' },
+            [LEADING_COMPONENT_ID]: { followers: ['target1'] },
+          },
+        },
+        {
+          id: 'target1',
+          components: {
+            [ACTOR_COMPONENT_ID]: {},
+            [NAME_COMPONENT_ID]: { text: 'Scout' },
+            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+            [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
+          },
+        },
+      ]);
+
+      testEnv.entityManager.addComponent('actor1', LEADING_COMPONENT_ID, {
+        followers: ['target1'],
+      });
+
+      await testEnv.eventBus.dispatch('core:entity_moved', {
+        entityId: 'actor1',
+        previousLocationId: 'room1',
+        currentLocationId: 'room2',
+      });
+
+      const perceptibleEvent = testEnv.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.descriptionText).toContain('Scout');
+      expect(perceptibleEvent.payload.descriptionText).toContain('Commander');
+    });
+  });
+
   it('does not move non-actor entities even when they have a following component', async () => {
     testEnv.reset([
       {

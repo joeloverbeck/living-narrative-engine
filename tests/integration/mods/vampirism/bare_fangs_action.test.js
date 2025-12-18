@@ -54,7 +54,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
       ).rejects.toThrow(/required component/i);
     });
 
-    it('rejects the action when actor has positioning:giving_blowjob', async () => {
+    it('rejects the action when actor has sex-states:giving_blowjob', async () => {
       const scenario = testFixture.createStandardActorTarget(
         ['Vampire', 'Mortal'],
         { includeRoom: false }
@@ -62,7 +62,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
 
       // Add vampire marker to actor
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         target_id: scenario.target.id,
       };
 

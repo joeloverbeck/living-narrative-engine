@@ -41,40 +41,40 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
   });
 
   describe('Action structure validation', () => {
-    it('kiss_cheek should have positioning:giving_blowjob as forbidden target component', () => {
+    it('kiss_cheek should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(kissCheekAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('kiss_forehead_gently should have positioning:giving_blowjob as forbidden target component', () => {
+    it('kiss_forehead_gently should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(kissForeheadGentlyAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('lean_in_for_deep_kiss should have positioning:giving_blowjob as forbidden target component', () => {
+    it('lean_in_for_deep_kiss should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(leanInForDeepKissAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('nibble_earlobe_playfully should have positioning:giving_blowjob as forbidden target component', () => {
+    it('nibble_earlobe_playfully should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(
         nibbleEarlobePlayfullyAction.forbidden_components.target
-      ).toContain('positioning:giving_blowjob');
+      ).toContain('sex-states:giving_blowjob');
     });
 
-    it('peck_on_lips should have positioning:giving_blowjob as forbidden target component', () => {
+    it('peck_on_lips should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(peckOnLipsAction.forbidden_components.target).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('suck_on_neck_to_leave_hickey should have positioning:giving_blowjob as forbidden target component', () => {
+    it('suck_on_neck_to_leave_hickey should have sex-states:giving_blowjob as forbidden target component', () => {
       expect(
         suckOnNeckToLeaveHickeyAction.forbidden_components.target
-      ).toContain('positioning:giving_blowjob');
+      ).toContain('sex-states:giving_blowjob');
     });
   });
 
@@ -162,13 +162,13 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
       // Alice is receiving a blowjob from Bob
-      actorA.components['positioning:receiving_blowjob'] = {
+      actorA.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: actorB.id,
         consented: true,
       };
 
       // Bob is giving a blowjob to Alice
-      actorB.components['positioning:giving_blowjob'] = {
+      actorB.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actorA.id,
         initiated: true,
         consented: true,
@@ -204,7 +204,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
       // Charlie tries to kiss Bob's cheek (Bob is giving blowjob)
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should NOT allow Actor C to kiss_forehead_gently Actor B (who is giving blowjob)', async () => {
@@ -222,7 +222,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should NOT allow Actor C to lean_in_for_deep_kiss Actor B (who is giving blowjob)', async () => {
@@ -240,7 +240,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should NOT allow Actor C to nibble_earlobe_playfully Actor B (who is giving blowjob)', async () => {
@@ -258,7 +258,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should NOT allow Actor C to peck_on_lips Actor B (who is giving blowjob)', async () => {
@@ -276,7 +276,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should NOT allow Actor C to suck_on_neck_to_leave_hickey Actor B (who is giving blowjob)', async () => {
@@ -294,7 +294,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actorC.id, scenario.actorB.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should ALLOW Actor A (receiving blowjob) to kiss_cheek Actor C (third party)', async () => {

@@ -9,6 +9,7 @@ import {
 import { createTestBed } from '../../common/testBed.js';
 import ModCrossReferenceValidator from '../../../cli/validation/modCrossReferenceValidator.js';
 import ModReferenceExtractor from '../../../cli/validation/modReferenceExtractor.js';
+import ViolationReporter from '../../../src/validation/violationReporter.js';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
@@ -16,6 +17,7 @@ import os from 'os';
 describe('ModCrossReferenceValidator - Integration', () => {
   let testBed;
   let validator;
+  let reporter;
   let tempDir;
 
   beforeEach(async () => {
@@ -44,6 +46,8 @@ describe('ModCrossReferenceValidator - Integration', () => {
       referenceExtractor,
       testModBasePath: tempDir, // Configure test base path
     });
+
+    reporter = new ViolationReporter({ logger });
   });
 
   afterEach(async () => {
@@ -286,7 +290,11 @@ describe('ModCrossReferenceValidator - Integration', () => {
       // Other mods should be clean (no cross-references)
       expect(results.get('anatomy').hasViolations).toBe(false);
       expect(results.get('positioning').hasViolations).toBe(false);
-      expect(results.get('violence').hasViolations).toBe(false);
+
+      // Violence has unused dependency (declares positioning but no files use it)
+      // This is correct behavior - unused dependencies are flagged as violations
+      expect(results.get('violence').hasViolations).toBe(true);
+      expect(results.get('violence').unusedDependencies).toContain('positioning');
     });
 
     it('should generate comprehensive ecosystem report', async () => {
@@ -315,14 +323,14 @@ describe('ModCrossReferenceValidator - Integration', () => {
       manifestsMap.set('core', { id: 'core' });
 
       const results = await validator.validateAllModReferences(manifestsMap);
-      const report = validator.generateReport(results);
+      const report = reporter.generateReport(results, 'console');
 
       expect(report).toContain(
         'Living Narrative Engine - Cross-Reference Validation Report'
       );
       expect(report).toContain('test-mod');
       expect(report).toContain('positioning');
-      expect(report).toContain('Next Steps:');
+      expect(report).toContain('Next Steps');
       expect(report).toContain('mod-manifest.json');
     });
   });

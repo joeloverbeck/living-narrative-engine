@@ -23,7 +23,7 @@ function setupUiDom() {
       <p class="actor-name-display"></p>
     </div>
     <div id="perception-log-widget">
-      <ul id="perception-log-list"></ul>
+      <div id="perception-log-content"></div>
     </div>
     <div id="outputDiv">
       <ul id="message-list"></ul>

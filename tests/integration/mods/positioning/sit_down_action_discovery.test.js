@@ -43,7 +43,7 @@ describe('positioning:sit_down action discovery', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Alice is actively fucking someone anally
-      scenario.actor.components['positioning:fucking_anally'] = {
+      scenario.actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
       };

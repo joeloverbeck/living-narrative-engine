@@ -97,10 +97,11 @@
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
                     "actor_description": "I stop following {context.oldLeaderName.text}. I am now independent again.",
+                    "target_description": "{context.actorName.text} stops following me.",
                     "perception_type": "state.observable_change",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{context.oldFollowingData.leaderId}",
-                                        "involved_entities": [],
+                    "involved_entities": [],
                     "alternate_descriptions": {
                       "auditory": "I hear someone declaring their independence from service nearby."
                     }

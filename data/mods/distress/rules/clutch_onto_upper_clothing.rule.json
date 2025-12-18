@@ -65,7 +65,8 @@
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.primaryId}",
                 "alternate_descriptions": {
-          "auditory": "I hear fabric being grabbed and someone in distress."
+          "auditory": "I hear fabric being grabbed and someone in distress.",
+          "tactile": "I feel someone grabbing at fabric nearby."
         }
       }
     },

@@ -56,7 +56,7 @@ describe('sex-dry-intimacy:rub_penis_between_ass_cheeks action discovery', () =>
       };
 
       // Alice is actively fucking someone anally
-      scenario.actor.components['positioning:fucking_anally'] = {
+      scenario.actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
       };

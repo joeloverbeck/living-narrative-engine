@@ -59,7 +59,7 @@ function buildTakePenisInMouthKneelingScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
+    actorBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: 'someone_else',
       initiated: true,
     });

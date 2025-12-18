@@ -302,7 +302,7 @@ describe('sex-physical-control:pull_head_to_bare_penis action discovery', () => 
     // Add receiving_blowjob component to actor
     const actorEntity = entities.find((e) => e.id === actorId);
     if (!actorEntity.components) actorEntity.components = {};
-    actorEntity.components['positioning:receiving_blowjob'] = {
+    actorEntity.components['sex-states:receiving_blowjob'] = {
       giving_entity_id: 'someone_else',
       consented: true,
     };

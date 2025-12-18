@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that positioning actions are correctly forbidden when actor is giving a blowjob.
  * @description Ensures that positioning actions (stand up, turn your back) are not available when the acting actor
- * has the positioning:giving_blowjob component.
+ * has the sex-states:giving_blowjob component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -33,15 +33,15 @@ describe('positioning actions forbidden when giving blowjob', () => {
   });
 
   describe('Action structure validation', () => {
-    it('stand_up should have positioning:giving_blowjob as forbidden component', () => {
+    it('stand_up should have sex-states:giving_blowjob as forbidden component', () => {
       expect(standUpAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('turn_your_back should have positioning:giving_blowjob as forbidden component', () => {
+    it('turn_your_back should have sex-states:giving_blowjob as forbidden component', () => {
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -127,7 +127,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       // is tested separately. The key validation is that the action has the
       // forbidden_components properly configured.
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
 
       // Action may not appear in discovery due to mouth-available prerequisite
@@ -200,7 +200,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       };
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -222,7 +222,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,

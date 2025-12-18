@@ -88,7 +88,7 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
     it('should NOT be available when actor has giving_blowjob component', async () => {
       const scenario = testFixture.createCloseActors(['Uma', 'Victor']);
 
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -100,7 +100,7 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, scenario.target.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 
@@ -126,12 +126,12 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
-      actor.components['positioning:receiving_blowjob'] = {
+      actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: targetGiving.id,
         consented: true,
       };
 
-      targetGiving.components['positioning:giving_blowjob'] = {
+      targetGiving.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actor.id,
         initiated: true,
         consented: true,
@@ -159,7 +159,7 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
 
       await expect(async () => {
         await testFixture.executeAction(targetGiving.id, actor.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 });

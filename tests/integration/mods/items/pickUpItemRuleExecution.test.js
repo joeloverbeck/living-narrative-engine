@@ -268,6 +268,76 @@ describe('item-handling:pick_up_item action integration', () => {
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('room');
     });
+
+    it('includes sense-aware perspective fields for successful pickup', async () => {
+      const scenario = setupPickUpItemScenario(
+        'Grace',
+        'tavern',
+        [{ id: 'silver-coin', weight: 0.01 }],
+        { maxWeight: 50, maxItems: 10 }
+      );
+
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+
+      await testFixture.executeAction('test:actor1', 'silver-coin');
+
+      const pickupEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'item.pickup'
+      );
+
+      expect(pickupEvent).toBeDefined();
+
+      // Verify perspective-aware actor description (first-person)
+      expect(pickupEvent.payload.actorDescription).toBe(
+        'I pick up silver-coin and add it to my inventory.'
+      );
+
+      // Verify alternate descriptions for different senses
+      expect(pickupEvent.payload.alternateDescriptions).toBeDefined();
+      expect(pickupEvent.payload.alternateDescriptions.auditory).toBe(
+        'I hear something being picked up from the ground.'
+      );
+      expect(pickupEvent.payload.alternateDescriptions.tactile).toBe(
+        'I sense movement near the ground as someone retrieves an item.'
+      );
+    });
+
+    it('includes sense-aware perspective fields for failed pickup', async () => {
+      const scenario = setupPickUpItemScenario(
+        'Henry',
+        'stable',
+        [{ id: 'anvil', weight: 200.0 }],
+        { maxWeight: 50, maxItems: 10 }
+      );
+
+      testFixture.reset([scenario.room, scenario.actor, ...scenario.items]);
+
+      await testFixture.executeAction('test:actor1', 'anvil');
+
+      const failedEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'error.action_failed'
+      );
+
+      expect(failedEvent).toBeDefined();
+
+      // Verify perspective-aware actor description (first-person)
+      expect(failedEvent.payload.actorDescription).toBe(
+        'I try to pick up anvil, but I cannot carry any more.'
+      );
+
+      // Verify alternate descriptions for different senses
+      expect(failedEvent.payload.alternateDescriptions).toBeDefined();
+      expect(failedEvent.payload.alternateDescriptions.auditory).toBe(
+        'I hear a frustrated attempt to pick something up.'
+      );
+      expect(failedEvent.payload.alternateDescriptions.tactile).toBe(
+        'I sense frustrated movement nearby as someone struggles with something.'
+      );
+    });
   });
 
   describe('round-trip with drop', () => {

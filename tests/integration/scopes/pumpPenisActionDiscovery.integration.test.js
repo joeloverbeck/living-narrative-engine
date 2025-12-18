@@ -384,7 +384,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
       setupEntities(
         {},
         {
-          'positioning:being_fucked_vaginally': { actorId: 'charlie' },
+          'sex-states:being_fucked_vaginally': { actorId: 'charlie' },
         }
       );
 

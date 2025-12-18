@@ -16,7 +16,7 @@ import * as createMessageElementModule from '../../../src/domUI/helpers/createMe
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/events/validatedEventDispatcher.js');
 
-const PERCEPTION_LOG_LIST_SELECTOR = '#perception-log-list';
+const PERCEPTION_LOG_CONTENT_SELECTOR = '#perception-log-content';
 const CLASS_PREFIX = '[PerceptionLogRenderer]';
 
 const flushPromises = () => new Promise((resolve) => process.nextTick(resolve));
@@ -40,14 +40,14 @@ describe('PerceptionLogRenderer', () => {
 
   beforeEach(() => {
     dom = new JSDOM(
-      `<!DOCTYPE html><html><body><ul id="perception-log-list"></ul></body></html>`
+      `<!DOCTYPE html><html><body><div id="perception-log-content"></div></body></html>`
     );
     document = dom.window.document;
 
     global.document = document;
     global.window = dom.window;
     global.HTMLElement = dom.window.HTMLElement;
-    global.HTMLUListElement = dom.window.HTMLUListElement;
+    global.HTMLDivElement = dom.window.HTMLDivElement;
     global.HTMLParagraphElement = dom.window.HTMLParagraphElement;
 
     const ConsoleLogger =
@@ -65,7 +65,7 @@ describe('PerceptionLogRenderer', () => {
     });
 
     listContainerElementInDom = document.querySelector(
-      PERCEPTION_LOG_LIST_SELECTOR
+      PERCEPTION_LOG_CONTENT_SELECTOR
     );
     if (listContainerElementInDom) {
       // Spy on methods; these will be restored by jest.restoreAllMocks()
@@ -90,7 +90,7 @@ describe('PerceptionLogRenderer', () => {
 
     mockDocumentContext = {
       query: jest.fn((selector) => {
-        if (selector === PERCEPTION_LOG_LIST_SELECTOR) {
+        if (selector === PERCEPTION_LOG_CONTENT_SELECTOR) {
           return listContainerElementInDom;
         }
         return document.querySelector(selector);
@@ -101,22 +101,22 @@ describe('PerceptionLogRenderer', () => {
 
     mockDomElementFactoryInstance = {
       create: jest.fn((tag) => document.createElement(tag)),
-      li: jest.fn((className, textContent) => {
-        const li = document.createElement('li');
-        if (textContent !== undefined) li.textContent = textContent;
-        if (className) li.className = className;
-        const originalSetAttribute = li.setAttribute.bind(li);
-        li.setAttribute = jest.fn((name, value) =>
+      div: jest.fn((className, textContent) => {
+        const div = document.createElement('div');
+        if (textContent !== undefined) div.textContent = textContent;
+        if (className) div.className = className;
+        const originalSetAttribute = div.setAttribute.bind(div);
+        div.setAttribute = jest.fn((name, value) =>
           originalSetAttribute(name, value)
         );
-        Object.defineProperty(li, 'title', {
-          get: () => li.getAttribute('title') || '',
+        Object.defineProperty(div, 'title', {
+          get: () => div.getAttribute('title') || '',
           set: (value) => {
-            li.setAttribute('title', value);
+            div.setAttribute('title', value);
           },
           configurable: true,
         });
-        return li;
+        return div;
       }),
       p: jest.fn((className, textContent) => {
         const p = document.createElement('p');
@@ -158,10 +158,10 @@ describe('PerceptionLogRenderer', () => {
       createRenderer();
       await flushPromises();
       expect(mockDocumentContext.query).toHaveBeenCalledWith(
-        PERCEPTION_LOG_LIST_SELECTOR
+        PERCEPTION_LOG_CONTENT_SELECTOR
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Successfully bound element 'listContainerElement' to selector '${PERCEPTION_LOG_LIST_SELECTOR}'.`
+        `${CLASS_PREFIX} Successfully bound element 'listContainerElement' to selector '${PERCEPTION_LOG_CONTENT_SELECTOR}'.`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} List container element successfully bound:`,
@@ -178,7 +178,7 @@ describe('PerceptionLogRenderer', () => {
 
     it('should throw if listContainerElement is not found (by BaseListDisplayComponent)', () => {
       mockDocumentContext.query.mockImplementationOnce((selector) => {
-        if (selector === PERCEPTION_LOG_LIST_SELECTOR) return null;
+        if (selector === PERCEPTION_LOG_CONTENT_SELECTOR) return null;
         return document.querySelector(selector);
       });
       const expectedErrorMessage = `${CLASS_PREFIX} 'listContainerElement' is not defined or not found in the DOM. This element is required for BaseListDisplayComponent. Ensure it's specified in elementsConfig.`;
@@ -300,7 +300,7 @@ describe('PerceptionLogRenderer', () => {
       renderer = createRenderer();
     });
 
-    it('should create an LI with descriptionText and title', () => {
+    it('should create a div with descriptionText and title', () => {
       const logEntry = {
         descriptionText: 'Test Log',
         timestamp: '12:00',
@@ -308,14 +308,15 @@ describe('PerceptionLogRenderer', () => {
         actorId: 'npc:1',
         targetId: 'item:A',
       };
-      const li = renderer._renderListItem(logEntry, 0, [logEntry]);
-      // New implementation calls li() with no args and adds classes via classList.add()
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
-      expect(li.classList.contains('log-generic')).toBe(true);
-      expect(li.textContent).toBe('Test Log');
-      // Title is now set via li.title property, not setAttribute
-      expect(li.title).toContain('Time: 12:00');
-      expect(li.title).toContain('Type: Sight');
+      const div = renderer._renderListItem(logEntry, 0, [logEntry]);
+      // New implementation calls div() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.div).toHaveBeenCalled();
+      expect(div.classList.contains('perception-log-entry')).toBe(true);
+      expect(div.classList.contains('log-generic')).toBe(true);
+      expect(div.textContent).toBe('Test Log');
+      // Title is now set via div.title property, not setAttribute
+      expect(div.title).toContain('Time: 12:00');
+      expect(div.title).toContain('Type: Sight');
     });
 
     it('should return null and log warning for malformed log entry', () => {
@@ -336,17 +337,18 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:alice',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
-      // New implementation calls li() with no args and adds classes via classList.add()
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
-      expect(li.classList.contains('log-type-speech')).toBe(true);
-      expect(li.classList.contains('log-cat-communication')).toBe(true);
+      // New implementation calls div() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.div).toHaveBeenCalled();
+      expect(div.classList.contains('perception-log-entry')).toBe(true);
+      expect(div.classList.contains('log-type-speech')).toBe(true);
+      expect(div.classList.contains('log-cat-communication')).toBe(true);
       // New implementation uses speaker-name and dialogue classes
-      expect(li.innerHTML).toContain('<span class="speaker-name">Alice</span>');
-      expect(li.innerHTML).toContain('<span class="dialogue">');
-      expect(li.title).toContain('Time: 14:30');
-      expect(li.title).toContain('Type: communication.speech');
+      expect(div.innerHTML).toContain('<span class="speaker-name">Alice</span>');
+      expect(div.innerHTML).toContain('<span class="dialogue">');
+      expect(div.title).toContain('Time: 14:30');
+      expect(div.title).toContain('Type: communication.speech');
     });
 
     it('should render speech with different speaker names', () => {
@@ -356,14 +358,14 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:darklord',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // New implementation uses speaker-name class for the speaker name only
-      expect(li.innerHTML).toContain(
+      expect(div.innerHTML).toContain(
         '<span class="speaker-name">The Dark Lord</span>'
       );
-      expect(li.innerHTML).toContain('says:');
-      expect(li.innerHTML).toContain('You shall not pass!');
+      expect(div.innerHTML).toContain('says:');
+      expect(div.innerHTML).toContain('You shall not pass!');
     });
 
     it('should render action entries with perceptionType-based class and action-text span', () => {
@@ -373,17 +375,18 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'physical.target_action', // Use a valid new perceptionType
         actorId: 'player:hero',
       };
-      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+      const div = renderer._renderListItem(actionEntry, 0, [actionEntry]);
 
-      // New implementation calls li() with no args and adds classes via classList.add()
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
-      expect(li.classList.contains('log-type-target-action')).toBe(true);
-      expect(li.classList.contains('log-cat-physical')).toBe(true);
-      expect(li.innerHTML).toContain(
+      // New implementation calls div() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.div).toHaveBeenCalled();
+      expect(div.classList.contains('perception-log-entry')).toBe(true);
+      expect(div.classList.contains('log-type-target-action')).toBe(true);
+      expect(div.classList.contains('log-cat-physical')).toBe(true);
+      expect(div.innerHTML).toContain(
         '<span class="action-text">draws sword</span>'
       );
-      expect(li.title).toContain('Time: 16:15');
-      expect(li.title).toContain('Type: physical.target_action');
+      expect(div.title).toContain('Time: 16:15');
+      expect(div.title).toContain('Type: physical.target_action');
     });
 
     it('should render complex action entries', () => {
@@ -393,9 +396,9 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'Action',
         actorId: 'player:scholar',
       };
-      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+      const div = renderer._renderListItem(actionEntry, 0, [actionEntry]);
 
-      expect(li.innerHTML).toContain(
+      expect(div.innerHTML).toContain(
         '<span class="action-text">carefully examines the ancient tome</span>'
       );
     });
@@ -407,12 +410,12 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'Speech',
         actorId: 'npc:bob',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
-      expect(li.innerHTML).toContain(
+      expect(div.innerHTML).toContain(
         '&lt;script&gt;alert("xss")&lt;/script&gt;'
       );
-      expect(li.innerHTML).not.toContain('<script>');
+      expect(div.innerHTML).not.toContain('<script>');
     });
 
     it('should escape HTML in action text', () => {
@@ -422,13 +425,13 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'Action',
         actorId: 'player:hacker',
       };
-      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+      const div = renderer._renderListItem(actionEntry, 0, [actionEntry]);
 
-      expect(li.innerHTML).toContain('&lt;b&gt;bold&lt;/b&gt;');
-      expect(li.innerHTML).toContain('&amp;');
-      expect(li.innerHTML).toContain('&lt;i&gt;italic&lt;/i&gt;');
-      expect(li.innerHTML).not.toContain('<b>');
-      expect(li.innerHTML).not.toContain('<i>');
+      expect(div.innerHTML).toContain('&lt;b&gt;bold&lt;/b&gt;');
+      expect(div.innerHTML).toContain('&amp;');
+      expect(div.innerHTML).toContain('&lt;i&gt;italic&lt;/i&gt;');
+      expect(div.innerHTML).not.toContain('<b>');
+      expect(div.innerHTML).not.toContain('<i>');
     });
 
     it('should escape HTML in generic entries', () => {
@@ -438,9 +441,9 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'Generic',
         actorId: 'system',
       };
-      const li = renderer._renderListItem(genericEntry, 0, [genericEntry]);
+      const div = renderer._renderListItem(genericEntry, 0, [genericEntry]);
 
-      expect(li.innerHTML).toBe(
+      expect(div.innerHTML).toBe(
         'The &lt;door&gt; opens &amp; reveals a &gt; symbol'
       );
     });
@@ -452,15 +455,16 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'physical.target_action',
         actorId: 'player:hero',
       };
-      const li = renderer._renderListItem(invalidActionEntry, 0, [
+      const div = renderer._renderListItem(invalidActionEntry, 0, [
         invalidActionEntry,
       ]);
 
       // Even though text doesn't match action pattern, it still gets perceptionType-based classes
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
+      expect(mockDomElementFactoryInstance.div).toHaveBeenCalled();
       // The perceptionType determines styling, not the text pattern
-      expect(li.classList.contains('log-type-target-action')).toBe(true);
-      expect(li.innerHTML).toBe('*draws sword');
+      expect(div.classList.contains('perception-log-entry')).toBe(true);
+      expect(div.classList.contains('log-type-target-action')).toBe(true);
+      expect(div.innerHTML).toBe('*draws sword');
     });
 
     // =========================================================================
@@ -478,11 +482,11 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:cress',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should contain single quotes, not double
-      expect(li.innerHTML).toContain('"Hello world"');
-      expect(li.innerHTML).not.toContain('""Hello world""');
+      expect(div.innerHTML).toContain('"Hello world"');
+      expect(div.innerHTML).not.toContain('""Hello world""');
     });
 
     it('should handle speech without pre-existing quotes', () => {
@@ -493,10 +497,10 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:bob',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should add quotes
-      expect(li.innerHTML).toContain('"Hi there"');
+      expect(div.innerHTML).toContain('"Hi there"');
     });
 
     it('should handle empty quoted speech without quadruple quotes', () => {
@@ -506,11 +510,11 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:charlie',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should have exactly two quotes (empty string in quotes), not four
-      expect(li.innerHTML).toContain('""');
-      expect(li.innerHTML).not.toContain('""""');
+      expect(div.innerHTML).toContain('""');
+      expect(div.innerHTML).not.toContain('""""');
     });
 
     it('should preserve speech with only partial quote at start', () => {
@@ -523,13 +527,13 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:dana',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should render in dialogue span (partial quote is not stripped, then wrapped)
       // This edge case produces ""incomplete quote" which is suboptimal but
       // unlikely in real usage since rule always adds complete quotes
-      expect(li.innerHTML).toContain('dialogue');
-      expect(li.innerHTML).toContain('incomplete quote');
+      expect(div.innerHTML).toContain('dialogue');
+      expect(div.innerHTML).toContain('incomplete quote');
     });
 
     it('should reproduce the reported bug scenario with realistic speech content', () => {
@@ -540,10 +544,10 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:cress_siltwell',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should show "aaaa", not ""aaaa""
-      const dialogueMatch = li.innerHTML.match(
+      const dialogueMatch = div.innerHTML.match(
         /<span class="dialogue">(.*?)<\/span>/
       );
       expect(dialogueMatch).not.toBeNull();
@@ -559,10 +563,10 @@ describe('PerceptionLogRenderer', () => {
         perceptionType: 'communication.speech',
         actorId: 'npc:eira_quenreach',
       };
-      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+      const div = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
       // Should show "I've said this.", not ""I've said this.""
-      const dialogueMatch = li.innerHTML.match(
+      const dialogueMatch = div.innerHTML.match(
         /<span class="dialogue">(.*?)<\/span>/
       );
       expect(dialogueMatch).not.toBeNull();

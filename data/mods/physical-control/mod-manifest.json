@@ -8,19 +8,11 @@
   "actionConsiderWhen": "Asserting physical dominance, forcing someone into a position, pushing someone away, or physically controlling another.",
   "dependencies": [
     {
-      "id": "anatomy",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "clothing",
+      "id": "sex-states",
       "version": "^1.0.0"
     },
     {
       "id": "core",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "movement",
       "version": "^1.0.0"
     },
     {

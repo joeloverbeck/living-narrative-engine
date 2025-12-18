@@ -65,7 +65,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 73,
     },
     {
-      mod: 'positioning',
+      mod: 'sex-states',
       name: 'giving_blowjob',
       targetRole: 'receiving_entity_id',
       priority: 80,
@@ -89,7 +89,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 64,
     },
     {
-      mod: 'positioning',
+      mod: 'sex-states',
       name: 'receiving_blowjob',
       targetRole: 'giving_entity_id',
       priority: 78,

@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:receiving_blowjob"]
+    "actor": ["sex-states:receiving_blowjob"]
   },
   "template": "guide {primary}'s hand to the bulge of your crotch",
   "prerequisites": [

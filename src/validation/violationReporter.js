@@ -280,11 +280,14 @@ class ViolationReporter {
     }
 
     // Mod summary table
-    lines.push('Violation Summary by Mod:');
+    lines.push('Violation Summary:');
     lines.push(
-      'Mod'.padEnd(20) + 'Violations'.padEnd(12) + 'Missing Dependencies'
+      'Mod'.padEnd(20) +
+        'Violations'.padEnd(12) +
+        'Missing Deps'.padEnd(15) +
+        'Unused Deps'
     );
-    lines.push('-'.repeat(60));
+    lines.push('-'.repeat(70));
 
     modsWithViolations
       .sort((a, b) => {
@@ -303,57 +306,103 @@ class ViolationReporter {
         const missingDeps = report.crossReferences
           ? report.crossReferences.missingDependencies
           : report.missingDependencies;
+        const unusedDeps = report.crossReferences
+          ? report.crossReferences.unusedDependencies
+          : report.unusedDependencies;
         const violationCount = violations.length.toString();
-        const depsStr = missingDeps ? missingDeps.join(', ') : '';
-        lines.push(modId.padEnd(20) + violationCount.padEnd(12) + depsStr);
+        const missingStr =
+          missingDeps && missingDeps.length > 0 ? missingDeps.join(', ') : '-';
+        const unusedStr =
+          unusedDeps && unusedDeps.length > 0 ? unusedDeps.join(', ') : '-';
+        lines.push(
+          modId.padEnd(20) +
+            violationCount.padEnd(12) +
+            missingStr.padEnd(15) +
+            unusedStr
+        );
       });
 
     lines.push('');
     lines.push('Detailed Violations:');
     lines.push('='.repeat(30));
 
-    // Detailed violations for each mod
+    // Detailed violations for each mod - only show mods with actual content to report
     modsWithViolations.forEach(([modId, report]) => {
-      lines.push('');
-      lines.push(`📦 ${modId}:`);
-
       const violations = report.crossReferences
         ? report.crossReferences.violations
         : report.violations;
-      const violationsByMod = this._groupByMod(violations);
+      const missingDeps = report.crossReferences
+        ? report.crossReferences.missingDependencies
+        : report.missingDependencies;
+      const unusedDeps = report.crossReferences
+        ? report.crossReferences.unusedDependencies
+        : report.unusedDependencies;
 
-      for (const [referencedMod, violations] of violationsByMod) {
-        lines.push(`  ❌ Missing dependency: ${referencedMod}`);
-        violations.forEach((violation) => {
-          let componentLine = `    - ${violation.referencedComponent}`;
+      const hasViolations = violations && violations.length > 0;
+      const hasMissingDeps = missingDeps && missingDeps.length > 0;
+      const hasUnusedDeps = unusedDeps && unusedDeps.length > 0;
 
-          // Add context information if available
-          if (violation.file && violation.file !== 'multiple') {
-            componentLine += ` (${violation.file}${violation.line ? ':' + violation.line : ''})`;
-          }
+      // Skip mods with nothing to report in detail
+      if (!hasViolations && !hasMissingDeps && !hasUnusedDeps) {
+        return;
+      }
 
-          if (violation.severity) {
-            const icon = this._getSeverityIcon(violation.severity);
-            componentLine += ` ${icon}`;
-          }
+      lines.push('');
+      lines.push(`📦 ${modId}:`);
 
-          lines.push(componentLine);
-        });
+      // Show violations grouped by referenced mod
+      if (hasViolations) {
+        const violationsByMod = this._groupByMod(violations);
 
-        // Show primary fix suggestion
-        if (showSuggestions) {
-          const firstViolation = violations[0];
-          if (firstViolation.suggestedFixes?.length > 0) {
-            const primaryFix = firstViolation.suggestedFixes.find(
-              (f) => f.priority === 'primary'
-            );
-            if (primaryFix) {
-              lines.push(`    💡 ${primaryFix.description}`);
+        for (const [referencedMod, modViolations] of violationsByMod) {
+          lines.push(`  ❌ References undeclared dependency: ${referencedMod}`);
+          modViolations.forEach((violation) => {
+            let componentLine = `    - ${violation.referencedComponent}`;
+
+            // Add context information if available
+            if (violation.file && violation.file !== 'multiple') {
+              componentLine += ` (${violation.file}${violation.line ? ':' + violation.line : ''})`;
             }
-          } else if (firstViolation.suggestedFix) {
-            lines.push(`    💡 ${firstViolation.suggestedFix}`);
+
+            if (violation.severity) {
+              const icon = this._getSeverityIcon(violation.severity);
+              componentLine += ` ${icon}`;
+            }
+
+            lines.push(componentLine);
+          });
+
+          // Show primary fix suggestion
+          if (showSuggestions) {
+            const firstViolation = modViolations[0];
+            if (firstViolation.suggestedFixes?.length > 0) {
+              const primaryFix = firstViolation.suggestedFixes.find(
+                (f) => f.priority === 'primary'
+              );
+              if (primaryFix) {
+                lines.push(`    💡 ${primaryFix.description}`);
+              }
+            } else if (firstViolation.suggestedFix) {
+              lines.push(`    💡 ${firstViolation.suggestedFix}`);
+            }
           }
         }
+      }
+
+      // Show missing dependencies (referenced but not declared)
+      if (hasMissingDeps) {
+        lines.push('  ⚠️ Missing dependencies (add to mod-manifest.json):');
+        missingDeps.forEach((dep) => {
+          lines.push(`    - "${dep}"`);
+        });
+      }
+
+      // Show unused dependencies (declared but not referenced)
+      if (hasUnusedDeps) {
+        lines.push('  🗑️ Unused dependencies (remove from mod-manifest.json):');
+        unusedDeps.forEach((dep) => {
+          lines.push(`    - "${dep}"`);
+        });
       }
     });
 
@@ -361,8 +410,9 @@ class ViolationReporter {
     lines.push('📋 Next Steps:');
     lines.push("1. Review each mod's manifest file (mod-manifest.json)");
     lines.push('2. Add missing dependencies to the dependencies array');
-    lines.push('3. Ensure version constraints are appropriate');
-    lines.push('4. Re-run validation to confirm fixes');
+    lines.push('3. Remove unused dependencies from the dependencies array');
+    lines.push('4. Ensure version constraints are appropriate');
+    lines.push('5. Re-run validation to confirm fixes');
 
     return lines.join('\n');
   }

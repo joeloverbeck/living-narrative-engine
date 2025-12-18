@@ -6,13 +6,18 @@
   "template": "swing {weapon} at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["positioning:wielding"],
-    "primary": ["weapons:weapon", "damage-types:damage_capabilities"]
+    "actor": [
+      "positioning:wielding"
+    ],
+    "primary": [
+      "weapons:weapon",
+      "damage-types:damage_capabilities"
+    ]
   },
   "forbidden_components": {
     "actor": [
       "positioning:hugging",
-      "positioning:giving_blowjob",
+      "sex-states:giving_blowjob",
       "positioning:doing_complex_performance",
       "positioning:bending_over",
       "positioning:being_restrained",
@@ -59,7 +64,11 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.secondary.components.positioning:fallen" }]
+            "!!": [
+              {
+                "var": "entity.secondary.components.positioning:fallen"
+              }
+            ]
           }
         },
         "type": "flat",
@@ -85,5 +94,11 @@
         "description": "Bonus for attacking a restrained target"
       }
     ]
+  },
+  "visual": {
+    "backgroundColor": "#112a46",
+    "textColor": "#e6f1ff",
+    "hoverBackgroundColor": "#0b3954",
+    "hoverTextColor": "#f0f4f8"
   }
 }

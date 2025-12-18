@@ -188,8 +188,20 @@ describe('deference:crawl_to - Rule Execution', () => {
       expect(lastPerceptible.payload.actorId).toBe('test:actor1');
       expect(lastPerceptible.payload.targetId).toBe('test:target1');
       expect(lastPerceptible.payload.perceptionType).toBe(
-        'state_change_observable'
+        'state.observable_change'
       );
+
+      // Validate sense-aware perspective fields
+      expect(lastPerceptible.payload.actorDescription).toBe(
+        'I crawl submissively to King until we\'re close.'
+      );
+      expect(lastPerceptible.payload.targetDescription).toBe(
+        'Knight crawls submissively toward me until we\'re close.'
+      );
+      expect(lastPerceptible.payload.alternateDescriptions).toEqual({
+        auditory:
+          'I hear the sounds of shuffling and fabric dragging as someone crawls nearby.',
+      });
     });
   });
 

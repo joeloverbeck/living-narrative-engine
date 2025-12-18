@@ -144,22 +144,18 @@ describe('CLOLAYMIG-012: Base-Clothing Recipe Reference Updates', () => {
       expect(dependencyIds).toContain('base-clothing');
     });
 
-    it('should still have clothing dependency (infrastructure) in both manifests', async () => {
+    it('should still have clothing dependency (infrastructure) in fantasy manifest', async () => {
       const fantasyPath = path.resolve('data/mods/fantasy/mod-manifest.json');
-      const patrolPath = path.resolve('data/mods/patrol/mod-manifest.json');
 
       const fantasyContent = await fs.readFile(fantasyPath, 'utf8');
-      const patrolContent = await fs.readFile(patrolPath, 'utf8');
 
       const fantasyManifest = JSON.parse(fantasyContent);
-      const patrolManifest = JSON.parse(patrolContent);
 
       const fantasyDeps = fantasyManifest.dependencies.map((d) => d.id);
-      const patrolDeps = patrolManifest.dependencies.map((d) => d.id);
 
       // clothing mod provides infrastructure (components, actions, rules)
+      // Note: patrol mod only needs base-clothing for its recipes, not full clothing infrastructure
       expect(fantasyDeps).toContain('clothing');
-      expect(patrolDeps).toContain('clothing');
     });
   });
 

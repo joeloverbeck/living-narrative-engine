@@ -93,17 +93,17 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
       testFixture.entityManager.getEntityInstance('actorB');
 
     expect(
-      aliceAfterInsert.components['positioning:being_fucked_vaginally']
+      aliceAfterInsert.components['sex-states:being_fucked_vaginally']
     ).toBeDefined();
     expect(
-      aliceAfterInsert.components['positioning:being_fucked_vaginally'].actorId
+      aliceAfterInsert.components['sex-states:being_fucked_vaginally'].actorId
     ).toBe('actorB');
 
     expect(
-      bobAfterInsert.components['positioning:fucking_vaginally']
+      bobAfterInsert.components['sex-states:fucking_vaginally']
     ).toBeDefined();
     expect(
-      bobAfterInsert.components['positioning:fucking_vaginally'].targetId
+      bobAfterInsert.components['sex-states:fucking_vaginally'].targetId
     ).toBe('actorA');
 
     // Act - Turn 2: Bob discovers and uses pull_penis_out_of_vagina action
@@ -136,10 +136,10 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
       testFixture.entityManager.getEntityInstance('actorB');
 
     expect(
-      aliceAfterPullOut.components['positioning:being_fucked_vaginally']
+      aliceAfterPullOut.components['sex-states:being_fucked_vaginally']
     ).toBeUndefined();
     expect(
-      bobAfterPullOut.components['positioning:fucking_vaginally']
+      bobAfterPullOut.components['sex-states:fucking_vaginally']
     ).toBeUndefined();
   });
 
@@ -175,7 +175,7 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     // Assert: Clean state after first cycle
     const aliceCycle1 = testFixture.entityManager.getEntityInstance('actorA');
     expect(
-      aliceCycle1.components['positioning:being_fucked_vaginally']
+      aliceCycle1.components['sex-states:being_fucked_vaginally']
     ).toBeUndefined();
 
     // Act: Cycle 2 - Insert again
@@ -187,13 +187,13 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     const aliceCycle2 = testFixture.entityManager.getEntityInstance('actorA');
     const bobCycle2 = testFixture.entityManager.getEntityInstance('actorB');
     expect(
-      aliceCycle2.components['positioning:being_fucked_vaginally']
+      aliceCycle2.components['sex-states:being_fucked_vaginally']
     ).toBeDefined();
     expect(
-      aliceCycle2.components['positioning:being_fucked_vaginally'].actorId
+      aliceCycle2.components['sex-states:being_fucked_vaginally'].actorId
     ).toBe('actorB');
-    expect(bobCycle2.components['positioning:fucking_vaginally']).toBeDefined();
-    expect(bobCycle2.components['positioning:fucking_vaginally'].targetId).toBe(
+    expect(bobCycle2.components['sex-states:fucking_vaginally']).toBeDefined();
+    expect(bobCycle2.components['sex-states:fucking_vaginally'].targetId).toBe(
       'actorA'
     );
   });

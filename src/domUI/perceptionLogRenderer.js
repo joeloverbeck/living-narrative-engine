@@ -96,9 +96,9 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   }) {
     const elementsConfig = {
       listContainerElement: {
-        selector: '#perception-log-list',
+        selector: '#perception-log-content',
         required: true,
-        expectedType: HTMLUListElement,
+        expectedType: HTMLDivElement,
       },
     };
 
@@ -224,7 +224,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * @param {LogEntryObject} logEntry - The log entry to render.
    * @param {number} _itemIndex - The index of the item (unused).
    * @param {LogEntryObject[]} _listData - The full list data (unused).
-   * @returns {HTMLLIElement | null} The rendered list item or null if malformed.
+   * @returns {HTMLDivElement | null} The rendered entry element or null if malformed.
    * @see specs/perceptionType-consolidation.md
    */
   _renderListItem(logEntry, _itemIndex, _listData) {
@@ -250,22 +250,23 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       perceptionType = legacyMapping;
     }
 
-    // Create the list item element
-    const li =
-      this.domElementFactory?.li?.() ?? this.documentContext.create('li');
+    // Create the entry element as a div
+    const entryElement =
+      this.domElementFactory?.div?.() ?? this.documentContext.create('div');
+    entryElement.classList.add('perception-log-entry');
 
     // Apply perceptionType-based CSS classes (PRIMARY styling mechanism)
     const typeMetadata = getPerceptionTypeMetadata(perceptionType);
     if (typeMetadata) {
-      li.classList.add(typeMetadata.cssClass);
+      entryElement.classList.add(typeMetadata.cssClass);
 
       const categoryMetadata = getCategoryMetadata(typeMetadata.category);
       if (categoryMetadata) {
-        li.classList.add(categoryMetadata.cssClassPrefix);
+        entryElement.classList.add(categoryMetadata.cssClassPrefix);
       }
     } else {
       // Fallback for unknown types
-      li.classList.add('log-generic');
+      entryElement.classList.add('log-generic');
     }
 
     // Text pattern detection for content formatting
@@ -299,10 +300,10 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       innerFragments.push(this.#escapeHtml(text));
     }
 
-    li.innerHTML = innerFragments.join('');
-    li.title = `Time: ${logEntry.timestamp} | Type: ${perceptionType}`;
+    entryElement.innerHTML = innerFragments.join('');
+    entryElement.title = `Time: ${logEntry.timestamp} | Type: ${perceptionType}`;
 
-    return li;
+    return entryElement;
   }
 
   /**

@@ -73,7 +73,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'bitten_entity_id',
     },
     {
-      mod: 'positioning',
+      mod: 'sex-states',
       name: 'giving_blowjob',
       expectedTemplate: 'performing oral sex',
       priority: 80,
@@ -94,7 +94,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'furniture_id',
     },
     {
-      mod: 'positioning',
+      mod: 'sex-states',
       name: 'receiving_blowjob',
       expectedTemplate: 'receiving oral sex',
       priority: 78,
@@ -200,8 +200,8 @@ describe('Activity Description System Activation', () => {
     it('should have correct priority ordering (highest first)', () => {
       const priorities = [
         { id: 'positioning:straddling_waist', priority: 82 },
-        { id: 'positioning:giving_blowjob', priority: 80 },
-        { id: 'positioning:receiving_blowjob', priority: 78 },
+        { id: 'sex-states:giving_blowjob', priority: 80 },
+        { id: 'sex-states:receiving_blowjob', priority: 78 },
         { id: 'positioning:biting_neck', priority: 73 },
         { id: 'kissing:kissing', priority: 72 },
       ];

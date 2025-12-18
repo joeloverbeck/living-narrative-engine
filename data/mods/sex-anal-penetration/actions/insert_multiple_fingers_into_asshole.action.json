@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:fucking_anally"]
+    "actor": ["sex-states:fucking_anally"]
   },
   "template": "insert multiple fingers into {primary}'s asshole",
   "prerequisites": [],

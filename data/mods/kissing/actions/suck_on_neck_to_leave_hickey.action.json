@@ -8,8 +8,8 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing", "positioning:giving_blowjob"],
-    "target": ["positioning:giving_blowjob"]
+    "actor": ["kissing:kissing", "sex-states:giving_blowjob"],
+    "target": ["sex-states:giving_blowjob"]
   },
   "template": "suck on {target}'s neck to leave a hickey",
   "prerequisites": [],

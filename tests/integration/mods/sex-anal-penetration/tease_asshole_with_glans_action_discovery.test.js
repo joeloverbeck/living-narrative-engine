@@ -57,7 +57,7 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       };
 
       // Alice is actively fucking someone anally
-      scenario.actor.components['positioning:fucking_anally'] = {
+      scenario.actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
       };
@@ -98,7 +98,7 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       };
 
       // Alice is actively fucking someone vaginally (cannot use same penis for anal)
-      scenario.actor.components['positioning:fucking_vaginally'] = {
+      scenario.actor.components['sex-states:fucking_vaginally'] = {
         targetId: 'other_entity',
       };
 

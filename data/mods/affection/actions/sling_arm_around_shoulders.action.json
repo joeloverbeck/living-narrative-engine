@@ -12,9 +12,9 @@
       "kissing:kissing",
       "positioning:straddling_waist",
       "positioning:being_hugged",
-      "positioning:giving_blowjob"
+      "sex-states:giving_blowjob"
     ],
-    "target": ["positioning:giving_blowjob"]
+    "target": ["sex-states:giving_blowjob"]
   },
   "template": "sling an arm around {target}'s shoulders",
   "prerequisites": [],

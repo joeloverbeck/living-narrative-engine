@@ -192,23 +192,15 @@ describe('Perceptible Event Validation Regression Tests', () => {
     const { rule } = standUpRule;
     const actions = rule.actions || [];
 
-    // Find perception type setting
-    const perceptionTypeAction = actions.find(
-      (action) =>
-        action.type === 'SET_VARIABLE' &&
-        action.parameters?.variable_name === 'perceptionType'
+    // Find DISPATCH_PERCEPTIBLE_EVENT action (modern pattern uses direct operation)
+    const dispatchPerceptibleAction = actions.find(
+      (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
-    expect(perceptionTypeAction).toBeDefined();
-    expect(perceptionTypeAction.parameters.value).toBe('physical.self_action');
-
-    // Find target ID setting
-    const targetIdAction = actions.find(
-      (action) =>
-        action.type === 'SET_VARIABLE' &&
-        action.parameters?.variable_name === 'targetId'
+    expect(dispatchPerceptibleAction).toBeDefined();
+    expect(dispatchPerceptibleAction.parameters.perception_type).toBe(
+      'physical.self_action'
     );
-    expect(targetIdAction).toBeDefined();
-    expect(targetIdAction.parameters.value).toBe(null);
+    expect(dispatchPerceptibleAction.parameters.target_id).toBe(null);
   });
 
   it('validates kneel_before rule uses correct perception type', () => {
@@ -220,14 +212,14 @@ describe('Perceptible Event Validation Regression Tests', () => {
     const { rule } = kneelBeforeRule;
     const actions = rule.actions || [];
 
-    // Find perception type setting
-    const perceptionTypeAction = actions.find(
-      (action) =>
-        action.type === 'SET_VARIABLE' &&
-        action.parameters?.variable_name === 'perceptionType'
+    // Find DISPATCH_PERCEPTIBLE_EVENT action (modern pattern uses direct operation)
+    const dispatchPerceptibleAction = actions.find(
+      (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
-    expect(perceptionTypeAction).toBeDefined();
-    expect(perceptionTypeAction.parameters.value).toBe('physical.target_action');
+    expect(dispatchPerceptibleAction).toBeDefined();
+    expect(dispatchPerceptibleAction.parameters.perception_type).toBe(
+      'physical.target_action'
+    );
   });
 
   it('demonstrates valid perceptible event payloads', () => {

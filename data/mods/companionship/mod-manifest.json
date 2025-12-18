@@ -15,10 +15,6 @@
     {
       "id": "positioning",
       "version": "^1.0.0"
-    },
-    {
-      "id": "movement",
-      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -27,7 +23,10 @@
       "follow.action.json",
       "stop_following.action.json"
     ],
-    "components": ["following.component.json", "leading.component.json"],
+    "components": [
+      "following.component.json",
+      "leading.component.json"
+    ],
     "conditions": [
       "actor-is-following.condition.json",
       "entity-is-following-actor.condition.json",
@@ -41,8 +40,13 @@
       "follow_auto_move.rule.json",
       "stop_following.rule.json"
     ],
-    "scopes": ["followers.scope", "potential_leaders.scope"],
-    "macros": ["autoMoveFollower.macro.json"],
+    "scopes": [
+      "followers.scope",
+      "potential_leaders.scope"
+    ],
+    "macros": [
+      "autoMoveFollower.macro.json"
+    ],
     "entities": {
       "definitions": [],
       "instances": []

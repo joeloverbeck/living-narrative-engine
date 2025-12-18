@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that caressing actions are correctly forbidden when actor is giving a blowjob.
  * @description Ensures that mouth engagement actions (cupping chin, licking lips, nuzzling neck, running fingers through hair,
- * running thumb across lips, and wiping cheek) are not available when the acting actor has the positioning:giving_blowjob component.
+ * running thumb across lips, and wiping cheek) are not available when the acting actor has the sex-states:giving_blowjob component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -244,39 +244,39 @@ describe('caressing actions forbidden when giving blowjob', () => {
   });
 
   describe('Action structure validation', () => {
-    it('cup_chin should have positioning:giving_blowjob as forbidden component', () => {
+    it('cup_chin should have sex-states:giving_blowjob as forbidden component', () => {
       expect(cupChinAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('lick_lips should have positioning:giving_blowjob as forbidden component', () => {
+    it('lick_lips should have sex-states:giving_blowjob as forbidden component', () => {
       expect(lickLipsAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('nuzzle_face_into_neck should have positioning:giving_blowjob as forbidden component', () => {
+    it('nuzzle_face_into_neck should have sex-states:giving_blowjob as forbidden component', () => {
       expect(nuzzleFaceIntoNeckAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('run_fingers_through_hair should have positioning:giving_blowjob as forbidden component', () => {
+    it('run_fingers_through_hair should have sex-states:giving_blowjob as forbidden component', () => {
       expect(runFingersThroughHairAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('run_thumb_across_lips should have positioning:giving_blowjob as forbidden component', () => {
+    it('run_thumb_across_lips should have sex-states:giving_blowjob as forbidden component', () => {
       expect(runThumbAcrossLipsAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
 
-    it('thumb_wipe_cheek should have positioning:giving_blowjob as forbidden component', () => {
+    it('thumb_wipe_cheek should have sex-states:giving_blowjob as forbidden component', () => {
       expect(thumbWipeCheekAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -381,7 +381,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -406,7 +406,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -431,7 +431,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -456,7 +456,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -481,7 +481,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
@@ -506,7 +506,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       );
 
       // Add giving_blowjob component to actor
-      scenario.actor.components['positioning:giving_blowjob'] = {
+      scenario.actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: scenario.target.id,
         initiated: true,
         consented: true,

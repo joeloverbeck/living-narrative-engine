@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob", "positioning:bending_over"]
+    "actor": ["sex-states:giving_blowjob", "positioning:bending_over"]
   },
   "template": "suck on {target}'s nipples",
   "prerequisites": [],

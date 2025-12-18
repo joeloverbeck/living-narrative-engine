@@ -32,7 +32,7 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
       testFixture.assertActionSuccess('Nina buries their face in their hands.');
     });
 
-    it('emits perceptible event with null target', async () => {
+    it('emits perceptible event with null target and sense-aware descriptions', async () => {
       const scenario = testFixture.createStandardActorTarget(['Ivy', 'Owen']);
 
       await testFixture.executeAction(scenario.actor.id, null);
@@ -43,6 +43,10 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
         actorId: scenario.actor.id,
         targetId: null,
         perceptionType: 'physical.self_action',
+        actorDescription: 'I bury my face in my hands, overwhelmed.',
+        alternateDescriptions: {
+          auditory: 'I hear someone nearby making sounds of distress.',
+        },
       });
     });
 
@@ -81,9 +85,9 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
   });
 
   describe('Action sequence validation', () => {
-    it('should include required variables and macro', () => {
+    it('should include required variables and sense-aware operations', () => {
       const actions = testFixture.ruleFile.actions;
-      expect(actions).toHaveLength(7);
+      expect(actions).toHaveLength(10);
 
       const [
         getName,
@@ -92,7 +96,10 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
         perceptionType,
         locationId,
         targetId,
-        macro,
+        successMessage,
+        dispatchPerceptible,
+        dispatchEvent,
+        endTurn,
       ] = actions;
 
       expect(getName.type).toBe('GET_NAME');
@@ -118,7 +125,23 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
       expect(targetId.parameters.variable_name).toBe('targetId');
       expect(targetId.parameters.value).toBeNull();
 
-      expect(macro.macro).toBe('core:logSuccessAndEndTurn');
+      expect(successMessage.type).toBe('SET_VARIABLE');
+      expect(successMessage.parameters.variable_name).toBe('successMessage');
+
+      expect(dispatchPerceptible.type).toBe('DISPATCH_PERCEPTIBLE_EVENT');
+      expect(dispatchPerceptible.parameters.actor_description).toBe(
+        'I bury my face in my hands, overwhelmed.'
+      );
+      expect(dispatchPerceptible.parameters.alternate_descriptions).toMatchObject({
+        auditory: 'I hear someone nearby making sounds of distress.',
+      });
+
+      expect(dispatchEvent.type).toBe('DISPATCH_EVENT');
+      expect(dispatchEvent.parameters.eventType).toBe(
+        'core:display_successful_action_result'
+      );
+
+      expect(endTurn.type).toBe('END_TURN');
     });
   });
 

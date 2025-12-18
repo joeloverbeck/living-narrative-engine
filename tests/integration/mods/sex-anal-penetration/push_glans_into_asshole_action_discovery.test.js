@@ -46,9 +46,9 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       });
     });
 
-    it('should forbid positioning:fucking_anally and positioning:fucking_vaginally components on actor', () => {
+    it('should forbid sex-states:fucking_anally and sex-states:fucking_vaginally components on actor', () => {
       expect(pushGlansIntoAssholeActionJson.forbidden_components).toEqual({
-        actor: ['positioning:fucking_anally', 'positioning:fucking_vaginally'],
+        actor: ['sex-states:fucking_anally', 'sex-states:fucking_vaginally'],
       });
     });
 
@@ -398,7 +398,7 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       // Alice is already fucking someone anally
       testFixture.testEnv.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:fucking_anally',
+        'sex-states:fucking_anally',
         { being_fucked_entity_id: 'other_entity', initiated: true }
       );
 
@@ -445,7 +445,7 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       // Alice is already fucking someone vaginally (cannot use same penis for anal)
       testFixture.testEnv.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:fucking_vaginally',
+        'sex-states:fucking_vaginally',
         { targetId: 'other_entity' }
       );
 

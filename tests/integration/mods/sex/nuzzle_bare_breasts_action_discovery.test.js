@@ -75,7 +75,7 @@ describe('sex-breastplay:nuzzle_bare_breasts action discovery', () => {
         'positioning:closeness',
       ]);
       expect(nuzzleBareBreastsAction.forbidden_components.actor).toEqual([
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
         'positioning:bending_over',
       ]);
 

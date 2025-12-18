@@ -119,13 +119,13 @@ export function buildStraddlingMilkingScenario(options = {}) {
   }
 
   if (actorBeingFucked) {
-    actorBuilder.withComponent('positioning:being_fucked_vaginally', {
+    actorBuilder.withComponent('sex-states:being_fucked_vaginally', {
       actorId: STRADDLING_MILKING_PRIMARY_ID,
     });
   }
 
   if (primaryAlreadyFucking) {
-    primaryBuilder.withComponent('positioning:fucking_vaginally', {
+    primaryBuilder.withComponent('sex-states:fucking_vaginally', {
       targetId: STRADDLING_MILKING_ACTOR_ID,
     });
   }
@@ -273,7 +273,7 @@ function resolveActorsFuckingMeVaginallyScope(testFixture, context) {
 
   const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
   const beingFuckedComponent =
-    actorEntity?.components?.['positioning:being_fucked_vaginally'];
+    actorEntity?.components?.['sex-states:being_fucked_vaginally'];
 
   if (!beingFuckedComponent) {
     return { success: true, value: new Set() };
@@ -294,7 +294,7 @@ function resolveActorsFuckingMeVaginallyScope(testFixture, context) {
     }
 
     const fuckingComponent =
-      partner.components?.['positioning:fucking_vaginally'];
+      partner.components?.['sex-states:fucking_vaginally'];
 
     if (!fuckingComponent) {
       return false;

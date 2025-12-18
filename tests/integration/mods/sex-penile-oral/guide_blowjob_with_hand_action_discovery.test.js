@@ -46,7 +46,7 @@ function buildGuideBlowjobScenario(options = {}) {
     .asActor();
 
   if (includeReceivingBlowjob) {
-    actorBuilder.withComponent('positioning:receiving_blowjob', {
+    actorBuilder.withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: mismatchedReferences ? 'someone_else' : PRIMARY_ID,
       consented: true,
     });
@@ -67,7 +67,7 @@ function buildGuideBlowjobScenario(options = {}) {
   }
 
   if (targetHasGivingBlowjob) {
-    primaryBuilder.withComponent('positioning:giving_blowjob', {
+    primaryBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: mismatchedReferences ? 'someone_else' : ACTOR_ID,
       initiated: true,
     });
@@ -104,7 +104,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const receivingBlowjob =
-        actor?.components?.['positioning:receiving_blowjob'];
+        actor?.components?.['sex-states:receiving_blowjob'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -127,7 +127,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const givingBlowjob =
-        givingEntity.components?.['positioning:giving_blowjob'];
+        givingEntity.components?.['sex-states:giving_blowjob'];
       if (!givingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -268,7 +268,7 @@ describe('sex-penile-oral:guide_blowjob_with_hand action discovery', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .closeToEntity(PRIMARY_ID)
-      .withComponent('positioning:receiving_blowjob', {
+      .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: PRIMARY_ID,
         consented: true,
       });
@@ -280,7 +280,7 @@ describe('sex-penile-oral:guide_blowjob_with_hand action discovery', () => {
       .asActor()
       .kneelingBefore(ACTOR_ID) // KEY: Target is kneeling
       .closeToEntity(ACTOR_ID)
-      .withComponent('positioning:giving_blowjob', {
+      .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: ACTOR_ID,
         initiated: true,
       });

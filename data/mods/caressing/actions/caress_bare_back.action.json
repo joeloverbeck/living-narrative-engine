@@ -15,7 +15,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "primary": ["positioning:giving_blowjob"]
+    "primary": ["sex-states:giving_blowjob"]
   },
   "prerequisites": [
     {

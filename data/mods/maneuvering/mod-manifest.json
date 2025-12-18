@@ -5,6 +5,10 @@
   "version": "1.0.0",
   "dependencies": [
     {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     }

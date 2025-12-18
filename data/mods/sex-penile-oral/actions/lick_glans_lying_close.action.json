@@ -17,7 +17,7 @@
     "primary": ["positioning:lying_down", "positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["sex-states:giving_blowjob"]
   },
   "visual": {
     "backgroundColor": "#2a1a5e",

@@ -2,14 +2,14 @@
 // Uses raw closeness.partners to allow kneeling scenarios (target kneeling before actor during blowjob)
 sex-penile-oral:actor_giving_blowjob_to_me := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"!!": {"var": "actor.components.positioning:receiving_blowjob"}},
-    {"!!": {"var": "entity.components.positioning:giving_blowjob"}},
+    {"!!": {"var": "actor.components.sex-states:receiving_blowjob"}},
+    {"!!": {"var": "entity.components.sex-states:giving_blowjob"}},
     {"==": [
-      {"var": "actor.components.positioning:receiving_blowjob.giving_entity_id"},
+      {"var": "actor.components.sex-states:receiving_blowjob.giving_entity_id"},
       {"var": "entity.id"}
     ]},
     {"==": [
-      {"var": "entity.components.positioning:giving_blowjob.receiving_entity_id"},
+      {"var": "entity.components.sex-states:giving_blowjob.receiving_entity_id"},
       {"var": "actor.id"}
     ]}
   ]

@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:biting_neck",
-      "positioning:giving_blowjob",
+      "sex-states:giving_blowjob",
       "positioning:being_restrained"
     ],
     "primary": ["positioning:being_bitten_in_neck"]

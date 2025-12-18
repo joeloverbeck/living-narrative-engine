@@ -32,11 +32,11 @@
         "entity_ref": "actor",
         "pairs": [
           {
-            "component_type": "positioning:giving_blowjob",
+            "component_type": "sex-states:giving_blowjob",
             "result_variable": "actorExistingGivingBlowjobComponent"
           },
           {
-            "component_type": "positioning:receiving_blowjob",
+            "component_type": "sex-states:receiving_blowjob",
             "result_variable": "actorExistingReceivingBlowjobComponent"
           }
         ]
@@ -48,11 +48,11 @@
         "entity_ref": "primary",
         "pairs": [
           {
-            "component_type": "positioning:giving_blowjob",
+            "component_type": "sex-states:giving_blowjob",
             "result_variable": "primaryExistingGivingBlowjobComponent"
           },
           {
-            "component_type": "positioning:receiving_blowjob",
+            "component_type": "sex-states:receiving_blowjob",
             "result_variable": "primaryExistingReceivingBlowjobComponent"
           }
         ]
@@ -67,7 +67,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingGivingBlowjobComponent.receiving_entity_id}",
-              "component_type": "positioning:receiving_blowjob"
+              "component_type": "sex-states:receiving_blowjob"
             }
           }
         ]
@@ -84,7 +84,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingReceivingBlowjobComponent.giving_entity_id}",
-              "component_type": "positioning:giving_blowjob"
+              "component_type": "sex-states:giving_blowjob"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.primaryExistingGivingBlowjobComponent.receiving_entity_id}",
-              "component_type": "positioning:receiving_blowjob"
+              "component_type": "sex-states:receiving_blowjob"
             }
           }
         ]
@@ -116,7 +116,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.primaryExistingReceivingBlowjobComponent.giving_entity_id}",
-              "component_type": "positioning:giving_blowjob"
+              "component_type": "sex-states:giving_blowjob"
             }
           }
         ]
@@ -126,35 +126,35 @@
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:giving_blowjob"
+        "component_type": "sex-states:giving_blowjob"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:receiving_blowjob"
+        "component_type": "sex-states:receiving_blowjob"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:giving_blowjob"
+        "component_type": "sex-states:giving_blowjob"
       }
     },
     {
       "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:receiving_blowjob"
+        "component_type": "sex-states:receiving_blowjob"
       }
     },
     {
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:giving_blowjob",
+        "component_type": "sex-states:giving_blowjob",
         "value": {
           "receiving_entity_id": "{event.payload.actorId}",
           "initiated": false
@@ -165,7 +165,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:receiving_blowjob",
+        "component_type": "sex-states:receiving_blowjob",
         "value": {
           "giving_entity_id": "{event.payload.primaryId}",
           "consented": true

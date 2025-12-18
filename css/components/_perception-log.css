@@ -8,6 +8,11 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 100px; /* Specific to this widget, base provides others */
+  /* Sepia gradient background matching injury-status-widget */
+  background: linear-gradient(135deg, #fffefb 0%, #fff8f0 100%);
+  border: 2px solid #ddd3c7;
+  border-left: 4px solid #1abc9c;
+  border-radius: 6px;
 }
 
 #perception-log-widget h3 {
@@ -15,57 +20,33 @@
   /* Common h3 styles are from _widgets-base.css */
 }
 
-#perception-log-list {
-  list-style-type: none;
-  padding: 0; /* Resetting default list padding */
-  margin: 0; /* Resetting default list margin */
+/* Content container - handles scrolling */
+#perception-log-content {
   overflow-y: auto;
   flex-grow: 1;
   font-family: var(--font-narrative);
   font-size: var(--font-size-small);
   color: var(--secondary-text-color);
-  border: var(--border-width) solid var(--border-color-subtle);
-  border-radius: var(--border-radius-sm);
-  padding: var(--spacing-xs); /* Inner padding for content */
-  background-color: var(
-    --primary-bg-color
-  ); /* Distinct background for the log itself */
-}
-
-#perception-log-list li {
   padding: var(--spacing-xs) var(--spacing-sm);
-  border-bottom: var(--border-width) dashed var(--border-color-subtle);
-  line-height: 1.5;
 }
 
-#perception-log-list li:last-child {
+/* Perception log entry styling */
+.perception-log-entry {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px dotted #ddd3c7;
+  line-height: 1.5;
+  font-family: 'Merriweather', serif;
+  color: #5b4a24;
+}
+
+.perception-log-entry:last-child {
   border-bottom: none;
 }
 
-#perception-log-list li.empty-log-message {
+.perception-log-entry.empty-log-message {
   font-style: italic;
   text-align: center;
   color: var(--input-placeholder-color);
-}
-
-/* === Parchment Fantasy theme === */
-
-#perception-log-list {
-  background: #fff8e6;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 8%, transparent 8%);
-  background-size: 6px 6px; /* subtle paper grain */
-  color: #5b4a24;
-  font-family: 'Merriweather', serif;
-  border: 2px solid #d6b97d;
-}
-
-#perception-log-list li {
-  border-bottom: 1px dotted #d6b97d;
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-#perception-log-list li:last-child {
-  border-bottom: none;
 }
 
 /* Speech lines */
@@ -94,20 +75,20 @@
 
 /* Generic lines just inherit base colours */
 
-/* Scrollbar matches parchment */
-#perception-log-list::-webkit-scrollbar-thumb {
-  background: #d6b97d;
+/* Scrollbar matches sepia theme */
+#perception-log-content::-webkit-scrollbar-thumb {
+  background: #ddd3c7;
 }
 
-/* Responsive adjustments for #perception-log-list max-height */
+/* Responsive adjustments for #perception-log-content max-height */
 @media (max-width: 768px) {
-  #perception-log-list {
+  #perception-log-content {
     max-height: 150px;
   }
 }
 
 @media (max-width: 480px) {
-  #perception-log-list {
+  #perception-log-content {
     max-height: 120px;
   }
 }

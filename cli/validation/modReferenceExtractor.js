@@ -354,6 +354,17 @@ class ModReferenceExtractor {
         }
         break;
 
+      case 'ScopeReference':
+        // ScopeReference nodes contain scopeId like "modId:scopeName"
+        if (node.scopeId && node.scopeId.includes(':')) {
+          this._extractModReferencesFromString(
+            node.scopeId,
+            references,
+            'scope_reference'
+          );
+        }
+        break;
+
       default:
         this._logger.debug(`Processing AST node type: ${node.type}`);
         break;

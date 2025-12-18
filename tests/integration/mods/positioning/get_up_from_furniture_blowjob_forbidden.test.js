@@ -68,9 +68,9 @@ describe('positioning:get_up_from_furniture - giving_blowjob forbidden component
   });
 
   describe('Action structure validation', () => {
-    it('should have positioning:giving_blowjob as forbidden component', () => {
+    it('should have sex-states:giving_blowjob as forbidden component', () => {
       expect(getUpFromFurnitureAction.forbidden_components.actor).toContain(
-        'positioning:giving_blowjob'
+        'sex-states:giving_blowjob'
       );
     });
   });
@@ -130,7 +130,7 @@ describe('positioning:get_up_from_furniture - giving_blowjob forbidden component
       };
 
       // Actor is giving a blowjob
-      actor.components['positioning:giving_blowjob'] = {
+      actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: target.id,
         initiated: true,
         consented: true,

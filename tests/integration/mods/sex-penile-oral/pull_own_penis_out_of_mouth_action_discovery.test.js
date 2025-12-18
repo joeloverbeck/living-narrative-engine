@@ -46,7 +46,7 @@ function buildPullOwnPenisOutScenario(options = {}) {
     .asActor();
 
   if (includeReceivingBlowjob) {
-    actorBuilder.withComponent('positioning:receiving_blowjob', {
+    actorBuilder.withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: mismatchedReferences ? 'someone_else' : PRIMARY_ID,
       consented: true,
     });
@@ -63,7 +63,7 @@ function buildPullOwnPenisOutScenario(options = {}) {
     .asActor();
 
   if (targetHasGivingBlowjob) {
-    primaryBuilder.withComponent('positioning:giving_blowjob', {
+    primaryBuilder.withComponent('sex-states:giving_blowjob', {
       receiving_entity_id: mismatchedReferences ? 'someone_else' : ACTOR_ID,
       initiated: true,
     });
@@ -106,7 +106,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const receivingBlowjob =
-        actor?.components?.['positioning:receiving_blowjob'];
+        actor?.components?.['sex-states:receiving_blowjob'];
       const closenessPartners =
         actor?.components?.['positioning:closeness']?.partners;
 
@@ -121,7 +121,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
 
       const target = fixture.entityManager.getEntityInstance(givingEntityId);
       const targetGivingBlowjob =
-        target?.components?.['positioning:giving_blowjob'];
+        target?.components?.['sex-states:giving_blowjob'];
 
       // Validate bidirectional references and closeness
       const referencesMatch =

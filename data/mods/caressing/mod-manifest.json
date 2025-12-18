@@ -10,7 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "anatomy",
+      "id": "sex-states",
       "version": "^1.0.0"
     },
     {
@@ -23,10 +23,6 @@
     },
     {
       "id": "descriptors",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "clothing",
       "version": "^1.0.0"
     }
   ],

@@ -252,5 +252,48 @@ describe('distress:clutch_onto_upper_clothing rule execution', () => {
       expect(perceptibleEvent.payload.actorId).toBe(scenario.actor.id);
       expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     });
+
+    it('includes alternate descriptions for sense-aware perception', async () => {
+      const scenario = testFixture.createCloseActors(['Ivy', 'Oliver'], {
+        location: 'sanctuary',
+      });
+
+      const garment = {
+        id: 'garment-sense-aware',
+        components: {
+          'core:name': { text: 'silk robe' },
+          'core:position': { locationId: 'sanctuary' },
+        },
+      };
+
+      scenario.target.components['clothing:equipment'] = {
+        equipped: {
+          torso_upper: { base: garment.id },
+        },
+      };
+
+      const room = ModEntityScenarios.createRoom('sanctuary', 'Sanctuary');
+      testFixture.reset([room, scenario.actor, scenario.target, garment]);
+
+      await testFixture.eventBus.dispatch('core:attempt_action', {
+        eventName: 'core:attempt_action',
+        actorId: scenario.actor.id,
+        actionId: ACTION_ID,
+        primaryId: scenario.target.id,
+        secondaryId: garment.id,
+        originalInput: 'clutch clothing',
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const perceptibleEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+      expect(perceptibleEvent).toBeDefined();
+      expect(perceptibleEvent.payload.alternateDescriptions).toMatchObject({
+        auditory: expect.stringContaining('fabric being grabbed'),
+        tactile: expect.stringContaining('grabbing at fabric'),
+      });
+    });
   });
 });

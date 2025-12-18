@@ -76,6 +76,33 @@ describe('companionship:stop_following rule execution', () => {
      * correctly configures the DISPATCH_PERCEPTIBLE_EVENT operation.
      */
 
+    it('verifies stop_following.rule.json has all sense-aware fields', () => {
+      // Verify the rule JSON has the correct operation type with all sense-aware fields
+      const findDispatchPerceptibleEvent = (actions) => {
+        for (const action of actions) {
+          if (action.type === 'DISPATCH_PERCEPTIBLE_EVENT') {
+            return action;
+          }
+          if (action.type === 'IF' && action.parameters?.then_actions) {
+            const found = findDispatchPerceptibleEvent(action.parameters.then_actions);
+            if (found) return found;
+          }
+          if (action.type === 'IF_CO_LOCATED' && action.parameters?.then_actions) {
+            const found = findDispatchPerceptibleEvent(action.parameters.then_actions);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const dispatchAction = findDispatchPerceptibleEvent(stopFollowingRule.actions);
+      expect(dispatchAction).not.toBeNull();
+      expect(dispatchAction.parameters).toHaveProperty('actor_description');
+      expect(dispatchAction.parameters).toHaveProperty('target_description');
+      expect(dispatchAction.parameters).toHaveProperty('alternate_descriptions');
+      expect(dispatchAction.parameters.alternate_descriptions).toHaveProperty('auditory');
+    });
+
     it('dispatches perceptible event with correct description text', async () => {
       const scenario = testFixture.createCloseActors(
         ['Servant', 'Lady Catherine'],

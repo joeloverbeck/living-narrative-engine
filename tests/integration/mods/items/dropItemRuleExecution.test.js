@@ -215,6 +215,39 @@ describe('item-handling:drop_item action integration', () => {
         'golden-watch'
       );
     });
+
+    it('includes sense-aware perspective fields in perception log', async () => {
+      const scenario = testFixture.createDropItemScenario({
+        roomId: 'tavern',
+        roomName: 'Tavern',
+        actor: { id: 'test:actor1', name: 'Dave' },
+        item: { id: 'old-key', name: 'old-key', weight: 0.02 },
+      });
+
+      testFixture.reset([...scenario.entities]);
+
+      await testFixture.executeAction(scenario.actor.id, scenario.item.id);
+
+      const perceptibleEvent = testFixture.events.find(
+        (event) => event.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvent).toBeDefined();
+
+      // Verify perspective-aware actor description (first-person)
+      expect(perceptibleEvent?.payload.actorDescription).toBe(
+        'I drop old-key.'
+      );
+
+      // Verify alternate descriptions for different senses
+      expect(perceptibleEvent?.payload.alternateDescriptions).toBeDefined();
+      expect(perceptibleEvent?.payload.alternateDescriptions.auditory).toBe(
+        'I hear something drop to the ground nearby.'
+      );
+      expect(perceptibleEvent?.payload.alternateDescriptions.tactile).toBe(
+        'I sense a faint vibration as something hits the ground nearby.'
+      );
+    });
   });
 
   describe('error scenarios', () => {

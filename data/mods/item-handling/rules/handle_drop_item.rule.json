@@ -53,42 +53,11 @@
       }
     },
     {
-      "type": "GET_TIMESTAMP",
-      "comment": "Get current timestamp",
-      "parameters": {
-        "result_variable": "currentTimestamp"
-      }
-    },
-    {
       "type": "SET_VARIABLE",
-      "comment": "Prepare success message for macro",
+      "comment": "Prepare success message",
       "parameters": {
         "variable_name": "logMessage",
         "value": "{context.actorName} drops {context.itemName}."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "comment": "Set perception type for macro",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "item.drop"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "comment": "Set location for macro",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "comment": "Set target for macro",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
       }
     },
     {
@@ -99,8 +68,64 @@
       }
     },
     {
-      "comment": "Display success message and end turn",
-      "macro": "core:logSuccessAndEndTurn"
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Drop item action with perspective-aware descriptions",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.logMessage}",
+        "actor_description": "I drop {context.itemName}.",
+        "perception_type": "item.drop",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "involved_entities": [],
+        "alternate_descriptions": {
+          "auditory": "I hear something drop to the ground nearby.",
+          "tactile": "I sense a faint vibration as something hits the ground nearby."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Mark action as successful",
+      "parameters": {
+        "eventType": "core:action_success",
+        "payload": {
+          "actionId": "{event.payload.actionId}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Notify that an item was dropped",
+      "parameters": {
+        "eventType": "items:item_dropped",
+        "payload": {
+          "actorEntity": "{event.payload.actorId}",
+          "itemEntity": "{event.payload.targetId}",
+          "locationId": "{context.actorPosition.locationId}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful drop",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
     }
   ]
 }

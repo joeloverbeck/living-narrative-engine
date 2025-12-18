@@ -191,7 +191,7 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
         [
           'kissing:kissing',
           'positioning:biting_neck',
-          'positioning:giving_blowjob',
+          'sex-states:giving_blowjob',
         ]
       );
       expect(restHeadAgainstFlatChestAction.visual).toEqual({

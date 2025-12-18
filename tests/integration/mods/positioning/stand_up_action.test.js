@@ -86,6 +86,16 @@ describe('deference:stand_up action integration', () => {
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
     expect(perceptibleEvent.payload.targetId).toBe(null);
     expect(perceptibleEvent.payload.perceptionType).toBe('physical.self_action');
+
+    // Validate sense-aware perspective fields
+    expect(perceptibleEvent.payload.actorDescription).toBe(
+      'I stand up from my kneeling position.'
+    );
+    // Self-action: no target_description expected (null or absent)
+    expect(perceptibleEvent.payload.targetDescription).toBeNull();
+    expect(perceptibleEvent.payload.alternateDescriptions).toEqual({
+      auditory: 'I hear the rustle of movement as someone stands up nearby.',
+    });
   });
 
   it('only fires for correct action ID', async () => {

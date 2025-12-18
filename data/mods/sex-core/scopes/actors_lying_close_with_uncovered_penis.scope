@@ -16,8 +16,8 @@ sex-core:actors_lying_close_with_uncovered_penis := actor.components.positioning
     {
       "not": {
         "and": [
-          {"!!": {"var": "entity.components.positioning:fucking_vaginally"}},
-          {"==": [{"var": "entity.components.positioning:fucking_vaginally.targetId"}, {"var": "actor.id"}]}
+          {"!!": {"var": "entity.components.sex-states:fucking_vaginally"}},
+          {"==": [{"var": "entity.components.sex-states:fucking_vaginally.targetId"}, {"var": "actor.id"}]}
         ]
       }
     }

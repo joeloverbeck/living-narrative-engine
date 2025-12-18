@@ -60,7 +60,7 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       };
 
       // Actor is being fucked vaginally
-      scenario.actor.components['positioning:being_fucked_vaginally'] = {
+      scenario.actor.components['sex-states:being_fucked_vaginally'] = {
         actorId: 'other_entity',
       };
 

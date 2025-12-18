@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "recovery",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "name": "Recovery",
   "description": "Actions that help actors stand back up after falling.",
   "actionPurpose": "Restore mobility to fallen actors, either by self-effort or assistance.",

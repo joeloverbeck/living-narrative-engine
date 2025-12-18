@@ -53,6 +53,44 @@
         "value": null
       }
     },
-    { "macro": "core:logSuccessAndEndTurn" }
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set success message for display event.",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} buries their face in their hands."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Broadcast sense-aware perceptible event with actor description and auditory fallback.",
+      "parameters": {
+        "location_id": "{context.locationId}",
+        "description_text": "{context.actorName} buries their face in their hands.",
+        "actor_description": "I bury my face in my hands, overwhelmed.",
+        "perception_type": "physical.self_action",
+        "actor_id": "{event.payload.actorId}",
+        "alternate_descriptions": {
+          "auditory": "I hear someone nearby making sounds of distress."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message to UI.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.successMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
   ]
 }

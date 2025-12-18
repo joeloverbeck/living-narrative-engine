@@ -9,11 +9,22 @@
   "author": "Living Narrative Engine Team",
   "gameVersion": ">=0.0.1",
   "dependencies": [
-    { "id": "anatomy", "version": "^1.0.0" },
-    { "id": "clothing", "version": "^1.0.0" },
-    { "id": "positioning", "version": "^1.0.0" },
-    { "id": "caressing", "version": "^1.0.0" },
-    { "id": "sex-core", "version": "^1.0.0" }
+    {
+      "id": "sex-core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "caressing",
+      "version": "^1.0.0"
+    }
   ],
   "content": {
     "actions": [

@@ -154,7 +154,7 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
   }
 
   if (targetFuckingActorVaginally) {
-    primaryBuilder.withComponent('positioning:fucking_vaginally', {
+    primaryBuilder.withComponent('sex-states:fucking_vaginally', {
       targetId: ACTOR_ID,
     });
   }
@@ -292,7 +292,7 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
 
         // Check if partner is fucking the actor vaginally
         const partnerFuckingVaginally =
-          partner.components?.['positioning:fucking_vaginally'];
+          partner.components?.['sex-states:fucking_vaginally'];
         if (
           partnerFuckingVaginally &&
           partnerFuckingVaginally.targetId === actorId

@@ -289,7 +289,7 @@ describe('first-aid:treat_wounded_part action definition', () => {
     expect(treatAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
         'positioning:hugging',
-        'positioning:giving_blowjob',
+        'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'positioning:bending_over',
         'positioning:being_restrained',

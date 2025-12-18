@@ -144,7 +144,7 @@ describe('Forbidden Components - giving_blowjob', () => {
         });
 
         // Add forbidden component
-        entityManager.addComponent('player', 'positioning:giving_blowjob', {
+        entityManager.addComponent('player', 'sex-states:giving_blowjob', {
           receiving_entity_id: 'someone',
           initiated: true,
         });
@@ -173,7 +173,7 @@ describe('Forbidden Components - giving_blowjob', () => {
         });
 
         // Add forbidden component
-        entityManager.addComponent('player', 'positioning:giving_blowjob', {
+        entityManager.addComponent('player', 'sex-states:giving_blowjob', {
           receiving_entity_id: 'someone',
           initiated: true,
         });
@@ -184,7 +184,7 @@ describe('Forbidden Components - giving_blowjob', () => {
         expect(actionIds).not.toContain(id);
 
         // Remove giving_blowjob component
-        entityManager.removeComponent('player', 'positioning:giving_blowjob');
+        entityManager.removeComponent('player', 'sex-states:giving_blowjob');
 
         // Should now be available
         candidates = actionIndex.getCandidateActions(player);

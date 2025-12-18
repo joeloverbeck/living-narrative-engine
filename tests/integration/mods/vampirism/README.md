@@ -105,7 +105,7 @@ scenario.actor.components['vampirism:is_vampire'] = {};
 
 ```javascript
 // Test that action is NOT available when actor has forbidden component
-scenario.actor.components['positioning:giving_blowjob'] = {
+scenario.actor.components['sex-states:giving_blowjob'] = {
   target_id: scenario.target.id,
 };
 

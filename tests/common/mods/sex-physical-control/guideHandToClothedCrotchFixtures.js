@@ -61,7 +61,7 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID = `${GUIDE_HAND_TO_CLOT
  * @property {boolean} [includeCloseness=true] - Whether mutual positioning:closeness components are applied.
  * @property {boolean} [includeActorPenis=true] - Whether the actor has a penis body part attached.
  * @property {boolean} [coverActorPenis=true] - Whether the actor's penis socket reports coveredBy metadata and slot coverage.
- * @property {boolean} [includeReceivingBlowjob=false] - Whether the actor includes positioning:receiving_blowjob.
+ * @property {boolean} [includeReceivingBlowjob=false] - Whether the actor includes sex-states:receiving_blowjob.
  * @property {boolean} [includeKneelingConflict=false] - Whether the actor kneels before the target, breaking the shared scope.
  * @property {boolean} [includeHandAnatomy=true] - Whether to attach basic hand anatomy to both participants.
  */
@@ -113,7 +113,7 @@ export function buildGuideHandToClothedCrotchScenario(options = {}) {
   }
 
   if (includeReceivingBlowjob) {
-    actorBuilder.withComponent('positioning:receiving_blowjob', {
+    actorBuilder.withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: primaryId,
       consented: true,
     });

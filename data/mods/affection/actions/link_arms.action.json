@@ -13,7 +13,7 @@
       "positioning:being_hugged",
       "positioning:hugging"
     ],
-    "target": ["positioning:giving_blowjob"]
+    "target": ["sex-states:giving_blowjob"]
   },
   "template": "link arms with {target}",
   "prerequisites": [],

@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that grab_crotch_draw_attention is correctly forbidden when actor is receiving a blowjob.
  * @description Ensures that the grab crotch action is not available when the acting actor
- * has the positioning:receiving_blowjob component.
+ * has the sex-states:receiving_blowjob component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -44,7 +44,7 @@ function loadScenario(
     .withBody('actorPelvis');
 
   if (includeReceivingBlowjob) {
-    actorBuilder.withComponent('positioning:receiving_blowjob', {
+    actorBuilder.withComponent('sex-states:receiving_blowjob', {
       giving_entity_id: 'partner1',
       consented: true,
     });
@@ -121,10 +121,10 @@ describe('grab_crotch_draw_attention forbidden when receiving blowjob', () => {
   });
 
   describe('Action structure validation', () => {
-    it('grab_crotch_draw_attention should have positioning:receiving_blowjob as forbidden component', () => {
+    it('grab_crotch_draw_attention should have sex-states:receiving_blowjob as forbidden component', () => {
       expect(
         grabCrotchDrawAttentionAction.forbidden_components.actor
-      ).toContain('positioning:receiving_blowjob');
+      ).toContain('sex-states:receiving_blowjob');
     });
   });
 

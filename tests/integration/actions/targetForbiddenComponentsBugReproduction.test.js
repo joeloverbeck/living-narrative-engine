@@ -7,8 +7,8 @@
  * BUG: kiss_cheek.action.json has:
  * {
  *   "forbidden_components": {
- *     "actor": ["kissing:kissing", "positioning:giving_blowjob"],
- *     "target": ["positioning:giving_blowjob"]
+ *     "actor": ["kissing:kissing", "sex-states:giving_blowjob"],
+ *     "target": ["sex-states:giving_blowjob"]
  *   }
  * }
  *
@@ -64,13 +64,13 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is receiving blowjob from TargetGiving
-      actor.components['positioning:receiving_blowjob'] = {
+      actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: targetGiving.id,
         consented: true,
       };
 
       // TargetGiving is giving blowjob to Actor
-      targetGiving.components['positioning:giving_blowjob'] = {
+      targetGiving.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actor.id,
         initiated: true,
         consented: true,
@@ -117,12 +117,12 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
 
       // BUG REPRODUCTION: Actor should NOT be able to kiss TargetGiving
       // because TargetGiving has giving_blowjob component
-      // and kiss_cheek.action.json has "target": ["positioning:giving_blowjob"] in forbidden_components
+      // and kiss_cheek.action.json has "target": ["sex-states:giving_blowjob"] in forbidden_components
 
       // With the fix applied, execution should be rejected
       await expect(async () => {
         await testFixture.executeAction(actor.id, targetGiving.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
 
     it('should PASS when target does NOT have giving_blowjob component', async () => {
@@ -147,13 +147,13 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is receiving blowjob from TargetGiving
-      actor.components['positioning:receiving_blowjob'] = {
+      actor.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: targetGiving.id,
         consented: true,
       };
 
       // TargetGiving is giving blowjob to Actor
-      targetGiving.components['positioning:giving_blowjob'] = {
+      targetGiving.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: actor.id,
         initiated: true,
         consented: true,
@@ -222,14 +222,14 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is giving blowjob to Target
-      actor.components['positioning:giving_blowjob'] = {
+      actor.components['sex-states:giving_blowjob'] = {
         receiving_entity_id: target.id,
         initiated: true,
         consented: true,
       };
 
       // Target is receiving blowjob from Actor
-      target.components['positioning:receiving_blowjob'] = {
+      target.components['sex-states:receiving_blowjob'] = {
         giving_entity_id: actor.id,
         consented: true,
       };
@@ -273,7 +273,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       // Actor with giving_blowjob should not be able to initiate kiss
       await expect(async () => {
         await testFixture.executeAction(actor.id, target.id);
-      }).rejects.toThrow(/forbidden component.*positioning:giving_blowjob/i);
+      }).rejects.toThrow(/forbidden component.*sex-states:giving_blowjob/i);
     });
   });
 });

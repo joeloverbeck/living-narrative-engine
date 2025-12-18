@@ -54,26 +54,51 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Kneel before action with perspective-aware descriptions",
       "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.logMessage}",
+        "actor_description": "I kneel before {context.targetName}.",
+        "target_description": "{context.actorName} kneels before me.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the rustle of clothing and the sound of someone lowering to their knees nearby."
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
       "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Mark action as successful",
       "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
+        "eventType": "core:action_success",
+        "payload": {
+          "actionId": "deference:kneel_before",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
       }
     },
-    { "macro": "core:logSuccessAndEndTurn" }
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful kneel before",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
   ]
 }

@@ -128,14 +128,14 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action i
 
     const actorComponent = testFixture.entityManager.getComponentData(
       'alana',
-      'positioning:being_fucked_vaginally'
+      'sex-states:being_fucked_vaginally'
     );
     expect(actorComponent).toBeDefined();
     expect(actorComponent).toEqual({ actorId: 'dorian' });
 
     const targetComponent = testFixture.entityManager.getComponentData(
       'dorian',
-      'positioning:fucking_vaginally'
+      'sex-states:fucking_vaginally'
     );
 
     expect(targetComponent).toBeDefined();

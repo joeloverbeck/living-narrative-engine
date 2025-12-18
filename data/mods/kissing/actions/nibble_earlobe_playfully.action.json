@@ -11,9 +11,9 @@
     "actor": [
       "kissing:kissing",
       "positioning:biting_neck",
-      "positioning:giving_blowjob"
+      "sex-states:giving_blowjob"
     ],
-    "target": ["positioning:giving_blowjob"]
+    "target": ["sex-states:giving_blowjob"]
   },
   "template": "nibble on {target}'s earlobe playfully",
   "prerequisites": [],
