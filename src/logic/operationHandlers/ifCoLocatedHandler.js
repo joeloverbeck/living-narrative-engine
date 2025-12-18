@@ -129,7 +129,6 @@ class IfCoLocatedHandler extends BaseOperationHandler {
     }
 
     const same = this.#entitiesCoLocated(idA, idB, executionContext);
-
     const actions = same ? then_actions : else_actions;
     await this.#runActions(actions, executionContext);
   }

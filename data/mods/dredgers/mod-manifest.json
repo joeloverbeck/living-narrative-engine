@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "dredgers",
   "version": "1.0.0",
-  "name": "dredgers",
-  "description": "Scenario.",
+  "name": "Dredgers",
+  "description": "A scenario about a crew of dredgers trying to save the city of Brinewick from an ancient artifact.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -13,6 +13,22 @@
     },
     {
       "id": "locations",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "containers-core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
       "version": "^1.0.0"
     },
     {

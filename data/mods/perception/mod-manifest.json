@@ -3,7 +3,7 @@
   "id": "perception",
   "version": "1.0.0",
   "name": "Perception System",
-  "description": "Sense-aware perception filtering for perceptible events",
+  "description": "Sense-aware perception filtering for perceptible events.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {

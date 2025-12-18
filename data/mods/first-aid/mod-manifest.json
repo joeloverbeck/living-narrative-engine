@@ -3,7 +3,7 @@
   "id": "first-aid",
   "version": "0.1.0",
   "name": "First-Aid",
-  "description": "Foundational scaffolding for wounded body-part scopes and future first-aid content.",
+  "description": "Actions and content about providing first-aid care.",
   "actionPurpose": "Provide medical triage scaffolding for identifying and treating wounded or bleeding body parts.",
   "actionConsiderWhen": "Use when actors need medical triage or treatment for damaged body parts and bleeding states.",
   "author": "Living Narrative Engine",

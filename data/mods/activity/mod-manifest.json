@@ -1,9 +1,0 @@
-{
-  "id": "activity",
-  "version": "1.0.0",
-  "name": "activity",
-  "dependencies": [],
-  "content": {
-    "components": ["description_metadata.component.json"]
-  }
-}

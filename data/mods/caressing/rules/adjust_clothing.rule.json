@@ -32,13 +32,19 @@
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Dispatch the event for observers.",
+      "comment": "Dispatch the event for observers with perspective-aware descriptions.",
       "parameters": {
         "location_id": "{context.locationId}",
         "description_text": "{context.perceptibleLogMessage}",
+        "actor_description": "I reach out and adjust {context.targetName}'s {context.garmentName}, smoothing it with possessive care.",
+        "target_description": "{context.actorName} adjusts my {context.garmentName}, smoothing it with possessive care.",
         "perception_type": "social.affection",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{context.targetId}"
+        "target_id": "{context.targetId}",
+        "log_entry": true,
+        "alternate_descriptions": {
+          "auditory": "I hear the rustle of fabric being adjusted nearby."
+        }
       }
     },
     {

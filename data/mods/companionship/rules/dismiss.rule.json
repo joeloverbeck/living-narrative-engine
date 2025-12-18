@@ -77,14 +77,20 @@
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "This event is for other characters to observe.",
+            "comment": "Dispatch the event with perspective-aware descriptions.",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} has dismissed {context.targetName} from their service.",
+              "actor_description": "I dismiss {context.targetName}, releasing them from their service.",
+              "target_description": "{context.actorName} dismisses me. I am no longer bound to follow.",
               "perception_type": "state.observable_change",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "involved_entities": []
+              "log_entry": true,
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear words of dismissal spoken nearby."
+              }
             }
           }
         ]

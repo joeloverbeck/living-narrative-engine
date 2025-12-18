@@ -339,6 +339,15 @@ export class ModGraphService {
   }
 
   /**
+   * Check if any explicit mods depend on this mod
+   * @param {string} modId - Mod to check
+   * @returns {boolean} True if other explicit mods depend on this mod
+   */
+  hasExplicitDependents(modId) {
+    return this.#getExplicitDependents(modId).length > 0;
+  }
+
+  /**
    * Get all mods with their current statuses
    * @returns {Map<string, ModNode>}
    */

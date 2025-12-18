@@ -58,33 +58,36 @@ export function createFileFetchMock() {
     let fileBuffer;
 
     try {
-      if (relativePath === 'data/game.json') {
+    if (relativePath === 'data/game.json') {
         const rawText = await fs.readFile(absolutePath, 'utf-8');
         const parsed = JSON.parse(rawText);
+
+        // Preserve the configured mods (used by mod loader to pull dependencies)
+        // but filter out any that aren't present in the repo to avoid filesystem
+        // errors in tests.
         const availableMods = new Set(
           await fs.readdir(path.resolve(REPO_ROOT, 'data/mods'))
         );
-        const preferredMods = [
-          'core',
-          'movement',
-          'companionship',
-          'positioning',
-          'items',
-          'anatomy',
-          'clothing',
-          'exercise',
-          'distress',
-          'violence',
-          'seduction',
-          'affection',
-          'caressing',
-          'kissing',
-          'isekai',
-        ];
-        const filteredMods = preferredMods.filter((modId) =>
+
+        const configuredMods = (parsed.mods || []).filter((modId) =>
           availableMods.has(modId)
         );
-        fileText = JSON.stringify({ ...parsed, mods: filteredMods });
+
+        // Fallback minimal set for cases where the config is empty; keep anatomy
+        // and clothing-capable mods so the visualizer has real data to render.
+        const fallbackMods = [
+          'core',
+          'anatomy',
+          'clothing',
+          'base-clothing',
+          'outer-clothing',
+          'underwear',
+          'items',
+        ].filter((modId) => availableMods.has(modId));
+
+        const selectedMods = configuredMods.length > 0 ? configuredMods : fallbackMods;
+
+        fileText = JSON.stringify({ ...parsed, mods: selectedMods });
         fileBuffer = Buffer.from(fileText, 'utf-8');
       } else {
         fileBuffer = await fs.readFile(absolutePath);

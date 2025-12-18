@@ -55,13 +55,19 @@
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Broadcast the action outcome to nearby observers.",
+      "comment": "Broadcast the action outcome with perspective-aware descriptions.",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.perceptibleLogMessage}",
+        "actor_description": "I clutch onto {context.primaryName}'s {context.garmentName}, holding tight in distress.",
+        "target_description": "{context.actorName} clutches onto my {context.garmentName} desperately.",
         "perception_type": "physical.target_action",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.primaryId}"
+        "target_id": "{event.payload.primaryId}",
+        "log_entry": true,
+        "alternate_descriptions": {
+          "auditory": "I hear fabric being grabbed and someone in distress."
+        }
       }
     },
     {

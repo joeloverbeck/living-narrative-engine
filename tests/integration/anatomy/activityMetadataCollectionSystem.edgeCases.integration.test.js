@@ -116,27 +116,6 @@ const TEST_COMPONENT_DEFINITIONS = {
 };
 
 /**
- * Helper to create an entity with a registered source component used by
- * dedicated metadata tests.
- *
- * @param {import('../../common/anatomy/anatomyIntegrationTestBed.js').default} testBed
- * @param {string} instanceId
- * @returns {Promise<import('../../../src/entities/entity.js').default>}
- */
-async function createActorWithSourceComponent(testBed, instanceId) {
-  const entity = await testBed.entityManager.createEntityInstance(
-    'core:actor',
-    {
-      instanceId,
-    }
-  );
-  testBed.entityManager.addComponent(entity.id, 'test:source_component', {
-    partner: 'partner_id',
-  });
-  return entity;
-}
-
-/**
  * Reusable helper that ensures metadata collection system is instantiated with
  * the fully configured integration test bed logger and entity manager.
  *
@@ -226,7 +205,7 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
 
     const collected = system.collectActivityMetadata('actor_edge');
     const types = collected.map((item) => item.type).sort();
-    expect(types).toEqual(['dedicated', 'inline']);
+    expect(types).toEqual(['inline']);
 
     // Invalid entity identifier ensures EntityManager throws and returned activities are filtered
     const fromNullId = system.collectActivityMetadata(null);
@@ -384,212 +363,6 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
     expect(invalidTargetActivity?.targetEntityId).toBeNull();
   });
 
-  it('should manage dedicated metadata retrieval even when collaborating entities misbehave', async () => {
-    const system = createSystem(testBed);
-
-    // Guard conditions when entity reference is not usable
-    expect(system.collectDedicatedMetadata(null)).toEqual([]);
-
-    const missingMethodEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_missing_method'
-    );
-    missingMethodEntity.hasComponent = undefined;
-    expect(system.collectDedicatedMetadata(missingMethodEntity)).toEqual([]);
-
-    const throwingHasComponent = await createActorWithSourceComponent(
-      testBed,
-      'ded_throwing_has'
-    );
-    throwingHasComponent.hasComponent = () => {
-      throw new Error('hasComponent failure');
-    };
-    expect(system.collectDedicatedMetadata(throwingHasComponent)).toEqual([]);
-
-    const noMetadataEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_no_metadata'
-    );
-    expect(system.collectDedicatedMetadata(noMetadataEntity)).toEqual([]);
-
-    const missingGetDataEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_missing_get'
-    );
-    missingGetDataEntity.hasComponent = () => true;
-    missingGetDataEntity.getComponentData = undefined;
-    expect(system.collectDedicatedMetadata(missingGetDataEntity)).toEqual([]);
-
-    const throwingGetDataEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_throwing_get'
-    );
-    throwingGetDataEntity.hasComponent = () => true;
-    throwingGetDataEntity.getComponentData = () => {
-      throw new Error('metadata read failure');
-    };
-    expect(system.collectDedicatedMetadata(throwingGetDataEntity)).toEqual([]);
-
-    const invalidMetadataEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_invalid_metadata'
-    );
-    invalidMetadataEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      invalidMetadataEntity.id,
-      'activity:description_metadata',
-      {}
-    );
-    const originalInvalidGet = invalidMetadataEntity.getComponentData.bind(
-      invalidMetadataEntity
-    );
-    invalidMetadataEntity.getComponentData = (componentId) => {
-      if (componentId === 'activity:description_metadata') {
-        return 'invalid';
-      }
-      return originalInvalidGet(componentId);
-    };
-    expect(system.collectDedicatedMetadata(invalidMetadataEntity)).toEqual([]);
-
-    const parserThrowEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_parser_throw'
-    );
-    parserThrowEntity.hasComponent = () => true;
-    const throwingMetadata = {};
-    Object.defineProperty(throwingMetadata, 'sourceComponent', {
-      get() {
-        throw new Error('metadata destructuring failure');
-      },
-    });
-    testBed.entityManager.addComponent(
-      parserThrowEntity.id,
-      'activity:description_metadata',
-      throwingMetadata
-    );
-    expect(system.collectDedicatedMetadata(parserThrowEntity)).toEqual([]);
-
-    const missingSourceEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_missing_source'
-    );
-    missingSourceEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      missingSourceEntity.id,
-      'activity:description_metadata',
-      {
-        descriptionType: 'verb',
-      }
-    );
-    expect(system.collectDedicatedMetadata(missingSourceEntity)).toEqual([]);
-
-    const sourceRetrievalFailureEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_source_failure'
-    );
-    sourceRetrievalFailureEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      sourceRetrievalFailureEntity.id,
-      'activity:description_metadata',
-      {
-        sourceComponent: 'test:source_component',
-        descriptionType: 'verb',
-      }
-    );
-    const originalSourceGet =
-      sourceRetrievalFailureEntity.getComponentData.bind(
-        sourceRetrievalFailureEntity
-      );
-    sourceRetrievalFailureEntity.getComponentData = (componentId) => {
-      if (componentId === 'test:source_component') {
-        throw new Error('source retrieval failure');
-      }
-      return originalSourceGet(componentId);
-    };
-    expect(
-      system.collectDedicatedMetadata(sourceRetrievalFailureEntity)
-    ).toEqual([]);
-
-    const missingSourceDataEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_source_missing'
-    );
-    missingSourceDataEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      missingSourceDataEntity.id,
-      'activity:description_metadata',
-      {
-        sourceComponent: 'test:missing_component',
-        descriptionType: 'verb',
-      }
-    );
-    expect(system.collectDedicatedMetadata(missingSourceDataEntity)).toEqual(
-      []
-    );
-
-    const targetResolutionFailureEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_target_resolution'
-    );
-    targetResolutionFailureEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      targetResolutionFailureEntity.id,
-      'activity:description_metadata',
-      {
-        sourceComponent: 'test:source_component',
-        descriptionType: 'verb',
-        targetRole: 'unreliable',
-      }
-    );
-    const originalTargetGet =
-      targetResolutionFailureEntity.getComponentData.bind(
-        targetResolutionFailureEntity
-      );
-    targetResolutionFailureEntity.getComponentData = (componentId) => {
-      const data = originalTargetGet(componentId);
-      if (componentId === 'test:source_component') {
-        return new Proxy(data, {
-          get(target, prop, receiver) {
-            if (prop === 'unreliable') {
-              throw new Error('target resolution failure');
-            }
-            return Reflect.get(target, prop, receiver);
-          },
-        });
-      }
-      return data;
-    };
-    const targetResolutionActivities = system.collectDedicatedMetadata(
-      targetResolutionFailureEntity
-    );
-    expect(targetResolutionActivities).toHaveLength(1);
-    expect(targetResolutionActivities[0].targetEntityId).toBeNull();
-
-    const validEntity = await createActorWithSourceComponent(
-      testBed,
-      'ded_valid'
-    );
-    validEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(
-      validEntity.id,
-      'activity:description_metadata',
-      {
-        sourceComponent: 'test:source_component',
-        descriptionType: 'verb',
-        verb: 'saluting',
-        template: '{actor} salutes',
-        adverb: 'smartly',
-        targetRole: 'partner',
-        priority: 120,
-        grouping: { groupKey: 'greeting' },
-      }
-    );
-    const validActivities = system.collectDedicatedMetadata(validEntity);
-    expect(validActivities).toHaveLength(1);
-    expect(validActivities[0].verb).toBe('saluting');
-    expect(validActivities[0].targetEntityId).toBe('partner_id');
-  });
-
   it('should deduplicate activities using production helpers', async () => {
     const system = createSystem(testBed);
     const hooks = system.getTestHooks();
@@ -689,27 +462,5 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
       { template: null }
     );
     expect(invalidInlineParse).toBeNull();
-
-    const dedicatedParse = hooks.parseDedicatedMetadata(
-      {
-        sourceComponent: 'test:source_component',
-        descriptionType: 'verb',
-        targetRole: 'partner',
-      },
-      await createActorWithSourceComponent(testBed, 'ded_hook_entity')
-    );
-    expect(dedicatedParse.targetEntityId).toBe('partner_id');
-
-    expect(hooks.parseDedicatedMetadata(null, null)).toBeNull();
-    expect(
-      hooks.parseDedicatedMetadata(
-        {
-          sourceComponent: 'test:source_component',
-        },
-        {
-          id: 'broken',
-        }
-      )
-    ).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 /**
  * @file Unit tests for ActivityMetadataCollectionSystem
- * @description Tests 3-tier metadata collection, parsing, and deduplication
+ * @description Tests 2-tier metadata collection, parsing, and deduplication
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -168,37 +168,7 @@ describe('ActivityMetadataCollectionSystem', () => {
       expect(result[0].sourceComponent).toBe('positioning:kneeling');
     });
 
-    it('should collect dedicated metadata from entity', () => {
-      const mockEntity = {
-        id: 'test_entity',
-        componentTypeIds: ['activity:description_metadata'],
-        getComponentData: (componentId) => {
-          if (componentId === 'activity:description_metadata') {
-            return {
-              sourceComponent: 'positioning:kneeling',
-              priority: 50,
-              verb: 'kneeling before',
-            };
-          }
-          if (componentId === 'positioning:kneeling') {
-            return {
-              entityId: 'target_entity',
-            };
-          }
-          return null;
-        },
-        hasComponent: (componentId) =>
-          componentId === 'activity:description_metadata',
-      };
-
-      const result = system.collectActivityMetadata('test_entity', mockEntity);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].type).toBe('dedicated');
-      expect(result[0].sourceComponent).toBe('positioning:kneeling');
-    });
-
-    it('should collect from all three tiers', () => {
+    it('should collect from both tiers (index and inline)', () => {
       const mockActivityIndex = {
         findActivitiesForEntity: () => [{ type: 'indexed', priority: 90 }],
       };
@@ -211,10 +181,7 @@ describe('ActivityMetadataCollectionSystem', () => {
 
       const mockEntity = {
         id: 'test_entity',
-        componentTypeIds: [
-          'positioning:kneeling',
-          'activity:description_metadata',
-        ],
+        componentTypeIds: ['positioning:kneeling'],
         getComponentData: (componentId) => {
           if (componentId === 'positioning:kneeling') {
             return {
@@ -225,20 +192,9 @@ describe('ActivityMetadataCollectionSystem', () => {
               },
             };
           }
-          if (componentId === 'activity:description_metadata') {
-            return {
-              sourceComponent: 'positioning:sitting',
-              priority: 40,
-              verb: 'sitting',
-            };
-          }
-          if (componentId === 'positioning:sitting') {
-            return {};
-          }
           return null;
         },
-        hasComponent: (componentId) =>
-          componentId === 'activity:description_metadata',
+        hasComponent: () => false,
       };
 
       const result = systemWithIndex.collectActivityMetadata(
@@ -254,18 +210,6 @@ describe('ActivityMetadataCollectionSystem', () => {
     it('should continue when inline metadata collection throws', () => {
       jest.spyOn(system, 'collectInlineMetadata').mockImplementation(() => {
         throw new Error('inline failure');
-      });
-
-      const mockEntity = { id: 'entity', componentTypeIds: [] };
-
-      const result = system.collectActivityMetadata('entity', mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should continue when dedicated metadata collection throws', () => {
-      jest.spyOn(system, 'collectDedicatedMetadata').mockImplementation(() => {
-        throw new Error('dedicated failure');
       });
 
       const mockEntity = { id: 'entity', componentTypeIds: [] };
@@ -310,18 +254,6 @@ describe('ActivityMetadataCollectionSystem', () => {
     it('should return empty array for entity without componentTypeIds', () => {
       const mockEntity = {
         id: 'test_entity',
-      };
-
-      const result = system.collectInlineMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should skip dedicated metadata components', () => {
-      const mockEntity = {
-        id: 'test_entity',
-        componentTypeIds: ['activity:description_metadata'],
-        getComponentData: () => null,
       };
 
       const result = system.collectInlineMetadata(mockEntity);
@@ -511,154 +443,6 @@ describe('ActivityMetadataCollectionSystem', () => {
       };
 
       const result = system.collectInlineMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('collectDedicatedMetadata', () => {
-    it('should return empty array for null entity', () => {
-      const result = system.collectDedicatedMetadata(null);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array if entity missing hasComponent', () => {
-      const mockEntity = {};
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array if no metadata component', () => {
-      const mockEntity = {
-        hasComponent: () => false,
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle hasComponent errors', () => {
-      const mockEntity = {
-        hasComponent: () => {
-          throw new Error('Has component error');
-        },
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array if entity missing getComponentData', () => {
-      const mockEntity = {
-        hasComponent: () => true,
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle getComponentData errors', () => {
-      const mockEntity = {
-        hasComponent: () => true,
-        getComponentData: () => {
-          throw new Error('Get component error');
-        },
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle invalid metadata', () => {
-      const mockEntity = {
-        hasComponent: () => true,
-        getComponentData: () => null,
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should parse valid dedicated metadata', () => {
-      const mockEntity = {
-        id: 'test_entity',
-        hasComponent: () => true,
-        getComponentData: (componentId) => {
-          if (componentId === 'activity:description_metadata') {
-            return {
-              sourceComponent: 'positioning:kneeling',
-              descriptionType: 'position',
-              priority: 60,
-              verb: 'kneeling before',
-              targetRole: 'entityId',
-            };
-          }
-          if (componentId === 'positioning:kneeling') {
-            return {
-              entityId: 'target_entity',
-            };
-          }
-          return null;
-        },
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].type).toBe('dedicated');
-      expect(result[0].sourceComponent).toBe('positioning:kneeling');
-      expect(result[0].targetEntityId).toBe('target_entity');
-      expect(result[0].verb).toBe('kneeling before');
-    });
-
-    it('should handle parsing errors gracefully', () => {
-      const mockEntity = {
-        id: 'test_entity',
-        hasComponent: () => true,
-        getComponentData: (componentId) => {
-          if (componentId === 'activity:description_metadata') {
-            return {
-              sourceComponent: 'missing:component',
-            };
-          }
-          // Source component not found
-          return null;
-        },
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should capture errors thrown during dedicated metadata parsing', () => {
-      const explodingMetadata = {};
-      Object.defineProperty(explodingMetadata, 'sourceComponent', {
-        get() {
-          throw new Error('boom');
-        },
-      });
-
-      const mockEntity = {
-        id: 'test_entity',
-        hasComponent: () => true,
-        getComponentData: (componentId) => {
-          if (componentId === 'activity:description_metadata') {
-            return explodingMetadata;
-          }
-          return {};
-        },
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
 
       expect(result).toEqual([]);
     });
@@ -904,7 +688,6 @@ describe('ActivityMetadataCollectionSystem', () => {
       const hooks = system.getTestHooks();
 
       expect(hooks.parseInlineMetadata).toBeDefined();
-      expect(hooks.parseDedicatedMetadata).toBeDefined();
       expect(hooks.buildActivityDeduplicationKey).toBeDefined();
     });
 
@@ -961,80 +744,6 @@ describe('ActivityMetadataCollectionSystem', () => {
       );
 
       expect(result).toBeNull();
-    });
-
-    it('should handle invalid dedicated metadata payloads via test hook', () => {
-      const hooks = system.getTestHooks();
-
-      const result = hooks.parseDedicatedMetadata(null, {
-        getComponentData: () => ({}),
-      });
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle missing component access in dedicated metadata parsing', () => {
-      const hooks = system.getTestHooks();
-
-      const result = hooks.parseDedicatedMetadata(
-        { sourceComponent: 'positioning:kneeling' },
-        {}
-      );
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle source component retrieval errors in dedicated metadata parsing', () => {
-      const hooks = system.getTestHooks();
-
-      const result = hooks.parseDedicatedMetadata(
-        { sourceComponent: 'positioning:kneeling' },
-        {
-          getComponentData: () => {
-            throw new Error('fail');
-          },
-        }
-      );
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle target resolution errors in dedicated metadata parsing', () => {
-      const hooks = system.getTestHooks();
-
-      const sourceData = {};
-      Object.defineProperty(sourceData, 'entityId', {
-        get() {
-          throw new Error('resolve error');
-        },
-      });
-
-      const result = hooks.parseDedicatedMetadata(
-        { sourceComponent: 'positioning:kneeling' },
-        {
-          getComponentData: (componentId) => {
-            if (componentId === 'positioning:kneeling') {
-              return sourceData;
-            }
-            return {};
-          },
-        }
-      );
-
-      expect(result).toEqual({
-        type: 'dedicated',
-        sourceComponent: 'positioning:kneeling',
-        descriptionType: undefined,
-        metadata: { sourceComponent: 'positioning:kneeling' },
-        sourceData,
-        targetEntityId: null,
-        priority: 50,
-        verb: undefined,
-        template: undefined,
-        adverb: undefined,
-        conditions: undefined,
-        grouping: undefined,
-      });
     });
 
     it('should create signature fallbacks when template is missing', () => {
@@ -1311,21 +1020,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].targetEntityId).toBeNull();
-    });
-
-    it('should handle dedicated metadata without sourceComponent', () => {
-      const mockEntity = {
-        id: 'test_entity',
-        hasComponent: () => true,
-        getComponentData: () => ({
-          // Missing sourceComponent
-          priority: 50,
-        }),
-      };
-
-      const result = system.collectDedicatedMetadata(mockEntity);
-
-      expect(result).toEqual([]);
     });
 
     it('should handle deduplication with missing priority fields', () => {

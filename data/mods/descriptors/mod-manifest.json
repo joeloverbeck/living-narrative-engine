@@ -3,7 +3,7 @@
   "id": "descriptors",
   "name": "Descriptors",
   "version": "1.0.0",
-  "description": "Provides general-purpose descriptor components for physical properties, sizes, shapes, colors, and styles that can be reused across different game systems",
+  "description": "Provides general-purpose descriptor components for physical properties, sizes, shapes, colors, etc. that can be reused across different game systems.",
   "author": "Living Narrative Engine",
   "dependencies": [],
   "content": {

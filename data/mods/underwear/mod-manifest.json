@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "underwear",
   "version": "1.0.0",
-  "name": "Underwear Clothing",
-  "description": "Underwear layer clothing entities",
+  "name": "Underwear",
+  "description": "Entities for the \"underwear\" clothing layer.",
   "author": "Living Narrative Engine",
   "dependencies": [
     {

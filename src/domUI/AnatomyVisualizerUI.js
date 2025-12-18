@@ -534,7 +534,13 @@ class AnatomyVisualizerUI {
     }
 
     if (!this._clothingManagementService) {
-      return { success: false, message: 'Clothing service not available' };
+      const fallback = {
+        success: true,
+        hasEquipment: false,
+        message: 'Clothing service not available',
+      };
+      this._equipmentCache.set(entityId, fallback);
+      return fallback;
     }
 
     try {
@@ -618,6 +624,27 @@ class AnatomyVisualizerUI {
           slotData.layers.push(layerData);
         }
       }
+
+      // Normalize layer ordering so UI renders from outermost to innermost
+      slotData.layers.sort((a, b) => {
+        const layerOrder = ['outer', 'armor', 'base', 'underwear', 'accessories'];
+        const indexOf = (layerName) => {
+          const normalized = String(layerName || '').toLowerCase();
+          const foundIndex = layerOrder.findIndex((order) =>
+            normalized.includes(order)
+          );
+          return foundIndex === -1
+            ? layerOrder.length + normalized.localeCompare('')
+            : foundIndex;
+        };
+
+        const aIndex = indexOf(a.layerName);
+        const bIndex = indexOf(b.layerName);
+        if (aIndex === bIndex) {
+          return String(a.layerName).localeCompare(String(b.layerName));
+        }
+        return aIndex - bIndex;
+      });
 
       if (slotData.layers.length > 0) {
         processedSlots.push(slotData);
@@ -719,6 +746,13 @@ class AnatomyVisualizerUI {
       equipmentResult.equipmentData
     );
     container.appendChild(fragment);
+
+    if (process.env.NODE_ENV === 'test' && process.env.LOG_EQUIPMENT_LAYERS) {
+      const layerNames = Array.from(
+        container.querySelectorAll('.equipment-layer-name')
+      ).map((el) => el.textContent);
+      console.error('EQUIPMENT_LAYER_ORDER', layerNames);
+    }
   }
 
   /**

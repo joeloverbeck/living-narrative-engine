@@ -256,14 +256,14 @@ describe('Equipment Visualization Integration E2E Tests', () => {
       const equipmentPanel = getEquipmentPanel();
       expect(equipmentPanel).toBeTruthy();
 
-      const layers = equipmentPanel.querySelectorAll('.equipment-layer');
+      const slots = equipmentPanel.querySelectorAll('.equipment-slot');
+      const layerOrder = ['outer', 'armor', 'base', 'underwear', 'accessories'];
 
-      if (layers.length > 1) {
-        const layerOrder = ['outer', 'armor', 'base', 'underwear', 'accessories'];
-        const layerNames = Array.from(layers).map((layer) => {
-          const nameEl = layer.querySelector('.equipment-layer-name');
-          return nameEl?.textContent?.toLowerCase().trim() || '';
-        });
+      // Verify ordering within each slot (UI renders slots independently)
+      slots.forEach((slot) => {
+        const layerNames = Array.from(
+          slot.querySelectorAll('.equipment-layer-name')
+        ).map((el) => el.textContent?.toLowerCase().trim() || '');
 
         const orderedLayers = layerNames.filter((name) =>
           layerOrder.some((order) => name.includes(order))
@@ -289,7 +289,7 @@ describe('Equipment Visualization Integration E2E Tests', () => {
           }
           expect(isOrdered).toBe(true);
         }
-      }
+      });
 
       const panelText = getEquipmentPanelText();
       expect(panelText).not.toContain('Failed to load');

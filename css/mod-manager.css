@@ -468,6 +468,13 @@
   color: var(--primary-text-color);
 }
 
+.mod-card-name-tag {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  /* backgroundColor and color set via inline styles */
+}
+
 .mod-card-version {
   font-size: var(--font-size-small);
   color: var(--secondary-text-color);
@@ -494,6 +501,11 @@
 
 .mod-badge.auto {
   background-color: var(--info-text-color);
+  color: white;
+}
+
+.mod-badge.required {
+  background-color: var(--success-text-color);
   color: white;
 }
 

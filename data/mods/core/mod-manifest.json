@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "core",
   "version": "1.0.0",
-  "name": "core",
+  "name": "Core",
   "description": "Contains the essential base data and definitions required to run the Living Narrative Engine engine.",
   "actionPurpose": "Pass time without taking significant action, allowing events to unfold.",
   "actionConsiderWhen": "Choosing to observe rather than act, pausing to think, waiting for someone else to act first, or when no other action is appropriate.",

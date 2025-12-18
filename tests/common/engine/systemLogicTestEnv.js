@@ -25,6 +25,7 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
 import { setupEntityCacheInvalidation } from '../../../src/scopeDsl/core/entityHelpers.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
+import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 /**
@@ -354,6 +355,23 @@ export function createBaseRuleEnvironment({
 
     pushHandlerToPlan('IF', ifHandler, 'flow-handler');
     pushHandlerToPlan('FOR_EACH', forEachHandler, 'flow-handler');
+
+    // Create a safe event dispatcher wrapper for handlers that need it
+    const safeEventDispatcher = {
+      dispatch: (eventType, payload) => {
+        bus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      },
+    };
+
+    // IF_CO_LOCATED also needs lazy resolution for operationInterpreter
+    const ifCoLocatedHandler = new IfCoLocatedHandler({
+      logger: testLogger,
+      entityManager,
+      operationInterpreter: () => operationInterpreter,
+      safeEventDispatcher,
+    });
+    pushHandlerToPlan('IF_CO_LOCATED', ifCoLocatedHandler, 'flow-handler');
 
     const dedupedEntries = [];
     const duplicates = [];

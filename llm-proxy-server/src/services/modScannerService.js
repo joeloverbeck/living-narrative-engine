@@ -26,6 +26,7 @@ import path from 'path';
  * @property {ModDependency[]} dependencies - Required mod dependencies
  * @property {string[]} conflicts - IDs of incompatible mods
  * @property {boolean} hasWorlds - Whether mod contains world definitions
+ * @property {{backgroundColor: string, textColor: string}|null} actionVisual - Visual styling from first action
  */
 
 /**
@@ -91,6 +92,7 @@ export class ModScannerService {
             dependencies: manifest.dependencies || [],
             conflicts: manifest.conflicts || [],
             hasWorlds: await this.#checkForWorlds(entry.name),
+            actionVisual: await this.#extractActionVisual(entry.name),
           });
         } catch (manifestError) {
           this.#logger.warn(
@@ -125,6 +127,40 @@ export class ModScannerService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Extracts the first visual property from a mod's action files
+   * @param {string} modName - Name of the mod directory
+   * @returns {Promise<{backgroundColor: string, textColor: string}|null>} Visual data or null
+   */
+  async #extractActionVisual(modName) {
+    const actionsPath = path.join(this.#modsPath, modName, 'actions');
+    try {
+      const files = await fs.readdir(actionsPath);
+      const actionFiles = files.filter((f) => f.endsWith('.action.json'));
+
+      for (const file of actionFiles) {
+        try {
+          const content = await fs.readFile(
+            path.join(actionsPath, file),
+            'utf-8'
+          );
+          const action = JSON.parse(content);
+          if (action.visual?.backgroundColor && action.visual?.textColor) {
+            return {
+              backgroundColor: action.visual.backgroundColor,
+              textColor: action.visual.textColor,
+            };
+          }
+        } catch {
+          // Skip invalid action files
+        }
+      }
+    } catch {
+      // Actions directory doesn't exist or isn't readable
+    }
+    return null;
   }
 }
 

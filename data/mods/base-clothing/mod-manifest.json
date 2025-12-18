@@ -3,7 +3,7 @@
   "id": "base-clothing",
   "version": "1.0.0",
   "name": "Base Clothing",
-  "description": "Base layer clothing entities",
+  "description": "Clothing entities for the \"base\" layer.",
   "author": "Living Narrative Engine",
   "dependencies": [
     {

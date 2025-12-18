@@ -3,7 +3,7 @@
   "id": "hexing",
   "version": "1.0.0",
   "name": "Hexing",
-  "description": "Hexing fundamentals including corrupting gaze.",
+  "description": "Hexing-related actions, such as corrupting gaze.",
   "dependencies": [
     { "id": "core", "version": ">=1.0.0" },
     { "id": "skills", "version": ">=1.0.0" },

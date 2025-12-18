@@ -23,6 +23,8 @@ export function addEdge(edges, from, to) {
 
 /**
  * Builds a dependency graph from a list of requested mods and all available manifests.
+ * Only includes mods that are either explicitly requested or are transitive dependencies
+ * of requested mods. Unrequested mods that happen to share dependencies are excluded.
  *
  * @param {string[]} requestedIds - The list of mod IDs requested by the user.
  * @param {Map<string, {id: string, dependencies?: Array<{id: string, required?: boolean}>}>} manifestsMap
@@ -37,9 +39,6 @@ export function buildDependencyGraph(requestedIds, manifestsMap) {
     throw new Error('buildDependencyGraph: `manifestsMap` must be a Map.');
   }
 
-  const requestedLower = new Set(
-    requestedIds.map((id) => String(id).toLowerCase())
-  );
   const lcToOriginal = new Map();
   const originalCase = (id) => {
     const lc = String(id).toLowerCase();
@@ -47,9 +46,54 @@ export function buildDependencyGraph(requestedIds, manifestsMap) {
     return lcToOriginal.get(lc);
   };
 
+  // Seed original casing with requested IDs so error messages preserve caller intent.
+  requestedIds.forEach((id) => {
+    const lc = String(id).toLowerCase();
+    if (!lcToOriginal.has(lc)) {
+      lcToOriginal.set(lc, id);
+    }
+  });
+
+  // Step 1: Compute transitive closure of requested mods
+  // This determines which mods should actually be included in the graph
+  const transitiveSet = new Set();
+  const queue = [...requestedIds.map((id) => String(id).toLowerCase())];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (transitiveSet.has(current)) continue;
+    transitiveSet.add(current);
+
+    const manifest = manifestsMap.get(current);
+    if (!manifest || !Array.isArray(manifest.dependencies)) continue;
+
+    for (const dep of manifest.dependencies) {
+      if (!dep || typeof dep.id !== 'string') continue;
+      const depLower = dep.id.toLowerCase();
+      const isRequired = dep.required !== false;
+      const isDepManifestPresent = manifestsMap.has(depLower);
+
+      // Validate required dependencies exist
+      if (isRequired && !isDepManifestPresent) {
+        throw new ModDependencyError(
+          `MISSING_DEPENDENCY: Mod '${originalCase(current)}' requires mod '${originalCase(dep.id)}', but the manifest for '${originalCase(dep.id)}' was not found.`
+        );
+      }
+
+      // Only traverse required dependencies
+      if (isRequired && !transitiveSet.has(depLower)) {
+        queue.push(depLower);
+      }
+    }
+  }
+
+  // Always include core mod if not already included
+  transitiveSet.add(CORE_MOD_ID.toLowerCase());
+  originalCase(CORE_MOD_ID);
+
+  // Step 2: Build the graph from only the transitive closure
   const nodes = new Set();
   const edges = new Map();
-  originalCase(CORE_MOD_ID);
 
   for (const reqId of requestedIds) {
     const orig = originalCase(reqId);
@@ -61,27 +105,29 @@ export function buildDependencyGraph(requestedIds, manifestsMap) {
     }
   }
 
+  // Only process manifests that are in the transitive closure
   for (const manifest of manifestsMap.values()) {
     if (!manifest || typeof manifest.id !== 'string') continue;
+
+    const modLower = manifest.id.toLowerCase();
+    // Skip manifests not in the transitive closure
+    if (!transitiveSet.has(modLower)) continue;
 
     const modOrig = originalCase(manifest.id);
     const deps = Array.isArray(manifest.dependencies)
       ? manifest.dependencies
       : [];
+
     for (const dep of deps) {
       if (!dep || typeof dep.id !== 'string') continue;
 
       const depOrig = originalCase(dep.id);
-      const isRequired = dep.required !== false;
-      const isDepRequested = requestedLower.has(dep.id.toLowerCase());
-      const isDepManifestPresent = manifestsMap.has(dep.id.toLowerCase());
+      const depLower = dep.id.toLowerCase();
+      const isDepInTransitive = transitiveSet.has(depLower);
 
-      if (isRequired && !isDepManifestPresent) {
-        throw new ModDependencyError(
-          `MISSING_DEPENDENCY: Mod '${modOrig}' requires mod '${depOrig}', but the manifest for '${depOrig}' was not found.`
-        );
-      }
-      if (isRequired || (isDepRequested && isDepManifestPresent)) {
+      // Only add edges for dependencies that are in the transitive closure
+      // This includes both required and optional dependencies (if the dependency is also requested)
+      if (isDepInTransitive) {
         nodes.add(depOrig);
         addEdge(edges, depOrig, modOrig);
       }

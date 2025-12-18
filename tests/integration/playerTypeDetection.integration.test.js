@@ -200,26 +200,26 @@ describe('[Integration] Player Type Detection', () => {
     });
   });
 
-  describe('Real-world scenario: Joel Overberus', () => {
-    it('should correctly identify Joel Overberus as human player', () => {
-      // Create Joel Overberus with proper player_type
+  describe('Real-world scenario: Human Player', () => {
+    it('should correctly identify Human Player', () => {
+      // Create Human Player with proper player_type
       entityManager.createEntity({
-        id: 'isekai:hero_instance',
+        id: 'test:hero_instance',
         components: {
           'core:actor': {},
           'core:player_type': { type: 'human' },
-          'core:name': { text: 'Joel Overberus' },
+          'core:name': { text: 'Test Human Player' },
           'core:description': {
-            text: 'A rugged-looking man, likely in his late 30s to 40s...',
+            text: 'A test human player.',
           },
-          'core:position': { locationId: 'isekai:adventurers_guild_instance' },
+          'core:position': { locationId: 'test:adventurers_guild_instance' },
           'core:perception_log': { maxEntries: 50, logEntries: [] },
           'core:movement': { locked: false },
         },
       });
 
-      // Create strategy for Joel
-      const strategy = factory.create('isekai:hero_instance');
+      // Create strategy for Human
+      const strategy = factory.create('test:hero_instance');
 
       // Verify human provider was selected
       expect(strategy).toBeDefined();
@@ -227,7 +227,7 @@ describe('[Integration] Player Type Detection', () => {
 
       // Verify that the expected log was called
       expect(logger.debug).toHaveBeenCalledWith(
-        'ActorAwareStrategyFactory: Creating GenericTurnStrategy for isekai:hero_instance using provider type human.'
+        'ActorAwareStrategyFactory: Creating GenericTurnStrategy for test:hero_instance using provider type human.'
       );
     });
   });

@@ -1,9 +1,8 @@
 /**
  * @file Activity Metadata Collection System
- * @description Implements 3-tier metadata collection for activity descriptions:
+ * @description Implements 2-tier metadata collection for activity descriptions:
  * Tier 1: Optional ActivityIndex (fastest)
  * Tier 2: Inline component metadata (fallback)
- * Tier 3: Dedicated metadata components (fallback)
  *
  * Extracted from ActivityDescriptionService for better separation of concerns.
  * @see activityDescriptionService.js
@@ -17,8 +16,7 @@ import { validateDependency, ensureValidLogger } from '../../utils/index.js';
  * Collection Strategy:
  * 1. ActivityIndex lookup (if available) - Fast pre-computed index
  * 2. Inline metadata - Scan component activityMetadata fields
- * 3. Dedicated metadata - Check activity:description_metadata component
- * 4. Deduplicate - Remove activities with identical semantic signatures
+ * 3. Deduplicate - Remove activities with identical semantic signatures
  *
  * All collected activities are deduplicated based on semantic signature
  * (type, template, source component, target, and groupKey).
@@ -55,11 +53,10 @@ class ActivityMetadataCollectionSystem {
   }
 
   /**
-   * Collect activity metadata using 3-tier fallback strategy.
+   * Collect activity metadata using 2-tier fallback strategy.
    *
    * Tier 1: Optional ActivityIndex (fastest, pre-computed)
    * Tier 2: Inline component metadata (scan activityMetadata fields)
-   * Tier 3: Dedicated metadata components (activity:description_metadata)
    *
    * All collected activities are deduplicated by semantic signature
    * to prevent redundant descriptions.
@@ -129,17 +126,6 @@ class ActivityMetadataCollectionSystem {
       );
     }
 
-    // Tier 3: Collect dedicated metadata
-    try {
-      const dedicatedActivities = this.collectDedicatedMetadata(resolvedEntity);
-      activities.push(...dedicatedActivities);
-    } catch (error) {
-      this.#logger.error(
-        `Failed to collect dedicated metadata for entity ${entityId}`,
-        error
-      );
-    }
-
     return activities.filter(Boolean);
   }
 
@@ -147,8 +133,7 @@ class ActivityMetadataCollectionSystem {
    * Collect inline metadata from component activityMetadata fields.
    *
    * Scans all entity components for activityMetadata fields and
-   * parses them into activity objects. Skips dedicated metadata
-   * components (processed separately).
+   * parses them into activity objects.
    *
    * @param {object} entity - Entity instance to scan
    * @returns {Array<object>} Inline metadata activities
@@ -176,11 +161,6 @@ class ActivityMetadataCollectionSystem {
     });
 
     for (const componentId of componentIds) {
-      // Skip dedicated metadata components (already processed)
-      if (componentId === 'activity:description_metadata') {
-        continue;
-      }
-
       if (typeof entity.getComponentData !== 'function') {
         this.#logger.warn(
           `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping ${componentId}`
@@ -360,181 +340,12 @@ class ActivityMetadataCollectionSystem {
   }
 
   /**
-   * Collect dedicated metadata component.
-   *
-   * Checks for activity:description_metadata component and parses
-   * it into activity object. Entity can only have ONE instance of
-   * each component type.
-   *
-   * @param {object} entity - Entity instance to check
-   * @returns {Array<object>} Dedicated metadata activities (single item or empty)
-   * @example
-   * const dedicatedActivities = collector.collectDedicatedMetadata(entity);
-   * // Returns: [{ type: 'dedicated', sourceComponent: 'positioning:kneeling', ... }] or []
-   */
-  collectDedicatedMetadata(entity) {
-    const activities = [];
-
-    if (!entity || typeof entity !== 'object') {
-      this.#logger.warn(
-        'Cannot collect dedicated metadata without a valid entity'
-      );
-      return activities;
-    }
-
-    if (typeof entity.hasComponent !== 'function') {
-      this.#logger.warn(
-        `Entity ${entity?.id ?? 'unknown'} is missing hasComponent; skipping dedicated metadata`
-      );
-      return activities;
-    }
-
-    let hasMetadataComponent = false;
-    try {
-      hasMetadataComponent = entity.hasComponent(
-        'activity:description_metadata'
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to verify dedicated metadata component for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return activities;
-    }
-
-    // Check if entity has dedicated metadata component type
-    // Note: Entity can only have ONE instance of each component type
-    if (!hasMetadataComponent) {
-      return activities;
-    }
-
-    // Get the single metadata component
-    if (typeof entity.getComponentData !== 'function') {
-      this.#logger.warn(
-        `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping dedicated metadata`
-      );
-      return activities;
-    }
-
-    let metadata;
-    try {
-      metadata = entity.getComponentData('activity:description_metadata');
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to read dedicated metadata for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return activities;
-    }
-
-    if (!metadata || typeof metadata !== 'object') {
-      this.#logger.warn(
-        `Dedicated metadata for ${entity?.id ?? 'unknown'} is invalid; skipping`
-      );
-      return activities;
-    }
-
-    try {
-      const activity = this.#parseDedicatedMetadata(metadata, entity);
-      if (activity) {
-        activities.push(activity);
-      }
-    } catch (error) {
-      this.#logger.error(`Failed to parse dedicated metadata`, error);
-    }
-
-    return activities;
-  }
-
-  /**
-   * Parse dedicated metadata component into activity object.
-   *
-   * Extracts sourceComponent, descriptionType, targetRole, and priority
-   * from dedicated metadata and resolves target entity ID from source component.
-   *
-   * @param {object} metadata - Metadata component data
-   * @param {object} entity - Entity instance for source component access
-   * @returns {object|null} Activity object or null if invalid
-   * @private
-   */
-  #parseDedicatedMetadata(metadata, entity) {
-    if (!metadata || typeof metadata !== 'object') {
-      this.#logger.warn('Dedicated metadata payload is invalid; skipping');
-      return null;
-    }
-
-    if (!entity || typeof entity.getComponentData !== 'function') {
-      this.#logger.warn(
-        `Cannot parse dedicated metadata without component access for ${entity?.id ?? 'unknown'}`
-      );
-      return null;
-    }
-
-    const {
-      sourceComponent,
-      descriptionType,
-      targetRole,
-      priority = 50,
-    } = metadata;
-
-    if (!sourceComponent) {
-      this.#logger.warn('Dedicated metadata missing sourceComponent');
-      return null;
-    }
-
-    // Get source component data
-    let sourceData;
-    try {
-      sourceData = entity.getComponentData(sourceComponent);
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to retrieve source component ${sourceComponent} for dedicated metadata`,
-        error
-      );
-      return null;
-    }
-    if (!sourceData) {
-      this.#logger.warn(`Source component not found: ${sourceComponent}`);
-      return null;
-    }
-
-    // Resolve target entity ID
-    const roleKey = targetRole || 'entityId';
-    let targetEntityId = null;
-
-    try {
-      targetEntityId = sourceData?.[roleKey] ?? null;
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to resolve target entity for dedicated metadata ${sourceComponent}`,
-        error
-      );
-      targetEntityId = null;
-    }
-
-    return {
-      type: 'dedicated',
-      sourceComponent,
-      descriptionType,
-      metadata,
-      sourceData,
-      targetEntityId,
-      priority,
-      verb: metadata.verb,
-      template: metadata.template,
-      adverb: metadata.adverb,
-      conditions: metadata.conditions,
-      grouping: metadata.grouping,
-    };
-  }
-
-  /**
    * Remove duplicate activities that share the same descriptive signature.
    *
    * Deduplication preserves insertion order and keeps the highest priority
    * activity when duplicates are found. Activities are considered duplicates
    * when they have the same:
-   * - type (inline/dedicated)
+   * - type (inline)
    * - template/description/verb
    * - target entity ID
    * - grouping key
@@ -583,7 +394,7 @@ class ActivityMetadataCollectionSystem {
    * Build deterministic signature used for deduplicating activities.
    *
    * Creates a reproducible signature encoding:
-   * - type: Activity type (inline/dedicated)
+   * - type: Activity type (inline)
    * - template/description/verb: Activity content
    * - target: Target entity ID
    * - groupKey: Grouping key for related activities
@@ -648,8 +459,6 @@ class ActivityMetadataCollectionSystem {
   getTestHooks() {
     return {
       parseInlineMetadata: (...args) => this.#parseInlineMetadata(...args),
-      parseDedicatedMetadata: (...args) =>
-        this.#parseDedicatedMetadata(...args),
       buildActivityDeduplicationKey: (...args) =>
         this.#buildActivityDeduplicationKey(...args),
     };

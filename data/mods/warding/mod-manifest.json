@@ -3,7 +3,7 @@
   "id": "warding",
   "version": "1.0.0",
   "name": "Warding System",
-  "description": "Protective magic mechanics including salt boundaries against corrupted entities",
+  "description": "Protective magic mechanics such as drawing salt boundaries against corrupted entities, and extracting corruption.",
   "dependencies": [
     {
       "id": "core",

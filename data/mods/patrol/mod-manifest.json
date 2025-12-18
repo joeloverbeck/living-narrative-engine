@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "patrol",
   "version": "1.0.0",
-  "name": "patrol",
-  "description": "Scenario.",
+  "name": "Patrol",
+  "description": "Scenario about two custodians dealing with a rip in reality.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -12,11 +12,11 @@
       "version": "^1.0.0"
     },
     {
-      "id": "movement",
+      "id": "descriptors",
       "version": "^1.0.0"
     },
     {
-      "id": "positioning",
+      "id": "movement",
       "version": "^1.0.0"
     },
     {
@@ -85,7 +85,10 @@
     "events": [],
     "macros": [],
     "scopes": [],
-    "recipes": ["dylan_crace.recipe.json", "len_amezua.recipe.json"],
+    "recipes": [
+      "dylan_crace.recipe.json",
+      "len_amezua.recipe.json"
+    ],
     "portraits": [
       "dylan_crace.png",
       "eldritch_dimension.png",
@@ -93,6 +96,8 @@
       "perimeter_of_rip_in_reality.png",
       "writhing_observer.png"
     ],
-    "worlds": ["patrol.world.json"]
+    "worlds": [
+      "patrol.world.json"
+    ]
   }
 }

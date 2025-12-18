@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "fantasy",
   "version": "1.0.0",
-  "name": "fantasy",
-  "description": "Scenario.",
+  "name": "Fantasy",
+  "description": "Scenario about a cat-folk bard arriving at a nowhere-town looking for trouble.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -29,6 +29,10 @@
     },
     {
       "id": "anatomy-creatures",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "mechanisms",
       "version": "^1.0.0"
     },
     {
@@ -77,6 +81,14 @@
     },
     {
       "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "damage-types",
       "version": "^1.0.0"
     },
     {

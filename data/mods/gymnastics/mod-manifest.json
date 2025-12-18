@@ -3,7 +3,7 @@
   "id": "gymnastics",
   "version": "1.0.0",
   "name": "Gymnastics",
-  "description": "Core floor gymnastics maneuvers focused on rolls and cartwheels for trained gymnasts",
+  "description": "Core floor gymnastics maneuvers for trained gymnasts.",
   "actionPurpose": "Perform floor gymnastics maneuvers including rolls and cartwheels.",
   "actionConsiderWhen": "Demonstrating gymnastics skill, performing acrobatic movements, or showing off athletic flexibility.",
   "author": "Living Narrative Engine",

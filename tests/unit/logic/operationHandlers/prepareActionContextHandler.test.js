@@ -546,4 +546,65 @@ describe('PrepareActionContextHandler', () => {
       expect(context.anotherProperty).toBe(42);
     });
   });
+
+  describe('execute - multi-target ID patterns', () => {
+    it('should resolve targetName from primaryId when targetId is missing', async () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'core:actor') return { name: `Name-${entityId}` };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
+          return null;
+        }
+      );
+
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'actor-1',
+              primaryId: 'target-1', // NOT targetId - multi-target pattern
+            },
+          },
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      const context = result.evaluationContext.context;
+      expect(context.targetName).toBe('Name-target-1');
+      expect(context.targetId).toBe('target-1');
+    });
+
+    it('should prefer targetId over primaryId when both present', async () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'core:actor') return { name: `Name-${entityId}` };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
+          return null;
+        }
+      );
+
+      const parameters = {};
+      const executionContext = {
+        evaluationContext: {
+          event: {
+            payload: {
+              actorId: 'actor-1',
+              targetId: 'targetFromTargetId',
+              primaryId: 'targetFromPrimaryId', // Should be ignored
+            },
+          },
+          context: {},
+        },
+      };
+
+      const result = await handler.execute(parameters, executionContext);
+
+      const context = result.evaluationContext.context;
+      expect(context.targetName).toBe('Name-targetFromTargetId');
+      expect(context.targetId).toBe('targetFromTargetId');
+    });
+  });
 });

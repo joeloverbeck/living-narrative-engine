@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for activity description system - Complete workflow
- * @description Tests complete activity description generation workflow with inline and dedicated metadata
+ * @description Tests complete activity description generation workflow with inline metadata
  */
 
 import {
@@ -136,7 +136,7 @@ describe('Activity Description System - Complete Workflow', () => {
     );
   });
 
-  it('should generate activity description from dedicated metadata', async () => {
+  it('should generate activity description from inline metadata only', async () => {
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'jon',
     });
@@ -144,20 +144,15 @@ describe('Activity Description System - Complete Workflow', () => {
       text: 'Jon Ureña',
     });
 
-    // Add source component
+    // Inline metadata describing the activity
     entityManager.addComponent(jonEntity.id, 'test:kissing', {
       partner: 'alicia',
-      initiator: true,
-    });
-
-    // Add dedicated metadata component
-    entityManager.addComponent(jonEntity.id, 'activity:description_metadata', {
-      sourceComponent: 'test:kissing',
-      descriptionType: 'verb',
-      verb: 'kissing',
-      adverb: 'passionately',
-      targetRole: 'partner',
-      priority: 90,
+      activityMetadata: {
+        shouldDescribeInActivity: true,
+        template: '{actor} is kissing {target} passionately',
+        targetRole: 'partner',
+        priority: 90,
+      },
     });
 
     const aliciaEntity = await entityManager.createEntityInstance(

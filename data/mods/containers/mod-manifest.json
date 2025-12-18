@@ -3,7 +3,7 @@
   "id": "containers",
   "version": "1.0.0",
   "name": "Containers",
-  "description": "Container interaction actions, rules, and events separated from core items.",
+  "description": "Container interactions.",
   "actionPurpose": "Open containers, store items, and retrieve them from storage.",
   "actionConsiderWhen": "Interacting with storage furniture or chests, organizing inventory, or managing locked containers.",
   "author": "Living Narrative Engine",

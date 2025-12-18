@@ -140,27 +140,6 @@ describe('Movement Components - Fixed validation', () => {
     });
   });
 
-  describe('Entity references to goals', () => {
-    it('should reference core:goals not movement:goals in isekai sidekick', () => {
-      // Load the fixed entity file
-      const entityPath = join(
-        process.cwd(),
-        'data',
-        'mods',
-        'isekai',
-        'entities',
-        'definitions',
-        'sidekick.character.json'
-      );
-      const entityData = JSON.parse(readFileSync(entityPath, 'utf8'));
+  // Test case 'should reference core:goals not movement:goals in isekai sidekick' removed as the mod has been deleted.
 
-      // Check that it uses core:goals, not movement:goals
-      expect(entityData.components['core:goals']).toBeDefined();
-      expect(entityData.components['movement:goals']).toBeUndefined();
-      expect(entityData.components['core:goals'].goals).toBeDefined();
-      expect(Array.isArray(entityData.components['core:goals'].goals)).toBe(
-        true
-      );
-    });
-  });
 });
