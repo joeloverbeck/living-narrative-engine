@@ -27,7 +27,7 @@ describe('Movement Flow Integration', () => {
     // Load referenced condition
     const conditionPath = path.resolve(
       process.cwd(),
-      'data/mods/movement/conditions/actor-can-move.condition.json'
+      'data/mods/anatomy/conditions/actor-can-move.condition.json'
     );
     const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
@@ -71,27 +71,38 @@ describe('Movement Flow Integration', () => {
         'utf8'
       )
     );
-    const conditions = [
-      'actor-can-move',
-      'event-is-action-go',
-      'exit-is-unblocked',
-    ].map((name) =>
-      JSON.parse(
-        fs.readFileSync(
-          path.resolve(
-            process.cwd(),
-            `data/mods/movement/conditions/${name}.condition.json`
-          ),
-          'utf8'
+    // Movement conditions (actor-can-move moved to anatomy mod)
+    const movementConditions = ['event-is-action-go', 'exit-is-unblocked'].map(
+      (name) =>
+        JSON.parse(
+          fs.readFileSync(
+            path.resolve(
+              process.cwd(),
+              `data/mods/movement/conditions/${name}.condition.json`
+            ),
+            'utf8'
+          )
         )
+    );
+    // actor-can-move is now in anatomy mod
+    const actorCanMoveCondition = JSON.parse(
+      fs.readFileSync(
+        path.resolve(
+          process.cwd(),
+          'data/mods/anatomy/conditions/actor-can-move.condition.json'
+        ),
+        'utf8'
       )
     );
 
-    // Verify action and conditions use movement namespace
+    // Verify action uses movement namespace
     expect(action.id).toMatch(/^movement:/);
-    conditions.forEach((condition) => {
+    // Verify movement conditions use movement namespace
+    movementConditions.forEach((condition) => {
       expect(condition.id).toMatch(/^movement:/);
     });
+    // Verify actor-can-move uses anatomy namespace
+    expect(actorCanMoveCondition.id).toBe('anatomy:actor-can-move');
     // Rule uses different format but references movement conditions
     const rule = JSON.parse(
       fs.readFileSync(
@@ -122,7 +133,7 @@ describe('Movement Flow Integration', () => {
       fs.readFileSync(
         path.resolve(
           process.cwd(),
-          'data/mods/movement/conditions/actor-can-move.condition.json'
+          'data/mods/anatomy/conditions/actor-can-move.condition.json'
         ),
         'utf8'
       )
@@ -201,12 +212,12 @@ describe('Movement Flow Integration', () => {
         .filter((prereq) => prereq.logic?.condition_ref)
         .map((prereq) => prereq.logic.condition_ref);
 
-      // Verify each referenced condition file exists
+      // Verify each referenced condition file exists in its respective mod
       conditionRefs.forEach((ref) => {
-        const conditionId = ref.split(':')[1]; // Remove namespace
+        const [modId, conditionId] = ref.split(':');
         const conditionPath = path.resolve(
           process.cwd(),
-          `data/mods/movement/conditions/${conditionId}.condition.json`
+          `data/mods/${modId}/conditions/${conditionId}.condition.json`
         );
         expect(fs.existsSync(conditionPath)).toBe(true);
       });

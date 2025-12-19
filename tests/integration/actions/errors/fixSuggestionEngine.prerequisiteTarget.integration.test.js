@@ -102,7 +102,7 @@ describe('FixSuggestionEngine prerequisite and target integration', () => {
         {
           logic: {
             and: [
-              { condition_ref: 'movement:actor-can-move' },
+              { condition_ref: 'anatomy:actor-can-move' },
               { hasComponent: 'core:position' },
             ],
           },

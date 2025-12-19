@@ -29,14 +29,14 @@ describe('Scope Tracing Integration', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // CRITICAL: Register custom scope AFTER createCloseActors to avoid reset() clearing it
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
       // Verify the custom scope was registered
       expect(testFixture.testEnv._registeredResolvers).toBeDefined();
       expect(
-        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+        testFixture.testEnv._registeredResolvers.has('personal-space:close_actors')
       ).toBe(true);
 
       // Directly resolve a scope to trigger tracer
@@ -46,7 +46,7 @@ describe('Scope Tracing Integration', () => {
       );
       const resolveResult =
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:close_actors',
+          'personal-space:close_actors',
           actorEntity
         );
 
@@ -62,7 +62,7 @@ describe('Scope Tracing Integration', () => {
     it('should capture StepResolver step', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -71,7 +71,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -86,7 +86,7 @@ describe('Scope Tracing Integration', () => {
     it('should capture FilterResolver step', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -95,7 +95,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -110,7 +110,7 @@ describe('Scope Tracing Integration', () => {
     it('should capture filter evaluations per entity', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -119,7 +119,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -134,7 +134,7 @@ describe('Scope Tracing Integration', () => {
     it('should capture complete resolver chain', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -142,7 +142,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -162,7 +162,7 @@ describe('Scope Tracing Integration', () => {
   describe('Trace data quality', () => {
     beforeEach(async () => {
       // Register scope for tracing
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
     });
 
     it('should have correct step count', async () => {
@@ -173,7 +173,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -191,7 +191,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -210,7 +210,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -229,7 +229,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -253,7 +253,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -282,7 +282,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -304,7 +304,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -329,7 +329,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -350,7 +350,7 @@ describe('Scope Tracing Integration', () => {
   describe('Formatted output', () => {
     beforeEach(async () => {
       // Register scope for tracing
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
     });
 
     it('should format as human-readable text', async () => {
@@ -361,7 +361,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -380,7 +380,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -404,7 +404,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -426,7 +426,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -445,7 +445,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -467,7 +467,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -622,7 +622,7 @@ describe('Scope Tracing Integration', () => {
     it('should clear trace data', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -630,7 +630,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 

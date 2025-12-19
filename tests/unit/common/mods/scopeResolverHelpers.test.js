@@ -569,16 +569,16 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
   });
 
   describe('High Priority Scopes', () => {
-    it('should register positioning:close_actors', () => {
+    it('should register personal-space:close_actors', () => {
       expect(
-        mockTestEnv._registeredResolvers.has('positioning:close_actors')
+        mockTestEnv._registeredResolvers.has('personal-space:close_actors')
       ).toBe(true);
     });
 
-    it('should register positioning:close_actors_facing_each_other', () => {
+    it('should register personal-space:close_actors_facing_each_other', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:close_actors_facing_each_other'
+          'personal-space:close_actors_facing_each_other'
         )
       ).toBe(true);
     });
@@ -597,10 +597,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register positioning:close_actors_or_entity_kneeling_before_actor', () => {
+    it('should register personal-space:close_actors_or_entity_kneeling_before_actor', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         )
       ).toBe(true);
     });

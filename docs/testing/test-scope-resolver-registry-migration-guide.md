@@ -143,7 +143,7 @@ await registry.discoverAndRegister(['positioning', 'inventory'], {
 Get a resolver by ID.
 
 ```javascript
-const resolver = registry.get('positioning:close_actors');
+const resolver = registry.get('personal-space:close_actors');
 ```
 
 #### getByCategory(category)
@@ -160,7 +160,7 @@ Resolve a scope using the registered resolver.
 
 ```javascript
 const entityIds = registry.resolve(
-  'positioning:close_actors',
+  'personal-space:close_actors',
   { actor: myActor },
   { entityManager: em, logger: logger }
 );
@@ -171,7 +171,7 @@ const entityIds = registry.resolve(
 Check if a scope is registered.
 
 ```javascript
-if (registry.has('positioning:close_actors')) {
+if (registry.has('personal-space:close_actors')) {
   // Use the scope
 }
 ```
@@ -182,7 +182,7 @@ List all registered scope IDs (sorted).
 
 ```javascript
 const allScopes = registry.list();
-// ['items:actor_inventory_items', 'positioning:close_actors', ...]
+// ['items:actor_inventory_items', 'personal-space:close_actors', ...]
 ```
 
 #### listByCategory()
@@ -192,7 +192,7 @@ List scopes organized by category.
 ```javascript
 const byCategory = registry.listByCategory();
 // {
-//   positioning: ['positioning:close_actors', 'positioning:sitting_actors'],
+//   positioning: ['personal-space:close_actors', 'positioning:sitting_actors'],
 //   items: ['items:actor_inventory_items']
 // }
 ```
@@ -237,7 +237,7 @@ Clear error messages when scopes are missing or resolution fails.
 
 ```javascript
 // Before: Generic error
-// After: "No resolver registered for scope 'positioning:close_actors'. Available scopes: ..."
+// After: "No resolver registered for scope 'personal-space:close_actors'. Available scopes: ..."
 ```
 
 ### 3. Centralized Management
@@ -265,7 +265,7 @@ Registry tracks and validates dependencies between scopes.
 // Registry warns if dependencies are missing
 const resolver = new CustomResolver({
   id: 'my:scope',
-  dependencies: ['positioning:close_actors'], // Will validate this exists
+  dependencies: ['personal-space:close_actors'], // Will validate this exists
 });
 ```
 
@@ -407,7 +407,7 @@ class MyCustomResolver extends BaseScopeResolver {
       id: 'my-mod:my_scope',
       category: 'my-mod',
       name: 'My Custom Scope',
-      dependencies: ['positioning:close_actors'],
+      dependencies: ['personal-space:close_actors'],
     });
   }
 
@@ -445,8 +445,8 @@ console.log('All scopes:', registry.list());
 console.log('By category:', registry.listByCategory());
 
 // Check specific scope
-if (registry.has('positioning:close_actors')) {
-  const resolver = registry.get('positioning:close_actors');
+if (registry.has('personal-space:close_actors')) {
+  const resolver = registry.get('personal-space:close_actors');
   console.log('Resolver:', resolver.name);
   console.log('Category:', resolver.category);
   console.log('Dependencies:', resolver.dependencies);
@@ -494,7 +494,7 @@ ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 **Error:**
 
 ```
-No resolver registered for scope "positioning:close_actors"
+No resolver registered for scope "personal-space:close_actors"
 ```
 
 **Solution:**

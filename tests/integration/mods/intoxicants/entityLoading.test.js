@@ -143,7 +143,7 @@ describe('Intoxicants - Entity Loading', () => {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
       const depIds = manifest.dependencies.map((dep) => dep.id);
-      expect(depIds).toContain('core');
+      expect(depIds).toContain('containers-core');
       expect(depIds).toContain('items');
     });
   });

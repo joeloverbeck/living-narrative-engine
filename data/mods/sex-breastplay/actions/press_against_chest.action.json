@@ -5,7 +5,7 @@
   "description": "Press yourself against the target's chest, letting your breasts meet them head-on.",
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors_facing_each_other",
+      "scope": "personal-space:close_actors_facing_each_other",
       "placeholder": "target",
       "description": "Partner facing you up close"
     }

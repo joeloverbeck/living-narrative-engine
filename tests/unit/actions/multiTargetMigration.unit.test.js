@@ -92,7 +92,7 @@ describe('Multi-Target Migration Unit Tests', () => {
     it('should preserve all prerequisites for follow action', () => {
       expect(followAction.prerequisites).toHaveLength(3);
       expect(followAction.prerequisites[0].logic.condition_ref).toBe(
-        'movement:actor-can-move'
+        'anatomy:actor-can-move'
       );
       expect(followAction.prerequisites[1].logic.not.condition_ref).toBe(
         'companionship:actor-is-following'

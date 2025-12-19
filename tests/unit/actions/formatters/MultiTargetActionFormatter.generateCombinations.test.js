@@ -44,7 +44,7 @@ describe('MultiTargetActionFormatter - generateCombinations behavior', () => {
         description: "Remove a piece of someone else's topmost clothing",
         targets: {
           primary: {
-            scope: 'positioning:close_actors',
+            scope: 'personal-space:close_actors',
             placeholder: 'person',
             description: 'The person whose clothing to remove',
           },
@@ -151,7 +151,7 @@ describe('MultiTargetActionFormatter - generateCombinations behavior', () => {
         template: "adjust {person}'s {item}",
         targets: {
           primary: {
-            scope: 'positioning:close_actors',
+            scope: 'personal-space:close_actors',
             placeholder: 'person',
             description: 'The person whose clothing to adjust',
           },
@@ -229,7 +229,7 @@ describe('MultiTargetActionFormatter - generateCombinations behavior', () => {
         template: "remove {person}'s {item}",
         targets: {
           primary: {
-            scope: 'positioning:close_actors',
+            scope: 'personal-space:close_actors',
             placeholder: 'person',
           },
           secondary: {

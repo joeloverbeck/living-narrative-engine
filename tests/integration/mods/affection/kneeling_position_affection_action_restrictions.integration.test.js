@@ -108,10 +108,10 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
       'data/mods/positioning/scopes/actors_in_location_facing.scope',
-      'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope',
-      'data/mods/positioning/scopes/close_actors.scope',
+      'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
+      'data/mods/personal-space/scopes/close_actors.scope',
       'data/mods/affection/scopes/close_actors_facing_each_other.scope',
-      'data/mods/positioning/scopes/close_actors_or_entity_kneeling_before_actor.scope',
+      'data/mods/personal-space/scopes/close_actors_or_entity_kneeling_before_actor.scope',
       'data/mods/affection/scopes/actors_with_arm_subtypes_facing_each_other_or_behind_target.scope',
     ];
 
@@ -435,7 +435,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     );
   }
 
-  describe('Hug Tight Action (positioning:close_actors_facing_each_other_or_behind_target)', () => {
+  describe('Hug Tight Action (personal-space:close_actors_facing_each_other_or_behind_target)', () => {
     it('should NOT be available when target is kneeling before actor', async () => {
       // Arrange: Two actors in closeness, facing each other
       actor1 = createActor('test:actor1', 'Alice');
@@ -491,7 +491,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     });
   });
 
-  describe('Link Arms Action (positioning:close_actors_facing_each_other_or_behind_target)', () => {
+  describe('Link Arms Action (personal-space:close_actors_facing_each_other_or_behind_target)', () => {
     it('should NOT be available when target is kneeling before actor', async () => {
       actor1 = createActor('test:actor1', 'Alice');
       actor2 = createActor('test:actor2', 'Bob');
@@ -521,7 +521,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     });
   });
 
-  describe('Place Hand on Waist Action (positioning:close_actors)', () => {
+  describe('Place Hand on Waist Action (personal-space:close_actors)', () => {
     it('should NOT be available when target is kneeling before actor', async () => {
       actor1 = createActor('test:actor1', 'Alice');
       actor2 = createActor('test:actor2', 'Bob');
@@ -559,7 +559,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     });
   });
 
-  describe('Rest Head on Shoulder Action (positioning:close_actors_facing_each_other_or_behind_target)', () => {
+  describe('Rest Head on Shoulder Action (personal-space:close_actors_facing_each_other_or_behind_target)', () => {
     it('should NOT be available when target is kneeling before actor', async () => {
       actor1 = createActor('test:actor1', 'Alice');
       actor2 = createActor('test:actor2', 'Bob');

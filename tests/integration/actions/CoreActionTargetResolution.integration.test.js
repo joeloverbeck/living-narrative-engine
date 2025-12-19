@@ -173,10 +173,10 @@ describe('Core Action Target Resolution Integration', () => {
       {
         path: path.resolve(
           __dirname,
-          '../../../data/mods/movement/conditions/actor-can-move.condition.json'
+          '../../../data/mods/anatomy/conditions/actor-can-move.condition.json'
         ),
         fallback: {
-          id: 'movement:actor-can-move',
+          id: 'anatomy:actor-can-move',
           logic: {
             hasPartWithComponentValue: [
               'actor',

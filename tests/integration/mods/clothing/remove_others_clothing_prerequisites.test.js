@@ -150,7 +150,7 @@ describe('clothing:remove_others_clothing prerequisites', () => {
         "remove {person}'s {item}"
       );
       expect(removeOthersClothingAction.targets.primary.scope).toBe(
-        'positioning:close_actors'
+        'personal-space:close_actors'
       );
       expect(removeOthersClothingAction.targets.secondary.scope).toBe(
         'clothing:target_topmost_clothing'

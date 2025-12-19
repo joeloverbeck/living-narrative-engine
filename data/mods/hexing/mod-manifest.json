@@ -5,15 +5,31 @@
   "name": "Hexing System",
   "description": "Hexing-related actions, such as corrupting gaze.",
   "dependencies": [
-    { "id": "core", "version": ">=1.0.0" },
-    { "id": "skills", "version": ">=1.0.0" },
-    { "id": "positioning", "version": ">=1.0.0" },
-    { "id": "warding", "version": ">=1.0.0" }
+    {
+      "id": "skills",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "warding",
+      "version": ">=1.0.0"
+    }
   ],
   "content": {
-    "components": ["is_hexer.component.json"],
-    "conditions": ["event-is-action-corrupting-gaze.condition.json"],
-    "actions": ["corrupting_gaze.action.json"],
-    "rules": ["handle_corrupting_gaze.rule.json"]
+    "components": [
+      "is_hexer.component.json"
+    ],
+    "conditions": [
+      "event-is-action-corrupting-gaze.condition.json"
+    ],
+    "actions": [
+      "corrupting_gaze.action.json"
+    ],
+    "rules": [
+      "handle_corrupting_gaze.rule.json"
+    ]
   }
 }

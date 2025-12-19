@@ -18,7 +18,7 @@ describe('physical-control:turn_around action', () => {
 
     it('uses physical-control:close_actors_facing_each_other_or_behind_target scope', () => {
       expect(turnAroundAction.targets.primary.scope).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'personal-space:close_actors_facing_each_other_or_behind_target'
       );
     });
 
@@ -37,7 +37,7 @@ describe('physical-control:turn_around action', () => {
 
       expect(turnAroundAction.prerequisites[0]).toEqual({
         logic: {
-          condition_ref: 'movement:actor-can-move',
+          condition_ref: 'anatomy:actor-can-move',
         },
         failure_message: 'You cannot move right now.',
       });

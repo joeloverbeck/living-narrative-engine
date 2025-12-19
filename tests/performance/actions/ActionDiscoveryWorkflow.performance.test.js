@@ -144,7 +144,7 @@ describe('Action Discovery Workflow Performance', () => {
     // Add condition definitions to the registry
     const testConditions = [
       {
-        id: 'movement:actor-can-move',
+        id: 'anatomy:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {

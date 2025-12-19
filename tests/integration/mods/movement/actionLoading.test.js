@@ -48,7 +48,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the condition file
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
 
@@ -57,7 +57,7 @@ describe('Movement Action Loading Integration', () => {
 
       // Verify condition is loaded correctly
       expect(condition).toBeDefined();
-      expect(condition.id).toBe('movement:actor-can-move');
+      expect(condition.id).toBe('anatomy:actor-can-move');
     });
 
     it('should load movement scopes referenced by go action', () => {
@@ -91,7 +91,7 @@ describe('Movement Action Loading Integration', () => {
       // Check prerequisites array
       expect(Array.isArray(action.prerequisites)).toBe(true);
       expect(action.prerequisites[0].logic.condition_ref).toBe(
-        'movement:actor-can-move'
+        'anatomy:actor-can-move'
       );
 
       // Verify the referenced scope exists
@@ -104,7 +104,7 @@ describe('Movement Action Loading Integration', () => {
       // Verify the referenced condition exists
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
     });
@@ -127,11 +127,12 @@ describe('Movement Action Loading Integration', () => {
         'core:'
       );
 
-      // Verify movement namespace is used consistently
+      // Verify movement namespace is used for action and scope
       expect(movementAction.id).toMatch(/^movement:/);
       expect(movementAction.targets.primary.scope).toMatch(/^movement:/);
-      expect(movementAction.prerequisites[0].logic.condition_ref).toMatch(
-        /^movement:/
+      // Prerequisites can reference conditions from other mods (anatomy:actor-can-move)
+      expect(movementAction.prerequisites[0].logic.condition_ref).toBe(
+        'anatomy:actor-can-move'
       );
     });
   });
@@ -148,10 +149,10 @@ describe('Movement Action Loading Integration', () => {
       expect(manifest.content.actions).toBeDefined();
       expect(manifest.content.actions).toContain('go.action.json');
 
-      // Verify conditions are listed
+      // Verify conditions are listed (actor-can-move moved to anatomy mod)
       expect(manifest.content.conditions).toBeDefined();
       expect(manifest.content.conditions).toContain(
-        'actor-can-move.condition.json'
+        'exit-is-unblocked.condition.json'
       );
 
       // Verify scopes are listed
@@ -159,7 +160,7 @@ describe('Movement Action Loading Integration', () => {
       expect(manifest.content.scopes).toContain('clear_directions.scope');
     });
 
-    it('should maintain dependency on core mod', () => {
+    it('should maintain dependency on anatomy mod', () => {
       const manifestPath = path.resolve(
         process.cwd(),
         'data/mods/movement/mod-manifest.json'
@@ -170,7 +171,7 @@ describe('Movement Action Loading Integration', () => {
       expect(manifest.dependencies).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: 'core',
+            id: 'anatomy',
             version: expect.any(String),
           }),
         ])
@@ -219,7 +220,7 @@ describe('Movement Action Loading Integration', () => {
     it('should validate condition against condition schema', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 

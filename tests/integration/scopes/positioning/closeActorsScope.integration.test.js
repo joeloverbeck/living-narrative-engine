@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for positioning:close_actors scope
+ * @file Integration tests for personal-space:close_actors scope
  * @description Tests the migrated close_actors scope functionality
  */
 
@@ -12,7 +12,7 @@ import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import { addMockAstsToScopes } from '../../../common/scopeDsl/mockAstGenerator.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
-describe('positioning:close_actors scope integration', () => {
+describe('personal-space:close_actors scope integration', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
@@ -23,14 +23,14 @@ describe('positioning:close_actors scope integration', () => {
     // Initialize test environment
     logger = new ConsoleLogger('ERROR');
 
-    // Create scope registry and register the positioning:close_actors scope
+    // Create scope registry and register the personal-space:close_actors scope
     scopeRegistry = new ScopeRegistry();
     scopeRegistry.initialize(
       addMockAstsToScopes({
-        'positioning:close_actors': {
+        'personal-space:close_actors': {
           expr: 'actor.components.personal-space-states:closeness.partners[]',
           definition:
-            'positioning:close_actors := actor.components.personal-space-states:closeness.partners[]',
+            'personal-space:close_actors := actor.components.personal-space-states:closeness.partners[]',
           modId: 'positioning',
         },
       })
@@ -85,7 +85,7 @@ describe('positioning:close_actors scope integration', () => {
       };
 
       // Parse the scope expression
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
@@ -115,7 +115,7 @@ describe('positioning:close_actors scope integration', () => {
         logger,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const result = scopeEngine.resolve(ast, loneActor, runtimeCtx);
@@ -143,7 +143,7 @@ describe('positioning:close_actors scope integration', () => {
         logger,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const result = scopeEngine.resolve(
@@ -211,7 +211,7 @@ describe('positioning:close_actors scope integration', () => {
       };
 
       // Get all close actors
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const result = scopeEngine.resolve(ast, mainActor, runtimeCtx);
@@ -267,7 +267,7 @@ describe('positioning:close_actors scope integration', () => {
         logger,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const startTime = Date.now();
@@ -310,7 +310,7 @@ describe('positioning:close_actors scope integration', () => {
         logger,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:close_actors');
+      const scopeDef = scopeRegistry.getScope('personal-space:close_actors');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
 
       const result1 = scopeEngine.resolve(ast, actor1, runtimeCtx);

@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:closeness_with_target_broken",
+  "id": "personal-space:closeness_with_target_broken",
   "description": "Dispatched when a closeness relationship between an actor and a target is forcefully broken.",
   "payloadSchema": {
-    "title": "Positioning: Closeness With Target Broken Payload",
-    "description": "Payload for the positioning:closeness_with_target_broken event.",
+    "title": "Personal Space: Closeness With Target Broken Payload",
+    "description": "Payload for the personal-space:closeness_with_target_broken event.",
     "type": "object",
     "properties": {
       "actorId": {

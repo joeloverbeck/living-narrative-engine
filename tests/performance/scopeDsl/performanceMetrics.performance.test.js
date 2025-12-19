@@ -15,7 +15,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -34,7 +34,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     testBed.enableScopeTracing();
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -61,7 +61,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -87,7 +87,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -112,7 +112,7 @@ describe('Performance Metrics - Overhead', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -128,7 +128,7 @@ describe('Performance Metrics - Overhead', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -147,13 +147,13 @@ describe('Performance Metrics - Overhead', () => {
 
     // Warmup to stabilize JIT before measuring
     for (let i = 0; i < 100; i++) {
-      testBed.resolveSyncNoTracer('positioning:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
     }
 
     // Baseline: tracer completely bypassed
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testBed.resolveSyncNoTracer('positioning:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
     }
     const duration1 = performance.now() - start1;
 
@@ -162,7 +162,7 @@ describe('Performance Metrics - Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
     }
@@ -190,7 +190,7 @@ describe('Performance Metrics - Overhead', () => {
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
     }
@@ -201,7 +201,7 @@ describe('Performance Metrics - Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
       testBed.clearScopeTrace();
@@ -223,7 +223,7 @@ describe('Performance Metrics - Calculations', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -239,7 +239,7 @@ describe('Performance Metrics - Calculations', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -267,7 +267,7 @@ describe('Performance Metrics - Calculations', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -295,7 +295,7 @@ describe('Performance Metrics - Calculations', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -321,7 +321,7 @@ describe('Performance Metrics - Regression Detection', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -338,7 +338,7 @@ describe('Performance Metrics - Regression Detection', () => {
 
     // Baseline measurement
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
     const baselineMetrics = testBed.getScopePerformanceMetrics();
@@ -346,7 +346,7 @@ describe('Performance Metrics - Regression Detection', () => {
 
     // Second measurement (should be similar)
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
     const secondMetrics = testBed.getScopePerformanceMetrics();
@@ -369,7 +369,7 @@ describe('Performance Metrics - Regression Detection', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -388,7 +388,7 @@ describe('Performance Metrics - Regression Detection', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -412,7 +412,7 @@ describe('Performance Metrics - Formatted Output', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scopes needed for action discovery
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -428,7 +428,7 @@ describe('Performance Metrics - Formatted Output', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 
@@ -451,7 +451,7 @@ describe('Performance Metrics - Formatted Output', () => {
     );
 
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 

@@ -5,7 +5,7 @@
   "description": "Turn the target around or have them face you again.",
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors_facing_each_other_or_behind_target",
+      "scope": "personal-space:close_actors_facing_each_other_or_behind_target",
       "placeholder": "target",
       "description": "Actor to turn around"
     }
@@ -24,7 +24,7 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "movement:actor-can-move"
+        "condition_ref": "anatomy:actor-can-move"
       },
       "failure_message": "You cannot move right now."
     },

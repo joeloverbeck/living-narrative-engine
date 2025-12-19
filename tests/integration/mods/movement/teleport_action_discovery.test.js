@@ -57,7 +57,7 @@ describe('movement:teleport action discovery', () => {
       expect(teleportAction.prerequisites).toBeDefined();
       expect(teleportAction.prerequisites.length).toBe(1);
       expect(teleportAction.prerequisites[0].logic.condition_ref).toBe(
-        'movement:actor-can-move'
+        'anatomy:actor-can-move'
       );
     });
   });
@@ -98,7 +98,7 @@ describe('movement:teleport action discovery', () => {
     it('should NOT appear when actor is lying down', () => {
       // EXPECTED BEHAVIOR:
       // If Alice has positioning:lying_down component:
-      // - Prerequisites check movement:actor-can-move fails (movement locked)
+      // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //
       // Enforced by movement lock system, not forbidden_components
@@ -108,7 +108,7 @@ describe('movement:teleport action discovery', () => {
     it('should NOT appear when actor is sitting', () => {
       // EXPECTED BEHAVIOR:
       // If Alice has positioning:sitting_on component:
-      // - Prerequisites check movement:actor-can-move fails (movement locked)
+      // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //
       // Sitting locks movement via core:movement component
@@ -118,7 +118,7 @@ describe('movement:teleport action discovery', () => {
     it('should NOT appear when actor is kneeling', () => {
       // EXPECTED BEHAVIOR:
       // If Alice has positioning:kneeling_before component:
-      // - Prerequisites check movement:actor-can-move fails (movement locked)
+      // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //
       // Prevents teleporting while in kneeling position
@@ -128,7 +128,7 @@ describe('movement:teleport action discovery', () => {
     it('should NOT appear when actor is bending over', () => {
       // EXPECTED BEHAVIOR:
       // If Alice has bending-states:bending_over component:
-      // - Prerequisites check movement:actor-can-move fails (movement locked)
+      // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //
       // Ensures actors cannot teleport while bending over

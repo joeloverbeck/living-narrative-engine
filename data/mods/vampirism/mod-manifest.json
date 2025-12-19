@@ -14,11 +14,11 @@
       "version": "^1.0.0"
     },
     {
-      "id": "core",
+      "id": "personal-space-states",
       "version": "^1.0.0"
     },
     {
-      "id": "personal-space-states",
+      "id": "personal-space",
       "version": "^1.0.0"
     },
     {

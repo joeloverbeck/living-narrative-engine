@@ -23,7 +23,7 @@ import turnAroundAction from '../../../../data/mods/physical-control/actions/tur
 
 // Import the mouth and movement availability conditions
 import mouthAvailableCondition from '../../../../data/mods/core/conditions/actor-mouth-available.condition.json';
-import actorCanMoveCondition from '../../../../data/mods/movement/conditions/actor-can-move.condition.json';
+import actorCanMoveCondition from '../../../../data/mods/anatomy/conditions/actor-can-move.condition.json';
 
 describe('Turn Around Action - Architectural Fix Validation', () => {
   let prereqService;
@@ -101,7 +101,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
         if (conditionId === 'core:actor-mouth-available') {
           return mouthAvailableCondition;
         }
-        if (conditionId === 'movement:actor-can-move') {
+        if (conditionId === 'anatomy:actor-can-move') {
           return actorCanMoveCondition;
         }
         return undefined;
@@ -174,7 +174,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
 
       // Find the movement prerequisite
       const movePrereq = turnAroundAction.prerequisites.find(
-        (prereq) => prereq.logic?.condition_ref === 'movement:actor-can-move'
+        (prereq) => prereq.logic?.condition_ref === 'anatomy:actor-can-move'
       );
 
       expect(movePrereq).toBeDefined();
@@ -478,10 +478,10 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(turnAroundAction).toBeDefined();
       expect(turnAroundAction.id).toBe('physical-control:turn_around');
 
-      // Prerequisites should reference only core or movement conditions (no intimacy)
+      // Prerequisites should reference only core, anatomy, or movement conditions (no intimacy)
       turnAroundAction.prerequisites.forEach((prereq) => {
         if (prereq.logic?.condition_ref) {
-          expect(prereq.logic.condition_ref).toMatch(/^(core:|movement:)/);
+          expect(prereq.logic.condition_ref).toMatch(/^(core:|anatomy:|movement:)/);
         }
       });
     });
@@ -496,7 +496,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(turnAroundAction.prerequisites).toEqual([
         {
           logic: {
-            condition_ref: 'movement:actor-can-move',
+            condition_ref: 'anatomy:actor-can-move',
           },
           failure_message: 'You cannot move right now.',
         },

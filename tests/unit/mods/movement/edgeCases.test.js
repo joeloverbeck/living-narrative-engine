@@ -72,7 +72,7 @@ describe('Movement Error Handling', () => {
     it('should handle null context in conditions', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 

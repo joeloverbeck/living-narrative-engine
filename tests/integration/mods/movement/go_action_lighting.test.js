@@ -68,9 +68,9 @@ describe('movement:go lighting prerequisite', () => {
     mockGameDataRepository.getConditionDefinition.mockImplementation(
       (conditionId) => {
         // The go action uses a condition_ref for actor-can-move
-        if (conditionId === 'movement:actor-can-move') {
+        if (conditionId === 'anatomy:actor-can-move') {
           return {
-            id: 'movement:actor-can-move',
+            id: 'anatomy:actor-can-move',
             logic: { '==': [true, true] }, // Always passes for these tests
           };
         }
@@ -142,7 +142,7 @@ describe('movement:go lighting prerequisite', () => {
       expect(goAction.prerequisites.length).toBeGreaterThanOrEqual(2);
 
       const movementPrereq = goAction.prerequisites.find(
-        (prereq) => prereq.logic?.condition_ref === 'movement:actor-can-move'
+        (prereq) => prereq.logic?.condition_ref === 'anatomy:actor-can-move'
       );
       const lightingPrereq = goAction.prerequisites.find(
         (prereq) => prereq.logic?.isActorLocationLit

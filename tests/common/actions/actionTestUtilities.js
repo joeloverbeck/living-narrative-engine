@@ -224,7 +224,7 @@ export class ActionTestUtilities {
         description: 'Move to a different location.',
         scope: 'movement:clear_directions',
         template: 'go to {target}',
-        prerequisites: ['movement:actor-can-move'],
+        prerequisites: ['anatomy:actor-can-move'],
         required_components: {
           actor: ['core:position'],
         },
@@ -235,7 +235,7 @@ export class ActionTestUtilities {
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
-        prerequisites: ['movement:actor-can-move'],
+        prerequisites: ['anatomy:actor-can-move'],
         required_components: {
           actor: [FOLLOWING_COMPONENT_ID, 'core:position'],
         },
@@ -246,7 +246,7 @@ export class ActionTestUtilities {
         description: 'Attack a target.',
         scope: 'core:nearby_actors',
         template: 'attack {target}',
-        prerequisites: ['movement:actor-can-move'],
+        prerequisites: ['anatomy:actor-can-move'],
         required_components: {
           actor: ['core:position', 'core:health'],
         },
@@ -299,7 +299,7 @@ export class ActionTestUtilities {
         description: 'Move to a different location.',
         scope: 'movement:clear_directions',
         template: 'go to {target}',
-        prerequisites: ['movement:actor-can-move'],
+        prerequisites: ['anatomy:actor-can-move'],
         required_components: {
           actor: ['core:position'],
         },
@@ -310,7 +310,7 @@ export class ActionTestUtilities {
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
-        prerequisites: ['movement:actor-can-move'],
+        prerequisites: ['anatomy:actor-can-move'],
         required_components: {
           actor: [FOLLOWING_COMPONENT_ID, 'core:position'],
         },
@@ -337,7 +337,7 @@ export class ActionTestUtilities {
   static setupTestConditions(registry, additionalConditions = []) {
     const testConditions = [
       {
-        id: 'movement:actor-can-move',
+        id: 'anatomy:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {

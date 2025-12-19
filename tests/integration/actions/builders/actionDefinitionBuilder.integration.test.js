@@ -39,7 +39,7 @@ describe('ActionDefinitionBuilder integration behavior', () => {
       },
       prerequisites: [
         {
-          logic: { condition_ref: 'movement:actor-can-move' },
+          logic: { condition_ref: 'anatomy:actor-can-move' },
           failure_message: 'You cannot move right now',
         },
         {

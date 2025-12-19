@@ -102,7 +102,7 @@ class TestScopeResolverRegistry {
   /**
    * Gets a resolver by ID.
    *
-   * @param {string} scopeId - The scope ID (e.g., "positioning:close_actors")
+   * @param {string} scopeId - The scope ID (e.g., "personal-space:close_actors")
    * @returns {object|null} The resolver or null if not found
    */
   get(scopeId) {

@@ -127,8 +127,8 @@ describe('Action Target Resolution Workflow E2E', () => {
       id: 'movement:exit-is-unblocked',
       logic: { '!': { var: 'entity.blocker' } },
     });
-    dataRegistry.store('conditions', 'movement:actor-can-move', {
-      id: 'movement:actor-can-move',
+    dataRegistry.store('conditions', 'anatomy:actor-can-move', {
+      id: 'anatomy:actor-can-move',
       logic: {
         '==': [{ var: 'actor.components.movement:movement.locked' }, false],
       },

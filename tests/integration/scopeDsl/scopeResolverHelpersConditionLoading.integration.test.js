@@ -102,7 +102,7 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
       // Register a scope that uses condition_ref
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'personal-space',
         'close_actors'
       );
 

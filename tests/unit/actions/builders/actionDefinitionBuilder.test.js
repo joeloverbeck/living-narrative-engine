@@ -812,7 +812,7 @@ describe('ActionDefinitionBuilder', () => {
       const partial = builder.toPartial();
       expect(partial.required_components.actor).toContain('core:position');
       expect(partial.prerequisites).toContainEqual({
-        logic: { condition_ref: 'movement:actor-can-move' },
+        logic: { condition_ref: 'anatomy:actor-can-move' },
         failure_message: 'You cannot move right now',
       });
     });
@@ -846,7 +846,7 @@ describe('ActionDefinitionBuilder', () => {
       expect(partial.required_components.actor).toContain('core:position');
       expect(partial.required_components.actor).toContain('core:health');
       expect(partial.prerequisites).toContainEqual({
-        logic: { condition_ref: 'movement:actor-can-move' },
+        logic: { condition_ref: 'anatomy:actor-can-move' },
         failure_message: 'You cannot move right now',
       });
       expect(partial.prerequisites).toContainEqual({

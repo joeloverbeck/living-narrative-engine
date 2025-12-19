@@ -10,14 +10,14 @@ describe('Movement Conditions', () => {
     beforeEach(() => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       const conditionContent = fs.readFileSync(conditionPath, 'utf8');
       condition = JSON.parse(conditionContent);
     });
 
     it('should have correct ID and description', () => {
-      expect(condition.id).toBe('movement:actor-can-move');
+      expect(condition.id).toBe('anatomy:actor-can-move');
       expect(condition.description).toBeDefined();
       expect(typeof condition.description).toBe('string');
     });

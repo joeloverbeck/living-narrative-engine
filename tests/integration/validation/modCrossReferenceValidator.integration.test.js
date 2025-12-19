@@ -99,7 +99,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
         required_components: {
           actor: ['personal-space-states:closeness'], // This is a REAL reference used by affection/kissing mods
         },
-        targets: 'positioning:close_actors', // This is a REAL scope from positioning mod
+        targets: 'personal-space:close_actors', // This is a REAL scope from personal-space mod
       };
 
       await fs.writeFile(
@@ -111,9 +111,9 @@ describe('ModCrossReferenceValidator - Integration', () => {
       const manifestsMap = new Map();
       manifestsMap.set('test-mod', {
         id: 'test-mod',
-        dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing positioning dependency
+        dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing personal-space dependency
       });
-      manifestsMap.set('positioning', { id: 'positioning' });
+      manifestsMap.set('personal-space', { id: 'personal-space' });
       manifestsMap.set('personal-space-states', { id: 'personal-space-states' });
       manifestsMap.set('core', { id: 'core' });
 
@@ -125,11 +125,11 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(report.hasViolations).toBe(true);
       expect(report.violations.length).toBeGreaterThan(0);
 
-      // Verify that positioning references were detected
-      const positioningViolations = report.violations.filter(
-        (v) => v.referencedMod === 'positioning'
+      // Verify that personal-space references were detected (close_actors scope)
+      const personalSpaceViolations = report.violations.filter(
+        (v) => v.referencedMod === 'personal-space'
       );
-      expect(positioningViolations.length).toBeGreaterThan(0);
+      expect(personalSpaceViolations.length).toBeGreaterThan(0);
 
       // Verify that personal-space-states references were detected
       const pssViolations = report.violations.filter(
@@ -138,10 +138,10 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(pssViolations.length).toBeGreaterThan(0);
 
       // Check specific components were found
-      const positioningComponents = positioningViolations.map(
+      const personalSpaceComponents = personalSpaceViolations.map(
         (v) => v.referencedComponent
       );
-      expect(positioningComponents).toContain('close_actors');
+      expect(personalSpaceComponents).toContain('close_actors');
 
       const pssComponents = pssViolations.map((v) => v.referencedComponent);
       expect(pssComponents).toContain('closeness');
@@ -149,17 +149,17 @@ describe('ModCrossReferenceValidator - Integration', () => {
   });
 
   describe('Real-world Scenarios', () => {
-    it('should handle real kissing mod referencing positioning components', async () => {
-      // Test the ACTUAL scenario - kissing mod DOES reference positioning components
+    it('should handle real kissing mod referencing personal-space components', async () => {
+      // Test the ACTUAL scenario - kissing mod DOES reference personal-space components
       const kissingPath = path.join(tempDir, 'kissing');
       await fs.mkdir(kissingPath, { recursive: true });
       await fs.mkdir(path.join(kissingPath, 'actions'), { recursive: true });
 
-      // Create a real kissing action that references positioning components
+      // Create a real kissing action that references personal-space components
       const kissAction = {
         id: 'kiss_cheek',
         description: 'Kiss someone on the cheek',
-        targets: 'positioning:close_actors', // Real reference from kissing mod
+        targets: 'personal-space:close_actors', // Real reference from kissing mod
         required_components: {
           actor: ['personal-space-states:closeness'], // Real reference from kissing mod
         },
@@ -177,11 +177,11 @@ describe('ModCrossReferenceValidator - Integration', () => {
         version: '1.0.0',
         dependencies: [
           { id: 'anatomy', version: '^1.0.0' },
-          // Missing positioning dependency to test violation detection
+          // Missing personal-space dependency to test violation detection
         ],
       });
-      manifestsMap.set('positioning', {
-        id: 'positioning',
+      manifestsMap.set('personal-space', {
+        id: 'personal-space',
         version: '1.0.0',
         dependencies: [{ id: 'core', version: '^1.0.0' }],
       });
@@ -201,7 +201,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
         dependencies: [],
       });
 
-      // Should detect positioning violations
+      // Should detect personal-space violations
       const report = await validator.validateModReferences(
         kissingPath,
         manifestsMap
@@ -209,14 +209,14 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       expect(report.hasViolations).toBe(true);
       expect(report.modId).toBe('kissing');
-      expect(report.missingDependencies).toContain('positioning');
+      expect(report.missingDependencies).toContain('personal-space');
       expect(report.missingDependencies).toContain('personal-space-states');
 
       // Verify specific violations
-      const positioningViolations = report.violations.filter(
-        (v) => v.referencedMod === 'positioning'
+      const personalSpaceViolations = report.violations.filter(
+        (v) => v.referencedMod === 'personal-space'
       );
-      expect(positioningViolations.length).toBeGreaterThan(0);
+      expect(personalSpaceViolations.length).toBeGreaterThan(0);
 
       const pssViolations = report.violations.filter(
         (v) => v.referencedMod === 'personal-space-states'
@@ -224,20 +224,20 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(pssViolations.length).toBeGreaterThan(0);
 
       // Should find the actual referenced components
-      const posComponents = positioningViolations.map(
+      const psComponents = personalSpaceViolations.map(
         (v) => v.referencedComponent
       );
-      expect(posComponents).toContain('close_actors');
+      expect(psComponents).toContain('close_actors');
 
       const pssComponents = pssViolations.map((v) => v.referencedComponent);
       expect(pssComponents).toContain('closeness');
 
       // Verify violation messages are helpful
-      positioningViolations.forEach((violation) => {
+      personalSpaceViolations.forEach((violation) => {
         expect(violation.message).toContain('kissing');
-        expect(violation.message).toContain('positioning');
+        expect(violation.message).toContain('personal-space');
         expect(violation.suggestedFix).toContain(
-          'Add "positioning" to dependencies'
+          'Add "personal-space" to dependencies'
         );
       });
     });
@@ -250,27 +250,27 @@ describe('ModCrossReferenceValidator - Integration', () => {
           files: [],
           dependencies: [{ id: 'core', version: '^1.0.0' }],
         },
-        positioning: {
+        'personal-space': {
           files: [],
           dependencies: [{ id: 'core', version: '^1.0.0' }],
         },
         affection: {
           files: [
-            // Affection ACTUALLY references positioning components
+            // Affection ACTUALLY references personal-space components
             {
               name: 'kiss.action.json',
               content: {
                 id: 'kiss',
                 required_components: { actor: ['personal-space-states:closeness'] },
-                targets: 'positioning:close_actors',
+                targets: 'personal-space:close_actors',
               },
             },
           ],
-          dependencies: [{ id: 'anatomy', version: '^1.0.0' }], // Missing positioning dependency
+          dependencies: [{ id: 'anatomy', version: '^1.0.0' }], // Missing personal-space dependency
         },
         violence: {
           files: [],
-          dependencies: [{ id: 'positioning', version: '^1.0.0' }],
+          dependencies: [{ id: 'personal-space', version: '^1.0.0' }],
         },
       };
 
@@ -303,20 +303,20 @@ describe('ModCrossReferenceValidator - Integration', () => {
       // Core should have no violations (no files)
       expect(results.get('core').hasViolations).toBe(false);
 
-      // Affection should have violations (missing positioning dependency)
+      // Affection should have violations (missing personal-space dependency)
       expect(results.get('affection').hasViolations).toBe(true);
       expect(results.get('affection').missingDependencies).toContain(
-        'positioning'
+        'personal-space'
       );
 
       // Other mods should be clean (no cross-references)
       expect(results.get('anatomy').hasViolations).toBe(false);
-      expect(results.get('positioning').hasViolations).toBe(false);
+      expect(results.get('personal-space').hasViolations).toBe(false);
 
-      // Violence has unused dependency (declares positioning but no files use it)
+      // Violence has unused dependency (declares personal-space but no files use it)
       // This is correct behavior - unused dependencies are flagged as violations
       expect(results.get('violence').hasViolations).toBe(true);
-      expect(results.get('violence').unusedDependencies).toContain('positioning');
+      expect(results.get('violence').unusedDependencies).toContain('personal-space');
     });
 
     it('should detect nested target scopes in action files (BUG FIX)', async () => {
@@ -414,9 +414,8 @@ describe('ModCrossReferenceValidator - Integration', () => {
       const manifestsMap = new Map();
       manifestsMap.set('test-mod', {
         id: 'test-mod',
-        dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing positioning dependency
+        dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing personal-space-states dependency
       });
-      manifestsMap.set('positioning', { id: 'positioning' });
       manifestsMap.set('personal-space-states', { id: 'personal-space-states' });
       manifestsMap.set('core', { id: 'core' });
 
@@ -587,7 +586,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
         path.join(modPath, 'action.action.json'),
         JSON.stringify({
           id: 'test',
-          targets: 'positioning:close_actors',
+          targets: 'personal-space:close_actors',
           required_components: { actor: ['personal-space-states:closeness'] },
         })
       );
@@ -596,13 +595,13 @@ describe('ModCrossReferenceValidator - Integration', () => {
         path.join(modPath, 'rule.rule.json'),
         JSON.stringify({
           id: 'test',
-          condition: { condition_ref: 'positioning:actor-is-in-closeness' },
+          condition: { condition_ref: 'personal-space:actor-is-in-closeness' },
         })
       );
 
       await fs.writeFile(
         path.join(modPath, 'test.scope'),
-        'close_to_target := positioning:close_actors'
+        'close_to_target := personal-space:close_actors'
       );
 
       await fs.writeFile(
@@ -620,7 +619,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       const manifestsMap = new Map();
       manifestsMap.set('mixed-mod', { id: 'mixed-mod', dependencies: [] });
-      manifestsMap.set('positioning', { id: 'positioning' });
+      manifestsMap.set('personal-space', { id: 'personal-space' });
       manifestsMap.set('kissing', { id: 'kissing' });
       manifestsMap.set('personal-space-states', { id: 'personal-space-states' });
 
@@ -631,13 +630,13 @@ describe('ModCrossReferenceValidator - Integration', () => {
 
       expect(report.hasViolations).toBe(true);
       expect(report.referencedMods).toEqual(
-        expect.arrayContaining(['positioning', 'kissing'])
+        expect.arrayContaining(['personal-space', 'kissing'])
       );
       expect(report.violations.length).toBeGreaterThan(0);
 
       // Should find references from different file types
       const referencedMods = report.violations.map((v) => v.referencedMod);
-      expect(referencedMods).toContain('positioning');
+      expect(referencedMods).toContain('personal-space');
       expect(referencedMods).toContain('kissing');
       expect(referencedMods).toContain('personal-space-states');
     });

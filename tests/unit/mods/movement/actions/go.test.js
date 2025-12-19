@@ -42,11 +42,11 @@ describe('Movement Go Action', () => {
     expect(action.prerequisites).toHaveLength(2);
   });
 
-  it('should reference movement:actor-can-move condition in prerequisites', () => {
+  it('should reference anatomy:actor-can-move condition in prerequisites', () => {
     expect(action.prerequisites[0]).toBeDefined();
     expect(action.prerequisites[0].logic).toBeDefined();
     expect(action.prerequisites[0].logic.condition_ref).toBe(
-      'movement:actor-can-move'
+      'anatomy:actor-can-move'
     );
     expect(action.prerequisites[0].failure_message).toBe(
       'You cannot move without functioning legs.'

@@ -70,7 +70,7 @@ describe('Turn Around Action Discovery', () => {
     // Load the scope file
     const scopePath = path.join(
       process.cwd(),
-      'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope'
+      'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope'
     );
     const scopeContent = fs.readFileSync(scopePath, 'utf-8');
     const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);

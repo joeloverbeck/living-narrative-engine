@@ -26,7 +26,7 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "positioning:actor-can-move"
+        "condition_ref": "anatomy:actor-can-move"
       },
       "failure_message": "You cannot move without functioning legs."
     },

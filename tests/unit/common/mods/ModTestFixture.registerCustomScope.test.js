@@ -92,18 +92,18 @@ describe('ModTestFixture - registerCustomScope', () => {
     it('should successfully register valid custom scope', async () => {
       // Use real scope from positioning mod
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors')
+        testFixture.registerCustomScope('personal-space', 'close_actors')
       ).resolves.not.toThrow();
 
       // Verify scope is registered
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       expect(testFixture.testEnv._registeredResolvers.has(scopeId)).toBe(true);
     });
 
     it('should create working resolver function', async () => {
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       const resolver = testFixture.testEnv._registeredResolvers.get(scopeId);
 
       expect(typeof resolver).toBe('function');
@@ -111,17 +111,17 @@ describe('ModTestFixture - registerCustomScope', () => {
 
     it('should handle scope with underscores in name', async () => {
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors')
+        testFixture.registerCustomScope('personal-space', 'close_actors')
       ).resolves.not.toThrow();
     });
 
     it('should allow re-registration of same scope', async () => {
       // First registration
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       // Second registration should not throw
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors')
+        testFixture.registerCustomScope('personal-space', 'close_actors')
       ).resolves.not.toThrow();
     });
   });
@@ -131,7 +131,7 @@ describe('ModTestFixture - registerCustomScope', () => {
       // This test verifies that the option is handled, but full behavior
       // is tested in integration tests
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors', {
+        testFixture.registerCustomScope('personal-space', 'close_actors', {
           loadConditions: false,
         })
       ).resolves.not.toThrow();
@@ -139,14 +139,14 @@ describe('ModTestFixture - registerCustomScope', () => {
 
     it('should handle empty options object', async () => {
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors', {})
+        testFixture.registerCustomScope('personal-space', 'close_actors', {})
       ).resolves.not.toThrow();
     });
 
     it('should handle undefined options', async () => {
       await expect(
         testFixture.registerCustomScope(
-          'positioning',
+          'personal-space',
           'close_actors',
           undefined
         )
@@ -155,7 +155,7 @@ describe('ModTestFixture - registerCustomScope', () => {
 
     it('should respect maxDepth option', async () => {
       await expect(
-        testFixture.registerCustomScope('positioning', 'close_actors', {
+        testFixture.registerCustomScope('personal-space', 'close_actors', {
           maxDepth: 10,
         })
       ).resolves.not.toThrow();
@@ -177,9 +177,9 @@ describe('ModTestFixture - registerCustomScope', () => {
 
   describe('Resolver Functionality', () => {
     it('should create resolver that returns success/failure object', async () => {
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       const resolver = testFixture.testEnv._registeredResolvers.get(scopeId);
 
       const result = resolver({ actor: { id: 'test-actor' } });
@@ -189,11 +189,11 @@ describe('ModTestFixture - registerCustomScope', () => {
     });
 
     it('should register scope with full namespaced name', async () => {
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       // Should be registered with mod:scope format
       expect(
-        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+        testFixture.testEnv._registeredResolvers.has('personal-space:close_actors')
       ).toBe(true);
 
       // Should NOT be registered with just the scope name
@@ -205,14 +205,14 @@ describe('ModTestFixture - registerCustomScope', () => {
 
   describe('Multiple Scope Registration', () => {
     it('should allow registering multiple different scopes', async () => {
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       await testFixture.registerCustomScope(
         'sitting',
         'actors_sitting_close'
       );
 
       expect(
-        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+        testFixture.testEnv._registeredResolvers.has('personal-space:close_actors')
       ).toBe(true);
       expect(
         testFixture.testEnv._registeredResolvers.has(
@@ -222,7 +222,7 @@ describe('ModTestFixture - registerCustomScope', () => {
     });
 
     it('should allow registering scopes from different mods', async () => {
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       // Register another scope from a different mod (sitting mod)
       await testFixture.registerCustomScope(
@@ -297,24 +297,24 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
       await expect(
         ScopeResolverHelpers.registerCustomScope(
           testEnv,
-          'positioning',
+          'personal-space',
           'close_actors'
         )
       ).resolves.not.toThrow();
 
       // Verify scope is registered
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       expect(testEnv._registeredResolvers.has(scopeId)).toBe(true);
     });
 
     it('should create working resolver function', async () => {
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'personal-space',
         'close_actors'
       );
 
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       const resolver = testEnv._registeredResolvers.get(scopeId);
 
       expect(typeof resolver).toBe('function');
@@ -323,11 +323,11 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
     it('should register scope with full namespaced name', async () => {
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'personal-space',
         'close_actors'
       );
 
-      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(
+      expect(testEnv._registeredResolvers.has('personal-space:close_actors')).toBe(
         true
       );
       expect(testEnv._registeredResolvers.has('close_actors')).toBe(false);
@@ -338,11 +338,11 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
     it('should create resolver that returns success/failure object', async () => {
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'personal-space',
         'close_actors'
       );
 
-      const scopeId = 'positioning:close_actors';
+      const scopeId = 'personal-space:close_actors';
       const resolver = testEnv._registeredResolvers.get(scopeId);
 
       const result = resolver({ actor: { id: 'test-actor' } });
@@ -356,7 +356,7 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
     it('should allow registering multiple different scopes', async () => {
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'personal-space',
         'close_actors'
       );
       await ScopeResolverHelpers.registerCustomScope(
@@ -365,7 +365,7 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
         'actors_sitting_close'
       );
 
-      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(
+      expect(testEnv._registeredResolvers.has('personal-space:close_actors')).toBe(
         true
       );
       expect(

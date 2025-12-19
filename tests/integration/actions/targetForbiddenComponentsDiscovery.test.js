@@ -14,7 +14,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
     it('should filter out kneel_before when target is kneeling', () => {
       // EXPECTED BEHAVIOR:
       // When action discovery runs for deference:kneel_before:
-      // 1. Primary target scope 'positioning:close_actors' returns nearby actors
+      // 1. Primary target scope 'personal-space:close_actors' returns nearby actors
       // 2. Target validation checks each potential target for forbidden components
       // 3. Actors with 'positioning:kneeling_before' component are filtered out
       // 4. Only valid targets (standing actors) appear in available actions
@@ -163,7 +163,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       //   "id": "deference:kneel_before",
       //   "targets": {
       //     "primary": {
-      //       "scope": "positioning:close_actors",
+      //       "scope": "personal-space:close_actors",
       //       "forbidden_components": [
       //         "positioning:kneeling_before",
       //         "positioning:lying_down",

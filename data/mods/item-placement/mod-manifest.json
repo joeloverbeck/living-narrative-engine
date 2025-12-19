@@ -10,7 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "core",
+      "id": "anatomy",
       "version": "1.0.0"
     },
     {

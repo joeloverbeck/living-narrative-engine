@@ -83,14 +83,11 @@ describe('Locations Mod Manifest Validation', () => {
   });
 
   describe('Dependencies', () => {
-    it('should include "core" as a dependency', () => {
+    it('should have valid dependencies structure', () => {
       expect(manifest.dependencies).toBeDefined();
       expect(Array.isArray(manifest.dependencies)).toBe(true);
-
-      const coreDep = manifest.dependencies.find((dep) => dep.id === 'core');
-      expect(coreDep).toBeDefined();
-      expect(coreDep.id).toBe('core');
-      expect(coreDep.version).toBeDefined();
+      // Locations mod currently has no dependencies
+      expect(manifest.dependencies).toHaveLength(0);
     });
 
     it('should have dependencies in correct object format', () => {
@@ -143,7 +140,7 @@ describe('Locations Mod Manifest Validation', () => {
     });
 
     it('should have descriptive name and description', () => {
-      expect(manifest.name).toBe('Locations');
+      expect(manifest.name).toBe('Locations System');
       expect(manifest.description).toContain('lighting');
     });
   });

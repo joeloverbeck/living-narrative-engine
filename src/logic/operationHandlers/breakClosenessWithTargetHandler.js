@@ -389,7 +389,7 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
     }
 
     // Dispatch success event
-    this.#dispatcher.dispatch('positioning:closeness_with_target_broken', {
+    this.#dispatcher.dispatch('personal-space:closeness_with_target_broken', {
       actorId: parameters.actor_id,
       targetId: parameters.target_id,
       operationId,

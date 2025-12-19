@@ -3,7 +3,7 @@
   "id": "affection:massage_shoulders",
   "name": "Massage Shoulders",
   "description": "Gently massage the target's shoulders.",
-  "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
+  "targets": "personal-space:close_actors_or_entity_kneeling_before_actor",
   "required_components": {
     "actor": ["personal-space-states:closeness"]
   },

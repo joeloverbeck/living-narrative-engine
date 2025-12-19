@@ -53,8 +53,8 @@ describe('Items - Inventory Scopes Integration', () => {
 
     const scopeDefinitions = {
       'items:actor_inventory_items': actorInventoryScope,
-      'positioning:close_actors':
-        'positioning:close_actors := actor.components.personal-space-states:closeness.partners[]',
+      'personal-space:close_actors':
+        'personal-space:close_actors := actor.components.personal-space-states:closeness.partners[]',
       'items:close_actors_with_inventory': closeActorsWithInventoryScope,
     };
 

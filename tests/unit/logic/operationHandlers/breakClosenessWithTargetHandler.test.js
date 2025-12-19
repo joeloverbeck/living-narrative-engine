@@ -216,7 +216,7 @@ describe('BreakClosenessWithTargetHandler', () => {
 
       expect(result.success).toBe(true);
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'positioning:closeness_with_target_broken',
+        'personal-space:closeness_with_target_broken',
         expect.objectContaining({
           actorId: 'actor1',
           targetId: 'target1',

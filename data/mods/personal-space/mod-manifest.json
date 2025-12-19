@@ -10,7 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "core",
+      "id": "anatomy",
       "version": "^1.0.0"
     },
     {
@@ -43,11 +43,15 @@
       "step_back.action.json"
     ],
     "conditions": [
+      "actor-is-in-closeness.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-scoot-closer-right.condition.json",
       "event-is-action-scoot-closer.condition.json",
       "event-is-action-sit-down-at-distance.condition.json",
       "event-is-action-step-back.condition.json"
+    ],
+    "events": [
+      "closeness_with_target_broken.event.json"
     ],
     "rules": [
       "closeness_auto_move.rule.json",
@@ -60,6 +64,11 @@
     "scopes": [
       "actors_in_location_not_wielding.scope",
       "actors_sitting_with_space_to_right.scope",
+      "close_actors.scope",
+      "close_actors_facing_each_other.scope",
+      "close_actors_facing_each_other_or_behind_target.scope",
+      "close_actors_facing_each_other_or_behind_target_with_hands.scope",
+      "close_actors_or_entity_kneeling_before_actor.scope",
       "closest_leftmost_occupant.scope",
       "closest_rightmost_occupant.scope",
       "furniture_actor_sitting_on.scope"

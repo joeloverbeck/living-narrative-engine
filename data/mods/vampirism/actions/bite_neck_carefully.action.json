@@ -3,7 +3,7 @@
   "id": "vampirism:bite_neck_carefully",
   "name": "Bite Neck Carefully",
   "description": "Carefully sink your fangs into the target's neck to feed",
-  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["personal-space-states:closeness", "vampirism:is_vampire"]
   },

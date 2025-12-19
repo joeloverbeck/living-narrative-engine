@@ -69,10 +69,10 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
     // Set up condition definitions for any condition_ref lookups
     mockGameDataRepository.getConditionDefinition.mockImplementation(
       (conditionId) => {
-        // The action uses movement:actor-can-move condition_ref
-        if (conditionId === 'movement:actor-can-move') {
+        // The action uses anatomy:actor-can-move condition_ref
+        if (conditionId === 'anatomy:actor-can-move') {
           return {
-            id: 'movement:actor-can-move',
+            id: 'anatomy:actor-can-move',
             logic: { '==': [true, true] }, // Always passes for these tests
           };
         }
@@ -166,7 +166,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
 
     it('should require actor can move', () => {
       const movePrereq = feelYourWayAction.prerequisites.find(
-        (p) => p.logic.condition_ref === 'movement:actor-can-move'
+        (p) => p.logic.condition_ref === 'anatomy:actor-can-move'
       );
       expect(movePrereq).toBeDefined();
       expect(movePrereq.failure_message).toContain('cannot move');

@@ -768,10 +768,10 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(itemIds) };
         }
 
-        // Handle the core:actors_in_location scope (same as positioning:close_actors)
+        // Handle the core:actors_in_location scope (same as personal-space:close_actors)
         if (
           scopeName === 'core:actors_in_location' ||
-          scopeName === 'positioning:close_actors'
+          scopeName === 'personal-space:close_actors'
         ) {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;

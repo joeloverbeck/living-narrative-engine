@@ -107,7 +107,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
         'pat {target} on the head'
       );
       expect(patHeadAffectionatelyAction.targets).toBe(
-        'positioning:close_actors_or_entity_kneeling_before_actor'
+        'personal-space:close_actors_or_entity_kneeling_before_actor'
       );
     });
 

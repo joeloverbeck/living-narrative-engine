@@ -200,7 +200,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const testPath = '/test/mod/path';
       const scopeContent = `
         // Comment should be ignored
-        positioning:close_actors := actor.components.personal-space-states:closeness.partners
+        personal-space:close_actors := actor.components.personal-space-states:closeness.partners
         affection:attracted_actors := actor.components.affection:attraction.targets
       `;
 
@@ -212,7 +212,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       const result = await extractor.extractReferences(testPath);
 
       expect(result).toBeInstanceOf(Map);
-      expect(result.has('positioning')).toBe(true);
+      expect(result.has('personal-space')).toBe(true);
       expect(result.has('affection')).toBe(true);
       expect(result.get('personal-space-states')).toContain('closeness');
       expect(result.get('affection')).toContain('attraction');
@@ -445,7 +445,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         targets: {
           primary: {
             scope:
-              'positioning:close_actors_facing_each_other_or_behind_target',
+              'personal-space:close_actors_facing_each_other_or_behind_target',
           },
         },
         required_components: {
@@ -575,7 +575,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           targets: {
-            scope: 'positioning:close_actors_facing_each_other',
+            scope: 'personal-space:close_actors_facing_each_other',
           },
         };
 
@@ -590,7 +590,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('positioning')).toContain(
+        expect(result.get('personal-space')).toContain(
           'close_actors_facing_each_other'
         );
       });
@@ -667,7 +667,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should extract targets as string', async () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
-          targets: 'positioning:close_actors_facing_each_other',
+          targets: 'personal-space:close_actors_facing_each_other',
         };
 
         fs.readdir.mockResolvedValue([
@@ -681,7 +681,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.get('positioning')).toContain(
+        expect(result.get('personal-space')).toContain(
           'close_actors_facing_each_other'
         );
       });
@@ -1141,7 +1141,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         targets: {
           primary: {
             scope:
-              'positioning:close_actors_facing_each_other_or_behind_target',
+              'personal-space:close_actors_facing_each_other_or_behind_target',
           },
         },
         required_components: {
@@ -1229,7 +1229,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should extract references from simple scope assignments', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          positioning:close_actors := actor.components.personal-space-states:closeness.partners
+          personal-space:close_actors := actor.components.personal-space-states:closeness.partners
           affection:attracted_actors := actor.components.affection:attraction.targets
         `;
 
@@ -1240,7 +1240,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
         const result = await extractor.extractReferences(testPath);
 
-        expect(result.has('positioning')).toBe(true);
+        expect(result.has('personal-space')).toBe(true);
         expect(result.has('affection')).toBe(true);
         expect(result.get('personal-space-states')).toContain('closeness');
         expect(result.get('affection')).toContain('attraction');
@@ -1339,7 +1339,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       it('should handle condition_ref in filters', async () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
-          positioning:close_actors_facing := actor.components.personal-space-states:closeness.partners[][{
+          personal-space:close_actors_facing := actor.components.personal-space-states:closeness.partners[][{
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;
@@ -1408,7 +1408,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const realWorldContent = `
           // Scope for actors in closeness who are facing each other
           // Used by actions that require face-to-face interaction
-          positioning:close_actors_facing_each_other := actor.components.personal-space-states:closeness.partners[][{
+          personal-space:close_actors_facing_each_other := actor.components.personal-space-states:closeness.partners[][{
             "condition_ref": "positioning:both-actors-facing-each-other"
           }]
         `;

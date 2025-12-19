@@ -41,7 +41,7 @@ describe('clothing:remove_others_clothing action discovery', () => {
     expect(removeOthersClothingAction.targets).toBeDefined();
     expect(removeOthersClothingAction.targets.primary).toBeDefined();
     expect(removeOthersClothingAction.targets.primary.scope).toBe(
-      'positioning:close_actors'
+      'personal-space:close_actors'
     );
     expect(removeOthersClothingAction.targets.secondary).toBeDefined();
     // IMPORTANT: Should use target_topmost_clothing (not topmost_clothing)
@@ -110,7 +110,7 @@ describe('clothing:remove_others_clothing action discovery', () => {
 
     it('should NOT appear when actors are not close', () => {
       // EXPECTED BEHAVIOR:
-      // The action primary target uses 'positioning:close_actors' scope
+      // The action primary target uses 'personal-space:close_actors' scope
       // If actors are not close, the scope returns empty set
       // Therefore, no actions should be available
       //
@@ -134,7 +134,7 @@ describe('clothing:remove_others_clothing action discovery', () => {
     it('should support multiple close actors as primary targets', () => {
       // EXPECTED BEHAVIOR:
       // If Alice is close to both Bob and Carol (separate closeness components):
-      // - positioning:close_actors scope returns [Bob, Carol]
+      // - personal-space:close_actors scope returns [Bob, Carol]
       // - MultiTargetResolutionStage loops over each primary target
       // - For Bob: resolves clothing:topmost_clothing in Bob's context
       // - For Carol: resolves clothing:topmost_clothing in Carol's context

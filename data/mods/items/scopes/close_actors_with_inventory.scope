@@ -1,1 +1,1 @@
-items:close_actors_with_inventory := positioning:close_actors[{"!!": {"var": "entity.components.items:inventory"}}]
+items:close_actors_with_inventory := personal-space:close_actors[{"!!": {"var": "entity.components.items:inventory"}}]

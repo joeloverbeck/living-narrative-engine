@@ -126,7 +126,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'push {primary} down onto {secondary}'
       );
       expect(pushOntoFurnitureAction.targets.primary.scope).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'personal-space:close_actors_facing_each_other_or_behind_target'
       );
       expect(pushOntoFurnitureAction.targets.secondary.scope).toBe(
         'lying:available_lying_furniture'

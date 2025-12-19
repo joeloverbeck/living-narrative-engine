@@ -117,7 +117,7 @@ expect(ids).not.toContain(ACTION_ID);
 
 ### Bite Actions
 
-- **`bite_neck_carefully`**: Uses `positioning:close_actors_facing_each_other_or_behind_target`
+- **`bite_neck_carefully`**: Uses `personal-space:close_actors_facing_each_other_or_behind_target`
   - Requires closeness and proper facing/positioning
   - Requires `vampirism:is_vampire` marker
 

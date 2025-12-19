@@ -358,7 +358,7 @@ describe('ActionDefinitionValidator', () => {
   describe('prerequisite validation', () => {
     it('should accept valid string prerequisites', () => {
       const definition = createValidDefinition();
-      definition.prerequisites = ['movement:actor-can-move', 'test:condition'];
+      definition.prerequisites = ['anatomy:actor-can-move', 'test:condition'];
 
       const result = validator.validate(definition);
       const prereqErrors = result.errors.filter((error) =>
@@ -371,7 +371,7 @@ describe('ActionDefinitionValidator', () => {
       const definition = createValidDefinition();
       definition.prerequisites = [
         {
-          logic: { condition_ref: 'movement:actor-can-move' },
+          logic: { condition_ref: 'anatomy:actor-can-move' },
           failure_message: 'Cannot move',
         },
       ];
@@ -386,7 +386,7 @@ describe('ActionDefinitionValidator', () => {
     it('should accept object prerequisites without failure_message', () => {
       const definition = createValidDefinition();
       definition.prerequisites = [
-        { logic: { condition_ref: 'movement:actor-can-move' } },
+        { logic: { condition_ref: 'anatomy:actor-can-move' } },
       ];
 
       const result = validator.validate(definition);
@@ -399,7 +399,7 @@ describe('ActionDefinitionValidator', () => {
     it('should accept mixed string and object prerequisites', () => {
       const definition = createValidDefinition();
       definition.prerequisites = [
-        'movement:actor-can-move',
+        'anatomy:actor-can-move',
         {
           logic: { condition_ref: 'test:condition' },
           failure_message: 'Test failed',

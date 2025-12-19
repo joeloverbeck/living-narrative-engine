@@ -53,7 +53,7 @@ const vaginaCoveredScopeContent = fs.readFileSync(
 const closeActorsFacingScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/positioning/scopes/close_actors_facing_each_other.scope'
+    '../../../data/mods/personal-space/scopes/close_actors_facing_each_other.scope'
   ),
   'utf8'
 );
@@ -293,7 +293,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered'
     );
     const positioningScopeDef = positioningScopeDefinitions.get(
-      'positioning:close_actors_facing_each_other'
+      'personal-space:close_actors_facing_each_other'
     );
 
     if (!scopeDef || !positioningScopeDef) {
@@ -301,7 +301,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     }
 
     scopeRegistry.initialize({
-      'positioning:close_actors_facing_each_other': positioningScopeDef,
+      'personal-space:close_actors_facing_each_other': positioningScopeDef,
       'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered': scopeDef,
     });
 
@@ -567,7 +567,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         'sex-dry-intimacy:actors_with_vagina_facing_each_other_covered'
       );
       const baseScopeDefinition = scopeRegistry.getScope(
-        'positioning:close_actors_facing_each_other'
+        'personal-space:close_actors_facing_each_other'
       );
       const actorInstance = entityManager.getEntityInstance('actor1');
       const actorWithComponents = {

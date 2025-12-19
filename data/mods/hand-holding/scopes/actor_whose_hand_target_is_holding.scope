@@ -1,5 +1,5 @@
 // Scope restricting potential targets to the actor's current hand-holding partner
-hand-holding:actor_whose_hand_target_is_holding := positioning:close_actors_facing_each_other_or_behind_target[{
+hand-holding:actor_whose_hand_target_is_holding := personal-space:close_actors_facing_each_other_or_behind_target[{
   "and": [
     {"!!": {"var": "actor.components.hand-holding:hand_held"}},
     {"!!": {"var": "entity.components.hand-holding:holding_hand"}},

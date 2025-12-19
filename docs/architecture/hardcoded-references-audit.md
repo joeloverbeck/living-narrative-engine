@@ -112,7 +112,7 @@
 | 265  | `await this.#entityManager.addComponent(actorId, 'positioning:closeness', {` | Critical | Registry             |
 | 321  | `'positioning:closeness'`                                                    | Critical | Registry             |
 | 332  | `'positioning:closeness',`                                                   | Critical | Registry             |
-| 374  | `this.#dispatcher.dispatch('positioning:closeness_with_target_broken', {`    | Critical | Registry             |
+| 374  | `this.#dispatcher.dispatch('personal-space:closeness_with_target_broken', {`    | Critical | Registry             |
 
 ### src/logic/operationHandlers/establishLyingClosenessHandler.js
 

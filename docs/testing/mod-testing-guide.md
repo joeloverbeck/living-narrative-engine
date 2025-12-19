@@ -430,7 +430,7 @@ ParameterValidationError: Expected actorEntity (object with .id), got object
 
 ```javascript
 ScopeResolutionError: Invalid parameter passed to scope resolver
-  Scope: positioning:close_actors
+  Scope: personal-space:close_actors
   Phase: parameter extraction
   Parameters:
     contextType: object
@@ -673,7 +673,7 @@ Mix matcher usage with targeted entity inspections; for example, call `fixture.e
 
 ### Testing Actions with Custom Scopes
 
-Actions that use scopes from dependency mods (e.g., `positioning:close_actors`, `positioning:furniture_actor_sitting_on`) require scope registration in tests. While the production engine auto-loads scope definitions from `.scope` files, **ModTestFixture does not automatically load scopes from dependency mods**.
+Actions that use scopes from dependency mods (e.g., `personal-space:close_actors`, `positioning:furniture_actor_sitting_on`) require scope registration in tests. While the production engine auto-loads scope definitions from `.scope` files, **ModTestFixture does not automatically load scopes from dependency mods**.
 
 > **✨ NEW: Unified Scope Registration System (2025-11-08)**
 >
@@ -704,7 +704,7 @@ Actions that use scopes from dependency mods (e.g., `positioning:close_actors`, 
 
 #### Why Scope Registration is Required
 
-The test environment is isolated and doesn't load all mod dependencies by default. When your action uses a scope like `positioning:close_actors`, you must register the scope resolver in your test setup.
+The test environment is isolated and doesn't load all mod dependencies by default. When your action uses a scope like `personal-space:close_actors`, you must register the scope resolver in your test setup.
 
 #### Using ScopeResolverHelpers (Recommended)
 
@@ -738,12 +738,12 @@ beforeEach(async () => {
 
 **High Priority - Closeness & Facing (6 scopes)**:
 
-- `positioning:close_actors` - Close actors excluding kneeling relationships
-- `positioning:close_actors_facing_each_other` - Close actors facing each other (no kneeling)
+- `personal-space:close_actors` - Close actors excluding kneeling relationships
+- `personal-space:close_actors_facing_each_other` - Close actors facing each other (no kneeling)
 - `positioning:actors_both_sitting_close` - Close actors both sitting
 - `positioning:actor_biting_my_neck` - Entity biting actor's neck (reciprocal validation)
 - `positioning:actors_sitting_close` - Close actors where actor is sitting
-- `positioning:close_actors_or_entity_kneeling_before_actor` - Close actors plus those kneeling before actor
+- `personal-space:close_actors_or_entity_kneeling_before_actor` - Close actors plus those kneeling before actor
 
 **Medium Priority - Straddling & Seating (3 scopes)**:
 
@@ -772,7 +772,7 @@ beforeEach(async () => {
 - `positioning:kneeling_actors` - All kneeling actors
 - `positioning:furniture_actor_behind` - Furniture actor is standing behind
 - `positioning:actor_being_bitten_by_me` - Entity actor is biting (reciprocal)
-- `positioning:close_actors_facing_each_other_or_behind_target` - Complex facing/behind logic
+- `personal-space:close_actors_facing_each_other_or_behind_target` - Complex facing/behind logic
 
 </details>
 
@@ -1211,7 +1211,7 @@ When implementing this pattern, document the dependencies your action uses:
 /**
  * This action uses custom scopes that reference:
  * - positioning:actor-in-entity-facing-away (condition) - must be loaded manually
- * - positioning:close_actors (scope) - auto-registered with autoRegisterScopes
+ * - personal-space:close_actors (scope) - auto-registered with autoRegisterScopes
  *
  * Manual scope setup required for mod-specific scope:
  * - sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind
@@ -1586,7 +1586,7 @@ ModTestFixture provides automatic hints when action discovery fails due to missi
 const availableActions = await testFixture.discoverActions(scenario.actor.id);
 // ⚠️ Console Warning:
 //    Action discovery found 0 actions
-//    The action uses scope 'positioning:close_actors' which is not registered
+//    The action uses scope 'personal-space:close_actors' which is not registered
 //    Solution: Enable auto-registration or call registerPositioningScopes()
 ```
 

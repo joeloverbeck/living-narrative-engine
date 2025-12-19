@@ -3,7 +3,7 @@
 // - Actor is NOT kneeling before entity (can't reach up from kneeling)
 // - Entity CAN be kneeling before actor (head/shoulders are reachable)
 // Used by actions targeting head/shoulders that work when target kneels before actor
-positioning:close_actors_or_entity_kneeling_before_actor := actor.components.personal-space-states:closeness.partners[][{
+personal-space:close_actors_or_entity_kneeling_before_actor := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {
       "or": [

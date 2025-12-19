@@ -4,12 +4,7 @@
   "version": "1.0.0",
   "name": "Skills System",
   "description": "Character skills for non-deterministic action resolution.",
-  "dependencies": [
-    {
-      "id": "core",
-      "version": ">=1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "awareness_skill.component.json",

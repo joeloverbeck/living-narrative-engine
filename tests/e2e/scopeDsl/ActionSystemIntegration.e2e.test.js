@@ -190,7 +190,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
     // Set up minimal test conditions
     ScopeTestUtilities.setupScopeTestConditions(registry, [
       {
-        id: 'movement:actor-can-move',
+        id: 'anatomy:actor-can-move',
         description: 'Checks if the actor can move',
         logic: { '==': [{ var: 'actor.core:movement.locked' }, false] },
       },

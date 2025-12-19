@@ -444,7 +444,7 @@ scenario.target.components['positioning:being_bitten_in_neck'] = {
 
 ---
 
-### `positioning:close_actors_facing_each_other_or_behind_target`
+### `personal-space:close_actors_facing_each_other_or_behind_target`
 
 **Description**: Close actors either facing each other or with actor positioned behind target.
 
@@ -462,7 +462,7 @@ scenario.target.components['positioning:being_bitten_in_neck'] = {
 ```javascript
 {
   "id": "violence:grab_neck",
-  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
   // ...
 }
 ```
@@ -493,7 +493,7 @@ scenario.target.components['positioning:facing_away'] = {
 
 ---
 
-### `positioning:close_actors`
+### `personal-space:close_actors`
 
 **Description**: Base closeness partners excluding kneeling-before relationships.
 
@@ -511,7 +511,7 @@ scenario.target.components['positioning:facing_away'] = {
 ```javascript
 {
   "id": "affection:hug",
-  "targets": "positioning:close_actors",
+  "targets": "personal-space:close_actors",
   // ...
 }
 ```
@@ -531,7 +531,7 @@ scenario.actor.components['positioning:closeness'] = {
 
 ---
 
-### `positioning:close_actors_facing_each_other`
+### `personal-space:close_actors_facing_each_other`
 
 **Description**: Close actors mutually facing each other (not facing away from each other).
 
@@ -549,7 +549,7 @@ scenario.actor.components['positioning:closeness'] = {
 ```javascript
 {
   "id": "kissing:kiss_lips",
-  "targets": "positioning:close_actors_facing_each_other",
+  "targets": "personal-space:close_actors_facing_each_other",
   // ...
 }
 ```
@@ -699,7 +699,7 @@ scenario.target.components['positioning:sitting_on'] = {
 
 ---
 
-### `positioning:close_actors_or_entity_kneeling_before_actor`
+### `personal-space:close_actors_or_entity_kneeling_before_actor`
 
 **Description**: Complex scope combining closeness partners (facing/behind) with exclusion for actor kneeling before partner.
 
@@ -718,7 +718,7 @@ scenario.target.components['positioning:sitting_on'] = {
 ```javascript
 {
   "id": "affection:embrace",
-  "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
+  "targets": "personal-space:close_actors_or_entity_kneeling_before_actor",
   // ...
 }
 ```
@@ -1480,7 +1480,7 @@ ScopeResolverHelpers.createArrayFilterResolver(scopeName, config);
 
 ```javascript
 const facingResolver = ScopeResolverHelpers.createArrayFilterResolver(
-  'positioning:close_actors_facing_each_other',
+  'personal-space:close_actors_facing_each_other',
   {
     getArray: (actor, context, em) => {
       const closeness = em.getComponentData(actor.id, 'positioning:closeness');
@@ -1505,7 +1505,7 @@ const facingResolver = ScopeResolverHelpers.createArrayFilterResolver(
 ScopeResolverHelpers._registerResolvers(
   testFixture.testEnv,
   testFixture.testEnv.entityManager,
-  { 'positioning:close_actors_facing_each_other': facingResolver }
+  { 'personal-space:close_actors_facing_each_other': facingResolver }
 );
 ```
 
@@ -1635,13 +1635,13 @@ ScopeResolverHelpers._registerResolvers(
 | All kneeling actors          | `positioning:kneeling_actors`                                 | Positioning |
 | Furniture actor behind       | `positioning:furniture_actor_behind`                          | Positioning |
 | Entity being bitten          | `positioning:actor_being_bitten_by_me`                        | Positioning |
-| Close actors (facing/behind) | `positioning:close_actors_facing_each_other_or_behind_target` | Positioning |
-| Close actors (base)          | `positioning:close_actors`                                    | Positioning |
-| Close actors facing          | `positioning:close_actors_facing_each_other`                  | Positioning |
+| Close actors (facing/behind) | `personal-space:close_actors_facing_each_other_or_behind_target` | Positioning |
+| Close actors (base)          | `personal-space:close_actors`                                    | Positioning |
+| Close actors facing          | `personal-space:close_actors_facing_each_other`                  | Positioning |
 | Both sitting close           | `positioning:actors_both_sitting_close`                       | Positioning |
 | Actor biting my neck         | `positioning:actor_biting_my_neck`                            | Positioning |
 | Actors sitting close         | `positioning:actors_sitting_close`                            | Positioning |
-| Complex closeness/kneeling   | `positioning:close_actors_or_entity_kneeling_before_actor`    | Positioning |
+| Complex closeness/kneeling   | `personal-space:close_actors_or_entity_kneeling_before_actor`    | Positioning |
 | Actor I'm straddling         | `straddling:actor_im_straddling`                             | Positioning |
 | Entity kneeling before       | `positioning:entity_actor_is_kneeling_before`                 | Positioning |
 | Sitting with space right     | `positioning:actors_sitting_with_space_to_right`              | Positioning |

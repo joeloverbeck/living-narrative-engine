@@ -242,7 +242,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .withName('Complex Convenience')
         .withDescription('Testing complex convenience method combinations')
         .asTargetedAction('test:targets', 'complex {target}')
-        .asMovementAction() // Adds core:position + movement:actor-can-move
+        .asMovementAction() // Adds core:position + anatomy:actor-can-move
         .asCombatAction() // Adds core:health + core:has-health (position already exists)
         .requiresComponent('extra:component1')
         .withPrerequisite('extra:condition1')
@@ -271,7 +271,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
       const allConditionRefs = action.prerequisites.map((p) =>
         typeof p === 'string' ? p : p.logic?.condition_ref
       );
-      expect(allConditionRefs).toContain('movement:actor-can-move');
+      expect(allConditionRefs).toContain('anatomy:actor-can-move');
       expect(allConditionRefs).toContain('core:has-health');
       expect(allConditionRefs).toContain('extra:condition1');
       expect(allConditionRefs).toContain('extra:condition2');

@@ -129,9 +129,9 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
       'data/mods/positioning/scopes/actors_in_location_facing.scope',
-      'data/mods/positioning/scopes/close_actors_or_entity_kneeling_before_actor.scope',
-      'data/mods/positioning/scopes/close_actors.scope',
-      'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope',
+      'data/mods/personal-space/scopes/close_actors_or_entity_kneeling_before_actor.scope',
+      'data/mods/personal-space/scopes/close_actors.scope',
+      'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
       'data/mods/affection/scopes/close_actors_with_hair_or_entity_kneeling_before_actor.scope',
       'data/mods/affection/scopes/actors_with_arms_facing_each_other_or_behind_target.scope',
       'data/mods/affection/scopes/close_actors_facing_each_other.scope',

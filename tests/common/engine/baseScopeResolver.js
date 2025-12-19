@@ -12,7 +12,7 @@
  * Provides common functionality and validation for test scope resolvers.
  *
  * Implements the IScopeResolver interface:
- * - id: Unique identifier (e.g., "positioning:close_actors")
+ * - id: Unique identifier (e.g., "personal-space:close_actors")
  * - category: Category name (e.g., "positioning", "inventory")
  * - name: Human-readable name for diagnostics
  * - dependencies: Array of scope IDs this resolver depends on
@@ -29,7 +29,7 @@ class BaseScopeResolver {
    * Creates a new scope resolver.
    *
    * @param {object} config - Configuration object
-   * @param {string} config.id - Unique identifier for this scope (e.g., "positioning:close_actors")
+   * @param {string} config.id - Unique identifier for this scope (e.g., "personal-space:close_actors")
    * @param {string} config.category - Category this scope belongs to (e.g., "positioning")
    * @param {string} config.name - Human-readable name for diagnostics
    * @param {string[]} [config.dependencies] - Scope IDs this resolver depends on
