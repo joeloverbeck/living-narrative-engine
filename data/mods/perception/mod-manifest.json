@@ -7,6 +7,8 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["sensory_capability.component.json"]
+    "components": [
+      "sensory_capability.component.json"
+    ]
   }
 }

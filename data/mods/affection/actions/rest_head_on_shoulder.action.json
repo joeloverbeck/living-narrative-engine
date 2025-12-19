@@ -3,7 +3,7 @@
   "id": "affection:rest_head_on_shoulder",
   "name": "Rest Head on Shoulder",
   "description": "Lean your head on a companion's shoulder to offer comfort.",
-  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["personal-space-states:closeness"]
   },

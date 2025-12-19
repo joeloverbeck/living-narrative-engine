@@ -92,13 +92,13 @@ describe('hand-holding:let_go_of_hand action integration', () => {
       // Handle both the base scope and the with_hands variant
       if (
         scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target' ||
+          'personal-space:close_actors_facing_each_other_or_behind_target' ||
         scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
+          'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
       ) {
         const requireHands =
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target_with_hands';
+          'personal-space:close_actors_facing_each_other_or_behind_target_with_hands';
 
         const actorId = context?.actor?.id;
         if (!actorId) {

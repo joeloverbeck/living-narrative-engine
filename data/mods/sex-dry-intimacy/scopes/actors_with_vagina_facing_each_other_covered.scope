@@ -1,6 +1,6 @@
 // Scope for intimate partners with covered vaginas who are facing the actor
 // Builds on positioning helper to avoid duplicating closeness + facing logic
-sex-dry-intimacy:actors_with_vagina_facing_each_other_covered := positioning:close_actors_facing_each_other[][
+sex-dry-intimacy:actors_with_vagina_facing_each_other_covered := personal-space:close_actors_facing_each_other[][
   {
     "and": [
       { "hasPartOfType": [".", "vagina"] },

@@ -162,7 +162,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
     // Add condition definitions to the registry
     const testConditions = [
       {
-        id: 'movement:actor-can-move',
+        id: 'anatomy:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {

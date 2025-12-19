@@ -8,10 +8,6 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "core",
-      "version": "^1.0.0"
-    },
-    {
       "id": "locations",
       "version": "^1.0.0"
     },

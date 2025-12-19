@@ -130,7 +130,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       expect(forceBendOverAction.generateCombinations).toBe(true);
       expect(forceBendOverAction.targets).toBeDefined();
       expect(forceBendOverAction.targets.primary.scope).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'personal-space:close_actors_facing_each_other_or_behind_target'
       );
       expect(forceBendOverAction.targets.secondary.scope).toBe(
         'bending:available_surfaces'

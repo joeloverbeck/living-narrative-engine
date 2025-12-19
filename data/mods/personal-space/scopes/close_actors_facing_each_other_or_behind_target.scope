@@ -2,7 +2,7 @@
 // Excludes scenarios where either actor is kneeling before the other (incompatible vertical positioning)
 // Excludes scenarios where the target is bending over (incompatible with push/turn actions)
 // Used by actions that can work from either face-to-face or behind positions without anatomy requirements
-positioning:close_actors_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
+personal-space:close_actors_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {
       "or": [

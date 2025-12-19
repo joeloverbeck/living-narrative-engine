@@ -26,7 +26,7 @@ describe('Filter Breakdown Integration', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Register custom scope AFTER createCloseActors to avoid reset() clearing it
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -35,7 +35,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -56,7 +56,7 @@ describe('Filter Breakdown Integration', () => {
     it('should capture breakdown for nested filter', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -64,7 +64,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -86,7 +86,7 @@ describe('Filter Breakdown Integration', () => {
         'Charlie',
       ]);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -94,7 +94,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -116,7 +116,7 @@ describe('Filter Breakdown Integration', () => {
     it('should return null for non-existent entity', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -124,7 +124,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -138,7 +138,7 @@ describe('Filter Breakdown Integration', () => {
     it('should show breakdown in trace output', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -146,7 +146,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -160,7 +160,7 @@ describe('Filter Breakdown Integration', () => {
     it('should use ✓/✗ symbols in formatted output', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -168,7 +168,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -181,7 +181,7 @@ describe('Filter Breakdown Integration', () => {
     it('should include breakdown section in formatted trace', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -189,7 +189,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -204,7 +204,7 @@ describe('Filter Breakdown Integration', () => {
     it('should extract all operator clauses from tree', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -212,7 +212,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -234,7 +234,7 @@ describe('Filter Breakdown Integration', () => {
     it('should handle filters with no breakdown gracefully', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       // Disable tracing to ensure no breakdown is captured
       testFixture.disableScopeTracing();
@@ -243,7 +243,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -262,7 +262,7 @@ describe('Filter Breakdown Integration', () => {
     it('should work when tracer is disabled', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.disableScopeTracing();
 
@@ -270,7 +270,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -281,7 +281,7 @@ describe('Filter Breakdown Integration', () => {
     it('should not impact performance when tracer disabled', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.disableScopeTracing();
 
@@ -291,7 +291,7 @@ describe('Filter Breakdown Integration', () => {
 
       const startTime = Date.now();
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
       const endTime = Date.now();
@@ -305,7 +305,7 @@ describe('Filter Breakdown Integration', () => {
     it('should provide detailed clause info for passed filters', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -313,7 +313,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -339,7 +339,7 @@ describe('Filter Breakdown Integration', () => {
   describe('Breakdown tree structure', () => {
     it('should have correct tree depth', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -347,7 +347,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -366,14 +366,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should preserve operator results', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -387,14 +387,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should track variable values', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -407,14 +407,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should include clause descriptions', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -432,7 +432,7 @@ describe('Filter Breakdown Integration', () => {
   describe('Real-world debugging scenarios', () => {
     it('should help debug "why did this filter fail"', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       // Setup incorrect state (missing component)
       testFixture.testEnv.entityManager.removeComponent(
@@ -446,7 +446,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -468,14 +468,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should show which and clause failed', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -487,14 +487,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should show component presence status', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -506,14 +506,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should show variable resolution details', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -525,14 +525,14 @@ describe('Filter Breakdown Integration', () => {
 
     it('should help debug complex nested filters', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -551,7 +551,7 @@ describe('Filter Breakdown Integration', () => {
         'Bob',
         'Charlie',
       ]);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.enableScopeTracing();
 
@@ -559,7 +559,7 @@ describe('Filter Breakdown Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -578,14 +578,14 @@ describe('Filter Breakdown Integration', () => {
         'Bob',
         'Charlie',
       ]);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -601,14 +601,14 @@ describe('Filter Breakdown Integration', () => {
         'Bob',
         'Charlie',
       ]);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
 
@@ -623,7 +623,7 @@ describe('Filter Breakdown Integration', () => {
   describe('Performance impact', () => {
     it('should have no overhead when tracer disabled', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       testFixture.disableScopeTracing();
 
@@ -633,7 +633,7 @@ describe('Filter Breakdown Integration', () => {
 
       const start = performance.now();
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
       const duration = performance.now() - start;
@@ -648,7 +648,7 @@ describe('Filter Breakdown Integration', () => {
 
     it('should have acceptable overhead when tracer enabled', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
@@ -659,7 +659,7 @@ describe('Filter Breakdown Integration', () => {
       const start1 = performance.now();
       for (let i = 0; i < 100; i++) {
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:close_actors',
+          'personal-space:close_actors',
           actorEntity
         );
       }
@@ -670,7 +670,7 @@ describe('Filter Breakdown Integration', () => {
       const start2 = performance.now();
       for (let i = 0; i < 100; i++) {
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:close_actors',
+          'personal-space:close_actors',
           actorEntity
         );
         testFixture.clearScopeTrace();
@@ -689,7 +689,7 @@ describe('Filter Breakdown Integration', () => {
 
     it('should not leak memory with repeated breakdown', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      await testFixture.registerCustomScope('positioning', 'close_actors');
+      await testFixture.registerCustomScope('personal-space', 'close_actors');
       testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
@@ -699,7 +699,7 @@ describe('Filter Breakdown Integration', () => {
       // Run many iterations
       for (let i = 0; i < 1000; i++) {
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:close_actors',
+          'personal-space:close_actors',
           actorEntity
         );
         testFixture.clearScopeTrace();

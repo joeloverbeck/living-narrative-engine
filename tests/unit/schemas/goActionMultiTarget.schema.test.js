@@ -55,7 +55,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
     expect(goActionMigrated.prerequisites).toBeDefined();
     expect(goActionMigrated.prerequisites).toHaveLength(2);
     expect(goActionMigrated.prerequisites[0].logic.condition_ref).toBe(
-      'movement:actor-can-move'
+      'anatomy:actor-can-move'
     );
     expect(goActionMigrated.prerequisites[0].failure_message).toBe(
       'You cannot move without functioning legs.'

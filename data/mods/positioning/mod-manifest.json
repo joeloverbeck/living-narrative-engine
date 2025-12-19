@@ -10,10 +10,6 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "core",
-      "version": "^1.0.0"
-    },
-    {
       "id": "personal-space-states",
       "version": "^1.0.0"
     }
@@ -36,10 +32,8 @@
       "wielding.component.json"
     ],
     "conditions": [
-      "actor-can-move.condition.json",
       "actor-in-entity-facing-away.condition.json",
       "actor-is-behind-entity.condition.json",
-      "actor-is-in-closeness.condition.json",
       "actor-kneeling-before-entity.condition.json",
       "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
@@ -56,7 +50,6 @@
       "actor_faced_everyone.event.json",
       "actor_faced_forward.event.json",
       "actor_turned_back.event.json",
-      "closeness_with_target_broken.event.json",
       "entity_entered_location.event.json",
       "entity_exited_location.event.json"
     ],
@@ -65,11 +58,6 @@
       "actor_being_bitten_by_me.scope",
       "actors_im_facing_away_from.scope",
       "actors_in_location_facing.scope",
-      "close_actors.scope",
-      "close_actors_facing_each_other.scope",
-      "close_actors_facing_each_other_or_behind_target.scope",
-      "close_actors_facing_each_other_or_behind_target_with_hands.scope",
-      "close_actors_or_entity_kneeling_before_actor.scope",
       "entity_actor_is_kneeling_before.scope"
     ],
     "actions": [],

@@ -37,7 +37,7 @@ describe('affection:rest_head_on_shoulder - giving_blowjob forbidden component',
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
+          'personal-space:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {

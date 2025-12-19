@@ -677,6 +677,27 @@ class ModReferenceExtractor {
     if (actionData.condition) {
       this._extractFromJsonLogic(actionData.condition, references);
     }
+
+    // Prerequisites array - check for condition_ref references
+    if (actionData.prerequisites && Array.isArray(actionData.prerequisites)) {
+      actionData.prerequisites.forEach((prerequisite) => {
+        if (prerequisite && typeof prerequisite === 'object') {
+          // Handle direct condition_ref in logic
+          if (prerequisite.logic?.condition_ref) {
+            this._extractModReferencesFromString(
+              prerequisite.logic.condition_ref,
+              references,
+              'prerequisite_condition_ref'
+            );
+          }
+          // Also process any nested JSON Logic in the logic field
+          // This handles 'not', 'and', 'or' operators with nested condition_ref
+          if (prerequisite.logic) {
+            this._extractFromJsonLogic(prerequisite.logic, references);
+          }
+        }
+      });
+    }
   }
 
   /**

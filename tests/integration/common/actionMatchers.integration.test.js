@@ -43,7 +43,7 @@ describe('actionMatchers integration - real action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -150,7 +150,7 @@ describe('actionMatchers integration - real action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -215,7 +215,7 @@ describe('actionMatchers integration - real action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -271,7 +271,7 @@ describe('actionMatchers integration - real action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {

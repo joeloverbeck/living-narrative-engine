@@ -3,7 +3,7 @@
   "id": "hand-holding:let_go_of_hand",
   "name": "Let go of hand",
   "description": "Release the target's hand and allow the moment to end on your terms.",
-  "targets": "positioning:close_actors_facing_each_other_or_behind_target",
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["personal-space-states:closeness", "hand-holding:holding_hand"],
     "primary": ["hand-holding:hand_held"]

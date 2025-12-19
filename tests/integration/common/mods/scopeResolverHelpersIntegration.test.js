@@ -251,11 +251,11 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
 
   it('should register all 14 new TEAOUTTHR-006 positioning scopes', () => {
     const newScopes = [
-      'positioning:close_actors',
-      'positioning:close_actors_facing_each_other',
+      'personal-space:close_actors',
+      'personal-space:close_actors_facing_each_other',
       'sitting:actors_both_sitting_close',
       'sitting:actors_sitting_close',
-      'positioning:close_actors_or_entity_kneeling_before_actor',
+      'personal-space:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
@@ -282,11 +282,11 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     testFixture.reset([scenario.actor, scenario.target]);
 
     const scopesToTest = [
-      'positioning:close_actors',
-      'positioning:close_actors_facing_each_other',
+      'personal-space:close_actors',
+      'personal-space:close_actors_facing_each_other',
       'sitting:actors_both_sitting_close',
       'sitting:actors_sitting_close',
-      'positioning:close_actors_or_entity_kneeling_before_actor',
+      'personal-space:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',

@@ -26,7 +26,7 @@ export const PRESS_AGAINST_CHEST_ACTOR_ID = 'lyra';
  * @type {string}
  */
 export const PRESS_AGAINST_CHEST_SCOPE_ID =
-  'positioning:close_actors_facing_each_other';
+  'personal-space:close_actors_facing_each_other';
 
 /**
  * Default target identifier used in press against chest scenarios.

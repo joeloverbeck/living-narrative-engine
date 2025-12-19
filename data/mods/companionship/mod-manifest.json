@@ -9,7 +9,7 @@
   "author": "Living Narrative Engine Team",
   "dependencies": [
     {
-      "id": "core",
+      "id": "anatomy",
       "version": "^1.0.0"
     },
     {

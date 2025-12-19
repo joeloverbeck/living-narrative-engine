@@ -14,7 +14,7 @@ describe('Tracer Memory Usage', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scope for tracing
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -32,7 +32,7 @@ describe('Tracer Memory Usage', () => {
     // Run many iterations with clear between
     for (let i = 0; i < 1000; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
       testBed.clearScopeTrace();

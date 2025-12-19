@@ -313,11 +313,11 @@ export class ActionDefinitionBuilder {
    *
    * @returns {ActionDefinitionBuilder} This builder for chaining
    * @example
-   * builder.asMovementAction(); // Adds core:position and movement:actor-can-move
+   * builder.asMovementAction(); // Adds core:position and anatomy:actor-can-move
    */
   asMovementAction() {
     return this.requiresComponent('core:position').withPrerequisite(
-      'movement:actor-can-move',
+      'anatomy:actor-can-move',
       'You cannot move right now'
     );
   }
@@ -332,7 +332,7 @@ export class ActionDefinitionBuilder {
   asCombatAction() {
     return this.requiresComponent('core:position')
       .requiresComponent('core:health')
-      .withPrerequisite('movement:actor-can-move', 'You cannot move right now')
+      .withPrerequisite('anatomy:actor-can-move', 'You cannot move right now')
       .withPrerequisite(
         'core:has-health',
         'You need health to perform this action'

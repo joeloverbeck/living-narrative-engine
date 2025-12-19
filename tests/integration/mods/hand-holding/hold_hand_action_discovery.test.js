@@ -73,7 +73,7 @@ describe('hand-holding:hold_hand action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
+          'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -147,7 +147,7 @@ describe('hand-holding:hold_hand action discovery', () => {
       expect(holdHandAction.id).toBe(ACTION_ID);
       expect(holdHandAction.template).toBe("hold {target}'s hand");
       expect(holdHandAction.targets).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
+        'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
       );
       expect(holdHandAction.forbidden_components.actor).toEqual([
         'hand-holding:holding_hand',

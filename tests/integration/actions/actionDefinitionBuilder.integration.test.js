@@ -107,7 +107,7 @@ describe('ActionDefinitionBuilder Integration', () => {
         .build();
 
       expect(movementAction).toRequireComponent('core:position');
-      expect(movementAction).toHavePrerequisite('movement:actor-can-move');
+      expect(movementAction).toHavePrerequisite('anatomy:actor-can-move');
     });
   });
 
@@ -263,7 +263,7 @@ describe('ActionDefinitionBuilder Integration', () => {
         typeof p === 'string' ? p : p.logic?.condition_ref
       );
 
-      expect(allConditionRefs).toContain('movement:actor-can-move');
+      expect(allConditionRefs).toContain('anatomy:actor-can-move');
       expect(allConditionRefs).toContain('core:has-health');
     });
   });

@@ -28,7 +28,7 @@ describe('ScopeResolutionError', () => {
     it('should create error with full context', () => {
       const originalError = new Error('Parameter validation failed');
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'parameter extraction',
         parameters: {
           contextType: 'object',
@@ -50,7 +50,7 @@ describe('ScopeResolutionError', () => {
       );
 
       expect(error.message).toBe('Invalid parameter passed to scope resolver');
-      expect(error.context.scopeName).toBe('positioning:close_actors');
+      expect(error.context.scopeName).toBe('personal-space:close_actors');
       expect(error.context.phase).toBe('parameter extraction');
       expect(error.context.parameters).toEqual({
         contextType: 'object',
@@ -154,13 +154,13 @@ describe('ScopeResolutionError', () => {
 
     it('should include scope name section', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        scopeName: 'positioning:close_actors_facing_each_other',
+        scopeName: 'personal-space:close_actors_facing_each_other',
       });
 
       const result = error.toString();
 
       expect(result).toContain(
-        'Scope: positioning:close_actors_facing_each_other'
+        'Scope: personal-space:close_actors_facing_each_other'
       );
     });
 
@@ -306,7 +306,7 @@ describe('ScopeResolutionError', () => {
       const error = new ScopeResolutionError(
         'Invalid parameter passed to scope resolver',
         {
-          scopeName: 'positioning:close_actors_facing_each_other',
+          scopeName: 'personal-space:close_actors_facing_each_other',
           phase: 'parameter extraction',
           parameters: {
             contextType: 'object',
@@ -430,7 +430,7 @@ describe('ScopeResolutionError', () => {
   describe('toJSON() inherited from BaseError', () => {
     it('should return serializable object', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'filter evaluation',
         hint: 'Check your filter logic',
       };
@@ -444,7 +444,7 @@ describe('ScopeResolutionError', () => {
 
     it('should include name, message, code, context, timestamp, severity, recoverable, correlationId, stack', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'filter evaluation',
         expected: 'boolean result',
         received: 'undefined',
@@ -466,7 +466,7 @@ describe('ScopeResolutionError', () => {
 
     it('should not lose data in JSON round-trip', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'parameter extraction',
         parameters: {
           contextType: 'object',
@@ -551,7 +551,7 @@ describe('ScopeResolutionError', () => {
   describe('context access via BaseError', () => {
     it('should expose context via getContext()', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'filter evaluation',
       };
 
@@ -563,7 +563,7 @@ describe('ScopeResolutionError', () => {
 
     it('should return deep copy of context (defensive)', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         nested: { value: 'original' },
       };
 
@@ -575,27 +575,27 @@ describe('ScopeResolutionError', () => {
       retrievedContext.nested.value = 'modified';
 
       // Original error context should be unchanged
-      expect(error.context.scopeName).toBe('positioning:close_actors');
+      expect(error.context.scopeName).toBe('personal-space:close_actors');
       expect(error.context.nested.value).toBe('original');
     });
 
     it('should allow reading specific context properties via getContext(key)', () => {
       const context = {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
         phase: 'filter evaluation',
         hint: 'Check your logic',
       };
 
       const error = new ScopeResolutionError('Test error', context);
 
-      expect(error.getContext('scopeName')).toBe('positioning:close_actors');
+      expect(error.getContext('scopeName')).toBe('personal-space:close_actors');
       expect(error.getContext('phase')).toBe('filter evaluation');
       expect(error.getContext('hint')).toBe('Check your logic');
     });
 
     it('should support addContext() for fluent interface', () => {
       const error = new ScopeResolutionError('Test error', {
-        scopeName: 'positioning:close_actors',
+        scopeName: 'personal-space:close_actors',
       });
 
       const result = error.addContext('phase', 'parameter extraction');
@@ -614,7 +614,7 @@ describe('ScopeResolutionError', () => {
       const error = new ScopeResolutionError(
         'Invalid parameter passed to scope resolver',
         {
-          scopeName: 'positioning:close_actors_facing_each_other',
+          scopeName: 'personal-space:close_actors_facing_each_other',
           phase: 'parameter extraction',
           parameters: {
             contextType: 'object',
@@ -635,7 +635,7 @@ describe('ScopeResolutionError', () => {
 
       expect(error.message).toBe('Invalid parameter passed to scope resolver');
       expect(error.context.scopeName).toBe(
-        'positioning:close_actors_facing_each_other'
+        'personal-space:close_actors_facing_each_other'
       );
       expect(error.context.phase).toBe('parameter extraction');
       expect(error.severity).toBe('error');
@@ -643,7 +643,7 @@ describe('ScopeResolutionError', () => {
 
       const formatted = error.toString();
       expect(formatted).toContain(
-        'Scope: positioning:close_actors_facing_each_other'
+        'Scope: personal-space:close_actors_facing_each_other'
       );
       expect(formatted).toContain('Phase: parameter extraction');
       expect(formatted).toContain('Parameters:');

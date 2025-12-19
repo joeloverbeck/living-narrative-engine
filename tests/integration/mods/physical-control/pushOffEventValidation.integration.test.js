@@ -1,7 +1,7 @@
 /**
  * @file Integration test to verify that the push_off action properly validates the closeness_with_target_broken event
  * @see src/logic/operationHandlers/breakClosenessWithTargetHandler.js
- * @description This test ensures that the positioning:closeness_with_target_broken event
+ * @description This test ensures that the personal-space:closeness_with_target_broken event
  * definition exists and can be validated without warnings.
  */
 
@@ -43,7 +43,7 @@ describe('Push Off Action - Event Validation Integration', () => {
       (call) =>
         typeof call[0] === 'string' &&
         call[0].includes('EventDefinition not found') &&
-        call[0].includes('positioning:closeness_with_target_broken')
+        call[0].includes('personal-space:closeness_with_target_broken')
     );
 
     // Log any warnings found for debugging

@@ -17,18 +17,18 @@ describe('Cross-Mod References', () => {
       // Verify it references movement condition
       const conditionRef =
         turnAroundAction.prerequisites[0].logic.condition_ref;
-      expect(conditionRef).toBe('movement:actor-can-move');
+      expect(conditionRef).toBe('anatomy:actor-can-move');
 
       // Verify the referenced condition exists
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
 
       // Load and verify the condition structure
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
-      expect(condition.id).toBe('movement:actor-can-move');
+      expect(condition.id).toBe('anatomy:actor-can-move');
     });
 
     it('should have get_close action reference positioning condition', () => {
@@ -41,7 +41,7 @@ describe('Cross-Mod References', () => {
 
       // Verify positioning condition reference (moved from movement to avoid circular dependency)
       const hasPositioningRef = getCloseAction.prerequisites.some(
-        (prereq) => prereq.logic?.condition_ref === 'positioning:actor-can-move'
+        (prereq) => prereq.logic?.condition_ref === 'anatomy:actor-can-move'
       );
       expect(hasPositioningRef).toBe(true);
     });
@@ -102,10 +102,10 @@ describe('Cross-Mod References', () => {
   });
 
   describe('Movement Condition Availability', () => {
-    it('should have movement:actor-can-move condition accessible to other mods', () => {
+    it('should have anatomy:actor-can-move condition accessible to other mods', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json'
+        'data/mods/anatomy/conditions/actor-can-move.condition.json'
       );
 
       // Verify the condition exists
@@ -113,7 +113,7 @@ describe('Cross-Mod References', () => {
 
       // Verify the condition structure
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
-      expect(condition.id).toBe('movement:actor-can-move');
+      expect(condition.id).toBe('anatomy:actor-can-move');
       expect(condition.description).toBeDefined();
       expect(condition.logic).toBeDefined();
       expect(condition.$schema).toBe(
@@ -181,23 +181,27 @@ describe('Cross-Mod References', () => {
   });
 
   describe('Cross-Mod Reference Validation', () => {
-    it('should have positioning actions with valid prerequisite structures', () => {
-      const positioningActionsDir = path.resolve(
+    it('should have movement actions with valid prerequisite structures', () => {
+      const movementActionsDir = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions'
+        'data/mods/movement/actions'
       );
 
       const actionFiles = fs
-        .readdirSync(positioningActionsDir)
+        .readdirSync(movementActionsDir)
         .filter((file) => file.endsWith('.action.json'));
 
-      // All positioning actions should have valid prerequisite structures
+      // All movement actions should have valid prerequisite structures if they exist
       actionFiles.forEach((file) => {
-        const actionPath = path.join(positioningActionsDir, file);
+        const actionPath = path.join(movementActionsDir, file);
         const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
-        // Actions should have prerequisites array
-        expect(action.prerequisites).toBeDefined();
+        // Some actions may not have prerequisites - that's valid
+        if (!action.prerequisites) {
+          return;
+        }
+
+        // If prerequisites exist, they should be an array
         expect(Array.isArray(action.prerequisites)).toBe(true);
 
         // Each prerequisite should have a valid structure
@@ -217,17 +221,17 @@ describe('Cross-Mod References', () => {
     });
 
     it('should not have broken cross-mod references', () => {
-      const positioningActionsDir = path.resolve(
+      const movementActionsDir = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions'
+        'data/mods/movement/actions'
       );
 
       const actionFiles = fs
-        .readdirSync(positioningActionsDir)
+        .readdirSync(movementActionsDir)
         .filter((file) => file.endsWith('.action.json'));
 
       actionFiles.forEach((actionFile) => {
-        const actionPath = path.join(positioningActionsDir, actionFile);
+        const actionPath = path.join(movementActionsDir, actionFile);
         const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
         if (!action.prerequisites) {

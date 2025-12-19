@@ -14,7 +14,7 @@ describe('Tracer Performance Overhead', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scope for tracing
-    await testBed.registerCustomScope('positioning', 'close_actors');
+    await testBed.registerCustomScope('personal-space', 'close_actors');
   });
 
   afterEach(() => {
@@ -29,13 +29,13 @@ describe('Tracer Performance Overhead', () => {
 
     // Warmup (stabilize JIT)
     for (let i = 0; i < 100; i++) {
-      testBed.resolveSyncNoTracer('positioning:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
     }
 
     // Baseline: no tracer injected
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testBed.resolveSyncNoTracer('positioning:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
     }
     const duration1 = performance.now() - start1;
 
@@ -44,7 +44,7 @@ describe('Tracer Performance Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
     }
@@ -93,7 +93,7 @@ describe('Tracer Performance Overhead', () => {
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
     }
@@ -104,7 +104,7 @@ describe('Tracer Performance Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
+        'personal-space:close_actors',
         actorEntity
       );
       testBed.clearScopeTrace();
@@ -148,7 +148,7 @@ describe('Tracer Performance Overhead', () => {
 
     const start = performance.now();
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
     const duration = performance.now() - start;
@@ -180,7 +180,7 @@ describe('Tracer Performance Overhead', () => {
 
     // Generate trace data
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'positioning:close_actors',
+      'personal-space:close_actors',
       actorEntity
     );
 

@@ -90,7 +90,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
     });
 
     // Note: Positive discovery test for get_close requires meeting all prerequisites
-    // (positioning:actor-can-move condition requiring core:movement component).
+    // (anatomy:actor-can-move condition requiring core:movement component).
     // The structure validation tests above confirm the forbidden_components configuration.
     // This follows the pattern in doingComplexPerformanceForbiddenActions.test.js
     it('should have wielding in forbidden list - validates blocking configuration is correct', () => {

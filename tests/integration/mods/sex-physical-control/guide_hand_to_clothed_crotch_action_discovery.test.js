@@ -61,7 +61,7 @@ function entityHasHands(entityId, fixture) {
 }
 
 /**
- * Installs a scope override for positioning:close_actors_facing_each_other_or_behind_target_with_hands.
+ * Installs a scope override for personal-space:close_actors_facing_each_other_or_behind_target_with_hands.
  * Mirrors the production kneeling exclusions while leveraging the simplified test anatomy fixtures.
  *
  * @param {ModTestFixture} fixture - Active mod test fixture.
@@ -74,7 +74,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
   resolver.resolveSync = (scopeName, context) => {
     if (
       scopeName ===
-      'positioning:close_actors_facing_each_other_or_behind_target_with_hands'
+      'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
     ) {
       const actorId = context?.actor?.id;
 

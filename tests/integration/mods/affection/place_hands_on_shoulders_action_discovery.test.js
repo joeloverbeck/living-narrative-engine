@@ -34,7 +34,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'positioning:close_actors_or_entity_kneeling_before_actor'
+          'personal-space:close_actors_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -118,7 +118,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
         "place your hands on {target}'s shoulders"
       );
       expect(placeHandsOnShouldersAction.targets).toBe(
-        'positioning:close_actors_or_entity_kneeling_before_actor'
+        'personal-space:close_actors_or_entity_kneeling_before_actor'
       );
     });
 

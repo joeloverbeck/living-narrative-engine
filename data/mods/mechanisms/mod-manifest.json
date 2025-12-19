@@ -6,14 +6,11 @@
   "description": "Components related to entity mechanisms, such as if an entity is openable.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "core",
-      "version": "1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
-    "components": ["openable.component.json"],
+    "components": [
+      "openable.component.json"
+    ],
     "actions": [],
     "rules": [],
     "conditions": [],

@@ -66,9 +66,9 @@ describe('personal-space:get_close lighting prerequisite', () => {
     // Set up condition definitions for any condition_ref lookups
     mockGameDataRepository.getConditionDefinition.mockImplementation(
       (conditionId) => {
-        if (conditionId === 'positioning:actor-can-move') {
+        if (conditionId === 'anatomy:actor-can-move') {
           return {
-            id: 'positioning:actor-can-move',
+            id: 'anatomy:actor-can-move',
             logic: { '==': [true, true] }, // Always passes for these tests
           };
         }

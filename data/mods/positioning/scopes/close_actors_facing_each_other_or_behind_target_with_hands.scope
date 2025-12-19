@@ -1,5 +1,0 @@
-// Scope for close actors who are facing each other (or actor is behind target) and have hand anatomy
-// Extends positioning:close_actors_facing_each_other_or_behind_target with a hand subtype check on the target entity
-positioning:close_actors_facing_each_other_or_behind_target_with_hands := positioning:close_actors_facing_each_other_or_behind_target[{
-  "hasPartSubTypeContaining": [".", "hand", {"matchAtEnd": true}]
-}]

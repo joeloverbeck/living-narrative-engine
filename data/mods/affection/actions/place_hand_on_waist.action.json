@@ -3,7 +3,7 @@
   "id": "affection:place_hand_on_waist",
   "name": "Place hand on waist",
   "description": "Place a hand on someone's waist in an intimate gesture",
-  "targets": "positioning:close_actors",
+  "targets": "personal-space:close_actors",
   "required_components": {
     "actor": ["personal-space-states:closeness"]
   },

@@ -40,7 +40,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       scopeResolver.__forceToKneesOriginalResolve = originalResolve;
       scopeResolver.__forceToKneesOriginalResolveAsync = originalResolveAsync;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'positioning:close_actors_facing_each_other') {
+        if (scopeName === 'personal-space:close_actors_facing_each_other') {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };
@@ -95,7 +95,7 @@ describe('physical-control:force_to_knees action discovery', () => {
         return originalResolve(scopeName, context);
       };
       scopeResolver.resolve = async (scopeName, context) => {
-        if (scopeName === 'positioning:close_actors_facing_each_other') {
+        if (scopeName === 'personal-space:close_actors_facing_each_other') {
           return scopeResolver.resolveSync(scopeName, context);
         }
 
@@ -130,7 +130,7 @@ describe('physical-control:force_to_knees action discovery', () => {
         'force {target} to their knees before you'
       );
       expect(forceToKneesAction.targets.primary.scope).toBe(
-        'positioning:close_actors_facing_each_other'
+        'personal-space:close_actors_facing_each_other'
       );
       expect(forceToKneesAction.targets.primary.placeholder).toBe('target');
     });

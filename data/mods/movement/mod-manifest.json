@@ -10,7 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "core",
+      "id": "anatomy",
       "version": "^1.0.0"
     },
     {
@@ -44,7 +44,6 @@
       "handle_travel_through_dimensions.rule.json"
     ],
     "conditions": [
-      "actor-can-move.condition.json",
       "blocker-is-dimensional-portal.condition.json",
       "event-is-action-feel-your-way-to-an-exit.condition.json",
       "event-is-action-go.condition.json",

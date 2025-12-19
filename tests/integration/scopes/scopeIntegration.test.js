@@ -134,8 +134,8 @@ describe('Scope Integration Tests', () => {
         '!': { var: 'entity.blocker' },
       },
     });
-    registry.store('conditions', 'movement:actor-can-move', {
-      id: 'movement:actor-can-move',
+    registry.store('conditions', 'anatomy:actor-can-move', {
+      id: 'anatomy:actor-can-move',
       description:
         'Checks if the actor has functioning legs capable of movement',
       logic: {
@@ -392,8 +392,8 @@ describe('Scope Integration Tests', () => {
         id: 'movement:exit-is-unblocked',
         logic: { '!': { var: 'entity.blocker' } },
       });
-      registry.store('conditions', 'movement:actor-can-move', {
-        id: 'movement:actor-can-move',
+      registry.store('conditions', 'anatomy:actor-can-move', {
+        id: 'anatomy:actor-can-move',
         logic: {
           hasPartWithComponentValue: [
             'actor',
@@ -522,8 +522,8 @@ describe('Scope Integration Tests', () => {
         id: 'movement:exit-is-unblocked',
         logic: { '!': { var: 'entity.blocker' } },
       });
-      registry.store('conditions', 'movement:actor-can-move', {
-        id: 'movement:actor-can-move',
+      registry.store('conditions', 'anatomy:actor-can-move', {
+        id: 'anatomy:actor-can-move',
         logic: {
           hasPartWithComponentValue: [
             'actor',

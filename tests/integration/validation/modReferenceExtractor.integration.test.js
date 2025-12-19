@@ -397,7 +397,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
           dataSchema: {
             properties: {
               target_id: {
-                description: 'ID of target from positioning:close_actors',
+                description: 'ID of target from personal-space:close_actors',
               },
               technique: {
                 enum: [

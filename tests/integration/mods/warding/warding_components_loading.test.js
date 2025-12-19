@@ -239,10 +239,10 @@ describe('Warding Mod Components - Integration', () => {
       );
     });
 
-    it('should depend on core mod', () => {
-      const coreDep = wardingManifest.dependencies.find((d) => d.id === 'core');
-      expect(coreDep).toBeDefined();
-      expect(coreDep.version).toBe('>=1.0.0');
+    it('should depend on items mod', () => {
+      const itemsDep = wardingManifest.dependencies.find((d) => d.id === 'items');
+      expect(itemsDep).toBeDefined();
+      expect(itemsDep.version).toBe('>=1.0.0');
     });
 
     it('should depend on skills mod', () => {

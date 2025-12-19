@@ -5,7 +5,7 @@
   "description": "Forcefully push someone down to kneel before you",
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors_facing_each_other",
+      "scope": "personal-space:close_actors_facing_each_other",
       "placeholder": "target",
       "description": "The actor to force to their knees"
     }

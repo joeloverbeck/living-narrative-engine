@@ -40,8 +40,8 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     },
     massage_back: 'affection:close_actors_facing_away',
     massage_shoulders:
-      'positioning:close_actors_or_entity_kneeling_before_actor',
-    place_hand_on_waist: 'positioning:close_actors',
+      'personal-space:close_actors_or_entity_kneeling_before_actor',
+    place_hand_on_waist: 'personal-space:close_actors',
   };
 
   describe('Migration Completeness', () => {
@@ -133,7 +133,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
           // massage_shoulders uses positioning mod with kneeling support, feel_arm_muscles uses caressing mod
           if (name === 'massage_shoulders') {
             expect(content.targets).toBe(
-              'positioning:close_actors_or_entity_kneeling_before_actor'
+              'personal-space:close_actors_or_entity_kneeling_before_actor'
             );
           } else if (name === 'feel_arm_muscles') {
             expect(content.targets).toMatch(

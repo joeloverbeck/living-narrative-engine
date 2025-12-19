@@ -215,6 +215,7 @@
       "visualizer_state_changed.event.json"
     ],
     "conditions": [
+      "actor-can-move.condition.json",
       "actor-has-free-grabbing-appendage.condition.json",
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],

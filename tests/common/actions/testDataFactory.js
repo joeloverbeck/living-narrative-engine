@@ -78,7 +78,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'movement:actor-can-move',
+              condition_ref: 'anatomy:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -94,7 +94,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'movement:actor-can-move',
+              condition_ref: 'anatomy:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -112,7 +112,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'movement:actor-can-move',
+              condition_ref: 'anatomy:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -154,7 +154,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'movement:actor-can-move',
+              condition_ref: 'anatomy:actor-can-move',
             },
             failure_message: 'You cannot move without functioning legs.',
           },
@@ -181,7 +181,7 @@ export class TestDataFactory {
   static createTestConditions() {
     return [
       {
-        id: 'movement:actor-can-move',
+        id: 'anatomy:actor-can-move',
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
@@ -443,7 +443,7 @@ export class TestDataFactory {
           'core:movement',
         ])
         .withPrerequisites([
-          { condition: 'movement:actor-can-move', message: 'Cannot move' },
+          { condition: 'anatomy:actor-can-move', message: 'Cannot move' },
           { condition: 'core:has-health', message: 'No health' },
           { condition: 'core:has-inventory', message: 'No inventory' },
         ])
@@ -508,7 +508,7 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'movement:actor-can-move',
+              condition_ref: 'anatomy:actor-can-move',
             },
             failure_message: 'Cannot move',
           },

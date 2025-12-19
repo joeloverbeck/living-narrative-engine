@@ -5,7 +5,7 @@
   "description": "Remove a piece of someone else's topmost clothing.",
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors",
+      "scope": "personal-space:close_actors",
       "placeholder": "person",
       "description": "The person whose clothing to remove"
     },

@@ -34,7 +34,7 @@ describe('violence:grab_neck action discovery', () => {
       expect(grabNeckAction.id).toBe(ACTION_ID);
       expect(grabNeckAction.template).toBe("grab {target}'s neck");
       expect(grabNeckAction.targets).toBe(
-        'positioning:close_actors_facing_each_other_or_behind_target'
+        'personal-space:close_actors_facing_each_other_or_behind_target'
       );
     });
 

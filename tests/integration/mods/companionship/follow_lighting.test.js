@@ -66,9 +66,9 @@ describe('companionship:follow lighting prerequisite', () => {
     // Set up condition definitions for any condition_ref lookups
     mockGameDataRepository.getConditionDefinition.mockImplementation(
       (conditionId) => {
-        if (conditionId === 'movement:actor-can-move') {
+        if (conditionId === 'anatomy:actor-can-move') {
           return {
-            id: 'movement:actor-can-move',
+            id: 'anatomy:actor-can-move',
             logic: { '==': [true, true] }, // Always passes for these tests
           };
         }

@@ -109,10 +109,10 @@ describe('TestScopeResolverRegistry - Integration', () => {
     }, 5000);
 
     it('should check if scope file exists', async () => {
-      // Check for a known scope
+      // Check for a known scope (actors_in_location_facing exists in positioning)
       const exists = await ScopeDiscoveryService.scopeFileExists(
         'positioning',
-        'close_actors'
+        'actors_in_location_facing'
       );
       expect(exists).toBe(true);
 

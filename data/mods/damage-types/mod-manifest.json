@@ -4,8 +4,10 @@
   "version": "1.0.0",
   "name": "Damage Types",
   "description": "Components for entity damage capabilities.",
-  "dependencies": [{ "id": "core", "version": ">=1.0.0" }],
+  "dependencies": [],
   "content": {
-    "components": ["damage_capabilities.component.json"]
+    "components": [
+      "damage_capabilities.component.json"
+    ]
   }
 }

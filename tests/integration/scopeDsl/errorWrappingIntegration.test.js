@@ -21,7 +21,7 @@ describe('Error Wrapping Integration', () => {
           expr: 'actor.items[]',
           ast: { type: 'Source', name: 'actor' },
         },
-        'positioning:close_actors': {
+        'personal-space:close_actors': {
           expr: 'close_actors',
           ast: { type: 'Source', name: 'close_actors' },
         },
@@ -666,7 +666,7 @@ describe('Error Wrapping Integration', () => {
       it('should suggest similar scope names when typo detected', () => {
         const registry = new ScopeRegistry();
         registry.initialize({
-          'positioning:close_actors': {
+          'personal-space:close_actors': {
             expr: 'close',
             ast: { type: 'Source', name: 'close' },
           },
@@ -688,7 +688,7 @@ describe('Error Wrapping Integration', () => {
       it('should provide list of available scopes when scope is not found', () => {
         const registry = new ScopeRegistry();
         registry.initialize({
-          'positioning:close_actors': {
+          'personal-space:close_actors': {
             expr: 'close',
             ast: { type: 'Source', name: 'close' },
           },
@@ -709,7 +709,7 @@ describe('Error Wrapping Integration', () => {
         expect(caughtError).toBeInstanceOf(ScopeResolutionError);
         expect(caughtError.context.suggestion).toBeDefined();
         expect(caughtError.context.example).toContain(
-          'positioning:close_actors'
+          'personal-space:close_actors'
         );
       });
     });
@@ -862,7 +862,7 @@ describe('Error Wrapping Integration', () => {
             expr: 'items',
             ast: { type: 'Source', name: 'items' },
           },
-          'positioning:close_actors': {
+          'personal-space:close_actors': {
             expr: 'close',
             ast: { type: 'Source', name: 'close' },
           },

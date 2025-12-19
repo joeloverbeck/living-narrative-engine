@@ -26,7 +26,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
     // Override scope with kneeling checks (matches production .scope file behavior)
     const closeFacingOrBehindResolver =
       ScopeResolverHelpers.createArrayFilterResolver(
-        'positioning:close_actors_facing_each_other_or_behind_target',
+        'personal-space:close_actors_facing_each_other_or_behind_target',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -75,7 +75,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       testFixture.testEnv,
       testFixture.testEnv.entityManager,
       {
-        'positioning:close_actors_facing_each_other_or_behind_target':
+        'personal-space:close_actors_facing_each_other_or_behind_target':
           closeFacingOrBehindResolver,
       }
     );

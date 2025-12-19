@@ -198,7 +198,7 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       fixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Register a custom scope (this will create a resolver with runtimeCtx)
-      await fixture.registerCustomScope('positioning', 'close_actors');
+      await fixture.registerCustomScope('personal-space', 'close_actors');
 
       // The tracer should be accessible through the fixture
       expect(fixture.scopeTracer).toBeDefined();
@@ -212,7 +212,7 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       fixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Register a custom scope
-      await fixture.registerCustomScope('positioning', 'close_actors');
+      await fixture.registerCustomScope('personal-space', 'close_actors');
 
       // Enable tracing
       fixture.enableScopeTracing();
@@ -225,7 +225,7 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
     it('should use the same tracer instance across multiple scope resolutions', async () => {
       const tracerBefore = fixture.scopeTracer;
 
-      await fixture.registerCustomScope('positioning', 'close_actors');
+      await fixture.registerCustomScope('personal-space', 'close_actors');
 
       const tracerAfter = fixture.scopeTracer;
 
@@ -363,7 +363,7 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       fixture.enableScopeTracing();
 
       // Register custom scope
-      await fixture.registerCustomScope('positioning', 'close_actors');
+      await fixture.registerCustomScope('personal-space', 'close_actors');
 
       // Tracer should still be enabled
       expect(fixture.scopeTracer.isEnabled()).toBe(true);

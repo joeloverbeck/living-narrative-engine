@@ -32,7 +32,7 @@ describe('actionMatchers - toHaveAction', () => {
         {
           id: 'intimacy:kiss_cheek',
           name: 'Kiss Cheek',
-          targets: 'positioning:close_actors',
+          targets: 'personal-space:close_actors',
           required_components: { actor: ['personal-space-states:closeness'] },
         },
       ];

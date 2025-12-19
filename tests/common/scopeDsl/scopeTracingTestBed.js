@@ -21,10 +21,10 @@ import UnifiedScopeResolver from '../../../src/actions/scopes/unifiedScopeResolv
  * @class
  * @example
  * const testBed = await ScopeTracingTestBed.create();
- * await testBed.registerCustomScope('positioning', 'close_actors');
+ * await testBed.registerCustomScope('personal-space', 'close_actors');
  * const scenario = testBed.createCloseActors(['Alice', 'Bob']);
  * testBed.enableScopeTracing();
- * testBed.testEnv.unifiedScopeResolver.resolveSync('positioning:close_actors', scenario.actor);
+ * testBed.testEnv.unifiedScopeResolver.resolveSync('personal-space:close_actors', scenario.actor);
  * const trace = testBed.getScopeTraceData();
  */
 export class ScopeTracingTestBed {

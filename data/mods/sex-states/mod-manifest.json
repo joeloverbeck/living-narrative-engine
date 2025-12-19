@@ -6,12 +6,7 @@
   "description": "Base components for sexual engagement states.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "core",
-      "version": "^1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "being_fucked_anally.component.json",

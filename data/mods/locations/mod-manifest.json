@@ -6,12 +6,7 @@
   "description": "Location-specific mechanics including lighting states and environmental conditions.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "core",
-      "version": "^1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "description_in_darkness.component.json",

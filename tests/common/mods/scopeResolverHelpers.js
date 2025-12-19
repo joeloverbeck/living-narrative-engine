@@ -452,9 +452,9 @@ export class ScopeResolverHelpers {
       ),
 
       // Violence mod scopes - complex closeness + facing logic
-      'positioning:close_actors_facing_each_other_or_behind_target':
+      'personal-space:close_actors_facing_each_other_or_behind_target':
         this.createArrayFilterResolver(
-          'positioning:close_actors_facing_each_other_or_behind_target',
+          'personal-space:close_actors_facing_each_other_or_behind_target',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
@@ -523,8 +523,8 @@ export class ScopeResolverHelpers {
       // HIGH PRIORITY SCOPES (Phase 1)
 
       // "close actors" - Base closeness without kneeling filters
-      'positioning:close_actors': this.createArrayFilterResolver(
-        'positioning:close_actors',
+      'personal-space:close_actors': this.createArrayFilterResolver(
+        'personal-space:close_actors',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -553,9 +553,9 @@ export class ScopeResolverHelpers {
       ),
 
       // "close actors facing each other" - Mutual facing validation
-      'positioning:close_actors_facing_each_other':
+      'personal-space:close_actors_facing_each_other':
         this.createArrayFilterResolver(
-          'positioning:close_actors_facing_each_other',
+          'personal-space:close_actors_facing_each_other',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
@@ -621,9 +621,9 @@ export class ScopeResolverHelpers {
       ),
 
       // "close actors or entity kneeling before actor" - Complex closeness with kneeling union
-      'positioning:close_actors_or_entity_kneeling_before_actor':
+      'personal-space:close_actors_or_entity_kneeling_before_actor':
         this.createArrayFilterResolver(
-          'positioning:close_actors_or_entity_kneeling_before_actor',
+          'personal-space:close_actors_or_entity_kneeling_before_actor',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
