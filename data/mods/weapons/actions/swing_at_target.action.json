@@ -16,7 +16,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:hugging",
+      "hugging-states:hugging",
       "sex-states:giving_blowjob",
       "positioning:doing_complex_performance",
       "bending-states:bending_over",

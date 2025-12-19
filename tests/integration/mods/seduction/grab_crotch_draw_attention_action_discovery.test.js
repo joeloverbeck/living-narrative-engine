@@ -42,7 +42,7 @@ function loadScenario(
     .withBody('actorPelvis');
 
   if (includeHugging) {
-    actorBuilder.withComponent('positioning:hugging', {
+    actorBuilder.withComponent('hugging-states:hugging', {
       embraced_entity_id: 'target1',
       initiated: true,
     });

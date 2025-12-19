@@ -143,8 +143,8 @@ describe('physical-control:force_to_knees action discovery', () => {
         'positioning:biting_neck',
         'positioning:kneeling_before',
         'positioning:straddling_waist',
-        'positioning:hugging',
-        'positioning:being_hugged',
+        'hugging-states:hugging',
+        'hugging-states:being_hugged',
         'positioning:lying_down',
         'positioning:being_restrained',
         'positioning:restraining',
@@ -368,7 +368,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:hugging',
+        'hugging-states:hugging',
         {
           embraced_entity_id: scenario.target.id,
           initiated: true,
@@ -377,7 +377,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       );
       await testFixture.entityManager.addComponent(
         scenario.target.id,
-        'positioning:being_hugged',
+        'hugging-states:being_hugged',
         { hugging_entity_id: scenario.actor.id }
       );
 
@@ -398,7 +398,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:being_hugged',
+        'hugging-states:being_hugged',
         { hugging_entity_id: scenario.target.id }
       );
 

@@ -913,7 +913,7 @@ describe('ActivityMetadataCollectionSystem', () => {
         };
 
         const result = hooks.parseInlineMetadata(
-          'positioning:hugging',
+          'hugging-states:hugging',
           componentData,
           activityMetadata
         );

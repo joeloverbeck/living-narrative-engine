@@ -226,7 +226,7 @@ describe('affection:link_arms action integration', () => {
       .withLocationComponent('room1')
       .asActor()
       .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-      .withComponent('positioning:hugging', {
+      .withComponent('hugging-states:hugging', {
         embraced_entity_id: 'target1',
         initiated: true,
         consented: true,
@@ -250,7 +250,7 @@ describe('affection:link_arms action integration', () => {
       .withLocationComponent('room1')
       .asActor()
       .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
-      .withComponent('positioning:being_hugged', {
+      .withComponent('hugging-states:being_hugged', {
         hugging_entity_id: 'actor1',
         consented: true,
       })
@@ -279,6 +279,6 @@ describe('affection:link_arms action integration', () => {
 
     await expect(
       testFixture.executeAction(actor.id, target.id)
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
   });
 });

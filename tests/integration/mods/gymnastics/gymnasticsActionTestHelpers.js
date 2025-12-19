@@ -24,7 +24,7 @@ const TARGET_ID = 'gymnast_observer';
 const ACTOR_NAME = 'Simone';
 const TARGET_NAME = 'Jordan';
 const REQUIRED_COMPONENT = 'gymnastics:is_gymnast';
-const FORBIDDEN_COMPONENT = 'positioning:hugging';
+const FORBIDDEN_COMPONENT = 'hugging-states:hugging';
 const FORBIDDEN_COMPONENTS = [
   FORBIDDEN_COMPONENT,
   'positioning:being_restrained',

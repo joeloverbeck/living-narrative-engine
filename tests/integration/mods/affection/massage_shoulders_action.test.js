@@ -86,7 +86,7 @@ describe('affection:massage_shoulders action integration', () => {
       .atLocation('room1')
       .asActor()
       .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-      .withComponent('positioning:being_hugged', {
+      .withComponent('hugging-states:being_hugged', {
         hugging_entity_id: 'target1',
       })
       .build();
@@ -102,6 +102,6 @@ describe('affection:massage_shoulders action integration', () => {
 
     await expect(
       testFixture.executeAction(actor.id, target.id)
-    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
   });
 });

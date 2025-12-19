@@ -266,7 +266,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
     );
     expect(disinfectAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
-        'positioning:hugging',
+        'hugging-states:hugging',
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'bending-states:bending_over',

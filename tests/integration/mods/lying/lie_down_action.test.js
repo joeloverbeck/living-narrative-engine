@@ -450,7 +450,7 @@ describe('lying:lie_down action rule execution', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:being_hugged', {
+        .withComponent('hugging-states:being_hugged', {
           hugging_entity_id: 'test:hugger',
         })
         .build();
@@ -466,7 +466,7 @@ describe('lying:lie_down action rule execution', () => {
       testFixture.reset([room, actor, hugger, bed]);
 
       await expect(testFixture.executeAction(actor.id, bed.id)).rejects.toThrow(
-        /forbidden component.*positioning:being_hugged/i
+        /forbidden component.*hugging-states:being_hugged/i
       );
     });
 
@@ -481,7 +481,7 @@ describe('lying:lie_down action rule execution', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:hugging', {
+        .withComponent('hugging-states:hugging', {
           embraced_entity_id: 'test:huggee',
           initiated: true,
         })
@@ -498,7 +498,7 @@ describe('lying:lie_down action rule execution', () => {
       testFixture.reset([room, actor, huggee, bed]);
 
       await expect(testFixture.executeAction(actor.id, bed.id)).rejects.toThrow(
-        /forbidden component.*positioning:hugging/i
+        /forbidden component.*hugging-states:hugging/i
       );
     });
   });

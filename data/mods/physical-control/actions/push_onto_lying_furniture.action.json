@@ -23,8 +23,8 @@
     "actor": [
       "positioning:biting_neck",
       "positioning:lying_down",
-      "positioning:hugging",
-      "positioning:being_hugged",
+      "hugging-states:hugging",
+      "hugging-states:being_hugged",
       "positioning:being_restrained",
       "positioning:restraining",
       "positioning:fallen"

@@ -7,7 +7,7 @@
   "required_components": {},
   "forbidden_components": {
     "actor": [
-      "positioning:hugging",
+      "hugging-states:hugging",
       "sex-states:receiving_blowjob",
       "sex-states:fucking_anally",
       "positioning:restraining"

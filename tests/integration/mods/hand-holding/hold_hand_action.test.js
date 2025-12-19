@@ -187,7 +187,7 @@ describe('hand-holding:hold_hand action integration', () => {
       includeRoom: false,
     });
 
-    scenario.actor.components['positioning:hugging'] = {
+    scenario.actor.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.target.id,
       initiated: true,
     };
@@ -203,7 +203,7 @@ describe('hand-holding:hold_hand action integration', () => {
       scenario.actor.id
     );
 
-    expect(actorInstance.components['positioning:hugging']).toEqual({
+    expect(actorInstance.components['hugging-states:hugging']).toEqual({
       embraced_entity_id: scenario.target.id,
       initiated: true,
     });

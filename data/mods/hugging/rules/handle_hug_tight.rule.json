@@ -24,8 +24,8 @@
     {
       "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
       "parameters": {
-        "actor_component_type": "positioning:hugging",
-        "target_component_type": "positioning:being_hugged",
+        "actor_component_type": "hugging-states:hugging",
+        "target_component_type": "hugging-states:being_hugged",
         "actor_data": {
           "embraced_entity_id": "{event.payload.targetId}",
           "initiated": true
@@ -35,8 +35,8 @@
           "consented": true
         },
         "existing_component_types_to_clean": [
-          "positioning:hugging",
-          "positioning:being_hugged"
+          "hugging-states:hugging",
+          "hugging-states:being_hugged"
         ]
       }
     },

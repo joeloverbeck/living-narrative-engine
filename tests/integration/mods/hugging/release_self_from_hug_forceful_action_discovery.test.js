@@ -116,7 +116,7 @@ describe('hugging:release_self_from_hug_forceful action discovery', () => {
           }
 
           const beingHugged =
-            actorEntity.components?.['positioning:being_hugged'] || null;
+            actorEntity.components?.['hugging-states:being_hugged'] || null;
           if (!beingHugged) {
             return { success: true, value: new Set() };
           }
@@ -128,7 +128,7 @@ describe('hugging:release_self_from_hug_forceful action discovery', () => {
               return;
             }
 
-            const hugging = partner.components?.['positioning:hugging'] || null;
+            const hugging = partner.components?.['hugging-states:hugging'] || null;
             if (
               hugging?.embraced_entity_id === actorId &&
               beingHugged.hugging_entity_id === partnerId
@@ -156,11 +156,11 @@ describe('hugging:release_self_from_hug_forceful action discovery', () => {
     options = {}
   ) => {
     const scenario = testFixture.createCloseActors(names, options);
-    scenario.actor.components['positioning:being_hugged'] = {
+    scenario.actor.components['hugging-states:being_hugged'] = {
       hugging_entity_id: scenario.target.id,
       consented: true,
     };
-    scenario.target.components['positioning:hugging'] = {
+    scenario.target.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.actor.id,
       initiated: true,
     };
@@ -184,7 +184,7 @@ describe('hugging:release_self_from_hug_forceful action discovery', () => {
 
   it('only appears for targets whose hugging component references the actor', () => {
     const scenario = primeBeingHuggedScenario(['Sasha', 'Theo']);
-    scenario.target.components['positioning:hugging'] = {
+    scenario.target.components['hugging-states:hugging'] = {
       embraced_entity_id: 'hugging:someone_else',
       initiated: true,
     };
@@ -228,7 +228,7 @@ describe('hugging:release_self_from_hug_forceful action discovery', () => {
 
   it('is hidden when the actor is also hugging the target', () => {
     const scenario = primeBeingHuggedScenario(['Willow', 'Xavier']);
-    scenario.actor.components['positioning:hugging'] = {
+    scenario.actor.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.target.id,
       initiated: true,
     };

@@ -52,7 +52,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'biting_entity_id',
     },
     {
-      mod: 'positioning',
+      mod: 'hugging-states',
       name: 'being_hugged',
       expectedTemplate: 'is being hugged',
       priority: 63,
@@ -80,7 +80,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'receiving_entity_id',
     },
     {
-      mod: 'positioning',
+      mod: 'hugging-states',
       name: 'hugging',
       expectedTemplate: 'is hugging',
       priority: 66,

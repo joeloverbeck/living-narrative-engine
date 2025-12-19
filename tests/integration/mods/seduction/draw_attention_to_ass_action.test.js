@@ -44,7 +44,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
         required: {},
         forbidden: {
           actor: [
-            'positioning:hugging',
+            'hugging-states:hugging',
             'positioning:doing_complex_performance',
           ],
         },
@@ -166,7 +166,7 @@ describe('Seduction Mod: Draw Attention to Ass hugging restrictions', () => {
       includeRoom: false,
     });
 
-    scenario.actor.components['positioning:hugging'] = {
+    scenario.actor.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.target.id,
       initiated: true,
     };
@@ -181,7 +181,7 @@ describe('Seduction Mod: Draw Attention to Ass hugging restrictions', () => {
     const actorInstance = testFixture.entityManager.getEntityInstance(
       scenario.actor.id
     );
-    expect(actorInstance.components['positioning:hugging']).toEqual({
+    expect(actorInstance.components['hugging-states:hugging']).toEqual({
       embraced_entity_id: scenario.target.id,
       initiated: true,
     });

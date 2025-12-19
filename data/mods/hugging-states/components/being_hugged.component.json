@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:being_hugged",
+  "id": "hugging-states:being_hugged",
   "description": "Marks an entity currently enveloped in a tight hug by another actor, signaling that other conflicting embraces are unavailable.",
   "dataSchema": {
     "type": "object",

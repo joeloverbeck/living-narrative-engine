@@ -137,8 +137,8 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       expect(pushOntoFurnitureAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
         'positioning:lying_down',
-        'positioning:hugging',
-        'positioning:being_hugged',
+        'hugging-states:hugging',
+        'hugging-states:being_hugged',
         'positioning:being_restrained',
         'positioning:restraining',
         'positioning:fallen',
@@ -239,14 +239,14 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
     it('fails validation when the actor is hugging the target', () => {
       setupScenario(testFixture, {
         actorComponents: {
-          'positioning:hugging': {
+          'hugging-states:hugging': {
             embraced_entity_id: TARGET_ID,
             initiated: true,
             consented: true,
           },
         },
         targetComponents: {
-          'positioning:being_hugged': { hugging_entity_id: ACTOR_ID },
+          'hugging-states:being_hugged': { hugging_entity_id: ACTOR_ID },
         },
       });
 
@@ -267,7 +267,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
     it('fails validation when the actor is being hugged', () => {
       setupScenario(testFixture, {
         actorComponents: {
-          'positioning:being_hugged': { hugging_entity_id: TARGET_ID },
+          'hugging-states:being_hugged': { hugging_entity_id: TARGET_ID },
         },
       });
 

@@ -6,7 +6,7 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:restraining"]
+    "actor": ["hugging-states:hugging", "positioning:restraining"]
   },
   "template": "squeeze your breasts to draw attention",
   "prerequisites": [

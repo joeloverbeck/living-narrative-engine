@@ -143,7 +143,7 @@ describe('violence:slap prerequisites', () => {
       expect(slapAction.targets.primary.scope).toBe('core:actors_in_location');
       expect(slapAction.forbidden_components).toBeDefined();
       expect(slapAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
       expect(slapAction.visual).toBeDefined();
     });

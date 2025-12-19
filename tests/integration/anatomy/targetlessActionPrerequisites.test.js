@@ -223,7 +223,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .atLocation('test-room')
         .withLocationComponent('test-room')
         .withBody(torsoId)
-        .withComponent('positioning:hugging', {
+        .withComponent('hugging-states:hugging', {
           embraced_entity_id: 'target-id',
           initiated: true,
         })

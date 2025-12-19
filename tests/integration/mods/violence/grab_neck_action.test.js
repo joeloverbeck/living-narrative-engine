@@ -45,7 +45,7 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
         includeRoom: false,
       });
 
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
       };
@@ -60,7 +60,7 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorInstance.components['positioning:hugging']).toEqual({
+      expect(actorInstance.components['hugging-states:hugging']).toEqual({
         embraced_entity_id: scenario.target.id,
         initiated: true,
       });

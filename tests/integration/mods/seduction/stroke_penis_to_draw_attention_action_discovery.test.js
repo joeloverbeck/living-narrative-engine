@@ -62,7 +62,7 @@ function loadScenario(
     });
 
   if (includeHugging) {
-    actorBuilder.withComponent('positioning:hugging', {
+    actorBuilder.withComponent('hugging-states:hugging', {
       embraced_entity_id: TARGET_ID,
       initiated: true,
     });
@@ -164,7 +164,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
       expect(strokePenisToDrawAttentionAction.targets).toBe('none');
       expect(strokePenisToDrawAttentionAction.forbidden_components).toEqual({
         actor: [
-          'positioning:hugging',
+          'hugging-states:hugging',
           'sex-states:receiving_blowjob',
           'sex-states:fucking_anally',
           'positioning:restraining',

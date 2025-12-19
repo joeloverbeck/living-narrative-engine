@@ -116,7 +116,7 @@ describe('violence:peck_target action discovery', () => {
         'positioning:fallen'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
         'positioning:being_restrained'

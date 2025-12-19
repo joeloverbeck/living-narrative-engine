@@ -169,7 +169,7 @@ describe('violence:peck_target prerequisites', () => {
 
     test('should have forbidden actor states for combat', () => {
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
         'positioning:being_restrained'

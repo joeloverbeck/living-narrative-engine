@@ -45,9 +45,9 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       );
     });
 
-    it('should forbid positioning:hugging component', () => {
+    it('should forbid hugging-states:hugging component', () => {
       expect(action.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
     });
 
@@ -104,7 +104,7 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       const actor = sittingScenario.entities.find((e) => e.id === 'actor1');
       const partner = sittingScenario.entities.find((e) => e.id === 'actor2');
 
-      actor.components['positioning:hugging'] = {
+      actor.components['hugging-states:hugging'] = {
         embraced_entity_id: partner.id,
         initiated: true,
       };
@@ -129,7 +129,7 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       const actorInstance = testFixture.entityManager.getEntityInstance(
         actor.id
       );
-      expect(actorInstance.components['positioning:hugging']).toEqual({
+      expect(actorInstance.components['hugging-states:hugging']).toEqual({
         embraced_entity_id: partner.id,
         initiated: true,
       });

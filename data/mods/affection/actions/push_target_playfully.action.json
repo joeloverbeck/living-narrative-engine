@@ -8,7 +8,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:hugging"]
+    "actor": ["hugging-states:hugging"]
   },
   "template": "push {target} playfully",
   "prerequisites": [],

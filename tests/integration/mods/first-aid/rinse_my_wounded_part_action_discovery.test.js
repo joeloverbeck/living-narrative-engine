@@ -369,7 +369,7 @@ describe('first-aid:rinse_my_wounded_part action definition', () => {
     expect(rinseAction.required_components.actor).not.toContain('items:inventory');
     expect(rinseAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
-        'positioning:hugging',
+        'hugging-states:hugging',
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'bending-states:bending_over',

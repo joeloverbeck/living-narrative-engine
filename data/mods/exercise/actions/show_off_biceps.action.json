@@ -7,7 +7,7 @@
   "required_components": {},
   "forbidden_components": {
     "actor": [
-      "positioning:hugging",
+      "hugging-states:hugging",
       "positioning:fallen",
       "positioning:being_restrained",
       "positioning:restraining"

@@ -186,7 +186,7 @@ describe('affection:rest_head_on_shoulder action discovery', () => {
 
     it('is not available when the actor is currently being hugged', () => {
       const scenario = testFixture.createCloseActors(['Nina', 'Omar']);
-      scenario.actor.components['positioning:being_hugged'] = {
+      scenario.actor.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.target.id,
       };
 
