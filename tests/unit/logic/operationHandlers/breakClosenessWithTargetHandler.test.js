@@ -161,13 +161,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['target1'] };
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1'] };
           }
@@ -182,13 +182,13 @@ describe('BreakClosenessWithTargetHandler', () => {
       // Actor component should be removed (empty partners)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'actor1',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Target component should be removed (empty partners)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'target1',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Should not call addComponent for either entity
@@ -205,7 +205,7 @@ describe('BreakClosenessWithTargetHandler', () => {
 
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
           }
           return undefined;
@@ -237,13 +237,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['partner2', 'target1'] };
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1'] };
           }
@@ -258,14 +258,14 @@ describe('BreakClosenessWithTargetHandler', () => {
       // Actor component should be updated (still has partner2)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'actor1',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['partner2'] }
       );
 
       // Target component should be removed (no partners left)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'target1',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Movement unlock no longer performed when breaking closeness
@@ -282,13 +282,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['target1'] };
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1', 'partner3'] };
           }
@@ -303,13 +303,13 @@ describe('BreakClosenessWithTargetHandler', () => {
       // Actor component should be removed (no partners left)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'actor1',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Target component should be updated (still has partner3)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'target1',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['partner3'] }
       );
 
@@ -331,13 +331,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['partner2', 'target1'] };
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1', 'partner3'] };
           }
@@ -352,12 +352,12 @@ describe('BreakClosenessWithTargetHandler', () => {
       // Both components should be updated, not removed
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'actor1',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['partner2'] }
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'target1',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['partner3'] }
       );
 
@@ -389,7 +389,7 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1'] };
           }
@@ -416,7 +416,7 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['target1'] };
           }
@@ -443,13 +443,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: 'not-an-array' };
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1'] };
           }
@@ -476,13 +476,13 @@ describe('BreakClosenessWithTargetHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'actor1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['target1', 'partner2', 'partner2'] }; // Duplicates
           }
           if (
             entityId === 'target1' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['actor1'] };
           }
@@ -507,7 +507,7 @@ describe('BreakClosenessWithTargetHandler', () => {
 
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
           }
           return undefined;

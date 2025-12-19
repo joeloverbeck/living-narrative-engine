@@ -22,9 +22,9 @@ describe('physical-control:turn_around action', () => {
       );
     });
 
-    it('requires positioning:closeness component for actor', () => {
+    it('requires personal-space-states:closeness component for actor', () => {
       expect(turnAroundAction.required_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
@@ -56,20 +56,20 @@ describe('physical-control:turn_around action', () => {
       const mockActor = {
         id: 'actor1',
         components: {
-          'positioning:closeness': { partners: ['target1'] },
+          'personal-space-states:closeness': { partners: ['target1'] },
         },
       };
 
       const mockTarget = {
         id: 'target1',
         components: {
-          'positioning:closeness': { partners: ['actor1'] },
+          'personal-space-states:closeness': { partners: ['actor1'] },
         },
       };
 
       // Action requires closeness component
-      expect(mockActor.components['positioning:closeness']).toBeDefined();
-      expect(mockTarget.components['positioning:closeness'].partners).toContain(
+      expect(mockActor.components['personal-space-states:closeness']).toBeDefined();
+      expect(mockTarget.components['personal-space-states:closeness'].partners).toContain(
         'actor1'
       );
     });
@@ -81,7 +81,7 @@ describe('physical-control:turn_around action', () => {
       };
 
       // Actor lacks required component
-      expect(mockActor.components['positioning:closeness']).toBeUndefined();
+      expect(mockActor.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 });

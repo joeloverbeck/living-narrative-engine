@@ -1,6 +1,0 @@
-positioning:surface_im_bending_over := entities(positioning:allows_bending_over)[][{
-  "==": [
-    {"var": "entity.id"},
-    {"var": "actor.components.positioning:bending_over.surface_id"}
-  ]
-}]

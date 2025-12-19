@@ -77,10 +77,10 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
       const actor = testBed.mocks.entityManager.getEntityInstance('actor1');
       const target = testBed.mocks.entityManager.getEntityInstance('target1');
 
-      expect(actor.components['positioning:closeness'].partners).toContain(
+      expect(actor.components['personal-space-states:closeness'].partners).toContain(
         'target1'
       );
-      expect(target.components['positioning:closeness'].partners).toContain(
+      expect(target.components['personal-space-states:closeness'].partners).toContain(
         'actor1'
       );
     });
@@ -107,7 +107,7 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
       const updatedActor =
         testBed.mocks.entityManager.getEntityInstance('actor1');
       expect(
-        updatedActor.components['positioning:closeness'].partners
+        updatedActor.components['personal-space-states:closeness'].partners
       ).toContain('target1');
     });
 
@@ -117,7 +117,7 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
       testBed.establishClosenessWithValidation('actor1', 'target1');
 
       const actor = testBed.mocks.entityManager.getEntityInstance('actor1');
-      const partners = actor.components['positioning:closeness'].partners;
+      const partners = actor.components['personal-space-states:closeness'].partners;
 
       // Should only have one instance of target1
       const target1Count = partners.filter((p) => p === 'target1').length;
@@ -204,10 +204,10 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
         closeProximity: true,
       });
 
-      expect(actor.components['positioning:closeness'].partners).toContain(
+      expect(actor.components['personal-space-states:closeness'].partners).toContain(
         target.id
       );
-      expect(target.components['positioning:closeness'].partners).toContain(
+      expect(target.components['personal-space-states:closeness'].partners).toContain(
         actor.id
       );
     });
@@ -217,8 +217,8 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
         closeProximity: false,
       });
 
-      expect(actor.components['positioning:closeness']).toBeUndefined();
-      expect(target.components['positioning:closeness']).toBeUndefined();
+      expect(actor.components['personal-space-states:closeness']).toBeUndefined();
+      expect(target.components['personal-space-states:closeness']).toBeUndefined();
     });
 
     it('should place entities at same location', () => {

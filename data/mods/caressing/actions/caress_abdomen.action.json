@@ -18,7 +18,7 @@
   },
   "template": "caress {primary}'s abdomen over the {secondary}",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["positioning:facing_away"]

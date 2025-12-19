@@ -75,7 +75,7 @@ describe('sex-breastplay:press_against_chest action discovery', () => {
       );
 
       expect(pressAgainstChestAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
 
       expect(pressAgainstChestAction.visual).toEqual({

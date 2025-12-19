@@ -193,11 +193,11 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
   async #getCurrentClosenessStates(parameters, logger) {
     const actorCloseness = this.#entityManager.getComponentData(
       parameters.actor_id,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const targetCloseness = this.#entityManager.getComponentData(
       parameters.target_id,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     logger.debug('Retrieved current closeness states', {
@@ -259,7 +259,7 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
       // No more partners → remove component
       await this.#entityManager.removeComponent(
         actorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       logger.info('Removed actor closeness component (no remaining partners)', {
@@ -268,7 +268,7 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
       });
     } else {
       // Still has partners → update component
-      await this.#entityManager.addComponent(actorId, 'positioning:closeness', {
+      await this.#entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: repairedPartners,
       });
 
@@ -330,7 +330,7 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
       // No more partners → remove component
       await this.#entityManager.removeComponent(
         targetId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       logger.info(
@@ -344,7 +344,7 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
       // Still has partners → update component
       await this.#entityManager.addComponent(
         targetId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: repairedPartners,
         }

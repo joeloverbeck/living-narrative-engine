@@ -15,7 +15,7 @@
     "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": ["positioning:closeness", "positioning:being_restrained"]
+    "actor": ["personal-space-states:closeness", "positioning:being_restrained"]
   },
   "prerequisites": [],
   "template": "stop playing {instrument}",

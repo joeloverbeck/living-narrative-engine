@@ -102,8 +102,8 @@ describe('ActivityDescriptionService cache management integration', () => {
 
   const registerClosenessComponent = () => {
     testBed.loadComponents({
-      'positioning:closeness': {
-        id: 'positioning:closeness',
+      'personal-space-states:closeness': {
+        id: 'personal-space-states:closeness',
         dataSchema: {
           type: 'object',
           properties: {
@@ -161,7 +161,7 @@ describe('ActivityDescriptionService cache management integration', () => {
     await testBed.entityManager.createEntityInstance('core:actor', {
       instanceId: 'ane',
     });
-    testBed.entityManager.addComponent(jon.id, 'positioning:closeness', {
+    testBed.entityManager.addComponent(jon.id, 'personal-space-states:closeness', {
       partners: ['ane'],
     });
 

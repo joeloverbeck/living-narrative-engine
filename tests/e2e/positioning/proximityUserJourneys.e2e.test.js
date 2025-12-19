@@ -106,22 +106,22 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         spot_index: 1,
       });
 
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
 
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
       // Verify closeness established between Alice and Bob
       const aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeDefined();
@@ -146,19 +146,19 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Verify closeness removed from both actors
       const aliceFinalCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobFinalCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceFinalCloseness).toBeNull();
@@ -197,7 +197,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         components: {
           'core:actor': { type: 'player' },
           'positioning:sitting_on': { furniture_id: benchId, spot_index: 0 },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
         },
       });
 
@@ -207,26 +207,26 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         components: {
           'core:actor': { type: 'npc' },
           'positioning:sitting_on': { furniture_id: benchId, spot_index: 1 },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
         },
       });
 
       // Establish initial closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
       // Verify initial closeness
       const initialAliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const initialBobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(initialAliceCloseness.partners).toContain(bobId);
@@ -248,19 +248,19 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Verify closeness removed and states updated
       const aliceAfterBobStandsCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobAfterStandingCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceAfterBobStandsCloseness).toBeNull();
@@ -330,7 +330,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       let aliceCloseness = await entityService.getComponent(
         actorIds.alice,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness).toBeNull();
 
@@ -354,14 +354,14 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Establish closeness between Alice and Bob
       await entityService.updateComponent(
         actorIds.alice,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.bob],
         }
       );
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.alice],
         }
@@ -369,11 +369,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       aliceCloseness = await entityService.getComponent(
         actorIds.alice,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let bobCloseness = await entityService.getComponent(
         actorIds.bob,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toContain(actorIds.bob);
@@ -399,14 +399,14 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Bob should now be close to both Alice and Charlie
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.alice, actorIds.charlie],
         }
       );
       await entityService.updateComponent(
         actorIds.charlie,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.bob],
         }
@@ -414,11 +414,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       bobCloseness = await entityService.getComponent(
         actorIds.bob,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let charlieCloseness = await entityService.getComponent(
         actorIds.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(bobCloseness.partners).toContain(actorIds.alice);
@@ -445,14 +445,14 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Charlie should now be close to both Bob and Diana
       await entityService.updateComponent(
         actorIds.charlie,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.bob, actorIds.diana],
         }
       );
       await entityService.updateComponent(
         actorIds.diana,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.charlie],
         }
@@ -460,11 +460,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       charlieCloseness = await entityService.getComponent(
         actorIds.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let dianaCloseness = await entityService.getComponent(
         actorIds.diana,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(charlieCloseness.partners).toContain(actorIds.bob);
@@ -474,7 +474,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Verify Alice and Diana are not directly close (not adjacent)
       aliceCloseness = await entityService.getComponent(
         actorIds.alice,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness.partners).not.toContain(actorIds.diana);
       expect(dianaCloseness.partners).not.toContain(actorIds.alice);
@@ -498,7 +498,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         components: {
           'core:actor': { type: 'player' },
           'positioning:sitting_on': { furniture_id: sofaId, spot_index: 0 },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
         },
       });
 
@@ -508,7 +508,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         components: {
           'core:actor': { type: 'npc' },
           'positioning:sitting_on': { furniture_id: sofaId, spot_index: 1 },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
         },
       });
 
@@ -518,25 +518,25 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         components: {
           'core:actor': { type: 'npc' },
           'positioning:sitting_on': { furniture_id: sofaId, spot_index: 2 },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
         },
       });
 
       // Establish initial closeness: Bob is the bridge between Alice and Charlie
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId, charlieId],
       });
-      await entityService.updateComponent(charlieId, 'positioning:closeness', {
+      await entityService.updateComponent(charlieId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
 
       // Verify initial state: Bob is the bridge between Alice and Charlie
       const initialBobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(initialBobCloseness.partners).toContain(aliceId);
       expect(initialBobCloseness.partners).toContain(charlieId);
@@ -557,28 +557,28 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
       await entityService.updateComponent(
         charlieId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
 
       // Verify all closeness relationships are removed
       const finalAliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const finalBobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const finalCharlieCloseness = await entityService.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(finalAliceCloseness).toBeNull();
@@ -647,7 +647,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       );
       const aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceSitting).toBeDefined();
@@ -712,11 +712,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Verify no closeness established (not adjacent)
       const aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeNull();
@@ -790,21 +790,21 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
           furniture_id: benchId,
           spot_index: 1,
         });
-        await entityService.updateComponent(aliceId, 'positioning:closeness', {
+        await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
           partners: [bobId],
         });
-        await entityService.updateComponent(bobId, 'positioning:closeness', {
+        await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
           partners: [aliceId],
         });
 
         // Verify closeness established
         let aliceCloseness = await entityService.getComponent(
           aliceId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         let bobCloseness = await entityService.getComponent(
           bobId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
 
         expect(aliceCloseness).toBeDefined();
@@ -837,23 +837,23 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         );
         await entityService.updateComponent(
           aliceId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           null
         );
         await entityService.updateComponent(
           bobId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           null
         );
 
         // Verify closeness removed and no corruption
         aliceCloseness = await entityService.getComponent(
           aliceId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         bobCloseness = await entityService.getComponent(
           bobId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         const aliceSitting = await entityService.getComponent(
           aliceId,

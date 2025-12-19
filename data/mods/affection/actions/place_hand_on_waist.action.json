@@ -5,7 +5,7 @@
   "description": "Place a hand on someone's waist in an intimate gesture",
   "targets": "positioning:close_actors",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["positioning:facing_away", "positioning:hugging"]

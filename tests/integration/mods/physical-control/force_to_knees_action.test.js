@@ -132,10 +132,10 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       expect(
         actorAfter.components['positioning:kneeling_before']
       ).toBeUndefined();
-      expect(actorAfter.components['positioning:closeness'].partners).toEqual([
+      expect(actorAfter.components['personal-space-states:closeness'].partners).toEqual([
         scenario.target.id,
       ]);
-      expect(targetAfter.components['positioning:closeness'].partners).toEqual([
+      expect(targetAfter.components['personal-space-states:closeness'].partners).toEqual([
         scenario.actor.id,
       ]);
       expect(targetAfter.components['positioning:sitting_on']).toBeUndefined();

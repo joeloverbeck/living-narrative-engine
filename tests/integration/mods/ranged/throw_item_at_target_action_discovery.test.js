@@ -77,7 +77,7 @@ describe('throw_item_at_target action definition', () => {
 
     it('should forbid bending over state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
     });
 

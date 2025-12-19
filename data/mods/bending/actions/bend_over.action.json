@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "bending:bend_over",
+  "name": "Bend over",
+  "description": "Bend over an available surface",
+  "targets": "bending:available_surfaces",
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:being_hugged",
+      "positioning:biting_neck",
+      "positioning:hugging",
+      "positioning:sitting_on",
+      "bending-states:bending_over",
+      "positioning:kneeling_before",
+      "positioning:straddling_waist",
+      "sex-states:giving_blowjob",
+      "sex-states:receiving_blowjob",
+      "sex-states:fucking_anally",
+      "positioning:lying_down",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "bend over {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#5a4033",
+    "textColor": "#fff3e0",
+    "hoverBackgroundColor": "#6d4c41",
+    "hoverTextColor": "#ffffff"
+  }
+}

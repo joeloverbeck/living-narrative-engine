@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["sex-states:fucking_vaginally", "sex-states:receiving_blowjob"],

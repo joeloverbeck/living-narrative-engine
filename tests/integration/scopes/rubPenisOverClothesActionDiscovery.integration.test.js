@@ -360,7 +360,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.actor,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
             'positioning:facing_away': {
@@ -371,7 +371,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.target,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
             'positioning:facing_away': {
@@ -547,7 +547,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.actor,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
             'positioning:facing_away': {
@@ -558,7 +558,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.target,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
             'positioning:facing_away': {
@@ -640,7 +640,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.actor,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
             'positioning:facing_away': {
@@ -651,7 +651,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.target,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
             'positioning:facing_away': {

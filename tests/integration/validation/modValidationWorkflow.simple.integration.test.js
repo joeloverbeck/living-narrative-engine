@@ -397,7 +397,7 @@ async function createBasicModEcosystem(baseDir) {
       },
       files: {
         'components/closeness.component.json': {
-          id: 'positioning:closeness',
+          id: 'personal-space-states:closeness',
           dataSchema: {
             type: 'object',
             properties: { distance: { type: 'string' } },
@@ -566,7 +566,7 @@ async function createRealPositioningIntimacyViolation(baseDir) {
       },
       files: {
         'components/closeness.component.json': {
-          id: 'positioning:closeness',
+          id: 'personal-space-states:closeness',
           dataSchema: {
             type: 'object',
             properties: {
@@ -577,13 +577,13 @@ async function createRealPositioningIntimacyViolation(baseDir) {
         },
         'actions/turn_around.action.json': {
           id: 'physical-control:turn_around',
-          required_components: { actor: ['positioning:closeness'] },
+          required_components: { actor: ['personal-space-states:closeness'] },
           forbidden_components: { actor: ['kissing:kissing'] }, // ← The actual violation
           operations: [
             {
               type: 'set_component_value',
               target: 'actor',
-              component: 'positioning:closeness',
+              component: 'personal-space-states:closeness',
               field: 'direction',
               value: 'opposite',
             },
@@ -693,12 +693,12 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
       },
       files: {
         'components/closeness.component.json': {
-          id: 'positioning:closeness',
+          id: 'personal-space-states:closeness',
           dataSchema: { type: 'object' },
         },
         'actions/move_to.action.json': {
           id: 'positioning:move_to',
-          required_components: { actor: ['positioning:closeness'] },
+          required_components: { actor: ['personal-space-states:closeness'] },
         },
       },
     };

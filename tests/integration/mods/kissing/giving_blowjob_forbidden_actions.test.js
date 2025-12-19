@@ -122,7 +122,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -175,13 +175,13 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
       };
 
       // Set up closeness for all three actors
-      actorA.components['positioning:closeness'] = {
+      actorA.components['personal-space-states:closeness'] = {
         partners: [actorB.id, actorC.id],
       };
-      actorB.components['positioning:closeness'] = {
+      actorB.components['personal-space-states:closeness'] = {
         partners: [actorA.id, actorC.id],
       };
-      actorC.components['positioning:closeness'] = {
+      actorC.components['personal-space-states:closeness'] = {
         partners: [actorA.id, actorB.id],
       };
 

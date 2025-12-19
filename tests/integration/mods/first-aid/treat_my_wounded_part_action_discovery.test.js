@@ -121,7 +121,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorBendingOver) {
-      actorBuilder.withComponent('positioning:bending_over', {});
+      actorBuilder.withComponent('bending-states:bending_over', {});
     }
 
     if (actorHugging) {
@@ -279,7 +279,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
         'positioning:hugging',
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
-        'positioning:bending_over',
+        'bending-states:bending_over',
         'positioning:being_restrained',
         'positioning:restraining',
         'positioning:fallen',
@@ -335,7 +335,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:bending_over', () => {
+  it('is hidden when actor has bending-states:bending_over', () => {
     loadScenario({ actorBendingOver: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);

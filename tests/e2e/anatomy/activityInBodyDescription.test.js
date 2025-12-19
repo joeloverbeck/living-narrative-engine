@@ -21,7 +21,6 @@ describe('Activity Integration in Body Descriptions', () => {
       { mod: 'kissing', name: 'kissing' },
       { mod: 'positioning', name: 'being_bitten_in_neck' },
       { mod: 'positioning', name: 'being_hugged' },
-      { mod: 'positioning', name: 'bending_over' },
       { mod: 'positioning', name: 'biting_neck' },
       { mod: 'sex-states', name: 'giving_blowjob' },
       { mod: 'positioning', name: 'hugging' },
@@ -119,7 +118,7 @@ describe('Activity Integration in Body Descriptions', () => {
 
         // Templates should use present progressive or present tense
         expect(template).toMatch(
-          /is (following|leading|holding|sitting|straddling|lying|bending|biting|kissing|hugging|performing|receiving|being|kneeling)/
+          /is (following|leading|holding|sitting|straddling|lying|biting|kissing|hugging|performing|receiving|being|kneeling)/
         );
       });
     });

@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "companionship",
   "version": "1.0.0",
-  "name": "Companionship",
+  "name": "Companionship System",
   "description": "Provides following, leading, and companion management mechanics.",
   "actionPurpose": "Manage companion relationships through following, leading, and dismissing mechanics.",
   "actionConsiderWhen": "Recruiting someone to follow you, ending a companion relationship, or coordinating group movement.",
@@ -13,7 +13,7 @@
       "version": "^1.0.0"
     },
     {
-      "id": "positioning",
+      "id": "bending-states",
       "version": "^1.0.0"
     }
   ],

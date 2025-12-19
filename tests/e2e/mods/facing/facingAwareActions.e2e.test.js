@@ -58,7 +58,7 @@ describe('Facing-aware action availability E2E', () => {
         [POSITION_COMPONENT_ID]: { locationId: 'test:throne_room' },
         'core:actor': { type: 'player' },
         // Add closeness component for NPC (required for turn_around action)
-        'positioning:closeness': { partners: ['test:npc'] },
+        'personal-space-states:closeness': { partners: ['test:npc'] },
       },
     });
 
@@ -70,7 +70,7 @@ describe('Facing-aware action availability E2E', () => {
         [POSITION_COMPONENT_ID]: { locationId: 'test:throne_room' },
         'core:actor': { type: 'npc' },
         // Add closeness component for player (required for turn_around action)
-        'positioning:closeness': { partners: ['test:player'] },
+        'personal-space-states:closeness': { partners: ['test:player'] },
       },
     });
 
@@ -222,7 +222,7 @@ describe('Facing-aware action availability E2E', () => {
         [POSITION_COMPONENT_ID]: { locationId: 'test:throne_room' },
         'core:actor': { type: 'npc' },
         // Add closeness to both other actors
-        'positioning:closeness': { partners: ['test:npc', 'test:player'] },
+        'personal-space-states:closeness': { partners: ['test:npc', 'test:player'] },
       },
     });
 

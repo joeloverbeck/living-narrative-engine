@@ -71,17 +71,17 @@ describe('deference:crawl_to - Rule Execution', () => {
       // Verify actor gained closeness
       const actorEntity =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorEntity.components['positioning:closeness']).toBeDefined();
+      expect(actorEntity.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        actorEntity.components['positioning:closeness'].partners
+        actorEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:target1');
 
       // Verify target gained closeness
       const targetEntity =
         testFixture.entityManager.getEntityInstance('test:target1');
-      expect(targetEntity.components['positioning:closeness']).toBeDefined();
+      expect(targetEntity.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        targetEntity.components['positioning:closeness'].partners
+        targetEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:actor1');
 
       // Verify kneeling state preserved
@@ -149,13 +149,13 @@ describe('deference:crawl_to - Rule Execution', () => {
       const carolEntity =
         testFixture.entityManager.getEntityInstance('test:carol');
 
-      expect(aliceEntity.components['positioning:closeness'].partners).toEqual(
+      expect(aliceEntity.components['personal-space-states:closeness'].partners).toEqual(
         expect.arrayContaining(['test:bob', 'test:carol'])
       );
-      expect(bobEntity.components['positioning:closeness'].partners).toEqual(
+      expect(bobEntity.components['personal-space-states:closeness'].partners).toEqual(
         expect.arrayContaining(['test:alice', 'test:carol'])
       );
-      expect(carolEntity.components['positioning:closeness'].partners).toEqual(
+      expect(carolEntity.components['personal-space-states:closeness'].partners).toEqual(
         expect.arrayContaining(['test:alice', 'test:bob'])
       );
     });
@@ -216,7 +216,7 @@ describe('deference:crawl_to - Rule Execution', () => {
       expect(
         actorBefore.components['positioning:kneeling_before']
       ).toBeDefined();
-      expect(actorBefore.components['positioning:closeness']).toBeUndefined();
+      expect(actorBefore.components['personal-space-states:closeness']).toBeUndefined();
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
@@ -229,8 +229,8 @@ describe('deference:crawl_to - Rule Execution', () => {
       expect(
         actorAfter.components['positioning:kneeling_before'].entityId
       ).toBe('test:target1');
-      expect(actorAfter.components['positioning:closeness']).toBeDefined();
-      expect(actorAfter.components['positioning:closeness'].partners).toContain(
+      expect(actorAfter.components['personal-space-states:closeness']).toBeDefined();
+      expect(actorAfter.components['personal-space-states:closeness'].partners).toContain(
         'test:target1'
       );
     });
@@ -247,7 +247,7 @@ describe('deference:crawl_to - Rule Execution', () => {
       // Verify no closeness was added
       const actorEntity =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorEntity.components['positioning:closeness']).toBeUndefined();
+      expect(actorEntity.components['personal-space-states:closeness']).toBeUndefined();
 
       // Verify no crawling-related perceptible events
       const perceptibleEvents = testFixture.events.filter(
@@ -309,16 +309,16 @@ describe('deference:crawl_to - Rule Execution', () => {
       const aliceEntity =
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
-      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
-      expect(bobEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeDefined();
+      expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
 
       // Verify Carol and Dave are not affected
       const carolEntity =
         testFixture.entityManager.getEntityInstance('test:carol');
       const daveEntity =
         testFixture.entityManager.getEntityInstance('test:dave');
-      expect(carolEntity.components['positioning:closeness']).toBeUndefined();
-      expect(daveEntity.components['positioning:closeness']).toBeUndefined();
+      expect(carolEntity.components['personal-space-states:closeness']).toBeUndefined();
+      expect(daveEntity.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 
@@ -358,12 +358,12 @@ describe('deference:crawl_to - Rule Execution', () => {
         'p_scenario:bob_jones'
       );
 
-      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        aliceEntity.components['positioning:closeness'].partners
+        aliceEntity.components['personal-space-states:closeness'].partners
       ).toContain('p_scenario:bob_jones');
-      expect(bobEntity.components['positioning:closeness']).toBeDefined();
-      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+      expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
+      expect(bobEntity.components['personal-space-states:closeness'].partners).toContain(
         'p_scenario:alice_smith'
       );
     });

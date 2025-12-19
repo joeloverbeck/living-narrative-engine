@@ -1916,7 +1916,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'lying:available_lying_furniture',
         'lying:furniture_im_lying_on',
         'sitting:furniture_im_sitting_on',
-        'positioning:surface_im_bending_over',
+        'bending:surface_im_bending_over',
         'positioning:actors_im_facing_away_from',
       ],
       inventory: [

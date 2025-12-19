@@ -52,7 +52,7 @@ describe('hugging:release_hug action discovery', () => {
         }
 
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners || [];
+          actorEntity.components?.['personal-space-states:closeness']?.partners || [];
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return new Set();
         }

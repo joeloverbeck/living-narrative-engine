@@ -5,7 +5,7 @@
   "description": "Lean in and softly kiss the target on the cheek.",
   "targets": "kissing:close_actors_facing_each_other",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [

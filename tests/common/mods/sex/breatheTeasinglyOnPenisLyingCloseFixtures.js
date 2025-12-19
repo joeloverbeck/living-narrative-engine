@@ -245,7 +245,7 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
       const actor = testFixture.entityManager.getEntityInstance(actorId);
       const actorLying = actor?.components?.['positioning:lying_down'];
       const closenessPartners =
-        actor?.components?.['positioning:closeness']?.partners;
+        actor?.components?.['personal-space-states:closeness']?.partners;
 
       if (
         !actorLying ||

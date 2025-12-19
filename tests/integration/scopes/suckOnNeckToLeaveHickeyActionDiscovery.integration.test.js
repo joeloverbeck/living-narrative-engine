@@ -208,14 +208,14 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
           },
         },
         {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId] },
+            'personal-space-states:closeness': { partners: [actorId] },
           },
         },
         { id: 'room1', components: {} },
@@ -249,14 +249,14 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
           },
         },
         {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId] },
+            'personal-space-states:closeness': { partners: [actorId] },
             'positioning:facing_away': { facing_away_from: [actorId] },
           },
         },
@@ -327,7 +327,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
             'kissing:kissing': { partner: targetId, initiator: true },
           },
         },
@@ -335,7 +335,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId] },
+            'personal-space-states:closeness': { partners: [actorId] },
             'kissing:kissing': { partner: actorId, initiator: false },
           },
         },
@@ -366,21 +366,21 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [target1Id, target2Id] },
+            'personal-space-states:closeness': { partners: [target1Id, target2Id] },
           },
         },
         {
           id: target1Id,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId, target2Id] },
+            'personal-space-states:closeness': { partners: [actorId, target2Id] },
           },
         },
         {
           id: target2Id,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId, target1Id] },
+            'personal-space-states:closeness': { partners: [actorId, target1Id] },
           },
         },
         { id: 'room1', components: {} },
@@ -416,7 +416,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [facingTargetId, behindTargetId],
             },
           },
@@ -425,7 +425,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: facingTargetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId, behindTargetId] },
+            'personal-space-states:closeness': { partners: [actorId, behindTargetId] },
             // No facing_away component = facing each other
           },
         },
@@ -433,7 +433,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: behindTargetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: [actorId, facingTargetId] },
+            'personal-space-states:closeness': { partners: [actorId, facingTargetId] },
             'positioning:facing_away': { facing_away_from: [actorId] },
           },
         },
@@ -473,7 +473,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            // Missing positioning:closeness
+            // Missing personal-space-states:closeness
           },
         },
         {

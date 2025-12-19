@@ -279,7 +279,7 @@ function resolveActorsFuckingMeVaginallyScope(testFixture, context) {
     return { success: true, value: new Set() };
   }
 
-  const closeness = actorEntity?.components?.['positioning:closeness'];
+  const closeness = actorEntity?.components?.['personal-space-states:closeness'];
   const partners = Array.isArray(closeness?.partners) ? closeness.partners : [];
 
   if (partners.length === 0) {

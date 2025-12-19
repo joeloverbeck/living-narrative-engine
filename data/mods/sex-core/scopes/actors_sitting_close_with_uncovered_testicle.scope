@@ -1,17 +1,17 @@
 // Scope for seated partners with at least one uncovered testicle while sharing close seating
 // Shared across oral teasing actions that keep both participants seated close together
-sex-core:actors_sitting_close_with_uncovered_testicle := actor.components.positioning:closeness.partners[][
+sex-core:actors_sitting_close_with_uncovered_testicle := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
       {"!!": {"var": "actor.components.positioning:sitting_on"}},
       {"!!": {"var": "entity.components.positioning:sitting_on"}},
       {
         "and": [
-          {"!!": {"var": "entity.components.positioning:closeness.partners"}},
+          {"!!": {"var": "entity.components.personal-space-states:closeness.partners"}},
           {
             "in": [
               {"var": "actor.id"},
-              {"var": "entity.components.positioning:closeness.partners"}
+              {"var": "entity.components.personal-space-states:closeness.partners"}
             ]
           }
         ]

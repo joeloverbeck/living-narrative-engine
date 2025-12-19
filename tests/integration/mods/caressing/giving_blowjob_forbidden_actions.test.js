@@ -90,7 +90,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       }
 
       const closeness =
-        actorEntity.components?.['positioning:closeness']?.partners;
+        actorEntity.components?.['personal-space-states:closeness']?.partners;
       if (!Array.isArray(closeness) || closeness.length === 0) {
         return new Set();
       }
@@ -137,7 +137,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       }
 
       const closeness =
-        actorEntity.components?.['positioning:closeness']?.partners;
+        actorEntity.components?.['personal-space-states:closeness']?.partners;
       if (!Array.isArray(closeness) || closeness.length === 0) {
         return new Set();
       }

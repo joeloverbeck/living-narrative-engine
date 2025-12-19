@@ -24,7 +24,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['partner1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['partner1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'partner1',
       })
@@ -34,7 +34,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .build();
 
     testFixture.reset([room, actor, partner]);
@@ -51,7 +51,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['partner1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['partner1'] })
       .withComponent('positioning:hugging', {
         embraced_entity_id: 'partner1',
         initiated: true,
@@ -62,7 +62,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .build();
 
     testFixture.reset([room, actor, partner]);

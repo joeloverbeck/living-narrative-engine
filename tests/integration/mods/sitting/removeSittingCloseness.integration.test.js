@@ -62,13 +62,13 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
     entityManager.createEntity('game:david');
 
     // Set up initial closeness relationships (Alice-Bob-Charlie chain from sitting)
-    entityManager.addComponent('game:alice', 'positioning:closeness', {
+    entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
       partners: ['game:bob'],
     });
-    entityManager.addComponent('game:bob', 'positioning:closeness', {
+    entityManager.addComponent('game:bob', 'personal-space-states:closeness', {
       partners: ['game:alice', 'game:charlie'],
     });
-    entityManager.addComponent('game:charlie', 'positioning:closeness', {
+    entityManager.addComponent('game:charlie', 'personal-space-states:closeness', {
       partners: ['game:bob'],
     });
 
@@ -98,21 +98,21 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
       // Verify Alice's closeness is removed
       const aliceCloseness = entityManager.getComponentData(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness).toBeNull();
 
       // Verify Bob's closeness to Alice is removed
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness?.partners).toEqual(['game:charlie']);
 
       // Verify Charlie is unaffected (wasn't adjacent to Alice)
       const charlieCloseness = entityManager.getComponentData(
         'game:charlie',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(charlieCloseness?.partners).toEqual(['game:bob']);
 
@@ -149,21 +149,21 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
       // Verify Charlie's closeness is removed
       const charlieCloseness = entityManager.getComponentData(
         'game:charlie',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(charlieCloseness).toBeNull();
 
       // Verify Bob's closeness to Charlie is removed
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness?.partners).toEqual(['game:alice']);
 
       // Verify Alice is unaffected (wasn't adjacent to Charlie)
       const aliceCloseness = entityManager.getComponentData(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness?.partners).toEqual(['game:bob']);
     });
@@ -199,10 +199,10 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
   describe('Mixed Relationship Handling', () => {
     it('should preserve manual relationships while removing sitting-based ones', async () => {
       // Add David as a manual partner to Alice (not adjacent)
-      entityManager.addComponent('game:alice', 'positioning:closeness', {
+      entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: ['game:bob', 'game:david'], // Bob from sitting, David manual
       });
-      entityManager.addComponent('game:david', 'positioning:closeness', {
+      entityManager.addComponent('game:david', 'personal-space-states:closeness', {
         partners: ['game:alice'],
       });
 
@@ -217,31 +217,31 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
       // Alice should keep David but lose Bob
       const aliceCloseness = entityManager.getComponentData(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness?.partners).toEqual(['game:david']);
 
       // David should keep Alice
       const davidCloseness = entityManager.getComponentData(
         'game:david',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(davidCloseness?.partners).toEqual(['game:alice']);
 
       // Bob should lose Alice but keep Charlie
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness?.partners).toEqual(['game:charlie']);
     });
 
     it('should handle complex multi-actor closeness chains', async () => {
       // Complex setup: Alice-Bob-Charlie sitting + Alice-David manual
-      entityManager.addComponent('game:alice', 'positioning:closeness', {
+      entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: ['game:bob', 'game:david'],
       });
-      entityManager.addComponent('game:david', 'positioning:closeness', {
+      entityManager.addComponent('game:david', 'personal-space-states:closeness', {
         partners: ['game:alice'],
       });
 
@@ -256,28 +256,28 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
       // Bob loses both Alice and Charlie (was adjacent to both)
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness).toBeNull();
 
       // Alice loses Bob but keeps David
       const aliceCloseness = entityManager.getComponentData(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness?.partners).toEqual(['game:david']);
 
       // Charlie loses Bob
       const charlieCloseness = entityManager.getComponentData(
         'game:charlie',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(charlieCloseness).toBeNull();
 
       // David unaffected
       const davidCloseness = entityManager.getComponentData(
         'game:david',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(davidCloseness?.partners).toEqual(['game:alice']);
     });
@@ -322,16 +322,16 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
 
       // Verify all relationships properly cleaned up
       expect(
-        entityManager.getComponentData('game:alice', 'positioning:closeness')
+        entityManager.getComponentData('game:alice', 'personal-space-states:closeness')
       ).toBeNull();
       expect(
-        entityManager.getComponentData('game:charlie', 'positioning:closeness')
+        entityManager.getComponentData('game:charlie', 'personal-space-states:closeness')
       ).toBeNull();
 
       // Bob should lose both partners
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness).toBeNull();
     });
@@ -377,13 +377,13 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
 
       // All should be cleaned up
       expect(
-        entityManager.getComponentData('game:alice', 'positioning:closeness')
+        entityManager.getComponentData('game:alice', 'personal-space-states:closeness')
       ).toBeNull();
       expect(
-        entityManager.getComponentData('game:bob', 'positioning:closeness')
+        entityManager.getComponentData('game:bob', 'personal-space-states:closeness')
       ).toBeNull();
       expect(
-        entityManager.getComponentData('game:charlie', 'positioning:closeness')
+        entityManager.getComponentData('game:charlie', 'personal-space-states:closeness')
       ).toBeNull();
     });
 
@@ -407,19 +407,19 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
       entityManager.createEntity('game:eve');
 
       // Set up complex closeness chain
-      entityManager.addComponent('game:alice', 'positioning:closeness', {
+      entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: ['game:bob'],
       });
-      entityManager.addComponent('game:bob', 'positioning:closeness', {
+      entityManager.addComponent('game:bob', 'personal-space-states:closeness', {
         partners: ['game:alice', 'game:charlie'],
       });
-      entityManager.addComponent('game:charlie', 'positioning:closeness', {
+      entityManager.addComponent('game:charlie', 'personal-space-states:closeness', {
         partners: ['game:bob', 'game:david'],
       });
-      entityManager.addComponent('game:david', 'positioning:closeness', {
+      entityManager.addComponent('game:david', 'personal-space-states:closeness', {
         partners: ['game:charlie', 'game:eve'],
       });
-      entityManager.addComponent('game:eve', 'positioning:closeness', {
+      entityManager.addComponent('game:eve', 'personal-space-states:closeness', {
         partners: ['game:david'],
       });
 
@@ -434,31 +434,31 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
 
       // Charlie should have no relationships
       expect(
-        entityManager.getComponentData('game:charlie', 'positioning:closeness')
+        entityManager.getComponentData('game:charlie', 'personal-space-states:closeness')
       ).toBeNull();
 
       // Bob should lose Charlie but keep Alice
       const bobCloseness = entityManager.getComponentData(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness?.partners).toEqual(['game:alice']);
 
       // David should lose Charlie but keep Eve
       const davidCloseness = entityManager.getComponentData(
         'game:david',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(davidCloseness?.partners).toEqual(['game:eve']);
 
       // Alice and Eve should be unaffected
       const aliceCloseness = entityManager.getComponentData(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const eveCloseness = entityManager.getComponentData(
         'game:eve',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness?.partners).toEqual(['game:bob']);
       expect(eveCloseness?.partners).toEqual(['game:david']);
@@ -490,7 +490,7 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
 
     it('should handle actor with no existing closeness component', async () => {
       // Remove Alice's closeness component
-      entityManager.removeComponent('game:alice', 'positioning:closeness');
+      entityManager.removeComponent('game:alice', 'personal-space-states:closeness');
 
       const parameters = {
         furniture_id: 'furniture:test_couch',
@@ -511,7 +511,7 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
 
     it('should handle malformed component data gracefully', async () => {
       // Add malformed closeness component
-      entityManager.addComponent('game:alice', 'positioning:closeness', {
+      entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: 'invalid_string_instead_of_array',
       });
 
@@ -570,7 +570,7 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
         if (i > 0) {
           entityManager.addComponent(
             `game:actor${i}`,
-            'positioning:closeness',
+            'personal-space-states:closeness',
             {
               partners:
                 i > 1
@@ -610,7 +610,7 @@ describe('REMOVE_SITTING_CLOSENESS Integration Tests', () => {
         await handler.execute(parameters, executionContext);
 
         // Reset state for next iteration
-        entityManager.addComponent('game:alice', 'positioning:closeness', {
+        entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
           partners: ['game:bob'],
         });
       }

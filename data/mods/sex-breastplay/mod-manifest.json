@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "sex-breastplay",
   "version": "1.0.0",
-  "name": "Sex - Breastplay",
+  "name": "Sex - Breastplay System",
   "description": "Breast-focused intimacy actions.",
   "actionPurpose": "Engage in breast-focused intimacy including fondling, licking, sucking nipples, and lactation play.",
   "actionConsiderWhen": "Engaging in breast play, stimulating nipples, pressing bodies together, or exploring lactation scenarios.",
@@ -23,6 +23,14 @@
     },
     {
       "id": "caressing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
       "version": "^1.0.0"
     }
   ],

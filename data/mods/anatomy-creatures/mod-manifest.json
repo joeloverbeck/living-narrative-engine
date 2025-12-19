@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "anatomy-creatures",
   "version": "1.0.0",
-  "name": "Creature Anatomy",
+  "name": "Anatomy - Creatures",
   "description": "Non-human anatomy definitions including blueprints, recipes, and body part entities for various creature types.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",

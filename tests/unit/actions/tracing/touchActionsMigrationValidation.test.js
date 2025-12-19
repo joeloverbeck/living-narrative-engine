@@ -185,7 +185,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
         expect(content.required_components).toBeDefined();
         expect(content.required_components.actor).toContain(
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
       }
     );

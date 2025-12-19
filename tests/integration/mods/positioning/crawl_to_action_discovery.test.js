@@ -29,13 +29,13 @@ describe('deference:crawl_to - Action Discovery', () => {
 
       // Verify forbidden components for actor
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
         'positioning:sitting_on'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
         'positioning:lying_down'
@@ -58,7 +58,7 @@ describe('deference:crawl_to - Action Discovery', () => {
         'positioning:lying_down'
       );
       expect(crawlToAction.forbidden_components.primary).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
 
       // Verify visual scheme matches the deference palette
@@ -84,9 +84,9 @@ describe('deference:crawl_to - Action Discovery', () => {
     });
 
     it('should prevent crawling when already close', () => {
-      // The action forbids positioning:closeness component on actor
+      // The action forbids personal-space-states:closeness component on actor
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 

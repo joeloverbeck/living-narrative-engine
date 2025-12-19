@@ -1,6 +1,6 @@
 // Scope restricting potential targets to the entity currently giving oral sex to the acting entity
 // Uses raw closeness.partners to allow kneeling scenarios (target kneeling before actor during blowjob)
-sex-penile-oral:actor_giving_blowjob_to_me := actor.components.positioning:closeness.partners[][{
+sex-penile-oral:actor_giving_blowjob_to_me := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.sex-states:receiving_blowjob"}},
     {"!!": {"var": "entity.components.sex-states:giving_blowjob"}},

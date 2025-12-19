@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "first-aid",
   "version": "1.0.0",
-  "name": "First-Aid",
+  "name": "First-Aid System",
   "description": "Actions and content about providing first-aid care.",
   "actionPurpose": "Provide medical triage scaffolding for identifying and treating wounded or bleeding body parts.",
   "actionConsiderWhen": "Use when actors need medical triage or treatment for damaged body parts and bleeding states.",
@@ -35,6 +35,10 @@
     },
     {
       "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
       "version": "^1.0.0"
     }
   ],

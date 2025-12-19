@@ -1,6 +1,6 @@
 // Scope for close partners with uncovered breasts who can be face-to-face or with the actor behind the target
 // Extends the baseline breastplay scope to allow the target to face away when the actor slips in behind them
-sex-breastplay:actors_with_breasts_facing_each_other_or_away := actor.components.positioning:closeness.partners[][
+sex-breastplay:actors_with_breasts_facing_each_other_or_away := actor.components.personal-space-states:closeness.partners[][
 {
   "and": [
     {"hasPartOfType": [".", "breast"]},

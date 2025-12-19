@@ -97,7 +97,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       const actorBefore = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorBefore.components['positioning:closeness'].partners).toEqual([
+      expect(actorBefore.components['personal-space-states:closeness'].partners).toEqual([
         scenario.target.id,
       ]);
 
@@ -106,7 +106,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       console.log('Target ID:', scenario.target.id);
       console.log(
         'Partners array:',
-        actorBefore.components['positioning:closeness'].partners
+        actorBefore.components['personal-space-states:closeness'].partners
       );
 
       // Hook the event bus to see the payload
@@ -131,7 +131,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
         scenario.actor.id
       );
 
-      expect(actorAfter.components['positioning:closeness']).toBeUndefined();
+      expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
     });
 
     it('removes entire closeness component from target', async () => {
@@ -141,7 +141,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       const targetBefore = testFixture.entityManager.getEntityInstance(
         scenario.target.id
       );
-      expect(targetBefore.components['positioning:closeness']).toBeDefined();
+      expect(targetBefore.components['personal-space-states:closeness']).toBeDefined();
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -149,7 +149,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       const targetAfter = testFixture.entityManager.getEntityInstance(
         scenario.target.id
       );
-      expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+      expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
     });
 
     it('preserves actor closeness with other partners when pushing off one target', async () => {
@@ -181,13 +181,13 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
         .build();
 
       // Set up actor with closeness to both targets
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [target1.id, target2.id],
       };
-      target1.components['positioning:closeness'] = {
+      target1.components['personal-space-states:closeness'] = {
         partners: [actor.id],
       };
-      target2.components['positioning:closeness'] = {
+      target2.components['personal-space-states:closeness'] = {
         partners: [actor.id],
       };
 
@@ -199,8 +199,8 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
 
       // Verify actor still has closeness with target2
       const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorAfter.components['positioning:closeness']).toBeDefined();
-      expect(actorAfter.components['positioning:closeness'].partners).toEqual([
+      expect(actorAfter.components['personal-space-states:closeness']).toBeDefined();
+      expect(actorAfter.components['personal-space-states:closeness'].partners).toEqual([
         target2.id,
       ]);
 
@@ -208,14 +208,14 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       const target1After = testFixture.entityManager.getEntityInstance(
         target1.id
       );
-      expect(target1After.components['positioning:closeness']).toBeUndefined();
+      expect(target1After.components['personal-space-states:closeness']).toBeUndefined();
 
       // Verify target2 still has closeness (unchanged)
       const target2After = testFixture.entityManager.getEntityInstance(
         target2.id
       );
-      expect(target2After.components['positioning:closeness']).toBeDefined();
-      expect(target2After.components['positioning:closeness'].partners).toEqual(
+      expect(target2After.components['personal-space-states:closeness']).toBeDefined();
+      expect(target2After.components['personal-space-states:closeness'].partners).toEqual(
         [actor.id]
       );
     });

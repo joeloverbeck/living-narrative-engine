@@ -108,14 +108,14 @@ describe('Sex Action Discovery Integration Tests', () => {
       const targetId = 'test:target';
 
       // Set up entities with all required components
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
       entityManager.addComponent(actorId, 'positioning:kneeling_before', {
         entityId: targetId,
       });
 
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
       entityManager.addComponent(targetId, 'anatomy:body', {
@@ -173,12 +173,12 @@ describe('Sex Action Discovery Integration Tests', () => {
       const targetId = 'test:target';
 
       // Set up entities WITHOUT kneeling_before
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
       // NO kneeling_before component
 
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
       entityManager.addComponent(targetId, 'anatomy:body', {
@@ -228,14 +228,14 @@ describe('Sex Action Discovery Integration Tests', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
 
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
       entityManager.addComponent(actorId, 'positioning:kneeling_before', {
         entityId: targetId,
       });
 
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
       entityManager.addComponent(targetId, 'anatomy:body', {
@@ -287,14 +287,14 @@ describe('Sex Action Discovery Integration Tests', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
 
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
       entityManager.addComponent(actorId, 'positioning:kneeling_before', {
         entityId: targetId,
       });
 
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
       entityManager.addComponent(targetId, 'anatomy:body', {

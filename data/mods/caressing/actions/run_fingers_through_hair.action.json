@@ -5,7 +5,7 @@
   "description": "Gently run your fingers through the target's hair in an intimate, caring gesture.",
   "targets": "caressing:close_actors_with_hair_or_entity_kneeling_before_actor",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["sex-states:giving_blowjob"]

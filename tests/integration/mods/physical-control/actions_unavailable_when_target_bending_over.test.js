@@ -58,7 +58,7 @@ describe('Physical control actions with bending over target', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -75,7 +75,7 @@ describe('Physical control actions with bending over target', () => {
 
             // Check if partner is bending over - if so, exclude them
             const partnerBendingOver =
-              partner.components?.['positioning:bending_over'];
+              partner.components?.['bending-states:bending_over'];
             if (partnerBendingOver) {
               return acc;
             }
@@ -114,7 +114,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Add bending_over and facing_away components to target
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:table1',
       };
       scenario.target.components['positioning:facing_away'] = {
@@ -137,7 +137,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Charlie', 'Diana']);
 
       // Add only bending_over component (no facing_away)
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:desk1',
       };
 
@@ -179,7 +179,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
 
       // Add bending_over and facing_away components to target
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:counter1',
       };
       scenario.target.components['positioning:facing_away'] = {
@@ -202,7 +202,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Jack']);
 
       // Add only bending_over component (no facing_away)
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:workbench1',
       };
 
@@ -248,7 +248,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
 
       // Add bending_over and facing_away components to target
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:table2',
       };
       scenario.target.components['positioning:facing_away'] = {
@@ -271,7 +271,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Olivia', 'Paul']);
 
       // Add only bending_over component (no facing_away)
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:bench1',
       };
 
@@ -318,7 +318,7 @@ describe('Physical control actions with bending over target', () => {
       const scenario = testFixture.createCloseActors(['Sam', 'Tina']);
 
       // Target is bending over a surface with back to actor
-      scenario.target.components['positioning:bending_over'] = {
+      scenario.target.components['bending-states:bending_over'] = {
         surface_id: 'furniture:table3',
       };
       scenario.target.components['positioning:facing_away'] = {

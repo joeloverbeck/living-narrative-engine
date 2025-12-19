@@ -11,8 +11,8 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:sitting_on", "positioning:closeness"],
-    "primary": ["positioning:sitting_on", "positioning:closeness"]
+    "actor": ["positioning:sitting_on", "personal-space-states:closeness"],
+    "primary": ["positioning:sitting_on", "personal-space-states:closeness"]
   },
   "template": "pull {primary}'s head to your clothed crotch",
   "prerequisites": [

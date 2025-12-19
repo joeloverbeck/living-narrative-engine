@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness", "sex-states:being_fucked_vaginally"]
+    "actor": ["personal-space-states:closeness", "sex-states:being_fucked_vaginally"]
   },
   "forbidden_components": {
     "actor": ["positioning:sitting_on"],

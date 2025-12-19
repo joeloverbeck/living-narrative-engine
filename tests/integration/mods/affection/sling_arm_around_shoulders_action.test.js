@@ -86,7 +86,7 @@ describe('affection:sling_arm_around_shoulders action integration', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['target1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'target1',
       })
@@ -96,7 +96,7 @@ describe('affection:sling_arm_around_shoulders action integration', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .build();
 
     testFixture.reset([room, actor, target]);

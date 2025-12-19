@@ -18,7 +18,7 @@
       "positioning:biting_neck",
       "positioning:kneeling_before",
       "positioning:sitting_on",
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:lying_down",
       "positioning:straddling_waist",
       "positioning:being_hugged",
@@ -31,7 +31,7 @@
     "primary": [
       "positioning:kneeling_before",
       "positioning:lying_down",
-      "positioning:bending_over"
+      "bending-states:bending_over"
     ]
   },
   "template": "kneel before {actor}",

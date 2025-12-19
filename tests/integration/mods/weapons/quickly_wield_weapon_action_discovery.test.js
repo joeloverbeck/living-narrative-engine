@@ -44,9 +44,9 @@ describe('quickly_wield_weapon action definition', () => {
       expect(actionJson.forbidden_components.actor).toBeInstanceOf(Array);
     });
 
-    it('should forbid positioning:closeness', () => {
+    it('should forbid personal-space-states:closeness', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 

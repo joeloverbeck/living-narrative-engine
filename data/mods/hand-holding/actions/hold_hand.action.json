@@ -5,7 +5,7 @@
   "description": "Reach out and hold someone's hand in an affectionate gesture.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target_with_hands",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [

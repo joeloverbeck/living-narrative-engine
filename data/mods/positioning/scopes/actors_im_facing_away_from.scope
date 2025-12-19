@@ -3,6 +3,6 @@
 positioning:actors_im_facing_away_from := actor.components.positioning:facing_away.facing_away_from[][{
   "in": [
     { "var": "entity.id" },
-    { "var": "actor.components.positioning:closeness.partners" }
+    { "var": "actor.components.personal-space-states:closeness.partners" }
   ]
 }]

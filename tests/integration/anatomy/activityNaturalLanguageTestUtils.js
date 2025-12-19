@@ -3,8 +3,8 @@ const BASE_ACTIVITY_COMPONENTS = {
     id: 'core:gender',
     dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
   },
-  'positioning:closeness': {
-    id: 'positioning:closeness',
+  'personal-space-states:closeness': {
+    id: 'personal-space-states:closeness',
     dataSchema: {
       type: 'object',
       properties: {

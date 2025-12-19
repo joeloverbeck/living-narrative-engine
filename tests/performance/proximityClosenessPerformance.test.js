@@ -208,7 +208,7 @@ describe('Proximity Closeness Performance Tests', () => {
           if (componentType === 'sitting:allows_sitting') {
             return { spots: ['game:alice', null, 'game:charlie'] };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: ['game:alice', 'game:charlie'] };
           }
           return null;
@@ -276,7 +276,7 @@ describe('Proximity Closeness Performance Tests', () => {
             if (componentType === 'sitting:allows_sitting') {
               return { spots };
             }
-            if (componentType === 'positioning:closeness') {
+            if (componentType === 'personal-space-states:closeness') {
               // Return partners based on adjacency
               const actorIndex = parseInt(entityId.split('_')[1]);
               const partners = [];

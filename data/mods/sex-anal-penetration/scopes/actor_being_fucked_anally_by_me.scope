@@ -1,6 +1,6 @@
 // Scope restricting potential targets to the entity currently being anally penetrated by the acting entity
 // Uses raw closeness.partners to allow various positioning scenarios during anal sex
-sex-anal-penetration:actor_being_fucked_anally_by_me := actor.components.positioning:closeness.partners[][{
+sex-anal-penetration:actor_being_fucked_anally_by_me := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.sex-states:fucking_anally"}},
     {"!!": {"var": "entity.components.sex-states:being_fucked_anally"}},

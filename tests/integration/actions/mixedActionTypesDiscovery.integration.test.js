@@ -80,7 +80,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .asActor()
       .atLocation('room1')
       .withGrabbingHands(1) // Required for take_from_container prerequisite
-      .withComponent('positioning:closeness', {
+      .withComponent('personal-space-states:closeness', {
         targetId: recipientActorId,
       })
       .withComponent('items:inventory', {
@@ -95,7 +95,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('Bob')
       .asActor()
       .atLocation('room1')
-      .withComponent('positioning:closeness', {
+      .withComponent('personal-space-states:closeness', {
         targetId: actorId,
       })
       .withComponent('items:inventory', {

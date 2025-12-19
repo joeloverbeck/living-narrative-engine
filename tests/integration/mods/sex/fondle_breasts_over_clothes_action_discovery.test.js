@@ -61,7 +61,7 @@ describe('sex-breastplay:fondle_breasts_over_clothes action discovery', () => {
     it('should have closeness as required component', () => {
       expect(fondleBreastsOverClothesAction.required_components).toBeDefined();
       expect(fondleBreastsOverClothesAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
     });
 

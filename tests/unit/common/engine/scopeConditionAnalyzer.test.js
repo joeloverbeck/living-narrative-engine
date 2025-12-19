@@ -111,12 +111,12 @@ describe('ScopeConditionAnalyzer', () => {
     it('should handle complex real-world scope AST', () => {
       // Actual AST structure from sex-dry-intimacy mod after parsing
       const scopeAst = {
-        expr: 'actor.components.positioning:closeness.partners[][{...}]',
+        expr: 'actor.components.personal-space-states:closeness.partners[][{...}]',
         ast: {
           type: 'ArrayIteration',
           parent: {
             type: 'FieldAccess',
-            path: 'actor.components.positioning:closeness.partners',
+            path: 'actor.components.personal-space-states:closeness.partners',
           },
           filter: {
             and: [

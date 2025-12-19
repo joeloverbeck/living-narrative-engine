@@ -1,6 +1,6 @@
 // Scope for seated partners with covered penises while sharing close seating
 // Supports clothed penile teasing actions that keep both participants sitting together
-sex-core:actors_sitting_close_with_covered_penis := actor.components.positioning:closeness.partners[][
+sex-core:actors_sitting_close_with_covered_penis := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
       {"!!": {"var": "entity.components.positioning:sitting_on"}},

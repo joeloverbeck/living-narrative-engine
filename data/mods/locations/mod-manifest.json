@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "locations",
   "version": "1.0.0",
-  "name": "Locations",
+  "name": "Locations System",
   "description": "Location-specific mechanics including lighting states and environmental conditions.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",

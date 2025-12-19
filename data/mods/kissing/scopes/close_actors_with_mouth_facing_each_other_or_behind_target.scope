@@ -1,5 +1,5 @@
 // Scope for close partners who have a mouth available for kissing actions
-kissing:close_actors_with_mouth_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+kissing:close_actors_with_mouth_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartSubTypeContaining": [".", "mouth", {"matchAtEnd": true}]},
     {

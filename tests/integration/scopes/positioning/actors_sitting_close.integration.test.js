@@ -37,9 +37,9 @@ describe('sitting:actors_sitting_close scope integration', () => {
     // Register the scope
     const mockScopes = {
       'sitting:actors_sitting_close': {
-        expr: 'actor.components.positioning:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
+        expr: 'actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
         definition:
-          'sitting:actors_sitting_close := actor.components.positioning:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
+          'sitting:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
         modId: 'sitting',
       },
     };
@@ -58,7 +58,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor2', 'test:actor3'],
           },
         },
@@ -71,7 +71,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor1'],
           },
         },
@@ -80,7 +80,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor3',
         components: {
           'core:actor': { name: 'Actor 3' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor1'],
           },
         },
@@ -111,7 +111,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor2', 'test:actor3'],
           },
         },
@@ -184,7 +184,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [],
           },
         },
@@ -214,7 +214,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor2', 'test:actor3', 'test:actor4'],
           },
         },
@@ -227,7 +227,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor1'],
           },
         },
@@ -236,7 +236,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor3',
         components: {
           'core:actor': { name: 'Actor 3' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor1'],
           },
         },
@@ -249,7 +249,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
             furniture_id: 'furniture:chair_2',
             spot_index: 0,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['test:actor1'],
           },
         },

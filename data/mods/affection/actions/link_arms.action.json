@@ -5,7 +5,7 @@
   "description": "Gently loop your arm with someone in a close, supportive gesture.",
   "targets": "affection:actors_with_arm_subtypes_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [

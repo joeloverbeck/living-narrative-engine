@@ -54,7 +54,7 @@ describe('Items - Inventory Scopes Integration', () => {
     const scopeDefinitions = {
       'items:actor_inventory_items': actorInventoryScope,
       'positioning:close_actors':
-        'positioning:close_actors := actor.components.positioning:closeness.partners[]',
+        'positioning:close_actors := actor.components.personal-space-states:closeness.partners[]',
       'items:close_actors_with_inventory': closeActorsWithInventoryScope,
     };
 
@@ -265,7 +265,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['test:actor2', 'test:actor3', 'test:actor4'],
             },
           },
@@ -325,7 +325,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['test:actor2'],
             },
           },
@@ -378,7 +378,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [],
             },
           },

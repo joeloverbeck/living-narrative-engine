@@ -254,10 +254,10 @@ describe('ModEntityBuilder', () => {
       builder = new ModEntityBuilder('test_entity');
     });
 
-    it('should create positioning:closeness component with single partner', () => {
+    it('should create personal-space-states:closeness component with single partner', () => {
       const result = builder.closeToEntity('partner1');
 
-      expect(result.entityData.components['positioning:closeness']).toEqual({
+      expect(result.entityData.components['personal-space-states:closeness']).toEqual({
         partners: ['partner1'],
       });
     });
@@ -265,7 +265,7 @@ describe('ModEntityBuilder', () => {
     it('should handle array of partner IDs', () => {
       const result = builder.closeToEntity(['partner1', 'partner2']);
 
-      expect(result.entityData.components['positioning:closeness']).toEqual({
+      expect(result.entityData.components['personal-space-states:closeness']).toEqual({
         partners: ['partner1', 'partner2'],
       });
     });
@@ -280,7 +280,7 @@ describe('ModEntityBuilder', () => {
       builder.closeToEntity('partner1').closeToEntity(['partner2', 'partner3']);
 
       expect(
-        builder.entityData.components['positioning:closeness'].partners
+        builder.entityData.components['personal-space-states:closeness'].partners
       ).toEqual(['partner2', 'partner3']);
     });
   });
@@ -690,7 +690,7 @@ describe('ModEntityBuilder', () => {
     describe('component structure validation', () => {
       it('should validate closeness component partners array', () => {
         const builder = new ModEntityBuilder('test_entity');
-        builder.entityData.components['positioning:closeness'] = {
+        builder.entityData.components['personal-space-states:closeness'] = {
           partners: 'not-an-array', // Should be array
         };
 
@@ -708,7 +708,7 @@ describe('ModEntityBuilder', () => {
           id: 'target1',
           components: { 'core:name': { text: 'Target' } },
         };
-        builder.entityData.components['positioning:closeness'] = {
+        builder.entityData.components['personal-space-states:closeness'] = {
           partners: [nestedEntity], // Should be string ID
         };
 
@@ -839,7 +839,7 @@ describe('ModEntityBuilder', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
+          'personal-space-states:closeness': { partners: ['target1'] },
         },
       });
     });
@@ -880,7 +880,7 @@ describe('ModEntityBuilder', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Complex Character' },
           [POSITION_COMPONENT_ID]: { locationId: 'complex_room' },
-          'positioning:closeness': { partners: ['partner1', 'partner2'] },
+          'personal-space-states:closeness': { partners: ['partner1', 'partner2'] },
           'anatomy:body': { body: { root: 'torso1' } },
           'positioning:kneeling_before': { entityId: 'target1' },
           'positioning:facing': { direction: 'north' },
@@ -960,10 +960,10 @@ describe('ModEntityScenarios', () => {
         closeProximity: true,
       });
 
-      expect(actor.components['positioning:closeness']).toEqual({
+      expect(actor.components['personal-space-states:closeness']).toEqual({
         partners: ['target1'],
       });
-      expect(target.components['positioning:closeness']).toEqual({
+      expect(target.components['personal-space-states:closeness']).toEqual({
         partners: ['actor1'],
       });
     });
@@ -973,8 +973,8 @@ describe('ModEntityScenarios', () => {
         closeProximity: false,
       });
 
-      expect(actor.components['positioning:closeness']).toBeUndefined();
-      expect(target.components['positioning:closeness']).toBeUndefined();
+      expect(actor.components['personal-space-states:closeness']).toBeUndefined();
+      expect(target.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 
@@ -1026,18 +1026,18 @@ describe('ModEntityScenarios', () => {
       });
 
       // Actor should be close to target and first observer (closeToMain >= 1 and index + 2 = 2 <= closeToMain)
-      expect(result.actor.components['positioning:closeness'].partners).toEqual(
+      expect(result.actor.components['personal-space-states:closeness'].partners).toEqual(
         ['target1', 'observer1']
       );
 
       // Target should be close to actor (closeToMain >= 1)
       expect(
-        result.target.components['positioning:closeness'].partners
+        result.target.components['personal-space-states:closeness'].partners
       ).toEqual(['actor1']);
 
       // First observer should be close to actor (index + 2 = 2, which <= closeToMain)
       expect(
-        result.observers[0].components['positioning:closeness'].partners
+        result.observers[0].components['personal-space-states:closeness'].partners
       ).toEqual(['actor1']);
     });
   });
@@ -1123,8 +1123,8 @@ describe('ModEntityScenarios', () => {
 
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('Alice');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Bob');
-      expect(result.actor.components['positioning:closeness']).toBeDefined();
-      expect(result.target.components['positioning:closeness']).toBeDefined();
+      expect(result.actor.components['personal-space-states:closeness']).toBeDefined();
+      expect(result.target.components['personal-space-states:closeness']).toBeDefined();
     });
 
     it('should create kneeling positioning scenario', () => {

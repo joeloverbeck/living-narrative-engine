@@ -1,6 +1,6 @@
 // Scope for close partners with uncovered backs allowing face-to-face or behind positions
 // Ensures both upper and lower back sockets are exposed before surfacing the action
-caressing:close_actors_with_uncovered_back := actor.components.positioning:closeness.partners[][{
+caressing:close_actors_with_uncovered_back := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {
       "or": [

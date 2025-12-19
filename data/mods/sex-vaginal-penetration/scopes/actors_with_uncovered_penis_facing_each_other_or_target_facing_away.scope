@@ -1,6 +1,6 @@
 // Scope for closeness partners with an uncovered penis accessible from the front or while the actor is behind
 // Ensures the target's penis is exposed, allows dual orientation interactions, and avoids kneeling conflicts that break alignment
-sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away := actor.components.positioning:closeness.partners[][
+sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
     {"hasPartOfType": [".", "penis"]},

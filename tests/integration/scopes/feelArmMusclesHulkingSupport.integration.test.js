@@ -160,7 +160,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
         {
           id: actorId,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [targetId],
             },
             ...(facingAwayConfig.actorFacingAway && {
@@ -173,7 +173,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
         {
           id: targetId,
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [actorId],
             },
             'anatomy:body': {

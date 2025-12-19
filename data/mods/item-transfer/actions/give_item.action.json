@@ -10,7 +10,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:fallen",
       "positioning:being_restrained",
       "positioning:restraining"

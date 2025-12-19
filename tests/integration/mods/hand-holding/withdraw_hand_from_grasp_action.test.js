@@ -116,7 +116,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners;
+          actorEntity.components?.['personal-space-states:closeness']?.partners;
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return { success: true, value: new Set() };
         }
@@ -176,7 +176,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
           actorEntity.components?.['hand-holding:hand_held'];
         const holderId = handHeldComponent?.holding_entity_id;
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners || [];
+          actorEntity.components?.['personal-space-states:closeness']?.partners || [];
 
         if (!holderId || !closeness.includes(holderId)) {
           return { success: true, value: new Set() };

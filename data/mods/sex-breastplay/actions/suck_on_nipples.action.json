@@ -11,10 +11,10 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["sex-states:giving_blowjob", "positioning:bending_over"]
+    "actor": ["sex-states:giving_blowjob", "bending-states:bending_over"]
   },
   "template": "suck on {target}'s nipples",
   "prerequisites": [],

@@ -38,7 +38,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
 
     it('should include bending_over in forbidden components', () => {
       expect(putInContainerAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
     });
 
@@ -162,7 +162,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
           items: ['item1'],
           capacity: { maxWeight: 10, maxItems: 10 },
         })
-        .withComponent('positioning:bending_over', {});
+        .withComponent('bending-states:bending_over', {});
       const actor = actorBuilder.build();
 
       // Create item in actor's inventory

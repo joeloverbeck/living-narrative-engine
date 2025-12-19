@@ -19,7 +19,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
      * Test-specific scope resolver for actors_both_sitting_close.
      *
      * Scope DSL:
-     *   positioning:actors_both_sitting_close := actor.components.positioning:closeness.partners[][{
+     *   positioning:actors_both_sitting_close := actor.components.personal-space-states:closeness.partners[][{
      *     "and": [
      *       {"!!": {"var": "entity.components.positioning:sitting_on"}},
      *       {"!!": {"var": "actor.components.positioning:sitting_on"}}
@@ -39,7 +39,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
 
         if (!closeness || !Array.isArray(closeness.partners)) {
           return { success: true, value: new Set() };

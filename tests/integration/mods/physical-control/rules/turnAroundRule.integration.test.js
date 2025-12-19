@@ -137,7 +137,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1'] },
+            'personal-space-states:closeness': { partners: ['target1'] },
           },
         },
         {
@@ -145,7 +145,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['actor1'] },
+            'personal-space-states:closeness': { partners: ['actor1'] },
           },
         },
       ]);
@@ -189,7 +189,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1'] },
+            'personal-space-states:closeness': { partners: ['target1'] },
           },
         },
         {
@@ -197,7 +197,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['actor1'] },
+            'personal-space-states:closeness': { partners: ['actor1'] },
             'positioning:facing_away': { facing_away_from: ['actor1'] },
           },
         },
@@ -241,7 +241,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1', 'actor2'] },
+            'personal-space-states:closeness': { partners: ['target1', 'actor2'] },
           },
         },
         {
@@ -249,7 +249,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Charlie' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1', 'actor1'] },
+            'personal-space-states:closeness': { partners: ['target1', 'actor1'] },
           },
         },
         {
@@ -257,7 +257,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['actor1', 'actor2'] },
+            'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
             'positioning:facing_away': {
               facing_away_from: ['actor1', 'actor2'],
             },
@@ -293,7 +293,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1', 'actor2'] },
+            'personal-space-states:closeness': { partners: ['target1', 'actor2'] },
           },
         },
         {
@@ -301,7 +301,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Charlie' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['target1', 'actor1'] },
+            'personal-space-states:closeness': { partners: ['target1', 'actor1'] },
           },
         },
         {
@@ -309,7 +309,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['actor1', 'actor2'] },
+            'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
             'positioning:facing_away': { facing_away_from: ['actor2'] },
           },
         },

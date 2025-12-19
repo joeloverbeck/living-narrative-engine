@@ -11,13 +11,13 @@
       "description": "Actor you are bending over"
     },
     "secondary": {
-      "scope": "positioning:available_surfaces",
+      "scope": "bending:available_surfaces",
       "placeholder": "secondary",
       "description": "Surface sturdy enough to bend them over"
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [
@@ -35,7 +35,7 @@
     "primary": [
       "positioning:kneeling_before",
       "positioning:sitting_on",
-      "positioning:bending_over"
+      "bending-states:bending_over"
     ]
   },
   "template": "bend {primary} over {secondary}",

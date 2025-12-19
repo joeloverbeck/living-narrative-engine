@@ -77,13 +77,13 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       };
 
       // Set up closeness for all actors
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [targetGiving.id, targetThird.id],
       };
-      targetGiving.components['positioning:closeness'] = {
+      targetGiving.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetThird.id],
       };
-      targetThird.components['positioning:closeness'] = {
+      targetThird.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetGiving.id],
       };
 
@@ -106,7 +106,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
             return { success: true, value: new Set() };
           }
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -160,13 +160,13 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       };
 
       // Set up closeness
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [targetGiving.id, targetThird.id],
       };
-      targetGiving.components['positioning:closeness'] = {
+      targetGiving.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetThird.id],
       };
-      targetThird.components['positioning:closeness'] = {
+      targetThird.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetGiving.id],
       };
 
@@ -189,7 +189,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
             return { success: true, value: new Set() };
           }
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -235,10 +235,10 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
       };
 
       // Set up closeness
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [target.id],
       };
-      target.components['positioning:closeness'] = {
+      target.components['personal-space-states:closeness'] = {
         partners: [actor.id],
       };
 
@@ -261,7 +261,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
             return { success: true, value: new Set() };
           }
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }

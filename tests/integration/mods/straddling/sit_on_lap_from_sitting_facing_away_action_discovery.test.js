@@ -100,7 +100,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
      * data/mods/positioning/scopes/actors_both_sitting_close.scope
      *
      * Scope DSL:
-     *   positioning:actors_both_sitting_close := actor.components.positioning:closeness.partners[][{
+     *   positioning:actors_both_sitting_close := actor.components.personal-space-states:closeness.partners[][{
      *     "and": [
      *       {"!!": {"var": "entity.components.positioning:sitting_on"}},
      *       {"!!": {"var": "actor.components.positioning:sitting_on"}}
@@ -120,7 +120,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
 
         if (!closeness || !Array.isArray(closeness.partners)) {
           return { success: true, value: new Set() };

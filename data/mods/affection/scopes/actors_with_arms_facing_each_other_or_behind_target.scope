@@ -1,6 +1,6 @@
 // Scope for actors in closeness who have arms and are either facing each other OR actor is behind the target
 // Used by actions that require arm anatomy and can work from either face-to-face or behind positions
-affection:actors_with_arms_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+affection:actors_with_arms_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "arm"]},
     {

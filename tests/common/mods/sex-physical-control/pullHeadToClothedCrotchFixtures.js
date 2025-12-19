@@ -233,7 +233,7 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
 
       const actorSitting = actor.components?.['positioning:sitting_on'];
       const closenessPartners =
-        actor.components?.['positioning:closeness']?.partners;
+        actor.components?.['personal-space-states:closeness']?.partners;
 
       if (
         !actorSitting ||
@@ -257,7 +257,7 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
         }
 
         const partnerCloseness =
-          partner.components?.['positioning:closeness']?.partners;
+          partner.components?.['personal-space-states:closeness']?.partners;
 
         if (
           !Array.isArray(partnerCloseness) ||

@@ -96,10 +96,10 @@ describe('Physical Control Mod: push_onto_lying_furniture action', () => {
     const actorBefore = testFixture.entityManager.getEntityInstance(ACTOR_ID);
     const targetBefore = testFixture.entityManager.getEntityInstance(TARGET_ID);
 
-    expect(actorBefore.components['positioning:closeness'].partners).toContain(
+    expect(actorBefore.components['personal-space-states:closeness'].partners).toContain(
       TARGET_ID
     );
-    expect(targetBefore.components['positioning:closeness'].partners).toContain(
+    expect(targetBefore.components['personal-space-states:closeness'].partners).toContain(
       ACTOR_ID
     );
 
@@ -111,8 +111,8 @@ describe('Physical Control Mod: push_onto_lying_furniture action', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(ACTOR_ID);
     const targetAfter = testFixture.entityManager.getEntityInstance(TARGET_ID);
 
-    expect(actorAfter.components['positioning:closeness']).toBeUndefined();
-    expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+    expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
+    expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
 
     const lyingState = targetAfter.components['positioning:lying_down'];
     expect(lyingState).toBeDefined();

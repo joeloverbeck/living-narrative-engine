@@ -50,7 +50,7 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners || [];
+            actorEntity.components?.['personal-space-states:closeness']?.partners || [];
           const actorSittingOn =
             actorEntity.components?.['positioning:sitting_on'];
 
@@ -125,8 +125,8 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:sitting_on'] = {
           furniture_id: 'chair2',
         };
-        actor.components['positioning:closeness'] = { partners: [target.id] };
-        target.components['positioning:closeness'] = { partners: [actor.id] };
+        actor.components['personal-space-states:closeness'] = { partners: [target.id] };
+        target.components['personal-space-states:closeness'] = { partners: [actor.id] };
 
         testFixture.reset([room, chair1, chair2, actor, target]);
         configureActionDiscovery([sitOnLapFacingAction]);
@@ -168,8 +168,8 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:sitting_on'] = {
           furniture_id: 'chair2',
         };
-        actor.components['positioning:closeness'] = { partners: [target.id] };
-        target.components['positioning:closeness'] = { partners: [actor.id] };
+        actor.components['personal-space-states:closeness'] = { partners: [target.id] };
+        target.components['personal-space-states:closeness'] = { partners: [actor.id] };
 
         // Actor is giving a blowjob
         actor.components['sex-states:giving_blowjob'] = {
@@ -222,8 +222,8 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:sitting_on'] = {
           furniture_id: 'chair2',
         };
-        actor.components['positioning:closeness'] = { partners: [target.id] };
-        target.components['positioning:closeness'] = { partners: [actor.id] };
+        actor.components['personal-space-states:closeness'] = { partners: [target.id] };
+        target.components['personal-space-states:closeness'] = { partners: [actor.id] };
 
         testFixture.reset([room, chair1, chair2, actor, target]);
         configureActionDiscovery([sitOnLapFacingAwayAction]);
@@ -265,8 +265,8 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
         target.components['positioning:sitting_on'] = {
           furniture_id: 'chair2',
         };
-        actor.components['positioning:closeness'] = { partners: [target.id] };
-        target.components['positioning:closeness'] = { partners: [actor.id] };
+        actor.components['personal-space-states:closeness'] = { partners: [target.id] };
+        target.components['personal-space-states:closeness'] = { partners: [actor.id] };
 
         // Actor is giving a blowjob
         actor.components['sex-states:giving_blowjob'] = {

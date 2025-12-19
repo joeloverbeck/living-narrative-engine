@@ -269,7 +269,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target is bending over
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:bending_over',
+        'bending-states:bending_over',
         {}
       );
 
@@ -312,7 +312,7 @@ describe('Positioning Target Validation Scenarios', () => {
       );
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:bending_over',
+        'bending-states:bending_over',
         {}
       );
 
@@ -502,7 +502,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target starts bending over (forbidden)
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:bending_over',
+        'bending-states:bending_over',
         {}
       );
 
@@ -522,7 +522,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target transitions to lying down (still forbidden)
       fixture.entityManager.removeComponent(
         target.id,
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
       fixture.entityManager.addComponent(
         target.id,

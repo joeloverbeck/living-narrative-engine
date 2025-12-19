@@ -112,7 +112,7 @@ function installKneelingBeforeTargetWithPenisScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const closenessPartners =
-        actor?.components?.['positioning:closeness']?.partners;
+        actor?.components?.['personal-space-states:closeness']?.partners;
       const kneelingBefore =
         actor?.components?.['positioning:kneeling_before']?.entityId;
 

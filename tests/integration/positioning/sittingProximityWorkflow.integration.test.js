@@ -93,7 +93,7 @@ describe('Sitting Proximity Workflow Integration', () => {
             furniture_id: furnitureId,
             spot_index: 0,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [bobId],
           },
         },
@@ -107,7 +107,7 @@ describe('Sitting Proximity Workflow Integration', () => {
             furniture_id: furnitureId,
             spot_index: 1,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [aliceId],
           },
         },
@@ -132,11 +132,11 @@ describe('Sitting Proximity Workflow Integration', () => {
       // Verify closeness removed from both actors
       const aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeNull();
@@ -192,7 +192,7 @@ describe('Sitting Proximity Workflow Integration', () => {
               furniture_id: furnitureId,
               spot_index: actor.spot,
             },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: actor.partners,
             },
           },
@@ -229,19 +229,19 @@ describe('Sitting Proximity Workflow Integration', () => {
       // Verify closeness relationships updated
       const aliceCloseness = entityManager.getComponent(
         'test:alice_chain',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         'test:bob_chain',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieCloseness = entityManager.getComponent(
         'test:charlie_chain',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const dianaCloseness = entityManager.getComponent(
         'test:diana_chain',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Alice should no longer be close to Bob
@@ -357,11 +357,11 @@ describe('Sitting Proximity Workflow Integration', () => {
       // Verify adjacency (no wrapping - first and last are NOT adjacent)
       const actor1Closeness = entityManager.getComponent(
         actors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const actor4Closeness = entityManager.getComponent(
         actors[3],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Actor 1 (spot 0) should only be close to Actor 2 (spot 1)

@@ -56,7 +56,7 @@ describe('Expected AI Action Validation Compliance', () => {
       //
       // TEST SCENARIO:
       // - Valid Target has no forbidden positioning components (can be knelt before)
-      // - Invalid Target has positioning:bending_over component (forbidden)
+      // - Invalid Target has bending-states:bending_over component (forbidden)
       // - AI should see kneel_before action for Valid Target but not Invalid Target
       expect(true).toBe(true);
     });

@@ -91,7 +91,7 @@ describe('Activity Description - Natural Language Integration', () => {
       gender: 'female',
     });
 
-    entityManager.addComponent(jon.id, 'positioning:closeness', {
+    entityManager.addComponent(jon.id, 'personal-space-states:closeness', {
       partners: [alicia.id],
     });
 

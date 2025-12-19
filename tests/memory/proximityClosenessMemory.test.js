@@ -198,7 +198,7 @@ describe('Proximity Closeness Memory Tests', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: [...partners] }; // Create new array to avoid shared references
           }
           if (componentType === 'sitting:allows_sitting') {
@@ -449,7 +449,7 @@ describe('Proximity Closeness Memory Tests', () => {
             spots[6] = 'game:persistent_actor_3';
             return { spots };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: ['game:persistent_partner'] };
           }
           return null;

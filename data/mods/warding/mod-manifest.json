@@ -24,6 +24,10 @@
     {
       "id": "positioning",
       "version": ">=1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {

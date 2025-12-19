@@ -65,7 +65,7 @@ describe('handle_force_bend_over rule', () => {
     const addComponent = handleForceBendOverRule.actions.find(
       (op) =>
         op.type === 'ADD_COMPONENT' &&
-        op.parameters.component_type === 'positioning:bending_over'
+        op.parameters.component_type === 'bending-states:bending_over'
     );
 
     expect(addComponent).toBeDefined();

@@ -113,21 +113,21 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Phase 1: Alice and Charlie establish manual closeness (get_close action)
       // This simulates the result of a get_close action
-      entityManager.addComponent(aliceId, 'positioning:closeness', {
+      entityManager.addComponent(aliceId, 'personal-space-states:closeness', {
         partners: [charlieId],
       });
-      entityManager.addComponent(charlieId, 'positioning:closeness', {
+      entityManager.addComponent(charlieId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
       // Verify manual closeness established
       let aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let charlieCloseness = entityManager.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toEqual([charlieId]);
@@ -162,11 +162,11 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify Alice now has both manual (Charlie) and automatic (Bob) closeness
       aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toContain(charlieId); // Manual
@@ -197,15 +197,15 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify Alice retains manual closeness with Charlie but loses automatic with Bob
       aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       charlieCloseness = entityManager.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobClosenessAfter = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toEqual([charlieId]); // Only manual remains
@@ -247,13 +247,13 @@ describe('Mixed Closeness Scenarios Integration', () => {
       }
 
       // Phase 1: Create manual closeness circle (Alice-Bob-Charlie)
-      entityManager.addComponent(actors.alice, 'positioning:closeness', {
+      entityManager.addComponent(actors.alice, 'personal-space-states:closeness', {
         partners: [actors.bob, actors.charlie],
       });
-      entityManager.addComponent(actors.bob, 'positioning:closeness', {
+      entityManager.addComponent(actors.bob, 'personal-space-states:closeness', {
         partners: [actors.alice, actors.charlie],
       });
-      entityManager.addComponent(actors.charlie, 'positioning:closeness', {
+      entityManager.addComponent(actors.charlie, 'personal-space-states:closeness', {
         partners: [actors.alice, actors.bob],
       });
 
@@ -307,7 +307,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify Charlie has both manual and automatic relationships
       const charlieCloseness = entityManager.getComponent(
         actors.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(charlieCloseness.partners).toContain(actors.alice); // Manual
       expect(charlieCloseness.partners).toContain(actors.bob); // Manual
@@ -317,7 +317,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify Eve only has automatic relationships
       const eveCloseness = entityManager.getComponent(
         actors.eve,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(eveCloseness.partners).toContain(actors.diana); // Automatic
       expect(eveCloseness.partners).toContain(actors.charlie); // Automatic
@@ -378,7 +378,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify initial closeness
       let actor2Closeness = entityManager.getComponent(
         actors[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(actor2Closeness.partners.length).toBe(2); // Adjacent to actors[0] and actors[2]
 
@@ -405,11 +405,11 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify closeness after odd actors stand
       const actor0Closeness = entityManager.getComponent(
         actors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       actor2Closeness = entityManager.getComponent(
         actors[2],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(actor0Closeness).toBeNull(); // No adjacent actors
@@ -454,11 +454,11 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify new closeness relationships
       const newActor0Closeness = entityManager.getComponent(
         actors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const newActor3Closeness = entityManager.getComponent(
         actors[3],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(newActor0Closeness.partners).toEqual([actors[3]]);
@@ -547,15 +547,15 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify closeness changes
       const leftNeighborCloseness = entityManager.getComponent(
         actors[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const rightNeighborCloseness = entityManager.getComponent(
         actors[3],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const removedActorCloseness = entityManager.getComponent(
         actors[2],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Middle actor should have no closeness
@@ -671,19 +671,19 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify closeness is furniture-specific
       const aliceCloseness = entityManager.getComponent(
         actors.alice,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         actors.bob,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieCloseness = entityManager.getComponent(
         actors.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const dianaCloseness = entityManager.getComponent(
         actors.diana,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Couch1 actors should only be close to each other
@@ -782,7 +782,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify initial closeness
       let actorCloseness = entityManager.getComponent(
         actorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(actorCloseness.partners).toEqual([buddy1Id]);
 
@@ -806,7 +806,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify closeness removed
       actorCloseness = entityManager.getComponent(
         actorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(actorCloseness).toBeNull();
 
@@ -838,11 +838,11 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify new closeness on bench2
       actorCloseness = entityManager.getComponent(
         actorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const buddy2Closeness = entityManager.getComponent(
         buddy2Id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(actorCloseness.partners).toEqual([buddy2Id]);
@@ -851,7 +851,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify buddy1 still has no closeness (alone on bench1)
       const buddy1Closeness = entityManager.getComponent(
         buddy1Id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(buddy1Closeness).toBeNull();
     });
@@ -888,7 +888,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Create manual closeness circle
       for (let i = 0; i < circleActors.length; i++) {
         const partners = circleActors.filter((_, idx) => idx !== i);
-        entityManager.addComponent(circleActors[i], 'positioning:closeness', {
+        entityManager.addComponent(circleActors[i], 'personal-space-states:closeness', {
           partners: partners,
         });
       }
@@ -896,7 +896,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify circle established
       const initialCirc1Closeness = entityManager.getComponent(
         circleActors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(initialCirc1Closeness.partners.length).toBe(2);
       expect(initialCirc1Closeness.partners).toContain(circleActors[1]);
@@ -936,7 +936,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify circle member now has both manual and automatic relationships
       const circ1Closeness = entityManager.getComponent(
         circleActors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(circ1Closeness.partners.length).toBe(3);
       expect(circ1Closeness.partners).toContain(circleActors[1]); // Manual
@@ -946,14 +946,14 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify outsider only has automatic relationship
       const outsiderCloseness = entityManager.getComponent(
         outsiderActor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(outsiderCloseness.partners).toEqual([circleActors[0]]);
 
       // Verify other circle members unchanged
       const circ2Closeness = entityManager.getComponent(
         circleActors[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(circ2Closeness.partners.length).toBe(2);
       expect(circ2Closeness.partners).not.toContain(outsiderActor);
@@ -990,18 +990,18 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Create two separate manual closeness circles
       // Circle 1
-      entityManager.addComponent(circle1[0], 'positioning:closeness', {
+      entityManager.addComponent(circle1[0], 'personal-space-states:closeness', {
         partners: [circle1[1]],
       });
-      entityManager.addComponent(circle1[1], 'positioning:closeness', {
+      entityManager.addComponent(circle1[1], 'personal-space-states:closeness', {
         partners: [circle1[0]],
       });
 
       // Circle 2
-      entityManager.addComponent(circle2[0], 'positioning:closeness', {
+      entityManager.addComponent(circle2[0], 'personal-space-states:closeness', {
         partners: [circle2[1]],
       });
-      entityManager.addComponent(circle2[1], 'positioning:closeness', {
+      entityManager.addComponent(circle2[1], 'personal-space-states:closeness', {
         partners: [circle2[0]],
       });
 
@@ -1044,7 +1044,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify bridge connects both circles
       const bridgeCloseness = entityManager.getComponent(
         bridge,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bridgeCloseness.partners).toContain(circle1[0]);
       expect(bridgeCloseness.partners).toContain(circle2[0]);
@@ -1053,11 +1053,11 @@ describe('Mixed Closeness Scenarios Integration', () => {
       // Verify circles remain separate (only connected via bridge)
       const c1aCloseness = entityManager.getComponent(
         circle1[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const c2aCloseness = entityManager.getComponent(
         circle2[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(c1aCloseness.partners).toContain(circle1[1]); // Manual within circle

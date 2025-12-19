@@ -106,11 +106,11 @@ describe('Sit Down Closeness Workflow Integration', () => {
     // Assert: Both actors should have closeness components
     const aliceCloseness = entityManager.getComponentData(
       aliceId,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const bobCloseness = entityManager.getComponentData(
       bobId,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     expect(aliceCloseness).toEqual({

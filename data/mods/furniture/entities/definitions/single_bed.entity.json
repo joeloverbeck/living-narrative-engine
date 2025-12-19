@@ -17,6 +17,6 @@
     "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
-    "positioning:allows_bending_over": {}
+    "bending:allows_bending_over": {}
   }
 }

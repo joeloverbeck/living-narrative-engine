@@ -88,9 +88,9 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
       );
 
       expect(actorInstance).toHaveComponent('vampirism:is_vampire');
-      expect(targetInstance).toHaveComponent('positioning:closeness');
+      expect(targetInstance).toHaveComponent('personal-space-states:closeness');
       expect(
-        targetInstance.components['positioning:closeness'].partners
+        targetInstance.components['personal-space-states:closeness'].partners
       ).toContain(scenario.actor.id);
     });
 

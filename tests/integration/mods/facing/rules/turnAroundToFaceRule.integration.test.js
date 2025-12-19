@@ -129,7 +129,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -138,7 +138,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -167,7 +167,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -176,7 +176,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -206,7 +206,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -215,7 +215,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -252,7 +252,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -261,7 +261,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -292,7 +292,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob', 'charlie'] },
+            'personal-space-states:closeness': { partners: ['bob', 'charlie'] },
             'positioning:facing_away': { facing_away_from: ['bob', 'charlie'] },
           },
         },
@@ -301,7 +301,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice', 'charlie'] },
+            'personal-space-states:closeness': { partners: ['alice', 'charlie'] },
           },
         },
         {
@@ -309,7 +309,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Charlie' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice', 'bob'] },
+            'personal-space-states:closeness': { partners: ['alice', 'bob'] },
           },
         },
       ]);
@@ -343,7 +343,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob', 'charlie'] },
+            'personal-space-states:closeness': { partners: ['bob', 'charlie'] },
             'positioning:facing_away': { facing_away_from: ['bob', 'charlie'] },
           },
         },
@@ -352,7 +352,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice', 'charlie'] },
+            'personal-space-states:closeness': { partners: ['alice', 'charlie'] },
           },
         },
         {
@@ -360,7 +360,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Charlie' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice', 'bob'] },
+            'personal-space-states:closeness': { partners: ['alice', 'bob'] },
           },
         },
       ]);
@@ -389,7 +389,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -416,7 +416,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             // No facing_away component
           },
         },
@@ -425,7 +425,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -450,7 +450,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: [] },
           },
         },
@@ -459,7 +459,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);
@@ -486,7 +486,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['bob'] },
+            'personal-space-states:closeness': { partners: ['bob'] },
             'positioning:facing_away': { facing_away_from: ['bob'] },
           },
         },
@@ -495,7 +495,7 @@ describe('Turn Around to Face Rule', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
-            'positioning:closeness': { partners: ['alice'] },
+            'personal-space-states:closeness': { partners: ['alice'] },
           },
         },
       ]);

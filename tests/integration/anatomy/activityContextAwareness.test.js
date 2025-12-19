@@ -133,7 +133,7 @@ describe('Activity Description - Context Edge Cases', () => {
       gender: 'female',
     });
 
-    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+    await entityManager.addComponent(actor.id, 'personal-space-states:closeness', {
       partners: [alicia.id],
     });
 
@@ -186,7 +186,7 @@ describe('Activity Description - Context Edge Cases', () => {
       gender: 'female',
     });
 
-    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+    await entityManager.addComponent(actor.id, 'personal-space-states:closeness', {
       partners: [alicia.id],
     });
 
@@ -206,13 +206,13 @@ describe('Activity Description - Context Edge Cases', () => {
     );
     expect(baselineContext.relationshipTone).toBe('closeness_partner');
 
-    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+    await entityManager.addComponent(actor.id, 'personal-space-states:closeness', {
       partners: [],
     });
 
     const closenessAfterUpdate = entityManager
       .getEntityInstance(actor.id)
-      .getComponentData('positioning:closeness');
+      .getComponentData('personal-space-states:closeness');
     expect(Array.isArray(closenessAfterUpdate?.partners)).toBe(true);
     expect(closenessAfterUpdate.partners).toHaveLength(0);
 

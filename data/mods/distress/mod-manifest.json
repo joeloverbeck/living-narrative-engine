@@ -20,6 +20,10 @@
     {
       "id": "clothing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -38,6 +42,8 @@
       "clutch_onto_upper_clothing.rule.json",
       "throw_self_to_ground.rule.json"
     ],
-    "scopes": ["close_actors_facing_each_other_with_torso_clothing.scope"]
+    "scopes": [
+      "close_actors_facing_each_other_with_torso_clothing.scope"
+    ]
   }
 }

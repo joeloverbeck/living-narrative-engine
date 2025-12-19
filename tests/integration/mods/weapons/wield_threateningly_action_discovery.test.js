@@ -44,9 +44,9 @@ describe('wield_threateningly action definition', () => {
       expect(actionJson.forbidden_components.actor).toBeInstanceOf(Array);
     });
 
-    it('should include positioning:closeness in forbidden list', () => {
+    it('should include personal-space-states:closeness in forbidden list', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
   });

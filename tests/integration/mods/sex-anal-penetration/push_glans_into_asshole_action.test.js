@@ -28,7 +28,7 @@ function buildAnalPenetrationScenario() {
     .withName('Alice')
     .atLocation('room1')
     .asActor()
-    .withComponent('positioning:closeness', { closeActorIds: ['bob'] })
+    .withComponent('personal-space-states:closeness', { closeActorIds: ['bob'] })
     .withComponent('anatomy:body_part_types', { types: ['penis'] })
     .withComponent('clothing:socket_coverage', { sockets: {} })
     .build();
@@ -37,7 +37,7 @@ function buildAnalPenetrationScenario() {
     .withName('Bob')
     .atLocation('room1')
     .asActor()
-    .withComponent('positioning:closeness', { closeActorIds: ['alice'] })
+    .withComponent('personal-space-states:closeness', { closeActorIds: ['alice'] })
     .withComponent('positioning:facing_away', { facing_away_from: ['alice'] })
     .withComponent('anatomy:body_part_types', { types: ['asshole'] })
     .withComponent('clothing:socket_coverage', { sockets: {} })

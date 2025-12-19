@@ -1,6 +1,6 @@
 // Scope for close partners with arm anatomy (subtype contains 'arm') usable face-to-face or from behind
 // Blocks incompatible kneeling height differences and bending-over targets
-affection:actors_with_arm_subtypes_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+affection:actors_with_arm_subtypes_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartSubTypeContaining": [".", "arm", {"matchAtEnd": true}]},
     {
@@ -11,6 +11,6 @@ affection:actors_with_arm_subtypes_facing_each_other_or_behind_target := actor.c
     },
     {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
     {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}},
-    {"!": {"condition_ref": "positioning:entity-is-bending-over"}}
+    {"!": {"condition_ref": "bending-states:entity-is-bending-over"}}
   ]
 }]

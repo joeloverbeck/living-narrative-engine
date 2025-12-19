@@ -54,7 +54,7 @@ describe('Target Required Components Validation - Integration', () => {
       description: 'Test player',
       components: {
         'core:actor': { name: 'Test Player' },
-        'positioning:closeness': { entity: 'npc1', distance: 1 },
+        'personal-space-states:closeness': { entity: 'npc1', distance: 1 },
       },
     });
 
@@ -63,7 +63,7 @@ describe('Target Required Components Validation - Integration', () => {
       components: {
         'core:actor': { name: 'Test NPC' },
         'positioning:sitting_on': { furniture: 'chair1' },
-        'positioning:closeness': { entity: 'player', distance: 1 },
+        'personal-space-states:closeness': { entity: 'player', distance: 1 },
       },
     });
 
@@ -71,7 +71,7 @@ describe('Target Required Components Validation - Integration', () => {
       description: 'Standing NPC missing sitting_on',
       components: {
         'core:actor': { name: 'Standing NPC' },
-        'positioning:closeness': { entity: 'player', distance: 1 },
+        'personal-space-states:closeness': { entity: 'player', distance: 1 },
       },
     });
 
@@ -163,8 +163,8 @@ describe('Target Required Components Validation - Integration', () => {
           },
         },
         required_components: {
-          actor: ['positioning:closeness'],
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -192,8 +192,8 @@ describe('Target Required Components Validation - Integration', () => {
           },
         },
         required_components: {
-          actor: ['positioning:closeness'],
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -222,8 +222,8 @@ describe('Target Required Components Validation - Integration', () => {
           },
         },
         required_components: {
-          actor: ['positioning:closeness'],
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -238,7 +238,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain('positioning:closeness');
+      expect(result.reason).toContain('personal-space-states:closeness');
       expect(result.reason).toContain('primary');
     });
   });
@@ -308,7 +308,7 @@ describe('Target Required Components Validation - Integration', () => {
         id: 'test:actor_only',
         name: 'Actor Only Action',
         required_components: {
-          actor: ['positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
         },
       };
 
@@ -349,7 +349,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'straddling:straddle_waist_facing',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -371,7 +371,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -391,7 +391,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:null_targets',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -410,7 +410,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:empty_target_array',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -431,7 +431,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:falsy_candidate',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -452,7 +452,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:missing_entity_reference',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -593,7 +593,7 @@ describe('Target Required Components Validation - Integration', () => {
         required_components: {
           primary: [
             'positioning:sitting_on',
-            'positioning:closeness',
+            'personal-space-states:closeness',
             'positioning:facing',
           ],
         },

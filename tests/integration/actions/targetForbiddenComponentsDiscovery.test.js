@@ -48,7 +48,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
 
     it('should filter out kneel_before when target is bending over', () => {
       // EXPECTED BEHAVIOR:
-      // When target has positioning:bending_over component:
+      // When target has bending-states:bending_over component:
       // 1. Target validation identifies this as a forbidden state
       // 2. Target is excluded from kneel_before action discovery results
       // 3. User does not see "kneel before [bending actor]" in available actions
@@ -97,7 +97,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       // Multiple forbidden states should all be handled:
       // 1. positioning:kneeling_before - forbidden
       // 2. positioning:lying_down - forbidden
-      // 3. positioning:bending_over - forbidden
+      // 3. bending-states:bending_over - forbidden
       // 4. Any combination of these - forbidden
       // 5. Standing/default state - allowed
       //
@@ -167,7 +167,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       //       "forbidden_components": [
       //         "positioning:kneeling_before",
       //         "positioning:lying_down",
-      //         "positioning:bending_over"
+      //         "bending-states:bending_over"
       //       ]
       //     }
       //   }

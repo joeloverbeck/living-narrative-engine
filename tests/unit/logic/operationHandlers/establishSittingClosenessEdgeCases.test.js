@@ -371,7 +371,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
             return { spots: ['game:alice', 'game:bob', 'game:charlie'] };
           }
 
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             switch (entityId) {
               case 'game:alice':
                 return { partners: ['game:bob'] };
@@ -418,7 +418,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (
-            componentType === 'positioning:closeness' &&
+            componentType === 'personal-space-states:closeness' &&
             entityId === 'game:alice'
           ) {
             return { partners: ['game:alice'] }; // Self-reference
@@ -687,7 +687,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
           if (componentType === 'sitting:allows_sitting') {
             return { spots: [null, 'game:bob', null] };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             // Return unidirectional relationship after update
             if (entityId === 'game:alice') {
               return { partners: ['game:bob'] };
@@ -735,7 +735,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
     it('should handle null closeness components gracefully', async () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return null; // No closeness component
           }
           if (componentType === 'sitting:allows_sitting') {

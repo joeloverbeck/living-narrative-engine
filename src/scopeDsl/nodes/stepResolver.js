@@ -135,7 +135,7 @@ export default function createStepResolver({
             field: 'components',
             componentKeys: componentsObj ? Object.keys(componentsObj) : null,
             hasCloseness: componentsObj
-              ? 'positioning:closeness' in componentsObj
+              ? 'personal-space-states:closeness' in componentsObj
               : false,
           }
         );

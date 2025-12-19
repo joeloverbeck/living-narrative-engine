@@ -485,9 +485,9 @@ describe('ModTestFixture - Deep Validation (TSTAIMIG-002)', () => {
       expect(scenario).toHaveProperty('target');
 
       // Both entities should have closeness components
-      expect(scenario.actor.components).toHaveProperty('positioning:closeness');
+      expect(scenario.actor.components).toHaveProperty('personal-space-states:closeness');
       expect(scenario.target.components).toHaveProperty(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 

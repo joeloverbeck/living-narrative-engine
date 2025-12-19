@@ -129,7 +129,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
       for (let i = 0; i < actorCount; i++) {
         const actorCloseness = entityManager.getComponent(
           actors[i],
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
 
         if (i === 0) {
@@ -212,14 +212,14 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
         // Verify closeness established
         const middleActorCloseness = entityManager.getComponent(
           actors[1],
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         expect(middleActorCloseness.partners.length).toBe(2);
 
         // All stand
         for (const actorId of actors) {
           entityManager.removeComponent(actorId, 'positioning:sitting_on');
-          entityManager.removeComponent(actorId, 'positioning:closeness');
+          entityManager.removeComponent(actorId, 'personal-space-states:closeness');
         }
 
         await entityManager.addComponent(
@@ -234,7 +234,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
         for (const actorId of actors) {
           const closeness = entityManager.getComponent(
             actorId,
-            'positioning:closeness'
+            'personal-space-states:closeness'
           );
           expect(closeness).toBeNull();
         }

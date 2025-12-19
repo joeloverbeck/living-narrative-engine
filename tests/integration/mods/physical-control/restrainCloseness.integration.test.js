@@ -75,10 +75,10 @@ describe('physical-control:restrain_target closeness handling', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
     const targetAfter = testFixture.entityManager.getEntityInstance(target.id);
 
-    expect(actorAfter.components['positioning:closeness'].partners).toEqual([
+    expect(actorAfter.components['personal-space-states:closeness'].partners).toEqual([
       target.id,
     ]);
-    expect(targetAfter.components['positioning:closeness'].partners).toEqual([
+    expect(targetAfter.components['personal-space-states:closeness'].partners).toEqual([
       actor.id,
     ]);
   });

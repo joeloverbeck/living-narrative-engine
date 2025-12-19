@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "vampirism",
   "version": "1.0.0",
-  "name": "Vampirism",
+  "name": "Vampirism System",
   "description": "Vampire-themed actions, such as feeding on someone.",
   "actionPurpose": "Perform vampire-specific actions including baring fangs, biting necks, and drinking blood.",
   "actionConsiderWhen": "Threatening with fangs, feeding on blood, biting a victim carefully or violently, or withdrawing fangs.",
@@ -18,6 +18,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     }
@@ -30,7 +34,9 @@
       "lunge_bite_neck_violently.action.json",
       "pull_out_fangs.action.json"
     ],
-    "components": ["is_vampire.component.json"],
+    "components": [
+      "is_vampire.component.json"
+    ],
     "conditions": [
       "event-is-action-bare-fangs.condition.json",
       "event-is-action-bite-neck-carefully.condition.json",

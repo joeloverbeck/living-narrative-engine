@@ -85,7 +85,7 @@ describe('sex-breastplay:squeeze_breasts_ardently action discovery', () => {
       );
 
       expect(squeezeBreastsArdentlyAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(squeezeBreastsArdentlyAction.forbidden_components.actor).toEqual([
         'sex-states:giving_blowjob',

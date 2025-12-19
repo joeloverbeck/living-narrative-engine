@@ -127,7 +127,7 @@ describe('movement:teleport action discovery', () => {
 
     it('should NOT appear when actor is bending over', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:bending_over component:
+      // If Alice has bending-states:bending_over component:
       // - Prerequisites check movement:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //

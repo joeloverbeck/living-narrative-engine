@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "vampirism:lunge_bite_neck_violently",
   "name": "Lunge and Bite Neck Violently",
-  "description": "Lunge at a target across the room and sink your fangs into their neck predatorily",
+  "description": "Lunge at a target and sink your fangs into their neck predatorily",
   "targets": "core:actors_in_location",
   "required_components": {
     "actor": ["vampirism:is_vampire"]

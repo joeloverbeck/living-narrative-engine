@@ -1,5 +1,5 @@
 /**
- * @file Validates the positioning:closeness component definition.
+ * @file Validates the personal-space-states:closeness component definition.
  * @see {@link ../../../../../data/mods/positioning/components/closeness.component.json}
  */
 
@@ -10,9 +10,9 @@ import addFormats from 'ajv-formats';
 // Direct import of JSON files, as supported by Jest's transformer.
 import componentDefinitionSchema from '../../../data/schemas/component.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
-import closenessComponent from '../../../data/mods/positioning/components/closeness.component.json';
+import closenessComponent from '../../../data/mods/personal-space-states/components/closeness.component.json';
 
-describe('positioning:closeness component definition', () => {
+describe('personal-space-states:closeness component definition', () => {
   it('should be a valid component definition according to the schema', () => {
     const ajv = new Ajv({ allErrors: true });
     addFormats(ajv);

@@ -152,7 +152,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         id: 'actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['target1'],
           },
           'positioning:facing_away': {
@@ -164,7 +164,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         id: 'target1',
         components: {
           'core:actor': { name: 'Target 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['actor1'],
           },
           'positioning:facing_away': {

@@ -36,8 +36,8 @@ describe('ModEntityScenarios sitting helpers', () => {
       spot_index: 1,
     });
 
-    const actor1Closeness = getComponent(actor1, 'positioning:closeness');
-    const actor2Closeness = getComponent(actor2, 'positioning:closeness');
+    const actor1Closeness = getComponent(actor1, 'personal-space-states:closeness');
+    const actor2Closeness = getComponent(actor2, 'personal-space-states:closeness');
     expect(actor1Closeness.partners).toContain('actor2');
     expect(actor2Closeness.partners).toContain('actor1');
   });
@@ -48,8 +48,8 @@ describe('ModEntityScenarios sitting helpers', () => {
     });
 
     const [, , actor1, actor2] = scenario.entities;
-    expect(getComponent(actor1, 'positioning:closeness')).toBeUndefined();
-    expect(getComponent(actor2, 'positioning:closeness')).toBeUndefined();
+    expect(getComponent(actor1, 'personal-space-states:closeness')).toBeUndefined();
+    expect(getComponent(actor2, 'personal-space-states:closeness')).toBeUndefined();
   });
 
   it('should create standing actors with optional behind targeting metadata', () => {
@@ -70,7 +70,7 @@ describe('ModEntityScenarios sitting helpers', () => {
       entityId: 'actor1',
     });
     expect(
-      getComponent(standingActor, 'positioning:closeness').partners
+      getComponent(standingActor, 'personal-space-states:closeness').partners
     ).toContain('actor1');
   });
 
@@ -117,7 +117,7 @@ describe('ModEntityScenarios sitting helpers', () => {
       entityId: 'actor1',
     });
     expect(
-      getComponent(kneelingActor, 'positioning:closeness').partners
+      getComponent(kneelingActor, 'personal-space-states:closeness').partners
     ).toContain('actor1');
   });
 });

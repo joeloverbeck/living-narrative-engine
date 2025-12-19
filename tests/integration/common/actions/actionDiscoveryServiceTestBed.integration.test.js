@@ -118,10 +118,10 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       expect(target.components['positioning:standing']).toEqual({});
 
       // Verify closeness established
-      expect(actor.components['positioning:closeness'].partners).toContain(
+      expect(actor.components['personal-space-states:closeness'].partners).toContain(
         'target1'
       );
-      expect(target.components['positioning:closeness'].partners).toContain(
+      expect(target.components['personal-space-states:closeness'].partners).toContain(
         'actor1'
       );
     });

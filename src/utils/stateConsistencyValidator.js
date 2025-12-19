@@ -46,14 +46,14 @@ export class StateConsistencyValidator {
 
     // Get all entities with closeness components
     const entitiesWithCloseness = this.#entityManager.getEntitiesWithComponent(
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     for (const entity of entitiesWithCloseness) {
       const entityId = entity.id;
       const closenessData = this.#entityManager.getComponentData(
         entityId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       if (!closenessData || !closenessData.partners) continue;
@@ -67,7 +67,7 @@ export class StateConsistencyValidator {
         // Check for bidirectional relationship
         const partnerCloseness = this.#entityManager.getComponentData(
           partnerId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
 
         if (
@@ -117,7 +117,7 @@ export class StateConsistencyValidator {
         // Check if entity has closeness partners or is sitting
         const closenessData = this.#entityManager.getComponentData(
           entityId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         const sittingData = this.#entityManager.getComponentData(
           entityId,
@@ -317,7 +317,7 @@ export class StateConsistencyValidator {
   async #repairUnidirectionalCloseness(issue) {
     const closenessData = this.#entityManager.getComponentData(
       issue.from,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     if (closenessData && closenessData.partners) {
       const updatedPartners = closenessData.partners.filter(
@@ -325,7 +325,7 @@ export class StateConsistencyValidator {
       );
       await this.#entityManager.addComponent(
         issue.from,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: updatedPartners,
         }

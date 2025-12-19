@@ -45,7 +45,7 @@ describe('caressing:caress_cheek_softly action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -102,7 +102,7 @@ describe('caressing:caress_cheek_softly action discovery', () => {
 
     it('requires actor closeness and forbids only blowjob', () => {
       expect(caressСheekSoftlyAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(caressСheekSoftlyAction.forbidden_components.actor).toEqual([
         'sex-states:giving_blowjob',
@@ -134,8 +134,8 @@ describe('caressing:caress_cheek_softly action discovery', () => {
 
     it('is not available when actors are not in closeness', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);

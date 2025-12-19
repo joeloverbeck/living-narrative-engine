@@ -59,7 +59,7 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
         actorEntity
       );
     expect(prerequisitesPassed).toBe(true);
-    expect(actorEntity.components['positioning:closeness']).toBeDefined();
+    expect(actorEntity.components['personal-space-states:closeness']).toBeDefined();
 
     const candidateIds = testFixture.testEnv.actionIndex
       .getCandidateActions({ id: ACTOR_ID })

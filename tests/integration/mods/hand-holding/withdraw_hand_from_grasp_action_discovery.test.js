@@ -49,7 +49,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
             actorEntity.components?.['hand-holding:hand_held'];
           const holderId = handHeldComponent?.holding_entity_id;
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners || [];
+            actorEntity.components?.['personal-space-states:closeness']?.partners || [];
 
           if (!holderId || !closeness.includes(holderId)) {
             return { success: true, value: new Set() };
@@ -107,7 +107,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
         'hand-holding:actor_whose_hand_target_is_holding'
       );
       expect(withdrawAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
         'hand-holding:hand_held',
       ]);
       expect(withdrawAction.required_components.primary).toEqual([
@@ -222,10 +222,10 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
         idPrefix: 'extra_',
       });
 
-      scenario.actor.components['positioning:closeness'].partners.push(
+      scenario.actor.components['personal-space-states:closeness'].partners.push(
         thirdActor.actor.id
       );
-      thirdActor.actor.components['positioning:closeness'].partners.push(
+      thirdActor.actor.components['personal-space-states:closeness'].partners.push(
         scenario.actor.id
       );
 

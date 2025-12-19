@@ -95,7 +95,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
     testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
       (_scopeName, actorEntity) => {
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners ?? [];
+          actorEntity.components?.['personal-space-states:closeness']?.partners ?? [];
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return ActionResult.success([]);
         }
@@ -172,7 +172,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
         'affection:close_actors_with_nose_or_entity_kneeling_before_actor'
       );
       expect(touchNoseTenderlyAction.required_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(touchNoseTenderlyAction.visual.backgroundColor).toBe('#6a1b9a');
       expect(touchNoseTenderlyAction.visual.textColor).toBe('#f3e5f5');

@@ -73,7 +73,7 @@ describe('deference:crawl_to - Integration Tests', () => {
       ).toBe('test:bob');
       // Closeness was removed by kneel_before
       expect(
-        aliceAfterKneel.components['positioning:closeness']
+        aliceAfterKneel.components['personal-space-states:closeness']
       ).toBeUndefined();
 
       // Step 2: Alice crawls to Bob
@@ -88,13 +88,13 @@ describe('deference:crawl_to - Integration Tests', () => {
       expect(
         aliceAfterCrawl.components['positioning:kneeling_before']
       ).toBeDefined();
-      expect(aliceAfterCrawl.components['positioning:closeness']).toBeDefined();
+      expect(aliceAfterCrawl.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        aliceAfterCrawl.components['positioning:closeness'].partners
+        aliceAfterCrawl.components['personal-space-states:closeness'].partners
       ).toContain('test:bob');
-      expect(bobAfterCrawl.components['positioning:closeness']).toBeDefined();
+      expect(bobAfterCrawl.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        bobAfterCrawl.components['positioning:closeness'].partners
+        bobAfterCrawl.components['personal-space-states:closeness'].partners
       ).toContain('test:alice');
     });
   });
@@ -128,8 +128,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
-      expect(bobEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeDefined();
+      expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
       // No kneeling component added
       expect(
         aliceEntity.components['positioning:kneeling_before']
@@ -174,7 +174,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         aliceEntity.components['positioning:kneeling_before'].entityId
       ).toBe('test:bob');
       // Closeness removed by kneel_before
-      expect(aliceEntity.components['positioning:closeness']).toBeUndefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 
@@ -228,8 +228,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
-      expect(bobEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeDefined();
+      expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
 
       // Verify Carol and Dave are NOT affected
       const carolEntity =
@@ -237,8 +237,8 @@ describe('deference:crawl_to - Integration Tests', () => {
       const daveEntity =
         testFixture.entityManager.getEntityInstance('test:dave');
 
-      expect(carolEntity.components['positioning:closeness']).toBeUndefined();
-      expect(daveEntity.components['positioning:closeness']).toBeUndefined();
+      expect(carolEntity.components['personal-space-states:closeness']).toBeUndefined();
+      expect(daveEntity.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 
@@ -304,12 +304,12 @@ describe('deference:crawl_to - Integration Tests', () => {
 
       const forbiddenComponents = [
         'positioning:sitting_on',
-        'positioning:bending_over',
+        'bending-states:bending_over',
         'positioning:lying_down',
         'positioning:straddling_waist',
         'positioning:being_hugged',
         'positioning:hugging',
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ];
 
       for (const componentId of forbiddenComponents) {

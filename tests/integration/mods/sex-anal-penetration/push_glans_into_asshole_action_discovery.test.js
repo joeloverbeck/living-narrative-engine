@@ -40,9 +40,9 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       });
     });
 
-    it('should require positioning:closeness component on actor', () => {
+    it('should require personal-space-states:closeness component on actor', () => {
       expect(pushGlansIntoAssholeActionJson.required_components).toEqual({
-        actor: ['positioning:closeness'],
+        actor: ['personal-space-states:closeness'],
       });
     });
 
@@ -148,7 +148,7 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
           const actor =
             testFixture.testEnv.entityManager.getEntityInstance(actorId);
           const closenessPartners =
-            actor?.components?.['positioning:closeness']?.partners;
+            actor?.components?.['personal-space-states:closeness']?.partners;
 
           if (
             !Array.isArray(closenessPartners) ||
@@ -198,11 +198,11 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       // Remove closeness components
       testFixture.testEnv.entityManager.removeComponent(
         scenario.actor.id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       testFixture.testEnv.entityManager.removeComponent(
         scenario.target.id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Setup target with exposed asshole facing away

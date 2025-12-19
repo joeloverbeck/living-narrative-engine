@@ -31,7 +31,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners || [];
           },
@@ -156,8 +156,8 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       // Remove closeness
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       // Add vampire marker but no closeness
       scenario.actor.components['vampirism:is_vampire'] = {};

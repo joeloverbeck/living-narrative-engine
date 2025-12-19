@@ -13,7 +13,7 @@ import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 // Sample action imports for validation
 import kissNeckSensuallyAction from '../../../data/mods/kissing/actions/kiss_neck_sensually.action.json';
 import lickLipsAction from '../../../data/mods/caressing/actions/lick_lips.action.json';
-import bendOverAction from '../../../data/mods/positioning/actions/bend_over.action.json';
+import bendOverAction from '../../../data/mods/bending/actions/bend_over.action.json';
 
 describe('Blowjob Components - Forbidden Actions Validation', () => {
   let testFixture;
@@ -56,13 +56,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     };
 
     // Set up closeness
-    actor.components['positioning:closeness'] = {
+    actor.components['personal-space-states:closeness'] = {
       partners: [targetGiving.id, targetNormal.id],
     };
-    targetGiving.components['positioning:closeness'] = {
+    targetGiving.components['personal-space-states:closeness'] = {
       partners: [actor.id, targetNormal.id],
     };
-    targetNormal.components['positioning:closeness'] = {
+    targetNormal.components['personal-space-states:closeness'] = {
       partners: [actor.id, targetGiving.id],
     };
 
@@ -162,7 +162,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
           return { success: true, value: new Set() };
         }
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners;
+          actorEntity.components?.['personal-space-states:closeness']?.partners;
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return { success: true, value: new Set() };
         }
@@ -181,7 +181,7 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
           return { success: true, value: new Set() };
         }
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners;
+          actorEntity.components?.['personal-space-states:closeness']?.partners;
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return { success: true, value: new Set() };
         }
@@ -328,8 +328,8 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
   describe('Sample validation: bend_over (actor forbidden)', () => {
     beforeEach(async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:bend_over'
+        'bending',
+        'bending:bend_over'
       );
     });
 

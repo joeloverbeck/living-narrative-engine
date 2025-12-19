@@ -48,7 +48,7 @@ describe('physical-control:push_off action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -104,7 +104,7 @@ describe('physical-control:push_off action discovery', () => {
 
     it('requires actor closeness, forbids sitting targets, and uses the physical-control color palette', () => {
       expect(pushOffAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
@@ -160,8 +160,8 @@ describe('physical-control:push_off action discovery', () => {
 
     it('is not available when actors are not in closeness', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);

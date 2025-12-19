@@ -39,9 +39,9 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       );
     });
 
-    it('should include positioning:closeness in forbidden list', () => {
+    it('should include personal-space-states:closeness in forbidden list', () => {
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 

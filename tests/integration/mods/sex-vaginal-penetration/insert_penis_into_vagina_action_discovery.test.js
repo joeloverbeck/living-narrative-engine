@@ -105,7 +105,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
     }
 
     const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
-    const closeness = actorEntity?.components?.['positioning:closeness'];
+    const closeness = actorEntity?.components?.['personal-space-states:closeness'];
     const partners = Array.isArray(closeness?.partners)
       ? closeness.partners
       : [];
@@ -426,7 +426,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
     it('should require actor closeness to the target', () => {
       expect(insertPenisIntoVaginaAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
     });
 

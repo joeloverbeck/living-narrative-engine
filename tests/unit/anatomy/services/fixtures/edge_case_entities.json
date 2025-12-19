@@ -70,7 +70,7 @@
         "name": "Self-Referencing",
         "components": {
           "core:gender": { "value": "non_binary" },
-          "positioning:closeness": {
+          "personal-space-states:closeness": {
             "partners": ["circular_1"]
           }
         }
@@ -191,7 +191,7 @@
         "name": "Nested",
         "components": {
           "core:gender": { "value": "male" },
-          "positioning:closeness": {
+          "personal-space-states:closeness": {
             "partners": ["p1", "p2", "p3"],
             "close": ["c1", "c2", "c3", "c4", "c5"],
             "acquaintances": ["a1", "a2", "a3", "a4", "a5", "a6", "a7"]

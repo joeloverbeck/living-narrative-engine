@@ -1,6 +1,6 @@
 // Scope for partners currently being vaginally penetrated by the actor
 // Ensures the target has being_fucked_vaginally component with matching actorId reference
-sex-vaginal-penetration:actors_being_fucked_vaginally_by_me := actor.components.positioning:closeness.partners[][
+sex-vaginal-penetration:actors_being_fucked_vaginally_by_me := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
       {"!!": {"var": "entity.components.sex-states:being_fucked_vaginally"}},

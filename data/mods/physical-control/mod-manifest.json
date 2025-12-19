@@ -16,6 +16,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     },
@@ -25,6 +29,14 @@
     },
     {
       "id": "lying",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending",
       "version": "^1.0.0"
     }
   ],
@@ -59,7 +71,9 @@
       "event-is-action-restrain-target.condition.json",
       "event-is-action-turn-around.condition.json"
     ],
-    "events": ["actor_turned_around.event.json"],
+    "events": [
+      "actor_turned_around.event.json"
+    ],
     "scopes": [
       "restrained_entity_i_am_holding.scope",
       "restraining_entity_from_being_restrained.scope"

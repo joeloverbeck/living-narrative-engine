@@ -74,7 +74,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -141,7 +141,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
       );
       expect(brushHairBehindEarAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(brushHairBehindEarAction.visual.backgroundColor).toBe('#6a1b9a');
       expect(brushHairBehindEarAction.visual.textColor).toBe('#f3e5f5');
@@ -215,8 +215,8 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         ['Ivy', 'Liam'],
         ['torso', 'hair']
       );
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       testFixture.reset([...scenario.allEntities]);
       return configureActionDiscovery().then(() => {

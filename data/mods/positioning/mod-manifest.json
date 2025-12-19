@@ -14,19 +14,16 @@
       "version": "^1.0.0"
     },
     {
-      "id": "sex-states",
+      "id": "personal-space-states",
       "version": "^1.0.0"
     }
   ],
   "content": {
     "components": [
-      "allows_bending_over.component.json",
       "being_bitten_in_neck.component.json",
       "being_hugged.component.json",
       "being_restrained.component.json",
-      "bending_over.component.json",
       "biting_neck.component.json",
-      "closeness.component.json",
       "doing_complex_performance.component.json",
       "facing_away.component.json",
       "fallen.component.json",
@@ -38,10 +35,6 @@
       "straddling_waist.component.json",
       "wielding.component.json"
     ],
-    "actions": [
-      "bend_over.action.json",
-      "straighten_up.action.json"
-    ],
     "conditions": [
       "actor-can-move.condition.json",
       "actor-in-entity-facing-away.condition.json",
@@ -50,17 +43,10 @@
       "actor-kneeling-before-entity.condition.json",
       "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
-      "entity-is-bending-over.condition.json",
       "entity-is-not-wielding.condition.json",
       "entity-kneeling-before-actor.condition.json",
       "entity-not-facing-away-from-actor.condition.json",
-      "entity-not-in-facing-away.condition.json",
-      "event-is-action-bend-over.condition.json",
-      "event-is-action-straighten-up.condition.json"
-    ],
-    "rules": [
-      "bend_over.rule.json",
-      "straighten_up.rule.json"
+      "entity-not-in-facing-away.condition.json"
     ],
     "entities": {
       "definitions": [],
@@ -79,14 +65,14 @@
       "actor_being_bitten_by_me.scope",
       "actors_im_facing_away_from.scope",
       "actors_in_location_facing.scope",
-      "available_surfaces.scope",
       "close_actors.scope",
       "close_actors_facing_each_other.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
       "close_actors_facing_each_other_or_behind_target_with_hands.scope",
       "close_actors_or_entity_kneeling_before_actor.scope",
-      "entity_actor_is_kneeling_before.scope",
-      "surface_im_bending_over.scope"
-    ]
+      "entity_actor_is_kneeling_before.scope"
+    ],
+    "actions": [],
+    "rules": []
   }
 }

@@ -45,7 +45,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -94,7 +94,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
@@ -105,7 +105,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -129,7 +129,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: true,
@@ -140,7 +140,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -185,14 +185,14 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .build();
 
       const target = new ModEntityBuilder('target1')
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .build();
 
       testFixture.reset([room, actor, target]);
@@ -214,7 +214,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
@@ -225,7 +225,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .build();
 
       testFixture.reset([room, actor, target]);
@@ -260,7 +260,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['target1', 'target2'],
         })
         .withComponent('positioning:straddling_waist', {
@@ -273,14 +273,14 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .build();
 
       const target2 = new ModEntityBuilder('target2')
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .build();
 
       testFixture.reset([room, actor, target1, target2]);
@@ -303,7 +303,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('kissing:kissing', { target_id: 'target1' })
         .build();
 
@@ -311,7 +311,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .build();
 
       testFixture.reset([room, actor, target]);

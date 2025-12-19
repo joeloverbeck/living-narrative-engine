@@ -59,7 +59,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'hugging_entity_id',
     },
     {
-      mod: 'positioning',
+      mod: 'bending-states',
       name: 'bending_over',
       expectedTemplate: 'is bending over',
       priority: 68,

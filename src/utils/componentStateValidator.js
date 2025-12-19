@@ -209,11 +209,11 @@ export class ComponentStateValidator {
 
       const actorCloseness = entityManager.getComponentData(
         actorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const partnerCloseness = entityManager.getComponentData(
         partnerId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       const actorHasPartner =

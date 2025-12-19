@@ -353,7 +353,7 @@ describe('Turn around and kneel before interaction', () => {
         [NAME_COMPONENT_ID]: { name: 'Actor 1' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
         'core:actor': {},
-        'positioning:closeness': { partners: ['test:actor2', 'test:actor3'] },
+        'personal-space-states:closeness': { partners: ['test:actor2', 'test:actor3'] },
       },
     };
 
@@ -363,7 +363,7 @@ describe('Turn around and kneel before interaction', () => {
         [NAME_COMPONENT_ID]: { name: 'Actor 2' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
         'core:actor': {},
-        'positioning:closeness': { partners: ['test:actor1', 'test:actor3'] },
+        'personal-space-states:closeness': { partners: ['test:actor1', 'test:actor3'] },
       },
     };
 
@@ -384,8 +384,8 @@ describe('Turn around and kneel before interaction', () => {
     );
     entityManager.addComponent(
       actor1.id,
-      'positioning:closeness',
-      actor1.components['positioning:closeness']
+      'personal-space-states:closeness',
+      actor1.components['personal-space-states:closeness']
     );
 
     entityManager.addComponent(
@@ -405,8 +405,8 @@ describe('Turn around and kneel before interaction', () => {
     );
     entityManager.addComponent(
       actor2.id,
-      'positioning:closeness',
-      actor2.components['positioning:closeness']
+      'personal-space-states:closeness',
+      actor2.components['personal-space-states:closeness']
     );
   });
 

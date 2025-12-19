@@ -42,7 +42,7 @@ describe('Sitting Closeness Establishment Integration', () => {
             ],
           };
         }
-        if (componentId === 'positioning:closeness') {
+        if (componentId === 'personal-space-states:closeness') {
           return { partners: [] };
         }
         if (componentId === 'positioning:movement_lock') {

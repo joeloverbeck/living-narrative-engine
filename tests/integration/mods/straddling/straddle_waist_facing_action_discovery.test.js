@@ -35,7 +35,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
      * data/mods/positioning/scopes/actors_sitting_close.scope
      *
      * Scope DSL:
-     *   positioning:actors_sitting_close := actor.components.positioning:closeness.partners[][{
+     *   positioning:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{
      *     "!!": {"var": "entity.components.positioning:sitting_on"}
      *   }]
      *
@@ -51,7 +51,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
 
         if (!closeness || !Array.isArray(closeness.partners)) {
           return { success: true, value: new Set() };
@@ -120,12 +120,12 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
       console.log('  Actor components:', Object.keys(actorEntity.components));
       console.log(
         '  Actor closeness:',
-        actorEntity.components['positioning:closeness']
+        actorEntity.components['personal-space-states:closeness']
       );
       console.log('  Target components:', Object.keys(targetEntity.components));
       console.log(
         '  Target closeness:',
-        targetEntity.components['positioning:closeness']
+        targetEntity.components['personal-space-states:closeness']
       );
       console.log(
         '  Target sitting_on:',
@@ -323,7 +323,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['target1'],
         })
         .build();

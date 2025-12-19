@@ -1360,7 +1360,7 @@ describe('ActivityDescriptionService - Context Building Characterization', () =>
       const actor = createStandardEntity({
         id: 'actor1',
         additionalComponents: new Map([
-          ['positioning:closeness', { partners: ['target1'] }],
+          ['personal-space-states:closeness', { partners: ['target1'] }],
         ]),
       });
       testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
@@ -1452,7 +1452,7 @@ describe('ActivityDescriptionService - Context Building Characterization', () =>
       const actor = createStandardEntity({
         id: 'actor1',
         additionalComponents: new Map([
-          ['positioning:closeness', { partners: ['target1'] }],
+          ['personal-space-states:closeness', { partners: ['target1'] }],
         ]),
       });
       testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
@@ -1725,7 +1725,7 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
       expect(gender).toBe('neutral');
     });
 
-    it('should handle entity without positioning:closeness component', () => {
+    it('should handle entity without personal-space-states:closeness component', () => {
       const entity = createStandardEntity({ id: 'actor1' });
       testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
 
@@ -2116,7 +2116,7 @@ describe('ActivityDescriptionService - Golden Master Tests', () => {
             },
           ],
           [
-            'positioning:closeness',
+            'personal-space-states:closeness',
             {
               partners: ['target1'],
             },

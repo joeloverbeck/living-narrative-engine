@@ -80,7 +80,7 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
       );
 
       expect(latchAndDrinkMilkAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(latchAndDrinkMilkAction.required_components.target).toEqual([
         'sex-breastplay:is_lactating',

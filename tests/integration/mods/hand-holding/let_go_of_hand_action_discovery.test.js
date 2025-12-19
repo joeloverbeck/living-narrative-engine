@@ -56,7 +56,7 @@ describe('hand-holding:let_go_of_hand action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -113,7 +113,7 @@ describe('hand-holding:let_go_of_hand action discovery', () => {
         'positioning:close_actors_facing_each_other_or_behind_target'
       );
       expect(letGoAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
         'hand-holding:holding_hand',
       ]);
       expect(letGoAction.required_components.primary).toEqual([

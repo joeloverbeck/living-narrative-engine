@@ -1,5 +1,5 @@
 {
-  "description": "Relationship tone detection via positioning:closeness component",
+  "description": "Relationship tone detection via personal-space-states:closeness component",
   "scenarios": [
     {
       "name": "closeness_partner",

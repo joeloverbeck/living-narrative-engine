@@ -63,7 +63,7 @@ describe('affection:push_target_playfully action integration', () => {
       .withName('Amelia')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['target1'] })
       .withComponent('positioning:hugging', {
         embraced_entity_id: 'target1',
         initiated: true,
@@ -75,7 +75,7 @@ describe('affection:push_target_playfully action integration', () => {
       .withName('Jonah')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'actor1',
         consented: true,

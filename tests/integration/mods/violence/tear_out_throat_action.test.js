@@ -417,7 +417,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         .asActor()
         .build();
 
-      unrelatedEntity.components['positioning:closeness'] = { partners: [] };
+      unrelatedEntity.components['personal-space-states:closeness'] = { partners: [] };
       unrelatedEntity.components['positioning:biting_neck'] = {
         bitten_entity_id: 'someone_else',
         initiated: true,

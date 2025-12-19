@@ -191,8 +191,8 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Remove closeness
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['positioning:biting_neck'] = {
         bitten_entity_id: scenario.target.id,

@@ -292,11 +292,11 @@ describe('Complete Lying Workflow', () => {
       const counter = new ModEntityBuilder('test:counter1')
         .withName('Counter')
         .atLocation('bedroom')
-        .withComponent('positioning:allows_bending_over', {})
+        .withComponent('bending:allows_bending_over', {})
         .build();
 
       const bendFixture = await ModTestFixture.forAction(
-        'positioning',
+        'bending',
         'bend_over'
       );
       bendFixture.reset([room, actor, bed, counter]);
@@ -490,7 +490,7 @@ describe('Complete Lying Workflow', () => {
       const counter = new ModEntityBuilder('test:counter1')
         .withName('Counter')
         .atLocation('bedroom')
-        .withComponent('positioning:allows_bending_over', {})
+        .withComponent('bending:allows_bending_over', {})
         .build();
 
       // Act: Get up
@@ -503,7 +503,7 @@ describe('Complete Lying Workflow', () => {
 
       // Assert: Bending should now work
       const bendFixture = await ModTestFixture.forAction(
-        'positioning',
+        'bending',
         'bend_over'
       );
       const standingActor =

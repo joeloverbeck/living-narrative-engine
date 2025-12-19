@@ -23,7 +23,7 @@
     "actor": [
       "positioning:sitting_on",
       "positioning:kneeling_before",
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:restraining",
       "positioning:fallen"
     ]

@@ -11,11 +11,11 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness", "positioning:facing_away"]
+    "actor": ["personal-space-states:closeness", "positioning:facing_away"]
   },
   "forbidden_components": {
     "actor": [
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:biting_neck",
       "positioning:being_restrained",
       "positioning:restraining",

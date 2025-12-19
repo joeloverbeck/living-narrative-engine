@@ -236,7 +236,7 @@ describe('violence:tear_out_throat action discovery', () => {
           'core:position': {
             locationId: 'room1',
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [scenario.actor.id],
           },
         },

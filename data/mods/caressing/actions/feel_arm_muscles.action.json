@@ -5,7 +5,7 @@
   "description": "Feel the hard swell of the target's muscular arms.",
   "targets": "caressing:actors_with_muscular_arms_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "feel the hard swell of {target}'s muscles",
   "prerequisites": [],

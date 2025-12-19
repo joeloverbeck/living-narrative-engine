@@ -1,0 +1,50 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "bending",
+  "version": "1.0.0",
+  "name": "Bending System",
+  "description": "Provides bending over mechanics including bending over surfaces and straightening up.",
+  "actionPurpose": "Bend over surfaces or straighten up from a bent position.",
+  "actionConsiderWhen": "Wanting to bend over furniture or surfaces, or stand back up from a bent position.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "allows_bending_over.component.json"
+    ],
+    "actions": [
+      "bend_over.action.json",
+      "straighten_up.action.json"
+    ],
+    "conditions": [
+      "event-is-action-bend-over.condition.json",
+      "event-is-action-straighten-up.condition.json"
+    ],
+    "rules": [
+      "bend_over.rule.json",
+      "straighten_up.rule.json"
+    ],
+    "scopes": [
+      "available_surfaces.scope",
+      "surface_im_bending_over.scope"
+    ]
+  }
+}

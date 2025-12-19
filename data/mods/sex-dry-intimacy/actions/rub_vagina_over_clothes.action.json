@@ -17,7 +17,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "primary": ["sex-states:giving_blowjob"]

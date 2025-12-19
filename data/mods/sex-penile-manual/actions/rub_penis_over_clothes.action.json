@@ -17,7 +17,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "rub {primary}'s penis over the {secondary}",
   "prerequisites": [],

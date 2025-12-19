@@ -136,11 +136,11 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
   async #updatePartners(actorId, targetId) {
     const actorComp = this.#entityManager.getComponentData(
       actorId,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const targetComp = this.#entityManager.getComponentData(
       targetId,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const mergedMemberIds = this.#closenessCircleService.merge(
       [actorId, targetId],
@@ -150,7 +150,7 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     for (const id of mergedMemberIds) {
       const partners = mergedMemberIds.filter((p) => p !== id);
       try {
-        await this.#entityManager.addComponent(id, 'positioning:closeness', {
+        await this.#entityManager.addComponent(id, 'personal-space-states:closeness', {
           partners,
         });
       } catch (err) {

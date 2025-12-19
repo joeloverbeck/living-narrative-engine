@@ -2,7 +2,7 @@
 // Combines positioning validation (facing_away OR lying_down) with anatomy and clothing checks
 // Used by actions that require the actor to be behind someone with exposed asshole anatomy
 // Note: asshole is both the body part type and socket ID
-sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind := actor.components.positioning:closeness.partners[][{
+sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {
       "and": [

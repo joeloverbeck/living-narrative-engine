@@ -103,7 +103,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
-    const closeness = actorEntity?.components?.['positioning:closeness'];
+    const closeness = actorEntity?.components?.['personal-space-states:closeness'];
     const partners = Array.isArray(closeness?.partners)
       ? closeness.partners
       : [];
@@ -386,7 +386,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
     it('requires closeness and forbids conflicting actor states', () => {
       expect(insertPrimaryPenisAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(insertPrimaryPenisAction.forbidden_components.actor).toEqual([
         'sex-states:being_fucked_vaginally',

@@ -27,7 +27,7 @@ describe('ModAssertionHelpers - Deep Validation (TSTAIMIG-002)', () => {
         components: {
           'core:name': { text: 'Test Target' },
           'core:position': { locationId: 'test-room' },
-          'positioning:closeness': { partners: ['test-actor'] },
+          'personal-space-states:closeness': { partners: ['test-actor'] },
         },
       },
     ]);
@@ -659,7 +659,7 @@ describe('ModAssertionHelpers - Deep Validation (TSTAIMIG-002)', () => {
 
     describe('Positioning assertions', () => {
       it('should validate mutual closeness correctly', () => {
-        mockEntityManager.addComponent('test-actor', 'positioning:closeness', {
+        mockEntityManager.addComponent('test-actor', 'personal-space-states:closeness', {
           partners: ['test-target'],
         });
 

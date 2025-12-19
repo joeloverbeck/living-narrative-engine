@@ -141,7 +141,7 @@ describe('item-handling:pick_up_item prerequisites', () => {
         'items:inventory'
       );
       expect(pickUpItemAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
       expect(pickUpItemAction.forbidden_components.actor).toContain(
         'sex-states:being_fucked_vaginally'

@@ -17,7 +17,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
       const builder = new ModEntityBuilder('actor1').withName('Actor');
 
       // This should fail validation
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: [targetEntity], // BUG: should be targetEntity.id
       };
 
@@ -70,7 +70,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
       const target2 = new ModEntityBuilder('target2').withName('T2').build();
 
       const builder = new ModEntityBuilder('actor1').withName('Actor');
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: [target1, target2], // BUG: should be IDs
       };
 
@@ -92,7 +92,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
 
     it('should provide helpful context when closeness has wrong structure', () => {
       const builder = new ModEntityBuilder('actor1');
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: 'single-string-not-array', // Should be array
       };
 
@@ -120,7 +120,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
       const invalidEntity = { id: 'wrong', components: {} };
 
       const builder = new ModEntityBuilder('actor1');
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: ['valid1', invalidEntity, 'valid2'], // Middle one is wrong
       };
 
@@ -205,7 +205,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
 
     it('should handle empty partners array in closeness', () => {
       const builder = new ModEntityBuilder('actor1');
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: [], // Empty but valid array
       };
 
@@ -262,7 +262,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
         .atLocation('room1');
 
       // Simulate the bug
-      builder.entityData.components['positioning:closeness'] = {
+      builder.entityData.components['personal-space-states:closeness'] = {
         partners: [targetEntity],
       };
 

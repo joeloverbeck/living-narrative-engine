@@ -2,7 +2,7 @@
   "$schema": "http://example.com/schemas/mod-manifest.schema.json",
   "id": "gymnastics",
   "version": "1.0.0",
-  "name": "Gymnastics",
+  "name": "Gymnastics System",
   "description": "Core floor gymnastics maneuvers for trained gymnasts.",
   "actionPurpose": "Perform floor gymnastics maneuvers including rolls and cartwheels.",
   "actionConsiderWhen": "Demonstrating gymnastics skill, performing acrobatic movements, or showing off athletic flexibility.",
