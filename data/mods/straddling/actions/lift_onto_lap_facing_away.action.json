@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "straddling:lift_onto_lap_facing_away",
+  "name": "Lift Onto Lap (Facing Away)",
+  "description": "Lift a close sitting actor onto your lap in a facing away orientation",
+  "targets": {
+    "primary": {
+      "scope": "positioning:actors_both_sitting_close",
+      "placeholder": "primary",
+      "description": "Sitting actor close to you to lift onto your lap"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["sex-states:giving_blowjob"],
+    "primary": ["positioning:straddling_waist"]
+  },
+  "template": "lift {primary} onto your lap (facing away)",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#5e2750",
+    "textColor": "#fce4f1",
+    "hoverBackgroundColor": "#732f62",
+    "hoverTextColor": "#ffffff"
+  }
+}

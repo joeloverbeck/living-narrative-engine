@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "straddling:straddle_waist_facing_away",
+  "name": "Straddle Waist (Facing Away)",
+  "description": "Straddle the waist of a sitting actor while facing away from them",
+  "targets": {
+    "primary": {
+      "scope": "positioning:actors_sitting_close",
+      "placeholder": "target",
+      "description": "Sitting actor to straddle"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:sitting_on", "positioning:straddling_waist"]
+  },
+  "template": "sit on {target}'s lap (facing away)",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#5e2750",
+    "textColor": "#fce4f1",
+    "hoverBackgroundColor": "#732f62",
+    "hoverTextColor": "#ffffff"
+  }
+}

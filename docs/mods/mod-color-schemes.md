@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 54 defined color combinations
-**In Use**: 40 schemes actively implemented across mods
+**Total Schemes**: 55 defined color combinations
+**In Use**: 41 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -53,6 +53,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Sex-Penile-Oral         | Midnight Orchid     | 12.3    | `#2a1a5e`        | Active |
 | Sex-Physical-Control    | Velvet Twilight     | 11.3    | `#2c0e37`        | Active |
 | Sex-Vaginal-Penetration | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
+| Straddling              | Intimate Embrace    | 20.1    | `#5e2750`        | Active |
 | Vampirism               | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
 | Violence                | Dark Crimson        | 2.2     | `#8b0000`        | Active |
 | Warding                 | Cool Grey Modern    | 10.3    | `#424242`        | Active |
@@ -1167,14 +1168,33 @@ When modifying schemes:
 - **Use Cases**: Writing actions, note-taking, document signing, scholarly activities
 - **Theme**: Deep ink blue-black with warm parchment text, evoking manuscripts, quills, and scholarly work
 
+### 20. Intimate Positioning Colors
+
+#### 20.1 Intimate Embrace ✅ IN USE: Straddling
+
+```json
+{
+  "backgroundColor": "#5e2750",
+  "textColor": "#fce4f1",
+  "hoverBackgroundColor": "#732f62",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 10.5:1 🌟 AAA
+- **Hover Contrast**: 8.8:1 🌟 AAA
+- **Use Cases**: Straddling, lap-sitting, intimate seated positioning, bodily closeness
+- **Theme**: Deep plum-magenta suggesting intimate proximity and sensual bodily contact
+
 ## Version History
 
+- **2025-12**: Added Section 20 (Intimate Positioning Colors) with Intimate Embrace (20.1) for Straddling mod
 - **2025-12**: Added Scribe's Ink (19.1) for Writing mod
-- **2026-03**: Added Depot Olive (18.3) for Containers mod
+- **2025-12**: Added Depot Olive (18.3) for Containers mod
 - **2025-12**: Added Foundation Earth (18.2) for Item-Placement mod
 - **2025-12**: Added Section 18 (Physical/Interaction Colors) with Tactile Brown (18.1) for Item-Handling mod
 - **2025-12**: Added Section 17 (Intoxicants/Vice Colors) with Tavern Amber (17.1) for Intoxicants mod and Hazy Smoke (17.2) available
-- **2026-02**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
+- **2025-12**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
 - **2025-12**: Added Archer's Focus (15.1) for Ranged mod
 - **2025-11**: Consolidated from multiple sources into single reference document
 - Original spec: `specs/wcag-compliant-color-combinations.spec.md` (removed)

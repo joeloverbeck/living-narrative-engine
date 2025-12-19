@@ -576,7 +576,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'physical.target_action'
+        'physical.self_action'
       );
       expect(perceptibleEvent.payload.locationId).toBe('room1');
     });

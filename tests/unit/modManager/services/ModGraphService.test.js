@@ -362,9 +362,8 @@ describe('ModGraphService', () => {
       // the key is core is present and properly ordered
     });
 
-    it('should fall back to unsorted on error', () => {
+    it('should return empty array and track circular dependency on cycle error', () => {
       // Build a graph that will cause a cycle error
-      // Note: This test relies on internal error handling
       service.buildGraph([
         { id: 'core', dependencies: [] },
         { id: 'mod-a', dependencies: [{ id: 'mod-b' }] },
@@ -374,13 +373,86 @@ describe('ModGraphService', () => {
 
       const order = service.getLoadOrder();
 
-      // Should have logged an error and returned unsorted list
+      // Should have logged an error
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to resolve load order',
         expect.any(Error)
       );
-      // Order should still contain active mods (fallback behavior)
-      expect(Array.isArray(order)).toBe(true);
+      // Order should be empty array when circular dependency detected
+      expect(order).toEqual([]);
+      // Circular dependency state should be tracked
+      expect(service.hasCircularDependency()).toBe(true);
+      expect(service.getCircularDependencyError()).toContain('DEPENDENCY_CYCLE');
+    });
+  });
+
+  describe('hasCircularDependency', () => {
+    it('should return false before getLoadOrder is called', () => {
+      service.buildGraph(createMockMods());
+      expect(service.hasCircularDependency()).toBe(false);
+    });
+
+    it('should return false when no circular dependency exists', () => {
+      service.buildGraph(createMockMods());
+      service.setExplicitMods(['feature-mod']);
+      service.getLoadOrder();
+
+      expect(service.hasCircularDependency()).toBe(false);
+    });
+
+    it('should return true when circular dependency is detected', () => {
+      service.buildGraph([
+        { id: 'core', dependencies: [] },
+        { id: 'mod-a', dependencies: [{ id: 'mod-b' }] },
+        { id: 'mod-b', dependencies: [{ id: 'mod-a' }] },
+      ]);
+      service.setExplicitMods(['mod-a']);
+      service.getLoadOrder();
+
+      expect(service.hasCircularDependency()).toBe(true);
+    });
+
+    it('should reset on subsequent successful getLoadOrder call', () => {
+      // First, create a circular dependency
+      service.buildGraph([
+        { id: 'core', dependencies: [] },
+        { id: 'mod-a', dependencies: [{ id: 'mod-b' }] },
+        { id: 'mod-b', dependencies: [{ id: 'mod-a' }] },
+      ]);
+      service.setExplicitMods(['mod-a']);
+      service.getLoadOrder();
+      expect(service.hasCircularDependency()).toBe(true);
+
+      // Now rebuild with no circular dependency
+      service.buildGraph(createMockMods());
+      service.setExplicitMods(['feature-mod']);
+      service.getLoadOrder();
+
+      expect(service.hasCircularDependency()).toBe(false);
+    });
+  });
+
+  describe('getCircularDependencyError', () => {
+    it('should return null when no circular dependency', () => {
+      service.buildGraph(createMockMods());
+      service.setExplicitMods(['feature-mod']);
+      service.getLoadOrder();
+
+      expect(service.getCircularDependencyError()).toBeNull();
+    });
+
+    it('should return error message when circular dependency detected', () => {
+      service.buildGraph([
+        { id: 'core', dependencies: [] },
+        { id: 'mod-a', dependencies: [{ id: 'mod-b' }] },
+        { id: 'mod-b', dependencies: [{ id: 'mod-a' }] },
+      ]);
+      service.setExplicitMods(['mod-a']);
+      service.getLoadOrder();
+
+      const error = service.getCircularDependencyError();
+      expect(error).not.toBeNull();
+      expect(error).toContain('DEPENDENCY_CYCLE');
     });
   });
 

@@ -38,6 +38,23 @@
       }
     },
     {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for pushing off.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} pushes {context.targetName} off forcefully, breaking their closeness.",
+        "actor_description": "I push {context.targetName} off forcefully, breaking our closeness.",
+        "target_description": "{context.actorName} pushes me off forcefully, breaking our closeness.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the sounds of a struggle and someone being pushed away nearby.",
+          "tactile": "I feel vibrations as someone is pushed away nearby."
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
@@ -45,28 +62,7 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    {
-      "macro": "core:logSuccessAndEndTurn"
+      "macro": "core:logSuccessOutcomeAndEndTurn"
     }
   ]
 }

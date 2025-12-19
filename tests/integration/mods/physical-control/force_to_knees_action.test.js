@@ -16,8 +16,7 @@ import eventIsActionForceToKnees from '../../../../data/mods/physical-control/co
 
 const ACTION_ID = 'physical-control:force_to_knees';
 
-const EXPECTED_MESSAGE =
-  '{actor} roughly forces {target} to their knees before {actor}.';
+const EXPECTED_MESSAGE = '{actor} roughly forces {target} to their knees.';
 
 describe('Physical Control Mod: Force to Knees Action Integration', () => {
   let testFixture;

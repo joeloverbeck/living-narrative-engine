@@ -712,8 +712,8 @@ export class ScopeResolverHelpers {
       // MEDIUM PRIORITY SCOPES (Phase 2)
 
       // "actor im straddling" - Straddling relationship lookup
-      'positioning:actor_im_straddling': this.createComponentLookupResolver(
-        'positioning:actor_im_straddling',
+      'straddling:actor_im_straddling': this.createComponentLookupResolver(
+        'straddling:actor_im_straddling',
         {
           componentType: 'positioning:straddling_waist',
           sourceField: 'target_id',

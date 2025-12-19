@@ -15,11 +15,13 @@ import eventIsActionForceBendOver from '../../../../../data/mods/physical-contro
 import bendingOverComponent from '../../../../../data/mods/positioning/components/bending_over.component.json';
 import facingAwayComponent from '../../../../../data/mods/positioning/components/facing_away.component.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import logSuccessOutcomeMacro from '../../../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../../../src/logic/operationHandlers/endTurnHandler.js';
 import AddComponentHandler from '../../../../../src/logic/operationHandlers/addComponentHandler.js';
 import ModifyArrayFieldHandler from '../../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
@@ -72,6 +74,10 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: safeDispatcher,
+      logger,
+    }),
     END_TURN: new EndTurnHandler({
       safeEventDispatcher: safeDispatcher,
       logger,
@@ -101,7 +107,10 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
   let testEnv;
 
   beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const macros = {
+      'core:logSuccessAndEndTurn': logSuccessMacro,
+      'core:logSuccessOutcomeAndEndTurn': logSuccessOutcomeMacro,
+    };
     const expandedActions = expandMacros(forceBendOverRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
@@ -198,7 +207,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Rhea forcefully bends Noah over Steel Table'
+      'Rhea forcefully bends Noah over Steel Table.'
     );
     expect(perceptibleEvent.payload.locationId).toBe('room1');
     expect(perceptibleEvent.payload.targetId).toBe('target1');
@@ -208,7 +217,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
     );
     expect(displayEvent).toBeDefined();
     expect(displayEvent.payload.message).toBe(
-      'Rhea forcefully bends Noah over Steel Table'
+      'Rhea forcefully bends Noah over Steel Table.'
     );
 
     const successEvent = testEnv.events.find(

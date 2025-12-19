@@ -92,6 +92,23 @@
             }
           },
           {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Dispatch sense-aware perceptible event for target turning to face actor.",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.targetName} turns to face {context.actorName}.",
+              "actor_description": "I turn {context.targetName} around to face me.",
+              "target_description": "{context.actorName} turns me around to face them.",
+              "perception_type": "physical.target_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sound of someone turning around nearby.",
+                "tactile": "I feel movement as someone turns around nearby."
+              }
+            }
+          },
+          {
             "type": "SET_VARIABLE",
             "parameters": {
               "variable_name": "logMessage",
@@ -107,7 +124,8 @@
                 "facing": "{event.payload.actorId}"
               }
             }
-          }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
         ],
         "else_actions": [
           {
@@ -144,6 +162,23 @@
             }
           },
           {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Dispatch sense-aware perceptible event for target turning away from actor.",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} turns {context.targetName} around.",
+              "actor_description": "I turn {context.targetName} around, away from me.",
+              "target_description": "{context.actorName} turns me around, away from them.",
+              "perception_type": "physical.target_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sound of someone being turned around nearby.",
+                "tactile": "I feel movement as someone is turned around nearby."
+              }
+            }
+          },
+          {
             "type": "SET_VARIABLE",
             "parameters": {
               "variable_name": "logMessage",
@@ -159,31 +194,10 @@
                 "turned_by": "{event.payload.actorId}"
               }
             }
-          }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
         ]
       }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    { "macro": "core:logSuccessAndEndTurn" }
+    }
   ]
 }

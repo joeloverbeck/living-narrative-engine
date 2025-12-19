@@ -1,0 +1,113 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_straddle_waist_facing_away",
+  "comment": "Handles the 'straddling:straddle_waist_facing_away' action. Adds straddling_waist component with facing_away=true, adds facing_away component, locks movement, and dispatches actor_turned_back event.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "straddling:event-is-action-straddle-waist-facing-away"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Add straddling_waist component with facing_away=true",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:straddling_waist",
+        "value": {
+          "target_id": "{event.payload.targetId}",
+          "facing_away": true
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Add facing_away component to track which entity actor is facing away from",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:facing_away",
+        "value": {
+          "facing_away_from": ["{event.payload.targetId}"]
+        }
+      }
+    },
+    {
+      "type": "LOCK_MOVEMENT",
+      "comment": "Lock movement while straddling",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch event indicating actor has turned their back to target",
+      "parameters": {
+        "eventType": "positioning:actor_turned_back",
+        "payload": {
+          "actor": "{event.payload.actorId}",
+          "target": "{event.payload.targetId}"
+        }
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} sits on {context.targetName}'s lap (facing away)."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.target_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

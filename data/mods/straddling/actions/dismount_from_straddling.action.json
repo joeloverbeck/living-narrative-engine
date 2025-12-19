@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "straddling:dismount_from_straddling",
+  "name": "Dismount",
+  "description": "Stop straddling and return to standing position",
+  "targets": {
+    "primary": {
+      "scope": "straddling:actor_im_straddling",
+      "placeholder": "target",
+      "description": "Actor you're straddling"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:straddling_waist"]
+  },
+  "forbidden_components": {
+    "actor": []
+  },
+  "template": "dismount from straddling {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#5e2750",
+    "textColor": "#fce4f1",
+    "hoverBackgroundColor": "#732f62",
+    "hoverTextColor": "#ffffff"
+  }
+}

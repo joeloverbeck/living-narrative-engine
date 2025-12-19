@@ -13,6 +13,7 @@ import {
 import turnAroundRule from '../../../../../data/mods/physical-control/rules/handle_turn_around.rule.json';
 import eventIsActionTurnAround from '../../../../../data/mods/physical-control/conditions/event-is-action-turn-around.condition.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import logSuccessOutcomeMacro from '../../../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
@@ -94,7 +95,10 @@ describe('physical_control_handle_turn_around rule integration', () => {
   let testEnv;
 
   beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const macros = {
+      'core:logSuccessAndEndTurn': logSuccessMacro,
+      'core:logSuccessOutcomeAndEndTurn': logSuccessOutcomeMacro,
+    };
     const expanded = expandMacros(turnAroundRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });

@@ -55,35 +55,31 @@
       "parameters": { "entity_ref": "actor" }
     },
     {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for forcing to knees.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} roughly forces {context.targetName} to their knees.",
+        "actor_description": "I roughly force {context.targetName} to their knees.",
+        "target_description": "{context.actorName} roughly forces me to my knees.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the sounds of a struggle and someone being forced down nearby.",
+          "tactile": "I feel vibrations as someone is forced down nearby."
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} roughly forces {context.targetName} to their knees before {context.actorName}."
+        "value": "{context.actorName} roughly forces {context.targetName} to their knees."
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    {
-      "macro": "core:logSuccessAndEndTurn"
+      "macro": "core:logSuccessOutcomeAndEndTurn"
     }
   ]
 }

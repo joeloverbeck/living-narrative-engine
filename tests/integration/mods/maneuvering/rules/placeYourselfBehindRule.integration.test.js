@@ -12,8 +12,6 @@ import {
 } from '@jest/globals';
 import placeYourselfBehindRule from '../../../../../data/mods/maneuvering/rules/place_yourself_behind.rule.json';
 import eventIsActionPlaceYourselfBehind from '../../../../../data/mods/maneuvering/conditions/event-is-action-place-yourself-behind.condition.json';
-import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../../../src/logic/operationHandlers/getTimestampHandler.js';
@@ -94,11 +92,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
   let testEnv;
 
   beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(placeYourselfBehindRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
+    // Rule no longer uses macros - uses inline sense-aware operations
     const dataRegistry = {
       getCondition: (id) => {
         if (id === eventIsActionPlaceYourselfBehind.id) {
@@ -112,9 +106,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
         }
         return null;
       },
-      getAllSystemRules: () => [
-        { ...placeYourselfBehindRule, actions: expanded },
-      ],
+      getAllSystemRules: () => [placeYourselfBehindRule],
       getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
@@ -122,7 +114,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       createHandlers,
       dataRegistry,
       entities: [],
-      rules: [{ ...placeYourselfBehindRule, actions: expanded }],
+      rules: [placeYourselfBehindRule],
     });
   });
 
@@ -307,14 +299,22 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Act
     await testEnv.systemLogicOrchestrator.processEvent(eventPayload);
 
-    // Assert - Check that the perceptible event was dispatched with correct message
-    expect(testEnv.handlers.DISPATCH_EVENT.execute).toHaveBeenNthCalledWith(
-      2,
+    // Assert - Check that the perceptible event was dispatched with sense-aware fields
+    expect(
+      testEnv.handlers.DISPATCH_PERCEPTIBLE_EVENT.execute
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventType: 'core:perceptible_event',
-        payload: expect.objectContaining({
-          descriptionText: 'John Smith places themselves behind Jane Jones.',
-        }),
+        location_id: locationId,
+        description_text: 'John Smith places themselves behind Jane Jones.',
+        actor_description: 'I place myself behind Jane Jones.',
+        target_description: 'John Smith moves behind me.',
+        perception_type: 'physical.target_action',
+        actor_id: actorId,
+        target_id: targetId,
+        alternate_descriptions: {
+          auditory:
+            'I hear footsteps and the rustle of movement as someone repositions nearby.',
+        },
       }),
       expect.any(Object)
     );

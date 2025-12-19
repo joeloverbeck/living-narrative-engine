@@ -256,7 +256,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'positioning:actor_biting_my_neck',
       'positioning:actors_sitting_close',
       'positioning:close_actors_or_entity_kneeling_before_actor',
-      'positioning:actor_im_straddling',
+      'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
       'positioning:available_furniture',
@@ -281,7 +281,8 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
 
     // 4 scopes migrated to personal-space: furniture_actor_sitting_on, closest_leftmost_occupant,
     // closest_rightmost_occupant, actors_sitting_with_space_to_right
-    expect(positioningScopes.length).toBe(22);
+    // 1 scope migrated to straddling: actor_im_straddling
+    expect(positioningScopes.length).toBe(21);
   });
 
   it('should call all new scopes without errors (smoke test)', () => {
@@ -298,7 +299,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'positioning:actor_biting_my_neck',
       'positioning:actors_sitting_close',
       'positioning:close_actors_or_entity_kneeling_before_actor',
-      'positioning:actor_im_straddling',
+      'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
       'positioning:available_furniture',

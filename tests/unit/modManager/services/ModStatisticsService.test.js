@@ -459,6 +459,47 @@ describe('ModStatisticsService', () => {
       expect(health.hasCircularDeps).toBe(true);
     });
 
+    it('should detect circular dependency via explicit hasCircularDependency method', () => {
+      const nodes = new Map([
+        [
+          'mod-a',
+          {
+            id: 'mod-a',
+            dependencies: ['mod-b'],
+            dependents: ['mod-b'],
+            status: 'explicit',
+          },
+        ],
+        [
+          'mod-b',
+          {
+            id: 'mod-b',
+            dependencies: ['mod-a'],
+            dependents: ['mod-a'],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+      mockModGraphService.getLoadOrder.mockReturnValue([]);
+      // New: ModGraphService provides explicit circular dependency detection
+      mockModGraphService.hasCircularDependency = jest.fn().mockReturnValue(true);
+      mockModGraphService.getCircularDependencyError = jest
+        .fn()
+        .mockReturnValue('DEPENDENCY_CYCLE: mod-a <-> mod-b');
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const health = service.getHealthStatus();
+
+      expect(health.hasCircularDeps).toBe(true);
+      expect(health.loadOrderValid).toBe(false);
+      expect(health.errors).toContain('DEPENDENCY_CYCLE: mod-a <-> mod-b');
+    });
+
     it('should cache results until invalidation', () => {
       const nodes = new Map([
         [

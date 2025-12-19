@@ -160,17 +160,40 @@ export default class ModStatisticsService {
       }
     }
 
-    // Validate load order exists and has entries
-    if (!loadOrder || loadOrder.length === 0) {
-      health.loadOrderValid = false;
-      health.warnings.push('Load order is empty or not computed');
-    }
-
-    // Check for circular dependencies (via load order failure)
-    // If getAllNodes has entries but getLoadOrder is empty, likely circular
-    if (nodes.size > 0 && (!loadOrder || loadOrder.length === 0)) {
+    // Check for circular dependencies using explicit detection from ModGraphService
+    if (
+      typeof this.#modGraphService.hasCircularDependency === 'function' &&
+      this.#modGraphService.hasCircularDependency()
+    ) {
       health.hasCircularDeps = true;
-      health.errors.push('Possible circular dependency detected');
+      const errorMsg =
+        typeof this.#modGraphService.getCircularDependencyError === 'function'
+          ? this.#modGraphService.getCircularDependencyError()
+          : null;
+      health.errors.push(errorMsg || 'Circular dependency detected');
+      health.loadOrderValid = false;
+    }
+    // Fallback: If multiple non-core active nodes exist but getLoadOrder is empty,
+    // likely circular dependency (single core node with empty load order is just empty, not circular)
+    else if (!loadOrder || loadOrder.length === 0) {
+      // Count active non-core mods
+      let activeNonCoreCount = 0;
+      for (const [_id, node] of nodes) {
+        if (node.status !== 'inactive' && node.status !== 'core') {
+          activeNonCoreCount++;
+        }
+      }
+
+      if (activeNonCoreCount > 0) {
+        // Active mods exist but load order failed - likely circular dependency
+        health.hasCircularDeps = true;
+        health.errors.push('Possible circular dependency detected');
+        health.loadOrderValid = false;
+      } else {
+        // No active non-core mods, just empty load order
+        health.loadOrderValid = false;
+        health.warnings.push('Load order is empty or not computed');
+      }
     }
 
     // Cache results and mark valid

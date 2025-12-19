@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "straddling:event-is-action-straddle-waist-facing",
+  "description": "Checks if event is attempting the straddle_waist_facing action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "straddling:straddle_waist_facing"
+    ]
+  }
+}

@@ -1,6 +1,0 @@
-positioning:actor_im_straddling := entities(core:actor)[][{
-  "==": [
-    {"var": "entity.id"},
-    {"var": "actor.components.positioning:straddling_waist.target_id"}
-  ]
-}]

@@ -745,7 +745,7 @@ scenario.target.components['positioning:facing_away'] = {
 
 ---
 
-### `positioning:actor_im_straddling`
+### `straddling:actor_im_straddling`
 
 **Description**: Entity whose waist the actor is currently straddling.
 
@@ -761,8 +761,8 @@ scenario.target.components['positioning:facing_away'] = {
 
 ```javascript
 {
-  "id": "positioning:dismount_from_straddling",
-  "targets": "positioning:actor_im_straddling",
+  "id": "straddling:dismount_from_straddling",
+  "targets": "straddling:actor_im_straddling",
   // ...
 }
 ```
@@ -1642,7 +1642,7 @@ ScopeResolverHelpers._registerResolvers(
 | Actor biting my neck         | `positioning:actor_biting_my_neck`                            | Positioning |
 | Actors sitting close         | `positioning:actors_sitting_close`                            | Positioning |
 | Complex closeness/kneeling   | `positioning:close_actors_or_entity_kneeling_before_actor`    | Positioning |
-| Actor I'm straddling         | `positioning:actor_im_straddling`                             | Positioning |
+| Actor I'm straddling         | `straddling:actor_im_straddling`                             | Positioning |
 | Entity kneeling before       | `positioning:entity_actor_is_kneeling_before`                 | Positioning |
 | Sitting with space right     | `positioning:actors_sitting_with_space_to_right`              | Positioning |
 | Available furniture          | `positioning:available_furniture`                             | Positioning |

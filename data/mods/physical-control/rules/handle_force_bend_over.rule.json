@@ -99,42 +99,31 @@
       }
     },
     {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for forcefully bending target over surface.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}.",
+        "actor_description": "I forcefully bend {context.primaryName} over {context.surfaceName}.",
+        "target_description": "{context.actorName} forcefully bends me over {context.surfaceName}.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.primaryId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the sounds of a struggle and someone being forced down onto a surface nearby.",
+          "tactile": "I feel vibrations as someone is forced down onto a surface nearby."
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}"
+        "value": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}."
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionEventMessage",
-        "value": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.primaryId}"
-      }
-    },
-    {
-      "macro": "core:logSuccessAndEndTurn"
+      "macro": "core:logSuccessOutcomeAndEndTurn"
     }
   ]
 }

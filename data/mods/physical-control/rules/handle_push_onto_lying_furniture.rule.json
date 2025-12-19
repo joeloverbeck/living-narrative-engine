@@ -69,6 +69,23 @@
       }
     },
     {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for pushing target onto furniture.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} pushes {context.primaryName} down roughly onto {context.furnitureName}.",
+        "actor_description": "I push {context.primaryName} down roughly onto {context.furnitureName}.",
+        "target_description": "{context.actorName} pushes me down roughly onto {context.furnitureName}.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.primaryId}",
+        "alternate_descriptions": {
+          "auditory": "I hear the sounds of a struggle and someone being pushed down onto furniture nearby.",
+          "tactile": "I feel vibrations as someone is pushed down onto furniture nearby."
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
@@ -76,35 +93,7 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionEventMessage",
-        "value": "{context.actorName} pushes {context.primaryName} down roughly onto {context.furnitureName}."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.primaryId}"
-      }
-    },
-    {
-      "macro": "core:logSuccessAndEndTurn"
+      "macro": "core:logSuccessOutcomeAndEndTurn"
     }
   ]
 }

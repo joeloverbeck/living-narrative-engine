@@ -225,10 +225,29 @@ class ModValidationOrchestrator {
             performance.now() - loadOrderStartTime
           );
         } catch (error) {
-          this.#logger.warn('Load order resolution failed', error);
-          results.warnings.push(
-            `Load order resolution failed: ${error.message}`
-          );
+          // Check if this is a circular dependency error - treat as hard error
+          if (error.message && error.message.includes('DEPENDENCY_CYCLE')) {
+            this.#logger.error(
+              'Load order resolution failed: circular dependency detected',
+              error
+            );
+            results.loadOrder = {
+              order: [],
+              isValid: false,
+              circularDependency: true,
+            };
+            results.errors.push(
+              `Circular dependency detected: ${error.message}`
+            );
+            if (failFast) {
+              throw new ModValidationError(results);
+            }
+          } else {
+            this.#logger.warn('Load order resolution failed', error);
+            results.warnings.push(
+              `Load order resolution failed: ${error.message}`
+            );
+          }
         }
       }
 
