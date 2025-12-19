@@ -238,7 +238,7 @@ describe('Straddling Waist System - Performance Tests', () => {
             `Chair ${i}`,
             'test:room'
           );
-          testEnv.entityManager.addComponent(id, 'positioning:sitting_on', {
+          testEnv.entityManager.addComponent(id, 'sitting-states:sitting_on', {
             furniture_id: chairId,
             seat_index: 0,
           });
@@ -322,7 +322,7 @@ describe('Straddling Waist System - Performance Tests', () => {
               `Chair ${index}`,
               'test:room'
             );
-            freshEnv.entityManager.addComponent(id, 'positioning:sitting_on', {
+            freshEnv.entityManager.addComponent(id, 'sitting-states:sitting_on', {
               furniture_id: chairId,
               seat_index: 0,
             });
@@ -394,7 +394,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         partners: ['test:target'],
       });
 
-      testEnv.entityManager.addComponent(targetId, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(targetId, 'sitting-states:sitting_on', {
         furniture_id: chairId,
         seat_index: 0,
       });
@@ -490,7 +490,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         partners: ['test:target'],
       });
 
-      testEnv.entityManager.addComponent(targetId, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(targetId, 'sitting-states:sitting_on', {
         furniture_id: chairId,
         seat_index: 0,
       });

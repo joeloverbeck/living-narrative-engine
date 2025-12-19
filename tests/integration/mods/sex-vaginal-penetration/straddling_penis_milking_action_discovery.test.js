@@ -65,7 +65,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
         'sex-states:being_fucked_vaginally',
       ]);
       expect(straddlingMilkingAction.forbidden_components.actor).toEqual([
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
     });
 

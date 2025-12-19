@@ -53,7 +53,7 @@ const sitDownAction = {
     actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+    actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
   },
   template: 'sit down on {target.components.core:description.short}',
   prerequisites: [],
@@ -65,7 +65,7 @@ const getUpAction = {
   description: "Stand up from the furniture you're sitting on",
   targets: 'sitting:furniture_im_sitting_on',
   required_components: {
-    actor: ['positioning:sitting_on'],
+    actor: ['sitting-states:sitting_on'],
   },
   forbidden_components: {
     actor: [],
@@ -286,7 +286,7 @@ describe('Get Up Closeness Workflow', () => {
     // 5. Verify: Alice no longer has sitting_on component
     const aliceSitting = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(aliceSitting).toBeNull();
 
@@ -606,7 +606,7 @@ describe('Get Up Closeness Workflow', () => {
     // Verify: Standing still succeeded
     const aliceSitting = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(aliceSitting).toBeNull();
   });

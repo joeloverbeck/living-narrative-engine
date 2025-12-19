@@ -24,7 +24,7 @@ describe('sit_down action discovery integration', () => {
         actor: ['core:actor'],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -166,7 +166,7 @@ describe('sit_down action discovery integration', () => {
         actor: ['core:actor'],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -188,7 +188,7 @@ describe('sit_down action discovery integration', () => {
           'core:name': { text: 'Ane Arrieta' },
           'core:actor': {},
           'core:position': { locationId: 'park_instance' },
-          'positioning:sitting_on': { entityId: 'park_bench_instance' }, // Already sitting!
+          'sitting-states:sitting_on': { entityId: 'park_bench_instance' }, // Already sitting!
         },
       },
     };

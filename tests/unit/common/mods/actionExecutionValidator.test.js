@@ -81,10 +81,10 @@ describe('actionExecutionValidator - Required Components', () => {
       // Note: EntityManager uses getEntityInstance(), not entityExists()
       getEntityInstance: jest.fn(() => ({})), // All entities exist in this test suite
       hasComponent: jest.fn((entityId, componentType) => {
-        // Simulate actor1 has positioning:sitting_on, but not positioning:standing
+        // Simulate actor1 has sitting-states:sitting_on, but not positioning:standing
         if (
           entityId === 'actor1' &&
-          componentType === 'positioning:sitting_on'
+          componentType === 'sitting-states:sitting_on'
         ) {
           return true;
         }
@@ -122,7 +122,7 @@ describe('actionExecutionValidator - Required Components', () => {
       targetId: 'target1',
       actionDefinition: {
         required_components: {
-          primary: ['positioning:sitting_on'],
+          primary: ['sitting-states:sitting_on'],
         },
       },
       entityManager: mockEntityManager,
@@ -134,7 +134,7 @@ describe('actionExecutionValidator - Required Components', () => {
       type: 'missing_required_component',
       entityId: 'target1',
       role: 'primary target',
-      componentType: 'positioning:sitting_on',
+      componentType: 'sitting-states:sitting_on',
       severity: 'high',
     });
   });
@@ -145,7 +145,7 @@ describe('actionExecutionValidator - Required Components', () => {
       targetId: null,
       actionDefinition: {
         required_components: {
-          actor: ['positioning:sitting_on'], // Actor has this
+          actor: ['sitting-states:sitting_on'], // Actor has this
         },
       },
       entityManager: mockEntityManager,
@@ -220,11 +220,11 @@ describe('ActionValidationError - Error Formatting', () => {
         type: 'missing_required_component',
         entityId: 'actor1',
         role: 'actor',
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         message:
-          "Actor 'actor1' missing required component 'positioning:sitting_on'",
+          "Actor 'actor1' missing required component 'sitting-states:sitting_on'",
         suggestion:
-          "Add component: actor.withComponent('positioning:sitting_on', {...})",
+          "Add component: actor.withComponent('sitting-states:sitting_on', {...})",
         reason: 'Required by test:action',
         severity: 'high',
       },
@@ -240,7 +240,7 @@ describe('ActionValidationError - Error Formatting', () => {
     expect(err.message).toContain('Action: test:action');
     expect(err.message).toContain('Actor: actor1');
     expect(err.message).toContain('Primary Target: target1');
-    expect(err.message).toContain('positioning:sitting_on');
+    expect(err.message).toContain('sitting-states:sitting_on');
     expect(err.message).toContain('💡 Suggestion');
   });
 

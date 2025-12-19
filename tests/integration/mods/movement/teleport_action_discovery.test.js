@@ -107,7 +107,7 @@ describe('movement:teleport action discovery', () => {
 
     it('should NOT appear when actor is sitting', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:sitting_on component:
+      // If Alice has sitting-states:sitting_on component:
       // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //

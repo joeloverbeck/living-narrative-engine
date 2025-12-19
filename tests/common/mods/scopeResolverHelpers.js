@@ -73,7 +73,7 @@ export class ScopeResolverHelpers {
    *
    * @param {string} scopeName - Scope identifier
    * @param {object} config - Configuration
-   * @param {string} config.componentType - Component type to query (e.g., 'positioning:sitting_on')
+   * @param {string} config.componentType - Component type to query (e.g., 'sitting-states:sitting_on')
    * @param {string} config.sourceField - Field in component containing target entity ID
    * @param {string} [config.resultField] - Field to extract from result
    * @param {string} [config.contextSource] - Context entity to use ('actor' or 'target')
@@ -281,7 +281,7 @@ export class ScopeResolverHelpers {
         this.createComponentLookupResolver(
           'personal-space:furniture_actor_sitting_on',
           {
-            componentType: 'positioning:sitting_on',
+            componentType: 'sitting-states:sitting_on',
             sourceField: 'furniture_id',
           }
         ),
@@ -294,7 +294,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const sitting = em.getComponentData(
                 actor.id,
-                'positioning:sitting_on'
+                'sitting-states:sitting_on'
               );
               if (!sitting) return [];
 
@@ -318,7 +318,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const sitting = em.getComponentData(
                 actor.id,
-                'positioning:sitting_on'
+                'sitting-states:sitting_on'
               );
               if (!sitting) return [];
 
@@ -354,7 +354,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const sitting = em.getComponentData(
                 actor.id,
-                'positioning:sitting_on'
+                'sitting-states:sitting_on'
               );
               if (!sitting) {
                 return [];
@@ -418,7 +418,7 @@ export class ScopeResolverHelpers {
               if (!em.hasComponent(entityId, 'core:actor')) return false;
               // Standing means NOT sitting, lying, or kneeling
               return (
-                !em.hasComponent(entityId, 'positioning:sitting_on') &&
+                !em.hasComponent(entityId, 'sitting-states:sitting_on') &&
                 !em.hasComponent(entityId, 'positioning:lying_on') &&
                 !em.hasComponent(entityId, 'positioning:kneeling')
               );
@@ -430,7 +430,7 @@ export class ScopeResolverHelpers {
       'positioning:sitting_actors': this.createComponentFilterResolver(
         'positioning:sitting_actors',
         {
-          componentType: 'positioning:sitting_on',
+          componentType: 'sitting-states:sitting_on',
         }
       ),
 
@@ -595,8 +595,8 @@ export class ScopeResolverHelpers {
           filterFn: (partnerId, actor, context, em) => {
             // Both actor and partner must be sitting
             return (
-              em.hasComponent(actor.id, 'positioning:sitting_on') &&
-              em.hasComponent(partnerId, 'positioning:sitting_on')
+              em.hasComponent(actor.id, 'sitting-states:sitting_on') &&
+              em.hasComponent(partnerId, 'sitting-states:sitting_on')
             );
           },
         }
@@ -615,7 +615,7 @@ export class ScopeResolverHelpers {
           },
           filterFn: (partnerId, actor, context, em) => {
             // Partner must be sitting (actor sitting status doesn't matter)
-            return em.hasComponent(partnerId, 'positioning:sitting_on');
+            return em.hasComponent(partnerId, 'sitting-states:sitting_on');
           },
         }
       ),
@@ -700,11 +700,11 @@ export class ScopeResolverHelpers {
         this.createComponentFilterResolver(
           'personal-space:actors_sitting_with_space_to_right',
           {
-            componentType: 'positioning:sitting_on',
+            componentType: 'sitting-states:sitting_on',
             filterFn: (entityId, context, em) => {
               const sitting = em.getComponentData(
                 entityId,
-                'positioning:sitting_on'
+                'sitting-states:sitting_on'
               );
               if (
                 !sitting?.furniture_id ||
@@ -802,7 +802,7 @@ export class ScopeResolverHelpers {
       'sitting:furniture_im_sitting_on': this.createComponentLookupResolver(
         'sitting:furniture_im_sitting_on',
         {
-          componentType: 'positioning:sitting_on',
+          componentType: 'sitting-states:sitting_on',
           sourceField: 'furniture_id',
           contextSource: 'actor',
         }

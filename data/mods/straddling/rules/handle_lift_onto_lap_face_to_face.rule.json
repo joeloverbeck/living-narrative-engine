@@ -34,7 +34,7 @@
       "comment": "CRITICAL: Remove PRIMARY's sitting_on component as they're being lifted off furniture",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:sitting_on"
+        "component_type": "sitting-states:sitting_on"
       }
     },
     {

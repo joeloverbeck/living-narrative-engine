@@ -51,7 +51,7 @@ const sitDownAction = {
     actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+    actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
   },
   template: 'sit down on {target}',
   prerequisites: [],
@@ -257,7 +257,7 @@ describe('park bench sitting issue', () => {
       // Check that actor has sitting_on component
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       // Log the result for debugging

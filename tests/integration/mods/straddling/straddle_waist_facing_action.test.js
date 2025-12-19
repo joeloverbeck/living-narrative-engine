@@ -36,7 +36,7 @@ function setupStraddleFacingScenario(
     .asActor()
     .build();
 
-  target.components['positioning:sitting_on'] = {
+  target.components['sitting-states:sitting_on'] = {
     furniture_id: 'test:chair1',
     spot_index: 0,
   };
@@ -101,8 +101,8 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     const targetActor =
       testFixture.entityManager.getEntityInstance('test:target1');
-    expect(targetActor.components['positioning:sitting_on']).toBeDefined();
-    expect(targetActor.components['positioning:sitting_on'].furniture_id).toBe(
+    expect(targetActor.components['sitting-states:sitting_on']).toBeDefined();
+    expect(targetActor.components['sitting-states:sitting_on'].furniture_id).toBe(
       'test:chair1'
     );
   });

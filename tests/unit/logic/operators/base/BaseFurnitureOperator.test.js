@@ -219,7 +219,7 @@ describe('BaseFurnitureOperator', () => {
       expect(result).toBe(sittingOnData);
       expect(
         mockDependencies.entityManager.getComponentData
-      ).toHaveBeenCalledWith('entity-1', 'positioning:sitting_on');
+      ).toHaveBeenCalledWith('entity-1', 'sitting-states:sitting_on');
     });
 
     test('getSittingOnData returns null when component is missing', () => {

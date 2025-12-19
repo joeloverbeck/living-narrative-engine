@@ -9,7 +9,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:sitting_on",
+      "sitting-states:sitting_on",
       "positioning:fallen",
       "positioning:restraining"
     ]

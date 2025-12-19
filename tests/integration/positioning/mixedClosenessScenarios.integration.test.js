@@ -138,12 +138,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [aliceId, bobId, null],
       });
 
-      entityManager.addComponent(aliceId, 'positioning:sitting_on', {
+      entityManager.addComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
 
-      entityManager.addComponent(bobId, 'positioning:sitting_on', {
+      entityManager.addComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
@@ -181,7 +181,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       // Remove Alice's sitting component
-      entityManager.removeComponent(aliceId, 'positioning:sitting_on');
+      entityManager.removeComponent(aliceId, 'sitting-states:sitting_on');
 
       // Use handler to remove automatic closeness
       await removeHandler.execute(
@@ -262,12 +262,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actors.diana, actors.eve, null, null, null],
       });
 
-      entityManager.addComponent(actors.diana, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.diana, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
 
-      entityManager.addComponent(actors.eve, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.eve, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
@@ -287,7 +287,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actors.diana, actors.eve, actors.charlie, null, null],
       });
 
-      entityManager.addComponent(actors.charlie, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.charlie, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 2,
       });
@@ -359,7 +359,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       for (let i = 0; i < actors.length; i++) {
-        entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+        entityManager.addComponent(actors[i], 'sitting-states:sitting_on', {
           furniture_id: furnitureId,
           spot_index: i,
         });
@@ -389,7 +389,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       for (let i = 1; i < actors.length; i += 2) {
-        entityManager.removeComponent(actors[i], 'positioning:sitting_on');
+        entityManager.removeComponent(actors[i], 'sitting-states:sitting_on');
 
         await removeHandler.execute(
           {
@@ -420,12 +420,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actors[0], actors[3], actors[2], actors[1]], // Rearranged
       });
 
-      entityManager.addComponent(actors[3], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[3], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
 
-      entityManager.addComponent(actors[1], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[1], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 3,
       });
@@ -493,7 +493,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
           instanceId: actors[i],
           baseComponents: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: furnitureId,
               spot_index: i,
             },
@@ -531,7 +531,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       entityManager.removeComponent(
         actors[middleIndex],
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       await removeHandler.execute(
@@ -622,12 +622,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actors.alice, actors.bob],
       });
 
-      entityManager.addComponent(actors.alice, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.alice, 'sitting-states:sitting_on', {
         furniture_id: couch1Id,
         spot_index: 0,
       });
 
-      entityManager.addComponent(actors.bob, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.bob, 'sitting-states:sitting_on', {
         furniture_id: couch1Id,
         spot_index: 1,
       });
@@ -637,12 +637,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actors.charlie, actors.diana],
       });
 
-      entityManager.addComponent(actors.charlie, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.charlie, 'sitting-states:sitting_on', {
         furniture_id: couch2Id,
         spot_index: 0,
       });
 
-      entityManager.addComponent(actors.diana, 'positioning:sitting_on', {
+      entityManager.addComponent(actors.diana, 'sitting-states:sitting_on', {
         furniture_id: couch2Id,
         spot_index: 1,
       });
@@ -759,12 +759,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [actorId, buddy1Id],
       });
 
-      entityManager.addComponent(actorId, 'positioning:sitting_on', {
+      entityManager.addComponent(actorId, 'sitting-states:sitting_on', {
         furniture_id: bench1Id,
         spot_index: 0,
       });
 
-      entityManager.addComponent(buddy1Id, 'positioning:sitting_on', {
+      entityManager.addComponent(buddy1Id, 'sitting-states:sitting_on', {
         furniture_id: bench1Id,
         spot_index: 1,
       });
@@ -791,7 +791,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [null, buddy1Id],
       });
 
-      entityManager.removeComponent(actorId, 'positioning:sitting_on');
+      entityManager.removeComponent(actorId, 'sitting-states:sitting_on');
 
       await removeHandler.execute(
         {
@@ -811,12 +811,12 @@ describe('Mixed Closeness Scenarios Integration', () => {
       expect(actorCloseness).toBeNull();
 
       // Phase 3: Actor sits on bench2 with buddy2
-      entityManager.addComponent(buddy2Id, 'positioning:sitting_on', {
+      entityManager.addComponent(buddy2Id, 'sitting-states:sitting_on', {
         furniture_id: bench2Id,
         spot_index: 0,
       });
 
-      entityManager.addComponent(actorId, 'positioning:sitting_on', {
+      entityManager.addComponent(actorId, 'sitting-states:sitting_on', {
         furniture_id: bench2Id,
         spot_index: 1,
       });
@@ -903,7 +903,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       expect(initialCirc1Closeness.partners).toContain(circleActors[2]);
 
       // One circle member sits down
-      entityManager.addComponent(circleActors[0], 'positioning:sitting_on', {
+      entityManager.addComponent(circleActors[0], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
@@ -913,7 +913,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       // Outsider sits adjacent
-      entityManager.addComponent(outsiderActor, 'positioning:sitting_on', {
+      entityManager.addComponent(outsiderActor, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
@@ -1010,18 +1010,18 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spots: [circle1[0], null, circle2[0], null, null],
       });
 
-      entityManager.addComponent(circle1[0], 'positioning:sitting_on', {
+      entityManager.addComponent(circle1[0], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
 
-      entityManager.addComponent(circle2[0], 'positioning:sitting_on', {
+      entityManager.addComponent(circle2[0], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 2,
       });
 
       // Bridge actor sits between them
-      entityManager.addComponent(bridge, 'positioning:sitting_on', {
+      entityManager.addComponent(bridge, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });

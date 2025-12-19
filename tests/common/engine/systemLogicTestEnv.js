@@ -618,7 +618,7 @@ export function createBaseRuleEnvironment({
           scopeName === 'personal-space:furniture_actor_sitting_on'
         ) {
           // This scope should find furniture that the actor is currently sitting on
-          // The scope definition is: entities(sitting:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
+          // The scope definition is: entities(sitting:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.sitting-states:sitting_on.furniture_id"}]}]
 
           // Get actor
           const actor =
@@ -628,7 +628,7 @@ export function createBaseRuleEnvironment({
           }
 
           // Get actor's sitting_on component
-          const sittingOn = actor.components?.['positioning:sitting_on'];
+          const sittingOn = actor.components?.['sitting-states:sitting_on'];
           if (!sittingOn || !sittingOn.furniture_id) {
             return { success: true, value: new Set() };
           }
@@ -997,7 +997,7 @@ export function createBaseRuleEnvironment({
 
           // Get actor's sitting position
           const actor = entityManager.getEntityInstance(actorId);
-          const actorSitting = actor?.components?.['positioning:sitting_on'];
+          const actorSitting = actor?.components?.['sitting-states:sitting_on'];
           if (!actorSitting || actorSitting.furniture_id !== furnitureId) {
             return { success: true, value: new Set() };
           }
@@ -1016,7 +1016,7 @@ export function createBaseRuleEnvironment({
               // Verify the occupant exists and has correct component data
               const occupant = entityManager.getEntityInstance(occupantId);
               const occupantSitting =
-                occupant?.components?.['positioning:sitting_on'];
+                occupant?.components?.['sitting-states:sitting_on'];
               if (
                 occupantSitting &&
                 occupantSitting.furniture_id === furnitureId &&
@@ -1048,7 +1048,7 @@ export function createBaseRuleEnvironment({
 
           const spots = allowsSitting.spots;
           const actor = entityManager.getEntityInstance(actorId);
-          const actorSitting = actor?.components?.['positioning:sitting_on'];
+          const actorSitting = actor?.components?.['sitting-states:sitting_on'];
           if (!actorSitting || actorSitting.furniture_id !== furnitureId) {
             return { success: true, value: new Set() };
           }
@@ -1068,7 +1068,7 @@ export function createBaseRuleEnvironment({
               const occupantId = spots[i];
               const occupant = entityManager.getEntityInstance(occupantId);
               const occupantSitting =
-                occupant?.components?.['positioning:sitting_on'];
+                occupant?.components?.['sitting-states:sitting_on'];
               if (
                 occupantSitting &&
                 occupantSitting.furniture_id === furnitureId &&
@@ -1126,7 +1126,7 @@ export function createBaseRuleEnvironment({
             }
 
             // Must be sitting on this furniture
-            const sittingOn = entity.components?.['positioning:sitting_on'];
+            const sittingOn = entity.components?.['sitting-states:sitting_on'];
             if (!sittingOn || sittingOn.furniture_id !== targetId) {
               return false;
             }

@@ -193,7 +193,7 @@ describe('preValidationUtils - Macro Reference Issue Reproduction', () => {
             type: 'QUERY_COMPONENT',
             parameters: {
               entity_ref: '{event.payload.actorId}',
-              component_type: 'positioning:sitting_on',
+              component_type: 'sitting-states:sitting_on',
               result_variable: 'sittingInfo',
             },
           },
@@ -201,7 +201,7 @@ describe('preValidationUtils - Macro Reference Issue Reproduction', () => {
             type: 'REMOVE_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_type: 'positioning:sitting_on',
+              component_type: 'sitting-states:sitting_on',
             },
           },
           {

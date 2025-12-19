@@ -131,7 +131,7 @@ export function buildStraddlingMilkingScenario(options = {}) {
   }
 
   if (actorSitting) {
-    actorBuilder.withComponent('positioning:sitting_on', {
+    actorBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: `${STRADDLING_MILKING_ROOM_ID}_ottoman`,
       spot_index: 0,
     });

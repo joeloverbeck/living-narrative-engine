@@ -25,8 +25,8 @@ describe('ModEntityScenarios sitting helpers', () => {
     const [room, , actor1, actor2] = scenario.entities;
     expect(room.id).toBe('room1');
 
-    const actor1Sitting = getComponent(actor1, 'positioning:sitting_on');
-    const actor2Sitting = getComponent(actor2, 'positioning:sitting_on');
+    const actor1Sitting = getComponent(actor1, 'sitting-states:sitting_on');
+    const actor2Sitting = getComponent(actor2, 'sitting-states:sitting_on');
     expect(actor1Sitting).toMatchObject({
       furniture_id: 'couch1',
       spot_index: 0,
@@ -100,10 +100,10 @@ describe('ModEntityScenarios sitting helpers', () => {
     const actor2 = scenario.seatedActors.find(
       (entity) => entity.id === 'actor2'
     );
-    expect(getComponent(actor1, 'positioning:sitting_on').furniture_id).toBe(
+    expect(getComponent(actor1, 'sitting-states:sitting_on').furniture_id).toBe(
       leftFurniture.id
     );
-    expect(getComponent(actor2, 'positioning:sitting_on').furniture_id).toBe(
+    expect(getComponent(actor2, 'sitting-states:sitting_on').furniture_id).toBe(
       rightFurniture.id
     );
   });

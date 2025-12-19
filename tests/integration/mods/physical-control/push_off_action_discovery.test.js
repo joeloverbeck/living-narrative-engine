@@ -116,7 +116,7 @@ describe('physical-control:push_off action discovery', () => {
         'positioning:restraining',
       ]);
       expect(pushOffAction.forbidden_components.primary).toEqual([
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
       expect(pushOffAction.visual).toEqual({
         backgroundColor: '#2f2f2f',
@@ -264,7 +264,7 @@ describe('physical-control:push_off action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.target.id,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: 'furniture:bench1',
           spot_index: 1,
@@ -272,7 +272,7 @@ describe('physical-control:push_off action discovery', () => {
       );
       const targetSitting = testFixture.entityManager.getComponentData(
         scenario.target.id,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(targetSitting?.furniture_id).toBe('furniture:bench1');
       expect(targetSitting?.spot_index).toBe(1);

@@ -19,7 +19,7 @@ import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/acti
 import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
 import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
 import holdingHandComponent from '../../../data/mods/hand-holding/components/holding_hand.component.json';
-import sittingOnComponent from '../../../data/mods/positioning/components/sitting_on.component.json';
+import sittingOnComponent from '../../../data/mods/sitting-states/components/sitting_on.component.json';
 import beingHuggedComponent from '../../../data/mods/hugging-states/components/being_hugged.component.json';
 import livingRoomSofaDefinition from '../../../data/mods/furniture/entities/definitions/living_room_sofa.entity.json';
 

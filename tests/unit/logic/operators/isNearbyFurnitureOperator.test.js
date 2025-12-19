@@ -67,7 +67,7 @@ describe('IsNearbyFurnitureOperator', () => {
       expect(result).toBe(false);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'actor-1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'isNearbyFurniture: Actor actor-1 is not sitting'

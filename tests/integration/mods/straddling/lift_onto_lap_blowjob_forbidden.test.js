@@ -52,7 +52,7 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
           const closeness =
             actorEntity.components?.['personal-space-states:closeness']?.partners || [];
           const actorSittingOn =
-            actorEntity.components?.['positioning:sitting_on'];
+            actorEntity.components?.['sitting-states:sitting_on'];
 
           if (!actorSittingOn || closeness.length === 0) {
             return { success: true, value: new Set() };
@@ -63,7 +63,7 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
             if (!partner) {
               return false;
             }
-            return !!partner.components?.['positioning:sitting_on'];
+            return !!partner.components?.['sitting-states:sitting_on'];
           });
 
           return { success: true, value: new Set(validTargets) };
@@ -121,8 +121,8 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
           .asActor()
           .build();
 
-        actor.components['positioning:sitting_on'] = { furniture_id: 'chair1' };
-        target.components['positioning:sitting_on'] = {
+        actor.components['sitting-states:sitting_on'] = { furniture_id: 'chair1' };
+        target.components['sitting-states:sitting_on'] = {
           furniture_id: 'chair2',
         };
         actor.components['personal-space-states:closeness'] = { partners: [target.id] };
@@ -164,8 +164,8 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
           .asActor()
           .build();
 
-        actor.components['positioning:sitting_on'] = { furniture_id: 'chair1' };
-        target.components['positioning:sitting_on'] = {
+        actor.components['sitting-states:sitting_on'] = { furniture_id: 'chair1' };
+        target.components['sitting-states:sitting_on'] = {
           furniture_id: 'chair2',
         };
         actor.components['personal-space-states:closeness'] = { partners: [target.id] };
@@ -218,8 +218,8 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
           .asActor()
           .build();
 
-        actor.components['positioning:sitting_on'] = { furniture_id: 'chair1' };
-        target.components['positioning:sitting_on'] = {
+        actor.components['sitting-states:sitting_on'] = { furniture_id: 'chair1' };
+        target.components['sitting-states:sitting_on'] = {
           furniture_id: 'chair2',
         };
         actor.components['personal-space-states:closeness'] = { partners: [target.id] };
@@ -261,8 +261,8 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
           .asActor()
           .build();
 
-        actor.components['positioning:sitting_on'] = { furniture_id: 'chair1' };
-        target.components['positioning:sitting_on'] = {
+        actor.components['sitting-states:sitting_on'] = { furniture_id: 'chair1' };
+        target.components['sitting-states:sitting_on'] = {
           furniture_id: 'chair2',
         };
         actor.components['personal-space-states:closeness'] = { partners: [target.id] };

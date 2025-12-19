@@ -611,7 +611,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             },
           },
           required_components: {
-            actor: ['positioning:sitting_on', 'personal-space-states:closeness'],
+            actor: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
           },
         };
 
@@ -944,7 +944,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
             type: 'QUERY_COMPONENT',
             parameters: {
               entity_ref: '{event.payload.actorId}',
-              component_type: 'positioning:sitting_on',
+              component_type: 'sitting-states:sitting_on',
               result_variable: 'sittingInfo',
             },
           },
@@ -962,7 +962,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       const result = await extractor.extractReferences(testPath);
 
-      expect(result.get('positioning')).toContain('sitting_on');
+      expect(result.get('sitting-states')).toContain('sitting_on');
     });
   });
 
@@ -1183,7 +1183,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           {
             type: 'QUERY_COMPONENT',
             parameters: {
-              component_type: 'positioning:sitting_on',
+              component_type: 'sitting-states:sitting_on',
             },
           },
           {

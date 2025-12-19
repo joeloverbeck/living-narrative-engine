@@ -37,9 +37,9 @@ describe('sitting:actors_sitting_close scope integration', () => {
     // Register the scope
     const mockScopes = {
       'sitting:actors_sitting_close': {
-        expr: 'actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
+        expr: 'actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.sitting-states:sitting_on"}}]',
         definition:
-          'sitting:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
+          'sitting:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{"!!": {"var": "entity.components.sitting-states:sitting_on"}}]',
         modId: 'sitting',
       },
     };
@@ -67,7 +67,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor2',
         components: {
           'core:actor': { name: 'Actor 2' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
@@ -120,7 +120,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor2',
         components: {
           'core:actor': { name: 'Actor 2' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
@@ -223,7 +223,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor2',
         components: {
           'core:actor': { name: 'Actor 2' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
@@ -245,7 +245,7 @@ describe('sitting:actors_sitting_close scope integration', () => {
         id: 'test:actor4',
         components: {
           'core:actor': { name: 'Actor 4' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_2',
             spot_index: 0,
           },

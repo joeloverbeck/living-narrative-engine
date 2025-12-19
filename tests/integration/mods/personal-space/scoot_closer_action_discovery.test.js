@@ -44,7 +44,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
         console.log(`  👤 Actor entity: ${actor ? 'found' : 'NOT FOUND'}`);
-        const sittingOn = actor?.components?.['positioning:sitting_on'];
+        const sittingOn = actor?.components?.['sitting-states:sitting_on'];
         console.log(`  🪑 Sitting component: ${JSON.stringify(sittingOn)}`);
         if (!sittingOn || !sittingOn.furniture_id) {
           console.log(`  ❌ No valid sitting_on component`);
@@ -77,7 +77,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
           `  👤 Actor: ${actor ? 'found' : 'NOT FOUND'}, 🪑 Furniture: ${furniture ? 'found' : 'NOT FOUND'}`
         );
 
-        const actorSitting = actor?.components?.['positioning:sitting_on'];
+        const actorSitting = actor?.components?.['sitting-states:sitting_on'];
         const sittingComponent =
           furniture?.components?.['sitting:allows_sitting'];
         console.log(`  📍 Actor sitting: ${JSON.stringify(actorSitting)}`);
@@ -173,7 +173,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -183,7 +183,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -249,7 +249,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -259,7 +259,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 3,
         })
@@ -306,7 +306,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -316,7 +316,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -326,7 +326,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 4,
         })
@@ -365,7 +365,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -375,7 +375,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -410,7 +410,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -420,7 +420,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 1,
         })
@@ -430,7 +430,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -465,7 +465,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -525,7 +525,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -535,7 +535,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 1,
         })
@@ -570,7 +570,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })

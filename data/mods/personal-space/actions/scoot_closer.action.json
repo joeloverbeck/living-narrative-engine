@@ -17,7 +17,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:sitting_on"]
+    "actor": ["sitting-states:sitting_on"]
   },
   "forbidden_components": {
     "actor": []

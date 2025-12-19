@@ -49,7 +49,7 @@ describe('Action Validation Integration', () => {
       id: 'positioning:test_action',
       requiredComponents: {
         // Typo: should be 'required_components'
-        actor: ['positioning:sitting_on'],
+        actor: ['sitting-states:sitting_on'],
       },
     };
 

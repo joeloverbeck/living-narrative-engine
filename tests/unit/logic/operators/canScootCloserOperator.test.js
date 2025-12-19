@@ -27,7 +27,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -58,7 +58,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 3 };
           }
@@ -99,7 +99,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture2', spot_index: 1 };
           }
@@ -123,7 +123,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -154,7 +154,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -185,7 +185,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -216,7 +216,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 4 };
           }
@@ -248,7 +248,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -279,7 +279,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -309,7 +309,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -342,7 +342,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: -1 };
           }
@@ -372,7 +372,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 10 };
           }
@@ -402,7 +402,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -433,7 +433,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -490,7 +490,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: undefined };
           }
@@ -520,7 +520,7 @@ describe('CanScootCloserOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: '2' };
           }

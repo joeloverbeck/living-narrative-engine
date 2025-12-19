@@ -152,7 +152,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
         'positioning:kneeling_before',
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
       expect(forceToKneesAction.visual).toEqual({
         backgroundColor: '#2f2f2f',
@@ -291,7 +291,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.target.id,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: 'furniture:stool1',
           spot_index: 0,
@@ -299,7 +299,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       );
       const targetSitting = testFixture.entityManager.getComponentData(
         scenario.target.id,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(targetSitting?.furniture_id).toBe('furniture:stool1');
       expect(targetSitting?.spot_index).toBe(0);

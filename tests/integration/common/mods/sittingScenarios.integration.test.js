@@ -39,7 +39,7 @@ describe('Sitting scenario helpers - integration', () => {
     const actorSitting = getComponent(
       testFixture,
       'actor1',
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(actorSitting.spot_index).toBe(1);
     expect(actorSitting.furniture_id).toBe('sofa1');
@@ -71,7 +71,7 @@ describe('Sitting scenario helpers - integration', () => {
     const actor1Sitting = getComponent(
       testFixture,
       'actor1',
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(actor1Sitting.spot_index).toBe(0);
 
@@ -107,7 +107,7 @@ describe('Sitting scenario helpers - integration', () => {
     const actorSitting = getComponent(
       testFixture,
       'actor1',
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(actorSitting.spot_index).toBe(1);
 

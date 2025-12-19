@@ -17,8 +17,8 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:sitting_on", "personal-space-states:closeness"],
-    "primary": ["positioning:sitting_on", "personal-space-states:closeness"]
+    "actor": ["sitting-states:sitting_on", "personal-space-states:closeness"],
+    "primary": ["sitting-states:sitting_on", "personal-space-states:closeness"]
   },
   "template": "nuzzle against {primary}'s penis through the {secondary}",
   "prerequisites": [],

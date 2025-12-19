@@ -27,13 +27,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -64,13 +64,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -100,13 +100,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 3 };
           }
           if (
             entityId === 'occupant2' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -136,13 +136,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 3 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -173,7 +173,7 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -199,7 +199,7 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -225,13 +225,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture2', spot_index: 0 };
           }
@@ -253,13 +253,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'otherFurniture', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -285,13 +285,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -322,13 +322,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -360,13 +360,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
@@ -396,13 +396,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -438,13 +438,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -472,13 +472,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 1 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -533,13 +533,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: actorIndex };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: candidateIndex };
           }
@@ -570,13 +570,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 10 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -607,13 +607,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: -1 };
           }
@@ -644,13 +644,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -681,13 +681,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -744,13 +744,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 'invalid' };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -781,13 +781,13 @@ describe('IsClosestLeftOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: null };
           }

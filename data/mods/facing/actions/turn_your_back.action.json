@@ -17,7 +17,7 @@
     "actor": [
       "positioning:biting_neck",
       "positioning:facing_away",
-      "positioning:sitting_on",
+      "sitting-states:sitting_on",
       "positioning:straddling_waist",
       "hugging-states:hugging",
       "sex-states:giving_blowjob",

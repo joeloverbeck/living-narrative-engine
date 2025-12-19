@@ -37,7 +37,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -47,7 +47,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -61,7 +61,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting.spot_index).toBe(1);
       expect(actorSitting.furniture_id).toBe('furniture1');
@@ -74,7 +74,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const occupant1Sitting = testFixture.entityManager.getComponentData(
         'occupant1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(occupant1Sitting.spot_index).toBe(2);
       expect(occupant1Sitting.furniture_id).toBe('furniture1');
@@ -96,7 +96,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 3,
         })
@@ -106,7 +106,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -120,7 +120,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting.spot_index).toBe(1);
 
@@ -132,7 +132,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const occupant1Sitting = testFixture.entityManager.getComponentData(
         'occupant1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(occupant1Sitting.spot_index).toBe(3);
     });
@@ -153,7 +153,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -163,7 +163,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Carol')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 3,
         })
@@ -173,7 +173,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -187,7 +187,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting.spot_index).toBe(1);
 
@@ -204,12 +204,12 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const occupant1Sitting = testFixture.entityManager.getComponentData(
         'occupant1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(occupant1Sitting.spot_index).toBe(2);
       const occupant2Sitting = testFixture.entityManager.getComponentData(
         'occupant2',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(occupant2Sitting.spot_index).toBe(3);
     });
@@ -232,7 +232,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -242,7 +242,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -254,7 +254,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting.spot_index).toBe(1);
     });
@@ -274,7 +274,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 2,
         })
@@ -284,7 +284,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'furniture1',
           spot_index: 0,
         })
@@ -298,7 +298,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(typeof actorSitting.spot_index).toBe('number');
       expect(actorSitting.spot_index).toBe(1);

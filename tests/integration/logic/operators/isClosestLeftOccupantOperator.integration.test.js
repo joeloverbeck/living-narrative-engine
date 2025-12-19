@@ -52,7 +52,7 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
     operator.evaluate(params, context);
 
   const setSitting = async (entityId, targetId, spotIndex) => {
-    await entityManager.addComponent(entityId, 'positioning:sitting_on', {
+    await entityManager.addComponent(entityId, 'sitting-states:sitting_on', {
       furniture_id: targetId,
       spot_index: spotIndex,
     });
@@ -170,7 +170,7 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
   });
 
   it('returns false when spot indices are not numeric', async () => {
-    await entityManager.addComponent(actorId, 'positioning:sitting_on', {
+    await entityManager.addComponent(actorId, 'sitting-states:sitting_on', {
       furniture_id: furnitureId,
       spot_index: '2',
     });

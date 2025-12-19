@@ -31,7 +31,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -44,7 +44,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 1,
         })
@@ -92,7 +92,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -140,7 +140,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -193,7 +193,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -245,7 +245,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair1',
           seat_index: 0,
         })
@@ -285,7 +285,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -336,7 +336,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -409,7 +409,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
@@ -461,7 +461,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target1 = new ModEntityBuilder('test:target1')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair1',
           seat_index: 0,
         })
@@ -471,7 +471,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target2 = new ModEntityBuilder('test:target2')
         .withName('Charlie')
         .atLocation('test:room')
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'test:chair2',
           seat_index: 0,
         })

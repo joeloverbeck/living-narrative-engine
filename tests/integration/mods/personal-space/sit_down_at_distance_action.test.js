@@ -47,7 +47,7 @@ function setupSitAtDistanceScenario(
     .atLocation('room1')
     .asActor()
     .withComponent('core:movement', { locked: false })
-    .withComponent('positioning:sitting_on', {
+    .withComponent('sitting-states:sitting_on', {
       furniture_id: 'bench1',
       spot_index: occupantIndex,
     })
@@ -102,7 +102,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Assert: Verify actor is sitting at correct spot (occupant index + 2)
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       expect(actorSitting).toBeDefined();
@@ -264,7 +264,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       expect(actorSitting.spot_index).toBe(3); // Bob at 1, buffer at 2, Alice at 3
@@ -299,7 +299,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify actor is still standing
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting).toBeNull();
 
@@ -343,7 +343,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify actor is still standing
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting).toBeNull();
 
@@ -373,7 +373,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify actor is still standing (action should fail)
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSitting).toBeNull();
     });
@@ -414,7 +414,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify actor sits in leftmost seat
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       // If sit_down action executed successfully, verify leftmost assignment
@@ -448,7 +448,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('core:movement', { locked: false })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -469,7 +469,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify actor sits next to Bob (no gap)
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       if (actorSitting) {
@@ -640,7 +640,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('core:movement', { locked: false })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -657,7 +657,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -700,7 +700,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // The rule itself would still execute because we're bypassing action discovery
       const actorSitting = testFixture.entityManager.getComponentData(
         'actor1',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       // If the action executed despite bypassing discovery, verify it worked

@@ -57,7 +57,7 @@ function setupSittingTurnBackScenario() {
       components: {
         [NAME_COMPONENT_ID]: { text: 'Sitting Player' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:room' },
-        'positioning:sitting_on': {
+        'sitting-states:sitting_on': {
           furniture_id: 'test:chair',
           spot_index: 0,
         },
@@ -96,7 +96,7 @@ function setupStraddlingTurnBackScenario() {
       components: {
         [NAME_COMPONENT_ID]: { text: 'Bob' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:room' },
-        'positioning:sitting_on': {
+        'sitting-states:sitting_on': {
           furniture_id: 'test:chair',
           spot_index: 0,
         },
@@ -582,7 +582,7 @@ describe('facing:turn_your_back action integration', () => {
     testEnv.reset(entities);
 
     // In normal action discovery, this action would not appear in available actions
-    // because the actor has the positioning:sitting_on component.
+    // because the actor has the sitting-states:sitting_on component.
     // However, we're testing the rule execution directly to verify the logic.
 
     // NOTE: This test shows what would happen if somehow the action was triggered
@@ -622,11 +622,11 @@ describe('facing:turn_your_back action integration', () => {
 
     // Verify the sitting component is properly structured
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:sitting_on']).toBeDefined();
-    expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+    expect(actor.components['sitting-states:sitting_on']).toBeDefined();
+    expect(actor.components['sitting-states:sitting_on'].furniture_id).toBe(
       'test:chair'
     );
-    expect(actor.components['positioning:sitting_on'].spot_index).toBe(0);
+    expect(actor.components['sitting-states:sitting_on'].spot_index).toBe(0);
 
     // Verify the chair entity exists
     const chair = testEnv.entityManager.getEntityInstance('test:chair');

@@ -41,7 +41,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       .atLocation('test:bar')
       .asActor()
       .withComponent('core:movement', { locked: false })
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'test:bar_stools',
         spot_index: 1,
       })
@@ -89,7 +89,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       // Assert: Actor should be sitting at correct spot (index 3, two seats from occupant)
       const actorSittingData = testFixture.entityManager.getComponentData(
         'test:actor',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSittingData).toBeDefined();
       expect(actorSittingData.furniture_id).toBe('test:bar_stools');
@@ -156,7 +156,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       // Assert: Actor should NOT have sitting_on component (action didn't execute)
       const actorSittingData = testFixture.entityManager.getComponentData(
         'test:actor',
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(actorSittingData).toBeNull();
     } finally {
@@ -180,7 +180,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       .atLocation('test:bar')
       .asActor()
       .withComponent('core:movement', { locked: false })
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'test:long_bar',
         spot_index: 2,
       })
@@ -211,7 +211,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
     // Assert: Actor should be at spot 4 (occupant at 2 + buffer at 3 + actor at 4)
     const actorSittingData = testFixture.entityManager.getComponentData(
       'test:actor',
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(actorSittingData).toBeDefined();
     expect(actorSittingData.spot_index).toBe(4);

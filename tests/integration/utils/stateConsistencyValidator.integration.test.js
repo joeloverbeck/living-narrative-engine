@@ -165,7 +165,7 @@ describe('StateConsistencyValidator integration', () => {
     );
 
     logger.reset();
-    await entityManager.addComponent(actor.id, 'positioning:sitting_on', {
+    await entityManager.addComponent(actor.id, 'sitting-states:sitting_on', {
       furniture_id: 'bench-one',
       spot_index: 0,
     });
@@ -200,7 +200,7 @@ describe('StateConsistencyValidator integration', () => {
     ]);
 
     logger.reset();
-    await entityManager.addComponent(occupant.id, 'positioning:sitting_on', {
+    await entityManager.addComponent(occupant.id, 'sitting-states:sitting_on', {
       furniture_id: 'other-bench',
       spot_index: 1,
     });
@@ -219,7 +219,7 @@ describe('StateConsistencyValidator integration', () => {
     ]);
 
     logger.reset();
-    await entityManager.addComponent(occupant.id, 'positioning:sitting_on', {
+    await entityManager.addComponent(occupant.id, 'sitting-states:sitting_on', {
       furniture_id: furniture.id,
       spot_index: 0,
     });
@@ -284,7 +284,7 @@ describe('StateConsistencyValidator integration', () => {
     });
     await entityManager.addComponent(
       furnitureOccupant.id,
-      'positioning:sitting_on',
+      'sitting-states:sitting_on',
       {
         furniture_id: furniture.id,
         spot_index: 0,
@@ -338,7 +338,7 @@ describe('StateConsistencyValidator integration', () => {
     );
     await entityManager.addComponent(
       mismatchOccupant.id,
-      'positioning:sitting_on',
+      'sitting-states:sitting_on',
       {
         furniture_id: 'wrong-furniture',
         spot_index: 2,
@@ -380,7 +380,7 @@ describe('StateConsistencyValidator integration', () => {
 
     const repairedSitting = await entityManager.getComponentData(
       mismatchOccupant.id,
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(repairedSitting).toEqual({
       furniture_id: furniture.id,

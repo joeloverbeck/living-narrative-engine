@@ -117,7 +117,7 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
       .withName('Old Receiver')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', { furnitureId: 'furniture1' })
+      .withComponent('sitting-states:sitting_on', { furnitureId: 'furniture1' })
       .withComponent('sex-states:receiving_blowjob', {
         giving_entity_id: primaryId,
         consented: true,
@@ -129,7 +129,7 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
       .withName('Old Giver')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', { furnitureId: 'furniture1' })
+      .withComponent('sitting-states:sitting_on', { furnitureId: 'furniture1' })
       .withComponent('sex-states:giving_blowjob', {
         receiving_entity_id: actorId,
         initiated: true,

@@ -85,7 +85,7 @@ function setupSittingScenario() {
     .build();
 
   // Actor is sitting on the chair
-  scenario.actor.components['positioning:sitting_on'] = {
+  scenario.actor.components['sitting-states:sitting_on'] = {
     furniture_id: 'test:chair',
     spot_index: 0,
   };
@@ -106,7 +106,7 @@ function setupTargetSittingScenario() {
     .build();
 
   // Target (King) is sitting on throne
-  scenario.target.components['positioning:sitting_on'] = {
+  scenario.target.components['sitting-states:sitting_on'] = {
     furniture_id: 'test:throne',
     spot_index: 0,
   };
@@ -210,7 +210,7 @@ function setupMixedPositioningScenario() {
     .build();
 
   // King is sitting on throne
-  king.components['positioning:sitting_on'] = {
+  king.components['sitting-states:sitting_on'] = {
     furniture_id: 'test:throne',
     spot_index: 0,
   };
@@ -254,7 +254,7 @@ function setupStraddlingScenario() {
     .withName('Bob')
     .atLocation('throne_room')
     .asActor()
-    .withComponent('positioning:sitting_on', {
+    .withComponent('sitting-states:sitting_on', {
       furniture_id: 'test:chair',
       spot_index: 0,
     })
@@ -471,7 +471,7 @@ describe('deference:kneel_before action integration', () => {
     testFixture.reset(Object.values(entities));
 
     // In normal action discovery, this action would not appear in available actions
-    // because the actor has the positioning:sitting_on component.
+    // because the actor has the sitting-states:sitting_on component.
     // However, we're testing the rule execution directly to verify the logic.
 
     // NOTE: This test shows what would happen if somehow the action was triggered
@@ -505,11 +505,11 @@ describe('deference:kneel_before action integration', () => {
 
     // Verify the sitting component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:sitting_on']).toBeDefined();
-    expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+    expect(actor.components['sitting-states:sitting_on']).toBeDefined();
+    expect(actor.components['sitting-states:sitting_on'].furniture_id).toBe(
       'test:chair'
     );
-    expect(actor.components['positioning:sitting_on'].spot_index).toBe(0);
+    expect(actor.components['sitting-states:sitting_on'].spot_index).toBe(0);
 
     // Verify the chair entity exists
     const chair = testFixture.entityManager.getEntityInstance('test:chair');
@@ -643,7 +643,7 @@ describe('deference:kneel_before action integration', () => {
         testFixture.reset(Object.values(entities));
 
         // In real gameplay, action discovery would prevent this
-        // because actor has positioning:sitting_on
+        // because actor has sitting-states:sitting_on
         // Bypass validation to test rule execution behavior
         await testFixture.executeAction('test:actor1', 'test:target1', {
           skipDiscovery: true,

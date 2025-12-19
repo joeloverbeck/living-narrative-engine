@@ -89,14 +89,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:straddle',
         required_components: {
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         primary: {
           id: 'npc1',
           components: {
-            'positioning:sitting_on': { furniture: 'chair1' },
+            'sitting-states:sitting_on': { furniture: 'chair1' },
             'personal-space-states:closeness': { entity: 'player' },
           },
         },
@@ -237,7 +237,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:straddle',
         required_components: {
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -245,7 +245,7 @@ describe('TargetRequiredComponentsValidator', () => {
           id: 'npc1',
           components: {
             'personal-space-states:closeness': {},
-            // Missing positioning:sitting_on
+            // Missing sitting-states:sitting_on
           },
         },
       };
@@ -257,7 +257,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (primary) must have component: positioning:sitting_on',
+        reason: 'Target (primary) must have component: sitting-states:sitting_on',
       });
     });
 
@@ -364,14 +364,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          target: ['personal-space-states:closeness', 'positioning:sitting_on'],
+          target: ['personal-space-states:closeness', 'sitting-states:sitting_on'],
         },
       };
       const targetEntities = {
         target: {
           id: 'npc1',
           components: { 'personal-space-states:closeness': {} },
-          // Missing positioning:sitting_on
+          // Missing sitting-states:sitting_on
         },
       };
 
@@ -382,7 +382,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (target) must have component: positioning:sitting_on',
+        reason: 'Target (target) must have component: sitting-states:sitting_on',
       });
     });
 

@@ -36,7 +36,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
      *
      * Scope DSL:
      *   positioning:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{
-     *     "!!": {"var": "entity.components.positioning:sitting_on"}
+     *     "!!": {"var": "entity.components.sitting-states:sitting_on"}
      *   }]
      *
      * Translation: Filter the actor's closeness partners to only those who have sitting_on component.
@@ -61,7 +61,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         const sittingPartners = closeness.partners.filter((partnerId) => {
           const partner =
             testFixture.entityManager.getEntityInstance(partnerId);
-          return !!partner?.components?.['positioning:sitting_on'];
+          return !!partner?.components?.['sitting-states:sitting_on'];
         });
 
         return { success: true, value: new Set(sittingPartners) };
@@ -102,7 +102,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -129,7 +129,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
       );
       console.log(
         '  Target sitting_on:',
-        targetEntity.components['positioning:sitting_on']
+        targetEntity.components['sitting-states:sitting_on']
       );
 
       // Act
@@ -190,7 +190,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -282,7 +282,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -332,7 +332,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -379,7 +379,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -427,7 +427,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -438,7 +438,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -489,7 +489,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -546,7 +546,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })

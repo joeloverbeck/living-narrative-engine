@@ -47,7 +47,7 @@ function installActorsSittingCloseScopeOverride(fixture) {
         }
 
         // Both must be sitting
-        return Boolean(partner.components?.['positioning:sitting_on']);
+        return Boolean(partner.components?.['sitting-states:sitting_on']);
       });
 
       return { success: true, value: new Set(validPartners) };
@@ -101,7 +101,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .withLocationComponent(ROOM_ID)
     .asActor()
     .withBody(actorTorsoId)
-    .withComponent('positioning:sitting_on', {
+    .withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 0,
     })
@@ -131,7 +131,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
     .asActor()
-    .withComponent('positioning:sitting_on', {
+    .withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 1,
     })
@@ -340,7 +340,7 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
       .atLocation(roomId)
       .withLocationComponent(roomId)
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       })
@@ -352,7 +352,7 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
       .atLocation(roomId)
       .withLocationComponent(roomId)
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       })

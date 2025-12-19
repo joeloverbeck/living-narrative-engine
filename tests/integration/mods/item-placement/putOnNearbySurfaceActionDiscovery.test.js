@@ -55,7 +55,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
   it('should require sitting_on component for actor', () => {
     expect(putOnNearbySurfaceAction.required_components).toBeDefined();
     expect(putOnNearbySurfaceAction.required_components.actor).toContain(
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(putOnNearbySurfaceAction.required_components.actor).toContain(
       'items:inventory'
@@ -114,7 +114,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -172,7 +172,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -221,7 +221,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -331,7 +331,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -383,7 +383,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -446,7 +446,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1', 'bread-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -524,7 +524,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -598,7 +598,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })

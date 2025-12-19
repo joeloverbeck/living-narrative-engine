@@ -89,7 +89,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         instanceId: aliceId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 0,
           },
@@ -103,7 +103,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         instanceId: bobId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 1,
           },
@@ -188,7 +188,7 @@ describe('Sitting Proximity Workflow Integration', () => {
           instanceId: actor.id,
           baseComponents: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: furnitureId,
               spot_index: actor.spot,
             },
@@ -213,7 +213,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       });
 
       // Remove Bob's sitting component
-      entityManager.removeComponent('test:bob_chain', 'positioning:sitting_on');
+      entityManager.removeComponent('test:bob_chain', 'sitting-states:sitting_on');
 
       // Use handler to remove closeness relationships
       await removeHandler.execute(
@@ -292,7 +292,7 @@ describe('Sitting Proximity Workflow Integration', () => {
 
       // Simulate actors sitting down one by one
       // First actor sits (no adjacency yet)
-      entityManager.addComponent(actors[0], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[0], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
@@ -301,7 +301,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       });
 
       // Second actor sits adjacent to first
-      entityManager.addComponent(actors[1], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[1], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
@@ -319,7 +319,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       );
 
       // Third actor sits adjacent to second
-      entityManager.addComponent(actors[2], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[2], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 2,
       });
@@ -337,7 +337,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       );
 
       // Fourth actor sits adjacent to third
-      entityManager.addComponent(actors[3], 'positioning:sitting_on', {
+      entityManager.addComponent(actors[3], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 3,
       });

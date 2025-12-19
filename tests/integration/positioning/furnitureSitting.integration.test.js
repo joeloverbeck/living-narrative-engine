@@ -52,7 +52,7 @@ const sitDownAction = {
     actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+    actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
   },
   template: 'sit down on {target.components.core:description.short}',
   prerequisites: [],
@@ -64,7 +64,7 @@ const getUpAction = {
   description: "Stand up from the furniture you're sitting on",
   targets: 'sitting:furniture_im_sitting_on',
   required_components: {
-    actor: ['positioning:sitting_on'],
+    actor: ['sitting-states:sitting_on'],
   },
   forbidden_components: {
     actor: [],
@@ -252,7 +252,7 @@ describe('furniture sitting system', () => {
       // Check that actor has sitting_on component
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toEqual({
         furniture_id: chair,
@@ -285,7 +285,7 @@ describe('furniture sitting system', () => {
       // Verify first actor is sitting (should succeed since chair is empty)
       const firstSittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(firstSittingOn).toEqual({
         furniture_id: chair,
@@ -312,7 +312,7 @@ describe('furniture sitting system', () => {
       // Second actor should not be sitting (rule should fail to find empty spot)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeNull();
 
@@ -344,7 +344,7 @@ describe('furniture sitting system', () => {
       // Check that sitting_on component is removed
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeNull();
 
@@ -365,7 +365,7 @@ describe('furniture sitting system', () => {
 
     it('should clear correct spot when getting up from specific position', async () => {
       // Sit on middle spot of couch
-      testEnv.entityManager.addComponent(actor, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor, 'sitting-states:sitting_on', {
         furniture_id: couch,
         spot_index: 1,
       });
@@ -399,7 +399,7 @@ describe('furniture sitting system', () => {
 
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn.spot_index).toBe(0);
 
@@ -439,7 +439,7 @@ describe('furniture sitting system', () => {
 
       const sittingOn = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn.spot_index).toBe(1);
 
@@ -465,7 +465,7 @@ describe('furniture sitting system', () => {
       // Verify actor is sitting on chair
       const firstSittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(firstSittingOn.furniture_id).toBe(chair);
 
@@ -483,7 +483,7 @@ describe('furniture sitting system', () => {
       // Should still be on chair (no rule execution due to ActionIndex filtering)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn.furniture_id).toBe(chair);
 
@@ -515,7 +515,7 @@ describe('furniture sitting system', () => {
       // Should not be sitting (ActionIndex prevents rule execution)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeNull();
 
@@ -545,7 +545,7 @@ describe('furniture sitting system', () => {
       // Should not be sitting (scope wouldn't include this furniture)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       // Note: In a full implementation with scope resolution,
@@ -585,7 +585,7 @@ describe('furniture sitting system', () => {
 
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeNull();
     });
@@ -606,7 +606,7 @@ describe('furniture sitting system', () => {
       // (cleanup would be handled by a separate system)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeDefined();
       expect(sittingOn.furniture_id).toBe(chair);
@@ -670,7 +670,7 @@ describe('furniture sitting system', () => {
       // Verify Alice still stood up successfully
       const aliceSitting = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(aliceSitting).toBeNull();
     });
@@ -756,7 +756,7 @@ describe('furniture sitting system', () => {
       // Verify standing succeeded normally
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeNull();
 
@@ -850,7 +850,7 @@ describe('furniture sitting system', () => {
       // Verify Bob stood up successfully
       const bobSitting = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(bobSitting).toBeNull();
     });

@@ -432,14 +432,14 @@ describe('Domain Matchers - Unit Tests', () => {
       const entity = {
         id: 'actor1',
         components: {
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'chair1',
             spot_index: 0,
           },
         },
       };
 
-      expect(entity).toHaveComponentData('positioning:sitting_on', {
+      expect(entity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: 'chair1',
         spot_index: 0,
       });
@@ -449,7 +449,7 @@ describe('Domain Matchers - Unit Tests', () => {
       const entity = {
         id: 'actor1',
         components: {
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'chair1',
             spot_index: 0,
           },
@@ -457,7 +457,7 @@ describe('Domain Matchers - Unit Tests', () => {
       };
 
       expect(() =>
-        expect(entity).toHaveComponentData('positioning:sitting_on', {
+        expect(entity).toHaveComponentData('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 1,
         })

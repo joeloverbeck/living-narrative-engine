@@ -43,7 +43,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Iker')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 0,
       })
@@ -53,7 +53,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Marla')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 2,
       })
@@ -93,7 +93,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Iker')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 2,
       })
@@ -103,7 +103,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Marla')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 0,
       })
@@ -143,7 +143,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Iker')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 0,
       })
@@ -153,7 +153,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 1,
       })
@@ -163,7 +163,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
       .withName('Marla')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'bar_stools_1',
         spot_index: 3,
       })

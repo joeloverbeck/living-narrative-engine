@@ -176,7 +176,7 @@ describe('Proximity Validation Performance', () => {
           if (componentType === 'sitting:allows_sitting') {
             return { spots: [null, 'game:alice', null, 'npc:bob'] };
           }
-          if (componentType === 'positioning:sitting_on') {
+          if (componentType === 'sitting-states:sitting_on') {
             return { furniture_id: entityId, spot_index: 1 };
           }
           return null;

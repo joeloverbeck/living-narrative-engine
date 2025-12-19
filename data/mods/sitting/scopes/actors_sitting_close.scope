@@ -1,3 +1,3 @@
 sitting:actors_sitting_close := actor.components.personal-space-states:closeness.partners[][{
-  "!!": {"var": "entity.components.positioning:sitting_on"}
+  "!!": {"var": "entity.components.sitting-states:sitting_on"}
 }]

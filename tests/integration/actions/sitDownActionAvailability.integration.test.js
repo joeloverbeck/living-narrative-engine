@@ -29,7 +29,7 @@ describe('Sit Down Action Availability', () => {
         actor: [], // No required components for actor
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -42,7 +42,7 @@ describe('Sit Down Action Availability', () => {
 
         // Check if actor has forbidden components for sit_down
         const hasForbiddenComponents =
-          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['sitting-states:sitting_on'] ||
           actor.components?.['positioning:kneeling_before'];
 
         if (!hasForbiddenComponents) {
@@ -193,7 +193,7 @@ describe('Sit Down Action Availability', () => {
         actor: [],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -206,7 +206,7 @@ describe('Sit Down Action Availability', () => {
 
         // Actor is already sitting, so has forbidden component
         const hasForbiddenComponents =
-          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['sitting-states:sitting_on'] ||
           actor.components?.['positioning:kneeling_before'];
 
         if (!hasForbiddenComponents) {
@@ -241,7 +241,7 @@ describe('Sit Down Action Availability', () => {
         components: {
           'core:name': { text: 'Test Actor' },
           'core:position': { location_id: 'test:park' },
-          'positioning:sitting_on': { entityId: 'test:other_bench' }, // Forbidden component
+          'sitting-states:sitting_on': { entityId: 'test:other_bench' }, // Forbidden component
         },
       },
       'test:park_bench': {
@@ -310,7 +310,7 @@ describe('Sit Down Action Availability', () => {
         actor: [],
       },
       forbidden_components: {
-        actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -322,7 +322,7 @@ describe('Sit Down Action Availability', () => {
         const actions = [];
 
         const hasForbiddenComponents =
-          actor.components?.['positioning:sitting_on'] ||
+          actor.components?.['sitting-states:sitting_on'] ||
           actor.components?.['positioning:kneeling_before'];
 
         if (!hasForbiddenComponents) {

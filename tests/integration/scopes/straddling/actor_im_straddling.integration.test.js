@@ -66,7 +66,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor2',
         components: {
           'core:actor': { name: 'Actor 2' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },
@@ -139,7 +139,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor3',
         components: {
           'core:actor': { name: 'Actor 3' },
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'furniture:chair_1',
             spot_index: 0,
           },

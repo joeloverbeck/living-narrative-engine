@@ -62,7 +62,7 @@ describe('Target Required Components Validation - Integration', () => {
       description: 'Sitting NPC with all required components',
       components: {
         'core:actor': { name: 'Test NPC' },
-        'positioning:sitting_on': { furniture: 'chair1' },
+        'sitting-states:sitting_on': { furniture: 'chair1' },
         'personal-space-states:closeness': { entity: 'player', distance: 1 },
       },
     });
@@ -79,7 +79,7 @@ describe('Target Required Components Validation - Integration', () => {
       description: 'Sitting NPC missing closeness',
       components: {
         'core:actor': { name: 'Distant Sitting NPC' },
-        'positioning:sitting_on': { furniture: 'chair2' },
+        'sitting-states:sitting_on': { furniture: 'chair2' },
       },
     });
 
@@ -164,7 +164,7 @@ describe('Target Required Components Validation - Integration', () => {
         },
         required_components: {
           actor: ['personal-space-states:closeness'],
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -193,7 +193,7 @@ describe('Target Required Components Validation - Integration', () => {
         },
         required_components: {
           actor: ['personal-space-states:closeness'],
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -208,7 +208,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain('positioning:sitting_on');
+      expect(result.reason).toContain('sitting-states:sitting_on');
       expect(result.reason).toContain('primary');
     });
 
@@ -223,7 +223,7 @@ describe('Target Required Components Validation - Integration', () => {
         },
         required_components: {
           actor: ['personal-space-states:closeness'],
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -253,7 +253,7 @@ describe('Target Required Components Validation - Integration', () => {
           secondary: { scope: 'test:scope2' },
         },
         required_components: {
-          primary: ['positioning:sitting_on'],
+          primary: ['sitting-states:sitting_on'],
           secondary: ['items:portable'],
         },
       };
@@ -281,7 +281,7 @@ describe('Target Required Components Validation - Integration', () => {
           secondary: { scope: 'test:scope2' },
         },
         required_components: {
-          primary: ['positioning:sitting_on'],
+          primary: ['sitting-states:sitting_on'],
           secondary: ['items:portable'],
         },
       };
@@ -327,7 +327,7 @@ describe('Target Required Components Validation - Integration', () => {
           target: { scope: 'test:scope' },
         },
         required_components: {
-          target: ['positioning:sitting_on'],
+          target: ['sitting-states:sitting_on'],
         },
       };
 
@@ -349,7 +349,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'straddling:straddle_waist_facing',
         required_components: {
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
       };
 
@@ -363,7 +363,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.reason).toMatch(
-        /Target.*primary.*must have component.*positioning:sitting_on/
+        /Target.*primary.*must have component.*sitting-states:sitting_on/
       );
     });
 
@@ -558,7 +558,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain('positioning:sitting_on');
+      expect(result.reason).toContain('sitting-states:sitting_on');
     });
   });
 
@@ -592,7 +592,7 @@ describe('Target Required Components Validation - Integration', () => {
         id: 'test:multiple_requirements',
         required_components: {
           primary: [
-            'positioning:sitting_on',
+            'sitting-states:sitting_on',
             'personal-space-states:closeness',
             'positioning:facing',
           ],
@@ -610,7 +610,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain('positioning:sitting_on');
+      expect(result.reason).toContain('sitting-states:sitting_on');
     });
 
     it('should handle tertiary target requirements', async () => {
@@ -618,7 +618,7 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:three_target_action',
         required_components: {
-          primary: ['positioning:sitting_on'],
+          primary: ['sitting-states:sitting_on'],
           secondary: ['items:portable'],
           tertiary: ['items:portable'],
         },

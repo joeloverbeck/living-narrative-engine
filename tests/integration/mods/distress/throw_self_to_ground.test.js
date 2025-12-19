@@ -75,9 +75,9 @@ describe('distress:throw_self_to_ground', () => {
       ).rejects.toThrow('forbidden component');
     });
 
-    it('should be forbidden when actor has positioning:sitting_on', async () => {
+    it('should be forbidden when actor has sitting-states:sitting_on', async () => {
       const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
-      scenario.actor.components['positioning:sitting_on'] = {
+      scenario.actor.components['sitting-states:sitting_on'] = {
         furniture_id: 'test:couch',
         spot_index: 0,
       };

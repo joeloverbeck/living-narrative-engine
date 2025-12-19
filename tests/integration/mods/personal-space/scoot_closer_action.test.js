@@ -53,7 +53,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - Actor moved to spot 1
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(actorEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 1,
       });
@@ -78,7 +78,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const occupantEntity = testFixture.entityManager.getEntityInstance(
         occupant.id
       );
-      expect(occupantEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(occupantEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 0,
       });
@@ -105,7 +105,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - Actor moved to spot 2 (one spot to the left)
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(actorEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 2,
       });
@@ -145,7 +145,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - furniture_id unchanged
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(actorEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 1,
       });
@@ -210,7 +210,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - Actor moved to spot 2
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(actorEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 2,
       });
@@ -227,7 +227,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const occupantOneEntity = testFixture.entityManager.getEntityInstance(
         occupant.id
       );
-      expect(occupantOneEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(occupantOneEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 0,
       });
@@ -235,7 +235,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const occupantTwoEntity = testFixture.entityManager.getEntityInstance(
         occupantTwo.id
       );
-      expect(occupantTwoEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(occupantTwoEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 1,
       });
@@ -262,7 +262,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorEntity).toHaveComponentData('positioning:sitting_on', {
+      expect(actorEntity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: scenario.furniture.id,
         spot_index: 1,
       });
@@ -290,7 +290,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - spot_index is number, not string
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      const sittingData = actorEntity.components['positioning:sitting_on'];
+      const sittingData = actorEntity.components['sitting-states:sitting_on'];
       expect(typeof sittingData.spot_index).toBe('number');
       expect(sittingData.spot_index).toBe(1);
     });

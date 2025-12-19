@@ -65,7 +65,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
         'sex-states:being_fucked_vaginally',
       ]);
       expect(ridePenisGreedilyAction.forbidden_components.actor).toEqual([
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
     });
 

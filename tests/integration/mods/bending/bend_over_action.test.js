@@ -74,7 +74,7 @@ function setupSittingScenario() {
     .build();
 
   // Actor is sitting on the chair
-  scenario.actor.components['positioning:sitting_on'] = {
+  scenario.actor.components['sitting-states:sitting_on'] = {
     furniture_id: 'test:chair',
     spot_index: 0,
   };
@@ -141,7 +141,7 @@ function setupStraddlingScenario() {
     .withName('Bob')
     .atLocation('kitchen')
     .asActor()
-    .withComponent('positioning:sitting_on', {
+    .withComponent('sitting-states:sitting_on', {
       furniture_id: 'test:chair',
       spot_index: 0,
     })
@@ -255,7 +255,7 @@ describe('bending:bend_over action integration', () => {
       // Verify initial state
       const initialActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(initialActor.components['positioning:sitting_on']).toEqual({
+      expect(initialActor.components['sitting-states:sitting_on']).toEqual({
         furniture_id: 'test:chair',
         spot_index: 0,
       });
@@ -274,7 +274,7 @@ describe('bending:bend_over action integration', () => {
         surface_id: 'test:surface1',
       });
       // Actor still retains sitting component as rule doesn't remove it
-      expect(updatedActor.components['positioning:sitting_on']).toEqual({
+      expect(updatedActor.components['sitting-states:sitting_on']).toEqual({
         furniture_id: 'test:chair',
         spot_index: 0,
       });

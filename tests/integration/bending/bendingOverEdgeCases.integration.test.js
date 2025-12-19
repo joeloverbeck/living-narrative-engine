@@ -524,7 +524,7 @@ describe('Bending Over System Edge Cases', () => {
       );
 
       // Add multiple positioning components (invalid state but test resilience)
-      testEnv.entityManager.addComponent(actor, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor, 'sitting-states:sitting_on', {
         furniture_id: 'test:chair',
         spot_index: 0,
       });
@@ -549,7 +549,7 @@ describe('Bending Over System Edge Cases', () => {
       // Other components still exist
       const sitting = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting).toBeDefined();
 

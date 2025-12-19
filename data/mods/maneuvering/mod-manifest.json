@@ -5,6 +5,10 @@
   "version": "1.0.0",
   "dependencies": [
     {
+      "id": "sitting-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "hugging-states",
       "version": "^1.0.0"
     },

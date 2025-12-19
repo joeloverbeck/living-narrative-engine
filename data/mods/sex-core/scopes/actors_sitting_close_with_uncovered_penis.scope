@@ -3,8 +3,8 @@
 sex-core:actors_sitting_close_with_uncovered_penis := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
-      {"!!": {"var": "entity.components.positioning:sitting_on"}},
-      {"!!": {"var": "actor.components.positioning:sitting_on"}},
+      {"!!": {"var": "entity.components.sitting-states:sitting_on"}},
+      {"!!": {"var": "actor.components.sitting-states:sitting_on"}},
       {"hasPartOfType": [".", "penis"]},
       {"socketExposure": [".", "penis"]}
     ]

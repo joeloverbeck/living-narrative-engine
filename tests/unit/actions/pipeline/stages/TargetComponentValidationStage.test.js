@@ -266,7 +266,7 @@ describe('TargetComponentValidationStage', () => {
       const actionWithRequiredComponents = {
         id: 'action-1',
         required_components: {
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
         target_entities: {
           primary: {
@@ -304,7 +304,7 @@ describe('TargetComponentValidationStage', () => {
         .mockReturnValueOnce({
           valid: false,
           reason:
-            'Target (primary) must have component: positioning:sitting_on',
+            'Target (primary) must have component: sitting-states:sitting_on',
         })
         .mockReturnValueOnce({
           valid: true,
@@ -389,13 +389,13 @@ describe('TargetComponentValidationStage', () => {
       const action = {
         id: 'action-1',
         required_components: {
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
         target_entities: {
           primary: {
             id: 'target-1',
             components: {
-              'positioning:sitting_on': {},
+              'sitting-states:sitting_on': {},
               'personal-space-states:closeness': {},
             },
           },

@@ -156,7 +156,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
         return false;
       }
 
-      const partnerSitting = partner.components?.['positioning:sitting_on'];
+      const partnerSitting = partner.components?.['sitting-states:sitting_on'];
       if (partnerSitting) {
         return false;
       }
@@ -234,14 +234,14 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
     }
 
     if (targetSitting) {
-      targetBuilder.withComponent('positioning:sitting_on', {
+      targetBuilder.withComponent('sitting-states:sitting_on', {
         furniture_id: 'stool1',
         spot_index: 0,
       });
     }
 
     if (actorSitting) {
-      actorBuilder.withComponent('positioning:sitting_on', {
+      actorBuilder.withComponent('sitting-states:sitting_on', {
         furniture_id: 'stool1',
         spot_index: 0,
       });
@@ -439,7 +439,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
     it('should forbid the target from sitting on furniture', () => {
       expect(insertPenisIntoVaginaAction.forbidden_components.primary).toEqual([
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
     });
 

@@ -250,19 +250,19 @@ describe('multi-seat furniture behavior', () => {
       // Verify each actor knows their position
       const sitting1 = testEnv.entityManager.getComponentData(
         actor1,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting1.spot_index).toBe(0);
 
       const sitting2 = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting2.spot_index).toBe(1);
 
       const sitting3 = testEnv.entityManager.getComponentData(
         actor3,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting3.spot_index).toBe(2);
     });
@@ -297,7 +297,7 @@ describe('multi-seat furniture behavior', () => {
       // Fourth actor should not be sitting
       const sitting4 = testEnv.entityManager.getComponentData(
         actor4,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting4).toBeNull();
 
@@ -348,7 +348,7 @@ describe('multi-seat furniture behavior', () => {
       // Verify fourth actor took middle spot
       const sitting4 = testEnv.entityManager.getComponentData(
         actor4,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting4.spot_index).toBe(1);
 
@@ -364,11 +364,11 @@ describe('multi-seat furniture behavior', () => {
       testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
         spots: [actor1, null, actor3],
       });
-      testEnv.entityManager.addComponent(actor1, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor1, 'sitting-states:sitting_on', {
         furniture_id: couch,
         spot_index: 0,
       });
-      testEnv.entityManager.addComponent(actor3, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor3, 'sitting-states:sitting_on', {
         furniture_id: couch,
         spot_index: 2,
       });
@@ -390,7 +390,7 @@ describe('multi-seat furniture behavior', () => {
       // Verify actor2 took first spot
       const sitting2 = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting2.spot_index).toBe(0);
 
@@ -442,14 +442,14 @@ describe('multi-seat furniture behavior', () => {
       // Other actors should still be sitting
       const sitting2 = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting2).toBeDefined();
       expect(sitting2.spot_index).toBe(1);
 
       const sitting3 = testEnv.entityManager.getComponentData(
         actor3,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitting3).toBeDefined();
       expect(sitting3.spot_index).toBe(2);

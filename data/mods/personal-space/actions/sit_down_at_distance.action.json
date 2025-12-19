@@ -21,7 +21,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:sitting_on",
+      "sitting-states:sitting_on",
       "positioning:kneeling_before",
       "bending-states:bending_over",
       "positioning:restraining",

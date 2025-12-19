@@ -76,7 +76,7 @@ describe('Sit Down Closeness Workflow Integration', () => {
     const aliceEntity = createEntityInstance({
       instanceId: aliceId,
       baseComponents: {
-        'positioning:sitting_on': {
+        'sitting-states:sitting_on': {
           furniture_id: furnitureId,
           spot_index: 0,
         },

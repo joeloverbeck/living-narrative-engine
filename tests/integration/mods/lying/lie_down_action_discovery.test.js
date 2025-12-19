@@ -44,7 +44,7 @@ describe('lying:lie_down action discovery', () => {
         'hugging-states:being_hugged',
         'positioning:biting_neck',
         'hugging-states:hugging',
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         'bending-states:bending_over',
         'positioning:kneeling_before',
         'positioning:lying_down',
@@ -86,7 +86,7 @@ describe('lying:lie_down action discovery', () => {
 
     it('should NOT appear when actor is sitting', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:sitting_on component:
+      // If Alice has sitting-states:sitting_on component:
       // - Action's forbidden_components.actor check fails
       // - lying:lie_down action should NOT be available
       //

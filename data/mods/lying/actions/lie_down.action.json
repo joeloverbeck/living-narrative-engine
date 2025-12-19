@@ -12,7 +12,7 @@
       "hugging-states:being_hugged",
       "positioning:biting_neck",
       "hugging-states:hugging",
-      "positioning:sitting_on",
+      "sitting-states:sitting_on",
       "bending-states:bending_over",
       "positioning:kneeling_before",
       "positioning:lying_down",

@@ -77,7 +77,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       expect(aliceSitResult.success).toBe(true);
 
       // Update Alice's state to reflect sitting
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: couchId,
         spot_index: 0,
       });
@@ -85,7 +85,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Verify Alice is sitting using facade API
       const aliceSittingComponent = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(aliceSittingComponent).toBeDefined();
       expect(aliceSittingComponent.furniture_id).toBe(couchId);
@@ -101,7 +101,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       expect(bobSitResult.success).toBe(true);
 
       // Update Bob's state and establish closeness
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: couchId,
         spot_index: 1,
       });
@@ -141,7 +141,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Update states to reflect Alice standing and closeness removal
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -167,14 +167,14 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Verify Alice is no longer sitting
       const aliceFinalSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(aliceFinalSitting).toBeNull();
 
       // Verify Bob is still sitting but no longer close to anyone
       const bobFinalSitting = await entityService.getComponent(
         bobId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(bobFinalSitting).toBeDefined();
       expect(bobFinalSitting.furniture_id).toBe(couchId);
@@ -196,7 +196,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         location: 'test:park',
         components: {
           'core:actor': { type: 'player' },
-          'positioning:sitting_on': { furniture_id: benchId, spot_index: 0 },
+          'sitting-states:sitting_on': { furniture_id: benchId, spot_index: 0 },
           'personal-space-states:closeness': { partners: [] },
         },
       });
@@ -206,7 +206,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         location: 'test:park',
         components: {
           'core:actor': { type: 'npc' },
-          'positioning:sitting_on': { furniture_id: benchId, spot_index: 1 },
+          'sitting-states:sitting_on': { furniture_id: benchId, spot_index: 1 },
           'personal-space-states:closeness': { partners: [] },
         },
       });
@@ -243,7 +243,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Update states - Bob standing and closeness removal
       await entityService.updateComponent(
         bobId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -269,11 +269,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Alice should still be sitting, Bob should not be
       const aliceAfterBobStandsSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const bobAfterStandingSitting = await entityService.getComponent(
         bobId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       expect(aliceAfterBobStandsSitting).toBeDefined();
@@ -321,7 +321,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       await entityService.updateComponent(
         actorIds.alice,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: benchId,
           spot_index: 0,
@@ -344,7 +344,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: benchId,
           spot_index: 1,
@@ -389,7 +389,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       await entityService.updateComponent(
         actorIds.charlie,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: benchId,
           spot_index: 2,
@@ -435,7 +435,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
 
       await entityService.updateComponent(
         actorIds.diana,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         {
           furniture_id: benchId,
           spot_index: 3,
@@ -497,7 +497,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         location: 'test:living_room',
         components: {
           'core:actor': { type: 'player' },
-          'positioning:sitting_on': { furniture_id: sofaId, spot_index: 0 },
+          'sitting-states:sitting_on': { furniture_id: sofaId, spot_index: 0 },
           'personal-space-states:closeness': { partners: [] },
         },
       });
@@ -507,7 +507,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         location: 'test:living_room',
         components: {
           'core:actor': { type: 'npc' },
-          'positioning:sitting_on': { furniture_id: sofaId, spot_index: 1 },
+          'sitting-states:sitting_on': { furniture_id: sofaId, spot_index: 1 },
           'personal-space-states:closeness': { partners: [] },
         },
       });
@@ -517,7 +517,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         location: 'test:living_room',
         components: {
           'core:actor': { type: 'npc' },
-          'positioning:sitting_on': { furniture_id: sofaId, spot_index: 2 },
+          'sitting-states:sitting_on': { furniture_id: sofaId, spot_index: 2 },
           'personal-space-states:closeness': { partners: [] },
         },
       });
@@ -552,7 +552,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Update states - Bob standing and all closeness removal
       await entityService.updateComponent(
         bobId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -588,15 +588,15 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Alice and Charlie should still be sitting but not close
       const finalAliceSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const finalCharlieSitting = await entityService.getComponent(
         charlieId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const finalBobSitting = await entityService.getComponent(
         bobId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       expect(finalAliceSitting).toBeDefined();
@@ -635,7 +635,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       expect(sitResult.success).toBe(true);
 
       // Update Alice's state
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: armchairId,
         spot_index: 0,
       });
@@ -643,7 +643,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Verify Alice is sitting but has no closeness (no one to be close to)
       const aliceSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const aliceCloseness = await entityService.getComponent(
         aliceId,
@@ -691,7 +691,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       });
       expect(sitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: tableId,
         spot_index: 0,
       });
@@ -704,7 +704,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       });
       expect(sitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: tableId,
         spot_index: 3,
       });
@@ -725,11 +725,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       // Both should be sitting though
       const aliceSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const bobSitting = await entityService.getComponent(
         bobId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       expect(aliceSitting).toBeDefined();
@@ -782,11 +782,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         expect(bobSit.success).toBe(true);
 
         // Update sitting states and establish closeness
-        await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+        await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
           furniture_id: benchId,
           spot_index: 0,
         });
-        await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+        await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
           furniture_id: benchId,
           spot_index: 1,
         });
@@ -827,12 +827,12 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         // Update states - remove sitting and closeness
         await entityService.updateComponent(
           aliceId,
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           null
         );
         await entityService.updateComponent(
           bobId,
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           null
         );
         await entityService.updateComponent(
@@ -857,11 +857,11 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
         );
         const aliceSitting = await entityService.getComponent(
           aliceId,
-          'positioning:sitting_on'
+          'sitting-states:sitting_on'
         );
         const bobSitting = await entityService.getComponent(
           bobId,
-          'positioning:sitting_on'
+          'sitting-states:sitting_on'
         );
 
         expect(aliceCloseness).toBeNull();

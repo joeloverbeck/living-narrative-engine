@@ -101,7 +101,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 0,
       });
@@ -114,7 +114,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
       expect(charlieSitResult.success).toBe(true);
 
-      await entityService.updateComponent(charlieId, 'positioning:sitting_on', {
+      await entityService.updateComponent(charlieId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 1,
       });
@@ -166,7 +166,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Update state - Alice standing, loses automatic closeness but keeps manual
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
@@ -239,7 +239,7 @@ describe('Complex Proximity Scenarios E2E', () => {
 
         await entityService.updateComponent(
           actorIds[actorName],
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           {
             furniture_id: benchId,
             spot_index: i,
@@ -302,7 +302,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Update states - Bob stands and cascading closeness removal
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -386,7 +386,7 @@ describe('Complex Proximity Scenarios E2E', () => {
 
         await entityService.updateComponent(
           actorIds[i],
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           {
             furniture_id: amphitheaterId,
             spot_index: i,
@@ -444,7 +444,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Update states - middle actor stands, neighbors lose connection
       await entityService.updateComponent(
         actorIds[10],
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -526,11 +526,11 @@ describe('Complex Proximity Scenarios E2E', () => {
         });
 
         // Update sitting states and closeness
-        await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+        await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
           furniture_id: chairId,
           spot_index: 0,
         });
-        await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+        await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
           furniture_id: chairId,
           spot_index: 1,
         });
@@ -555,12 +555,12 @@ describe('Complex Proximity Scenarios E2E', () => {
         // Update standing states
         await entityService.updateComponent(
           aliceId,
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           null
         );
         await entityService.updateComponent(
           bobId,
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           null
         );
         await entityService.updateComponent(
@@ -578,11 +578,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify final state is clean (no memory leaks or state corruption)
       const finalAliceSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const finalBobSitting = await entityService.getComponent(
         bobId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const finalAliceCloseness = await entityService.getComponent(
         aliceId,
@@ -665,7 +665,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       for (let i = 0; i < successfulActorCount; i++) {
         await entityService.updateComponent(
           actorIds[i],
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           {
             furniture_id: benchId,
             spot_index: i,
@@ -701,7 +701,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       for (let i = successfulActorCount; i < actorIds.length; i++) {
         const actorSitting = await entityService.getComponent(
           actorIds[i],
-          'positioning:sitting_on'
+          'sitting-states:sitting_on'
         );
         const actorCloseness = await entityService.getComponent(
           actorIds[i],
@@ -740,7 +740,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
       expect(initialSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: brokenChairId,
         spot_index: 0,
       });
@@ -758,12 +758,12 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Action should handle graceful recovery - simulate successful recovery
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       const finalSitting = await entityService.getComponent(
         aliceId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(finalSitting).toBeNull();
 
@@ -835,11 +835,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
 
       // Update states and establish proper closeness (cleaning up corruption)
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 0,
       });
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 1,
       });

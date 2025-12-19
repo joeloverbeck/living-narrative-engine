@@ -341,8 +341,8 @@ describe('ModCrossReferenceValidator - Integration', () => {
           },
         },
         required_components: {
-          actor: ['positioning:sitting_on', 'personal-space-states:closeness'],
-          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
+          actor: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness'],
         },
         template: 'lift {primary} onto your lap (face-to-face)',
       };
@@ -363,7 +363,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
         version: '1.0.0',
         dependencies: [
           { id: 'sitting', version: '^1.0.0' },
-          { id: 'positioning', version: '^1.0.0' },
+          { id: 'sitting-states', version: '^1.0.0' },
         ],
       });
       manifestsMap.set('sitting', {
@@ -371,8 +371,8 @@ describe('ModCrossReferenceValidator - Integration', () => {
         version: '1.0.0',
         dependencies: [],
       });
-      manifestsMap.set('positioning', {
-        id: 'positioning',
+      manifestsMap.set('sitting-states', {
+        id: 'sitting-states',
         version: '1.0.0',
         dependencies: [],
       });
@@ -389,9 +389,9 @@ describe('ModCrossReferenceValidator - Integration', () => {
       // Verify that the sitting reference WAS actually extracted
       expect(report.referencedMods).toContain('sitting');
 
-      // Also verify positioning is extracted from required_components
-      expect(report.referencedMods).toContain('positioning');
-      expect(report.unusedDependencies).not.toContain('positioning');
+      // Also verify sitting-states is extracted from required_components
+      expect(report.referencedMods).toContain('sitting-states');
+      expect(report.unusedDependencies).not.toContain('sitting-states');
     });
 
     it('should generate comprehensive ecosystem report', async () => {

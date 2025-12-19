@@ -40,7 +40,7 @@ describe('Debug canScootCloser in scope', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'furniture1',
         spot_index: 0,
       })
@@ -50,7 +50,7 @@ describe('Debug canScootCloser in scope', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'furniture1',
         spot_index: 2,
       })
@@ -64,11 +64,11 @@ describe('Debug canScootCloser in scope', () => {
     console.log('Actor components:', Object.keys(actorEntity.components));
     console.log(
       'sitting_on component:',
-      actorEntity.components['positioning:sitting_on']
+      actorEntity.components['sitting-states:sitting_on']
     );
     console.log(
-      'Actor has positioning:sitting_on?',
-      !!actorEntity.components['positioning:sitting_on']
+      'Actor has sitting-states:sitting_on?',
+      !!actorEntity.components['sitting-states:sitting_on']
     );
     console.log('=== END ACTOR COMPONENTS ===\n');
 

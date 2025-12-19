@@ -55,7 +55,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
   it('should require sitting_on component for actor', () => {
     expect(takeFromNearbySurfaceAction.required_components).toBeDefined();
     expect(takeFromNearbySurfaceAction.required_components.actor).toContain(
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
     expect(takeFromNearbySurfaceAction.required_components.actor).toContain(
       'items:inventory'
@@ -126,7 +126,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -193,7 +193,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -297,7 +297,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -350,7 +350,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -402,7 +402,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -484,7 +484,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })
@@ -553,7 +553,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'stool-1',
           spot_index: 0,
         })

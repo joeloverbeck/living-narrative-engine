@@ -335,7 +335,7 @@ describe('StateConsistencyValidator', () => {
             if (componentId === 'core:movement') {
               return { locked: true };
             }
-            if (componentId === 'positioning:sitting_on') {
+            if (componentId === 'sitting-states:sitting_on') {
               return { furniture_id: 'core:chair', spot_index: 0 };
             }
             return null;
@@ -467,7 +467,7 @@ describe('StateConsistencyValidator', () => {
             }
             if (
               entityId === 'core:actor1' &&
-              componentId === 'positioning:sitting_on'
+              componentId === 'sitting-states:sitting_on'
             ) {
               return { furniture_id: 'core:chair', spot_index: 0 };
             }
@@ -550,7 +550,7 @@ describe('StateConsistencyValidator', () => {
             }
             if (
               entityId === 'core:actor1' &&
-              componentId === 'positioning:sitting_on'
+              componentId === 'sitting-states:sitting_on'
             ) {
               return { furniture_id: 'core:bench', spot_index: 0 };
             }
@@ -585,7 +585,7 @@ describe('StateConsistencyValidator', () => {
             }
             if (
               entityId === 'core:actor1' &&
-              componentId === 'positioning:sitting_on'
+              componentId === 'sitting-states:sitting_on'
             ) {
               return { furniture_id: 'core:bench', spot_index: 0 };
             }
@@ -752,7 +752,7 @@ describe('StateConsistencyValidator', () => {
         expect(report.successful).toBe(1);
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           { furniture_id: 'core:chair', spot_index: 0 }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(

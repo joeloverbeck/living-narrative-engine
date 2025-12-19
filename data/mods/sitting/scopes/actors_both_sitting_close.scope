@@ -1,6 +1,6 @@
 sitting:actors_both_sitting_close := actor.components.personal-space-states:closeness.partners[][{
   "and": [
-    {"!!": {"var": "entity.components.positioning:sitting_on"}},
-    {"!!": {"var": "actor.components.positioning:sitting_on"}}
+    {"!!": {"var": "entity.components.sitting-states:sitting_on"}},
+    {"!!": {"var": "actor.components.sitting-states:sitting_on"}}
   ]
 }]

@@ -996,7 +996,7 @@ export class ModEntityScenarios {
         .atLocation(actor.locationId)
         .withLocationComponent(actor.locationId)
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: actor.furnitureId,
           spot_index: actor.spotIndex,
         });

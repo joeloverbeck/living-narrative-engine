@@ -59,7 +59,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -70,7 +70,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -83,7 +83,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       // Verify Step 1: sitting_on removed, straddling_waist added, facing_away added
       let updatedActor =
         testFixtureFacingAway.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();
@@ -110,7 +110,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       expect(
         updatedActor.components['positioning:facing_away']
       ).toBeUndefined();
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
 
       // Step 3: Try to sit on chair1 again
       // Transfer state to sit_down fixture
@@ -127,9 +127,9 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       expect(testFixtureSitDown.events).toHaveActionSuccess(
         'Alice sits down on Chair 1.'
       );
-      expect(updatedActor.components['positioning:sitting_on']).toBeDefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeDefined();
       expect(
-        updatedActor.components['positioning:sitting_on'].furniture_id
+        updatedActor.components['sitting-states:sitting_on'].furniture_id
       ).toBe('chair1');
     });
   });
@@ -158,7 +158,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -169,7 +169,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -182,7 +182,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       // Verify Step 1: sitting_on removed, straddling_waist added, NO facing_away
       let updatedActor =
         testFixtureFacing.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();
@@ -211,7 +211,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       expect(
         updatedActor.components['positioning:facing_away']
       ).toBeUndefined();
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
 
       // Step 3: Try to sit on chair1 again
       // Transfer state to sit_down fixture
@@ -228,9 +228,9 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       expect(testFixtureSitDown.events).toHaveActionSuccess(
         'Alice sits down on Chair 1.'
       );
-      expect(updatedActor.components['positioning:sitting_on']).toBeDefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeDefined();
       expect(
-        updatedActor.components['positioning:sitting_on'].furniture_id
+        updatedActor.components['sitting-states:sitting_on'].furniture_id
       ).toBe('chair1');
     });
   });
@@ -262,7 +262,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .atLocation('room1')
         .closeToEntity('target_away')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -273,7 +273,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .withName('Bob Away')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -314,7 +314,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .atLocation('room1')
         .closeToEntity('target_facing')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 1,
         })
@@ -325,7 +325,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .withName('Bob Facing')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 1,
         })

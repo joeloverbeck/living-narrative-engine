@@ -375,7 +375,7 @@ describe('Domain Matchers - Integration Tests', () => {
       const entity = {
         id: 'test1',
         components: {
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: 'chair1',
             spot_index: 0,
             metadata: {
@@ -386,12 +386,12 @@ describe('Domain Matchers - Integration Tests', () => {
       };
 
       // Partial match should work (only checks specified keys)
-      expect(entity).toHaveComponentData('positioning:sitting_on', {
+      expect(entity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: 'chair1',
       });
 
       // Multiple keys should work
-      expect(entity).toHaveComponentData('positioning:sitting_on', {
+      expect(entity).toHaveComponentData('sitting-states:sitting_on', {
         furniture_id: 'chair1',
         spot_index: 0,
       });
