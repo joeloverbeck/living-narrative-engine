@@ -20,6 +20,10 @@
     {
       "id": "positioning",
       "version": "^1.0.0"
+    },
+    {
+      "id": "sitting",
+      "version": "^1.0.0"
     }
   ],
   "content": {

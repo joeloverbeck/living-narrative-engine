@@ -20,10 +20,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "positioning",
-      "version": "^1.0.0"
-    },
-    {
       "id": "containers-core",
       "version": "^1.0.0"
     },
@@ -41,6 +37,10 @@
     },
     {
       "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting",
       "version": "^1.0.0"
     },
     {

@@ -590,16 +590,16 @@ class EntityManager extends IEntityManager {
     const result = this.#queryManager.getEntitiesWithComponent(componentTypeId);
 
     // Enhanced logging for debugging park bench scope resolution issue
-    if (componentTypeId === 'positioning:allows_sitting') {
+    if (componentTypeId === 'sitting:allows_sitting') {
       this.#logger.debug(
-        `[DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found ${result?.length || 0} entities`,
+        `[DEBUG] EntityManager.getEntitiesWithComponent('sitting:allows_sitting'): found ${result?.length || 0} entities`,
         result?.map((entity) => ({
           id: entity.id,
           hasPositionComponent: this.hasComponent(entity.id, 'core:position'),
           positionData: this.getComponentData(entity.id, 'core:position'),
           allowsSittingData: this.getComponentData(
             entity.id,
-            'positioning:allows_sitting'
+            'sitting:allows_sitting'
           ),
         }))
       );

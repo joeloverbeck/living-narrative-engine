@@ -44,7 +44,7 @@ describe('Debug Scope Resolution - Performance Test', () => {
     actorId = 'p_erotica:ane_arrieta_instance';
 
     console.log(`🪑 Creating park bench: ${parkBenchId}`);
-    entityManager.addComponent(parkBenchId, 'positioning:allows_sitting', {
+    entityManager.addComponent(parkBenchId, 'sitting:allows_sitting', {
       spots: [null, null], // Two empty spots
     });
     entityManager.addComponent(parkBenchId, POSITION_COMPONENT_ID, {
@@ -71,15 +71,15 @@ describe('Debug Scope Resolution - Performance Test', () => {
   it('should demonstrate entity creation and component access patterns', async () => {
     console.log('\n🔍 === ENTITY CREATION DEBUG TEST ===\n');
 
-    // Debug: Check what entities have positioning:allows_sitting component
+    // Debug: Check what entities have sitting:allows_sitting component
     console.log(
-      '🔍 Checking entities with positioning:allows_sitting component...'
+      '🔍 Checking entities with sitting:allows_sitting component...'
     );
     const furnitureEntities = entityManager.getEntitiesWithComponent(
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     console.log(
-      `Found ${furnitureEntities.length} entities with positioning:allows_sitting:`
+      `Found ${furnitureEntities.length} entities with sitting:allows_sitting:`
     );
 
     for (const entity of furnitureEntities) {
@@ -89,7 +89,7 @@ describe('Debug Scope Resolution - Performance Test', () => {
       );
       const allowsSittingData = entityManager.getComponentData(
         entity.id,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       console.log(`  - ${entity.id}:`);
       console.log(
@@ -135,7 +135,7 @@ describe('Debug Scope Resolution - Performance Test', () => {
       )?.locationId;
       const allowsSitting = entityManager.getComponentData(
         entity.id,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
 
       console.log(`  Checking ${entity.id}:`);
@@ -250,7 +250,7 @@ describe('Debug Scope Resolution - Performance Test', () => {
     // This should pass if our entity setup is correct
     expect(benchEntity).toBeDefined();
     expect(actorEntity).toBeDefined();
-    expect(benchEntity.hasComponent('positioning:allows_sitting')).toBe(true);
+    expect(benchEntity.hasComponent('sitting:allows_sitting')).toBe(true);
     expect(actorEntity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
 
     console.log('\n✅ Component state tracing completed\n');

@@ -199,9 +199,9 @@ export default class EntityQueryManager {
     );
 
     // Enhanced logging for debugging park bench scope resolution issue
-    if (componentTypeId === 'positioning:allows_sitting') {
+    if (componentTypeId === 'sitting:allows_sitting') {
       this.#logger.debug(
-        `EntityQueryManager detailed search for 'positioning:allows_sitting'`,
+        `EntityQueryManager detailed search for 'sitting:allows_sitting'`,
         {
           componentTypeId,
           entityIdsFromIndex: Array.from(entityIds),

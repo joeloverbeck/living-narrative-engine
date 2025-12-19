@@ -22,10 +22,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should work with real positioning mod conditions', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Load a real condition from the positioning mod
     await testFixture.loadDependencyConditions([
@@ -44,10 +41,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should work with multiple real conditions from same mod', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Load multiple real conditions
     await testFixture.loadDependencyConditions([
@@ -70,10 +64,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should integrate with scope resolution workflow', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Register positioning scopes
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -100,10 +91,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should support custom scopes that reference loaded conditions', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Register positioning scopes
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -139,10 +127,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should handle conditions with complex logic definitions', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     await testFixture.loadDependencyConditions([
       'positioning:actor-in-entity-facing-away',
@@ -158,10 +143,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should maintain loaded conditions across test operations', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Load conditions
     await testFixture.loadDependencyConditions([
@@ -190,10 +172,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should work in a complete action discovery workflow', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Register positioning scopes
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -233,10 +212,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
   });
 
   it('should allow incremental loading of conditions', async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     // Load first condition
     await testFixture.loadDependencyConditions([
@@ -271,10 +247,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     it('should simplify test setup for cross-mod dependencies', async () => {
       // This demonstrates the primary use case: testing a mod that depends on
       // conditions from another mod (e.g., sex-anal-penetration depending on positioning)
-      testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
-      );
+      testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
       // Before: Would require 10+ lines of boilerplate
       // After: One simple call

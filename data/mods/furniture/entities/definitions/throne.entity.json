@@ -13,7 +13,7 @@
       "imagePath": "portraits/throne.png",
       "altText": "A throne in a throne room."
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null]
     },
     "items:item": {}

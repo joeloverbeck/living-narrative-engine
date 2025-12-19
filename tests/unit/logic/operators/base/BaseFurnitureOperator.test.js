@@ -243,7 +243,7 @@ describe('BaseFurnitureOperator', () => {
       expect(result).toBe(allowsSittingData);
       expect(
         mockDependencies.entityManager.getComponentData
-      ).toHaveBeenCalledWith('furniture-1', 'positioning:allows_sitting');
+      ).toHaveBeenCalledWith('furniture-1', 'sitting:allows_sitting');
     });
 
     test('getAllowsSittingData returns null when component is missing', () => {

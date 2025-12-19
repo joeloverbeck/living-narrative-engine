@@ -186,7 +186,7 @@ export class BaseFurnitureOperator {
   getAllowsSittingData(furnitureId) {
     const allowsSittingData = this.entityManager.getComponentData(
       furnitureId,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     return allowsSittingData || null;

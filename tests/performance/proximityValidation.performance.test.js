@@ -173,7 +173,7 @@ describe('Proximity Validation Performance', () => {
       );
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: [null, 'game:alice', null, 'npc:bob'] };
           }
           if (componentType === 'positioning:sitting_on') {

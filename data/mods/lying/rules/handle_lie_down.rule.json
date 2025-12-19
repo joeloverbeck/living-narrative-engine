@@ -1,0 +1,99 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_lie_down",
+  "comment": "Handles the 'lying:lie_down' action. Adds lying_down component, locks movement, dispatches descriptive text and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "lying:event-is-action-lie-down"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "furnitureName"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Add lying_down component to actor",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:lying_down",
+        "value": {
+          "furniture_id": "{event.payload.targetId}"
+        }
+      }
+    },
+    {
+      "type": "LOCK_MOVEMENT",
+      "comment": "Lock movement while lying",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "ESTABLISH_LYING_CLOSENESS",
+      "comment": "Automatically establish closeness with all other actors lying on the same furniture",
+      "parameters": {
+        "furniture_id": "{event.payload.targetId}",
+        "actor_id": "{event.payload.actorId}",
+        "result_variable": "closenessEstablished"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} lies down on {context.furnitureName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.self_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

@@ -13,10 +13,10 @@ import {
   jest,
 } from '@jest/globals';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import handleSitDownRule from '../../../data/mods/positioning/rules/handle_sit_down.rule.json';
-import handleGetUpRule from '../../../data/mods/positioning/rules/handle_get_up_from_furniture.rule.json';
-import eventIsActionSitDown from '../../../data/mods/positioning/conditions/event-is-action-sit-down.condition.json';
-import eventIsActionGetUp from '../../../data/mods/positioning/conditions/event-is-action-get-up-from-furniture.condition.json';
+import handleSitDownRule from '../../../data/mods/sitting/rules/handle_sit_down.rule.json';
+import handleGetUpRule from '../../../data/mods/sitting/rules/handle_get_up_from_furniture.rule.json';
+import eventIsActionSitDown from '../../../data/mods/sitting/conditions/event-is-action-sit-down.condition.json';
+import eventIsActionGetUp from '../../../data/mods/sitting/conditions/event-is-action-get-up-from-furniture.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -44,10 +44,10 @@ import {
 
 // Action definitions
 const sitDownAction = {
-  id: 'positioning:sit_down',
+  id: 'sitting:sit_down',
   name: 'Sit down',
   description: 'Sit down on available furniture',
-  targets: 'positioning:available_furniture',
+  targets: 'sitting:available_furniture',
   required_components: {
     actor: ['core:actor'],
   },
@@ -59,10 +59,10 @@ const sitDownAction = {
 };
 
 const getUpAction = {
-  id: 'positioning:get_up_from_furniture',
+  id: 'sitting:get_up_from_furniture',
   name: 'Get up',
   description: "Stand up from the furniture you're sitting on",
-  targets: 'positioning:furniture_im_sitting_on',
+  targets: 'sitting:furniture_im_sitting_on',
   required_components: {
     actor: ['positioning:sitting_on'],
   },
@@ -185,8 +185,8 @@ describe('furniture sitting system', () => {
       rules: [handleSitDownRule, handleGetUpRule],
       actions: [sitDownAction, getUpAction],
       conditions: {
-        'positioning:event-is-action-sit-down': eventIsActionSitDown,
-        'positioning:event-is-action-get-up-from-furniture': eventIsActionGetUp,
+        'sitting:event-is-action-sit-down': eventIsActionSitDown,
+        'sitting:event-is-action-get-up-from-furniture': eventIsActionGetUp,
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -206,7 +206,7 @@ describe('furniture sitting system', () => {
 
     // Create single-seat chair
     chair = 'furniture:chair';
-    testEnv.entityManager.addComponent(chair, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(chair, 'sitting:allows_sitting', {
       spots: [null],
     });
     testEnv.entityManager.addComponent(chair, DESCRIPTION_COMPONENT_ID, {
@@ -222,7 +222,7 @@ describe('furniture sitting system', () => {
 
     // Create three-seat couch
     couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
       spots: [null, null, null],
     });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
@@ -244,7 +244,7 @@ describe('furniture sitting system', () => {
   describe('sitting on single-seat furniture', () => {
     it('should allow actor to sit on empty chair', async () => {
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -262,7 +262,7 @@ describe('furniture sitting system', () => {
       // Check that chair's spot is occupied
       const chairData = testEnv.entityManager.getComponentData(
         chair,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(chairData.spots[0]).toBe(actor);
 
@@ -277,7 +277,7 @@ describe('furniture sitting system', () => {
     it('should prevent sitting on occupied chair', async () => {
       // First actor sits
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -304,7 +304,7 @@ describe('furniture sitting system', () => {
 
       // Try to sit second actor - this should fail due to no available spots
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: chair,
       });
@@ -319,7 +319,7 @@ describe('furniture sitting system', () => {
       // Chair should still have first actor
       const chairData = testEnv.entityManager.getComponentData(
         chair,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(chairData.spots[0]).toBe(actor);
     });
@@ -329,14 +329,14 @@ describe('furniture sitting system', () => {
     it('should allow actor to get up from chair', async () => {
       // First sit down
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
 
       // Then get up - provide targetId so rule operations can resolve 'target' reference
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor,
         targetId: chair, // Required for rule operations to resolve 'target' entity_ref
       });
@@ -351,7 +351,7 @@ describe('furniture sitting system', () => {
       // Check that chair spot is cleared
       const chairData = testEnv.entityManager.getComponentData(
         chair,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(chairData.spots[0]).toBeNull();
 
@@ -369,13 +369,13 @@ describe('furniture sitting system', () => {
         furniture_id: couch,
         spot_index: 1,
       });
-      testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+      testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
         spots: [null, actor, null],
       });
 
       // Get up
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor,
         targetId: couch,
       });
@@ -383,7 +383,7 @@ describe('furniture sitting system', () => {
       // Check that only middle spot is cleared
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([null, null, null]);
     });
@@ -392,7 +392,7 @@ describe('furniture sitting system', () => {
   describe('multi-seat furniture', () => {
     it('should allocate first available spot on couch', async () => {
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
@@ -405,7 +405,7 @@ describe('furniture sitting system', () => {
 
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots[0]).toBe(actor);
       expect(couchData.spots[1]).toBeNull();
@@ -415,7 +415,7 @@ describe('furniture sitting system', () => {
     it('should allocate second spot when first is occupied', async () => {
       // First actor sits
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
@@ -432,7 +432,7 @@ describe('furniture sitting system', () => {
 
       // Second actor sits
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
@@ -445,7 +445,7 @@ describe('furniture sitting system', () => {
 
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots[0]).toBe(actor);
       expect(couchData.spots[1]).toBe(actor2);
@@ -457,7 +457,7 @@ describe('furniture sitting system', () => {
     it('should prevent sitting while already sitting', async () => {
       // Sit on chair
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -475,7 +475,7 @@ describe('furniture sitting system', () => {
 
       // Try to sit on couch without standing - this should be filtered out by ActionIndex
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
@@ -490,7 +490,7 @@ describe('furniture sitting system', () => {
       // Couch should be empty
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots[0]).toBeNull();
     });
@@ -507,7 +507,7 @@ describe('furniture sitting system', () => {
 
       // Try to sit - this should be filtered out by ActionIndex
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -522,7 +522,7 @@ describe('furniture sitting system', () => {
       // Chair should be empty
       const chairData = testEnv.entityManager.getComponentData(
         chair,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(chairData.spots[0]).toBeNull();
     });
@@ -537,7 +537,7 @@ describe('furniture sitting system', () => {
 
       // Try to sit
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -562,7 +562,7 @@ describe('furniture sitting system', () => {
       const brokenChair = 'furniture:broken';
       testEnv.entityManager.addComponent(
         brokenChair,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         { spots: [] }
       );
       testEnv.entityManager.addComponent(
@@ -578,7 +578,7 @@ describe('furniture sitting system', () => {
       });
 
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: brokenChair,
       });
@@ -593,7 +593,7 @@ describe('furniture sitting system', () => {
     it('should handle furniture destruction while sitting', async () => {
       // Sit on chair
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -627,12 +627,12 @@ describe('furniture sitting system', () => {
 
       // Both actors sit adjacent on couch
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
@@ -649,7 +649,7 @@ describe('furniture sitting system', () => {
 
       // Alice stands up
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor,
         targetId: couch,
       });
@@ -688,12 +688,12 @@ describe('furniture sitting system', () => {
 
       // Both actors sit adjacent on couch
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
@@ -711,7 +711,7 @@ describe('furniture sitting system', () => {
 
       // Alice stands up
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor,
         targetId: couch,
       });
@@ -734,7 +734,7 @@ describe('furniture sitting system', () => {
     it('should handle actor with no closeness relationships', async () => {
       // Actor sits alone on chair
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: chair,
       });
@@ -748,7 +748,7 @@ describe('furniture sitting system', () => {
 
       // Actor stands up
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor,
         targetId: chair,
       });
@@ -791,17 +791,17 @@ describe('furniture sitting system', () => {
 
       // All three actors sit on couch (Alice-Bob-Charlie)
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: couch,
       });
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
@@ -822,7 +822,7 @@ describe('furniture sitting system', () => {
 
       // Bob (middle position) stands up
       await testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor2,
         targetId: couch,
       });

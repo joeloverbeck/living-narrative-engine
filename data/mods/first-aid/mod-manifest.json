@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "first-aid",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "name": "First-Aid",
   "description": "Actions and content about providing first-aid care.",
   "actionPurpose": "Provide medical triage scaffolding for identifying and treating wounded or bleeding body parts.",

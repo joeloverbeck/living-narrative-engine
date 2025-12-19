@@ -154,14 +154,14 @@ export class StateConsistencyValidator {
     const issues = [];
 
     const furnitureEntities = this.#entityManager.getEntitiesWithComponent(
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     for (const furniture of furnitureEntities) {
       const furnitureId = furniture.id;
       const furnitureData = this.#entityManager.getComponentData(
         furnitureId,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
 
       if (!furnitureData || !furnitureData.spots) continue;

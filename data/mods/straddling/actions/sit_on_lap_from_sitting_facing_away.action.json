@@ -5,7 +5,7 @@
   "description": "Transition from sitting on furniture to sitting on another sitting actor's lap while facing away from them",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_both_sitting_close",
+      "scope": "sitting:actors_both_sitting_close",
       "placeholder": "target",
       "description": "Sitting actor to sit on"
     }

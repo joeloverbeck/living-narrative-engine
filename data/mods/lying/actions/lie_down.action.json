@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "lying:lie_down",
+  "name": "Lie down",
+  "description": "Lie down on available furniture",
+  "targets": "lying:available_lying_furniture",
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:being_hugged",
+      "positioning:biting_neck",
+      "positioning:hugging",
+      "positioning:sitting_on",
+      "positioning:bending_over",
+      "positioning:kneeling_before",
+      "positioning:lying_down",
+      "sex-states:fucking_anally",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "lie down on {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#0d47a1",
+    "textColor": "#bbdefb",
+    "hoverBackgroundColor": "#1565c0",
+    "hoverTextColor": "#e3f2fd"
+  }
+}

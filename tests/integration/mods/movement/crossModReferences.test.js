@@ -47,9 +47,10 @@ describe('Cross-Mod References', () => {
     });
 
     it('should have step_back action with appropriate conditions', () => {
+      // step_back was migrated to personal-space mod
       const stepBackPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/step_back.action.json'
+        'data/mods/personal-space/actions/step_back.action.json'
       );
       const stepBackAction = JSON.parse(fs.readFileSync(stepBackPath, 'utf8'));
 

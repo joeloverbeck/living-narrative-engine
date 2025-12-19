@@ -35,7 +35,7 @@ describe('scoot_closer_right action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant1'],
         })
         .build();
@@ -82,7 +82,7 @@ describe('scoot_closer_right action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', 'occupant1', 'occupant2'],
         })
         .build();
@@ -134,7 +134,7 @@ describe('scoot_closer_right action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', 'actor1'],
         })
         .build();

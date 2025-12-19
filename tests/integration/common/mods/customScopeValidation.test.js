@@ -18,13 +18,10 @@ describe('Custom Scope Validation - Integration Tests', () => {
     });
 
     it('should fail with helpful message when passed action context object', async () => {
-      fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
-      );
+      fixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
-      // Use an existing scope from the positioning mod
-      await fixture.registerCustomScope('positioning', 'available_furniture');
+      // Use an existing scope from the sitting mod
+      await fixture.registerCustomScope('sitting', 'available_furniture');
 
       // Create action context (has actor/targets) - this is invalid for scope resolution
       const actionContext = {
@@ -33,7 +30,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
       };
 
       const result = fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:available_furniture',
+        'sitting:available_furniture',
         actionContext
       );
 
@@ -43,17 +40,14 @@ describe('Custom Scope Validation - Integration Tests', () => {
       expect(result.error).toContain('action pipeline context object');
       expect(result.error).toContain('instead of entity instance');
       expect(result.error).toContain(
-        'CustomScopeResolver[positioning:available_furniture]'
+        'CustomScopeResolver[sitting:available_furniture]'
       );
     });
 
     it('should fail with helpful message when passed scope context object', async () => {
-      fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
-      );
+      fixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
-      await fixture.registerCustomScope('positioning', 'available_furniture');
+      await fixture.registerCustomScope('sitting', 'available_furniture');
 
       // Create scope context (has runtimeCtx/dispatcher) - this is invalid
       const scopeContext = {
@@ -63,7 +57,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
       };
 
       const result = fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:available_furniture',
+        'sitting:available_furniture',
         scopeContext
       );
 
@@ -71,7 +65,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
       expect(result.error).toBeDefined();
       expect(result.error).toContain('scope resolution context');
       expect(result.error).toContain(
-        'CustomScopeResolver[positioning:available_furniture]'
+        'CustomScopeResolver[sitting:available_furniture]'
       );
     });
 
@@ -101,12 +95,9 @@ describe('Custom Scope Validation - Integration Tests', () => {
     });
 
     it('should provide error.context with expected/received/hint/example', async () => {
-      fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
-      );
+      fixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
-      await fixture.registerCustomScope('positioning', 'available_furniture');
+      await fixture.registerCustomScope('sitting', 'available_furniture');
 
       const invalidContext = {
         actor: { id: 'actor1', components: {} },
@@ -114,7 +105,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
       };
 
       const result = fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:available_furniture',
+        'sitting:available_furniture',
         invalidContext
       );
 

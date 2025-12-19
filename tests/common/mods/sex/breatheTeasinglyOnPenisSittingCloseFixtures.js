@@ -89,7 +89,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     .withName('Plush Loveseat')
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
-    .withComponent('positioning:allows_sitting', {
+    .withComponent('sitting:allows_sitting', {
       spots: [
         includeActorSitting ? ACTOR_ID : null,
         includePrimarySitting ? PRIMARY_ID : null,

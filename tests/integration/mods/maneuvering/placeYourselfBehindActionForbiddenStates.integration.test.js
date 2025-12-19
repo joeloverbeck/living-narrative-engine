@@ -48,7 +48,7 @@ describe('maneuvering:place_yourself_behind discovery posture validation', () =>
     const bed = new ModEntityBuilder('bed1')
       .withName('Recovery Cot')
       .atLocation('room1')
-      .withComponent('positioning:allows_lying_on', {})
+      .withComponent('lying:allows_lying_on', {})
       .build();
 
     fixture.reset([room, bed, scenario.actor, scenario.target]);

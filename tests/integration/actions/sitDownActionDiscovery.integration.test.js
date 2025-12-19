@@ -59,7 +59,7 @@ describe('sit_down action discovery integration', () => {
         components: {
           'core:name': { text: 'Park Bench' },
           'core:position': { locationId: 'park_instance' },
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
         },
       },
     };

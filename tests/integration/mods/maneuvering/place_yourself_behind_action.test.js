@@ -141,7 +141,7 @@ function setupLyingBehindScenario() {
   const bed = new ModEntityBuilder('test:bed')
     .withName('Wooden Bed')
     .atLocation('test:room')
-    .withComponent('positioning:allows_lying_on', {})
+    .withComponent('lying:allows_lying_on', {})
     .build();
 
   // Actor is lying down on the bed

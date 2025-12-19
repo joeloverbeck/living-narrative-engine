@@ -13,8 +13,8 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
   it('should discover action when scopes auto-registered', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down',
+      'sitting',
+      'sitting:sit_down',
       null,
       null,
       { autoRegisterScopes: true }
@@ -30,7 +30,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const furniture = new ModEntityBuilder('bench1')
       .withName('bench')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', { spots: [null, null] })
+      .withComponent('sitting:allows_sitting', { spots: [null, null] })
       .build();
 
     testFixture.reset([room, actor, furniture]);
@@ -39,14 +39,14 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions('actor1');
 
     // Assert
-    expect(availableActions.map((a) => a.id)).toContain('positioning:sit_down');
+    expect(availableActions.map((a) => a.id)).toContain('sitting:sit_down');
   });
 
   it('should work with multiple scope categories', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down',
+      'sitting',
+      'sitting:sit_down',
       null,
       null,
       {
@@ -65,7 +65,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const furniture = new ModEntityBuilder('bench1')
       .withName('bench')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', { spots: [null, null] })
+      .withComponent('sitting:allows_sitting', { spots: [null, null] })
       .build();
 
     testFixture.reset([room, actor, furniture]);
@@ -74,14 +74,14 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions('actor1');
 
     // Assert
-    expect(availableActions.map((a) => a.id)).toContain('positioning:sit_down');
+    expect(availableActions.map((a) => a.id)).toContain('sitting:sit_down');
   });
 
   it('should maintain backward compatibility with manual registration', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
@@ -95,7 +95,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const furniture = new ModEntityBuilder('bench1')
       .withName('bench')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', { spots: [null, null] })
+      .withComponent('sitting:allows_sitting', { spots: [null, null] })
       .build();
 
     testFixture.reset([room, actor, furniture]);
@@ -104,14 +104,14 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions('actor1');
 
     // Assert
-    expect(availableActions.map((a) => a.id)).toContain('positioning:sit_down');
+    expect(availableActions.map((a) => a.id)).toContain('sitting:sit_down');
   });
 
   it('should not discover action when scopes not registered', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down',
+      'sitting',
+      'sitting:sit_down',
       null,
       null,
       { autoRegisterScopes: false }
@@ -124,7 +124,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
 
     // Assert - without scope registration, actions won't be discovered
     expect(availableActions.map((a) => a.id)).not.toContain(
-      'positioning:sit_down'
+      'sitting:sit_down'
     );
   });
 

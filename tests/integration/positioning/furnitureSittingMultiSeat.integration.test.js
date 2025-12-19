@@ -13,10 +13,10 @@ import {
   jest,
 } from '@jest/globals';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import handleSitDownRule from '../../../data/mods/positioning/rules/handle_sit_down.rule.json';
-import handleGetUpRule from '../../../data/mods/positioning/rules/handle_get_up_from_furniture.rule.json';
-import eventIsActionSitDown from '../../../data/mods/positioning/conditions/event-is-action-sit-down.condition.json';
-import eventIsActionGetUp from '../../../data/mods/positioning/conditions/event-is-action-get-up-from-furniture.condition.json';
+import handleSitDownRule from '../../../data/mods/sitting/rules/handle_sit_down.rule.json';
+import handleGetUpRule from '../../../data/mods/sitting/rules/handle_get_up_from_furniture.rule.json';
+import eventIsActionSitDown from '../../../data/mods/sitting/conditions/event-is-action-sit-down.condition.json';
+import eventIsActionGetUp from '../../../data/mods/sitting/conditions/event-is-action-get-up-from-furniture.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -150,8 +150,8 @@ describe('multi-seat furniture behavior', () => {
     testEnv = createRuleTestEnvironment({
       rules: [handleSitDownRule, handleGetUpRule],
       conditions: {
-        'positioning:event-is-action-sit-down': eventIsActionSitDown,
-        'positioning:event-is-action-get-up-from-furniture': eventIsActionGetUp,
+        'sitting:event-is-action-sit-down': eventIsActionSitDown,
+        'sitting:event-is-action-get-up-from-furniture': eventIsActionGetUp,
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -198,7 +198,7 @@ describe('multi-seat furniture behavior', () => {
 
     // Create three-seat couch
     couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
       spots: [null, null, null],
     });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
@@ -221,21 +221,21 @@ describe('multi-seat furniture behavior', () => {
     it('should fill spots in order: first, second, third', async () => {
       // First actor sits
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       // Second actor sits
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       // Third actor sits
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
@@ -243,7 +243,7 @@ describe('multi-seat furniture behavior', () => {
       // Verify spots are allocated in order
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, actor2, actor3]);
 
@@ -270,26 +270,26 @@ describe('multi-seat furniture behavior', () => {
     it('should prevent fourth actor from sitting on full couch', async () => {
       // Fill all three spots
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // Fourth actor tries to sit
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor4,
         targetId: couch,
       });
@@ -304,7 +304,7 @@ describe('multi-seat furniture behavior', () => {
       // Couch should still have only three actors
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, actor2, actor3]);
     });
@@ -314,33 +314,33 @@ describe('multi-seat furniture behavior', () => {
     it('should fill first available spot when middle actor stands', async () => {
       // Setup: Three actors sitting
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // Middle actor stands
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor2,
         targetId: couch,
       });
 
       // Fourth actor sits (should take middle spot)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor4,
         targetId: couch,
       });
@@ -354,14 +354,14 @@ describe('multi-seat furniture behavior', () => {
 
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, actor4, actor3]);
     });
 
     it('should fill first gap when first actor stands', async () => {
       // Setup: Two actors in spots 0 and 2
-      testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+      testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
         spots: [actor1, null, actor3],
       });
       testEnv.entityManager.addComponent(actor1, 'positioning:sitting_on', {
@@ -375,14 +375,14 @@ describe('multi-seat furniture behavior', () => {
 
       // First actor stands
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor1,
         targetId: couch,
       });
 
       // New actor sits (should take first spot)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
@@ -396,7 +396,7 @@ describe('multi-seat furniture behavior', () => {
 
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor2, null, actor3]);
     });
@@ -406,26 +406,26 @@ describe('multi-seat furniture behavior', () => {
     it('should maintain other spots when one actor stands', async () => {
       // Three actors sit
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // First actor stands
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor1,
         targetId: couch,
       });
@@ -433,7 +433,7 @@ describe('multi-seat furniture behavior', () => {
       // Verify only first spot is cleared
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots[0]).toBeNull();
       expect(couchData.spots[1]).toBe(actor2);
@@ -458,57 +458,57 @@ describe('multi-seat furniture behavior', () => {
     it('should handle all actors standing in random order', async () => {
       // Three actors sit
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // Stand in random order: 2, 3, 1
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor2,
         targetId: couch,
       });
 
       let couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, null, actor3]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor3,
         targetId: couch,
       });
 
       couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, null, null]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor1,
         targetId: couch,
       });
 
       couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([null, null, null]);
     });
@@ -518,19 +518,19 @@ describe('multi-seat furniture behavior', () => {
     it('should lock movement for all sitting actors', async () => {
       // Three actors sit
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
@@ -558,26 +558,26 @@ describe('multi-seat furniture behavior', () => {
     it('should only unlock movement for actor who stands', async () => {
       // Three actors sit
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // Middle actor stands
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor2,
         targetId: couch,
       });
@@ -610,7 +610,7 @@ describe('multi-seat furniture behavior', () => {
         {
           type: ATTEMPT_ACTION_ID,
           payload: {
-            actionId: 'positioning:sit_down',
+            actionId: 'sitting:sit_down',
             actorId: actor1,
             targetId: couch,
           },
@@ -618,7 +618,7 @@ describe('multi-seat furniture behavior', () => {
         {
           type: ATTEMPT_ACTION_ID,
           payload: {
-            actionId: 'positioning:sit_down',
+            actionId: 'sitting:sit_down',
             actorId: actor2,
             targetId: couch,
           },
@@ -626,7 +626,7 @@ describe('multi-seat furniture behavior', () => {
         {
           type: ATTEMPT_ACTION_ID,
           payload: {
-            actionId: 'positioning:sit_down',
+            actionId: 'sitting:sit_down',
             actorId: actor3,
             targetId: couch,
           },
@@ -641,7 +641,7 @@ describe('multi-seat furniture behavior', () => {
       // All three should be seated correctly
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor1, actor2, actor3]);
     });
@@ -649,35 +649,35 @@ describe('multi-seat furniture behavior', () => {
     it('should maintain consistency with interleaved sit/stand actions', async () => {
       // Actor1 sits
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor1,
         targetId: couch,
       });
 
       // Actor2 sits
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor2,
         targetId: couch,
       });
 
       // Actor1 stands
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: actor1,
         targetId: couch,
       });
 
       // Actor3 sits (should take first spot)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor3,
         targetId: couch,
       });
 
       // Actor4 sits (should take third spot)
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor4,
         targetId: couch,
       });
@@ -685,7 +685,7 @@ describe('multi-seat furniture behavior', () => {
       // Verify final state
       const couchData = testEnv.entityManager.getComponentData(
         couch,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(couchData.spots).toEqual([actor3, actor2, actor4]);
     });

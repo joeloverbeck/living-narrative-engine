@@ -562,15 +562,15 @@ export function createBaseRuleEnvironment({
     // Create a simple scope resolver for testing
     const simpleScopeResolver = {
       resolveSync: (scopeName, context) => {
-        // Handle the positioning:available_furniture scope
-        if (scopeName === 'positioning:available_furniture') {
+        // Handle the sitting:available_furniture scope
+        if (scopeName === 'sitting:available_furniture') {
           const actorLocation =
             context.actor?.components?.['core:position']?.locationId;
           if (!actorLocation) {
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with positioning:allows_sitting
+          // Find all entities with sitting:allows_sitting
           // Note: SimpleEntityManager doesn't have getAllEntities, we need to iterate differently
           const allEntityIds = entityManager.getEntityIds();
 
@@ -581,7 +581,7 @@ export function createBaseRuleEnvironment({
           });
           const furnitureEntities = allEntities.filter((entity) => {
             const hasSittingComponent =
-              entity.components?.['positioning:allows_sitting'];
+              entity.components?.['sitting:allows_sitting'];
             const furnitureLocation =
               entity.components?.['core:position']?.locationId;
 
@@ -611,14 +611,14 @@ export function createBaseRuleEnvironment({
           };
         }
 
-        // Handle the positioning:furniture_im_sitting_on and personal-space:furniture_actor_sitting_on scopes
+        // Handle the sitting:furniture_im_sitting_on and personal-space:furniture_actor_sitting_on scopes
         // These are equivalent - both find the furniture the actor is sitting on
         if (
-          scopeName === 'positioning:furniture_im_sitting_on' ||
+          scopeName === 'sitting:furniture_im_sitting_on' ||
           scopeName === 'personal-space:furniture_actor_sitting_on'
         ) {
           // This scope should find furniture that the actor is currently sitting on
-          // The scope definition is: entities(positioning:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
+          // The scope definition is: entities(sitting:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
 
           // Get actor
           const actor =
@@ -633,13 +633,13 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Check if this furniture exists and has positioning:allows_sitting component
+          // Check if this furniture exists and has sitting:allows_sitting component
           const targetFurniture = entityManager.getEntityInstance(
             sittingOn.furniture_id
           );
           if (
             !targetFurniture ||
-            !targetFurniture.components?.['positioning:allows_sitting']
+            !targetFurniture.components?.['sitting:allows_sitting']
           ) {
             return { success: true, value: new Set() };
           }
@@ -988,7 +988,7 @@ export function createBaseRuleEnvironment({
           // Get furniture entity and its sitting component
           const furniture = entityManager.getEntityInstance(furnitureId);
           const allowsSitting =
-            furniture?.components?.['positioning:allows_sitting'];
+            furniture?.components?.['sitting:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }
@@ -1041,7 +1041,7 @@ export function createBaseRuleEnvironment({
 
           const furniture = entityManager.getEntityInstance(furnitureId);
           const allowsSitting =
-            furniture?.components?.['positioning:allows_sitting'];
+            furniture?.components?.['sitting:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }
@@ -1092,7 +1092,7 @@ export function createBaseRuleEnvironment({
           // Get furniture entity and its sitting component
           const furniture = entityManager.getEntityInstance(targetId);
           const allowsSitting =
-            furniture?.components?.['positioning:allows_sitting'];
+            furniture?.components?.['sitting:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }

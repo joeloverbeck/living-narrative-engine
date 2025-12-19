@@ -3,7 +3,7 @@
   "id": "ranged",
   "version": "1.0.0",
   "name": "Ranged",
-  "description": "Ranged combat actions such sa throwing items at targets.",
+  "description": "Ranged combat actions such as throwing items at targets.",
   "actionPurpose": "Attack targets at a distance by throwing items from inventory.",
   "actionConsiderWhen": "Combat situations requiring ranged attacks, throwing weapons at enemies, or when melee engagement is not possible or desired.",
   "dependencies": [

@@ -324,7 +324,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
   #validateComponentState(parameters) {
     const furnitureComponent = this.#entityManager.getComponentData(
       parameters.furniture_id,
-      'positioning:allows_lying_on'
+      'lying:allows_lying_on'
     );
 
     if (!furnitureComponent) {

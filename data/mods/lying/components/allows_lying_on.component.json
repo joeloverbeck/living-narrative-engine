@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "lying:allows_lying_on",
+  "description": "Indicates that this furniture entity can be lain upon by actors",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

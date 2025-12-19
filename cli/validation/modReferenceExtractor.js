@@ -621,12 +621,33 @@ class ModReferenceExtractor {
     }
 
     // Target scopes - reference to scope definitions
-    if (actionData.targets?.scope) {
-      this._extractModReferencesFromString(
-        actionData.targets.scope,
-        references,
-        'target_scope'
-      );
+    // Handle both simple targets.scope and nested targets.primary.scope structures
+    if (actionData.targets && typeof actionData.targets === 'object') {
+      // Handle simple targets.scope format
+      if (actionData.targets.scope) {
+        this._extractModReferencesFromString(
+          actionData.targets.scope,
+          references,
+          'target_scope'
+        );
+      }
+
+      // Handle nested target structures: targets.primary.scope, targets.secondary.scope, etc.
+      for (const [targetKey, targetConfig] of Object.entries(
+        actionData.targets
+      )) {
+        if (
+          targetConfig &&
+          typeof targetConfig === 'object' &&
+          targetConfig.scope
+        ) {
+          this._extractModReferencesFromString(
+            targetConfig.scope,
+            references,
+            `target_${targetKey}_scope`
+          );
+        }
+      }
     }
 
     // Handle targets as string (alternative format)

@@ -13,7 +13,7 @@
       "imagePath": "portraits/night_park_stone_bench.png",
       "altText": "A solid stone bench illuminated by amber streetlight, showing weathered surface and heavy construction"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     }
   }

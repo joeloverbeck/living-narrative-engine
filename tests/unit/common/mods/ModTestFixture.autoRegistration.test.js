@@ -14,8 +14,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should not auto-register scopes by default', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Assert
@@ -29,8 +29,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should auto-register positioning scopes when enabled', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         { autoRegisterScopes: true }
@@ -47,8 +47,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should auto-register multiple scope categories', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {
@@ -116,8 +116,8 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act & Assert
       await expect(
         ModTestFixture.forAction(
-          'positioning',
-          'positioning:sit_down',
+          'sitting',
+          'sitting:sit_down',
           null,
           null,
           {
@@ -131,8 +131,8 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act & Assert
       await expect(
         ModTestFixture.forAction(
-          'positioning',
-          'positioning:sit_down',
+          'sitting',
+          'sitting:sit_down',
           null,
           null,
           {
@@ -147,8 +147,8 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act & Assert
       await expect(
         ModTestFixture.forAction(
-          'positioning',
-          'positioning:sit_down',
+          'sitting',
+          'sitting:sit_down',
           null,
           null,
           {
@@ -162,8 +162,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should accept all valid scope categories', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {
@@ -202,8 +202,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should work without options parameter', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Assert
@@ -218,8 +218,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should work with empty options object', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {}
@@ -237,8 +237,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should preserve other options when auto-registration is used', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {
@@ -261,8 +261,8 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should default to positioning category when autoRegisterScopes is true', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         { autoRegisterScopes: true }

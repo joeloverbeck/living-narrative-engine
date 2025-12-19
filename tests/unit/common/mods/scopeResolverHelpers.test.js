@@ -144,7 +144,7 @@ describe('ScopeResolverHelpers - Array Filter Pattern', () => {
       getComponentData: jest.fn((entityId, componentType) => {
         if (
           entityId === 'furniture1' &&
-          componentType === 'positioning:allows_sitting'
+          componentType === 'sitting:allows_sitting'
         ) {
           return { spots: ['occupant1', null, 'actor1'] };
         }
@@ -170,7 +170,7 @@ describe('ScopeResolverHelpers - Array Filter Pattern', () => {
           );
           const furniture = em.getComponentData(
             sitting.furniture_id,
-            'positioning:allows_sitting'
+            'sitting:allows_sitting'
           );
           return furniture?.spots || [];
         },
@@ -583,23 +583,17 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register positioning:actors_both_sitting_close', () => {
+    it('should register sitting:actors_both_sitting_close', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:actors_both_sitting_close'
+          'sitting:actors_both_sitting_close'
         )
       ).toBe(true);
     });
 
-    it('should register positioning:actor_biting_my_neck', () => {
+    it('should register sitting:actors_sitting_close', () => {
       expect(
-        mockTestEnv._registeredResolvers.has('positioning:actor_biting_my_neck')
-      ).toBe(true);
-    });
-
-    it('should register positioning:actors_sitting_close', () => {
-      expect(
-        mockTestEnv._registeredResolvers.has('positioning:actors_sitting_close')
+        mockTestEnv._registeredResolvers.has('sitting:actors_sitting_close')
       ).toBe(true);
     });
 
@@ -637,32 +631,32 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
   });
 
   describe('Lower Priority Scopes', () => {
-    it('should register positioning:available_furniture', () => {
+    it('should register sitting:available_furniture', () => {
       expect(
-        mockTestEnv._registeredResolvers.has('positioning:available_furniture')
+        mockTestEnv._registeredResolvers.has('sitting:available_furniture')
       ).toBe(true);
     });
 
-    it('should register positioning:available_lying_furniture', () => {
+    it('should register lying:available_lying_furniture', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:available_lying_furniture'
+          'lying:available_lying_furniture'
         )
       ).toBe(true);
     });
 
-    it('should register positioning:furniture_im_lying_on', () => {
+    it('should register lying:furniture_im_lying_on', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:furniture_im_lying_on'
+          'lying:furniture_im_lying_on'
         )
       ).toBe(true);
     });
 
-    it('should register positioning:furniture_im_sitting_on', () => {
+    it('should register sitting:furniture_im_sitting_on', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:furniture_im_sitting_on'
+          'sitting:furniture_im_sitting_on'
         )
       ).toBe(true);
     });
@@ -684,10 +678,20 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
     });
   });
 
-  it('should have 20+ total positioning scopes registered', () => {
+  it('should have 20+ total positioning-related scopes registered', () => {
+    // Count all positioning-related scopes across multiple namespaces
+    // (positioning, sitting, straddling, personal-space)
+    const positioningRelatedPrefixes = [
+      'positioning:',
+      'sitting:',
+      'straddling:',
+      'personal-space:',
+    ];
     const positioningScopes = Array.from(
       mockTestEnv._registeredResolvers.keys()
-    ).filter((key) => key.startsWith('positioning:'));
+    ).filter((key) =>
+      positioningRelatedPrefixes.some((prefix) => key.startsWith(prefix))
+    );
     expect(positioningScopes.length).toBeGreaterThanOrEqual(20);
   });
 });

@@ -13,8 +13,8 @@ describe('ModTestFixture - registerCustomScope', () => {
   beforeEach(async () => {
     // Create a basic test fixture
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
   });
 
@@ -207,7 +207,7 @@ describe('ModTestFixture - registerCustomScope', () => {
     it('should allow registering multiple different scopes', async () => {
       await testFixture.registerCustomScope('positioning', 'close_actors');
       await testFixture.registerCustomScope(
-        'positioning',
+        'sitting',
         'actors_sitting_close'
       );
 
@@ -216,7 +216,7 @@ describe('ModTestFixture - registerCustomScope', () => {
       ).toBe(true);
       expect(
         testFixture.testEnv._registeredResolvers.has(
-          'positioning:actors_sitting_close'
+          'sitting:actors_sitting_close'
         )
       ).toBe(true);
     });
@@ -224,9 +224,9 @@ describe('ModTestFixture - registerCustomScope', () => {
     it('should allow registering scopes from different mods', async () => {
       await testFixture.registerCustomScope('positioning', 'close_actors');
 
-      // Register another positioning scope (as we know these exist)
+      // Register another scope from a different mod (sitting mod)
       await testFixture.registerCustomScope(
-        'positioning',
+        'sitting',
         'actors_sitting_close'
       );
 
@@ -243,8 +243,8 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
   beforeEach(async () => {
     // Create a basic test environment
     const fixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
     testEnv = fixture.testEnv;
     // Clean up fixture but keep testEnv
@@ -361,7 +361,7 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
       );
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
-        'positioning',
+        'sitting',
         'actors_sitting_close'
       );
 
@@ -369,7 +369,7 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
         true
       );
       expect(
-        testEnv._registeredResolvers.has('positioning:actors_sitting_close')
+        testEnv._registeredResolvers.has('sitting:actors_sitting_close')
       ).toBe(true);
     });
   });

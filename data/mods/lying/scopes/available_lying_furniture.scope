@@ -1,0 +1,6 @@
+lying:available_lying_furniture := entities(lying:allows_lying_on)[][{
+  "==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]
+}]

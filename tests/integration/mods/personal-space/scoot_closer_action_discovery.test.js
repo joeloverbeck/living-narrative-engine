@@ -79,7 +79,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
 
         const actorSitting = actor?.components?.['positioning:sitting_on'];
         const sittingComponent =
-          furniture?.components?.['positioning:allows_sitting'];
+          furniture?.components?.['sitting:allows_sitting'];
         console.log(`  📍 Actor sitting: ${JSON.stringify(actorSitting)}`);
         console.log(
           `  🛋️ Furniture spots: ${JSON.stringify(sittingComponent?.spots)}`
@@ -164,7 +164,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', null, 'actor1'],
         })
         .build();
@@ -240,7 +240,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', null, null, 'actor1'],
         })
         .build();
@@ -297,7 +297,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', null, 'occupant2', null, 'actor1'],
         })
         .build();
@@ -356,7 +356,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant2'],
         })
         .build();
@@ -401,7 +401,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', 'occupant2', 'actor1'],
         })
         .build();
@@ -456,7 +456,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, 'actor1'],
         })
         .build();
@@ -516,7 +516,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['occupant1', 'actor1'],
         })
         .build();
@@ -561,7 +561,7 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1'],
         })
         .build();

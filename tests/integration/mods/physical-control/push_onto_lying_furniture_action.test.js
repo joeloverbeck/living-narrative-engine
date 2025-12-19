@@ -70,7 +70,7 @@ function createEntities() {
     .withName('Steel Table')
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
-    .withComponent('positioning:allows_lying_on', {})
+    .withComponent('lying:allows_lying_on', {})
     .build();
 
   return [room, actor, target, furniture];

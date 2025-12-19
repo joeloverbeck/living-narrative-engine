@@ -136,7 +136,7 @@ describe('Entity integration with EntityInstanceData', () => {
       instanceId: 'p_erotica:park_bench_instance',
       definitionId: 'p_erotica:park_bench',
       baseComponents: {
-        'positioning:allows_sitting': { permitted: true },
+        'sitting:allows_sitting': { permitted: true },
         'environment:location': { area: 'plaza' },
       },
     });
@@ -144,7 +144,7 @@ describe('Entity integration with EntityInstanceData', () => {
     const componentTypeIds = benchEntity.componentTypeIds;
 
     expect(componentTypeIds).toEqual([
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       'environment:location',
     ]);
     expect(consoleDebugSpy).toHaveBeenCalled();

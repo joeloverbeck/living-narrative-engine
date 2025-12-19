@@ -34,7 +34,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      if (scopeName === 'positioning:actors_both_sitting_close') {
+      if (scopeName === 'sitting:actors_both_sitting_close') {
         const actorId = context?.actor?.id;
         if (!actorId) {
           return { success: true, value: new Set() };

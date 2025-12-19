@@ -13,7 +13,7 @@
       "imagePath": "portraits/upholstered_armchair_pale_gray.png",
       "altText": "A pale and gray upholstered armchair"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null]
     },
     "items:item": {}

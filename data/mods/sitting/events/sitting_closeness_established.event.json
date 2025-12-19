@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "sitting:sitting_closeness_established",
+  "description": "Dispatched when closeness relationships are established between actors sitting adjacently on furniture.",
+  "payloadSchema": {
+    "title": "Sitting: Sitting Closeness Established Payload",
+    "description": "Payload for the sitting:sitting_closeness_established event.",
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who sat down and triggered closeness establishment."
+      },
+      "furnitureId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the furniture entity where the actors are seated."
+      },
+      "adjacentActors": {
+        "type": "array",
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        },
+        "description": "Array of actor IDs who are sitting adjacently and now have closeness established."
+      },
+      "operationId": {
+        "type": "string",
+        "description": "Unique identifier for this operation instance."
+      }
+    },
+    "required": ["actorId", "furnitureId", "adjacentActors", "operationId"],
+    "additionalProperties": false
+  }
+}

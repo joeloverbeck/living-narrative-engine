@@ -1,0 +1,160 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_get_up_from_furniture",
+  "comment": "Handles sitting:get_up_from_furniture action",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "sitting:event-is-action-get-up-from-furniture"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor's sitting position info",
+      "parameters": {
+        "entity_ref": "{event.payload.actorId}",
+        "component_type": "positioning:sitting_on",
+        "result_variable": "sittingInfo"
+      }
+    },
+    {
+      "type": "REMOVE_SITTING_CLOSENESS",
+      "comment": "Remove automatic closeness based on sitting proximity",
+      "parameters": {
+        "furniture_id": "{event.payload.targetId}",
+        "actor_id": "{event.payload.actorId}",
+        "spot_index": "{context.sittingInfo.spot_index}",
+        "result_variable": "closenessRemoved"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Clear spot 0 if that's where actor was sitting",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 0] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 0",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "sitting:allows_sitting",
+              "field": "spots.0",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Clear spot 1 if that's where actor was sitting",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 1] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 1",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "sitting:allows_sitting",
+              "field": "spots.1",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Clear spot 2 if that's where actor was sitting",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 2] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 2",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "sitting:allows_sitting",
+              "field": "spots.2",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove sitting_on from actor",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:sitting_on"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
+    {
+      "type": "UNLOCK_MOVEMENT",
+      "comment": "Restore movement capability",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} gets up from {context.targetName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.target_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

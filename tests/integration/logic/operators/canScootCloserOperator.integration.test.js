@@ -24,7 +24,7 @@ describe('CanScootCloserOperator integration with EntityManager', () => {
     if (spots) {
       await entityManager.addComponent(
         instance.id,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots,
         }
@@ -34,7 +34,7 @@ describe('CanScootCloserOperator integration with EntityManager', () => {
   };
 
   const setBenchSpots = async (spots) => {
-    await entityManager.addComponent(bench.id, 'positioning:allows_sitting', {
+    await entityManager.addComponent(bench.id, 'sitting:allows_sitting', {
       spots,
     });
   };
@@ -111,7 +111,7 @@ describe('CanScootCloserOperator integration with EntityManager', () => {
 
   it('returns false when furniture has invalid spots data', async () => {
     await setActorSitting({ spotIndex: 1 });
-    await entityManager.addComponent(bench.id, 'positioning:allows_sitting', {
+    await entityManager.addComponent(bench.id, 'sitting:allows_sitting', {
       spots: 'invalid',
     });
 

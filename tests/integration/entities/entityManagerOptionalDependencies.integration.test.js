@@ -50,7 +50,7 @@ describe('EntityManager integration with optional dependency factories', () => {
     const commonSchema = loadJson('data/schemas/common.schema.json');
     const componentSchema = loadJson('data/schemas/component.schema.json');
     const allowsSittingComponent = loadJson(
-      'data/mods/positioning/components/allows_sitting.component.json'
+      'data/mods/sitting/components/allows_sitting.component.json'
     );
     const corePositionComponent = loadJson(
       'data/mods/core/components/position.component.json'
@@ -104,7 +104,7 @@ describe('EntityManager integration with optional dependency factories', () => {
       description: 'Integration test bench entity',
       components: {
         'core:position': { locationId: 'location:park' },
-        'positioning:allows_sitting': { spots: [null, null] },
+        'sitting:allows_sitting': { spots: [null, null] },
       },
     });
     registry.store('entityDefinitions', benchDefinition.id, benchDefinition);
@@ -127,7 +127,7 @@ describe('EntityManager integration with optional dependency factories', () => {
       definitionId: 'test:bench',
       components: {
         'core:position': { locationId: 'location:park' },
-        'positioning:allows_sitting': { spots: ['npc:patron', null] },
+        'sitting:allows_sitting': { spots: ['npc:patron', null] },
       },
     });
     expect(reconstructed.id).toBe('bench-2');
@@ -136,7 +136,7 @@ describe('EntityManager integration with optional dependency factories', () => {
     expect(entityIds).toEqual(['bench-1', 'bench-2']);
 
     const seatingEntities = entityManager.getEntitiesWithComponent(
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(seatingEntities.map((entity) => entity.id).sort()).toEqual([
       'bench-1',
@@ -148,28 +148,28 @@ describe('EntityManager integration with optional dependency factories', () => {
         ([message]) =>
           typeof message === 'string' &&
           message.includes(
-            "EntityManager.getEntitiesWithComponent('positioning:allows_sitting')"
+            "EntityManager.getEntitiesWithComponent('sitting:allows_sitting')"
           )
       )
     ).toBe(true);
 
     expect(
-      entityManager.hasComponent('bench-1', 'positioning:allows_sitting', true)
+      entityManager.hasComponent('bench-1', 'sitting:allows_sitting', true)
     ).toBe(false);
 
-    await entityManager.addComponent('bench-1', 'positioning:allows_sitting', {
+    await entityManager.addComponent('bench-1', 'sitting:allows_sitting', {
       spots: ['npc:visitor', null],
     });
 
     expect(
       entityManager.hasComponentOverride(
         'bench-1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       )
     ).toBe(true);
 
     const found = entityManager.findEntities({
-      withAll: ['positioning:allows_sitting'],
+      withAll: ['sitting:allows_sitting'],
     });
     expect(found.map((entity) => entity.id).sort()).toEqual([
       'bench-1',
@@ -179,7 +179,7 @@ describe('EntityManager integration with optional dependency factories', () => {
     const componentTypes =
       entityManager.getAllComponentTypesForEntity('bench-1');
     expect(componentTypes).toEqual(
-      expect.arrayContaining(['core:position', 'positioning:allows_sitting'])
+      expect.arrayContaining(['core:position', 'sitting:allows_sitting'])
     );
 
     entityManager.clearAll();

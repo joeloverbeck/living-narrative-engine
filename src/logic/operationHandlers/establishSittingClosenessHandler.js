@@ -197,7 +197,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
 
     const furnitureComponent = this.#entityManager.getComponentData(
       parameters.furniture_id,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     validator.validateFurnitureComponent(
@@ -443,7 +443,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
     }
 
     // Dispatch success event with correct format
-    this.#dispatcher.dispatch('positioning:sitting_closeness_established', {
+    this.#dispatcher.dispatch('sitting:sitting_closeness_established', {
       actorId: parameters.actor_id,
       furnitureId: parameters.furniture_id,
       adjacentActors: adjacentActors,

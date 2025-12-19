@@ -64,7 +64,7 @@ describe('StateConsistencyValidator integration', () => {
     );
     await entityManager.addComponent(
       furniture.id,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       { spots: new Array(spotCount).fill(null) }
     );
     return furniture;
@@ -182,7 +182,7 @@ describe('StateConsistencyValidator integration', () => {
 
     await entityManager.addComponent(
       furniture.id,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       {
         spots: [occupant.id, null],
       }
@@ -256,7 +256,7 @@ describe('StateConsistencyValidator integration', () => {
     });
     await entityManager.addComponent(
       furniture.id,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       {
         spots: [furnitureOccupant.id],
       }
@@ -331,7 +331,7 @@ describe('StateConsistencyValidator integration', () => {
     });
     await entityManager.addComponent(
       furniture.id,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       {
         spots: [mismatchOccupant.id, missingOccupant.id],
       }

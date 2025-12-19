@@ -66,7 +66,7 @@
 
 **Examples**:
 
-- `positioning:allows_sitting` - Special debug logging in EntityQueryManager (lines 202, 204)
+- `sitting:allows_sitting` - Special debug logging in EntityQueryManager (lines 202, 204)
 
 **Affected Systems**:
 
@@ -164,7 +164,7 @@ Events: `positioning:closeness_with_target_broken`, `positioning:sitting_closene
 
 **Sitting/Lying Components** (18 references):
 
-- `positioning:allows_sitting` (8 references) - Activity metadata, context building
+- `sitting:allows_sitting` (8 references) - Activity metadata, context building
 - `positioning:sitting_on` (4 references) - Sitting state tracking
 - `positioning:allows_lying_on` (2 references) - Lying support
 - `positioning:lying_down` (4 references) - Lying state tracking
@@ -185,7 +185,7 @@ Events: `positioning:closeness_with_target_broken`, `positioning:sitting_closene
 **Entity Query Special Handling**:
 
 - `src/entities/managers/EntityQueryManager.js` (lines 202, 204)
-- Special debugging for `positioning:allows_sitting` queries
+- Special debugging for `sitting:allows_sitting` queries
 
 #### 1.3 Medium - Config Candidates (33 references)
 
@@ -453,7 +453,7 @@ class EntityQueryPluginHooks {
 
 // Positioning mod registers its debug hook
 pluginHooks.registerDebugHook(
-  (query) => query.componentId === 'positioning:allows_sitting',
+  (query) => query.componentId === 'sitting:allows_sitting',
   (query, result) => logger.debug('Sitting query executed', { query, result })
 );
 ```
@@ -485,7 +485,7 @@ Move hardcoded scope definitions to configuration:
     "available_furniture": {
       "description": "Furniture entities in current location",
       "query": "...",
-      "requiredComponents": ["positioning:allows_sitting"]
+      "requiredComponents": ["sitting:allows_sitting"]
     }
   }
 }
@@ -677,8 +677,8 @@ Options:
 
 **High (2)**:
 
-1. `EntityQueryManager.js:202` - `positioning:allows_sitting`
-2. `EntityQueryManager.js:204` - `positioning:allows_sitting`
+1. `EntityQueryManager.js:202` - `sitting:allows_sitting`
+2. `EntityQueryManager.js:204` - `sitting:allows_sitting`
 
 **Medium (33)**:
 ... (complete list in audit document)
@@ -889,7 +889,7 @@ class PositioningModInitializer {
   initialize({ entityQueryHooks, logger }) {
     // Register debug hook for sitting queries
     entityQueryHooks.registerDebugHook(
-      (query) => query.componentId === 'positioning:allows_sitting',
+      (query) => query.componentId === 'sitting:allows_sitting',
       (query, result) => {
         logger.debug('Sitting furniture query', {
           componentId: query.componentId,

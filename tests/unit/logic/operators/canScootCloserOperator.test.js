@@ -33,7 +33,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'actor1'] };
           }
@@ -64,7 +64,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null, 'actor1'] };
           }
@@ -129,7 +129,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['actor1', null, null] };
           }
@@ -160,7 +160,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', 'occupant2', 'actor1'] };
           }
@@ -191,7 +191,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, 'actor1'] };
           }
@@ -222,7 +222,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'occupant2', null, 'actor1'] };
           }
@@ -254,7 +254,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['actor1'] };
           }
@@ -285,7 +285,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', 'actor1'] };
           }
@@ -348,7 +348,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }
@@ -378,7 +378,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }
@@ -408,7 +408,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: 'invalid' }; // Not an array
           }
@@ -439,7 +439,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'otherActor'] }; // Mismatch
           }
@@ -496,7 +496,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }
@@ -526,7 +526,7 @@ describe('CanScootCloserOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }

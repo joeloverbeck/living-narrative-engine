@@ -5,7 +5,7 @@
   "description": "Lift a close sitting actor onto your lap in a face-to-face orientation",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_both_sitting_close",
+      "scope": "sitting:actors_both_sitting_close",
       "placeholder": "primary",
       "description": "Sitting actor close to you to lift onto your lap"
     }

@@ -44,7 +44,7 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      if (scopeName === 'positioning:actors_sitting_close') {
+      if (scopeName === 'sitting:actors_sitting_close') {
         const actorId = context?.actor?.id;
         if (!actorId) {
           return { success: true, value: new Set() };
@@ -142,7 +142,7 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       expect(straddleAction.targets).toBeDefined();
       expect(straddleAction.targets.primary).toBeDefined();
       expect(straddleAction.targets.primary.scope).toBe(
-        'positioning:actors_sitting_close'
+        'sitting:actors_sitting_close'
       );
     });
 

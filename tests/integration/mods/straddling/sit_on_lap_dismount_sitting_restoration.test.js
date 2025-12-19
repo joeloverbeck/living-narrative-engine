@@ -23,8 +23,8 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       'straddling:dismount_from_straddling'
     );
     testFixtureSitDown = await ModTestFixture.forActionAutoLoad(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
   });
 
@@ -42,14 +42,14 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       const chair1 = new ModEntityBuilder('chair1')
         .withName('Chair 1')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
       const chair2 = new ModEntityBuilder('chair2')
         .withName('Chair 2')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
@@ -141,14 +141,14 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       const chair1 = new ModEntityBuilder('chair1')
         .withName('Chair 1')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
       const chair2 = new ModEntityBuilder('chair2')
         .withName('Chair 2')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
@@ -244,14 +244,14 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       const chair1 = new ModEntityBuilder('chair1')
         .withName('Chair 1')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
       const chair2 = new ModEntityBuilder('chair2')
         .withName('Chair 2')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();

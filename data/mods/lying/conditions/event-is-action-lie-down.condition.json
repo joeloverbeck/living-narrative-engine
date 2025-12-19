@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "lying:event-is-action-lie-down",
+  "description": "Checks if the event is attempting the 'Lie down' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "lying:lie_down"]
+  }
+}

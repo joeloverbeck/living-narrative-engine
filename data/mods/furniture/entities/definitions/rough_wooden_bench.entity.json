@@ -13,7 +13,7 @@
       "imagePath": "portraits/rough_wooden_bench.png",
       "altText": "A long wooden bench with wide plank seating and sturdy construction"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
     "items:item": {}

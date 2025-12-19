@@ -87,7 +87,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor1', null, null, null],
             },
           },
@@ -128,7 +128,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: [null, 'actor2', null],
             },
           },
@@ -168,7 +168,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor3', null, null, 'actor4', null],
             },
           },
@@ -219,7 +219,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor5', 'actor6', null, null, null],
             },
           },
@@ -271,7 +271,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: [null, null, 'actor7'],
             },
           },
@@ -311,7 +311,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor8', null, null, null],
             },
           },
@@ -319,7 +319,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture2',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor9', null, null],
             },
           },
@@ -385,7 +385,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor10', null, null, null],
             },
           },
@@ -426,7 +426,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor10', null, 'actor11', null],
             },
           },
@@ -473,7 +473,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: [null, null, null],
             },
           },
@@ -481,7 +481,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture2',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: ['actor12', null, null],
             },
           },
@@ -522,7 +522,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
         {
           id: 'furniture1',
           components: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: [null, null, null],
             },
           },

@@ -90,7 +90,7 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
     .withName('Tufted Loveseat')
     .atLocation(roomId)
     .withLocationComponent(roomId)
-    .withComponent('positioning:allows_sitting', {
+    .withComponent('sitting:allows_sitting', {
       spots: [
         includeActorSitting ? actorId : null,
         includePrimarySitting ? primaryId : null,
@@ -209,7 +209,7 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
 }
 
 /**
- * @description Installs a scope resolver override for positioning:actors_sitting_close.
+ * @description Installs a scope resolver override for sitting:actors_sitting_close.
  * @param {import('../ModTestFixture.js').ModTestFixture} testFixture - Active mod test fixture.
  * @returns {Function} Cleanup function restoring the original resolver implementation.
  */
@@ -218,7 +218,7 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'positioning:actors_sitting_close') {
+    if (scopeName === 'sitting:actors_sitting_close') {
       const actorId = context?.actor?.id;
 
       if (!actorId) {

@@ -18,6 +18,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "sitting",
+      "version": "^1.0.0"
+    },
+    {
       "id": "sex-states",
       "version": "^1.0.0"
     }

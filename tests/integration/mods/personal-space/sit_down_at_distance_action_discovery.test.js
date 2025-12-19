@@ -8,7 +8,7 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import sitDownAtDistanceAction from '../../../../data/mods/personal-space/actions/sit_down_at_distance.action.json' assert { type: 'json' };
-import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json' assert { type: 'json' };
+import sitDownAction from '../../../../data/mods/sitting/actions/sit_down.action.json' assert { type: 'json' };
 
 describe('personal-space:sit_down_at_distance action discovery', () => {
   let testFixture;
@@ -37,7 +37,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         const furniture =
           testFixture.entityManager.getEntityInstance(furnitureId);
         const sittingComponent =
-          furniture?.components?.['positioning:allows_sitting'];
+          furniture?.components?.['sitting:allows_sitting'];
         if (!sittingComponent || !Array.isArray(sittingComponent.spots)) {
           return { success: true, value: new Set() };
         }
@@ -126,7 +126,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
     it('should use correct scope for primary target (furniture)', () => {
       expect(sitDownAtDistanceAction.targets.primary).toBeDefined();
       expect(sitDownAtDistanceAction.targets.primary.scope).toBe(
-        'positioning:available_furniture'
+        'sitting:available_furniture'
       );
       expect(sitDownAtDistanceAction.targets.primary.placeholder).toBe('seat');
     });
@@ -176,7 +176,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -215,7 +215,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('Long Bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -259,7 +259,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -285,7 +285,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
 
       // Both sit_down_at_distance and sit_down should be available
       expect(actionIds).toContain('personal-space:sit_down_at_distance');
-      expect(actionIds).toContain('positioning:sit_down');
+      expect(actionIds).toContain('sitting:sit_down');
     });
   });
 
@@ -302,7 +302,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('chair1')
         .withName('Two-seater')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null], // Only 2 spots - not enough for buffer
         })
         .build();
@@ -340,7 +340,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', 'charlie1', null], // Middle seat occupied
         })
         .build();
@@ -388,7 +388,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, 'charlie1', null], // Bob at index 0, Charlie at index 2
         })
         .build();
@@ -442,7 +442,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -482,7 +482,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -534,7 +534,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('Long Bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, 'charlie1', null, null], // Charlie is rightmost with space
         })
         .build();
@@ -597,7 +597,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, 'charlie1'], // No one has 2 consecutive spaces
         })
         .build();
@@ -661,7 +661,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, 'bob1', null, null],
         })
         .build();

@@ -31,7 +31,7 @@ describe('Debug canScootCloser in scope', () => {
     const furniture = new ModEntityBuilder('furniture1')
       .withName('bench')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: ['occupant1', null, 'actor1'],
       })
       .build();

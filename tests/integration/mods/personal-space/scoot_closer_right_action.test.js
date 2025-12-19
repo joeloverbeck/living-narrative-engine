@@ -28,7 +28,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant1'],
         })
         .build();
@@ -68,7 +68,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const furnitureSpots = testFixture.entityManager.getComponentData(
         'furniture1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureSpots.spots).toEqual([null, 'actor1', 'occupant1']);
 
@@ -87,7 +87,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, null, 'occupant1'],
         })
         .build();
@@ -126,7 +126,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const furnitureSpots = testFixture.entityManager.getComponentData(
         'furniture1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureSpots.spots).toEqual([null, 'actor1', null, 'occupant1']);
 
@@ -144,7 +144,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant1', 'occupant2'],
         })
         .build();
@@ -193,7 +193,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
 
       const furnitureSpots = testFixture.entityManager.getComponentData(
         'furniture1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureSpots.spots).toEqual([
         null,
@@ -223,7 +223,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant1'],
         })
         .build();
@@ -265,7 +265,7 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
       const furniture = new ModEntityBuilder('furniture1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['actor1', null, 'occupant1'],
         })
         .build();

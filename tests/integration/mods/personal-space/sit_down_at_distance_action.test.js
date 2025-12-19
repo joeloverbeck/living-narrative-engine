@@ -39,7 +39,7 @@ function setupSitAtDistanceScenario(
   const furniture = new ModEntityBuilder('bench1')
     .withName(furnitureName)
     .atLocation('room1')
-    .withComponent('positioning:allows_sitting', { spots })
+    .withComponent('sitting:allows_sitting', { spots })
     .build();
 
   const occupant = new ModEntityBuilder('bob1')
@@ -112,7 +112,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Assert: Verify furniture spots updated correctly
       const furnitureData = testFixture.entityManager.getComponentData(
         'bench1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureData.spots[0]).toBe('bob1');
       expect(furnitureData.spots[1]).toBe(null); // Buffer seat remains empty
@@ -137,7 +137,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify buffer seat is still null
       const furnitureData = testFixture.entityManager.getComponentData(
         'bench1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureData.spots[1]).toBe(null);
 
@@ -283,7 +283,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       // Manually fill the target seat to simulate race condition
       const bench = testFixture.entityManager.getEntityInstance('bench1');
-      bench.components['positioning:allows_sitting'].spots = [
+      bench.components['sitting:allows_sitting'].spots = [
         'bob1',
         null,
         'interloper1',
@@ -306,7 +306,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Verify furniture state unchanged from our manual update
       const furnitureData = testFixture.entityManager.getComponentData(
         'bench1',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureData.spots[2]).toBe('interloper1');
 
@@ -328,7 +328,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       // Manually fill the buffer seat to simulate race condition
       const bench = testFixture.entityManager.getEntityInstance('bench1');
-      bench.components['positioning:allows_sitting'].spots = [
+      bench.components['sitting:allows_sitting'].spots = [
         'bob1',
         'interloper1',
         null,
@@ -394,7 +394,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null, null, null],
         })
         .build();
@@ -438,7 +438,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();
@@ -630,7 +630,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       const furniture = new ModEntityBuilder('bench1')
         .withName('bench')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: ['bob1', null, null],
         })
         .build();

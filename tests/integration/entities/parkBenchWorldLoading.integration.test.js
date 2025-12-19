@@ -36,7 +36,7 @@ describe('Park Bench World Loading - Integration', () => {
   });
 
   describe('World loading simulation', () => {
-    it('should index park bench with positioning:allows_sitting when loaded from world data', () => {
+    it('should index park bench with sitting:allows_sitting when loaded from world data', () => {
       // Step 1: Load entity definition (simulating what entityDefinitionLoader does)
       const parkBenchDefinition = new EntityDefinition('p_erotica:park_bench', {
         name: 'Park Bench',
@@ -44,7 +44,7 @@ describe('Park Bench World Loading - Integration', () => {
         components: {
           'core:name': { value: 'Park Bench' },
           'core:description': { value: 'A wooden park bench' },
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null], // Two available spots
           },
         },
@@ -65,10 +65,10 @@ describe('Park Bench World Loading - Integration', () => {
 
       // Verify instance data has the component from definition
       expect(
-        parkBenchInstanceData.hasComponent('positioning:allows_sitting')
+        parkBenchInstanceData.hasComponent('sitting:allows_sitting')
       ).toBe(true);
       expect(parkBenchInstanceData.allComponentTypeIds).toContain(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
 
       // Step 3: Create entity wrapper
@@ -76,15 +76,15 @@ describe('Park Bench World Loading - Integration', () => {
 
       // Verify entity has the component
       expect(parkBenchEntity.componentTypeIds).toContain(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
-      expect(parkBenchEntity.hasComponent('positioning:allows_sitting')).toBe(
+      expect(parkBenchEntity.hasComponent('sitting:allows_sitting')).toBe(
         true
       );
 
       // Get the actual component data
       const allowsSittingData = parkBenchEntity.getComponentData(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(allowsSittingData).toBeDefined();
       expect(allowsSittingData.spots).toEqual([null, null]);
@@ -94,7 +94,7 @@ describe('Park Bench World Loading - Integration', () => {
 
       // Step 5: Verify the component index was updated
       const entitiesWithAllowsSitting =
-        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+        entityRepository.getEntityIdsByComponent('sitting:allows_sitting');
       expect(entitiesWithAllowsSitting).toBeInstanceOf(Set);
       expect(entitiesWithAllowsSitting.size).toBe(1);
       expect(
@@ -103,16 +103,16 @@ describe('Park Bench World Loading - Integration', () => {
 
       // Step 6: Verify EntityQueryManager can find the entity (simulating scope resolution)
       const foundEntities = entityQueryManager.getEntitiesWithComponent(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(foundEntities).toHaveLength(1);
       expect(foundEntities[0].id).toBe('p_erotica:park_bench_instance');
 
       // Step 7: Verify the found entity has the correct component data
       const foundEntity = foundEntities[0];
-      expect(foundEntity.hasComponent('positioning:allows_sitting')).toBe(true);
+      expect(foundEntity.hasComponent('sitting:allows_sitting')).toBe(true);
       expect(
-        foundEntity.getComponentData('positioning:allows_sitting')
+        foundEntity.getComponentData('sitting:allows_sitting')
       ).toEqual({
         spots: [null, null],
       });
@@ -136,7 +136,7 @@ describe('Park Bench World Loading - Integration', () => {
         'test:minimal_instance',
         minimalDefinition,
         {
-          'positioning:allows_sitting': { spots: [null] },
+          'sitting:allows_sitting': { spots: [null] },
           'core:position': { locationId: 'test_location' },
         },
         logger
@@ -145,7 +145,7 @@ describe('Park Bench World Loading - Integration', () => {
       const entity = new Entity(instanceData);
 
       // Verify entity has the override components
-      expect(entity.componentTypeIds).toContain('positioning:allows_sitting');
+      expect(entity.componentTypeIds).toContain('sitting:allows_sitting');
       expect(entity.componentTypeIds).toContain('core:position');
 
       // Add to repository
@@ -153,7 +153,7 @@ describe('Park Bench World Loading - Integration', () => {
 
       // Verify indexing works for override components
       const entitiesWithAllowsSitting =
-        entityRepository.getEntityIdsByComponent('positioning:allows_sitting');
+        entityRepository.getEntityIdsByComponent('sitting:allows_sitting');
       expect(entitiesWithAllowsSitting.has('test:minimal_instance')).toBe(true);
     });
   });

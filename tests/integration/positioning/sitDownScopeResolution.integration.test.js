@@ -1,6 +1,6 @@
 /**
  * @file Integration test for sit_down action scope resolution
- * @description Tests that entities with positioning:allows_sitting component are properly discovered by scopes
+ * @description Tests that entities with sitting:allows_sitting component are properly discovered by scopes
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -40,8 +40,8 @@ describe('Sit Down Scope Resolution - Integration', () => {
     jsonLogicEval = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // Register component definitions in the data registry
-    registry.store('components', 'positioning:allows_sitting', {
-      id: 'positioning:allows_sitting',
+    registry.store('components', 'sitting:allows_sitting', {
+      id: 'sitting:allows_sitting',
       dataSchema: {
         type: 'object',
         properties: {
@@ -103,7 +103,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'park bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
         },
       });
 
@@ -131,7 +131,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
       };
 
       // Parse the scope expression with filtering
-      const scopeExpr = `entities(positioning:allows_sitting)[][{
+      const scopeExpr = `entities(sitting:allows_sitting)[][{
         "and": [
           {
             "==": [
@@ -141,7 +141,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
           },
           {
             "some": [
-              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"var": "entity.components.sitting:allows_sitting.spots"},
               {"==": [{"var": ""}, null]}
             ]
           }
@@ -165,7 +165,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
 
       // Additional verification: Check that getEntitiesWithComponent works
       const entitiesWithSitting = entityManager.getEntitiesWithComponent(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(entitiesWithSitting).toBeDefined();
       expect(entitiesWithSitting.length).toBe(1);
@@ -180,7 +180,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'park bench' },
           'core:position': { locationId: 'test:different_location' },
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
         },
       });
 
@@ -200,7 +200,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
       entityManager.addEntity(actor);
 
       // Parse the scope expression
-      const scopeExpr = `entities(positioning:allows_sitting)[][{
+      const scopeExpr = `entities(sitting:allows_sitting)[][{
         "and": [
           {
             "==": [
@@ -210,7 +210,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
           },
           {
             "some": [
-              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"var": "entity.components.sitting:allows_sitting.spots"},
               {"==": [{"var": ""}, null]}
             ]
           }
@@ -245,7 +245,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'occupied bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: ['occupant1', 'occupant2'], // All spots occupied
           },
         },
@@ -258,7 +258,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         baseComponents: {
           'core:name': { text: 'available bench' },
           'core:position': { locationId: 'test:park' },
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, 'occupant1'], // One spot available
           },
         },
@@ -281,7 +281,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
       entityManager.addEntity(actor);
 
       // Parse the scope expression
-      const scopeExpr = `entities(positioning:allows_sitting)[][{
+      const scopeExpr = `entities(sitting:allows_sitting)[][{
         "and": [
           {
             "==": [
@@ -291,7 +291,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
           },
           {
             "some": [
-              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"var": "entity.components.sitting:allows_sitting.spots"},
               {"==": [{"var": ""}, null]}
             ]
           }

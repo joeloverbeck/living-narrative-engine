@@ -20,8 +20,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
   describe('registerCustomScope', () => {
     it('should auto-load conditions when registering custom scope', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // This should automatically load positioning:actor-in-entity-facing-away
@@ -43,8 +43,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should throw clear error when scope file does not exist', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       await expect(
@@ -54,8 +54,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should throw error when scope not found in file', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Try to load a scope that doesn't match the file name
@@ -73,8 +73,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should allow disabling auto-load', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // With loadConditions: false, should not attempt to load dependency conditions
@@ -89,8 +89,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should handle scope with multiple condition_refs', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Register scope that references conditions
@@ -110,8 +110,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should validate input parameters', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Test invalid modId
@@ -135,8 +135,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should respect maxDepth option', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Register with custom maxDepth
@@ -151,8 +151,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should register scope resolver that can be used', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Register the scope
@@ -169,8 +169,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should handle scope with no condition_refs', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Register a scope that doesn't have condition_refs
@@ -186,8 +186,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should load conditions additively', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Load a condition manually first
@@ -211,8 +211,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should handle parse errors gracefully', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Try to load a malformed scope file (if we had one)
@@ -225,8 +225,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
   describe('real-world usage patterns', () => {
     it('should work with sex-dry-intimacy mod scope', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // This is a real scope file that exists in the codebase
@@ -248,8 +248,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should handle multiple scope registrations', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Register multiple scopes
@@ -270,8 +270,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should integrate with existing action execution workflow', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Create entities
@@ -296,8 +296,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
   describe('error handling', () => {
     it('should provide helpful error for missing dependency conditions', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // This would fail if a scope references a condition that doesn't exist
@@ -308,8 +308,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should handle file system errors gracefully', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Try to read from a mod that doesn't exist
@@ -322,8 +322,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
   describe('performance', () => {
     it('should complete scope registration in reasonable time', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       const startTime = Date.now();
@@ -341,8 +341,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
     it('should benefit from condition caching on repeated calls', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // First call - will load from file
@@ -356,8 +356,8 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
       // Create a new fixture to test caching across fixtures
       testFixture.cleanup();
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       // Second call - should benefit from cache

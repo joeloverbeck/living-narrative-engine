@@ -1,3 +1,0 @@
-positioning:actors_sitting_close := actor.components.positioning:closeness.partners[][{
-  "!!": {"var": "entity.components.positioning:sitting_on"}
-}]

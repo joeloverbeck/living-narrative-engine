@@ -70,7 +70,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: new Array(actorCount).fill(null),
           },
         },
@@ -97,7 +97,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
       const spots = [...actors];
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         { spots }
       );
 
@@ -155,7 +155,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null],
           },
         },
@@ -190,7 +190,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
 
         await entityManager.addComponent(
           furnitureId,
-          'positioning:allows_sitting',
+          'sitting:allows_sitting',
           {
             spots: [...actors],
           }
@@ -224,7 +224,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
 
         await entityManager.addComponent(
           furnitureId,
-          'positioning:allows_sitting',
+          'sitting:allows_sitting',
           {
             spots: [null, null, null],
           }

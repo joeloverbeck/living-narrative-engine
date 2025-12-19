@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sitting:event-is-action-get-up-from-furniture",
+  "description": "Checks if the event is a get_up_from_furniture action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sitting:get_up_from_furniture"
+    ]
+  }
+}

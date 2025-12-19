@@ -5,7 +5,7 @@
  * This service is designed to be pure, with no external dependencies or side effects.
  * @see positioning:closeness component
  * @see intimacy_handle_get_close rule
- * @see intimacy_handle_step_back rule
+ * @see personal_space_handle_step_back rule
  */
 
 /**

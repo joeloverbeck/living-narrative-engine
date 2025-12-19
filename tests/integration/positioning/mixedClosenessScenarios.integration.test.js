@@ -79,7 +79,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null],
           },
         },
@@ -134,7 +134,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       expect(charlieCloseness.partners).toEqual([aliceId]);
 
       // Phase 2: Alice and Bob sit adjacent (automatic closeness)
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [aliceId, bobId, null],
       });
 
@@ -176,7 +176,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Phase 3: Alice stands up (should remove automatic but preserve manual)
       // Update furniture to remove Alice
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [null, bobId, null],
       });
 
@@ -228,7 +228,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null, null],
           },
         },
@@ -258,7 +258,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       // Phase 2: Diana and Eve sit adjacent
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors.diana, actors.eve, null, null, null],
       });
 
@@ -283,7 +283,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       );
 
       // Phase 3: Charlie sits next to Eve (bridging circles)
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors.diana, actors.eve, actors.charlie, null, null],
       });
 
@@ -334,7 +334,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null],
           },
         },
@@ -354,7 +354,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Pattern 1: All sit
       const spots = [...actors];
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots,
       });
 
@@ -384,7 +384,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
 
       // Pattern 2: Odd-indexed actors stand (1 and 3)
       const newSpots = [actors[0], null, actors[2], null];
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: newSpots,
       });
 
@@ -416,7 +416,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       expect(actor2Closeness).toBeNull(); // No adjacent actors
 
       // Pattern 3: Odd actors sit back in different spots
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors[0], actors[3], actors[2], actors[1]], // Rearranged
       });
 
@@ -480,7 +480,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: new Array(5).fill(null),
           },
         },
@@ -503,7 +503,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       }
 
       // Set furniture spots
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [...actors],
       });
 
@@ -525,7 +525,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const newSpots = [...actors];
       newSpots[middleIndex] = null;
 
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: newSpots,
       });
 
@@ -588,7 +588,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const couch1Entity = createEntityInstance({
         instanceId: couch1Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null],
           },
         },
@@ -597,7 +597,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const couch2Entity = createEntityInstance({
         instanceId: couch2Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null],
           },
         },
@@ -618,7 +618,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       }
 
       // Alice and Bob sit on couch1
-      entityManager.addComponent(couch1Id, 'positioning:allows_sitting', {
+      entityManager.addComponent(couch1Id, 'sitting:allows_sitting', {
         spots: [actors.alice, actors.bob],
       });
 
@@ -633,7 +633,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       // Charlie and Diana sit on couch2
-      entityManager.addComponent(couch2Id, 'positioning:allows_sitting', {
+      entityManager.addComponent(couch2Id, 'sitting:allows_sitting', {
         spots: [actors.charlie, actors.diana],
       });
 
@@ -710,7 +710,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const bench1Entity = createEntityInstance({
         instanceId: bench1Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null],
           },
         },
@@ -719,7 +719,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const bench2Entity = createEntityInstance({
         instanceId: bench2Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null],
           },
         },
@@ -755,7 +755,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       entityManager.addEntity(buddy2);
 
       // Phase 1: Actor and buddy1 sit on bench1
-      entityManager.addComponent(bench1Id, 'positioning:allows_sitting', {
+      entityManager.addComponent(bench1Id, 'sitting:allows_sitting', {
         spots: [actorId, buddy1Id],
       });
 
@@ -787,7 +787,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       expect(actorCloseness.partners).toEqual([buddy1Id]);
 
       // Phase 2: Actor stands up from bench1
-      entityManager.addComponent(bench1Id, 'positioning:allows_sitting', {
+      entityManager.addComponent(bench1Id, 'sitting:allows_sitting', {
         spots: [null, buddy1Id],
       });
 
@@ -821,7 +821,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spot_index: 1,
       });
 
-      entityManager.addComponent(bench2Id, 'positioning:allows_sitting', {
+      entityManager.addComponent(bench2Id, 'sitting:allows_sitting', {
         spots: [buddy2Id, actorId],
       });
 
@@ -867,7 +867,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null],
           },
         },
@@ -908,7 +908,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spot_index: 0,
       });
 
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [circleActors[0], null, null, null],
       });
 
@@ -918,7 +918,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spot_index: 1,
       });
 
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [circleActors[0], outsiderActor, null, null],
       });
 
@@ -970,7 +970,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null, null],
           },
         },
@@ -1006,7 +1006,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
       });
 
       // Members from each circle sit with gap between
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [circle1[0], null, circle2[0], null, null],
       });
 
@@ -1026,7 +1026,7 @@ describe('Mixed Closeness Scenarios Integration', () => {
         spot_index: 1,
       });
 
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [circle1[0], bridge, circle2[0], null, null],
       });
 

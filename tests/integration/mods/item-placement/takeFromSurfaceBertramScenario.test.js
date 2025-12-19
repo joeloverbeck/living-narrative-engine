@@ -77,7 +77,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
         .withComponent('furniture:near_furniture', {
           nearFurnitureIds: ['fantasy:aldous_kitchen_rustic_wooden_table_instance'],
         })
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [{ occupied: true }],
         })
         .build();

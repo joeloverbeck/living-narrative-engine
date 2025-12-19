@@ -9,10 +9,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    fixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
   });
 
   afterEach(() => {

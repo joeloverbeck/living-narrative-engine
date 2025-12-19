@@ -68,7 +68,7 @@ function setupSittingScenario() {
   const chair = new ModEntityBuilder('test:chair')
     .withName('Kitchen Chair')
     .atLocation('kitchen')
-    .withComponent('positioning:allows_sitting', {
+    .withComponent('sitting:allows_sitting', {
       spots: [{ occupied: false }],
     })
     .build();

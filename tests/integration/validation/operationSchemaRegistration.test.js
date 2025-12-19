@@ -42,7 +42,7 @@ describe('Operation Schema Registration Validation', () => {
     it('should validate handle_sit_down.rule.json without cascade errors', async () => {
       // Arrange
       const ruleDataContent = await readFile(
-        'data/mods/positioning/rules/handle_sit_down.rule.json',
+        'data/mods/sitting/rules/handle_sit_down.rule.json',
         'utf8'
       );
       const ruleData = JSON.parse(ruleDataContent);

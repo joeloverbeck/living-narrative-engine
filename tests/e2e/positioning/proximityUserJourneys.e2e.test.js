@@ -43,7 +43,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const couchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null, null],
           },
           'core:name': { name: 'Living Room Couch' },
@@ -185,7 +185,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null] },
           'core:name': { name: 'Park Bench' },
           'core:location': { locationId: 'test:park' },
         },
@@ -287,7 +287,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null, null, null],
           },
           'core:name': { name: 'Long Bench' },
@@ -485,7 +485,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const sofaId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null] },
           'core:name': { name: 'Three Seat Sofa' },
           'core:location': { locationId: 'test:living_room' },
         },
@@ -611,7 +611,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const armchairId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null] },
+          'sitting:allows_sitting': { spots: [null] },
           'core:name': { name: 'Armchair' },
           'core:location': { locationId: 'test:study' },
         },
@@ -659,7 +659,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const tableId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null, null],
           },
           'core:name': { name: 'Long Table' },
@@ -741,7 +741,7 @@ describe('Proximity-Based Closeness User Journeys E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Quick Bench' },
           'core:location': { locationId: 'test:plaza' },
         },

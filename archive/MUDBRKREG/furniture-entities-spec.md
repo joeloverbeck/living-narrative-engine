@@ -52,7 +52,7 @@ This specification defines the addition of three rustic civic furniture entities
       "imagePath": "portraits/[item].png",
       "altText": "accessibility description"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, ...]  // Optional, array length = seating capacity
     },
     "items:item": {}  // Optional, marks as portable item
@@ -65,7 +65,7 @@ This specification defines the addition of three rustic civic furniture entities
 - `core:name`: Display name for UI
 - `core:description`: Narrative description text
 - `core:portrait`: Placeholder only (system doesn't support item portraits yet)
-- `positioning:allows_sitting`: Required for seating furniture, with array length determining capacity
+- `sitting:allows_sitting`: Required for seating furniture, with array length determining capacity
 - `items:item`: Optional component marking furniture as an item entity (affects portability)
 
 **Existing Furniture Inventory**:
@@ -172,7 +172,7 @@ This specification defines the addition of three rustic civic furniture entities
 
 **Design Notes**:
 
-- No `positioning:allows_sitting` component (tables don't provide seating)
+- No `sitting:allows_sitting` component (tables don't provide seating)
 - Description emphasizes functionality, wear, civic use
 - `items:item` included (TBD if needed)
 
@@ -200,7 +200,7 @@ This specification defines the addition of three rustic civic furniture entities
       "imagePath": "portraits/plain_wooden_stool.png",
       "altText": "A simple wooden stool with uneven legs and a worn seat"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null]
     },
     "items:item": {}
@@ -210,7 +210,7 @@ This specification defines the addition of three rustic civic furniture entities
 
 **Design Notes**:
 
-- `positioning:allows_sitting` with 1 spot (individual seating)
+- `sitting:allows_sitting` with 1 spot (individual seating)
 - Description emphasizes simplicity, wear, utility
 - `items:item` included (likely portable due to size)
 
@@ -238,7 +238,7 @@ This specification defines the addition of three rustic civic furniture entities
       "imagePath": "portraits/rough_wooden_bench.png",
       "altText": "A long wooden bench with wide plank seating and sturdy construction"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
     "items:item": {}
@@ -248,7 +248,7 @@ This specification defines the addition of three rustic civic furniture entities
 
 **Design Notes**:
 
-- `positioning:allows_sitting` with 3 spots (communal seating)
+- `sitting:allows_sitting` with 3 spots (communal seating)
 - Description emphasizes warehouse origin, public use, durability
 - `items:item` included (TBD - may not be portable due to size)
 
@@ -289,7 +289,7 @@ This specification defines the addition of three rustic civic furniture entities
 All entities must validate against:
 
 - `schema://living-narrative-engine/entity-definition.schema.json`
-- Component schemas for `core:name`, `core:description`, `core:portrait`, `positioning:allows_sitting`, `items:item`
+- Component schemas for `core:name`, `core:description`, `core:portrait`, `sitting:allows_sitting`, `items:item`
 
 ### Naming Conventions
 
@@ -300,7 +300,7 @@ All entities must validate against:
 ### Component Requirements
 
 - **Required**: `core:name`, `core:description`, `core:portrait`
-- **Conditional**: `positioning:allows_sitting` (only for seating furniture)
+- **Conditional**: `sitting:allows_sitting` (only for seating furniture)
 - **Optional**: `items:item` (affects item/entity behavior)
 
 ## Open Questions

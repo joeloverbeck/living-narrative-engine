@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for positioning:actors_sitting_close scope
+ * @file Integration tests for sitting:actors_sitting_close scope
  * @description Tests the actors_sitting_close scope that filters closeness partners for sitting actors
  */
 
@@ -12,7 +12,7 @@ import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import { addMockAstsToScopes } from '../../../common/scopeDsl/mockAstGenerator.js';
 
-describe('positioning:actors_sitting_close scope integration', () => {
+describe('sitting:actors_sitting_close scope integration', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
@@ -36,11 +36,11 @@ describe('positioning:actors_sitting_close scope integration', () => {
 
     // Register the scope
     const mockScopes = {
-      'positioning:actors_sitting_close': {
+      'sitting:actors_sitting_close': {
         expr: 'actor.components.positioning:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
         definition:
-          'positioning:actors_sitting_close := actor.components.positioning:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
-        modId: 'positioning',
+          'sitting:actors_sitting_close := actor.components.positioning:closeness.partners[][{"!!": {"var": "entity.components.positioning:sitting_on"}}]',
+        modId: 'sitting',
       },
     };
 
@@ -95,7 +95,7 @@ describe('positioning:actors_sitting_close scope integration', () => {
       jsonLogicEval,
     };
 
-    const scopeDef = scopeRegistry.getScope('positioning:actors_sitting_close');
+    const scopeDef = scopeRegistry.getScope('sitting:actors_sitting_close');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -142,7 +142,7 @@ describe('positioning:actors_sitting_close scope integration', () => {
       jsonLogicEval,
     };
 
-    const scopeDef = scopeRegistry.getScope('positioning:actors_sitting_close');
+    const scopeDef = scopeRegistry.getScope('sitting:actors_sitting_close');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -170,7 +170,7 @@ describe('positioning:actors_sitting_close scope integration', () => {
       jsonLogicEval,
     };
 
-    const scopeDef = scopeRegistry.getScope('positioning:actors_sitting_close');
+    const scopeDef = scopeRegistry.getScope('sitting:actors_sitting_close');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -199,7 +199,7 @@ describe('positioning:actors_sitting_close scope integration', () => {
       jsonLogicEval,
     };
 
-    const scopeDef = scopeRegistry.getScope('positioning:actors_sitting_close');
+    const scopeDef = scopeRegistry.getScope('sitting:actors_sitting_close');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -264,7 +264,7 @@ describe('positioning:actors_sitting_close scope integration', () => {
       jsonLogicEval,
     };
 
-    const scopeDef = scopeRegistry.getScope('positioning:actors_sitting_close');
+    const scopeDef = scopeRegistry.getScope('sitting:actors_sitting_close');
     const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
     const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 

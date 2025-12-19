@@ -20,6 +20,10 @@
     {
       "id": "positioning",
       "version": "1.0.0"
+    },
+    {
+      "id": "containers-core",
+      "version": "1.0.0"
     }
   ],
   "content": {

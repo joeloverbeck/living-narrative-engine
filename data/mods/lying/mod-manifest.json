@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "lying",
+  "version": "1.0.0",
+  "name": "Lying System",
+  "description": "Provides lying down mechanics including lying on furniture, getting up, and lying-related spatial relationships.",
+  "actionPurpose": "Lie down on or get up from furniture suitable for lying.",
+  "actionConsiderWhen": "Wanting to rest by lying down or stand up from a lying position.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "allows_lying_on.component.json"
+    ],
+    "actions": [
+      "get_up_from_lying.action.json",
+      "lie_down.action.json"
+    ],
+    "conditions": [
+      "event-is-action-get-up-from-lying.condition.json",
+      "event-is-action-lie-down.condition.json"
+    ],
+    "rules": [
+      "handle_get_up_from_lying.rule.json",
+      "handle_lie_down.rule.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [
+      "lying_closeness_established.event.json"
+    ],
+    "macros": [],
+    "scopes": [
+      "available_lying_furniture.scope",
+      "furniture_im_lying_on.scope"
+    ]
+  }
+}

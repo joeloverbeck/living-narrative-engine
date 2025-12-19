@@ -461,7 +461,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:chair' &&
-              componentId === 'positioning:allows_sitting'
+              componentId === 'sitting:allows_sitting'
             ) {
               return { spots: ['core:actor1', null] };
             }
@@ -512,7 +512,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:chair' &&
-              componentId === 'positioning:allows_sitting'
+              componentId === 'sitting:allows_sitting'
             ) {
               return { spots: ['core:actor1'] };
             }
@@ -544,7 +544,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:chair' &&
-              componentId === 'positioning:allows_sitting'
+              componentId === 'sitting:allows_sitting'
             ) {
               return { spots: ['core:actor1'] };
             }
@@ -579,7 +579,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:bench' &&
-              componentId === 'positioning:allows_sitting'
+              componentId === 'sitting:allows_sitting'
             ) {
               return { spots: [null, 'core:actor1'] };
             }
@@ -608,7 +608,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:bench' &&
-              componentId === 'positioning:allows_sitting'
+              componentId === 'sitting:allows_sitting'
             ) {
               return { spots: ['core:actor1', 'core:actor2'] };
             }
@@ -654,7 +654,7 @@ describe('StateConsistencyValidator', () => {
           if (componentId === 'core:movement') {
             return { locked: true };
           }
-          if (componentId === 'positioning:allows_sitting') {
+          if (componentId === 'sitting:allows_sitting') {
             return { spots: ['core:actor3'] };
           }
           return null;
