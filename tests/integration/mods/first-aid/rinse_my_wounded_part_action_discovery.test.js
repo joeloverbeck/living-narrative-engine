@@ -373,8 +373,8 @@ describe('first-aid:rinse_my_wounded_part action definition', () => {
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'bending-states:bending_over',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
         'positioning:fallen',
       ])
     );

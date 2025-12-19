@@ -51,7 +51,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
         actor: [
           'hugging-states:hugging',
           'positioning:doing_complex_performance',
-          'positioning:restraining',
+          'physical-control-states:restraining',
         ],
       });
     });

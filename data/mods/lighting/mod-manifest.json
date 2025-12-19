@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "lighting",
+  "version": "1.0.0",
+  "name": "Lighting",
+  "description": "Actions and components for managing light sources - igniting and extinguishing oil lamps, candles, torches, and other combustible light sources.",
+  "actionPurpose": "Manage ambient lighting through portable and fixed light sources",
+  "actionConsiderWhen": "When you want to create light in dark areas or extinguish sources to conserve fuel or create darkness",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "is_light_source.component.json",
+      "is_lit.component.json"
+    ],
+    "actions": [
+      "extinguish_light_source.action.json",
+      "ignite_light_source.action.json"
+    ],
+    "conditions": [
+      "event-is-action-extinguish-light-source.condition.json",
+      "event-is-action-ignite-light-source.condition.json"
+    ],
+    "rules": [
+      "handle_extinguish_light_source.rule.json",
+      "handle_ignite_light_source.rule.json"
+    ],
+    "scopes": [
+      "lit_combustible_light_sources_in_inventory.scope",
+      "unlit_combustible_light_sources_in_inventory.scope"
+    ],
+    "entities": {
+      "definitions": [
+        "hooded_oil_lantern.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}

@@ -22,7 +22,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:doing_complex_performance",
-      "positioning:restraining"
+      "physical-control-states:restraining"
     ]
   },
   "prerequisites": [],

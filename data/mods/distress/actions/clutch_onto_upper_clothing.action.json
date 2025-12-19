@@ -21,7 +21,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["hugging-states:hugging", "positioning:restraining"],
+    "actor": ["hugging-states:hugging", "physical-control-states:restraining"],
     "primary": ["sex-states:giving_blowjob"],
     "secondary": []
   },

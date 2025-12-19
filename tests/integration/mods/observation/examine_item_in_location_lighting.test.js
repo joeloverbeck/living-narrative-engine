@@ -141,10 +141,10 @@ describe('observation:examine_item_in_location lighting prerequisite', () => {
       ).toContain('positioning:fallen');
       expect(
         examineItemInLocationAction.forbidden_components.actor
-      ).toContain('positioning:being_restrained');
+      ).toContain('physical-control-states:being_restrained');
       expect(
         examineItemInLocationAction.forbidden_components.actor
-      ).toContain('positioning:restraining');
+      ).toContain('physical-control-states:restraining');
     });
   });
 

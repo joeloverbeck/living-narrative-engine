@@ -17,8 +17,8 @@
     "actor": [
       "positioning:doing_complex_performance",
       "positioning:fallen",
-      "positioning:being_restrained",
-      "positioning:restraining"
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining"
     ]
   },
   "prerequisites": [

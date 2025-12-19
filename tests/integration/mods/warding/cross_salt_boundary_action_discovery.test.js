@@ -88,7 +88,7 @@ describe('warding:cross_salt_boundary action discovery', () => {
         'hugging-states:hugging'
       );
       expect(crossSaltBoundaryAction.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
@@ -167,9 +167,9 @@ describe('warding:cross_salt_boundary action discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actor has forbidden positioning:being_restrained component', () => {
+    it('is not available when actor has forbidden physical-control-states:being_restrained component', () => {
       const { actor } = setupScenario({
-        'positioning:being_restrained': { restrainer_id: 'some_entity' },
+        'physical-control-states:being_restrained': { restrainer_id: 'some_entity' },
       });
 
       const availableActions = testFixture.testEnv.getAvailableActions(

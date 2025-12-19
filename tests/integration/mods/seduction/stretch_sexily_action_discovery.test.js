@@ -48,7 +48,7 @@ describe('seduction:stretch_sexily action discovery', () => {
         actor: [
           'hugging-states:hugging',
           'positioning:doing_complex_performance',
-          'positioning:being_restrained',
+          'physical-control-states:being_restrained',
         ],
       });
     });

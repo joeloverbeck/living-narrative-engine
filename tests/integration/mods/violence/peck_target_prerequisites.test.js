@@ -172,7 +172,7 @@ describe('violence:peck_target prerequisites', () => {
         'hugging-states:hugging'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
         'positioning:fallen'

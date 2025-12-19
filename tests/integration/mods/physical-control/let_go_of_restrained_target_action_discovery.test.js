@@ -54,7 +54,7 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
           }
 
           const restraining =
-            actorEntity.components?.['positioning:restraining'] || null;
+            actorEntity.components?.['physical-control-states:restraining'] || null;
           const targetId = restraining?.restrained_entity_id;
 
           if (!targetId) {
@@ -67,7 +67,7 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
           }
 
           const beingRestrained =
-            target.components?.['positioning:being_restrained'] || null;
+            target.components?.['physical-control-states:being_restrained'] || null;
           if (beingRestrained?.restraining_entity_id !== actorId) {
             return { success: true, value: new Set() };
           }
@@ -111,14 +111,14 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
     const target = targetBuilder.build();
 
     if (options.addRestraining !== false) {
-      actor.components['positioning:restraining'] = {
+      actor.components['physical-control-states:restraining'] = {
         restrained_entity_id: target.id,
         initiated: true,
       };
     }
 
     if (options.addBeingRestrained !== false) {
-      target.components['positioning:being_restrained'] = {
+      target.components['physical-control-states:being_restrained'] = {
         restraining_entity_id: actor.id,
       };
     }
@@ -151,7 +151,7 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       expect(letGoAction.generateCombinations).toBe(false);
       expect(letGoAction.template).toBe('let go of {target}');
       expect(letGoAction.required_components.actor).toEqual([
-        'positioning:restraining',
+        'physical-control-states:restraining',
       ]);
       expect(letGoAction.targets.primary.scope).toBe(
         'physical-control:restrained_entity_i_am_holding'
@@ -172,7 +172,7 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       expect(ids).toContain(ACTION_ID);
     });
 
-    it('is not available when the actor lacks positioning:restraining', () => {
+    it('is not available when the actor lacks physical-control-states:restraining', () => {
       const { actor } = setupScenario({ addRestraining: false });
       configureActionDiscovery();
 

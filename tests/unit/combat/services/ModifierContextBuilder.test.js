@@ -166,7 +166,7 @@ describe('ModifierContextBuilder', () => {
         });
         const targetEntity = createMockEntity('target-456', {
           'core:actor': { name: 'Target' },
-          'positioning:being_restrained': { consented: false },
+          'physical-control-states:being_restrained': { consented: false },
         });
 
         mockEntityManager.getEntity.mockImplementation((id) => {
@@ -197,7 +197,7 @@ describe('ModifierContextBuilder', () => {
           id: 'target-456',
           components: {
             'core:actor': { name: 'Target' },
-            'positioning:being_restrained': { consented: false },
+            'physical-control-states:being_restrained': { consented: false },
           },
         });
         expect(result.entity.secondary).toBeNull();

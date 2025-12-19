@@ -68,7 +68,7 @@ describe('observation:examine_owned_item action definition', () => {
       expect(examineOwnedItemAction.forbidden_components).toBeDefined();
       expect(examineOwnedItemAction.forbidden_components.actor).toEqual([
         'positioning:doing_complex_performance',
-        'positioning:restraining',
+        'physical-control-states:restraining',
       ]);
     });
 

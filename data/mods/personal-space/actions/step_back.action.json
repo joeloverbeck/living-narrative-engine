@@ -20,8 +20,8 @@
       "sex-states:giving_blowjob",
       "sex-states:receiving_blowjob",
       "sex-states:fucking_anally",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen"
     ]
   },

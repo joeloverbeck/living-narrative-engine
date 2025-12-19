@@ -6,8 +6,8 @@
   "template": "break free from {target} ({chance}% chance)",
   "generateCombinations": false,
   "required_components": {
-    "actor": ["positioning:being_restrained"],
-    "primary": ["positioning:restraining"]
+    "actor": ["physical-control-states:being_restrained"],
+    "primary": ["physical-control-states:restraining"]
   },
   "targets": {
     "primary": {

@@ -255,7 +255,7 @@ describe('Chance-Based Modifier Display Integration', () => {
         target1: {
           'core:actor': { name: 'Goblin' },
           'positioning:prone': {},
-          'positioning:being_restrained': { restrainedBy: 'someone' },
+          'physical-control-states:being_restrained': { restrainedBy: 'someone' },
         },
       });
 
@@ -293,7 +293,7 @@ describe('Chance-Based Modifier Display Integration', () => {
                 logic: {
                   '!!': [
                     {
-                      var: 'entity.primary.components.positioning:being_restrained',
+                      var: 'entity.primary.components.physical-control-states:being_restrained',
                     },
                   ],
                 },

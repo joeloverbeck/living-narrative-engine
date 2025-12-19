@@ -7,7 +7,9 @@
             "locationId": "dredgers:service_stair_instance"
         },
         "items:inventory": {
-            "items": [],
+            "items": [
+                "dredgers:hooded_oil_lantern_instance_2"
+            ],
             "capacity": {
                 "maxWeight": 50.0,
                 "maxItems": 20

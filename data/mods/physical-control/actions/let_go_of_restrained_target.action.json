@@ -6,7 +6,7 @@
   "template": "let go of {target}",
   "generateCombinations": false,
   "required_components": {
-    "actor": ["positioning:restraining"]
+    "actor": ["physical-control-states:restraining"]
   },
   "targets": {
     "primary": {

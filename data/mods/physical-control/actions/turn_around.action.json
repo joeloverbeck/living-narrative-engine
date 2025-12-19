@@ -17,7 +17,7 @@
     "actor": [
       "positioning:biting_neck",
       "positioning:lying_down",
-      "positioning:being_restrained"
+      "physical-control-states:being_restrained"
     ]
   },
   "template": "turn {target} around",

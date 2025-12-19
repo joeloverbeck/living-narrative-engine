@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "physical-control-states",
+  "version": "1.0.0",
+  "name": "Physical Control States",
+  "description": "State components for physical restraint mechanics. Separated from action mod to allow other mods to check restraint state without depending on physical-control actions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "being_restrained.component.json",
+      "restraining.component.json"
+    ]
+  }
+}

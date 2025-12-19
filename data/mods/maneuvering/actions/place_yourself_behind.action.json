@@ -24,8 +24,8 @@
       "positioning:lying_down",
       "positioning:straddling_waist",
       "positioning:doing_complex_performance",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen"
     ],
     "primary": ["positioning:lying_down", "sex-states:giving_blowjob"]

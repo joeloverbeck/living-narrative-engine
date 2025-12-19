@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "lighting:is_lit",
+  "description": "Marker component indicating a light source is currently producing light. Absence of this component means the light source is extinguished.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

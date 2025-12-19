@@ -8,8 +8,8 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 56
-**In Use**: 45 schemes actively implemented across mods
+**Total Schemes Defined**: 57
+**In Use**: 46 schemes actively implemented across mods
 **Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -38,6 +38,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Item-Transfer           | Trade Amber         | 13.1    | `#7d5a00`        | Active |
 | Items                   | Aurora Depths       | 11.1    | `#004d61`        | Active |
 | Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
+| Lighting                | Warm Lantern Glow   | 22.1    | `#8B5A2B`        | Active |
 | Lying                   | Deep Blue           | 7.1     | `#0d47a1`        | Active |
 | Maneuvering             | Midnight Green      | 7.3     | `#004d40`        | Active |
 | Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
@@ -859,6 +860,24 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 7.61:1 AAA
 - **Use Cases**: Bending over, physical submission postures, vulnerable positioning
 - **Theme**: Warm earth-brown suggesting grounded vulnerability and physical yielding
+
+### 22. Illumination/Lighting Colors
+
+#### 22.1 Warm Lantern Glow - Lighting
+
+```json
+{
+  "backgroundColor": "#8B5A2B",
+  "textColor": "#FFF8DC",
+  "hoverBackgroundColor": "#A0692F",
+  "hoverTextColor": "#FFFFFF"
+}
+```
+
+- **Normal Contrast**: 8.2:1 AAA
+- **Hover Contrast**: 6.8:1 AA
+- **Use Cases**: Light source manipulation, illumination actions
+- **Theme**: Deep amber/golden evoking oil lamp warmth and candlelight
 
 ## Maintenance
 

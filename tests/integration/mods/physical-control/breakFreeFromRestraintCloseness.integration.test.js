@@ -51,7 +51,7 @@ describe('physical-control:break_free_from_restraint closeness handling', () => 
       .withLocationComponent('room1')
       .asActor()
       .withComponent('skills:grappling_skill', { value: 8 })
-      .withComponent('positioning:being_restrained', {
+      .withComponent('physical-control-states:being_restrained', {
         restraining_entity_id: 'test:holder',
       })
       .closeToEntity('test:holder')
@@ -63,7 +63,7 @@ describe('physical-control:break_free_from_restraint closeness handling', () => 
       .withLocationComponent('room1')
       .asActor()
       .withComponent('skills:grappling_skill', { value: 12 })
-      .withComponent('positioning:restraining', {
+      .withComponent('physical-control-states:restraining', {
         restrained_entity_id: 'test:restrained',
         initiated: true,
       })

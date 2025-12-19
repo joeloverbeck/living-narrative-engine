@@ -64,11 +64,11 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     const target = targetBuilder.build();
 
     if (options.includeRestraint !== false) {
-      actor.components['positioning:restraining'] = {
+      actor.components['physical-control-states:restraining'] = {
         restrained_entity_id: target.id,
         initiated: true,
       };
-      target.components['positioning:being_restrained'] = {
+      target.components['physical-control-states:being_restrained'] = {
         restraining_entity_id: actor.id,
       };
     }
@@ -110,7 +110,7 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
         }
 
         const restraining =
-          actorEntity.components?.['positioning:restraining'] || null;
+          actorEntity.components?.['physical-control-states:restraining'] || null;
         const targetId = restraining?.restrained_entity_id;
         if (!targetId) {
           return { success: true, value: new Set() };
@@ -118,7 +118,7 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
 
         const targetEntity = entityManager.getEntityInstance(targetId);
         const beingRestrained =
-          targetEntity?.components?.['positioning:being_restrained'] || null;
+          targetEntity?.components?.['physical-control-states:being_restrained'] || null;
         if (
           !targetEntity ||
           beingRestrained?.restraining_entity_id !== actorId
@@ -152,8 +152,8 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
       target.id
     );
 
-    expect(actorInstance).toNotHaveComponent('positioning:restraining');
-    expect(targetInstance).toNotHaveComponent('positioning:being_restrained');
+    expect(actorInstance).toNotHaveComponent('physical-control-states:restraining');
+    expect(targetInstance).toNotHaveComponent('physical-control-states:being_restrained');
 
     expect(unlockSpy).toHaveBeenCalledTimes(1);
     expect(unlockSpy).toHaveBeenCalledWith(

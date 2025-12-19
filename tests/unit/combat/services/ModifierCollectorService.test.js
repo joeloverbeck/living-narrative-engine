@@ -310,7 +310,7 @@ describe('ModifierCollectorService', () => {
             primary: {
               id: 'target-456',
               components: {
-                'positioning:being_restrained': { active: true },
+                'physical-control-states:being_restrained': { active: true },
               },
             },
             secondary: null,

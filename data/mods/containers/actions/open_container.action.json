@@ -15,7 +15,7 @@
     "actor": [
       "bending-states:bending_over",
       "positioning:fallen",
-      "positioning:restraining"
+      "physical-control-states:restraining"
     ]
   },
   "template": "open {container}",

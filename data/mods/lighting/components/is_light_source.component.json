@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "lighting:is_light_source",
+  "description": "Marker component indicating an entity can produce light. Specifies the fuel type used by the light source.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "fuelType": {
+        "type": "string",
+        "description": "The type of fuel this light source uses",
+        "enum": ["oil", "candle", "wood", "coal", "gas", "electricity", "magic"]
+      }
+    },
+    "required": ["fuelType"],
+    "additionalProperties": false
+  }
+}

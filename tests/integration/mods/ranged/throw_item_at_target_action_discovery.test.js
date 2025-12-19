@@ -83,13 +83,13 @@ describe('throw_item_at_target action definition', () => {
 
     it('should forbid being restrained state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
     it('should forbid restraining state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
     });
 

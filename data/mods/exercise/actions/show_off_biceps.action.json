@@ -9,8 +9,8 @@
     "actor": [
       "hugging-states:hugging",
       "positioning:fallen",
-      "positioning:being_restrained",
-      "positioning:restraining"
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining"
     ]
   },
   "template": "show off your muscular arms",

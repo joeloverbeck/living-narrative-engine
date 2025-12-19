@@ -135,10 +135,10 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         'positioning:fallen'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
         'positioning:doing_complex_performance'

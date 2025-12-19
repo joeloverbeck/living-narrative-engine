@@ -8,8 +8,6 @@
         },
         "containers-core:container": {
             "contents": [
-                "dredgers:hooded_oil_lantern_instance_1",
-                "dredgers:hooded_oil_lantern_instance_2",
                 "dredgers:hooded_oil_lantern_instance_3",
                 "dredgers:long_rope_instance_1",
                 "dredgers:long_rope_instance_2",

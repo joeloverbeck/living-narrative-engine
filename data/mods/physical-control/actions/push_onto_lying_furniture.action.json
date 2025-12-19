@@ -25,8 +25,8 @@
       "positioning:lying_down",
       "hugging-states:hugging",
       "hugging-states:being_hugged",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen"
     ],
     "primary": ["positioning:lying_down", "positioning:kneeling_before"]

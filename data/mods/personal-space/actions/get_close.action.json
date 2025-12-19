@@ -16,8 +16,8 @@
       "personal-space-states:closeness",
       "positioning:doing_complex_performance",
       "positioning:wielding",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen",
       "sitting-states:sitting_on"
     ]

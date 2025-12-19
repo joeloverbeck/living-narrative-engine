@@ -72,7 +72,7 @@ const WEAPON_ATTACK_MODIFIERS = [
     condition: {
       logic: {
         '!!': [
-          { var: 'entity.secondary.components.positioning:being_restrained' },
+          { var: 'entity.secondary.components.physical-control-states:being_restrained' },
         ],
       },
     },
@@ -170,7 +170,7 @@ describe('Weapon Attack Target State Modifiers', () => {
   });
 
   describe('Restrained Target Modifier (+10 bonus)', () => {
-    it('should apply +10 flat bonus when target has positioning:being_restrained component', () => {
+    it('should apply +10 flat bonus when target has physical-control-states:being_restrained component', () => {
       // Arrange - Target is restrained
       setupServices({
         attacker: {
@@ -179,7 +179,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         },
         restrained_target: {
           'core:actor': { name: 'Restrained Target' },
-          'positioning:being_restrained': {
+          'physical-control-states:being_restrained': {
             restraining_entity_id: 'holder',
             consented: false,
           },
@@ -212,7 +212,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         restrained_target: {
           'core:actor': { name: 'Restrained Target' },
-          'positioning:being_restrained': { restraining_entity_id: 'holder' },
+          'physical-control-states:being_restrained': { restraining_entity_id: 'holder' },
         },
       });
 
@@ -241,7 +241,7 @@ describe('Weapon Attack Target State Modifiers', () => {
           'positioning:fallen': {
             activityMetadata: { shouldDescribeInActivity: true },
           },
-          'positioning:being_restrained': {
+          'physical-control-states:being_restrained': {
             restraining_entity_id: 'holder',
             consented: false,
           },
@@ -277,7 +277,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         helpless_target: {
           'core:actor': { name: 'Helpless Target' },
           'positioning:fallen': {},
-          'positioning:being_restrained': { restraining_entity_id: 'holder' },
+          'physical-control-states:being_restrained': { restraining_entity_id: 'holder' },
         },
       });
 
@@ -302,7 +302,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         helpless_target: {
           'core:actor': { name: 'Helpless Target' },
           'positioning:fallen': {},
-          'positioning:being_restrained': { restraining_entity_id: 'holder' },
+          'physical-control-states:being_restrained': { restraining_entity_id: 'holder' },
         },
       });
 
@@ -329,7 +329,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         normal_target: {
           'core:actor': { name: 'Normal Target' },
           'skills:defense_skill': { value: 30 },
-          // No positioning:fallen or positioning:being_restrained
+          // No positioning:fallen or physical-control-states:being_restrained
         },
       });
 
@@ -448,7 +448,7 @@ describe('Weapon Attack Target State Modifiers', () => {
             attacker: { 'core:actor': { name: 'Attacker' } },
             restrained_target: {
               'core:actor': { name: 'Restrained Target' },
-              'positioning:being_restrained': {
+              'physical-control-states:being_restrained': {
                 restraining_entity_id: 'holder',
               },
             },
@@ -470,7 +470,7 @@ describe('Weapon Attack Target State Modifiers', () => {
             helpless_target: {
               'core:actor': { name: 'Helpless Target' },
               'positioning:fallen': {},
-              'positioning:being_restrained': {
+              'physical-control-states:being_restrained': {
                 restraining_entity_id: 'holder',
               },
             },

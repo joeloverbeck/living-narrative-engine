@@ -43,7 +43,7 @@ describe('lying:get_up_from_lying action discovery', () => {
       expect(getUpFromLyingAction.forbidden_components).toBeDefined();
       expect(getUpFromLyingAction.forbidden_components.actor).toEqual([
         'sex-states:being_fucked_vaginally',
-        'positioning:being_restrained',
+        'physical-control-states:being_restrained',
       ]);
     });
   });

@@ -85,15 +85,15 @@ describe('strike_target action definition', () => {
       );
     });
 
-    it('should forbid actor with positioning:being_restrained', () => {
+    it('should forbid actor with physical-control-states:being_restrained', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
-    it('should forbid actor with positioning:restraining', () => {
+    it('should forbid actor with physical-control-states:restraining', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
     });
 

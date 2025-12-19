@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "sex-states:being_fucked_vaginally",
-      "positioning:being_restrained"
+      "physical-control-states:being_restrained"
     ]
   },
   "template": "get up from {target}",

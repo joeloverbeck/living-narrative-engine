@@ -45,8 +45,8 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
           actor: [
             'hugging-states:hugging',
             'positioning:fallen',
-            'positioning:being_restrained',
-            'positioning:restraining',
+            'physical-control-states:being_restrained',
+            'physical-control-states:restraining',
           ],
         },
       });
@@ -167,7 +167,7 @@ describe('Exercise Mod: Show Off Biceps action availability restrictions', () =>
       includeRoom: false,
     });
 
-    scenario.actor.components['positioning:restraining'] = {
+    scenario.actor.components['physical-control-states:restraining'] = {
       restrained_entity_id: scenario.target.id,
       initiated: true,
     };
@@ -182,7 +182,7 @@ describe('Exercise Mod: Show Off Biceps action availability restrictions', () =>
     const actorInstance = testFixture.entityManager.getEntityInstance(
       scenario.actor.id
     );
-    expect(actorInstance.components['positioning:restraining']).toEqual({
+    expect(actorInstance.components['physical-control-states:restraining']).toEqual({
       restrained_entity_id: scenario.target.id,
       initiated: true,
     });

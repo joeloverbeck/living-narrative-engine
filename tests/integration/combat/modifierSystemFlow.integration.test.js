@@ -74,7 +74,7 @@ describe('Modifier System Flow Integration', () => {
         },
         target1: {
           'core:actor': { name: 'Test Target' },
-          'positioning:being_restrained': { restrainedBy: 'someone' },
+          'physical-control-states:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
         location1: {
@@ -113,7 +113,7 @@ describe('Modifier System Flow Integration', () => {
       // Verify target data
       expect(context.entity.primary.id).toBe('target1');
       expect(
-        context.entity.primary.components['positioning:being_restrained']
+        context.entity.primary.components['physical-control-states:being_restrained']
       ).toBeDefined();
       expect(
         context.entity.primary.components['skills:defense_skill'].value
@@ -155,7 +155,7 @@ describe('Modifier System Flow Integration', () => {
         },
         target1: {
           'core:actor': { name: 'Restrained Target' },
-          'positioning:being_restrained': { restrainedBy: 'someone' },
+          'physical-control-states:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
         target2: {
@@ -189,7 +189,7 @@ describe('Modifier System Flow Integration', () => {
               logic: {
                 '!!': [
                   {
-                    var: 'entity.primary.components.positioning:being_restrained',
+                    var: 'entity.primary.components.physical-control-states:being_restrained',
                   },
                 ],
               },
@@ -223,7 +223,7 @@ describe('Modifier System Flow Integration', () => {
               logic: {
                 '!!': [
                   {
-                    var: 'entity.primary.components.positioning:being_restrained',
+                    var: 'entity.primary.components.physical-control-states:being_restrained',
                   },
                 ],
               },
@@ -254,7 +254,7 @@ describe('Modifier System Flow Integration', () => {
               logic: {
                 '!!': [
                   {
-                    var: 'entity.primary.components.positioning:being_restrained',
+                    var: 'entity.primary.components.physical-control-states:being_restrained',
                   },
                 ],
               },
@@ -447,7 +447,7 @@ describe('Modifier System Flow Integration', () => {
         },
         target1: {
           'core:actor': { name: 'Restrained Target' },
-          'positioning:being_restrained': { restrainedBy: 'someone' },
+          'physical-control-states:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
         target2: {
@@ -513,7 +513,7 @@ describe('Modifier System Flow Integration', () => {
                 logic: {
                   '!!': [
                     {
-                      var: 'entity.primary.components.positioning:being_restrained',
+                      var: 'entity.primary.components.physical-control-states:being_restrained',
                     },
                   ],
                 },

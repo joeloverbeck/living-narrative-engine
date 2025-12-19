@@ -47,7 +47,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 63,
     },
     {
-      mod: 'positioning',
+      mod: 'physical-control-states',
       name: 'being_restrained',
       targetRole: 'restraining_entity_id',
       priority: 64,
@@ -77,7 +77,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 66,
     },
     {
-      mod: 'positioning',
+      mod: 'physical-control-states',
       name: 'restraining',
       targetRole: 'restrained_entity_id',
       priority: 67,

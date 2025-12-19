@@ -17,14 +17,12 @@
   "content": {
     "components": [
       "being_bitten_in_neck.component.json",
-      "being_restrained.component.json",
       "biting_neck.component.json",
       "doing_complex_performance.component.json",
       "facing_away.component.json",
       "fallen.component.json",
       "kneeling_before.component.json",
       "lying_down.component.json",
-      "restraining.component.json",
       "straddling_waist.component.json",
       "wielding.component.json"
     ],

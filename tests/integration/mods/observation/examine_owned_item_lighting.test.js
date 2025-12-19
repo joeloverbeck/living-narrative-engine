@@ -131,7 +131,7 @@ describe('observation:examine_owned_item lighting prerequisite', () => {
         'positioning:doing_complex_performance'
       );
       expect(examineOwnedItemAction.forbidden_components.actor).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
     });
   });

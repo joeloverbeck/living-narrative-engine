@@ -129,12 +129,12 @@ describe('handle_restrain_target rule', () => {
       const beingRestrained = actions.find(
         (op) =>
           op.type === 'ADD_COMPONENT' &&
-          op.parameters.component_type === 'positioning:being_restrained'
+          op.parameters.component_type === 'physical-control-states:being_restrained'
       );
       const restraining = actions.find(
         (op) =>
           op.type === 'ADD_COMPONENT' &&
-          op.parameters.component_type === 'positioning:restraining'
+          op.parameters.component_type === 'physical-control-states:restraining'
       );
       const lockGrabbing = actions.find((op) => op.type === 'LOCK_GRABBING');
       const regenOps = actions.filter(

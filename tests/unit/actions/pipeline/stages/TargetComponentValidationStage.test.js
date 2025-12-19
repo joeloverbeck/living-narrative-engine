@@ -504,7 +504,7 @@ describe('TargetComponentValidationStage', () => {
     it('prunes forbidden target candidates without removing the action', async () => {
       const actionDef = {
         id: 'action-with-forbidden-targets',
-        forbidden_components: { primary: ['positioning:being_restrained'] },
+        forbidden_components: { primary: ['physical-control-states:being_restrained'] },
         targetDefinitions: { primary: { placeholder: 'target' } },
         resolvedTargets: {
           primary: [{ id: 'allowed' }, { id: 'restrained' }],
@@ -531,7 +531,7 @@ describe('TargetComponentValidationStage', () => {
           {
             role: 'primary',
             targetId: 'restrained',
-            component: 'positioning:being_restrained',
+            component: 'physical-control-states:being_restrained',
           },
         ],
       });

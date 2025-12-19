@@ -44,7 +44,7 @@ describe('distress:bury_face_in_hands action discovery', () => {
           'positioning:biting_neck',
           'hugging-states:hugging',
           'positioning:doing_complex_performance',
-          'positioning:restraining',
+          'physical-control-states:restraining',
         ],
       });
     });
