@@ -132,7 +132,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'lying:available_lying_furniture'
       );
       expect(pushOntoFurnitureAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',

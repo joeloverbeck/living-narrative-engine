@@ -36,7 +36,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
 
     it('should include bending_over in forbidden components', () => {
       expect(pickUpItemAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
     });
 

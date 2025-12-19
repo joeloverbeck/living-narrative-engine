@@ -197,7 +197,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
       }
 
       // Get actor's closeness partners
-      const actorCloseness = actorEntity?.components['positioning:closeness'];
+      const actorCloseness = actorEntity?.components['personal-space-states:closeness'];
       if (!actorCloseness?.partners) {
         return { success: true, value: new Set() };
       }
@@ -217,7 +217,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
         // Check mutual closeness
         const partnerCloseness =
-          partnerEntity.components['positioning:closeness'];
+          partnerEntity.components['personal-space-states:closeness'];
         if (!partnerCloseness?.partners?.includes(actorId)) return false;
 
         // Check for testicle anatomy

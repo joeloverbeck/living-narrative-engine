@@ -295,13 +295,13 @@ export class ModAssertionHelpers {
     expect(entity1).toBeDefined();
     expect(entity2).toBeDefined();
 
-    expect(entity1.components['positioning:closeness']).toBeDefined();
-    expect(entity2.components['positioning:closeness']).toBeDefined();
+    expect(entity1.components['personal-space-states:closeness']).toBeDefined();
+    expect(entity2.components['personal-space-states:closeness']).toBeDefined();
 
-    expect(entity1.components['positioning:closeness'].partners).toContain(
+    expect(entity1.components['personal-space-states:closeness'].partners).toContain(
       entity2Id
     );
-    expect(entity2.components['positioning:closeness'].partners).toContain(
+    expect(entity2.components['personal-space-states:closeness'].partners).toContain(
       entity1Id
     );
   }

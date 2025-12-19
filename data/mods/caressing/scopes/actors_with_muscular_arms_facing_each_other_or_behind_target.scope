@@ -1,6 +1,6 @@
 // Scope for actors in closeness who have muscular or hulking arms and are either facing each other OR actor is behind the target
 // Used by actions that require arm anatomy with muscular/hulking build and can work from either face-to-face or behind positions
-caressing:actors_with_muscular_arms_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+caressing:actors_with_muscular_arms_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {
       "or": [

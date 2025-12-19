@@ -150,7 +150,7 @@ describe('item-transfer:give_item prerequisites', () => {
         'items:inventory'
       );
       expect(giveItemAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
     });
   });

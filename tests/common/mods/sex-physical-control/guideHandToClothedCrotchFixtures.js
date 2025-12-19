@@ -58,7 +58,7 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID = `${GUIDE_HAND_TO_CLOT
 
 /**
  * @typedef {object} GuideHandToClothedCrotchScenarioOptions
- * @property {boolean} [includeCloseness=true] - Whether mutual positioning:closeness components are applied.
+ * @property {boolean} [includeCloseness=true] - Whether mutual personal-space-states:closeness components are applied.
  * @property {boolean} [includeActorPenis=true] - Whether the actor has a penis body part attached.
  * @property {boolean} [coverActorPenis=true] - Whether the actor's penis socket reports coveredBy metadata and slot coverage.
  * @property {boolean} [includeReceivingBlowjob=false] - Whether the actor includes sex-states:receiving_blowjob.

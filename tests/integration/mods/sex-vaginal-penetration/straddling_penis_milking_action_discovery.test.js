@@ -61,7 +61,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
 
     it('requires active vaginal penetration posture and forbids seating conflicts', () => {
       expect(straddlingMilkingAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
         'sex-states:being_fucked_vaginally',
       ]);
       expect(straddlingMilkingAction.forbidden_components.actor).toEqual([

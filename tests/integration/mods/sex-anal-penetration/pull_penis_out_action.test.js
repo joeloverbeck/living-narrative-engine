@@ -91,7 +91,7 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const fuckingAnally = actor?.components?.['sex-states:fucking_anally'];
       const closenessPartners =
-        actor?.components?.['positioning:closeness']?.partners;
+        actor?.components?.['personal-space-states:closeness']?.partners;
 
       if (!fuckingAnally || !Array.isArray(closenessPartners)) {
         return { success: true, value: new Set() };

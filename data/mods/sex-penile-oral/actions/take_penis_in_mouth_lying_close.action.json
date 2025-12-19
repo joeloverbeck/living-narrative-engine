@@ -13,8 +13,8 @@
   "template": "take {primary}'s cock in your mouth",
   "prerequisites": [],
   "required_components": {
-    "actor": ["positioning:lying_down", "positioning:closeness"],
-    "primary": ["positioning:lying_down", "positioning:closeness"]
+    "actor": ["positioning:lying_down", "personal-space-states:closeness"],
+    "primary": ["positioning:lying_down", "personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["sex-states:giving_blowjob"]

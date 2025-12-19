@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "press yourself against {target}'s back",
   "prerequisites": [

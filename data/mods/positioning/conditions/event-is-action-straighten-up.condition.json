@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:event-is-action-straighten-up",
-  "description": "Checks if the event is attempting the 'Straighten Up' action.",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "positioning:straighten_up"]
-  }
-}

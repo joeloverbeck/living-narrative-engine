@@ -15,7 +15,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "sex-states:being_fucked_vaginally",
       "positioning:fallen",
       "positioning:restraining",

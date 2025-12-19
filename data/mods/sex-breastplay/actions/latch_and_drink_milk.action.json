@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness"],
+    "actor": ["personal-space-states:closeness"],
     "target": ["sex-breastplay:is_lactating"]
   },
   "forbidden_components": {

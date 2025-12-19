@@ -28,6 +28,10 @@
     {
       "id": "clothing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {

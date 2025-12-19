@@ -261,7 +261,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
       actorAdditionalComponents = {}
     ) {
       const actorComponents = {
-        'positioning:closeness': {
+        'personal-space-states:closeness': {
           partners: ['target1'],
           facing_away_from: [],
         },
@@ -276,7 +276,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -405,7 +405,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -414,7 +414,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -487,7 +487,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -496,7 +496,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -553,13 +553,13 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            // No positioning:closeness component
+            // No personal-space-states:closeness component
           },
         },
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },

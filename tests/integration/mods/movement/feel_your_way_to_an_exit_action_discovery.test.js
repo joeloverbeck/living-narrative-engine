@@ -129,7 +129,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
     it('should have correct forbidden components', () => {
       expect(feelYourWayAction.forbidden_components).toBeDefined();
       expect(feelYourWayAction.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
         'positioning:fallen'

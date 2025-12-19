@@ -806,11 +806,11 @@ describe('ComponentStateValidator', () => {
         expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(2);
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
           'core:actor1',
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
           'core:actor2',
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
       });
     });

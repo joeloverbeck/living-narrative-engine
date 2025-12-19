@@ -19,7 +19,7 @@ function createActorWithArmAnatomy(id, name, location, partners = []) {
     .atLocation(location)
     .withLocationComponent(location)
     .asActor()
-    .withComponent('positioning:closeness', { partners })
+    .withComponent('personal-space-states:closeness', { partners })
     .withBody(torsoId)
     .build();
 
@@ -102,7 +102,7 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }

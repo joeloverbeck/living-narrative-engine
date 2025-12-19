@@ -223,7 +223,7 @@ describe('ComponentStateValidator integration', () => {
     it('throws when the relationship exists only from actor to partner', () => {
       const entityManager = {
         getComponentData(requestedId, componentType) {
-          if (componentType !== 'positioning:closeness') {
+          if (componentType !== 'personal-space-states:closeness') {
             return null;
           }
 
@@ -258,7 +258,7 @@ describe('ComponentStateValidator integration', () => {
     it('throws when the relationship exists only from partner to actor', () => {
       const entityManager = {
         getComponentData(requestedId, componentType) {
-          if (componentType !== 'positioning:closeness') {
+          if (componentType !== 'personal-space-states:closeness') {
             return null;
           }
 
@@ -293,7 +293,7 @@ describe('ComponentStateValidator integration', () => {
     it('validates and logs when the relationship is reciprocal', () => {
       const entityManager = {
         getComponentData(requestedId, componentType) {
-          if (componentType !== 'positioning:closeness') {
+          if (componentType !== 'personal-space-states:closeness') {
             return null;
           }
 

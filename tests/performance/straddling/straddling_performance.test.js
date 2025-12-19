@@ -216,7 +216,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         'Alice',
         'test:room'
       );
-      testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: ['test:actor2'],
       });
 
@@ -248,7 +248,7 @@ describe('Straddling Waist System - Performance Tests', () => {
       // Add closeness to actor2
       testEnv.entityManager.addComponent(
         'test:actor2',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: ['test:actor1'],
         }
@@ -298,7 +298,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         );
         freshEnv.entityManager.addComponent(
           mainActorId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           {
             partners: partnerIds,
           }
@@ -328,7 +328,7 @@ describe('Straddling Waist System - Performance Tests', () => {
             });
           }
 
-          freshEnv.entityManager.addComponent(id, 'positioning:closeness', {
+          freshEnv.entityManager.addComponent(id, 'personal-space-states:closeness', {
             partners: ['test:actor0'],
           });
         });
@@ -390,7 +390,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         'test:room'
       );
 
-      testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: ['test:target'],
       });
 
@@ -399,7 +399,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         seat_index: 0,
       });
 
-      testEnv.entityManager.addComponent(targetId, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: ['test:actor1'],
       });
 
@@ -486,7 +486,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         'test:room'
       );
 
-      testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: ['test:target'],
       });
 
@@ -495,7 +495,7 @@ describe('Straddling Waist System - Performance Tests', () => {
         seat_index: 0,
       });
 
-      testEnv.entityManager.addComponent(targetId, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: ['test:actor1'],
       });
 

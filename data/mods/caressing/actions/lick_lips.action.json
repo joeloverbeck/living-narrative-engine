@@ -5,7 +5,7 @@
   "description": "Lean in and seductively lick the target's lips.",
   "targets": "kissing:close_actors_with_mouth_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["positioning:biting_neck", "sex-states:giving_blowjob"],

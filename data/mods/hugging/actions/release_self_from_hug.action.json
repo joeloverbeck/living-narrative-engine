@@ -5,7 +5,7 @@
   "description": "Gently free yourself from someone's embrace.",
   "targets": "hugging:hugging_actor",
   "required_components": {
-    "actor": ["positioning:closeness", "positioning:being_hugged"],
+    "actor": ["personal-space-states:closeness", "positioning:being_hugged"],
     "primary": ["positioning:hugging"]
   },
   "forbidden_components": {

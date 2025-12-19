@@ -431,7 +431,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       // Verify critical components preserved
       expect(updatedTarget.components['core:position']).toBeDefined();
-      expect(updatedTarget.components['positioning:closeness']).toBeDefined();
+      expect(updatedTarget.components['personal-space-states:closeness']).toBeDefined();
       expect(updatedTarget.components['core:actor']).toBeDefined();
     });
   });

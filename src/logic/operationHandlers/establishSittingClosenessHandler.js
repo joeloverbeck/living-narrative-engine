@@ -215,7 +215,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
 
     const actorClosenessComponent = this.#entityManager.getComponentData(
       parameters.actor_id,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     validator.validateClosenessComponent(
@@ -249,7 +249,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       try {
         const actorCloseness = this.#entityManager.getComponentData(
           actorId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         validator.validateClosenessComponent(actorId, actorCloseness);
         validActors.push(actorId);
@@ -290,11 +290,11 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       // Get current components
       const actorCloseness = this.#entityManager.getComponentData(
         parameters.actor_id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const adjacentCloseness = this.#entityManager.getComponentData(
         adjacentActorId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Get current partners lists or initialize empty arrays
@@ -322,14 +322,14 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       // Update both actors with their new partners lists
       await this.#entityManager.addComponent(
         parameters.actor_id,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: repairedActorPartners,
         }
       );
       await this.#entityManager.addComponent(
         adjacentActorId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: repairedAdjacentPartners,
         }

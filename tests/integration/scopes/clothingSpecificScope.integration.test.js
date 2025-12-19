@@ -134,7 +134,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         'Checks if the actor is currently in closeness with someone.',
       logic: {
         '>': [
-          { var: 'actor.components.positioning:closeness.partners.length' },
+          { var: 'actor.components.personal-space-states:closeness.partners.length' },
           0,
         ],
       },
@@ -270,7 +270,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
           console.log('Actor has components:', !!actor?.components);
           console.log(
             'Actor closeness partners:',
-            actor?.components?.['positioning:closeness']?.partners
+            actor?.components?.['personal-space-states:closeness']?.partners
           );
           console.log('Returning action:', adjustClothingAction.id);
           return [adjustClothingAction];
@@ -369,7 +369,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
               ) {
                 // For adjust_clothing, check closeness relationships and clothing
                 const actorCloseness =
-                  actor.components?.['positioning:closeness'];
+                  actor.components?.['personal-space-states:closeness'];
                 if (!actorCloseness?.partners?.length) continue;
 
                 // Check each potential target
@@ -379,7 +379,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
                   // Check if target has closeness back to actor
                   const targetCloseness =
-                    target.components?.['positioning:closeness'];
+                    target.components?.['personal-space-states:closeness'];
                   if (!targetCloseness?.partners?.includes(actor.id)) continue;
 
                   // Check if neither is facing away from the other
@@ -523,7 +523,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     };
     entityManager.addComponent(
       actorId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       actorClosenessData
     );
 
@@ -540,7 +540,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     };
     entityManager.addComponent(
       partnerId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       partnerClosenessData
     );
 
@@ -574,7 +574,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
   /**
    * Helper function to create target with or without clothing
-   * Now also adds the required positioning:closeness component for bidirectional relationships
+   * Now also adds the required personal-space-states:closeness component for bidirectional relationships
    *
    * @param targetId
    * @param actorId - The actor ID to establish closeness with (default: 'actor1')
@@ -589,13 +589,13 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     hasEquipmentComponent = true,
     facingAway = false
   ) {
-    // Add the required positioning:closeness component for bidirectional relationship
+    // Add the required personal-space-states:closeness component for bidirectional relationship
     const closenessData = {
       partners: [actorId],
     };
     entityManager.addComponent(
       targetId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       closenessData
     );
 
@@ -646,11 +646,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const actorId = 'actor1';
       const targetId = 'target1';
 
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
 
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
 
@@ -668,11 +668,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       console.log('both-actors-facing-each-other condition result:', result);
       console.log(
         'Actor closeness:',
-        context.actor?.components?.['positioning:closeness']
+        context.actor?.components?.['personal-space-states:closeness']
       );
       console.log(
         'Entity closeness:',
-        context.entity?.components?.['positioning:closeness']
+        context.entity?.components?.['personal-space-states:closeness']
       );
 
       expect(result).toBe(true);
@@ -684,12 +684,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const targetId = 'target1';
 
       // Actor with closeness to target
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
 
       // Target with closeness to actor AND torso_upper clothing
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
 
@@ -746,12 +746,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const targetId = 'target1';
 
       // Actor with closeness to target
-      entityManager.addComponent(actorId, 'positioning:closeness', {
+      entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
 
       // Target with closeness to actor AND torso_upper clothing
-      entityManager.addComponent(targetId, 'positioning:closeness', {
+      entityManager.addComponent(targetId, 'personal-space-states:closeness', {
         partners: [actorId],
       });
 
@@ -860,7 +860,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       console.log('Actor components:', actorEntity?.components);
       console.log(
         'Actor closeness component:',
-        actorEntity?.components?.['positioning:closeness']
+        actorEntity?.components?.['personal-space-states:closeness']
       );
 
       const targetEntity = entityManager.getEntityInstance('target1');
@@ -868,7 +868,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       console.log('Target components:', targetEntity?.components);
       console.log(
         'Target closeness component:',
-        targetEntity?.components?.['positioning:closeness']
+        targetEntity?.components?.['personal-space-states:closeness']
       );
       console.log(
         'Target equipment component:',
@@ -999,7 +999,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     it('should exclude actors not in closeness relationship', async () => {
       // Arrange
-      entityManager.addComponent('actor1', 'positioning:closeness', {
+      entityManager.addComponent('actor1', 'personal-space-states:closeness', {
         partners: [], // No partners
       });
 
@@ -1022,7 +1022,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     it('should include multiple valid targets when conditions are met', async () => {
       // Arrange
-      entityManager.addComponent('actor1', 'positioning:closeness', {
+      entityManager.addComponent('actor1', 'personal-space-states:closeness', {
         partners: ['target1', 'target2'],
       });
       const actorId = 'actor1';
@@ -1037,7 +1037,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // Create second target with different clothing and bidirectional closeness
       const target2Id = 'target2';
-      entityManager.addComponent(target2Id, 'positioning:closeness', {
+      entityManager.addComponent(target2Id, 'personal-space-states:closeness', {
         partners: [actorId],
       });
       entityManager.addComponent(target2Id, 'clothing:equipment', {

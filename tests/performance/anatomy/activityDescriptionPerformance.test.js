@@ -20,7 +20,7 @@ const createEntity = (id, gender = 'neutral') => {
   const components = new Map();
   components.set('core:name', { text: id });
   components.set('core:gender', { value: gender });
-  components.set('positioning:closeness', { partners: [] });
+  components.set('personal-space-states:closeness', { partners: [] });
 
   return {
     id,

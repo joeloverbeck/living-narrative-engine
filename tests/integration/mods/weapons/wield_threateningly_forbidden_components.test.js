@@ -33,14 +33,14 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
       expect(actionJson.forbidden_components.actor).toBeInstanceOf(Array);
     });
 
-    it('should include positioning:closeness in forbidden list', () => {
+    it('should include personal-space-states:closeness in forbidden list', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
   });
 
-  describe('positioning:closeness forbidden component', () => {
+  describe('personal-space-states:closeness forbidden component', () => {
     it('should NOT appear when actor has closeness component', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
@@ -54,7 +54,7 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
           capacity: { maxWeight: 10, maxItems: 5 },
         })
         // Actor is in closeness with someone - this should block wield_threateningly
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['actor2'],
         })
         .build();
@@ -72,7 +72,7 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['actor1'],
         })
         .build();
@@ -95,7 +95,7 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
       // This test confirms the forbidden_components are configured correctly
       // The blocking behavior is verified in the negative test above
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
   });

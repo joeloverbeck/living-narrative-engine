@@ -1,0 +1,6 @@
+bending:surface_im_bending_over := entities(bending:allows_bending_over)[][{
+  "==": [
+    {"var": "entity.id"},
+    {"var": "actor.components.bending-states:bending_over.surface_id"}
+  ]
+}]

@@ -50,7 +50,7 @@ export const LICK_TESTICLES_SITTING_CLOSE_FURNITURE_ID = 'sofa1';
  * @property {boolean} [coverRightTesticle=false] - Whether clothing should cover the right testicle socket.
  * @property {boolean} [includeActorSitting=true] - Whether the actor should have a sitting_on component.
  * @property {boolean} [includePrimarySitting=true] - Whether the primary partner should have a sitting_on component.
- * @property {boolean} [includeCloseness=true] - Whether both actors should have positioning:closeness toward each other.
+ * @property {boolean} [includeCloseness=true] - Whether both actors should have personal-space-states:closeness toward each other.
  */
 
 /**
@@ -256,7 +256,7 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
     const actor = testFixture.entityManager.getEntityInstance(actorId);
     const actorSitting = actor?.components?.['positioning:sitting_on'];
     const closenessPartners =
-      actor?.components?.['positioning:closeness']?.partners;
+      actor?.components?.['personal-space-states:closeness']?.partners;
 
     if (
       !actorSitting ||
@@ -275,7 +275,7 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
 
       const partnerSitting = partner.components?.['positioning:sitting_on'];
       const partnerCloseness =
-        partner.components?.['positioning:closeness']?.partners || [];
+        partner.components?.['personal-space-states:closeness']?.partners || [];
 
       if (!partnerSitting || !partnerCloseness.includes(actorId)) {
         return false;

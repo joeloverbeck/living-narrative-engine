@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "bending:event-is-action-bend-over",
+  "description": "Checks if the event is attempting the 'Bend Over' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "bending:bend_over"]
+  }
+}

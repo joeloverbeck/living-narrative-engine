@@ -101,10 +101,10 @@ describe('StateConsistencyValidator integration', () => {
     const actorOne = await createActor('actor-one');
     const actorTwo = await createActor('actor-two');
 
-    await entityManager.addComponent(actorOne.id, 'positioning:closeness', {
+    await entityManager.addComponent(actorOne.id, 'personal-space-states:closeness', {
       partners: [actorTwo.id],
     });
-    await entityManager.addComponent(actorTwo.id, 'positioning:closeness', {
+    await entityManager.addComponent(actorTwo.id, 'personal-space-states:closeness', {
       partners: [],
     });
 
@@ -129,7 +129,7 @@ describe('StateConsistencyValidator integration', () => {
     ]);
 
     logger.reset();
-    await entityManager.addComponent(actorTwo.id, 'positioning:closeness', {
+    await entityManager.addComponent(actorTwo.id, 'personal-space-states:closeness', {
       partners: [actorOne.id],
     });
 
@@ -239,14 +239,14 @@ describe('StateConsistencyValidator integration', () => {
 
     await entityManager.addComponent(
       closenessSource.id,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: [closenessTarget.id],
       }
     );
     await entityManager.addComponent(
       closenessTarget.id,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: [],
       }
@@ -274,7 +274,7 @@ describe('StateConsistencyValidator integration', () => {
 
     await entityManager.addComponent(
       closenessTarget.id,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: [closenessSource.id],
       }
@@ -314,14 +314,14 @@ describe('StateConsistencyValidator integration', () => {
 
     await entityManager.addComponent(
       closenessSource.id,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: [closenessTarget.id],
       }
     );
     await entityManager.addComponent(
       closenessTarget.id,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: [],
       }
@@ -368,7 +368,7 @@ describe('StateConsistencyValidator integration', () => {
 
     const updatedCloseness = await entityManager.getComponentData(
       closenessSource.id,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(updatedCloseness.partners).not.toContain(closenessTarget.id);
 

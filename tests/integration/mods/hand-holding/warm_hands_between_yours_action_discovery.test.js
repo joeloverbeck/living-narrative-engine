@@ -61,7 +61,7 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -148,7 +148,7 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
 
     it('requires actor closeness and uses the hand-holding color palette', () => {
       expect(warmHandsAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(warmHandsAction.visual).toEqual({
         backgroundColor: '#2c0e37',
@@ -228,8 +228,8 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);

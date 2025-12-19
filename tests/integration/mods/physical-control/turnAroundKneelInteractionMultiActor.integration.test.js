@@ -307,7 +307,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       locationId: 'test:location1',
     });
     entityManager.addComponent('test:actor1', 'core:actor', {});
-    entityManager.addComponent('test:actor1', 'positioning:closeness', {
+    entityManager.addComponent('test:actor1', 'personal-space-states:closeness', {
       partners: ['test:actor2'],
     });
 
@@ -319,7 +319,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       locationId: 'test:location1',
     });
     entityManager.addComponent('test:actor2', 'core:actor', {});
-    entityManager.addComponent('test:actor2', 'positioning:closeness', {
+    entityManager.addComponent('test:actor2', 'personal-space-states:closeness', {
       partners: ['test:actor1'],
     });
 
@@ -391,7 +391,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       locationId: 'test:location1',
     });
     entityManager.addComponent('test:actor3', 'core:actor', {});
-    entityManager.addComponent('test:actor3', 'positioning:closeness', {
+    entityManager.addComponent('test:actor3', 'personal-space-states:closeness', {
       partners: ['test:actor1', 'test:actor2'],
     });
 

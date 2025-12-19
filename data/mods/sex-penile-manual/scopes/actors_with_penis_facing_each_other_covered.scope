@@ -1,6 +1,6 @@
 // Scope for actors in closeness who have a covered penis and are facing each other
 // Used by clothed manual penis actions to ensure anatomy checks respect clothing coverage
-sex-penile-manual:actors_with_penis_facing_each_other_covered := actor.components.positioning:closeness.partners[][{
+sex-penile-manual:actors_with_penis_facing_each_other_covered := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},

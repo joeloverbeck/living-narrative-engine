@@ -78,7 +78,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' }, // Already lying
         },
@@ -89,7 +89,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' }, // Just lay down
         },
@@ -112,11 +112,11 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponentData(
         'test:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toContain('test:bob');
@@ -151,7 +151,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -162,7 +162,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -173,7 +173,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:charlie',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -198,7 +198,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
 
       const charlieCloseness = entityManager.getComponentData(
         'test:charlie',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(charlieCloseness.partners).toContain('test:alice');
@@ -228,7 +228,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -239,7 +239,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:2' },
         },
@@ -262,11 +262,11 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponentData(
         'test:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).not.toContain('test:bob');
@@ -288,7 +288,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -311,7 +311,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toHaveLength(0);
@@ -332,7 +332,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['test:diane'] }, // Already close to diane
+          'personal-space-states:closeness': { partners: ['test:diane'] }, // Already close to diane
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -343,7 +343,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
           'positioning:lying_down': { furniture_id: 'bed:1' },
         },
@@ -365,11 +365,11 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponentData(
         'test:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Alice should have both diane and bob

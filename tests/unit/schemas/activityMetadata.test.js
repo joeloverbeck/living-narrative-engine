@@ -53,7 +53,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 64,
     },
     {
-      mod: 'positioning',
+      mod: 'bending-states',
       name: 'bending_over',
       targetRole: 'surface_id',
       priority: 68,

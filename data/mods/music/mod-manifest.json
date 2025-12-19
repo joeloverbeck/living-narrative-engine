@@ -14,6 +14,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     },
@@ -86,10 +90,17 @@
       "event-is-action-stop-playing-instrument.condition.json",
       "event-is-action-swell-music-on-instrument.condition.json"
     ],
-    "scopes": ["instrument_actor_is_playing.scope"],
-    "lookups": ["mood_lexicon.lookup.json"],
+    "scopes": [
+      "instrument_actor_is_playing.scope"
+    ],
+    "lookups": [
+      "mood_lexicon.lookup.json"
+    ],
     "entities": {
-      "definitions": ["acoustic_guitar.entity.json", "lute.entity.json"]
+      "definitions": [
+        "acoustic_guitar.entity.json",
+        "lute.entity.json"
+      ]
     }
   }
 }

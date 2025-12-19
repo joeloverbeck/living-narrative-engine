@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "bending:straighten_up",
+  "name": "Straighten up",
+  "description": "Stop bending over the surface",
+  "targets": "bending:surface_im_bending_over",
+  "required_components": {
+    "actor": ["bending-states:bending_over"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "straighten up from {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#5a4033",
+    "textColor": "#fff3e0",
+    "hoverBackgroundColor": "#6d4c41",
+    "hoverTextColor": "#ffffff"
+  }
+}

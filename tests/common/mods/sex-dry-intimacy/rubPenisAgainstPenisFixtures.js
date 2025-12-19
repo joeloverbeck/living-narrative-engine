@@ -220,7 +220,7 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
       }
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
-      const closeness = actor?.components?.['positioning:closeness'];
+      const closeness = actor?.components?.['personal-space-states:closeness'];
       const partners = Array.isArray(closeness?.partners)
         ? closeness.partners
         : [];

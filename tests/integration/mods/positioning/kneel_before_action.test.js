@@ -135,7 +135,7 @@ function setupTargetBendingScenario() {
   const scenario = setupKneelingScenario('Servant', 'Worker', 'workshop');
 
   // Target is bending over
-  scenario.target.components['positioning:bending_over'] = {
+  scenario.target.components['bending-states:bending_over'] = {
     surface_id: 'test:workbench',
     spot_index: 0,
   };
@@ -578,7 +578,7 @@ describe('deference:kneel_before action integration', () => {
     describe('invalid target scenarios', () => {
       it('should demonstrate bending target restriction (action discovery would prevent this)', async () => {
         // NOTE: In real gameplay, the action discovery system would prevent this
-        // because the target has positioning:bending_over which is in forbidden_components.
+        // because the target has bending-states:bending_over which is in forbidden_components.
         // This test demonstrates the rule execution if somehow bypassed.
         const entities = setupTargetBendingScenario();
         testFixture.reset(Object.values(entities));
@@ -662,7 +662,7 @@ describe('deference:kneel_before action integration', () => {
         const scenario = setupKneelingScenario();
 
         // Actor is bending over
-        scenario.actor.components['positioning:bending_over'] = {
+        scenario.actor.components['bending-states:bending_over'] = {
           surface_id: 'test:table',
           spot_index: 0,
         };
@@ -670,7 +670,7 @@ describe('deference:kneel_before action integration', () => {
         testFixture.reset(Object.values(scenario));
 
         // In real gameplay, action discovery would prevent this
-        // because actor has positioning:bending_over
+        // because actor has bending-states:bending_over
         // Bypass validation to test rule execution behavior
         await testFixture.executeAction('test:actor1', 'test:target1', {
           skipDiscovery: true,

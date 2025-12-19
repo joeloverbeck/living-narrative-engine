@@ -55,7 +55,7 @@ describe('caressing:fondle_ass action integration', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -155,7 +155,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
@@ -166,7 +166,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -199,7 +199,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: true,
@@ -210,7 +210,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -278,7 +278,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['target1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['target1'] })
         .withComponent('positioning:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
@@ -289,7 +289,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -332,7 +332,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['target1', 'target2'],
         })
         .withComponent('positioning:straddling_waist', {
@@ -345,7 +345,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
@@ -359,7 +359,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', { partners: ['actor1'] })
+        .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
         .withComponent('anatomy:body_part_graph', {
           parts: [{ id: 'left_ass_cheek', type: 'ass_cheek' }],
         })

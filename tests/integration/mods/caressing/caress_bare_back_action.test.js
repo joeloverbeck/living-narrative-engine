@@ -80,7 +80,7 @@ describe('caressing:caress_bare_back action integration', () => {
     const actor = ModEntityScenarios.createActorTargetPair({
       names: ['Nova', 'Kai'],
     }).actor;
-    actor.components['positioning:closeness'] = { partners: [] };
+    actor.components['personal-space-states:closeness'] = { partners: [] };
 
     testFixture.reset([room, actor]);
 

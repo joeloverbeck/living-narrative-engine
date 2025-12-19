@@ -35,7 +35,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -48,7 +48,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 1,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -83,7 +83,7 @@ describe('Straddling Waist System - Edge Cases', () => {
         .withComponent('positioning:kneeling_before', {
           target_id: 'test:target',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -96,7 +96,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -128,10 +128,10 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:bending_over', {
+        .withComponent('bending-states:bending_over', {
           target_id: 'test:target',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -144,7 +144,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -184,7 +184,7 @@ describe('Straddling Waist System - Edge Cases', () => {
         .withComponent('positioning:lying_down', {
           surface_id: 'test:bed',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -197,7 +197,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -276,7 +276,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           target_id: 'test:target',
           facing_away: false,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target', 'test:other'],
         })
         .asActor()
@@ -295,7 +295,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const other = new ModEntityBuilder('test:other')
         .withName('Charlie')
         .atLocation('test:room')
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -327,7 +327,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           target_id: 'test:target',
           facing_away: false,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -340,7 +340,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -349,7 +349,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       testFixture.reset([room, chair, actor, target]);
 
       const actions = testFixture.actions || [];
-      const bendActions = actions.some((a) => a.id === 'positioning:bend_over');
+      const bendActions = actions.some((a) => a.id === 'bending:bend_over');
 
       expect(bendActions).toBe(false);
     });
@@ -362,7 +362,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target'],
         })
         .asActor()
@@ -371,7 +371,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const target = new ModEntityBuilder('test:target')
         .withName('Bob')
         .atLocation('test:room')
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()
@@ -452,7 +452,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           target_id: 'test:target1',
           facing_away: false,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:target1', 'test:target2'],
         })
         .asActor()
@@ -475,7 +475,7 @@ describe('Straddling Waist System - Edge Cases', () => {
           furniture_id: 'test:chair2',
           seat_index: 0,
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['test:actor1'],
         })
         .asActor()

@@ -78,7 +78,7 @@ function setupScenario(
       .withLocationComponent(surfaceLocation);
 
     if (surfaceAllowsBending) {
-      surfaceBuilder.withComponent('positioning:allows_bending_over', {});
+      surfaceBuilder.withComponent('bending:allows_bending_over', {});
     }
 
     entities.push(surfaceBuilder.build());
@@ -91,7 +91,7 @@ function setupScenario(
         .withLocationComponent(definition.locationId || surfaceLocation);
 
       if (definition.allowsBending !== false) {
-        builder.withComponent('positioning:allows_bending_over', {});
+        builder.withComponent('bending:allows_bending_over', {});
       }
 
       entities.push(builder.build());
@@ -133,10 +133,10 @@ describe('physical-control:force_bend_over action discovery', () => {
         'positioning:close_actors_facing_each_other_or_behind_target'
       );
       expect(forceBendOverAction.targets.secondary.scope).toBe(
-        'positioning:available_surfaces'
+        'bending:available_surfaces'
       );
       expect(forceBendOverAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(forceBendOverAction.forbidden_components.actor).toEqual(
         expect.arrayContaining([
@@ -153,7 +153,7 @@ describe('physical-control:force_bend_over action discovery', () => {
         expect.arrayContaining([
           'positioning:kneeling_before',
           'positioning:sitting_on',
-          'positioning:bending_over',
+          'bending-states:bending_over',
         ])
       );
       expect(forceBendOverAction.template).toBe(
@@ -231,7 +231,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       setupScenario(testFixture, {
         primaryComponents: {
           'positioning:kneeling_before': { entity_id: ACTOR_ID },
-          'positioning:bending_over': { surface_id: 'test:other-surface' },
+          'bending-states:bending_over': { surface_id: 'test:other-surface' },
         },
       });
 
@@ -258,7 +258,7 @@ describe('physical-control:force_bend_over action discovery', () => {
 
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
       const surfaceScope = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:available_surfaces',
+        'bending:available_surfaces',
         { actor: actorEntity }
       );
 
@@ -276,7 +276,7 @@ describe('physical-control:force_bend_over action discovery', () => {
 
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
       const surfaceScope = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:available_surfaces',
+        'bending:available_surfaces',
         { actor: actorEntity }
       );
 

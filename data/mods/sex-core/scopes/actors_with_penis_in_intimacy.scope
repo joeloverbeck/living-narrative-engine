@@ -1,1 +1,1 @@
-sex-core:actors_with_penis_in_intimacy := actor.components.positioning:closeness.partners[][{"hasPartOfType": [".", "penis"]}]
+sex-core:actors_with_penis_in_intimacy := actor.components.personal-space-states:closeness.partners[][{"hasPartOfType": [".", "penis"]}]

@@ -111,7 +111,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify no closeness established (no adjacent spots possible)
       const aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness).toBeNull();
 
@@ -197,11 +197,11 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify neither has closeness (sitting on different furniture)
       const aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeNull();
@@ -241,7 +241,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
             furniture_id: furnitureId,
             spot_index: 0,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [bobId],
           },
         },
@@ -255,7 +255,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
             furniture_id: furnitureId,
             spot_index: 1,
           },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [aliceId],
           },
         },
@@ -291,11 +291,11 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify existing relationships unchanged
       const aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toEqual([bobId]);
@@ -354,10 +354,10 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       // Initially, Alice and Charlie should not be close (gap between them)
       expect(
-        entityManager.getComponent(aliceId, 'positioning:closeness')
+        entityManager.getComponent(aliceId, 'personal-space-states:closeness')
       ).toBeNull();
       expect(
-        entityManager.getComponent(charlieId, 'positioning:closeness')
+        entityManager.getComponent(charlieId, 'personal-space-states:closeness')
       ).toBeNull();
 
       // Bob sits in the gap (spot 1)
@@ -388,15 +388,15 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Now Bob should bridge Alice and Charlie
       const aliceCloseness = entityManager.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieCloseness = entityManager.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(bobCloseness.partners).toContain(aliceId);
@@ -467,11 +467,11 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify initial closeness
       let actor1Closeness = entityManager.getComponent(
         actors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let actor2Closeness = entityManager.getComponent(
         actors[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(actor1Closeness.partners).toEqual([actors[1]]);
@@ -514,15 +514,15 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify updated closeness relationships
       actor1Closeness = entityManager.getComponent(
         actors[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       actor2Closeness = entityManager.getComponent(
         actors[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const actor3Closeness = entityManager.getComponent(
         actors[2],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(actor1Closeness.partners).toEqual([actors[1]]);
@@ -615,7 +615,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         for (const actorId of actors) {
           const closeness = entityManager.getComponent(
             actorId,
-            'positioning:closeness'
+            'personal-space-states:closeness'
           );
           const expectedPartners = config.expectedCloseness
             .filter((pair) => pair.includes(actorId))

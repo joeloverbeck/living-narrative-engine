@@ -12,7 +12,7 @@
   },
   "template": "caress the bare skin of {primary}'s back",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "primary": ["sex-states:giving_blowjob"]

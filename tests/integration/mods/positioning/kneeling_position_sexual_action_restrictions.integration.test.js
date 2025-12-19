@@ -366,7 +366,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
         [NAME_COMPONENT_ID]: { name: 'Actor 1' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
         'core:actor': {},
-        'positioning:closeness': { partners: ['test:actor2'] },
+        'personal-space-states:closeness': { partners: ['test:actor2'] },
         'anatomy:body': { rootBodyPartId: 'test:actor1:body' },
       },
     };
@@ -377,7 +377,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
         [NAME_COMPONENT_ID]: { name: 'Actor 2' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
         'core:actor': {},
-        'positioning:closeness': { partners: ['test:actor1'] },
+        'personal-space-states:closeness': { partners: ['test:actor1'] },
         'anatomy:body': { rootBodyPartId: 'test:actor2:body' },
       },
     };
@@ -400,8 +400,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
     );
     entityManager.addComponent(
       actor1.id,
-      'positioning:closeness',
-      actor1.components['positioning:closeness']
+      'personal-space-states:closeness',
+      actor1.components['personal-space-states:closeness']
     );
     entityManager.addComponent(
       actor1.id,
@@ -426,8 +426,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
     );
     entityManager.addComponent(
       actor2.id,
-      'positioning:closeness',
-      actor2.components['positioning:closeness']
+      'personal-space-states:closeness',
+      actor2.components['personal-space-states:closeness']
     );
     entityManager.addComponent(
       actor2.id,
@@ -642,7 +642,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
           [NAME_COMPONENT_ID]: { name: 'Actor 3' },
           [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
           'core:actor': {},
-          'positioning:closeness': { partners: ['test:actor1', 'test:actor2'] },
+          'personal-space-states:closeness': { partners: ['test:actor1', 'test:actor2'] },
           'anatomy:body': { rootBodyPartId: 'test:actor3:body' },
         },
       };
@@ -665,8 +665,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       );
       entityManager.addComponent(
         actor3.id,
-        'positioning:closeness',
-        actor3.components['positioning:closeness']
+        'personal-space-states:closeness',
+        actor3.components['personal-space-states:closeness']
       );
       entityManager.addComponent(
         actor3.id,
@@ -675,10 +675,10 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       );
 
       // Update actor1 and actor2 closeness to include actor3
-      entityManager.addComponent(actor1.id, 'positioning:closeness', {
+      entityManager.addComponent(actor1.id, 'personal-space-states:closeness', {
         partners: ['test:actor2', 'test:actor3'],
       });
-      entityManager.addComponent(actor2.id, 'positioning:closeness', {
+      entityManager.addComponent(actor2.id, 'personal-space-states:closeness', {
         partners: ['test:actor1', 'test:actor3'],
       });
 

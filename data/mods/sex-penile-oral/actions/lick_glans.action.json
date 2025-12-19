@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness", "positioning:kneeling_before"]
+    "actor": ["personal-space-states:closeness", "positioning:kneeling_before"]
   },
   "template": "lick {target}'s glans",
   "prerequisites": [],

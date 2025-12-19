@@ -24,6 +24,10 @@
     {
       "id": "skills",
       "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -48,7 +52,10 @@
       "event-is-action-travel-through-dimensions.condition.json",
       "exit-is-unblocked.condition.json"
     ],
-    "scopes": ["clear_directions.scope", "dimensional_portals.scope"],
+    "scopes": [
+      "clear_directions.scope",
+      "dimensional_portals.scope"
+    ],
     "events": [],
     "components": [
       "can_teleport.component.json",

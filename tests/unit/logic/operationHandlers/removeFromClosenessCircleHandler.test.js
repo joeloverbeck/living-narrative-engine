@@ -67,15 +67,15 @@ describe('RemoveFromClosenessCircleHandler', () => {
   test('removes actor from circle and unlocks movement on legacy entities', async () => {
     store = {
       actor: {
-        'positioning:closeness': { partners: ['p1', 'p2'] },
+        'personal-space-states:closeness': { partners: ['p1', 'p2'] },
         'core:movement': { locked: true },
       },
       p1: {
-        'positioning:closeness': { partners: ['actor', 'p2'] },
+        'personal-space-states:closeness': { partners: ['actor', 'p2'] },
         'core:movement': { locked: true },
       },
       p2: {
-        'positioning:closeness': { partners: ['actor', 'p1'] },
+        'personal-space-states:closeness': { partners: ['actor', 'p1'] },
         'core:movement': { locked: true },
       },
     };
@@ -99,10 +99,10 @@ describe('RemoveFromClosenessCircleHandler', () => {
       execCtx
     );
 
-    expect(store.actor['positioning:closeness']).toBeUndefined();
+    expect(store.actor['personal-space-states:closeness']).toBeUndefined();
     expect(store.actor['core:movement']).toEqual({ locked: false });
-    expect(store.p1['positioning:closeness']).toEqual({ partners: ['p2'] });
-    expect(store.p2['positioning:closeness']).toEqual({ partners: ['p1'] });
+    expect(store.p1['personal-space-states:closeness']).toEqual({ partners: ['p2'] });
+    expect(store.p2['personal-space-states:closeness']).toEqual({ partners: ['p1'] });
     expect(execCtx.evaluationContext.context.remain).toEqual(['p1', 'p2']);
   });
 
@@ -110,7 +110,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     // Create complex mock for anatomy entities
     const mockGetComponentData = jest.fn((id, componentId) => {
       // Hero1 setup
-      if (id === 'hero1' && componentId === 'positioning:closeness') {
+      if (id === 'hero1' && componentId === 'personal-space-states:closeness') {
         return { partners: ['hero2', 'hero3'] };
       }
       if (id === 'hero1' && componentId === 'anatomy:body') {
@@ -132,7 +132,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
         return { locked: true, forcedOverride: false };
       }
       // Hero2 setup
-      if (id === 'hero2' && componentId === 'positioning:closeness') {
+      if (id === 'hero2' && componentId === 'personal-space-states:closeness') {
         return { partners: ['hero1', 'hero3'] };
       }
       if (id === 'hero2' && componentId === 'anatomy:body') {
@@ -154,7 +154,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
         return { locked: true, forcedOverride: false };
       }
       // Hero3 setup
-      if (id === 'hero3' && componentId === 'positioning:closeness') {
+      if (id === 'hero3' && componentId === 'personal-space-states:closeness') {
         return { partners: ['hero1', 'hero2'] };
       }
       if (id === 'hero3' && componentId === 'anatomy:body') {
@@ -203,7 +203,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     // Check hero1 closeness removed
     expect(mockRemoveComponent).toHaveBeenCalledWith(
       'hero1',
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     // Check hero1's body parts movement unlocked
@@ -227,14 +227,14 @@ describe('RemoveFromClosenessCircleHandler', () => {
     // Check other heroes' closeness updated
     expect(mockAddComponent).toHaveBeenCalledWith(
       'hero2',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['hero3'],
       }
     );
     expect(mockAddComponent).toHaveBeenCalledWith(
       'hero3',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['hero2'],
       }
@@ -248,9 +248,9 @@ describe('RemoveFromClosenessCircleHandler', () => {
 
   test('removes partner component when last member', async () => {
     store = {
-      actor: { 'positioning:closeness': { partners: ['p1'] } },
+      actor: { 'personal-space-states:closeness': { partners: ['p1'] } },
       p1: {
-        'positioning:closeness': { partners: ['actor'] },
+        'personal-space-states:closeness': { partners: ['actor'] },
         'core:movement': { locked: true },
       },
     };
@@ -271,15 +271,15 @@ describe('RemoveFromClosenessCircleHandler', () => {
 
     await handler.execute({ actor_id: 'actor' }, execCtx);
 
-    expect(store.actor['positioning:closeness']).toBeUndefined();
-    expect(store.p1['positioning:closeness']).toBeUndefined();
+    expect(store.actor['personal-space-states:closeness']).toBeUndefined();
+    expect(store.p1['personal-space-states:closeness']).toBeUndefined();
     expect(store.p1['core:movement']).toEqual({ locked: false });
   });
 
   test('handles mixed legacy and anatomy entities when removing', async () => {
     const mockGetComponentData = jest.fn((id, componentId) => {
       // Legacy entity 'legacy1'
-      if (id === 'legacy1' && componentId === 'positioning:closeness') {
+      if (id === 'legacy1' && componentId === 'personal-space-states:closeness') {
         return { partners: ['hero1'] };
       }
       if (id === 'legacy1' && componentId === 'anatomy:body') return null;
@@ -287,7 +287,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
         return { locked: true };
       }
       // Anatomy entity 'hero1'
-      if (id === 'hero1' && componentId === 'positioning:closeness') {
+      if (id === 'hero1' && componentId === 'personal-space-states:closeness') {
         return { partners: ['legacy1'] };
       }
       if (id === 'hero1' && componentId === 'anatomy:body') {
@@ -329,7 +329,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     // Check legacy1 closeness removed and movement unlocked
     expect(mockRemoveComponent).toHaveBeenCalledWith(
       'legacy1',
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(mockAddComponent).toHaveBeenCalledWith('legacy1', 'core:movement', {
       locked: false,
@@ -338,7 +338,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     // Check hero1 closeness removed and body part movement unlocked
     expect(mockRemoveComponent).toHaveBeenCalledWith(
       'hero1',
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(mockAddComponent).toHaveBeenCalledWith(
       'left-leg1',

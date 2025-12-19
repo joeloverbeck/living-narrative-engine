@@ -103,7 +103,7 @@ describe('ActionIndex - ALL Required Components', () => {
       id: 'positioning:turn_around_to_face',
       name: 'Turn Around to Face',
       required_components: {
-        actor: ['positioning:closeness', 'positioning:facing_away'],
+        actor: ['personal-space-states:closeness', 'positioning:facing_away'],
       },
     };
 
@@ -111,7 +111,7 @@ describe('ActionIndex - ALL Required Components', () => {
 
     // Actor with only closeness
     const actor1 = 'actor1';
-    entityManager.addComponent(actor1, 'positioning:closeness', {
+    entityManager.addComponent(actor1, 'personal-space-states:closeness', {
       partners: ['someone'],
     });
     const actor1Entity = entityManager.getEntityInstance(actor1);
@@ -135,7 +135,7 @@ describe('ActionIndex - ALL Required Components', () => {
 
     // Actor with both components
     const actor3 = 'actor3';
-    entityManager.addComponent(actor3, 'positioning:closeness', {
+    entityManager.addComponent(actor3, 'personal-space-states:closeness', {
       partners: ['someone'],
     });
     entityManager.addComponent(actor3, 'positioning:facing_away', {

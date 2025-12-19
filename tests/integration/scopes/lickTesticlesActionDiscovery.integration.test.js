@@ -237,7 +237,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
             },
             'positioning:kneeling_before': {
@@ -248,7 +248,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
             },
             'anatomy:body': {
@@ -439,7 +439,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
             },
             // NO kneeling_before component
@@ -448,7 +448,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
             },
             'anatomy:body': {
@@ -526,7 +526,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
             },
             'positioning:kneeling_before': {
@@ -537,7 +537,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
             },
             'anatomy:body': {

@@ -145,13 +145,13 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
       // Single partner
       builder.closeToEntity('partner1');
-      expect(builder.entityData.components['positioning:closeness']).toEqual({
+      expect(builder.entityData.components['personal-space-states:closeness']).toEqual({
         partners: ['partner1'],
       });
 
       // Multiple partners
       builder.closeToEntity(['partner1', 'partner2', 'partner3']);
-      expect(builder.entityData.components['positioning:closeness']).toEqual({
+      expect(builder.entityData.components['personal-space-states:closeness']).toEqual({
         partners: ['partner1', 'partner2', 'partner3'],
       });
     });
@@ -167,7 +167,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       expect(entity.components['core:position']).toEqual({
         locationId: 'room1',
       });
-      expect(entity.components['positioning:closeness']).toEqual({
+      expect(entity.components['personal-space-states:closeness']).toEqual({
         partners: ['entity2', 'entity3'],
       });
       expect(entity.components['core:location']).toEqual({ location: 'room1' });
@@ -277,10 +277,10 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .asActor()
         .build();
 
-      expect(actor.components['positioning:closeness'].partners).toContain(
+      expect(actor.components['personal-space-states:closeness'].partners).toContain(
         'target1'
       );
-      expect(target.components['positioning:closeness'].partners).toContain(
+      expect(target.components['personal-space-states:closeness'].partners).toContain(
         'actor1'
       );
       expect(actor.components['core:position'].locationId).toBe(
@@ -454,16 +454,16 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         });
 
         expect(
-          scenario.actor.components['positioning:closeness']
+          scenario.actor.components['personal-space-states:closeness']
         ).toBeDefined();
         expect(
-          scenario.target.components['positioning:closeness']
+          scenario.target.components['personal-space-states:closeness']
         ).toBeDefined();
         expect(
-          scenario.actor.components['positioning:closeness'].partners
+          scenario.actor.components['personal-space-states:closeness'].partners
         ).toContain('target1');
         expect(
-          scenario.target.components['positioning:closeness'].partners
+          scenario.target.components['personal-space-states:closeness'].partners
         ).toContain('actor1');
       });
 
@@ -495,7 +495,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
 
         // Main actor should be close to specified number of entities
         expect(
-          scenario.actor.components['positioning:closeness'].partners
+          scenario.actor.components['personal-space-states:closeness'].partners
         ).toHaveLength(2);
       });
     });
@@ -623,7 +623,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .withName('Intimacy Entity')
         .closeToEntity(['partner1'])
         .build();
-      expect(intimacyEntity.components['positioning:closeness']).toBeDefined();
+      expect(intimacyEntity.components['personal-space-states:closeness']).toBeDefined();
 
       // Sex category
       const sexEntity = new ModEntityBuilder('sex-entity')

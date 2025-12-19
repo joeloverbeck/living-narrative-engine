@@ -80,7 +80,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -90,7 +90,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -118,11 +118,11 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = entityManager.getComponentData(
         'test:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toContain('test:bob');
@@ -159,7 +159,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['test:david'] },
+          'personal-space-states:closeness': { partners: ['test:david'] },
           'core:movement': { locked: false },
         },
       });
@@ -170,7 +170,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:charlie',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['test:eve'] },
+          'personal-space-states:closeness': { partners: ['test:eve'] },
           'core:movement': { locked: false },
         },
       });
@@ -181,7 +181,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:david',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['test:alice'] },
+          'personal-space-states:closeness': { partners: ['test:alice'] },
         },
       });
       entityManager.addEntity(david);
@@ -190,7 +190,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:eve',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['test:charlie'] },
+          'personal-space-states:closeness': { partners: ['test:charlie'] },
         },
       });
       entityManager.addEntity(eve);
@@ -200,7 +200,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -231,7 +231,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Check Bob's closeness - should only have direct neighbors
       const bobCloseness = entityManager.getComponentData(
         'test:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness.partners.sort()).toEqual(
         ['test:alice', 'test:charlie'].sort()
@@ -240,7 +240,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Check Alice's closeness - should keep David and add Bob
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness.partners.sort()).toEqual(
         ['test:bob', 'test:david'].sort()
@@ -249,7 +249,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Check Charlie's closeness - should keep Eve and add Bob
       const charlieCloseness = entityManager.getComponentData(
         'test:charlie',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(charlieCloseness.partners.sort()).toEqual(
         ['test:bob', 'test:eve'].sort()
@@ -258,14 +258,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Check David's closeness - should remain unchanged (only Alice)
       const davidCloseness = entityManager.getComponentData(
         'test:david',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(davidCloseness.partners).toEqual(['test:alice']);
 
       // Check Eve's closeness - should remain unchanged (only Charlie)
       const eveCloseness = entityManager.getComponentData(
         'test:eve',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(eveCloseness.partners).toEqual(['test:charlie']);
 
@@ -297,7 +297,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -320,7 +320,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness.partners).toEqual([]);
 
@@ -355,7 +355,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -365,7 +365,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });
@@ -458,7 +458,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: [] },
+          'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
         },
       });

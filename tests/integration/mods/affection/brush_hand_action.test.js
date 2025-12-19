@@ -19,7 +19,7 @@ function createActorWithHandAnatomy(id, name, location, partners = []) {
     .atLocation(location)
     .withLocationComponent(location)
     .asActor()
-    .withComponent('positioning:closeness', { partners })
+    .withComponent('personal-space-states:closeness', { partners })
     .withBody(torsoId)
     .build();
 

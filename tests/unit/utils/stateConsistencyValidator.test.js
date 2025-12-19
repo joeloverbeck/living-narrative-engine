@@ -99,7 +99,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -144,7 +144,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -170,7 +170,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -202,7 +202,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: [] };
               }
@@ -234,7 +234,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2', 'core:actor3'] };
               }
@@ -268,7 +268,7 @@ describe('StateConsistencyValidator', () => {
           (entityId, componentId) => {
             if (
               entityId === 'core:actor1' &&
-              componentId === 'positioning:closeness'
+              componentId === 'personal-space-states:closeness'
             ) {
               return { partners: ['core:actor2'] };
             }
@@ -314,7 +314,7 @@ describe('StateConsistencyValidator', () => {
             if (componentId === 'core:movement') {
               return { locked: true };
             }
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               return { partners: ['core:actor2'] };
             }
             return null;
@@ -369,7 +369,7 @@ describe('StateConsistencyValidator', () => {
             if (componentId === 'core:movement') {
               return { locked: true };
             }
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               return { partners: [] };
             }
             return null;
@@ -648,7 +648,7 @@ describe('StateConsistencyValidator', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:closeness') {
+          if (componentId === 'personal-space-states:closeness') {
             return { partners: ['core:actor2'] };
           }
           if (componentId === 'core:movement') {
@@ -704,7 +704,7 @@ describe('StateConsistencyValidator', () => {
         expect(report.failed).toEqual([]);
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',
-          'positioning:closeness',
+          'personal-space-states:closeness',
           { partners: ['core:actor3'] }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -869,7 +869,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -909,7 +909,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2', 'core:actor3'] };
               }
@@ -936,7 +936,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor1'] }; // Self-reference
               }
@@ -964,7 +964,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               // Creating fully bidirectional relationships
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2', 'core:actor3'] };
@@ -1003,7 +1003,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -1042,7 +1042,7 @@ describe('StateConsistencyValidator', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               const match = entityId.match(/core:actor(\d+)/);
               if (match) {
                 const num = parseInt(match[1]);
@@ -1081,7 +1081,7 @@ describe('StateConsistencyValidator', () => {
               throw new Error('Too many calls - possible infinite loop');
             }
 
-            if (componentId === 'positioning:closeness') {
+            if (componentId === 'personal-space-states:closeness') {
               if (entityId === 'core:actor1') {
                 return { partners: ['core:actor2'] };
               }
@@ -1146,17 +1146,17 @@ describe('StateConsistencyValidator', () => {
         // Should remove the unidirectional relationships
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',
-          'positioning:closeness',
+          'personal-space-states:closeness',
           { partners: [] }
         );
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor2',
-          'positioning:closeness',
+          'personal-space-states:closeness',
           { partners: [] }
         );
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor3',
-          'positioning:closeness',
+          'personal-space-states:closeness',
           { partners: [] }
         );
       });
@@ -1180,7 +1180,7 @@ describe('StateConsistencyValidator', () => {
         // Should remove self-reference but keep other partners
         expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
           'core:actor1',
-          'positioning:closeness',
+          'personal-space-states:closeness',
           { partners: ['core:actor2'] }
         );
       });

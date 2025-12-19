@@ -97,11 +97,11 @@ describe('EstablishLyingClosenessHandler', () => {
         'lying:allows_lying_on': {},
       },
       actor1: {
-        'positioning:closeness': { partners: ['actor3'] },
+        'personal-space-states:closeness': { partners: ['actor3'] },
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
       actor2: {
-        'positioning:closeness': { partners: ['actor3'] },
+        'personal-space-states:closeness': { partners: ['actor3'] },
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
       actor3: {
@@ -172,13 +172,13 @@ describe('EstablishLyingClosenessHandler', () => {
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       1,
       'actor1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor2', 'actor3'] }
     );
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       2,
       'actor2',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor1', 'actor3'] }
     );
     expect(updateMovementLock).toHaveBeenCalledWith(
@@ -214,11 +214,11 @@ describe('EstablishLyingClosenessHandler', () => {
         'lying:allows_lying_on': {},
       },
       actor1: {
-        'positioning:closeness': { partners: ['actor2'] },
+        'personal-space-states:closeness': { partners: ['actor2'] },
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
       actor2: {
-        'positioning:closeness': { partners: ['actor1'] },
+        'personal-space-states:closeness': { partners: ['actor1'] },
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
     };
@@ -244,13 +244,13 @@ describe('EstablishLyingClosenessHandler', () => {
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       1,
       'actor1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor2'] }
     );
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       2,
       'actor2',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor1'] }
     );
   });
@@ -264,7 +264,7 @@ describe('EstablishLyingClosenessHandler', () => {
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
       actor2: {
-        'positioning:closeness': { partners: 'actor1' },
+        'personal-space-states:closeness': { partners: 'actor1' },
         'positioning:lying_down': { furniture_id: 'furniture:1' },
       },
     };
@@ -290,13 +290,13 @@ describe('EstablishLyingClosenessHandler', () => {
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       1,
       'actor1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor2'] }
     );
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       2,
       'actor2',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       { partners: ['actor1'] }
     );
   });
@@ -320,7 +320,7 @@ describe('EstablishLyingClosenessHandler', () => {
 
         if (
           entityId === 'actor1' &&
-          componentName === 'positioning:closeness'
+          componentName === 'personal-space-states:closeness'
         ) {
           return { partners: [] };
         }
@@ -377,7 +377,7 @@ describe('EstablishLyingClosenessHandler', () => {
 
         if (
           entityId === 'actor1' &&
-          componentName === 'positioning:closeness'
+          componentName === 'personal-space-states:closeness'
         ) {
           return { partners: [] };
         }

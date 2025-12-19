@@ -101,7 +101,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         not: {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.positioning:closeness.facing_away_from' },
+            { var: 'entity.components.personal-space-states:closeness.facing_away_from' },
           ],
         },
       },
@@ -259,7 +259,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
       actorAdditionalComponents = {}
     ) {
       const actorComponents = {
-        'positioning:closeness': {
+        'personal-space-states:closeness': {
           partners: ['target1'],
           facing_away_from: [],
         },
@@ -274,7 +274,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -445,7 +445,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -454,7 +454,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: ['actor1'], // Facing away from actor
             },
@@ -524,7 +524,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -533,7 +533,7 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },

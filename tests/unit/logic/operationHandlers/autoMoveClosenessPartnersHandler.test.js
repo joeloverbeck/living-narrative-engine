@@ -10,7 +10,7 @@ jest.mock('../../../../src/utils/safeDispatchErrorUtils.js', () => ({
 import AutoMoveClosenessPartnersHandler from '../../../../src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js';
 
 const POSITION_COMPONENT_ID = 'core:position';
-const CLOSENESS_COMPONENT_ID = 'positioning:closeness';
+const CLOSENESS_COMPONENT_ID = 'personal-space-states:closeness';
 
 // Mocks
 let entityManager;

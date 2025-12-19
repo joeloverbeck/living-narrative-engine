@@ -74,8 +74,8 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     }
 
     if (options.includeCloseness) {
-      actor.components['positioning:closeness'] = { partners: [target.id] };
-      target.components['positioning:closeness'] = { partners: [actor.id] };
+      actor.components['personal-space-states:closeness'] = { partners: [target.id] };
+      target.components['personal-space-states:closeness'] = { partners: [actor.id] };
     }
 
     testFixture.reset([room, actor, target]);
@@ -216,7 +216,7 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
     const targetAfter = testFixture.entityManager.getEntityInstance(target.id);
 
-    expect(actorAfter.components['positioning:closeness']).toBeUndefined();
-    expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+    expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
+    expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
   });
 });

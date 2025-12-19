@@ -5,7 +5,7 @@
   "description": "Gently massage the target's shoulders.",
   "targets": "positioning:close_actors_or_entity_kneeling_before_actor",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["kissing:kissing", "positioning:being_hugged"]

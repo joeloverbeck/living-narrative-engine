@@ -67,13 +67,13 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          actor: ['positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         actor: {
           id: 'player',
-          components: { 'positioning:closeness': {} },
+          components: { 'personal-space-states:closeness': {} },
         },
       };
 
@@ -89,7 +89,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:straddle',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -97,7 +97,7 @@ describe('TargetRequiredComponentsValidator', () => {
           id: 'npc1',
           components: {
             'positioning:sitting_on': { furniture: 'chair1' },
-            'positioning:closeness': { entity: 'player' },
+            'personal-space-states:closeness': { entity: 'player' },
           },
         },
       };
@@ -158,13 +158,13 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          target: ['positioning:closeness'],
+          target: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         target: {
           id: 'npc1',
-          components: { 'positioning:closeness': {} },
+          components: { 'personal-space-states:closeness': {} },
         },
       };
 
@@ -180,14 +180,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
           secondary: ['core:actor'],
         },
       };
       const targetEntities = {
         primary: {
           id: 'npc1',
-          components: { 'positioning:closeness': {} },
+          components: { 'personal-space-states:closeness': {} },
         },
         secondary: {
           id: 'npc2',
@@ -207,14 +207,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         primary: [
           {
             id: 'npc1',
-            components: { 'positioning:closeness': {} },
+            components: { 'personal-space-states:closeness': {} },
           },
           {
             id: 'npc2',
@@ -237,14 +237,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:straddle',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         primary: {
           id: 'npc1',
           components: {
-            'positioning:closeness': {},
+            'personal-space-states:closeness': {},
             // Missing positioning:sitting_on
           },
         },
@@ -265,14 +265,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          secondary: ['core:actor', 'positioning:closeness'],
+          secondary: ['core:actor', 'personal-space-states:closeness'],
         },
       };
       const targetEntities = {
         secondary: {
           id: 'npc2',
           components: { 'core:actor': {} },
-          // Missing positioning:closeness
+          // Missing personal-space-states:closeness
         },
       };
 
@@ -283,7 +283,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (secondary) must have component: positioning:closeness',
+        reason: 'Target (secondary) must have component: personal-space-states:closeness',
       });
     });
 
@@ -291,7 +291,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -305,7 +305,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (primary) must have component: positioning:closeness',
+        reason: 'Target (primary) must have component: personal-space-states:closeness',
       });
     });
 
@@ -313,7 +313,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -336,7 +336,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (primary) must have component: positioning:closeness',
+        reason: 'Target (primary) must have component: personal-space-states:closeness',
       });
     });
 
@@ -344,7 +344,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {}; // No primary target
@@ -364,13 +364,13 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          target: ['positioning:closeness', 'positioning:sitting_on'],
+          target: ['personal-space-states:closeness', 'positioning:sitting_on'],
         },
       };
       const targetEntities = {
         target: {
           id: 'npc1',
-          components: { 'positioning:closeness': {} },
+          components: { 'personal-space-states:closeness': {} },
           // Missing positioning:sitting_on
         },
       };
@@ -390,14 +390,14 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
           secondary: ['core:actor'],
         },
       };
       const targetEntities = {
         primary: {
           id: 'npc1',
-          components: {}, // Missing positioning:closeness
+          components: {}, // Missing personal-space-states:closeness
         },
         secondary: {
           id: 'npc2',
@@ -440,7 +440,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -460,7 +460,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -479,7 +479,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
 
@@ -498,7 +498,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -523,7 +523,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -548,7 +548,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -556,7 +556,7 @@ describe('TargetRequiredComponentsValidator', () => {
           null,
           {
             id: 'npc-valid',
-            components: { 'positioning:closeness': {} },
+            components: { 'personal-space-states:closeness': {} },
           },
         ],
       };
@@ -576,7 +576,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -585,7 +585,7 @@ describe('TargetRequiredComponentsValidator', () => {
           {
             entity: {
               id: 'npc-valid',
-              components: { 'positioning:closeness': {} },
+              components: { 'personal-space-states:closeness': {} },
             },
           },
         ],
@@ -606,7 +606,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -614,7 +614,7 @@ describe('TargetRequiredComponentsValidator', () => {
           {
             entity: {
               id: 'wrapped-npc',
-              components: { 'positioning:closeness': {} },
+              components: { 'personal-space-states:closeness': {} },
             },
           },
         ],
@@ -635,7 +635,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -660,7 +660,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -672,7 +672,7 @@ describe('TargetRequiredComponentsValidator', () => {
           },
           {
             id: 'npc-valid',
-            components: { 'positioning:closeness': {} },
+            components: { 'personal-space-states:closeness': {} },
           },
         ],
       };
@@ -684,7 +684,7 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({ valid: true });
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Error checking hasComponent('positioning:closeness') on primary target unknown: hasComponent failed"
+        "Error checking hasComponent('personal-space-states:closeness') on primary target unknown: hasComponent failed"
       );
     });
 
@@ -692,7 +692,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {
@@ -708,10 +708,10 @@ describe('TargetRequiredComponentsValidator', () => {
 
       expect(result).toEqual({
         valid: false,
-        reason: 'Target (primary) must have component: positioning:closeness',
+        reason: 'Target (primary) must have component: personal-space-states:closeness',
       });
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Target entity unknown missing required component: positioning:closeness'
+        'Target entity unknown missing required component: personal-space-states:closeness'
       );
     });
 
@@ -719,7 +719,7 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
       };
       const targetEntities = {

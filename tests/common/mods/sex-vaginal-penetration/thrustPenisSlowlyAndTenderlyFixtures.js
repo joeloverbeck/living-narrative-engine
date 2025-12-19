@@ -142,7 +142,7 @@ function resolveBeingFuckedVaginallyScope(testFixture, context) {
   }
 
   const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
-  const closeness = actorEntity?.components?.['positioning:closeness'];
+  const closeness = actorEntity?.components?.['personal-space-states:closeness'];
   const partners = Array.isArray(closeness?.partners) ? closeness.partners : [];
 
   if (partners.length === 0) {

@@ -12,7 +12,7 @@ import {
 } from '@jest/globals';
 import forceBendOverRule from '../../../../../data/mods/physical-control/rules/handle_force_bend_over.rule.json';
 import eventIsActionForceBendOver from '../../../../../data/mods/physical-control/conditions/event-is-action-force-bend-over.condition.json';
-import bendingOverComponent from '../../../../../data/mods/positioning/components/bending_over.component.json';
+import bendingOverComponent from '../../../../../data/mods/bending-states/components/bending_over.component.json';
 import facingAwayComponent from '../../../../../data/mods/positioning/components/facing_away.component.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import logSuccessOutcomeMacro from '../../../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
@@ -125,7 +125,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
           : undefined
       ),
       getComponentDefinition: jest.fn((componentId) => {
-        if (componentId === 'positioning:bending_over') {
+        if (componentId === 'bending-states:bending_over') {
           return bendingOverComponent;
         }
         if (componentId === 'positioning:facing_away') {
@@ -156,7 +156,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Rhea' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
+          'personal-space-states:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -164,7 +164,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Noah' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
+          'personal-space-states:closeness': { partners: ['actor1'] },
         },
       },
       {
@@ -172,7 +172,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Steel Table' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:allows_bending_over': {},
+          'bending:allows_bending_over': {},
         },
       },
     ]);
@@ -187,7 +187,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
     });
 
     const target = testEnv.entityManager.getEntityInstance('target1');
-    expect(target.components['positioning:bending_over']).toMatchObject({
+    expect(target.components['bending-states:bending_over']).toMatchObject({
       surface_id: 'surface1',
     });
     expect(
@@ -238,7 +238,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Rhea' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1', 'actor2'] },
+          'personal-space-states:closeness': { partners: ['target1', 'actor2'] },
         },
       },
       {
@@ -246,7 +246,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Quinn' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1', 'actor1'] },
+          'personal-space-states:closeness': { partners: ['target1', 'actor1'] },
         },
       },
       {
@@ -254,7 +254,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Noah' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1', 'actor2'] },
+          'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
           'positioning:facing_away': {
             facing_away_from: ['actor2'],
           },
@@ -265,7 +265,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Steel Table' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:allows_bending_over': {},
+          'bending:allows_bending_over': {},
         },
       },
     ]);
@@ -292,7 +292,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Rhea' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
+          'personal-space-states:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -300,7 +300,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Noah' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
+          'personal-space-states:closeness': { partners: ['actor1'] },
           'positioning:facing_away': {
             facing_away_from: ['actor1'],
           },
@@ -311,7 +311,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Steel Table' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:allows_bending_over': {},
+          'bending:allows_bending_over': {},
         },
       },
     ]);

@@ -71,7 +71,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
             id: 'integration_test_mod:kiss',
             name: 'Kiss',
             required_components: {
-              actor: ['positioning:closeness', 'affection:attraction'],
+              actor: ['personal-space-states:closeness', 'affection:attraction'],
               target: ['core:actor'],
             },
             forbidden_components: {
@@ -122,7 +122,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
             id: 'integration_test_mod:attraction_increase',
             condition: {
               and: [
-                { has_component: ['actor', 'positioning:closeness'] },
+                { has_component: ['actor', 'personal-space-states:closeness'] },
                 { has_component: ['target', 'affection:attraction'] },
                 {
                   '>=': [
@@ -164,6 +164,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
         'violence',
         'stats_mod',
         'emotion_mod',
+        'personal-space-states',
       ];
 
       expectedRefs.forEach((ref) => {
@@ -171,7 +172,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       });
 
       // Verify specific component references
-      expect(references.get('positioning')).toContain('closeness');
+      expect(references.get('personal-space-states')).toContain('closeness');
       expect(references.get('positioning')).toContain('close_partner');
       expect(references.get('affection')).toContain('attraction');
       expect(references.get('kissing')).toContain(
@@ -308,7 +309,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       await fs.writeFile(
         path.join(scopesDir, 'close_partners.scope'),
         `// Scope definitions for close partners
-affection:close_partners := actor.components.positioning:closeness.partners[][{
+affection:close_partners := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"has_component": ["item", "affection:attraction"]},
     {">=": [{"get_component_value": ["item", "affection:attraction", "level"]}, 30]}
@@ -328,7 +329,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       expect(references.has('furniture_mod')).toBe(true);
       expect(references.has('social_mod')).toBe(true);
 
-      expect(references.get('positioning')).toContain('closeness');
+      expect(references.get('personal-space-states')).toContain('closeness');
       expect(references.get('positioning')).toContain('location');
       expect(references.get('affection')).toContain('attraction');
       expect(references.get('furniture_mod')).toContain('chair');
@@ -353,7 +354,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
           id: 'integration_test_mod:seduce',
           required_components: {
             actor: [
-              'positioning:closeness',
+              'personal-space-states:closeness',
               'affection:attraction',
               'social_mod:charisma',
             ],
@@ -540,7 +541,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       });
 
       // Verify specific component references from different contexts
-      expect(references.get('positioning')).toContain('closeness');
+      expect(references.get('personal-space-states')).toContain('closeness');
       expect(references.get('positioning')).toContain('facing');
       expect(references.get('affection')).toContain('attraction');
       expect(references.get('affection')).toContain('available_partners');

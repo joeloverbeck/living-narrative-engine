@@ -459,7 +459,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
                 actor.id,
-                'positioning:closeness'
+                'personal-space-states:closeness'
               );
               return closeness?.partners || [];
             },
@@ -488,7 +488,7 @@ export class ScopeResolverHelpers {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners || [];
           },
@@ -529,7 +529,7 @@ export class ScopeResolverHelpers {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners || [];
           },
@@ -560,7 +560,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
                 actor.id,
-                'positioning:closeness'
+                'personal-space-states:closeness'
               );
               return closeness?.partners || [];
             },
@@ -588,7 +588,7 @@ export class ScopeResolverHelpers {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners || [];
           },
@@ -609,7 +609,7 @@ export class ScopeResolverHelpers {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners || [];
           },
@@ -628,7 +628,7 @@ export class ScopeResolverHelpers {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
                 actor.id,
-                'positioning:closeness'
+                'personal-space-states:closeness'
               );
               return closeness?.partners || [];
             },
@@ -809,10 +809,10 @@ export class ScopeResolverHelpers {
       ),
 
       // "surface im bending over" - Bending-over surface lookup
-      'positioning:surface_im_bending_over': this.createComponentLookupResolver(
-        'positioning:surface_im_bending_over',
+      'bending:surface_im_bending_over': this.createComponentLookupResolver(
+        'bending:surface_im_bending_over',
         {
-          componentType: 'positioning:bending_over',
+          componentType: 'bending-states:bending_over',
           sourceField: 'surface_id',
           contextSource: 'actor',
         }
@@ -833,7 +833,7 @@ export class ScopeResolverHelpers {
             // Partner must be in closeness with actor
             const closeness = em.getComponentData(
               actor.id,
-              'positioning:closeness'
+              'personal-space-states:closeness'
             );
             return closeness?.partners?.includes(partnerId) || false;
           },

@@ -18,6 +18,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
       "version": "^1.0.0"
     }
@@ -48,6 +52,9 @@
     },
     "events": [],
     "macros": [],
-    "scopes": ["hugged_by_actor.scope", "hugging_actor.scope"]
+    "scopes": [
+      "hugged_by_actor.scope",
+      "hugging_actor.scope"
+    ]
   }
 }

@@ -119,7 +119,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
       // Create entity with closeness component
       const actor = createMockEntity(
         'actor1',
-        new Map([['positioning:closeness', { partners: ['target1'] }]])
+        new Map([['personal-space-states:closeness', { partners: ['target1'] }]])
       );
 
       // Setup entity manager to return our actor
@@ -229,7 +229,7 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
       // Create entity with closeness component
       const actor = createMockEntity(
         'actor1',
-        new Map([['positioning:closeness', { partners: ['target1'] }]])
+        new Map([['personal-space-states:closeness', { partners: ['target1'] }]])
       );
 
       // Setup entity manager to return our actor

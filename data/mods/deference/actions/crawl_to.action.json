@@ -16,12 +16,12 @@
   "forbidden_components": {
     "actor": [
       "positioning:sitting_on",
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:lying_down",
       "positioning:straddling_waist",
       "positioning:being_hugged",
       "positioning:hugging",
-      "positioning:closeness",
+      "personal-space-states:closeness",
       "positioning:being_restrained",
       "positioning:restraining",
       "positioning:fallen"
@@ -29,7 +29,7 @@
     "primary": [
       "positioning:kneeling_before",
       "positioning:lying_down",
-      "positioning:bending_over"
+      "bending-states:bending_over"
     ]
   },
   "template": "crawl to {target}",

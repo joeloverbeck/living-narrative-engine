@@ -150,7 +150,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
         'Checks if the actor is currently in closeness with someone.',
       logic: {
         '>': [
-          { var: 'actor.components.positioning:closeness.partners.length' },
+          { var: 'actor.components.personal-space-states:closeness.partners.length' },
           0,
         ],
       },
@@ -273,7 +273,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
           logger.debug('Actor has components:', !!actor?.components);
           logger.debug(
             'Actor closeness partners:',
-            actor?.components?.['positioning:closeness']?.partners
+            actor?.components?.['personal-space-states:closeness']?.partners
           );
           logger.debug('Returning action:', fondleAssAction.id);
           return [fondleAssAction];
@@ -331,7 +331,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
               if (isMultiTarget && actionDef.id === 'caressing:fondle_ass') {
                 // For fondle_ass, check closeness relationships
                 const actorCloseness =
-                  actor.components?.['positioning:closeness'];
+                  actor.components?.['personal-space-states:closeness'];
                 if (!actorCloseness?.partners?.length) continue;
 
                 // Check each potential target
@@ -341,7 +341,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
 
                   // Check if target has closeness back to actor
                   const targetCloseness =
-                    target.components?.['positioning:closeness'];
+                    target.components?.['personal-space-states:closeness'];
                   if (!targetCloseness?.partners?.includes(actor.id)) continue;
 
                   // For the secondary scope, we need to check if the target has clothing
@@ -446,7 +446,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
     };
     entityManager.addComponent(
       actorId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       actorClosenessData
     );
 
@@ -463,7 +463,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
     };
     entityManager.addComponent(
       partnerId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       partnerClosenessData
     );
 

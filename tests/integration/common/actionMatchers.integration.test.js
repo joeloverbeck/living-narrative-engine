@@ -57,7 +57,7 @@ describe('actionMatchers integration - real action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -80,8 +80,8 @@ describe('actionMatchers integration - real action discovery', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Remove closeness component
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
@@ -117,8 +117,8 @@ describe('actionMatchers integration - real action discovery', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Remove closeness component
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
@@ -160,7 +160,7 @@ describe('actionMatchers integration - real action discovery', () => {
           const actorEntity =
             testFixture.testEnv.entityManager.getEntityInstance(actorId);
           const closeness =
-            actorEntity?.components?.['positioning:closeness']?.partners || [];
+            actorEntity?.components?.['personal-space-states:closeness']?.partners || [];
 
           return { success: true, value: new Set(closeness) };
         }
@@ -225,7 +225,7 @@ describe('actionMatchers integration - real action discovery', () => {
           const actorEntity =
             testFixture.testEnv.entityManager.getEntityInstance(actorId);
           const closeness =
-            actorEntity?.components?.['positioning:closeness']?.partners || [];
+            actorEntity?.components?.['personal-space-states:closeness']?.partners || [];
 
           return { success: true, value: new Set(closeness) };
         }
@@ -281,7 +281,7 @@ describe('actionMatchers integration - real action discovery', () => {
           const actorEntity =
             testFixture.testEnv.entityManager.getEntityInstance(actorId);
           const closeness =
-            actorEntity?.components?.['positioning:closeness']?.partners || [];
+            actorEntity?.components?.['personal-space-states:closeness']?.partners || [];
 
           return { success: true, value: new Set(closeness) };
         }

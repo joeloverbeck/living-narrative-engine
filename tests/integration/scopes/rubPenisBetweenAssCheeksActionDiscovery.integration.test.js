@@ -428,7 +428,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
             },
             ...(actorHasPenis && {
@@ -443,7 +443,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
             },
             'positioning:facing_away': {
@@ -915,7 +915,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         {
           id: 'actor1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['target1'],
             },
             'anatomy:body': {
@@ -928,7 +928,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         {
           id: 'target1',
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['actor1'],
             },
             'positioning:facing_away': {

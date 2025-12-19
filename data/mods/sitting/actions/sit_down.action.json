@@ -11,7 +11,7 @@
     "actor": [
       "positioning:sitting_on",
       "positioning:kneeling_before",
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:straddling_waist",
       "positioning:being_hugged",
       "positioning:hugging",

@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "personal-space-states",
+  "version": "1.0.0",
+  "name": "Personal Space States",
+  "description": "State components for personal space and closeness relationships between actors.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "closeness.component.json"
+    ]
+  }
+}

@@ -247,11 +247,11 @@ describe('Get Up Closeness Workflow', () => {
     });
 
     // Simulate sitting-based closeness (normally would be created by sit_down rule)
-    testEnv.entityManager.addComponent(alice, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(alice, 'personal-space-states:closeness', {
       partners: [bob],
       sitting_based: [bob],
     });
-    testEnv.entityManager.addComponent(bob, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(bob, 'personal-space-states:closeness', {
       partners: [alice],
       sitting_based: [alice],
     });
@@ -267,11 +267,11 @@ describe('Get Up Closeness Workflow', () => {
     // 3. Verify: Both have closeness components with each other
     let aliceCloseness = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     let bobCloseness = testEnv.entityManager.getComponentData(
       bob,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(aliceCloseness.partners).toContain(bob);
     expect(bobCloseness.partners).toContain(alice);
@@ -293,11 +293,11 @@ describe('Get Up Closeness Workflow', () => {
     // 6. Verify: Neither Alice nor Bob have closeness components
     aliceCloseness = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     bobCloseness = testEnv.entityManager.getComponentData(
       bob,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(aliceCloseness).toBeNull();
     expect(bobCloseness).toBeNull();
@@ -388,15 +388,15 @@ describe('Get Up Closeness Workflow', () => {
     });
 
     // Set up closeness relationships (Alice-Bob and Bob-Charlie)
-    testEnv.entityManager.addComponent(alice, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(alice, 'personal-space-states:closeness', {
       partners: [bob],
       sitting_based: [bob],
     });
-    testEnv.entityManager.addComponent(bob, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(bob, 'personal-space-states:closeness', {
       partners: [alice, charlie],
       sitting_based: [alice, charlie],
     });
-    testEnv.entityManager.addComponent(charlie, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(charlie, 'personal-space-states:closeness', {
       partners: [bob],
       sitting_based: [bob],
     });
@@ -411,15 +411,15 @@ describe('Get Up Closeness Workflow', () => {
     // Verify: Alice-Bob and Bob-Charlie closeness removed
     const aliceCloseness = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const bobCloseness = testEnv.entityManager.getComponentData(
       bob,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const charlieCloseness = testEnv.entityManager.getComponentData(
       charlie,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     expect(bobCloseness).toBeNull();
@@ -501,15 +501,15 @@ describe('Get Up Closeness Workflow', () => {
     // Note: The handler uses adjacency heuristics, not manual/sitting_based fields
     // Alice (spot 0) is adjacent to Bob (spot 1)
     // Bob (spot 1) is adjacent to both Alice (spot 0) and Charlie (spot 2)
-    testEnv.entityManager.addComponent(alice, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(alice, 'personal-space-states:closeness', {
       partners: [bob],
       sitting_based: [bob],
     });
-    testEnv.entityManager.addComponent(bob, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(bob, 'personal-space-states:closeness', {
       partners: [alice, charlie],
       sitting_based: [alice, charlie],
     });
-    testEnv.entityManager.addComponent(charlie, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(charlie, 'personal-space-states:closeness', {
       partners: [bob],
       sitting_based: [bob],
     });
@@ -524,14 +524,14 @@ describe('Get Up Closeness Workflow', () => {
     // Verify: Alice's closeness with Bob (adjacent) is removed
     const aliceCloseness = testEnv.entityManager.getComponentData(
       alice,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(aliceCloseness).toBeNull();
 
     // Verify: Bob's closeness with Alice is removed but preserves with Charlie
     const bobCloseness = testEnv.entityManager.getComponentData(
       bob,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     // Bob should still have Charlie as a partner (they're still adjacent)
     expect(bobCloseness).toBeDefined();
@@ -540,7 +540,7 @@ describe('Get Up Closeness Workflow', () => {
     // Verify: Charlie still has Bob as partner
     const charlieCloseness = testEnv.entityManager.getComponentData(
       charlie,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     expect(charlieCloseness).toBeDefined();
     expect(charlieCloseness.partners).toEqual([bob]);
@@ -589,7 +589,7 @@ describe('Get Up Closeness Workflow', () => {
     });
 
     // Add malformed closeness data (missing required fields)
-    testEnv.entityManager.addComponent(alice, 'positioning:closeness', {
+    testEnv.entityManager.addComponent(alice, 'personal-space-states:closeness', {
       partners: ['invalid:id'],
       // Missing sitting_based field
     });

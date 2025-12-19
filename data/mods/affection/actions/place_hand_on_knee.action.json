@@ -5,7 +5,7 @@
   "description": "Rest a comforting hand on a nearby companion's knee.",
   "targets": "sitting:actors_sitting_close",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [],

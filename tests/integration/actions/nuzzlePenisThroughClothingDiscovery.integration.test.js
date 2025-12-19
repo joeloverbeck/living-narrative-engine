@@ -115,7 +115,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
             'positioning:kneeling_before': { entityId: targetId },
           },
         },
@@ -177,7 +177,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
             'positioning:kneeling_before': { entityId: targetId },
           },
         },
@@ -233,7 +233,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
             // No kneeling_before component
           },
         },
@@ -291,7 +291,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [targetId] },
+            'personal-space-states:closeness': { partners: [targetId] },
             'positioning:kneeling_before': { entityId: targetId },
           },
         },
@@ -348,7 +348,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [targetId, otherTargetId] },
+            'personal-space-states:closeness': { partners: [targetId, otherTargetId] },
             'positioning:kneeling_before': { entityId: otherTargetId }, // Kneeling before other
           },
         },
@@ -413,7 +413,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
         {
           id: actorId,
           components: {
-            'positioning:closeness': { partners: [target1Id, target2Id] },
+            'personal-space-states:closeness': { partners: [target1Id, target2Id] },
             'positioning:kneeling_before': { entityId: target1Id }, // Only kneeling before target1
           },
         },

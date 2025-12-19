@@ -8,8 +8,8 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 55
-**In Use**: 44 schemes actively implemented across mods
+**Total Schemes Defined**: 56
+**In Use**: 45 schemes actively implemented across mods
 **Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -18,6 +18,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | ----------------------- | ------------------- | ------- | ---------------- | ------ |
 | Affection               | Soft Purple         | 3.1     | `#6a1b9a`        | Active |
 | Ballet                  | Indigo Professional | 10.1    | `#283593`        | Active |
+| Bending                 | Yielding Posture    | 21.1    | `#5a4033`        | Active |
 | Caressing               | Dark Purple         | 7.2     | `#311b92`        | Active |
 | Clothing                | Earth Brown         | 4.2     | `#6d4c41`        | Active |
 | Companionship           | Deep Teal           | 3.3     | `#00695c`        | Active |
@@ -841,6 +842,24 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Straddling, lap-sitting, intimate seated positioning, bodily closeness
 - **Theme**: Deep plum-magenta suggesting intimate proximity and sensual bodily contact
 
+### 21. Posture/Position Colors
+
+#### 21.1 Yielding Posture - Bending
+
+```json
+{
+  "backgroundColor": "#5a4033",
+  "textColor": "#fff3e0",
+  "hoverBackgroundColor": "#6d4c41",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.47:1 AAA
+- **Hover Contrast**: 7.61:1 AAA
+- **Use Cases**: Bending over, physical submission postures, vulnerable positioning
+- **Theme**: Warm earth-brown suggesting grounded vulnerability and physical yielding
+
 ## Maintenance
 
 ### Assigning a New Scheme to a Mod
@@ -860,6 +879,7 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ## Version History
 
+- **2025-12**: Added Section 21 (Posture/Position Colors) with Yielding Posture (21.1) for Bending mod
 - **2025-12**: Assigned Pathfinder Slate (9.2) to Facing mod
 - **2025-12**: Assigned Deep Blue (7.1) to Lying mod
 - **2025-12**: Assigned Charcoal (1.3) to Sitting mod

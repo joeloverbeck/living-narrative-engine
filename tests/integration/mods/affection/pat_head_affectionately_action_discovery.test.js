@@ -33,7 +33,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
     testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
       (_scopeName, actorEntity) => {
         const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners ?? [];
+          actorEntity.components?.['personal-space-states:closeness']?.partners ?? [];
         if (!Array.isArray(closeness) || closeness.length === 0) {
           return ActionResult.success([]);
         }
@@ -113,7 +113,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
 
     it('requires actor closeness and uses the affection color palette', () => {
       expect(patHeadAffectionatelyAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(patHeadAffectionatelyAction.visual).toEqual({
         backgroundColor: '#6a1b9a',

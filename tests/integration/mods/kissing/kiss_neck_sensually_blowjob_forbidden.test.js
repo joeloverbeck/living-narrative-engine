@@ -51,7 +51,7 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -137,13 +137,13 @@ describe('kissing:kiss_neck_sensually - giving_blowjob forbidden component', () 
         consented: true,
       };
 
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [targetGiving.id, targetThird.id],
       };
-      targetGiving.components['positioning:closeness'] = {
+      targetGiving.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetThird.id],
       };
-      targetThird.components['positioning:closeness'] = {
+      targetThird.components['personal-space-states:closeness'] = {
         partners: [actor.id, targetGiving.id],
       };
 

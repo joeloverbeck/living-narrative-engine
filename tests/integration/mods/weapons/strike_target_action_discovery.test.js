@@ -79,9 +79,9 @@ describe('strike_target action definition', () => {
       );
     });
 
-    it('should forbid actor with positioning:bending_over', () => {
+    it('should forbid actor with bending-states:bending_over', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:bending_over'
+        'bending-states:bending_over'
       );
     });
 

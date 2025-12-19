@@ -279,10 +279,10 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should not show action when actor has closeness but no facing_away', async () => {
       // Alice is in closeness with Bob but not facing away
-      entityManager.addComponent(alice, 'positioning:closeness', {
+      entityManager.addComponent(alice, 'personal-space-states:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'positioning:closeness', {
+      entityManager.addComponent(bob, 'personal-space-states:closeness', {
         partners: [alice],
       });
 
@@ -308,10 +308,10 @@ describe('Turn Around to Face Action Discovery', () => {
         });
 
       // Set up closeness
-      entityManager.addComponent(alice, 'positioning:closeness', {
+      entityManager.addComponent(alice, 'personal-space-states:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'positioning:closeness', {
+      entityManager.addComponent(bob, 'personal-space-states:closeness', {
         partners: [alice],
       });
 
@@ -338,16 +338,16 @@ describe('Turn Around to Face Action Discovery', () => {
   describe('Scope Resolution', () => {
     beforeEach(() => {
       // Set up a complex closeness circle
-      entityManager.addComponent(alice, 'positioning:closeness', {
+      entityManager.addComponent(alice, 'personal-space-states:closeness', {
         partners: [bob, charlie, diana],
       });
-      entityManager.addComponent(bob, 'positioning:closeness', {
+      entityManager.addComponent(bob, 'personal-space-states:closeness', {
         partners: [alice, charlie, diana],
       });
-      entityManager.addComponent(charlie, 'positioning:closeness', {
+      entityManager.addComponent(charlie, 'personal-space-states:closeness', {
         partners: [alice, bob, diana],
       });
-      entityManager.addComponent(diana, 'positioning:closeness', {
+      entityManager.addComponent(diana, 'personal-space-states:closeness', {
         partners: [alice, bob, charlie],
       });
     });
@@ -491,10 +491,10 @@ describe('Turn Around to Face Action Discovery', () => {
         });
 
       // Set up closeness
-      entityManager.addComponent(alice, 'positioning:closeness', {
+      entityManager.addComponent(alice, 'personal-space-states:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'positioning:closeness', {
+      entityManager.addComponent(bob, 'personal-space-states:closeness', {
         partners: [alice],
       });
 
@@ -540,13 +540,13 @@ describe('Turn Around to Face Action Discovery', () => {
         });
 
       // Set up closeness for all
-      entityManager.addComponent(alice, 'positioning:closeness', {
+      entityManager.addComponent(alice, 'personal-space-states:closeness', {
         partners: [bob, charlie],
       });
-      entityManager.addComponent(bob, 'positioning:closeness', {
+      entityManager.addComponent(bob, 'personal-space-states:closeness', {
         partners: [alice, charlie],
       });
-      entityManager.addComponent(charlie, 'positioning:closeness', {
+      entityManager.addComponent(charlie, 'personal-space-states:closeness', {
         partners: [alice, bob],
       });
 

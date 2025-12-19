@@ -13,7 +13,7 @@ import { AnatomyFormattingService } from '../../../src/services/anatomyFormattin
 import EventBus from '../../../src/events/eventBus.js';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import handHoldingComponent from '../../../data/mods/hand-holding/components/holding_hand.component.json';
-import closenessComponent from '../../../data/mods/positioning/components/closeness.component.json';
+import closenessComponent from '../../../data/mods/personal-space-states/components/closeness.component.json';
 
 const FINAL_MOD_ORDER_KEY = 'final_mod_order';
 const TEST_MOD_ID = 'integration_mod';
@@ -349,7 +349,7 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
       await entityManager.addComponent(actor.id, 'core:gender', {
         value: 'nonbinary',
       });
-      await entityManager.addComponent(actor.id, 'positioning:closeness', {
+      await entityManager.addComponent(actor.id, 'personal-space-states:closeness', {
         partners: [partner.id],
       });
       await entityManager.addComponent(actor.id, handHoldingComponent.id, {

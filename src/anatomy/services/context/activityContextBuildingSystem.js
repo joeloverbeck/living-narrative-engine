@@ -45,7 +45,7 @@ class ActivityContextBuildingSystem {
   /**
    * Build lightweight context for an activity based on available component data.
    *
-   * Retrieves closeness relationships from the positioning:closeness component and
+   * Retrieves closeness relationships from the personal-space-states:closeness component and
    * determines relationship tone based on partner status. Also detects target gender
    * and activity intensity.
    *
@@ -84,7 +84,7 @@ class ActivityContextBuildingSystem {
   /**
    * Get closeness partners for an actor with caching
    *
-   * Queries the positioning:closeness component for the actor's partner list.
+   * Queries the personal-space-states:closeness component for the actor's partner list.
    * Results are cached to avoid repeated entity lookups.
    *
    * @private
@@ -102,7 +102,7 @@ class ActivityContextBuildingSystem {
     try {
       const actorEntity = this.#entityManager.getEntityInstance(actorId);
       const closenessData = actorEntity?.getComponentData?.(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       partners = Array.isArray(closenessData?.partners)
         ? [...closenessData.partners]

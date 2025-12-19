@@ -149,7 +149,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       expect(sitDownAtDistanceAction.forbidden_components.actor).toEqual([
         'positioning:sitting_on',
         'positioning:kneeling_before',
-        'positioning:bending_over',
+        'bending-states:bending_over',
         'positioning:restraining',
         'positioning:fallen',
       ]);

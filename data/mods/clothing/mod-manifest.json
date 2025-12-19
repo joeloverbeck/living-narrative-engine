@@ -19,6 +19,10 @@
     {
       "id": "items",
       "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
     }
   ],
   "gameVersion": ">=0.0.1",

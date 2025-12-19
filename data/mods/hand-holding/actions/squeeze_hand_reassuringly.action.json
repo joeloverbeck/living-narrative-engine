@@ -5,7 +5,7 @@
   "description": "Give the target's hand a gentle squeeze to provide comfort.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "squeeze {target}'s hand reassuringly",
   "prerequisites": [

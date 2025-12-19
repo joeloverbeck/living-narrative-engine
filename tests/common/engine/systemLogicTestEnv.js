@@ -647,8 +647,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set([sittingOn.furniture_id]) };
         }
 
-        // Handle the positioning:available_surfaces scope
-        if (scopeName === 'positioning:available_surfaces') {
+        // Handle the bending:available_surfaces scope
+        if (scopeName === 'bending:available_surfaces') {
           // Extract actor ID from context (context might be an object with actor property or just the ID)
           const actorId = context?.actor?.id || context;
 
@@ -659,11 +659,11 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with positioning:allows_bending_over in the same location
+          // Find all entities with bending:allows_bending_over in the same location
           const allEntities = Array.from(entityManager.entities);
           const availableSurfaces = allEntities.filter((entity) => {
             const hasBendingComponent =
-              entity.components?.['positioning:allows_bending_over'];
+              entity.components?.['bending:allows_bending_over'];
             const entityPosition = entity.components?.['core:position'];
             const sameLocation =
               entityPosition?.locationId === actorPosition.locationId;
@@ -674,14 +674,14 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(surfaceIds) };
         }
 
-        // Handle the positioning:surface_im_bending_over scope
-        if (scopeName === 'positioning:surface_im_bending_over') {
+        // Handle the bending:surface_im_bending_over scope
+        if (scopeName === 'bending:surface_im_bending_over') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
           // Get actor's bending_over component
           const actor = entityManager.getEntityInstance(actorId);
-          const bendingOver = actor?.components?.['positioning:bending_over'];
+          const bendingOver = actor?.components?.['bending-states:bending_over'];
 
           if (!bendingOver || !bendingOver.surface_id) {
             return { success: true, value: new Set() };

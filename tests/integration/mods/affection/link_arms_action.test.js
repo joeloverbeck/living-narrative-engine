@@ -113,7 +113,7 @@ describe('affection:link_arms action integration', () => {
       .atLocation('room1')
       .withLocationComponent('room1')
       .asActor()
-      .withComponent('positioning:closeness', {
+      .withComponent('personal-space-states:closeness', {
         partners: [scenario.actor.id],
       })
       .withBody('observer1-torso')
@@ -132,10 +132,10 @@ describe('affection:link_arms action integration', () => {
       .atLocation('room1')
       .withLocationComponent('room1')
       .build();
-    observer.components['positioning:closeness'] = {
+    observer.components['personal-space-states:closeness'] = {
       partners: [scenario.actor.id],
     };
-    scenario.actor.components['positioning:closeness'].partners.push(
+    scenario.actor.components['personal-space-states:closeness'].partners.push(
       observer.id
     );
     scenario.observers = [observer];
@@ -225,7 +225,7 @@ describe('affection:link_arms action integration', () => {
       .atLocation('room1')
       .withLocationComponent('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['target1'] })
       .withComponent('positioning:hugging', {
         embraced_entity_id: 'target1',
         initiated: true,
@@ -249,7 +249,7 @@ describe('affection:link_arms action integration', () => {
       .atLocation('room1')
       .withLocationComponent('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'actor1',
         consented: true,

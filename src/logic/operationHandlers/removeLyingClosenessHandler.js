@@ -118,7 +118,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
       // Get departing actor's current closeness state
       const departingActorCloseness = this.#entityManager.getComponentData(
         parameters.actor_id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Validate departing actor's closeness component
@@ -201,13 +201,13 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
           // Remove component if no partners remain
           await this.#entityManager.removeComponent(
             actorId,
-            'positioning:closeness'
+            'personal-space-states:closeness'
           );
         } else {
           // Update component with remaining partners
           await this.#entityManager.addComponent(
             actorId,
-            'positioning:closeness',
+            'personal-space-states:closeness',
             {
               partners: updatedPartners,
             }
@@ -223,7 +223,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
       for (const actorId of Object.keys(updatedPartnerData)) {
         const finalClosenessComponent = this.#entityManager.getComponentData(
           actorId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
         this.#componentStateValidator.validateClosenessComponent(
           actorId,
@@ -393,7 +393,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
     // Process the departing actor first
     const departingActorCloseness = this.#entityManager.getComponentData(
       departingActorId,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     if (
       departingActorCloseness &&
@@ -417,7 +417,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
     for (const partnerId of currentPartners) {
       const partnerCloseness = this.#entityManager.getComponentData(
         partnerId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       if (partnerCloseness && Array.isArray(partnerCloseness.partners)) {
@@ -472,7 +472,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
         // Check if actor still has closeness relationships
         const closenessComponent = this.#entityManager.getComponentData(
           actorId,
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
 
         // If no closeness component or empty partners, unlock movement

@@ -12,7 +12,7 @@
   },
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:bending_over"]
+    "actor": ["bending-states:bending_over"]
   },
   "template": "follow {target}",
   "prerequisites": [

@@ -309,12 +309,12 @@ describe('lying:lie_down action rule execution', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
-      expect(bobEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeDefined();
+      expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
       expect(
-        aliceEntity.components['positioning:closeness'].partners
+        aliceEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:bob');
-      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+      expect(bobEntity.components['personal-space-states:closeness'].partners).toContain(
         'test:alice'
       );
     });
@@ -361,22 +361,22 @@ describe('lying:lie_down action rule execution', () => {
         testFixture.entityManager.getEntityInstance('test:carol');
 
       expect(
-        aliceEntity.components['positioning:closeness'].partners
+        aliceEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:bob');
       expect(
-        aliceEntity.components['positioning:closeness'].partners
+        aliceEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:carol');
-      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+      expect(bobEntity.components['personal-space-states:closeness'].partners).toContain(
         'test:alice'
       );
-      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+      expect(bobEntity.components['personal-space-states:closeness'].partners).toContain(
         'test:carol'
       );
       expect(
-        carolEntity.components['positioning:closeness'].partners
+        carolEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:alice');
       expect(
-        carolEntity.components['positioning:closeness'].partners
+        carolEntity.components['personal-space-states:closeness'].partners
       ).toContain('test:bob');
     });
 
@@ -419,8 +419,8 @@ describe('lying:lie_down action rule execution', () => {
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       // Closeness component should not exist since they're alone on their respective beds
-      expect(aliceEntity.components['positioning:closeness']).toBeUndefined();
-      expect(bobEntity.components['positioning:closeness']).toBeUndefined();
+      expect(aliceEntity.components['personal-space-states:closeness']).toBeUndefined();
+      expect(bobEntity.components['personal-space-states:closeness']).toBeUndefined();
     });
   });
 

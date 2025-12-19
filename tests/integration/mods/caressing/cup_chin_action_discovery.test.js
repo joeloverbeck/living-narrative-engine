@@ -45,7 +45,7 @@ describe('caressing:cup_chin action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -100,7 +100,7 @@ describe('caressing:cup_chin action discovery', () => {
 
     it('requires actor closeness and uses the caressing color palette', () => {
       expect(cupChinAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(cupChinAction.visual).toEqual({
         backgroundColor: '#311b92',
@@ -126,8 +126,8 @@ describe('caressing:cup_chin action discovery', () => {
 
     it('is not available when actors are not in closeness', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);

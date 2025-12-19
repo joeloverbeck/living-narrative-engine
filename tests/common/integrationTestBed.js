@@ -467,7 +467,7 @@ export class IntegrationTestBed extends BaseTestBed {
           },
         },
         {
-          id: 'positioning:closeness',
+          id: 'personal-space-states:closeness',
           schema: {
             type: 'object',
             properties: {

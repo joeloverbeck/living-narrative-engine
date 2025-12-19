@@ -409,21 +409,21 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     // Get existing closeness components or create new ones
     const actor1Closeness = entityManager.getComponent(
       id1,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const actor2Closeness = entityManager.getComponent(
       id2,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     // Merge partners arrays, avoiding duplicates
     const actor1Partners = actor1Closeness?.partners || [];
     const actor2Partners = actor2Closeness?.partners || [];
 
-    entityManager.addComponent(id1, 'positioning:closeness', {
+    entityManager.addComponent(id1, 'personal-space-states:closeness', {
       partners: [...new Set([...actor1Partners, id2])],
     });
-    entityManager.addComponent(id2, 'positioning:closeness', {
+    entityManager.addComponent(id2, 'personal-space-states:closeness', {
       partners: [...new Set([...actor2Partners, id1])],
     });
   }

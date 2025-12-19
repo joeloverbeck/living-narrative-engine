@@ -73,7 +73,7 @@ describe('affection:link_arms action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -148,7 +148,7 @@ describe('affection:link_arms action discovery', () => {
 
     it('requires actor closeness and uses the affection color palette', () => {
       expect(linkArmsAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(linkArmsAction.forbidden_components.actor).toEqual([
         'positioning:straddling_waist',
@@ -205,8 +205,8 @@ describe('affection:link_arms action discovery', () => {
         ['Ivy', 'Liam'],
         ['torso', 'arm', 'arm']
       );
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       testFixture.reset([...scenario.allEntities]);
       await configureActionDiscovery();

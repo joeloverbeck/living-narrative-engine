@@ -247,7 +247,7 @@ describe('RemoveLyingClosenessHandler', () => {
           }
           if (
             entityId === 'game:alice' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: [] }; // Empty partners array
           }
@@ -282,7 +282,7 @@ describe('RemoveLyingClosenessHandler', () => {
           }
           if (
             entityId === 'game:alice' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: 'invalid-data' }; // Invalid partners data
           }
@@ -328,7 +328,7 @@ describe('RemoveLyingClosenessHandler', () => {
           }
           if (
             entityId === 'game:alice' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: [] }; // Empty partners array
           }
@@ -500,12 +500,12 @@ describe('RemoveLyingClosenessHandler', () => {
       // Verify component updates
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'game:alice',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['game:david'] }
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'game:bob',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['game:charlie'] }
       );
     });
@@ -538,11 +538,11 @@ describe('RemoveLyingClosenessHandler', () => {
       // Both should have components removed
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
@@ -563,13 +563,13 @@ describe('RemoveLyingClosenessHandler', () => {
           }
           if (
             entityId === 'game:alice' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['game:bob', 'game:charlie', 'game:bob'] }; // Duplicate partners trigger validation error
           }
           if (
             entityId === 'game:bob' &&
-            componentType === 'positioning:closeness'
+            componentType === 'personal-space-states:closeness'
           ) {
             return { partners: ['game:alice'] };
           }
@@ -636,11 +636,11 @@ describe('RemoveLyingClosenessHandler', () => {
       // Verify that components were removed
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Verify no errors were logged
@@ -906,18 +906,18 @@ describe('RemoveLyingClosenessHandler', () => {
       // Bob should have component removed
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Alice and Charlie should keep their components with each other
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'game:alice',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['game:charlie'] }
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'game:charlie',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['game:alice'] }
       );
     });
@@ -975,11 +975,11 @@ describe('RemoveLyingClosenessHandler', () => {
 
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:alice',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
         'game:bob',
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 

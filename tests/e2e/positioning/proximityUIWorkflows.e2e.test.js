@@ -152,10 +152,10 @@ describe('Proximity UI Workflows E2E', () => {
       });
 
       // Establish closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
@@ -214,10 +214,10 @@ describe('Proximity UI Workflows E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Simulate UI update - remove proximity actions
       proximityActions.forEach((action) => {
@@ -300,10 +300,10 @@ describe('Proximity UI Workflows E2E', () => {
       });
 
       // Establish closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
@@ -332,10 +332,10 @@ describe('Proximity UI Workflows E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Simulate final announcements
       gameLog.textContent =
@@ -439,10 +439,10 @@ describe('Proximity UI Workflows E2E', () => {
       });
 
       // Establish closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
@@ -477,10 +477,10 @@ describe('Proximity UI Workflows E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Update status displays
       aliceStatus.querySelector('.position').textContent = 'Standing';
@@ -578,10 +578,10 @@ describe('Proximity UI Workflows E2E', () => {
       });
 
       // Establish closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
@@ -613,10 +613,10 @@ describe('Proximity UI Workflows E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Update button states after standing
       sitButton.disabled = false; // Can sit again
@@ -804,10 +804,10 @@ describe('Proximity UI Workflows E2E', () => {
       });
 
       // Establish closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
@@ -848,10 +848,10 @@ describe('Proximity UI Workflows E2E', () => {
       );
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
-      await entityService.updateComponent(bobId, 'positioning:closeness', null);
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', null);
 
       // Announce proximity loss
       announce(

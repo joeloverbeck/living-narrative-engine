@@ -5,7 +5,7 @@
   "description": "Pull your hand away to break free from the target's hold.",
   "targets": "hand-holding:actor_whose_hand_target_is_holding",
   "required_components": {
-    "actor": ["positioning:closeness", "hand-holding:hand_held"],
+    "actor": ["personal-space-states:closeness", "hand-holding:hand_held"],
     "primary": ["hand-holding:holding_hand"]
   },
   "template": "withdraw your hand from {target}'s grasp",

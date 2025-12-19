@@ -1,1 +1,1 @@
-sex-breastplay:actors_with_breasts_in_intimacy := actor.components.positioning:closeness.partners[][{"hasPartOfType": [".", "breast"]}]
+sex-breastplay:actors_with_breasts_in_intimacy := actor.components.personal-space-states:closeness.partners[][{"hasPartOfType": [".", "breast"]}]

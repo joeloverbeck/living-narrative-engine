@@ -5,7 +5,7 @@
   "description": "Touch the tip of the target's nose in a tender gesture.",
   "targets": "affection:close_actors_with_nose_or_entity_kneeling_before_actor",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "touch the tip of {target}'s nose tenderly",
   "prerequisites": [],

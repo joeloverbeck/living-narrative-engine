@@ -269,7 +269,7 @@ export class ModEntityBuilder {
   }
 
   /**
-   * Adds positioning:closeness component with the specified partners.
+   * Adds personal-space-states:closeness component with the specified partners.
    *
    * Passing an array replaces any existing partners. Passing a single partner ID appends
    * it to the existing list (unless it is already present).
@@ -278,7 +278,7 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   closeToEntity(partnerIds) {
-    const closenessComponentId = 'positioning:closeness';
+    const closenessComponentId = 'personal-space-states:closeness';
 
     if (Array.isArray(partnerIds)) {
       const validatedPartners = partnerIds.map((partnerId, index) => {
@@ -644,7 +644,7 @@ export class ModEntityBuilder {
     }
 
     // Validate closeness component if present
-    const hasCloseness = this.entityData.components['positioning:closeness'];
+    const hasCloseness = this.entityData.components['personal-space-states:closeness'];
     if (hasCloseness) {
       if (!Array.isArray(hasCloseness.partners)) {
         throw new Error(

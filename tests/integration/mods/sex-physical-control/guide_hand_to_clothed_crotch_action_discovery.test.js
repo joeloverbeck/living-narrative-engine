@@ -93,7 +93,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
       }
 
       const closenessPartners =
-        actor.components?.['positioning:closeness']?.partners || [];
+        actor.components?.['personal-space-states:closeness']?.partners || [];
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };

@@ -80,7 +80,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
 
             const actorEntity = entityManager.getEntityInstance(actorId);
             const closeness =
-              actorEntity.components?.['positioning:closeness']?.partners;
+              actorEntity.components?.['personal-space-states:closeness']?.partners;
             if (!Array.isArray(closeness) || closeness.length === 0) {
               return { success: true, value: new Set() };
             }
@@ -197,7 +197,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
 
     it('requires actor closeness and uses the affection color palette', () => {
       expect(ruffleHairAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(ruffleHairAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
@@ -245,8 +245,8 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
 
     it('is not available when actors are not in closeness', () => {
       const scenario = createCloseActorsWithHair(['Ivy', 'Liam']);
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([

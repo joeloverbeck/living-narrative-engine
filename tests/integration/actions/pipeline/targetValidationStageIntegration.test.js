@@ -163,7 +163,7 @@ describe('TargetComponentValidationStage Integration', () => {
           },
         },
         {
-          id: 'positioning:bend_over',
+          id: 'bending:bend_over',
           forbidden_components: {
             primary: ['positioning:bent_over'],
             secondary: ['positioning:lying_down'],

@@ -13,7 +13,7 @@
   "required_components": {},
   "forbidden_components": {
     "actor": [
-      "positioning:closeness",
+      "personal-space-states:closeness",
       "positioning:doing_complex_performance",
       "positioning:wielding",
       "positioning:being_restrained",

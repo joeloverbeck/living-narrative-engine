@@ -1,7 +1,7 @@
 // Scope for actors in closeness who have breasts that are COVERED and are facing each other
 // This is the inverse of actors_with_breasts_facing_each_other (which requires exposed breasts)
 // Used by actions that interact with covered breasts (e.g., fondling over clothes)
-sex-breastplay:actors_with_breasts_facing_each_other_covered := actor.components.positioning:closeness.partners[][{ 
+sex-breastplay:actors_with_breasts_facing_each_other_covered := actor.components.personal-space-states:closeness.partners[][{ 
   "and": [
     {"hasPartOfType": [".", "breast"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},

@@ -44,7 +44,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
      * data/mods/sex-dry-intimacy/scopes/actors_with_penis_facing_straddler_covered.scope
      *
      * Scope DSL:
-     *   sex-dry-intimacy:actors_with_penis_facing_straddler_covered := actor.components.positioning:closeness.partners[][{
+     *   sex-dry-intimacy:actors_with_penis_facing_straddler_covered := actor.components.personal-space-states:closeness.partners[][{
      *     "and": [
      *       {"hasPartOfType": [".", "penis"]},
      *       {"condition_ref": "positioning:entity-not-in-facing-away"},
@@ -87,7 +87,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
         const straddling = actor?.components?.['positioning:straddling_waist'];
 
         console.log('  Actor closeness partners:', closeness?.partners);
@@ -347,10 +347,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
       );
     });
 
-    it('should require positioning:closeness and positioning:straddling_waist on actor', () => {
+    it('should require personal-space-states:closeness and positioning:straddling_waist on actor', () => {
       expect(rubPussyAgainstPenisAction.required_components).toBeDefined();
       expect(rubPussyAgainstPenisAction.required_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(rubPussyAgainstPenisAction.required_components.actor).toContain(
         'positioning:straddling_waist'

@@ -85,7 +85,7 @@ describe('physical-control:break_free_from_restraint closeness handling', () => 
     const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
     const targetAfter = testFixture.entityManager.getEntityInstance(target.id);
 
-    expect(actorAfter.components['positioning:closeness']).toBeUndefined();
-    expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+    expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
+    expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
   });
 });

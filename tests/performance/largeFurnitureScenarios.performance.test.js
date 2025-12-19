@@ -91,7 +91,7 @@ describe('Large Furniture Scenarios Performance', () => {
           if (componentType === 'sitting:allows_sitting') {
             return { spots };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             const actorIndex = parseInt(entityId.split('_')[1]);
             const partners = [];
             if (actorIndex > 0) partners.push(`game:actor_${actorIndex - 1}`);
@@ -316,7 +316,7 @@ describe('Large Furniture Scenarios Performance', () => {
               executionContext.variables.get('currentFurnitureId');
             return { spots: [...(furnitureStates[furnitureId] || [])] };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: [] }; // Simplified for testing
           }
           return null;
@@ -491,7 +491,7 @@ describe('Large Furniture Scenarios Performance', () => {
           if (componentType === 'sitting:allows_sitting') {
             return { spots: [...currentState] };
           }
-          if (componentType === 'positioning:closeness') {
+          if (componentType === 'personal-space-states:closeness') {
             return { partners: [] };
           }
           return null;

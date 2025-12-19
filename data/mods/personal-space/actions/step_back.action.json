@@ -5,11 +5,11 @@
   "description": "Step back from your current intimate partner, ending the closeness.",
   "targets": "none",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": [
-      "positioning:bending_over",
+      "bending-states:bending_over",
       "positioning:biting_neck",
       "positioning:straddling_waist",
       "positioning:sitting_on",

@@ -36,8 +36,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack (lunge doesn't require it)
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       // Add vampire marker to actor
       scenario.actor.components['vampirism:is_vampire'] = {};
@@ -61,8 +61,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -87,8 +87,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -114,8 +114,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
@@ -132,8 +132,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -160,8 +160,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -182,8 +182,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -210,8 +210,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -241,8 +241,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -273,8 +273,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         });
 
         // Remove closeness for distance attack
-        delete scenario.actor.components['positioning:closeness'];
-        delete scenario.target.components['positioning:closeness'];
+        delete scenario.actor.components['personal-space-states:closeness'];
+        delete scenario.target.components['personal-space-states:closeness'];
 
         scenario.actor.components['vampirism:is_vampire'] = {};
         testFixture.reset([scenario.room, scenario.actor, scenario.target]);
@@ -298,8 +298,8 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       });
 
       // Remove closeness for distance attack
-      delete scenario1.actor.components['positioning:closeness'];
-      delete scenario1.target.components['positioning:closeness'];
+      delete scenario1.actor.components['personal-space-states:closeness'];
+      delete scenario1.target.components['personal-space-states:closeness'];
 
       scenario1.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario1.room, scenario1.actor, scenario1.target]);

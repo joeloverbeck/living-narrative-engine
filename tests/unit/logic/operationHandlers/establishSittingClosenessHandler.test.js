@@ -457,12 +457,12 @@ describe('EstablishSittingClosenessHandler', () => {
       // Verify both actors get updated with their partner lists
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'alice',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['bob'] } // Alice's partners
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'bob',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['alice'] } // Bob's partners
       );
 
@@ -513,18 +513,18 @@ describe('EstablishSittingClosenessHandler', () => {
       // Only Alice and Charlie should be updated (adjacent relationship only)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'alice',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['bob', 'charlie'] } // Alice keeps Bob and adds Charlie
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'charlie',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: ['alice'] } // Charlie only gets Alice (adjacent)
       );
       // Bob should NOT be updated - he's not adjacent to Charlie
       expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
         'bob',
-        'positioning:closeness',
+        'personal-space-states:closeness',
         expect.anything()
       );
 

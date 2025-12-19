@@ -108,7 +108,7 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       const receivingBlowjob =
         actor?.components?.['sex-states:receiving_blowjob'];
       const closenessPartners =
-        actor?.components?.['positioning:closeness']?.partners;
+        actor?.components?.['personal-space-states:closeness']?.partners;
 
       // IMPORTANT: No kneeling filter here (unlike positioning:close_actors)
       // This allows the action to work when target is kneeling before actor

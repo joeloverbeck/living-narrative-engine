@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:closeness", "sex-states:receiving_blowjob"]
+    "actor": ["personal-space-states:closeness", "sex-states:receiving_blowjob"]
   },
   "forbidden_components": {},
   "template": "pull out your cock out of {primary}'s mouth",

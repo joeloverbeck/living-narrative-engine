@@ -1,6 +1,6 @@
 /**
  * @file Integration tests verifying that music actions are correctly forbidden when actor is in closeness.
- * @description Ensures that music actions are not available when the acting actor has the positioning:closeness component.
+ * @description Ensures that music actions are not available when the acting actor has the personal-space-states:closeness component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -38,38 +38,38 @@ describe('music actions forbidden when actor is in closeness', () => {
   });
 
   describe('Action structure validation', () => {
-    it('play_phrase_on_instrument should have positioning:closeness as forbidden component', () => {
+    it('play_phrase_on_instrument should have personal-space-states:closeness as forbidden component', () => {
       expect(playPhraseAction.forbidden_components).toBeDefined();
       expect(playPhraseAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
-    it('set_meditative_mood_on_instrument should have positioning:closeness as forbidden component', () => {
+    it('set_meditative_mood_on_instrument should have personal-space-states:closeness as forbidden component', () => {
       expect(setMeditativeMoodAction.forbidden_components).toBeDefined();
       expect(setMeditativeMoodAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
-    it('play_ostinato_on_instrument should have positioning:closeness as forbidden component', () => {
+    it('play_ostinato_on_instrument should have personal-space-states:closeness as forbidden component', () => {
       expect(playOstinatoAction.forbidden_components).toBeDefined();
       expect(playOstinatoAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
-    it('stop_playing_instrument should have positioning:closeness as forbidden component', () => {
+    it('stop_playing_instrument should have personal-space-states:closeness as forbidden component', () => {
       expect(stopPlayingAction.forbidden_components).toBeDefined();
       expect(stopPlayingAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
 
-    it('drive_accent_on_instrument should have positioning:closeness as forbidden component', () => {
+    it('drive_accent_on_instrument should have personal-space-states:closeness as forbidden component', () => {
       expect(driveAccentAction.forbidden_components).toBeDefined();
       expect(driveAccentAction.forbidden_components.actor).toContain(
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
     });
   });
@@ -126,7 +126,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withName('Emma')
         .atLocation('concert_hall')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['musician1'],
         })
         .build();
@@ -143,7 +143,7 @@ describe('music actions forbidden when actor is in closeness', () => {
           mood: 'cheerful',
         })
         .withComponent('positioning:doing_complex_performance', {})
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })
         .build();
@@ -174,7 +174,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withName('James')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['musician1'],
         })
         .build();
@@ -184,7 +184,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })
         .build();
@@ -214,7 +214,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withName('Alex')
         .atLocation('hall')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['musician1'],
         })
         .build();
@@ -230,7 +230,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withComponent('music:performance_mood', {
           mood: 'tense',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })
         .build();
@@ -260,7 +260,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withName('Taylor')
         .atLocation('studio')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['musician1'],
         })
         .build();
@@ -273,7 +273,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withComponent('music:playing_music', {
           playing_on: 'guitar1',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })
         .build();
@@ -303,7 +303,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withName('Casey')
         .atLocation('arena')
         .asActor()
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['musician1'],
         })
         .build();
@@ -319,7 +319,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withComponent('music:performance_mood', {
           mood: 'aggressive',
         })
-        .withComponent('positioning:closeness', {
+        .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })
         .build();

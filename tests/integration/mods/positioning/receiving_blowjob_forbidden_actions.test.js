@@ -12,7 +12,7 @@ import {
 } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
-import bendOverAction from '../../../../data/mods/positioning/actions/bend_over.action.json';
+import bendOverAction from '../../../../data/mods/bending/actions/bend_over.action.json';
 import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 import stepBackAction from '../../../../data/mods/personal-space/actions/step_back.action.json';
 
@@ -25,8 +25,8 @@ describe('positioning actions forbidden when receiving blowjob', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:bend_over'
+      'bending',
+      'bending:bend_over'
     );
   });
 
@@ -111,7 +111,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
           return { success: true, value: new Set(otherActors) };
         }
 
-        if (scopeName === 'positioning:available_surfaces') {
+        if (scopeName === 'bending:available_surfaces') {
           // Return a mock surface for bend_over action
           return { success: true, value: new Set(['surface1']) };
         }
@@ -135,7 +135,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).toContain('positioning:bend_over');
+      expect(ids).toContain('bending:bend_over');
     });
 
     it('turn_your_back is available for actors in location (structure validation)', () => {
@@ -203,7 +203,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
           return { success: true, value: new Set(otherActors) };
         }
 
-        if (scopeName === 'positioning:available_surfaces') {
+        if (scopeName === 'bending:available_surfaces') {
           // Return a mock surface for bend_over action
           return { success: true, value: new Set(['surface1']) };
         }
@@ -233,7 +233,7 @@ describe('positioning actions forbidden when receiving blowjob', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('positioning:bend_over');
+      expect(ids).not.toContain('bending:bend_over');
     });
 
     it('turn_your_back is NOT available when actor is receiving blowjob', () => {

@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "hexing",
   "version": "1.0.0",
-  "name": "Hexing",
+  "name": "Hexing System",
   "description": "Hexing-related actions, such as corrupting gaze.",
   "dependencies": [
     { "id": "core", "version": ">=1.0.0" },

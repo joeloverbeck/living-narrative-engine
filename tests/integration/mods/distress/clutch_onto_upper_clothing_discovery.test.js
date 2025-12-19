@@ -118,7 +118,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
           }
 
           const closenessPartners =
-            actorEntity.components?.['positioning:closeness']?.partners || [];
+            actorEntity.components?.['personal-space-states:closeness']?.partners || [];
           const actorFacingAway = new Set(
             actorEntity.components?.['positioning:facing_away']
               ?.facing_away_from || []
@@ -271,7 +271,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
 
     it('requires closeness and uses the Obsidian Frost palette', () => {
       expect(clutchOntoUpperClothingAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(clutchOntoUpperClothingAction.forbidden_components).toEqual({
         actor: ['positioning:hugging', 'positioning:restraining'],
@@ -322,8 +322,8 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
 
     it('is not available when actors lack closeness', () => {
       const scenario = testFixture.createCloseActors(['Kara', 'Leon']);
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       const garment = {
         id: 'garment2',

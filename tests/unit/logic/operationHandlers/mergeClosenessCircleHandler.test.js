@@ -51,14 +51,14 @@ describe('MergeClosenessCircleHandler', () => {
 
     expect(em.addComponent).toHaveBeenCalledWith(
       'a1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['t1'],
       }
     );
     expect(em.addComponent).toHaveBeenCalledWith(
       't1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['a1'],
       }
@@ -69,10 +69,10 @@ describe('MergeClosenessCircleHandler', () => {
   test('forms new circle and locks movement on anatomy-based entities', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
       // Actor closeness check
-      if (id === 'hero1' && componentId === 'positioning:closeness')
+      if (id === 'hero1' && componentId === 'personal-space-states:closeness')
         return null;
       // Target closeness check
-      if (id === 'hero2' && componentId === 'positioning:closeness')
+      if (id === 'hero2' && componentId === 'personal-space-states:closeness')
         return null;
       // Anatomy structure for hero1
       if (id === 'hero1' && componentId === 'anatomy:body') {
@@ -119,14 +119,14 @@ describe('MergeClosenessCircleHandler', () => {
 
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['hero2'],
       }
     );
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero2',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['hero1'],
       }
@@ -136,7 +136,7 @@ describe('MergeClosenessCircleHandler', () => {
 
   test('stores result variable when provided', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
-      if (componentId === 'positioning:closeness') return null;
+      if (componentId === 'personal-space-states:closeness') return null;
       if (componentId === 'anatomy:body') return null;
       if (componentId === 'core:movement') return { locked: false };
       return null;
@@ -156,13 +156,13 @@ describe('MergeClosenessCircleHandler', () => {
   test('handles mixed legacy and anatomy entities', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
       // Legacy entity 'a1' has no anatomy
-      if (id === 'a1' && componentId === 'positioning:closeness') return null;
+      if (id === 'a1' && componentId === 'personal-space-states:closeness') return null;
       if (id === 'a1' && componentId === 'anatomy:body') return null;
       if (id === 'a1' && componentId === 'core:movement') {
         return { locked: false };
       }
       // Anatomy entity 'hero1'
-      if (id === 'hero1' && componentId === 'positioning:closeness')
+      if (id === 'hero1' && componentId === 'personal-space-states:closeness')
         return null;
       if (id === 'hero1' && componentId === 'anatomy:body') {
         return {
@@ -185,14 +185,14 @@ describe('MergeClosenessCircleHandler', () => {
 
     expect(em.addComponent).toHaveBeenCalledWith(
       'a1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['hero1'],
       }
     );
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero1',
-      'positioning:closeness',
+      'personal-space-states:closeness',
       {
         partners: ['a1'],
       }
@@ -313,7 +313,7 @@ describe('MergeClosenessCircleHandler', () => {
 
     // Test non-array partners fallback (lines 130-131)
     em.getComponentData = jest.fn((id, componentId) => {
-      if (componentId === 'positioning:closeness') {
+      if (componentId === 'personal-space-states:closeness') {
         // Return object with partners as non-array to test fallback
         return { partners: 'not-an-array' };
       }

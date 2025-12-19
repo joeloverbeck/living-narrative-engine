@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "kissing",
   "version": "1.0.0",
-  "name": "Kissing",
+  "name": "Kissing System",
   "description": "Actions involving kissing and mouth-based romantic interactions.",
   "actionPurpose": "Engage in romantic mouth-based intimacy from gentle pecks to passionate deep kisses and neck play.",
   "actionConsiderWhen": "Expressing romantic desire, deepening intimacy, showing passionate attraction, or breaking from a kiss.",
@@ -15,6 +15,10 @@
     },
     {
       "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
       "version": "^1.0.0"
     }
   ],
@@ -37,7 +41,9 @@
       "suck_on_neck_to_leave_hickey.action.json",
       "suck_on_tongue.action.json"
     ],
-    "components": ["kissing.component.json"],
+    "components": [
+      "kissing.component.json"
+    ],
     "conditions": [
       "actor-is-kiss-receiver.condition.json",
       "event-is-action-accept-kiss-passively.condition.json",

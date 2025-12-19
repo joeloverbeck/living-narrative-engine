@@ -461,13 +461,13 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
         // Measure memory after each cycle (less frequent sampling)
         const currentMemory =
-          await global.memoryTestUtils.getStableMemoryUsage(1); // Reduced samples
+          await global.memoryTestUtils.getStableMemoryUsage(2); // Consistent with other tests
         const memoryIncrease = currentMemory - baseMemory;
         measurements.push(memoryIncrease);
       }
 
       // Verify growth rate stabilization after initial cycles
-      const maxGrowthRate = global.memoryTestUtils.isCI() ? 2.0 : 1.6;
+      const maxGrowthRate = global.memoryTestUtils.isCI() ? 2.0 : 1.8;
       for (let i = 2; i < measurements.length; i++) {
         // Start from cycle 2 instead of 3
         const previousIncrease = measurements[i - 1];

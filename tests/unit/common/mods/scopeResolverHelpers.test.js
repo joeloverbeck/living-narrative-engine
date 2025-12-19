@@ -661,10 +661,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register positioning:surface_im_bending_over', () => {
+    it('should register bending:surface_im_bending_over', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:surface_im_bending_over'
+          'bending:surface_im_bending_over'
         )
       ).toBe(true);
     });

@@ -638,11 +638,11 @@ describe('furniture sitting system', () => {
       });
 
       // Add closeness components to simulate sitting-based closeness
-      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor, 'personal-space-states:closeness', {
         partners: [actor2],
         sitting_based: [actor2],
       });
-      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor2, 'personal-space-states:closeness', {
         partners: [actor],
         sitting_based: [actor],
       });
@@ -657,11 +657,11 @@ describe('furniture sitting system', () => {
       // Verify closeness was removed
       const aliceCloseness = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeNull();
@@ -700,11 +700,11 @@ describe('furniture sitting system', () => {
 
       // Add closeness components
       // Note: The handler uses position-based heuristics, not the manual/sitting_based fields
-      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor, 'personal-space-states:closeness', {
         partners: [actor2],
         sitting_based: [actor2],
       });
-      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor2, 'personal-space-states:closeness', {
         partners: [actor],
         sitting_based: [actor],
       });
@@ -719,11 +719,11 @@ describe('furniture sitting system', () => {
       // Verify closeness was removed (actors were adjacent, so relationship is removed)
       const aliceCloseness = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       // Since Alice and Bob were adjacent, the handler removes their closeness
@@ -742,7 +742,7 @@ describe('furniture sitting system', () => {
       // Verify no closeness component exists
       const closenessBeforeStanding = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(closenessBeforeStanding).toBeNull();
 
@@ -763,7 +763,7 @@ describe('furniture sitting system', () => {
       // Verify still no closeness component
       const closenessAfterStanding = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(closenessAfterStanding).toBeNull();
     });
@@ -807,15 +807,15 @@ describe('furniture sitting system', () => {
       });
 
       // Set up closeness (Alice-Bob and Bob-Charlie)
-      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor, 'personal-space-states:closeness', {
         partners: [actor2],
         sitting_based: [actor2],
       });
-      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor2, 'personal-space-states:closeness', {
         partners: [actor, actor3],
         sitting_based: [actor, actor3],
       });
-      testEnv.entityManager.addComponent(actor3, 'positioning:closeness', {
+      testEnv.entityManager.addComponent(actor3, 'personal-space-states:closeness', {
         partners: [actor2],
         sitting_based: [actor2],
       });
@@ -830,18 +830,18 @@ describe('furniture sitting system', () => {
       // Verify Bob's closeness is removed
       const bobCloseness = testEnv.entityManager.getComponentData(
         actor2,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(bobCloseness).toBeNull();
 
       // Verify Alice and Charlie's closeness to Bob is removed
       const aliceCloseness = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieCloseness = testEnv.entityManager.getComponentData(
         actor3,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness).toBeNull();

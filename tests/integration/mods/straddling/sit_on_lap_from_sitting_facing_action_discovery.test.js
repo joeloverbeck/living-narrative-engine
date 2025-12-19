@@ -41,7 +41,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
 
         if (!closeness || !Array.isArray(closeness.partners)) {
           return { success: true, value: new Set() };

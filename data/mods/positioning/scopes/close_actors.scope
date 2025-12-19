@@ -1,6 +1,6 @@
 // Scope for actors in closeness, excluding scenarios where either actor is kneeling before the other
 // Used by actions that require compatible vertical positioning
-positioning:close_actors := actor.components.positioning:closeness.partners[][{
+positioning:close_actors := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
     {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}

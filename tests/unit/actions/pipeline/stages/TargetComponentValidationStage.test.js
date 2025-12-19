@@ -266,12 +266,12 @@ describe('TargetComponentValidationStage', () => {
       const actionWithRequiredComponents = {
         id: 'action-1',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
         target_entities: {
           primary: {
             id: 'target-1',
-            components: { 'positioning:closeness': {} },
+            components: { 'personal-space-states:closeness': {} },
           },
         },
       };
@@ -279,12 +279,12 @@ describe('TargetComponentValidationStage', () => {
       const actionWithAllRequired = {
         id: 'action-2',
         required_components: {
-          primary: ['positioning:closeness'],
+          primary: ['personal-space-states:closeness'],
         },
         target_entities: {
           primary: {
             id: 'target-2',
-            components: { 'positioning:closeness': {} },
+            components: { 'personal-space-states:closeness': {} },
           },
         },
       };
@@ -389,14 +389,14 @@ describe('TargetComponentValidationStage', () => {
       const action = {
         id: 'action-1',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'personal-space-states:closeness'],
         },
         target_entities: {
           primary: {
             id: 'target-1',
             components: {
               'positioning:sitting_on': {},
-              'positioning:closeness': {},
+              'personal-space-states:closeness': {},
             },
           },
         },
@@ -472,13 +472,13 @@ describe('TargetComponentValidationStage', () => {
       const action = {
         id: 'actor-required-action',
         required_components: {
-          actor: ['positioning:closeness'],
+          actor: ['personal-space-states:closeness'],
         },
       };
 
       context.actor = {
         id: 'player-1',
-        components: { 'positioning:closeness': {} },
+        components: { 'personal-space-states:closeness': {} },
       };
       context.candidateActions = [action];
 

@@ -73,7 +73,7 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'ADD_COMPONENT',
         parameters: {
           entity_id: 'actor', // Wrong field name
-          component_type: 'positioning:bending_over',
+          component_type: 'bending-states:bending_over',
           value: { surface_id: 'table' },
         },
       };
@@ -88,7 +88,7 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'REMOVE_COMPONENT',
         parameters: {
           entity_id: 'actor', // Wrong field name
-          component_type: 'positioning:bending_over',
+          component_type: 'bending-states:bending_over',
         },
       };
 
@@ -210,7 +210,7 @@ describe('preValidationUtils - Parameter Validation', () => {
             type: 'REMOVE_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_type: 'positioning:bending_over',
+              component_type: 'bending-states:bending_over',
             },
           },
           { macro: 'core:logSuccessAndEndTurn' },

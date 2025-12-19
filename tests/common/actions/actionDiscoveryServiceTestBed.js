@@ -651,11 +651,11 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
     }
 
     // Get or create closeness components
-    const actorCloseness = actorEntity.components['positioning:closeness'] || {
+    const actorCloseness = actorEntity.components['personal-space-states:closeness'] || {
       partners: [],
     };
     const targetCloseness = targetEntity.components[
-      'positioning:closeness'
+      'personal-space-states:closeness'
     ] || { partners: [] };
 
     // Add bidirectional relationship
@@ -670,12 +670,12 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
     // Note: Requires SimpleEntityManager for integration tests (has addComponent method)
     this.mocks.entityManager.addComponent(
       actorId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       actorCloseness
     );
     this.mocks.entityManager.addComponent(
       targetId,
-      'positioning:closeness',
+      'personal-space-states:closeness',
       targetCloseness
     );
   }

@@ -28,9 +28,9 @@ describe('positioning:close_actors scope integration', () => {
     scopeRegistry.initialize(
       addMockAstsToScopes({
         'positioning:close_actors': {
-          expr: 'actor.components.positioning:closeness.partners[]',
+          expr: 'actor.components.personal-space-states:closeness.partners[]',
           definition:
-            'positioning:close_actors := actor.components.positioning:closeness.partners[]',
+            'positioning:close_actors := actor.components.personal-space-states:closeness.partners[]',
           modId: 'positioning',
         },
       })
@@ -51,7 +51,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'test-actor-1',
           components: {
             'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['test-actor-2', 'test-actor-3'],
             },
           },
@@ -60,7 +60,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'test-actor-2',
           components: {
             'core:actor': { name: 'Actor 2' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['test-actor-1', 'test-actor-3'],
             },
           },
@@ -69,7 +69,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'test-actor-3',
           components: {
             'core:actor': { name: 'Actor 3' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['test-actor-1', 'test-actor-2'],
             },
           },
@@ -102,7 +102,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'lone-actor',
           components: {
             'core:actor': { name: 'Lone Actor' },
-            'positioning:closeness': { partners: [] },
+            'personal-space-states:closeness': { partners: [] },
           },
         },
       ]);
@@ -165,7 +165,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'main-actor',
           components: {
             'core:actor': { name: 'Main Actor' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['close-1', 'close-2', 'close-3'],
             },
             'positioning:facing_away': {
@@ -177,7 +177,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'close-1',
           components: {
             'core:actor': { name: 'Close 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['main-actor'],
             },
           },
@@ -186,7 +186,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'close-2',
           components: {
             'core:actor': { name: 'Close 2' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['main-actor'],
             },
           },
@@ -195,7 +195,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'close-3',
           components: {
             'core:actor': { name: 'Close 3' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['main-actor'],
             },
           },
@@ -243,7 +243,7 @@ describe('positioning:close_actors scope integration', () => {
         id: 'main',
         components: {
           'core:actor': { name: 'Main' },
-          'positioning:closeness': { partners: actorIds },
+          'personal-space-states:closeness': { partners: actorIds },
         },
       });
 
@@ -253,7 +253,7 @@ describe('positioning:close_actors scope integration', () => {
           id,
           components: {
             'core:actor': { name: id },
-            'positioning:closeness': { partners: ['main'] },
+            'personal-space-states:closeness': { partners: ['main'] },
           },
         });
       }
@@ -285,7 +285,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'circular-1',
           components: {
             'core:actor': { name: 'Circular 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['circular-2'],
             },
           },
@@ -294,7 +294,7 @@ describe('positioning:close_actors scope integration', () => {
           id: 'circular-2',
           components: {
             'core:actor': { name: 'Circular 2' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: ['circular-1'],
             },
           },

@@ -5,7 +5,7 @@
   "description": "Give the target a playful, light shove that keeps things fun and friendly.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["positioning:hugging"]

@@ -12,7 +12,7 @@
             "gender": "male",
             "components": {
               "core:gender": { "value": "male" },
-              "positioning:closeness": {
+              "personal-space-states:closeness": {
                 "partners": ["target1"],
                 "close": ["target2"],
                 "acquaintances": []

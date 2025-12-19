@@ -48,10 +48,10 @@ describe('Push Off Closeness Bug Reproduction', () => {
       const targetBefore = testFixture.entityManager.getEntityInstance(
         scenario.target.id
       );
-      expect(actorBefore.components['positioning:closeness'].partners).toEqual([
+      expect(actorBefore.components['personal-space-states:closeness'].partners).toEqual([
         scenario.target.id,
       ]);
-      expect(targetBefore.components['positioning:closeness'].partners).toEqual(
+      expect(targetBefore.components['personal-space-states:closeness'].partners).toEqual(
         [scenario.actor.id]
       );
 
@@ -67,8 +67,8 @@ describe('Push Off Closeness Bug Reproduction', () => {
       );
 
       // Both should have no closeness component
-      expect(actorAfter.components['positioning:closeness']).toBeUndefined();
-      expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+      expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
+      expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
     });
 
     it('FIXED: step_back not available after removing closeness', async () => {
@@ -82,7 +82,7 @@ describe('Push Off Closeness Bug Reproduction', () => {
       const actorAfter = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorAfter.components['positioning:closeness']).toBeUndefined();
+      expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
 
       // FIXED: step_back should not be available because closeness component
       // is removed when partners array becomes empty
@@ -105,11 +105,11 @@ describe('Push Off Closeness Bug Reproduction', () => {
       const actorAfter = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorAfter.components['positioning:closeness']).toBeUndefined();
+      expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
 
       // Component-level verification: No closeness component means get_close
       // would be available (if positioning mod was loaded)
-      // The get_close action has forbidden_components: ["positioning:closeness"]
+      // The get_close action has forbidden_components: ["personal-space-states:closeness"]
       // so removing this component unblocks the action
     });
   });
@@ -141,13 +141,13 @@ describe('Push Off Closeness Bug Reproduction', () => {
         .build();
 
       // Set up actor with closeness to both target and partner
-      actor.components['positioning:closeness'] = {
+      actor.components['personal-space-states:closeness'] = {
         partners: [target.id, partner.id],
       };
-      target.components['positioning:closeness'] = {
+      target.components['personal-space-states:closeness'] = {
         partners: [actor.id],
       };
-      partner.components['positioning:closeness'] = {
+      partner.components['personal-space-states:closeness'] = {
         partners: [actor.id],
       };
 
@@ -159,8 +159,8 @@ describe('Push Off Closeness Bug Reproduction', () => {
 
       // CORRECT: Actor still has closeness with partner C
       const actorAfter = testFixture.entityManager.getEntityInstance(actor.id);
-      expect(actorAfter.components['positioning:closeness']).toBeDefined();
-      expect(actorAfter.components['positioning:closeness'].partners).toEqual([
+      expect(actorAfter.components['personal-space-states:closeness']).toBeDefined();
+      expect(actorAfter.components['personal-space-states:closeness'].partners).toEqual([
         partner.id,
       ]);
 
@@ -168,14 +168,14 @@ describe('Push Off Closeness Bug Reproduction', () => {
       const targetAfter = testFixture.entityManager.getEntityInstance(
         target.id
       );
-      expect(targetAfter.components['positioning:closeness']).toBeUndefined();
+      expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
 
       // Partner unchanged
       const partnerAfter = testFixture.entityManager.getEntityInstance(
         partner.id
       );
-      expect(partnerAfter.components['positioning:closeness']).toBeDefined();
-      expect(partnerAfter.components['positioning:closeness'].partners).toEqual(
+      expect(partnerAfter.components['personal-space-states:closeness']).toBeDefined();
+      expect(partnerAfter.components['personal-space-states:closeness'].partners).toEqual(
         [actor.id]
       );
 

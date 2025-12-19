@@ -168,7 +168,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
       'data/mods/positioning/conditions/entity-kneeling-before-actor.condition.json',
       'data/mods/positioning/conditions/actor-kneeling-before-entity.condition.json',
-      'data/mods/positioning/conditions/entity-is-bending-over.condition.json',
+      'data/mods/bending-states/conditions/entity-is-bending-over.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -372,11 +372,11 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     // Get existing closeness or create new
     const actor1Closeness = entityManager.getComponent(
       id1,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
     const actor2Closeness = entityManager.getComponent(
       id2,
-      'positioning:closeness'
+      'personal-space-states:closeness'
     );
 
     // Add actor2 to actor1's partners (if not already there)
@@ -385,7 +385,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     if (!actor1Partners.includes(id2)) {
       actor1Partners.push(id2);
     }
-    entityManager.addComponent(id1, 'positioning:closeness', {
+    entityManager.addComponent(id1, 'personal-space-states:closeness', {
       partners: actor1Partners,
     });
 
@@ -395,7 +395,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     if (!actor2Partners.includes(id1)) {
       actor2Partners.push(id1);
     }
-    entityManager.addComponent(id2, 'positioning:closeness', {
+    entityManager.addComponent(id2, 'personal-space-states:closeness', {
       partners: actor2Partners,
     });
   }

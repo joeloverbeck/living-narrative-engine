@@ -437,7 +437,7 @@ describe('Filter Breakdown Integration', () => {
       // Setup incorrect state (missing component)
       testFixture.testEnv.entityManager.removeComponent(
         scenario.target.id,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       testFixture.enableScopeTracing();

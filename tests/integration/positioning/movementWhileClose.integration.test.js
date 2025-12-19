@@ -16,7 +16,7 @@ import AutoMoveClosenessPartnersHandler from '../../../src/logic/operationHandle
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
-const CLOSENESS_COMPONENT_ID = 'positioning:closeness';
+const CLOSENESS_COMPONENT_ID = 'personal-space-states:closeness';
 const MOVEMENT_COMPONENT_ID = 'core:movement';
 
 describe('Movement While Close - Integration', () => {

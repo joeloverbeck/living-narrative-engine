@@ -63,7 +63,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
           name: 'Amaia',
           location: testEnvironment.world.locations[0],
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [testEnvironment.actors.playerActorId],
             },
             'clothing:equipped': {
@@ -77,7 +77,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
           name: 'Carlos',
           location: testEnvironment.world.locations[0],
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [testEnvironment.actors.playerActorId],
             },
             'clothing:equipped': {
@@ -89,7 +89,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         // Update player to be in closeness with both NPCs
         await entityService.updateComponent(
           testEnvironment.actors.playerActorId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           {
             partners: ['npc_amaia', 'npc_carlos'],
           }
@@ -188,7 +188,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
           name: 'Dressed NPC',
           location: testEnvironment.world.locations[0],
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [testEnvironment.actors.playerActorId],
             },
             'clothing:equipped': {
@@ -202,7 +202,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
           name: 'Undressed NPC',
           location: testEnvironment.world.locations[0],
           components: {
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [testEnvironment.actors.playerActorId],
             },
             // No clothing equipped
@@ -212,7 +212,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         // Update player to be in closeness with both NPCs
         await entityService.updateComponent(
           testEnvironment.actors.playerActorId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           {
             partners: ['npc_with_clothing', 'npc_without_clothing'],
           }
@@ -272,7 +272,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
             name: `Partner ${i}`,
             location: testEnvironment.world.locations[0],
             components: {
-              'positioning:closeness': {
+              'personal-space-states:closeness': {
                 partners: [testEnvironment.actors.playerActorId],
               },
               'positioning:position': { value: 'standing' },
@@ -284,7 +284,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         // Update player to be in closeness with all partners
         await entityService.updateComponent(
           testEnvironment.actors.playerActorId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           {
             partners: ['partner1', 'partner2', 'partner3'],
           }
@@ -631,7 +631,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
       );
       await entityService.updateComponent(
         testEnvironment.actors.playerActorId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: [] }
       );
 
@@ -840,7 +840,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
       );
       await entityService.updateComponent(
         testEnvironment.actors.playerActorId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: ['bard_001'],
         }
@@ -852,7 +852,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         name: 'Traveling Bard',
         location: testEnvironment.world.locations[0],
         components: {
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [testEnvironment.actors.playerActorId],
           },
           'clothing:equipped': {

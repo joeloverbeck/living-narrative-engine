@@ -2,16 +2,33 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "facing",
   "version": "1.0.0",
-  "name": "Facing Direction",
+  "name": "Facing",
   "description": "Actions for changing facing direction relative to other actors.",
   "actionPurpose": "Turn to face or turn away from other actors.",
   "actionConsiderWhen": "Wanting to face toward or away from someone in close proximity.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
-    { "id": "core", "version": "^1.0.0" },
-    { "id": "positioning", "version": "^1.0.0" },
-    { "id": "sex-states", "version": "^1.0.0" }
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    }
   ],
   "content": {
     "components": [],
@@ -27,7 +44,10 @@
       "turn_around_to_face.rule.json",
       "turn_your_back.rule.json"
     ],
-    "entities": { "definitions": [], "instances": [] },
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
     "events": [],
     "macros": [],
     "scopes": []

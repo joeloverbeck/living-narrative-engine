@@ -46,7 +46,7 @@ describe('Complex Proximity Scenarios E2E', () => {
         components: {
           'core:actor': { type: 'player' },
           // Manual closeness with Bob (not sitting-based)
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [],
             type: 'manual', // Indicates this was manually established, not from sitting
           },
@@ -58,7 +58,7 @@ describe('Complex Proximity Scenarios E2E', () => {
         location: 'test:garden',
         components: {
           'core:actor': { type: 'npc' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: [],
             type: 'manual',
           },
@@ -74,11 +74,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
 
       // Establish manual closeness between Alice and Bob
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId],
         type: 'manual',
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
         type: 'manual',
       });
@@ -120,14 +120,14 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
 
       // Alice should now have mixed closeness: manual with Bob + automatic with Charlie
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId, charlieId],
         type: 'mixed',
         manual: [bobId],
         automatic: [charlieId],
       });
 
-      await entityService.updateComponent(charlieId, 'positioning:closeness', {
+      await entityService.updateComponent(charlieId, 'personal-space-states:closeness', {
         partners: [aliceId],
         type: 'automatic',
       });
@@ -135,15 +135,15 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify mixed closeness state
       const aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieCloseness = await entityService.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).toContain(bobId); // Manual
@@ -169,28 +169,28 @@ describe('Complex Proximity Scenarios E2E', () => {
         'positioning:sitting_on',
         null
       );
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId], // Only manual closeness remains
         type: 'manual',
       });
       await entityService.updateComponent(
         charlieId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
 
       // Verify final state
       const aliceFinalCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobFinalCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieFinalCloseness = await entityService.getComponent(
         charlieId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceFinalCloseness.partners).toContain(bobId); // Manual preserved
@@ -250,28 +250,28 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Establish complex closeness network
       await entityService.updateComponent(
         actorIds.alice,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.bob],
         }
       );
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.alice, actorIds.charlie],
         }
       );
       await entityService.updateComponent(
         actorIds.charlie,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.bob, actorIds.diana],
         }
       );
       await entityService.updateComponent(
         actorIds.diana,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.charlie],
         }
@@ -280,11 +280,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify initial complex closeness network
       let bobCloseness = await entityService.getComponent(
         actorIds.bob,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       let charlieCloseness = await entityService.getComponent(
         actorIds.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(bobCloseness.partners).toContain(actorIds.alice);
@@ -307,17 +307,17 @@ describe('Complex Proximity Scenarios E2E', () => {
       );
       await entityService.updateComponent(
         actorIds.alice,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
       await entityService.updateComponent(
         actorIds.bob,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
       await entityService.updateComponent(
         actorIds.charlie,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds.diana], // Keeps Diana but loses Bob
         }
@@ -327,19 +327,19 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify cascading effects
       const aliceFinalCloseness = await entityService.getComponent(
         actorIds.alice,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobFinalCloseness = await entityService.getComponent(
         actorIds.bob,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const charlieFinalCloseness = await entityService.getComponent(
         actorIds.charlie,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const dianaFinalCloseness = await entityService.getComponent(
         actorIds.diana,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceFinalCloseness).toBeNull(); // Lost Bob
@@ -401,7 +401,7 @@ describe('Complex Proximity Scenarios E2E', () => {
         if (partners.length > 0) {
           await entityService.updateComponent(
             actorIds[i],
-            'positioning:closeness',
+            'personal-space-states:closeness',
             {
               partners: partners,
             }
@@ -412,7 +412,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify closeness for a middle actor (should have 2 partners)
       const middleActorCloseness = await entityService.getComponent(
         actorIds[10],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(middleActorCloseness.partners).toHaveLength(2);
       expect(middleActorCloseness.partners).toContain(actorIds[9]);
@@ -421,11 +421,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify edge actors (should have 1 partner each)
       const firstActorCloseness = await entityService.getComponent(
         actorIds[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const lastActorCloseness = await entityService.getComponent(
         actorIds[19],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(firstActorCloseness.partners).toHaveLength(1);
@@ -449,19 +449,19 @@ describe('Complex Proximity Scenarios E2E', () => {
       );
       await entityService.updateComponent(
         actorIds[10],
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
       await entityService.updateComponent(
         actorIds[9],
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds[8]], // Loses actor 10, keeps 8
         }
       );
       await entityService.updateComponent(
         actorIds[11],
-        'positioning:closeness',
+        'personal-space-states:closeness',
         {
           partners: [actorIds[12]], // Loses actor 10, keeps 12
         }
@@ -470,11 +470,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify gap in closeness chain
       const ninthActorCloseness = await entityService.getComponent(
         actorIds[9],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const eleventhActorCloseness = await entityService.getComponent(
         actorIds[11],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(ninthActorCloseness.partners).not.toContain(actorIds[10]);
@@ -534,10 +534,10 @@ describe('Complex Proximity Scenarios E2E', () => {
           furniture_id: chairId,
           spot_index: 1,
         });
-        await entityService.updateComponent(aliceId, 'positioning:closeness', {
+        await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
           partners: [bobId],
         });
-        await entityService.updateComponent(bobId, 'positioning:closeness', {
+        await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
           partners: [aliceId],
         });
 
@@ -565,12 +565,12 @@ describe('Complex Proximity Scenarios E2E', () => {
         );
         await entityService.updateComponent(
           aliceId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           null
         );
         await entityService.updateComponent(
           bobId,
-          'positioning:closeness',
+          'personal-space-states:closeness',
           null
         );
       }
@@ -586,11 +586,11 @@ describe('Complex Proximity Scenarios E2E', () => {
       );
       const finalAliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const finalBobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(finalAliceSitting).toBeNull();
@@ -676,22 +676,22 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Test closeness establishment for successful actors
       await entityService.updateComponent(
         actorIds[0],
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: [actorIds[1]] }
       );
       await entityService.updateComponent(
         actorIds[1],
-        'positioning:closeness',
+        'personal-space-states:closeness',
         { partners: [actorIds[0]] }
       );
 
       const firstActorCloseness = await entityService.getComponent(
         actorIds[0],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const secondActorCloseness = await entityService.getComponent(
         actorIds[1],
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(firstActorCloseness.partners).toContain(actorIds[1]);
@@ -705,7 +705,7 @@ describe('Complex Proximity Scenarios E2E', () => {
         );
         const actorCloseness = await entityService.getComponent(
           actorIds[i],
-          'positioning:closeness'
+          'personal-space-states:closeness'
         );
 
         expect(actorSitting).toBeNull();
@@ -774,12 +774,12 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Either way, closeness should be cleaned up
       await entityService.updateComponent(
         aliceId,
-        'positioning:closeness',
+        'personal-space-states:closeness',
         null
       );
       const finalCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(finalCloseness).toBeNull();
     });
@@ -792,7 +792,7 @@ describe('Complex Proximity Scenarios E2E', () => {
         components: {
           'core:actor': { type: 'player' },
           // Corrupted state: closeness to non-existent actor
-          'positioning:closeness': { partners: ['non_existent_actor_123'] },
+          'personal-space-states:closeness': { partners: ['non_existent_actor_123'] },
         },
       });
 
@@ -807,7 +807,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       // Verify initial corrupted state
       let aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       expect(aliceCloseness.partners).toContain('non_existent_actor_123');
 
@@ -845,21 +845,21 @@ describe('Complex Proximity Scenarios E2E', () => {
       });
 
       // Replace corrupted closeness with legitimate closeness
-      await entityService.updateComponent(aliceId, 'positioning:closeness', {
+      await entityService.updateComponent(aliceId, 'personal-space-states:closeness', {
         partners: [bobId], // Clean state, no orphaned references
       });
-      await entityService.updateComponent(bobId, 'positioning:closeness', {
+      await entityService.updateComponent(bobId, 'personal-space-states:closeness', {
         partners: [aliceId],
       });
 
       // Verify cleanup worked
       aliceCloseness = await entityService.getComponent(
         aliceId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
       const bobCloseness = await entityService.getComponent(
         bobId,
-        'positioning:closeness'
+        'personal-space-states:closeness'
       );
 
       expect(aliceCloseness.partners).not.toContain('non_existent_actor_123');

@@ -47,7 +47,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -105,7 +105,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
     it('requires actor closeness, no forbidden components, and uses the affection color palette', () => {
       expect(placeHandOnKneeAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(placeHandOnKneeAction.forbidden_components.actor).toEqual([]);
       expect(placeHandOnKneeAction.visual).toEqual({
@@ -148,8 +148,8 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
     it('is not available when the actor lacks the closeness component', () => {
       const scenario = createSeatedPair('Ivy', 'Liam');
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       testFixture.reset([...scenario.entities]);
       configureActionDiscovery();

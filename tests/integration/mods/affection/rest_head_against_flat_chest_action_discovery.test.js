@@ -100,7 +100,7 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
           }
 
           const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
+            actorEntity.components?.['personal-space-states:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -185,7 +185,7 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
 
     it('requires closeness, forbids kissing, and keeps the affection palette', () => {
       expect(restHeadAgainstFlatChestAction.required_components.actor).toEqual([
-        'positioning:closeness',
+        'personal-space-states:closeness',
       ]);
       expect(restHeadAgainstFlatChestAction.forbidden_components.actor).toEqual(
         [
@@ -256,8 +256,8 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
         ['Alice', 'Erin'],
         ['torso']
       );
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      delete scenario.actor.components['personal-space-states:closeness'];
+      delete scenario.target.components['personal-space-states:closeness'];
 
       testFixture.reset([...scenario.allEntities]);
       configureActionDiscovery();

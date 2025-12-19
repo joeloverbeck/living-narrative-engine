@@ -35,7 +35,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
         if (!actorId) return { success: true, value: new Set() };
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const closeness = actor?.components?.['positioning:closeness'];
+        const closeness = actor?.components?.['personal-space-states:closeness'];
 
         if (!closeness || !Array.isArray(closeness.partners)) {
           return { success: true, value: new Set() };

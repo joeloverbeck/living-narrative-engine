@@ -414,12 +414,12 @@ describe('ModAssertionHelpers', () => {
     beforeEach(() => {
       mockEntity1 = {
         components: {
-          'positioning:closeness': { partners: ['entity2'] },
+          'personal-space-states:closeness': { partners: ['entity2'] },
         },
       };
       mockEntity2 = {
         components: {
-          'positioning:closeness': { partners: ['entity1'] },
+          'personal-space-states:closeness': { partners: ['entity1'] },
         },
       };
 
@@ -441,7 +441,7 @@ describe('ModAssertionHelpers', () => {
     });
 
     it('should throw when first entity lacks closeness component', () => {
-      delete mockEntity1.components['positioning:closeness'];
+      delete mockEntity1.components['personal-space-states:closeness'];
 
       expect(() => {
         ModAssertionHelpers.assertMutualCloseness(
@@ -453,7 +453,7 @@ describe('ModAssertionHelpers', () => {
     });
 
     it('should throw when entities are not mutual partners', () => {
-      mockEntity1.components['positioning:closeness'].partners = ['entity3'];
+      mockEntity1.components['personal-space-states:closeness'].partners = ['entity3'];
 
       expect(() => {
         ModAssertionHelpers.assertMutualCloseness(

@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "bending:allows_bending_over",
+  "description": "Indicates that this surface entity can be bent over by actors",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

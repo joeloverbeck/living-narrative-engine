@@ -45,7 +45,7 @@ describe('lying:lie_down action discovery', () => {
         'positioning:biting_neck',
         'positioning:hugging',
         'positioning:sitting_on',
-        'positioning:bending_over',
+        'bending-states:bending_over',
         'positioning:kneeling_before',
         'positioning:lying_down',
         'sex-states:fucking_anally',
@@ -96,7 +96,7 @@ describe('lying:lie_down action discovery', () => {
 
     it('should NOT appear when actor is bending over', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:bending_over component:
+      // If Alice has bending-states:bending_over component:
       // - Action's forbidden_components.actor check fails
       // - lying:lie_down action should NOT be available
       //

@@ -259,7 +259,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
         id: 'actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['target1'],
           },
           'anatomy:body': {
@@ -273,7 +273,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
         id: 'target1',
         components: {
           'core:actor': { name: 'Target 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['actor1'],
           },
           'positioning:facing_away': {
@@ -336,7 +336,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
         id: 'actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['target1'],
           },
           'anatomy:body': {
@@ -350,7 +350,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
         id: 'target1',
         components: {
           'core:actor': { name: 'Target 1' },
-          'positioning:closeness': {
+          'personal-space-states:closeness': {
             partners: ['actor1'],
           },
           'positioning:facing_away': {
@@ -448,7 +448,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
           id: 'actor1',
           components: {
             'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [], // No closeness partners
             },
             'anatomy:body': {
@@ -462,7 +462,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
           id: 'target1',
           components: {
             'core:actor': { name: 'Target 1' },
-            'positioning:closeness': {
+            'personal-space-states:closeness': {
               partners: [], // No closeness partners
             },
             'positioning:facing_away': {

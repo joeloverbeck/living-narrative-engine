@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["sex-states:giving_blowjob", "positioning:closeness"]
+    "actor": ["sex-states:giving_blowjob", "personal-space-states:closeness"]
   },
   "forbidden_components": {},
   "template": "suck {primary}'s cock slowly",

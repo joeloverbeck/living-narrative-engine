@@ -1,6 +1,6 @@
 // Scope restricting potential targets to the entity whose neck the actor is currently biting
 // Validates reciprocal component relationship for safety
-positioning:actor_being_bitten_by_me := actor.components.positioning:closeness.partners[][{
+positioning:actor_being_bitten_by_me := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"!!": {"var": "actor.components.positioning:biting_neck"}},
     {"!!": {"var": "entity.components.positioning:being_bitten_in_neck"}},

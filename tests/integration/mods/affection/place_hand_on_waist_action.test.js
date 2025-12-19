@@ -86,7 +86,7 @@ describe('affection:place_hand_on_waist action integration', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['target1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['target1'] })
       .withComponent('positioning:hugging', {
         embraced_entity_id: 'target1',
         initiated: true,
@@ -98,7 +98,7 @@ describe('affection:place_hand_on_waist action integration', () => {
       .withName('Bob')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:closeness', { partners: ['actor1'] })
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
       .withComponent('positioning:being_hugged', {
         hugging_entity_id: 'actor1',
         consented: true,

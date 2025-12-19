@@ -72,7 +72,7 @@ describe('ActivityFilteringSystem integration coverage', () => {
       instanceId: 'partner_conditions_pass',
     });
 
-    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+    await entityManager.addComponent(actor.id, 'personal-space-states:closeness', {
       partners: [partner.id],
     });
     await entityManager.addComponent(actor.id, 'core:gender', {
@@ -94,7 +94,7 @@ describe('ActivityFilteringSystem integration coverage', () => {
       },
       conditions: {
         showOnlyIfProperty: { property: 'category', equals: 'intimate' },
-        requiredComponents: ['positioning:closeness'],
+        requiredComponents: ['personal-space-states:closeness'],
         forbiddenComponents: ['test:activity_kneeling'],
         customLogic: {
           and: [

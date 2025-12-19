@@ -1,6 +1,6 @@
 // Scope for actors in closeness who are either facing each other OR actor is behind the target
 // Used by actions that can work from either face-to-face or behind positions without anatomy requirements
-kissing:close_actors_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
+kissing:close_actors_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "or": [
     {"condition_ref": "positioning:both-actors-facing-each-other"},
     {"condition_ref": "positioning:actor-is-behind-entity"}

@@ -5,7 +5,7 @@
   "description": "Lightly tickle the target in a playful, affectionate gesture.",
   "targets": "positioning:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["personal-space-states:closeness"]
   },
   "template": "tickle {target}",
   "prerequisites": [],
