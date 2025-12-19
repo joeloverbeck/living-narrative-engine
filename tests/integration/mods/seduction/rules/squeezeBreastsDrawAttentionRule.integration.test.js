@@ -52,7 +52,7 @@ function buildScenario({
     .withBody(torsoId);
 
   if (includeHugging) {
-    actorBuilder.withComponent('positioning:hugging', {
+    actorBuilder.withComponent('hugging-states:hugging', {
       embraced_entity_id: targetId,
       initiated: true,
     });

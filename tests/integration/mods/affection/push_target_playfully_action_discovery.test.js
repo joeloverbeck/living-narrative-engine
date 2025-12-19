@@ -109,7 +109,7 @@ describe('affection:push_target_playfully action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(pushTargetPlayfullyAction.forbidden_components.actor).toEqual([
-        'positioning:hugging',
+        'hugging-states:hugging',
       ]);
       expect(pushTargetPlayfullyAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
@@ -188,12 +188,12 @@ describe('affection:push_target_playfully action discovery', () => {
 
     it('is not available when the actor is hugging the target', () => {
       const scenario = testFixture.createCloseActors(['Quinn', 'Riley']);
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
       };
-      scenario.target.components['positioning:being_hugged'] = {
+      scenario.target.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.actor.id,
         consented: true,
       };

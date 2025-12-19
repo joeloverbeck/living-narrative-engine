@@ -85,7 +85,7 @@ describe('warding:cross_salt_boundary action discovery', () => {
         'positioning:fallen'
       );
       expect(crossSaltBoundaryAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
       expect(crossSaltBoundaryAction.forbidden_components.actor).toContain(
         'positioning:being_restrained'
@@ -180,9 +180,9 @@ describe('warding:cross_salt_boundary action discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actor has forbidden positioning:hugging component', () => {
+    it('is not available when actor has forbidden hugging-states:hugging component', () => {
       const { actor } = setupScenario({
-        'positioning:hugging': { target_id: 'some_entity' },
+        'hugging-states:hugging': { target_id: 'some_entity' },
       });
 
       const availableActions = testFixture.testEnv.getAvailableActions(

@@ -10,8 +10,8 @@
   "forbidden_components": {
     "actor": [
       "positioning:straddling_waist",
-      "positioning:being_hugged",
-      "positioning:hugging"
+      "hugging-states:being_hugged",
+      "hugging-states:hugging"
     ],
     "target": ["sex-states:giving_blowjob"]
   },

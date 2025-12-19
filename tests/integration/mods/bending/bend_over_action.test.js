@@ -354,7 +354,7 @@ describe('bending:bend_over action integration', () => {
         .asActor()
         .build();
 
-      actor.components['positioning:being_hugged'] = {
+      actor.components['hugging-states:being_hugged'] = {
         hugging_entity_id: hugger.id,
       };
 
@@ -362,7 +362,7 @@ describe('bending:bend_over action integration', () => {
 
       await expect(
         testFixture.executeAction(actor.id, surface.id)
-      ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+      ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
     });
 
     it('rejects the action when the actor is hugging someone else', async () => {
@@ -373,7 +373,7 @@ describe('bending:bend_over action integration', () => {
         .asActor()
         .build();
 
-      actor.components['positioning:hugging'] = {
+      actor.components['hugging-states:hugging'] = {
         embraced_entity_id: huggee.id,
         initiated: true,
       };
@@ -382,7 +382,7 @@ describe('bending:bend_over action integration', () => {
 
       await expect(
         testFixture.executeAction(actor.id, surface.id)
-      ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+      ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
     });
   });
 

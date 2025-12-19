@@ -6,7 +6,7 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:doing_complex_performance"]
+    "actor": ["hugging-states:hugging", "positioning:doing_complex_performance"]
   },
   "template": "draw attention to your ass",
   "prerequisites": [

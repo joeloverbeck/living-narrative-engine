@@ -5,11 +5,11 @@
   "description": "Release someone from a tight embrace you initiated.",
   "targets": "hugging:hugged_by_actor",
   "required_components": {
-    "actor": ["personal-space-states:closeness", "positioning:hugging"],
-    "primary": ["positioning:being_hugged"]
+    "actor": ["personal-space-states:closeness", "hugging-states:hugging"],
+    "primary": ["hugging-states:being_hugged"]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_hugged"]
+    "actor": ["hugging-states:being_hugged"]
   },
   "template": "release {primary} from the hug",
   "prerequisites": [],

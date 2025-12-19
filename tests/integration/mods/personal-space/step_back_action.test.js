@@ -25,7 +25,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .atLocation('room1')
       .asActor()
       .withComponent('personal-space-states:closeness', { partners: ['partner1'] })
-      .withComponent('positioning:being_hugged', {
+      .withComponent('hugging-states:being_hugged', {
         hugging_entity_id: 'partner1',
       })
       .build();
@@ -40,7 +40,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
     testFixture.reset([room, actor, partner]);
 
     await expect(testFixture.executeAction(actor.id, null)).rejects.toThrow(
-      /forbidden component.*positioning:being_hugged/i
+      /forbidden component.*hugging-states:being_hugged/i
     );
   });
 
@@ -52,7 +52,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
       .atLocation('room1')
       .asActor()
       .withComponent('personal-space-states:closeness', { partners: ['partner1'] })
-      .withComponent('positioning:hugging', {
+      .withComponent('hugging-states:hugging', {
         embraced_entity_id: 'partner1',
         initiated: true,
       })
@@ -68,7 +68,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
     testFixture.reset([room, actor, partner]);
 
     await expect(testFixture.executeAction(actor.id, null)).rejects.toThrow(
-      /forbidden component.*positioning:hugging/i
+      /forbidden component.*hugging-states:hugging/i
     );
   });
 });

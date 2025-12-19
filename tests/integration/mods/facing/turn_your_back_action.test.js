@@ -713,7 +713,7 @@ describe('facing:turn_your_back forbidden component enforcement', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:hugging', {
+      .withComponent('hugging-states:hugging', {
         embraced_entity_id: 'target1',
         initiated: true,
       })
@@ -729,6 +729,6 @@ describe('facing:turn_your_back forbidden component enforcement', () => {
 
     await expect(
       testFixture.executeAction(actor.id, target.id)
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
   });
 });

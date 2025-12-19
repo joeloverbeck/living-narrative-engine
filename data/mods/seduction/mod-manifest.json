@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "sex-states",
       "version": "^1.0.0"
     },

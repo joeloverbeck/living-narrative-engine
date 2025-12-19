@@ -156,7 +156,7 @@ function setupBeingHuggedScenario() {
     .asActor()
     .build();
 
-  scenario.actor.components['positioning:being_hugged'] = {
+  scenario.actor.components['hugging-states:being_hugged'] = {
     hugging_entity_id: hugger.id,
   };
 
@@ -176,7 +176,7 @@ function setupHuggingScenario() {
     .asActor()
     .build();
 
-  scenario.actor.components['positioning:hugging'] = {
+  scenario.actor.components['hugging-states:hugging'] = {
     embraced_entity_id: huggee.id,
     initiated: true,
   };
@@ -607,7 +607,7 @@ describe('deference:kneel_before action integration', () => {
 
         await expect(
           testFixture.executeAction(actor.id, target.id)
-        ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+        ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
       });
 
       it('rejects kneeling before someone while hugging another actor', async () => {
@@ -616,7 +616,7 @@ describe('deference:kneel_before action integration', () => {
 
         await expect(
           testFixture.executeAction(actor.id, target.id)
-        ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+        ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
       });
 
       it('should prevent kneeling while already kneeling', async () => {

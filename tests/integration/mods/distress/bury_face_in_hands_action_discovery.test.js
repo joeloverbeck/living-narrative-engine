@@ -42,7 +42,7 @@ describe('distress:bury_face_in_hands action discovery', () => {
       expect(buryFaceInHandsAction.forbidden_components).toEqual({
         actor: [
           'positioning:biting_neck',
-          'positioning:hugging',
+          'hugging-states:hugging',
           'positioning:doing_complex_performance',
           'positioning:restraining',
         ],
@@ -88,7 +88,7 @@ describe('distress:bury_face_in_hands action discovery', () => {
         includeRoom: false,
       });
 
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
       };
@@ -103,7 +103,7 @@ describe('distress:bury_face_in_hands action discovery', () => {
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorInstance.components['positioning:hugging']).toEqual({
+      expect(actorInstance.components['hugging-states:hugging']).toEqual({
         embraced_entity_id: scenario.target.id,
         initiated: true,
       });

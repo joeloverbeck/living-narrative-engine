@@ -32,7 +32,7 @@ describe('sitting:sit_down action forbidden state enforcement', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:being_hugged', {
+      .withComponent('hugging-states:being_hugged', {
         hugging_entity_id: 'hugger1',
       })
       .build();
@@ -46,7 +46,7 @@ describe('sitting:sit_down action forbidden state enforcement', () => {
     testFixture.reset([room, actor, hugger, chair]);
 
     await expect(testFixture.executeAction(actor.id, chair.id)).rejects.toThrow(
-      /forbidden component.*positioning:being_hugged/i
+      /forbidden component.*hugging-states:being_hugged/i
     );
   });
 
@@ -65,7 +65,7 @@ describe('sitting:sit_down action forbidden state enforcement', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:hugging', {
+      .withComponent('hugging-states:hugging', {
         embraced_entity_id: 'huggee1',
         initiated: true,
       })
@@ -80,7 +80,7 @@ describe('sitting:sit_down action forbidden state enforcement', () => {
     testFixture.reset([room, actor, huggee, chair]);
 
     await expect(testFixture.executeAction(actor.id, chair.id)).rejects.toThrow(
-      /forbidden component.*positioning:hugging/i
+      /forbidden component.*hugging-states:hugging/i
     );
   });
 });

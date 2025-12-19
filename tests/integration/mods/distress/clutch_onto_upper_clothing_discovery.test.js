@@ -274,7 +274,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(clutchOntoUpperClothingAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging', 'positioning:restraining'],
+        actor: ['hugging-states:hugging', 'positioning:restraining'],
         primary: ['sex-states:giving_blowjob'],
         secondary: [],
       });
@@ -400,7 +400,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
         location: 'arboretum',
       });
 
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
       };

@@ -125,7 +125,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorHugging) {
-      actorBuilder.withComponent('positioning:hugging', {});
+      actorBuilder.withComponent('hugging-states:hugging', {});
     }
 
     if (actorRestraining) {
@@ -276,7 +276,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     // Forbidden components on actor
     expect(treatMyAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
-        'positioning:hugging',
+        'hugging-states:hugging',
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'bending-states:bending_over',
@@ -342,7 +342,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:hugging', () => {
+  it('is hidden when actor has hugging-states:hugging', () => {
     loadScenario({ actorHugging: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);

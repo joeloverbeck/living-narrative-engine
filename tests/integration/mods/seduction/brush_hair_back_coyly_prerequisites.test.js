@@ -154,7 +154,7 @@ describe('seduction:brush_hair_back_coyly prerequisites', () => {
       expect(brushHairAction.targets).toBe('none');
       expect(brushHairAction.forbidden_components).toEqual({
         actor: [
-          'positioning:hugging',
+          'hugging-states:hugging',
           'positioning:doing_complex_performance',
           'positioning:restraining',
         ],

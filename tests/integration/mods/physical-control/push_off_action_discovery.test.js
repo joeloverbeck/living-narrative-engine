@@ -109,8 +109,8 @@ describe('physical-control:push_off action discovery', () => {
       expect(pushOffAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
         'positioning:straddling_waist',
-        'positioning:hugging',
-        'positioning:being_hugged',
+        'hugging-states:hugging',
+        'hugging-states:being_hugged',
         'positioning:lying_down',
         'positioning:being_restrained',
         'positioning:restraining',
@@ -217,12 +217,12 @@ describe('physical-control:push_off action discovery', () => {
     it('is not available when the actor is hugging the target', () => {
       const scenario = testFixture.createCloseActors(['Una', 'Viktor']);
 
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
       };
-      scenario.target.components['positioning:being_hugged'] = {
+      scenario.target.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.actor.id,
       };
 
@@ -241,7 +241,7 @@ describe('physical-control:push_off action discovery', () => {
     it('is not available when the actor is being hugged', () => {
       const scenario = testFixture.createCloseActors(['Iris', 'Jon']);
 
-      scenario.actor.components['positioning:being_hugged'] = {
+      scenario.actor.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.target.id,
       };
 

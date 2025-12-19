@@ -201,7 +201,7 @@ function setupBeingHuggedBehindScenario() {
     .asActor()
     .build();
 
-  scenario.actor.components['positioning:being_hugged'] = {
+  scenario.actor.components['hugging-states:being_hugged'] = {
     hugging_entity_id: hugger.id,
   };
 
@@ -221,7 +221,7 @@ function setupHuggingBehindScenario() {
     .asActor()
     .build();
 
-  scenario.actor.components['positioning:hugging'] = {
+  scenario.actor.components['hugging-states:hugging'] = {
     embraced_entity_id: huggee.id,
     initiated: true,
   };
@@ -330,7 +330,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     await expect(
       testFixture.executeAction('test:player', 'test:npc')
-    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
   });
 
   it('rejects placing yourself behind someone while hugging another actor', async () => {
@@ -339,7 +339,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     await expect(
       testFixture.executeAction('test:player', 'test:npc')
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
   });
 
   it('should handle multiple actors placing themselves behind the same target', async () => {

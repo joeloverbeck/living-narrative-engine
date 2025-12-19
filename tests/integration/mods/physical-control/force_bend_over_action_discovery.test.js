@@ -143,8 +143,8 @@ describe('physical-control:force_bend_over action discovery', () => {
           'positioning:biting_neck',
           'positioning:kneeling_before',
           'positioning:straddling_waist',
-          'positioning:hugging',
-          'positioning:being_hugged',
+          'hugging-states:hugging',
+          'hugging-states:being_hugged',
           'sex-states:receiving_blowjob',
           'sex-states:giving_blowjob',
         ])

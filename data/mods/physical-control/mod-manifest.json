@@ -8,6 +8,10 @@
   "actionConsiderWhen": "Asserting physical dominance, forcing someone into a position, pushing someone away, or physically controlling another.",
   "dependencies": [
     {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "anatomy",
       "version": "^1.0.0"
     },

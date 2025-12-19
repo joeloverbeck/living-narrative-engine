@@ -1,14 +1,14 @@
 // Scope restricting potential targets to those currently being hugged by the acting entity
 hugging:hugged_by_actor := personal-space:close_actors_facing_each_other_or_behind_target[{
   "and": [
-    {"!!": {"var": "actor.components.positioning:hugging"}},
-    {"!!": {"var": "entity.components.positioning:being_hugged"}},
+    {"!!": {"var": "actor.components.hugging-states:hugging"}},
+    {"!!": {"var": "entity.components.hugging-states:being_hugged"}},
     {"==": [
-      {"var": "actor.components.positioning:hugging.embraced_entity_id"},
+      {"var": "actor.components.hugging-states:hugging.embraced_entity_id"},
       {"var": "entity.id"}
     ]},
     {"==": [
-      {"var": "entity.components.positioning:being_hugged.hugging_entity_id"},
+      {"var": "entity.components.hugging-states:being_hugged.hugging_entity_id"},
       {"var": "actor.id"}
     ]}
   ]

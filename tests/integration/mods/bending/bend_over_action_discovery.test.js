@@ -32,7 +32,7 @@ describe('bending:bend_over action discovery', () => {
       expect(bendOverAction.forbidden_components).toBeDefined();
       expect(bendOverAction.forbidden_components.actor).toBeInstanceOf(Array);
       expect(bendOverAction.forbidden_components.actor).toContain(
-        'positioning:being_hugged'
+        'hugging-states:being_hugged'
       );
       expect(bendOverAction.forbidden_components.actor).toContain(
         'positioning:biting_neck'

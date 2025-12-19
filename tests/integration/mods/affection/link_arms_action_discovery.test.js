@@ -152,8 +152,8 @@ describe('affection:link_arms action discovery', () => {
       ]);
       expect(linkArmsAction.forbidden_components.actor).toEqual([
         'positioning:straddling_waist',
-        'positioning:being_hugged',
-        'positioning:hugging',
+        'hugging-states:being_hugged',
+        'hugging-states:hugging',
       ]);
       expect(linkArmsAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
@@ -244,7 +244,7 @@ describe('affection:link_arms action discovery', () => {
         ['Nina', 'Omar'],
         ['torso', 'arm', 'arm']
       );
-      scenario.actor.components['positioning:being_hugged'] = {
+      scenario.actor.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.target.id,
       };
 
@@ -264,12 +264,12 @@ describe('affection:link_arms action discovery', () => {
         ['Holly', 'Ian'],
         ['torso', 'arm', 'arm']
       );
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
         consented: true,
       };
-      scenario.target.components['positioning:being_hugged'] = {
+      scenario.target.components['hugging-states:being_hugged'] = {
         hugging_entity_id: scenario.actor.id,
         consented: true,
       };

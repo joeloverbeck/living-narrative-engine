@@ -9,12 +9,12 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:hugging",
-      "positioning:being_hugged",
+      "hugging-states:hugging",
+      "hugging-states:being_hugged",
       "sex-states:giving_blowjob",
       "positioning:restraining"
     ],
-    "primary": ["positioning:being_hugged"]
+    "primary": ["hugging-states:being_hugged"]
   },
   "template": "hug {target} tight",
   "prerequisites": [],

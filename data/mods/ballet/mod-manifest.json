@@ -10,7 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "positioning",
+      "id": "hugging-states",
       "version": "^1.0.0"
     }
   ],

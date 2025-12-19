@@ -8,7 +8,7 @@
     "actor": ["ballet:is_ballet_dancer"]
   },
   "forbidden_components": {
-    "actor": ["positioning:hugging"]
+    "actor": ["hugging-states:hugging"]
   },
   "template": "hold arabesque penché",
   "prerequisites": [],

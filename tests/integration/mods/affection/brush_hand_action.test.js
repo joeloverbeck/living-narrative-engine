@@ -157,7 +157,7 @@ describe('affection:brush_hand action integration', () => {
     const actorData = createActorWithHandAnatomy('actor1', 'Alice', 'room1', [
       'target1',
     ]);
-    actorData.entity.components['positioning:being_hugged'] = {
+    actorData.entity.components['hugging-states:being_hugged'] = {
       hugging_entity_id: 'target1',
     };
 
@@ -175,7 +175,7 @@ describe('affection:brush_hand action integration', () => {
 
     await expect(
       testFixture.executeAction(actorData.entity.id, targetData.entity.id)
-    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
   });
 
   it('rejects the action when the actor is currently hugging someone', async () => {
@@ -184,7 +184,7 @@ describe('affection:brush_hand action integration', () => {
     const actorData = createActorWithHandAnatomy('actor1', 'Alice', 'room1', [
       'target1',
     ]);
-    actorData.entity.components['positioning:hugging'] = {
+    actorData.entity.components['hugging-states:hugging'] = {
       embraced_entity_id: 'target1',
       initiated: true,
       consented: true,
@@ -193,7 +193,7 @@ describe('affection:brush_hand action integration', () => {
     const targetData = createActorWithHandAnatomy('target1', 'Bob', 'room1', [
       'actor1',
     ]);
-    targetData.entity.components['positioning:being_hugged'] = {
+    targetData.entity.components['hugging-states:being_hugged'] = {
       hugging_entity_id: 'actor1',
       consented: true,
     };
@@ -208,6 +208,6 @@ describe('affection:brush_hand action integration', () => {
 
     await expect(
       testFixture.executeAction(actorData.entity.id, targetData.entity.id)
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    ).rejects.toThrow(/forbidden component.*hugging-states:hugging/i);
   });
 });

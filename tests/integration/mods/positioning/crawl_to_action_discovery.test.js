@@ -44,10 +44,10 @@ describe('deference:crawl_to - Action Discovery', () => {
         'positioning:straddling_waist'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:being_hugged'
+        'hugging-states:being_hugged'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
 
       // Verify forbidden components for primary target

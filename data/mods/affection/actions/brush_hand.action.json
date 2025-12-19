@@ -10,8 +10,8 @@
   "forbidden_components": {
     "actor": [
       "kissing:kissing",
-      "positioning:being_hugged",
-      "positioning:hugging"
+      "hugging-states:being_hugged",
+      "hugging-states:hugging"
     ]
   },
   "template": "brush {target}'s hand with your own",

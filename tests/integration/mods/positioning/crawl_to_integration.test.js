@@ -271,7 +271,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         furniture_id: 'test:chair',
         spot_index: 0,
       };
-      alice.components['positioning:being_hugged'] = {
+      alice.components['hugging-states:being_hugged'] = {
         entityId: 'test:bob',
       };
 
@@ -307,8 +307,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         'bending-states:bending_over',
         'positioning:lying_down',
         'positioning:straddling_waist',
-        'positioning:being_hugged',
-        'positioning:hugging',
+        'hugging-states:being_hugged',
+        'hugging-states:hugging',
         'personal-space-states:closeness',
       ];
 

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:hugging",
+  "id": "hugging-states:hugging",
   "description": "Marks an actor who is actively embracing another entity in a tight hug, preventing conflicting proximity actions.",
   "dataSchema": {
     "type": "object",

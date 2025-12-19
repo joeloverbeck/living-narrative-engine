@@ -145,7 +145,7 @@ describe('violence:sucker_punch prerequisites', () => {
       );
       expect(suckerPunchAction.forbidden_components).toBeDefined();
       expect(suckerPunchAction.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
       expect(suckerPunchAction.visual).toBeDefined();
     });

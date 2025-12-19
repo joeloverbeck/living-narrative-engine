@@ -29,11 +29,11 @@
         "entity_ref": "actor",
         "pairs": [
           {
-            "component_type": "positioning:hugging",
+            "component_type": "hugging-states:hugging",
             "result_variable": "actorExistingHuggingComponent"
           },
           {
-            "component_type": "positioning:being_hugged",
+            "component_type": "hugging-states:being_hugged",
             "result_variable": "actorExistingBeingHuggedComponent"
           }
         ]
@@ -45,11 +45,11 @@
         "entity_ref": "target",
         "pairs": [
           {
-            "component_type": "positioning:hugging",
+            "component_type": "hugging-states:hugging",
             "result_variable": "targetExistingHuggingComponent"
           },
           {
-            "component_type": "positioning:being_hugged",
+            "component_type": "hugging-states:being_hugged",
             "result_variable": "targetExistingBeingHuggedComponent"
           }
         ]
@@ -76,7 +76,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingBeingHuggedComponent.hugging_entity_id}",
-              "component_type": "positioning:hugging"
+              "component_type": "hugging-states:hugging"
             }
           }
         ]
@@ -103,7 +103,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.actorExistingHuggingComponent.embraced_entity_id}",
-              "component_type": "positioning:being_hugged"
+              "component_type": "hugging-states:being_hugged"
             }
           }
         ]
@@ -130,7 +130,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.targetExistingHuggingComponent.embraced_entity_id}",
-              "component_type": "positioning:being_hugged"
+              "component_type": "hugging-states:being_hugged"
             }
           }
         ]
@@ -157,7 +157,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "{context.targetExistingBeingHuggedComponent.hugging_entity_id}",
-              "component_type": "positioning:hugging"
+              "component_type": "hugging-states:hugging"
             }
           }
         ]
@@ -184,7 +184,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:being_hugged"
+              "component_type": "hugging-states:being_hugged"
             }
           }
         ]
@@ -211,7 +211,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:hugging"
+              "component_type": "hugging-states:hugging"
             }
           }
         ]
@@ -238,7 +238,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "positioning:hugging"
+              "component_type": "hugging-states:hugging"
             }
           }
         ]
@@ -265,7 +265,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "positioning:being_hugged"
+              "component_type": "hugging-states:being_hugged"
             }
           }
         ]

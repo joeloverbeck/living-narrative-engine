@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "hugging-states",
+  "version": "1.0.0",
+  "name": "Hugging States",
+  "description": "State components for hugging mechanics.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "being_hugged.component.json",
+      "hugging.component.json"
+    ]
+  }
+}

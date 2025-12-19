@@ -5,11 +5,11 @@
   "description": "Gently free yourself from someone's embrace.",
   "targets": "hugging:hugging_actor",
   "required_components": {
-    "actor": ["personal-space-states:closeness", "positioning:being_hugged"],
-    "primary": ["positioning:hugging"]
+    "actor": ["personal-space-states:closeness", "hugging-states:being_hugged"],
+    "primary": ["hugging-states:hugging"]
   },
   "forbidden_components": {
-    "actor": ["positioning:hugging"]
+    "actor": ["hugging-states:hugging"]
   },
   "template": "release yourself gently from {target}'s hug",
   "prerequisites": [],

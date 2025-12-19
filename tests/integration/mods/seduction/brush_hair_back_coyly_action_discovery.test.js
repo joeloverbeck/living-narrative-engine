@@ -49,7 +49,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       expect(brushHairBackCoylyAction.required_components).toEqual({});
       expect(brushHairBackCoylyAction.forbidden_components).toEqual({
         actor: [
-          'positioning:hugging',
+          'hugging-states:hugging',
           'positioning:doing_complex_performance',
           'positioning:restraining',
         ],
@@ -120,7 +120,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
         }
       );
 
-      scenario.actor.components['positioning:hugging'] = {
+      scenario.actor.components['hugging-states:hugging'] = {
         embraced_entity_id: scenario.target.id,
         initiated: true,
       };
@@ -135,7 +135,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorInstance.components['positioning:hugging']).toEqual({
+      expect(actorInstance.components['hugging-states:hugging']).toEqual({
         embraced_entity_id: scenario.target.id,
         initiated: true,
       });

@@ -61,9 +61,9 @@ describe('strike_target action definition', () => {
   });
 
   describe('Forbidden Components', () => {
-    it('should forbid actor with positioning:hugging', () => {
+    it('should forbid actor with hugging-states:hugging', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:hugging'
+        'hugging-states:hugging'
       );
     });
 

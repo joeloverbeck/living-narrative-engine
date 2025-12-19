@@ -115,7 +115,7 @@ describe('hugging:release_self_from_hug action integration', () => {
           }
 
           const beingHugged =
-            actorEntity.components?.['positioning:being_hugged'] || null;
+            actorEntity.components?.['hugging-states:being_hugged'] || null;
           if (!beingHugged) {
             return { success: true, value: new Set() };
           }
@@ -127,7 +127,7 @@ describe('hugging:release_self_from_hug action integration', () => {
               return;
             }
 
-            const hugging = partner.components?.['positioning:hugging'] || null;
+            const hugging = partner.components?.['hugging-states:hugging'] || null;
             if (
               hugging?.embraced_entity_id === actorId &&
               beingHugged.hugging_entity_id === partnerId
@@ -155,11 +155,11 @@ describe('hugging:release_self_from_hug action integration', () => {
     options = {}
   ) => {
     const scenario = testFixture.createCloseActors(names, options);
-    scenario.actor.components['positioning:being_hugged'] = {
+    scenario.actor.components['hugging-states:being_hugged'] = {
       hugging_entity_id: scenario.target.id,
       consented: true,
     };
-    scenario.target.components['positioning:hugging'] = {
+    scenario.target.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.actor.id,
       initiated: true,
     };
@@ -199,10 +199,10 @@ describe('hugging:release_self_from_hug action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance).not.toHaveComponent('positioning:being_hugged');
-    expect(actorInstance).not.toHaveComponent('positioning:hugging');
-    expect(targetInstance).not.toHaveComponent('positioning:hugging');
-    expect(targetInstance).not.toHaveComponent('positioning:being_hugged');
+    expect(actorInstance).not.toHaveComponent('hugging-states:being_hugged');
+    expect(actorInstance).not.toHaveComponent('hugging-states:hugging');
+    expect(targetInstance).not.toHaveComponent('hugging-states:hugging');
+    expect(targetInstance).not.toHaveComponent('hugging-states:being_hugged');
   });
 
   it('preserves other hugging relationships while freeing the actor', async () => {
@@ -215,11 +215,11 @@ describe('hugging:release_self_from_hug action integration', () => {
       closeProximity: true,
       idPrefix: 'secondary_',
     });
-    otherPair.actor.components['positioning:hugging'] = {
+    otherPair.actor.components['hugging-states:hugging'] = {
       embraced_entity_id: otherPair.target.id,
       initiated: true,
     };
-    otherPair.target.components['positioning:being_hugged'] = {
+    otherPair.target.components['hugging-states:being_hugged'] = {
       hugging_entity_id: otherPair.actor.id,
       consented: true,
     };
@@ -242,11 +242,11 @@ describe('hugging:release_self_from_hug action integration', () => {
       otherPair.target.id
     );
 
-    expect(preservedActor).toHaveComponentData('positioning:hugging', {
+    expect(preservedActor).toHaveComponentData('hugging-states:hugging', {
       embraced_entity_id: otherPair.target.id,
       initiated: true,
     });
-    expect(preservedTarget).toHaveComponentData('positioning:being_hugged', {
+    expect(preservedTarget).toHaveComponentData('hugging-states:being_hugged', {
       hugging_entity_id: otherPair.actor.id,
       consented: true,
     });
@@ -280,11 +280,11 @@ describe('hugging:release_self_from_hug action integration', () => {
 
   it('leaves unrelated embrace data untouched when the target references a different partner', async () => {
     const scenario = testFixture.createCloseActors(['Indra', 'Jules']);
-    scenario.actor.components['positioning:being_hugged'] = {
+    scenario.actor.components['hugging-states:being_hugged'] = {
       hugging_entity_id: 'hugging:different_actor',
       consented: true,
     };
-    scenario.target.components['positioning:hugging'] = {
+    scenario.target.components['hugging-states:hugging'] = {
       embraced_entity_id: 'hugging:someone_else',
       initiated: true,
     };
@@ -304,11 +304,11 @@ describe('hugging:release_self_from_hug action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance).toHaveComponentData('positioning:being_hugged', {
+    expect(actorInstance).toHaveComponentData('hugging-states:being_hugged', {
       hugging_entity_id: 'hugging:different_actor',
       consented: true,
     });
-    expect(targetInstance).toHaveComponentData('positioning:hugging', {
+    expect(targetInstance).toHaveComponentData('hugging-states:hugging', {
       embraced_entity_id: 'hugging:someone_else',
       initiated: true,
     });

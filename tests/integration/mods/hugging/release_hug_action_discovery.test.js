@@ -108,7 +108,7 @@ describe('hugging:release_hug action discovery', () => {
           }
 
           const huggingComponent =
-            actorEntity.components?.['positioning:hugging'] || null;
+            actorEntity.components?.['hugging-states:hugging'] || null;
           if (!huggingComponent) {
             return { success: true, value: new Set() };
           }
@@ -121,7 +121,7 @@ describe('hugging:release_hug action discovery', () => {
             }
 
             const beingHugged =
-              partner.components?.['positioning:being_hugged'] || null;
+              partner.components?.['hugging-states:being_hugged'] || null;
             if (
               beingHugged?.hugging_entity_id === actorId &&
               huggingComponent.embraced_entity_id === partnerId
@@ -146,11 +146,11 @@ describe('hugging:release_hug action discovery', () => {
 
   const primeHugScenario = (names = ['Avery', 'Blake'], options = {}) => {
     const scenario = testFixture.createCloseActors(names, options);
-    scenario.actor.components['positioning:hugging'] = {
+    scenario.actor.components['hugging-states:hugging'] = {
       embraced_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['positioning:being_hugged'] = {
+    scenario.target.components['hugging-states:being_hugged'] = {
       hugging_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -174,7 +174,7 @@ describe('hugging:release_hug action discovery', () => {
 
   it('only appears for targets whose hugging_entity_id matches the actor', () => {
     const scenario = primeHugScenario(['Casey', 'Devon']);
-    scenario.target.components['positioning:being_hugged'] = {
+    scenario.target.components['hugging-states:being_hugged'] = {
       hugging_entity_id: 'hugging:someone_else',
       consented: true,
     };
@@ -216,9 +216,9 @@ describe('hugging:release_hug action discovery', () => {
     expect(actionIds).not.toContain(ACTION_ID);
   });
 
-  it('is unavailable once the actor loses positioning:hugging', () => {
+  it('is unavailable once the actor loses hugging-states:hugging', () => {
     const scenario = primeHugScenario(['Greta', 'Hayden']);
-    delete scenario.actor.components['positioning:hugging'];
+    delete scenario.actor.components['hugging-states:hugging'];
 
     const room = ModEntityScenarios.createRoom('room1', 'Test Room');
     testFixture.reset([room, scenario.actor, scenario.target]);
@@ -234,7 +234,7 @@ describe('hugging:release_hug action discovery', () => {
 
   it('is blocked for actors currently being hugged themselves', () => {
     const scenario = primeHugScenario(['Indira', 'Jules']);
-    scenario.actor.components['positioning:being_hugged'] = {
+    scenario.actor.components['hugging-states:being_hugged'] = {
       hugging_entity_id: 'hugging:someone_else',
       consented: true,
     };
