@@ -1,5 +1,5 @@
 {
   "$schema": "http://example.com/schemas/entity-instance.schema.json",
   "instanceId": "dredgers:hooded_oil_lantern_instance_3",
-  "definitionId": "dredgers:hooded_oil_lantern"
+  "definitionId": "lighting:hooded_oil_lantern"
 }

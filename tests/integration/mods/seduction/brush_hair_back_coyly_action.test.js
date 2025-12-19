@@ -50,7 +50,7 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
           actor: [
             'hugging-states:hugging',
             'positioning:doing_complex_performance',
-            'positioning:restraining',
+            'physical-control-states:restraining',
           ],
         },
       });

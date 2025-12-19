@@ -146,8 +146,8 @@ describe('physical-control:force_to_knees action discovery', () => {
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'positioning:lying_down',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
         'positioning:fallen',
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([

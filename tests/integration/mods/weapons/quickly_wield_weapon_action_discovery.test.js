@@ -56,15 +56,15 @@ describe('quickly_wield_weapon action definition', () => {
       );
     });
 
-    it('should forbid positioning:being_restrained', () => {
+    it('should forbid physical-control-states:being_restrained', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
-    it('should forbid positioning:restraining', () => {
+    it('should forbid physical-control-states:restraining', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
     });
   });

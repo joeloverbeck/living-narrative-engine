@@ -1,24 +1,20 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:restraining",
-  "description": "Marks an actor who is actively restraining another entity, limiting the target's movement and signaling conflicting proximity actions are unavailable.",
+  "id": "physical-control-states:being_restrained",
+  "description": "Marks an entity currently being physically restrained by another actor, indicating limited freedom of movement and conflicting actions.",
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["restrained_entity_id", "initiated"],
+    "required": ["restraining_entity_id"],
     "properties": {
-      "restrained_entity_id": {
+      "restraining_entity_id": {
         "type": "string",
-        "description": "The ID of the entity currently being restrained by this actor",
+        "description": "The ID of the entity that is restraining this actor",
         "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
-      },
-      "initiated": {
-        "type": "boolean",
-        "description": "Whether this entity initiated the restraining interaction"
       },
       "consented": {
         "type": "boolean",
-        "description": "Whether the restrained entity has consented to the restraint",
+        "description": "Whether this entity consents to remain restrained",
         "default": true
       },
       "activityMetadata": {
@@ -33,20 +29,20 @@
           },
           "template": {
             "type": "string",
-            "default": "{actor} is restraining {target}",
+            "default": "{actor} is restrained by {target}",
             "description": "Template string with placeholders: {actor} for the entity with this component, {target} for the entity referenced by targetRole property"
           },
           "targetRole": {
             "type": "string",
-            "default": "restrained_entity_id",
-            "description": "Property name in this component's data containing the target entity ID. Defaults to 'restrained_entity_id' for the entity being restrained."
+            "default": "restraining_entity_id",
+            "description": "Property name in this component's data containing the target entity ID. Defaults to 'restraining_entity_id' for the entity doing the restraining."
           },
           "priority": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "default": 67,
-            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Slightly higher than being_restrained to emphasize the actor's restraining action."
+            "default": 64,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Slightly lower than restraining to keep the actor-focused entry first."
           }
         }
       }

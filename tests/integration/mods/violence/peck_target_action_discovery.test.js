@@ -119,7 +119,7 @@ describe('violence:peck_target action discovery', () => {
         'hugging-states:hugging'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
@@ -457,7 +457,7 @@ describe('violence:peck_target action discovery', () => {
         location: 'cage',
         closeProximity: false,
         actorComponents: {
-          'positioning:being_restrained': { by: 'jailer1' },
+          'physical-control-states:being_restrained': { by: 'jailer1' },
           'anatomy:body': {
             root: 'restrained_bird1_body',
             bodyParts: [

@@ -305,7 +305,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
     it('is blocked by actor forbidden components (e.g., being restrained)', () => {
       const { actor } = setupScenario({
         actorCustomizer: ({ actor }) => {
-          actor.components['positioning:being_restrained'] = {
+          actor.components['physical-control-states:being_restrained'] = {
             restrainer_id: 'other',
           };
         },

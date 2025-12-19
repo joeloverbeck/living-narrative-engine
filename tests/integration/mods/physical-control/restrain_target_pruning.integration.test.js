@@ -55,7 +55,7 @@ describe('physical-control:restrain_target target pruning', () => {
       'actor:restrained': [
         'core:actor',
         'skills:grappling_skill',
-        'positioning:being_restrained',
+        'physical-control-states:being_restrained',
       ],
       'actor:free-1': ['core:actor', 'skills:grappling_skill'],
       'actor:free-2': ['core:actor', 'skills:grappling_skill'],

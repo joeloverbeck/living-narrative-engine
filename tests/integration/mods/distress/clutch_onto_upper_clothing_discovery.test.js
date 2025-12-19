@@ -274,7 +274,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(clutchOntoUpperClothingAction.forbidden_components).toEqual({
-        actor: ['hugging-states:hugging', 'positioning:restraining'],
+        actor: ['hugging-states:hugging', 'physical-control-states:restraining'],
         primary: ['sex-states:giving_blowjob'],
         secondary: [],
       });

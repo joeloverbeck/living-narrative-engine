@@ -14,7 +14,7 @@
     "primary": ["positioning:fallen"]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_restrained", "positioning:fallen"]
+    "actor": ["physical-control-states:being_restrained", "positioning:fallen"]
   },
   "template": "help {target} to their feet",
   "prerequisites": [],

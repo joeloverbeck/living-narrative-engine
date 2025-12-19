@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "physical-control-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "hugging-states",
       "version": "^1.0.0"
     },
@@ -23,10 +27,6 @@
     },
     {
       "id": "personal-space",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "positioning",
       "version": "^1.0.0"
     }
   ],

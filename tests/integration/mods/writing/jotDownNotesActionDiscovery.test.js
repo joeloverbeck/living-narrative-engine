@@ -94,7 +94,7 @@ describe('writing:jot_down_notes action definition', () => {
     expect(jotDownNotesAction.forbidden_components.actor).toBeDefined();
     expect(jotDownNotesAction.forbidden_components.actor).toEqual([
       'positioning:doing_complex_performance',
-      'positioning:restraining',
+      'physical-control-states:restraining',
     ]);
   });
 

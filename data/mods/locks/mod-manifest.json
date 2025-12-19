@@ -8,6 +8,10 @@
   "gameVersion": "0.0.1",
   "dependencies": [
     {
+      "id": "physical-control-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "movement",
       "version": "1.0.0"
     },
@@ -26,7 +30,10 @@
   ],
   "content": {
     "components": [],
-    "actions": ["lock_connection.action.json", "unlock_connection.action.json"],
+    "actions": [
+      "lock_connection.action.json",
+      "unlock_connection.action.json"
+    ],
     "rules": [
       "handle_lock_connection.rule.json",
       "handle_unlock_connection.rule.json"

@@ -8,7 +8,7 @@
     "actor": ["positioning:fallen"]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_restrained"]
+    "actor": ["physical-control-states:being_restrained"]
   },
   "template": "push yourself to your feet",
   "prerequisites": [],

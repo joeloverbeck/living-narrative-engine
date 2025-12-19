@@ -97,12 +97,12 @@ describe('handle_let_go_of_restrained_target rule', () => {
     const removeRestraining = handleLetGoRule.actions.find(
       (op) =>
         op.type === 'REMOVE_COMPONENT' &&
-        op.parameters.component_type === 'positioning:restraining'
+        op.parameters.component_type === 'physical-control-states:restraining'
     );
     const removeBeingRestrained = handleLetGoRule.actions.find(
       (op) =>
         op.type === 'REMOVE_COMPONENT' &&
-        op.parameters.component_type === 'positioning:being_restrained'
+        op.parameters.component_type === 'physical-control-states:being_restrained'
     );
     expect(removeRestraining?.parameters.entity_ref).toBe('actor');
     expect(removeBeingRestrained?.parameters.entity_ref).toBe('target');

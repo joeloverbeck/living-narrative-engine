@@ -27,9 +27,18 @@ describe('Tracer Performance Overhead', () => {
       scenario.actor.id
     );
 
-    // Warmup (stabilize JIT)
-    for (let i = 0; i < 100; i++) {
+    // Warmup both paths to stabilize JIT before measurement
+    // Path 1: No tracer
+    for (let i = 0; i < 500; i++) {
       testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
+    }
+    // Path 2: Disabled tracer (needs its own warmup for fair comparison)
+    testBed.scopeTracer.disable();
+    for (let i = 0; i < 500; i++) {
+      testBed.testEnv.unifiedScopeResolver.resolveSync(
+        'personal-space:close_actors',
+        actorEntity
+      );
     }
 
     // Baseline: no tracer injected
@@ -39,8 +48,7 @@ describe('Tracer Performance Overhead', () => {
     }
     const duration1 = performance.now() - start1;
 
-    // With tracer injected but disabled
-    testBed.scopeTracer.disable();
+    // With tracer injected but disabled (already disabled during warmup)
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(

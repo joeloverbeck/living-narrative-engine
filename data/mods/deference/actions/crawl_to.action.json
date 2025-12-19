@@ -22,8 +22,8 @@
       "hugging-states:being_hugged",
       "hugging-states:hugging",
       "personal-space-states:closeness",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen"
     ],
     "primary": [

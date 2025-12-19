@@ -1,0 +1,111 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_extinguish_light_source",
+  "comment": "Handles extinguish_light_source action: removes is_lit, removes from location's active light sources, dispatches perceptible event",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "lighting:event-is-action-extinguish-light-source"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name for messages",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get light source name for messages",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "lightSourceName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position to find current location",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove is_lit component from light source",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "lighting:is_lit"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check if location has light_sources component",
+      "parameters": {
+        "entity_ref": "{context.actorPosition.locationId}",
+        "component_type": "locations:light_sources",
+        "result_variable": "locationLightSources"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "If location has light_sources, remove this light source from array",
+      "parameters": {
+        "condition": {
+          "!!": { "var": "context.locationLightSources" }
+        },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Remove light source from light_sources array",
+            "parameters": {
+              "entity_ref": "{context.actorPosition.locationId}",
+              "component_type": "locations:light_sources",
+              "field": "sources",
+              "mode": "remove_by_value",
+              "value": "{event.payload.targetId}"
+            }
+          }
+        ],
+        "else_actions": []
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for extinguishing light source",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} extinguishes {context.lightSourceName}. The area grows darker.",
+        "actor_description": "I extinguish {context.lightSourceName}, watching the flame die out.",
+        "perception_type": "state.observable_change",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "You hear a soft puff as a nearby light source is extinguished.",
+          "tactile": "You feel the warmth fade as a nearby light source goes out.",
+          "olfactory": "The acrid smell of a recently extinguished flame wafts toward you."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} extinguishes {context.lightSourceName}."
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful extinguishing",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

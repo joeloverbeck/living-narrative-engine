@@ -133,7 +133,7 @@ describe('physical-control:restrain_target action discovery', () => {
   describe('Action structure', () => {
     it('forbids restraining targets already being restrained', () => {
       expect(restrainTargetAction.forbidden_components.primary).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
   });
@@ -195,7 +195,7 @@ describe('physical-control:restrain_target action discovery', () => {
 
     it('is not available when target is already being restrained', () => {
       const { actor } = setupScenario({
-        'positioning:being_restrained': {
+        'physical-control-states:being_restrained': {
           restraining_entity_id: 'test:other',
           consented: false,
         },

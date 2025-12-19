@@ -64,6 +64,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "lighting",
+      "version": "^1.0.0"
+    },
+    {
       "id": "writing",
       "version": "^1.0.0"
     }
@@ -91,7 +95,6 @@
         "hacksaw.entity.json",
         "hand_dredge_scoop.entity.json",
         "hobb_rusk.character.json",
-        "hooded_oil_lantern.entity.json",
         "jorren_weir.character.json",
         "kestrel_brune.character.json",
         "keyring.entity.json",

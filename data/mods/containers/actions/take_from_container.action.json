@@ -11,7 +11,7 @@
     "actor": [
       "sitting-states:sitting_on",
       "positioning:fallen",
-      "positioning:restraining"
+      "physical-control-states:restraining"
     ]
   },
   "targets": {

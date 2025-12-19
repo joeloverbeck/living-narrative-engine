@@ -83,7 +83,7 @@ describe('clothing:put_on_clothing action discovery', () => {
         items: ['hat_1'],
         capacity: { maxWeight: 5, maxItems: 5 },
       })
-      .withComponent('positioning:being_restrained', {});
+      .withComponent('physical-control-states:being_restrained', {});
 
     const actor = actorBuilder.build();
     const handEntities = actorBuilder.getHandEntities();

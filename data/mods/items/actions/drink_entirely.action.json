@@ -14,7 +14,7 @@
     "primary": ["items:drinkable", "containers-core:liquid_container"]
   },
   "forbidden_components": {
-    "actor": ["positioning:being_restrained", "positioning:restraining"],
+    "actor": ["physical-control-states:being_restrained", "physical-control-states:restraining"],
     "primary": ["items:empty"]
   },
   "prerequisites": [

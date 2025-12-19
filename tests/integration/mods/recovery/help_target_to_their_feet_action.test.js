@@ -32,7 +32,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
           'core:actor': {},
           ...(options.actorFallen ? { 'positioning:fallen': {} } : {}),
           ...(options.actorRestrained
-            ? { 'positioning:being_restrained': {} }
+            ? { 'physical-control-states:being_restrained': {} }
             : {}),
         },
       },

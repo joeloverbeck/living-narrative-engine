@@ -226,7 +226,7 @@ describe('hexing:corrupting_gaze action discovery', () => {
 
     it('is not available when actor is restrained', () => {
       const { actor } = setupScenario({
-        actorComponents: { 'positioning:being_restrained': {} },
+        actorComponents: { 'physical-control-states:being_restrained': {} },
       });
       configureActionDiscovery();
 

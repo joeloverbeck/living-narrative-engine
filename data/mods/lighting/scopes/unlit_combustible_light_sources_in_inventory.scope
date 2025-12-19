@@ -1,0 +1,10 @@
+lighting:unlit_combustible_light_sources_in_inventory :=
+  actor.components.items:inventory.items[]
+  [{"and": [
+    {"!!": {"var": "entity.components.lighting:is_light_source"}},
+    {"!": {"var": "entity.components.lighting:is_lit"}},
+    {"in": [
+      {"var": "entity.components.lighting:is_light_source.fuelType"},
+      ["oil", "candle", "wood", "coal", "gas"]
+    ]}
+  ]}]

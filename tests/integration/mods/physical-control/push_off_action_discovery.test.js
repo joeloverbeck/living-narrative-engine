@@ -112,8 +112,8 @@ describe('physical-control:push_off action discovery', () => {
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'positioning:lying_down',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
       ]);
       expect(pushOffAction.forbidden_components.primary).toEqual([
         'sitting-states:sitting_on',

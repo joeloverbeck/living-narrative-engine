@@ -17,8 +17,8 @@
     "actor": [
       "bending-states:bending_over",
       "positioning:biting_neck",
-      "positioning:being_restrained",
-      "positioning:restraining",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
       "positioning:fallen"
     ]
   },

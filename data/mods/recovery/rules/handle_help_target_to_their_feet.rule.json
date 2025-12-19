@@ -43,7 +43,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:being_restrained",
+        "component_type": "physical-control-states:being_restrained",
         "result_variable": "actorRestrainedState"
       }
     },

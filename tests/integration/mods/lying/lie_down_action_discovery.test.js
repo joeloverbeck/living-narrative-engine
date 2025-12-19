@@ -49,8 +49,8 @@ describe('lying:lie_down action discovery', () => {
         'positioning:kneeling_before',
         'positioning:lying_down',
         'sex-states:fucking_anally',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
         'positioning:fallen',
       ]);
     });

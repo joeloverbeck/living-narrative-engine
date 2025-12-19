@@ -146,12 +146,12 @@ describe('handle_break_free_from_restraint rule', () => {
       const removeBeingRestrained = actions.find(
         (op) =>
           op.type === 'REMOVE_COMPONENT' &&
-          op.parameters.component_type === 'positioning:being_restrained'
+          op.parameters.component_type === 'physical-control-states:being_restrained'
       );
       const removeRestraining = actions.find(
         (op) =>
           op.type === 'REMOVE_COMPONENT' &&
-          op.parameters.component_type === 'positioning:restraining'
+          op.parameters.component_type === 'physical-control-states:restraining'
       );
       const unlockGrabbing = actions.find(
         (op) => op.type === 'UNLOCK_GRABBING'

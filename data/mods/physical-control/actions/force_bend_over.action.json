@@ -29,7 +29,7 @@
       "sex-states:receiving_blowjob",
       "sex-states:giving_blowjob",
       "positioning:lying_down",
-      "positioning:being_restrained",
+      "physical-control-states:being_restrained",
       "positioning:fallen"
     ],
     "primary": [

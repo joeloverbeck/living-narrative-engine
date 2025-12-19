@@ -66,7 +66,7 @@ describe('physical-control:break_free_from_restraint action discovery', () => {
       .withLocationComponent('room1');
 
     if (withBeingRestrained) {
-      actorBuilder.withComponent('positioning:being_restrained', {
+      actorBuilder.withComponent('physical-control-states:being_restrained', {
         restraining_entity_id: restrainerId,
       });
     }
@@ -84,7 +84,7 @@ describe('physical-control:break_free_from_restraint action discovery', () => {
         .withLocationComponent('room1');
 
       if (withMutualLink) {
-        targetBuilder.withComponent('positioning:restraining', {
+        targetBuilder.withComponent('physical-control-states:restraining', {
           restrained_entity_id: actor.id,
           initiated: true,
         });
@@ -110,15 +110,15 @@ describe('physical-control:break_free_from_restraint action discovery', () => {
   };
 
   describe('Action requirements', () => {
-    it('requires positioning:being_restrained on the actor', () => {
+    it('requires physical-control-states:being_restrained on the actor', () => {
       expect(breakFreeAction.required_components.actor).toContain(
-        'positioning:being_restrained'
+        'physical-control-states:being_restrained'
       );
     });
 
     it('requires the primary target to be actively restraining someone', () => {
       expect(breakFreeAction.required_components.primary).toContain(
-        'positioning:restraining'
+        'physical-control-states:restraining'
       );
     });
   });

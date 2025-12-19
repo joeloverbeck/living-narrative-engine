@@ -80,8 +80,8 @@ describe('observation:examine_item_in_location action definition', () => {
       expect(examineItemInLocationAction.forbidden_components.actor).toEqual([
         'positioning:doing_complex_performance',
         'positioning:fallen',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
       ]);
     });
 

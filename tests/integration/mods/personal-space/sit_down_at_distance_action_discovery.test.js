@@ -150,7 +150,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         'sitting-states:sitting_on',
         'positioning:kneeling_before',
         'bending-states:bending_over',
-        'positioning:restraining',
+        'physical-control-states:restraining',
         'positioning:fallen',
       ]);
     });

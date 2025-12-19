@@ -10,8 +10,8 @@
   "forbidden_components": {
     "actor": [
       "hugging-states:hugging",
-      "positioning:being_restrained",
-      "positioning:restraining"
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining"
     ]
   },
   "template": "do backward roll",

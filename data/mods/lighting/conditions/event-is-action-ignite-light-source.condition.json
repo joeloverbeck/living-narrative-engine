@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "lighting:event-is-action-ignite-light-source",
+  "description": "Matches when the action being attempted is ignite_light_source",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "lighting:ignite_light_source"]
+  }
+}

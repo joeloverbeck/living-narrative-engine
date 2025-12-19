@@ -167,7 +167,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
           'hugging-states:hugging',
           'sex-states:receiving_blowjob',
           'sex-states:fucking_anally',
-          'positioning:restraining',
+          'physical-control-states:restraining',
         ],
       });
     });

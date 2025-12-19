@@ -91,25 +91,70 @@ const HTML_TEMPLATE = `
 function loadModMetadataFromDisk() {
   const modsDir = path.join(process.cwd(), 'data', 'mods');
   const entries = fs.readdirSync(modsDir, { withFileTypes: true });
+  const mods = [];
 
-  return entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => {
-      const manifestPath = path.join(modsDir, entry.name, 'mod-manifest.json');
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-      const hasWorlds = fs.existsSync(path.join(modsDir, entry.name, 'worlds'));
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
 
-      return {
-        id: manifest.id,
-        name: manifest.name,
-        version: manifest.version,
-        description: manifest.description || '',
-        author: manifest.author || 'Unknown',
-        dependencies: manifest.dependencies || [],
-        conflicts: manifest.conflicts || [],
-        hasWorlds,
-      };
+    const manifestPath = path.join(modsDir, entry.name, 'mod-manifest.json');
+    let manifest;
+
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+      continue;
+    }
+
+    let hasWorlds = false;
+    try {
+      hasWorlds = fs.statSync(path.join(modsDir, entry.name, 'worlds')).isDirectory();
+    } catch {
+      hasWorlds = false;
+    }
+
+    let actionVisual = null;
+    const actionsPath = path.join(modsDir, entry.name, 'actions');
+    try {
+      const actionFiles = fs
+        .readdirSync(actionsPath)
+        .filter((filename) => filename.endsWith('.action.json'));
+
+      for (const filename of actionFiles) {
+        try {
+          const action = JSON.parse(
+            fs.readFileSync(path.join(actionsPath, filename), 'utf8')
+          );
+          if (action.visual?.backgroundColor && action.visual?.textColor) {
+            actionVisual = {
+              backgroundColor: action.visual.backgroundColor,
+              textColor: action.visual.textColor,
+            };
+            break;
+          }
+        } catch {
+          // Skip invalid action files.
+        }
+      }
+    } catch {
+      actionVisual = null;
+    }
+
+    mods.push({
+      id: manifest.id,
+      name: manifest.name,
+      version: manifest.version,
+      description: manifest.description || '',
+      author: manifest.author || 'Unknown',
+      dependencies: manifest.dependencies || [],
+      conflicts: manifest.conflicts || [],
+      hasWorlds,
+      actionVisual,
     });
+  }
+
+  return mods;
 }
 
 describe('Mod Manager unsaved indicator regression', () => {

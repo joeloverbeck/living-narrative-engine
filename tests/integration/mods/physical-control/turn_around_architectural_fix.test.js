@@ -128,7 +128,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
         expect(turnAroundAction.forbidden_components.actor).toEqual([
           'positioning:biting_neck',
           'positioning:lying_down',
-          'positioning:being_restrained',
+          'physical-control-states:being_restrained',
         ]);
       }
     });
@@ -513,7 +513,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
         expect(turnAroundAction.forbidden_components.actor).toEqual([
           'positioning:biting_neck',
           'positioning:lying_down',
-          'positioning:being_restrained',
+          'physical-control-states:being_restrained',
         ]);
       }
     });

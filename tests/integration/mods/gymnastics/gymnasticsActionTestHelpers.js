@@ -27,8 +27,8 @@ const REQUIRED_COMPONENT = 'gymnastics:is_gymnast';
 const FORBIDDEN_COMPONENT = 'hugging-states:hugging';
 const FORBIDDEN_COMPONENTS = [
   FORBIDDEN_COMPONENT,
-  'positioning:being_restrained',
-  'positioning:restraining',
+  'physical-control-states:being_restrained',
+  'physical-control-states:restraining',
 ];
 const ACTION_SCHEMA = 'schema://living-narrative-engine/action.schema.json';
 const RULE_SCHEMA = 'schema://living-narrative-engine/rule.schema.json';

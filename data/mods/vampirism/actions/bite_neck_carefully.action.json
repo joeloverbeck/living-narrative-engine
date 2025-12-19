@@ -11,7 +11,7 @@
     "actor": [
       "positioning:biting_neck",
       "sex-states:giving_blowjob",
-      "positioning:being_restrained"
+      "physical-control-states:being_restrained"
     ],
     "primary": ["positioning:being_bitten_in_neck"]
   },

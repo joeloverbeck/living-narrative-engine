@@ -94,7 +94,7 @@ describe('writing:sign_document action definition', () => {
     expect(signDocumentAction.forbidden_components.actor).toBeDefined();
     expect(signDocumentAction.forbidden_components.actor).toEqual([
       'positioning:doing_complex_performance',
-      'positioning:restraining',
+      'physical-control-states:restraining',
     ]);
   });
 

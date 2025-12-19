@@ -14,8 +14,8 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 
 ## Current Status
 
-**Total Schemes Defined**: 56
-**In Use**: 45 schemes actively implemented
+**Total Schemes Defined**: 57
+**In Use**: 46 schemes actively implemented
 **Available**: 11 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category

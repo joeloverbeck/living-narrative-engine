@@ -4,12 +4,12 @@ physical-control:restrained_entity_i_am_holding := entities(core:actor)[][{
     {
       "==": [
         { "var": "entity.id" },
-        { "var": "actor.components.positioning:restraining.restrained_entity_id" }
+        { "var": "actor.components.physical-control-states:restraining.restrained_entity_id" }
       ]
     },
     {
       "==": [
-        { "var": "entity.components.positioning:being_restrained.restraining_entity_id" },
+        { "var": "entity.components.physical-control-states:being_restrained.restraining_entity_id" },
         { "var": "actor.id" }
       ]
     }

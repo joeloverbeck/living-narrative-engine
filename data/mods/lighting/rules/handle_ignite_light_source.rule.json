@@ -1,0 +1,124 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_ignite_light_source",
+  "comment": "Handles ignite_light_source action: marks light source as lit, adds to location's active light sources, dispatches perceptible event",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "lighting:event-is-action-ignite-light-source"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name for messages",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get light source name for messages",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "lightSourceName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position to find current location",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "comment": "Mark light source as lit",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "lighting:is_lit",
+        "value": {}
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check if location has light_sources component",
+      "parameters": {
+        "entity_ref": "{context.actorPosition.locationId}",
+        "component_type": "locations:light_sources",
+        "result_variable": "locationLightSources"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "If location doesn't have light_sources, add it",
+      "parameters": {
+        "condition": {
+          "!": { "var": "context.locationLightSources" }
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Add light_sources component to location with this light source",
+            "parameters": {
+              "entity_ref": "{context.actorPosition.locationId}",
+              "component_type": "locations:light_sources",
+              "value": {
+                "sources": ["{event.payload.targetId}"]
+              }
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Add light source to existing light_sources array (only if not already present)",
+            "parameters": {
+              "entity_ref": "{context.actorPosition.locationId}",
+              "component_type": "locations:light_sources",
+              "field": "sources",
+              "mode": "push_unique",
+              "value": "{event.payload.targetId}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for igniting light source",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} ignites {context.lightSourceName}. A warm glow spreads through the area.",
+        "actor_description": "I ignite {context.lightSourceName}, watching the flame catch and spread its warmth.",
+        "perception_type": "state.observable_change",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "You hear the soft hiss of a light source being ignited nearby.",
+          "tactile": "You feel a subtle warmth as a nearby light source flickers to life.",
+          "olfactory": "The faint scent of burning oil or wax reaches your nose."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} ignites {context.lightSourceName}."
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful ignition",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

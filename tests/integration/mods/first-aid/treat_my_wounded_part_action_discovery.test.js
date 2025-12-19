@@ -129,11 +129,11 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorRestraining) {
-      actorBuilder.withComponent('positioning:restraining', {});
+      actorBuilder.withComponent('physical-control-states:restraining', {});
     }
 
     if (actorBeingRestrained) {
-      actorBuilder.withComponent('positioning:being_restrained', {});
+      actorBuilder.withComponent('physical-control-states:being_restrained', {});
     }
 
     if (actorGivingBlowjob) {
@@ -280,8 +280,8 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
         'sex-states:giving_blowjob',
         'positioning:doing_complex_performance',
         'bending-states:bending_over',
-        'positioning:being_restrained',
-        'positioning:restraining',
+        'physical-control-states:being_restrained',
+        'physical-control-states:restraining',
         'positioning:fallen',
       ])
     );
@@ -349,14 +349,14 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:restraining', () => {
+  it('is hidden when actor has physical-control-states:restraining', () => {
     loadScenario({ actorRestraining: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:being_restrained', () => {
+  it('is hidden when actor has physical-control-states:being_restrained', () => {
     loadScenario({ actorBeingRestrained: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);

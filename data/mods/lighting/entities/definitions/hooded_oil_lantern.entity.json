@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "dredgers:hooded_oil_lantern",
-  "description": "A dredger's hooded oil lantern with belt hook, designed for forward-raking illumination",
+  "id": "lighting:hooded_oil_lantern",
+  "description": "A hooded oil lantern with belt hook, designed for forward-raking illumination",
   "components": {
     "core:name": {
       "text": "hooded oil lantern"
@@ -11,12 +11,17 @@
     },
     "items:item": {},
     "items:portable": {},
+    "lighting:is_light_source": {
+      "fuelType": "oil"
+    },
     "core:weight": {
       "weight": 1.5
     },
     "core:material": {
       "material": "brass",
-      "properties": ["rigid"]
+      "properties": [
+        "rigid"
+      ]
     },
     "descriptors:color_extended": {
       "color": "dull-brass"
