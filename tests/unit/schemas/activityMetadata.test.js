@@ -41,7 +41,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 70,
     },
     {
-      mod: 'positioning',
+      mod: 'hugging-states',
       name: 'being_hugged',
       targetRole: 'hugging_entity_id',
       priority: 63,
@@ -71,7 +71,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 80,
     },
     {
-      mod: 'positioning',
+      mod: 'hugging-states',
       name: 'hugging',
       targetRole: 'embraced_entity_id',
       priority: 66,
