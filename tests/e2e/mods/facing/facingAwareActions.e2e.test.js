@@ -332,7 +332,7 @@ describe('Facing-aware action availability E2E', () => {
         available: true,
       },
       {
-        actionId: 'positioning:turn_your_back',
+        actionId: 'facing:turn_your_back',
         targets: {
           primary: ['test:npc'],
         },
@@ -382,7 +382,7 @@ describe('Facing-aware action availability E2E', () => {
 
     // Player turns their back on NPC
     const turnBackResult = await actionServiceFacade.executeAction({
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       actorId: 'test:player',
       targetId: 'test:npc',
     });

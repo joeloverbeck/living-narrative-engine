@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:turn_your_back action and rule.
+ * @file Integration tests for the facing:turn_your_back action and rule.
  * @description Tests the rule execution after the turn_your_back action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -13,8 +13,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import turnYourBackRule from '../../../../data/mods/positioning/rules/turn_your_back.rule.json';
-import eventIsActionTurnYourBack from '../../../../data/mods/positioning/conditions/event-is-action-turn-your-back.condition.json';
+import turnYourBackRule from '../../../../data/mods/facing/rules/turn_your_back.rule.json';
+import eventIsActionTurnYourBack from '../../../../data/mods/facing/conditions/event-is-action-turn-your-back.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -171,7 +171,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   };
 }
 
-describe('positioning:turn_your_back action integration', () => {
+describe('facing:turn_your_back action integration', () => {
   let testEnv;
 
   beforeEach(() => {
@@ -185,7 +185,7 @@ describe('positioning:turn_your_back action integration', () => {
         .fn()
         .mockReturnValue([{ ...turnYourBackRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'positioning:event-is-action-turn-your-back'
+        id === 'facing:event-is-action-turn-your-back'
           ? eventIsActionTurnYourBack
           : undefined
       ),
@@ -227,7 +227,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -275,7 +275,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -313,7 +313,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -354,7 +354,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -431,7 +431,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -468,7 +468,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'game:player_character',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'npcs:bartender_instance',
       originalInput: 'turn_your_back npcs:bartender_instance',
     });
@@ -521,7 +521,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -555,7 +555,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -590,7 +590,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -660,7 +660,7 @@ describe('positioning:turn_your_back action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
-      actionId: 'positioning:turn_your_back',
+      actionId: 'facing:turn_your_back',
       targetId: 'test:target1',
       originalInput: 'turn_your_back test:target1',
     });
@@ -692,12 +692,12 @@ describe('positioning:turn_your_back action integration', () => {
   });
 });
 
-describe('positioning:turn_your_back forbidden component enforcement', () => {
+describe('facing:turn_your_back forbidden component enforcement', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'facing',
       'turn_your_back'
     );
   });

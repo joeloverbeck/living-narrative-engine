@@ -1,10 +1,10 @@
 /**
  * @jest-environment node
- * @file Integration tests for positioning:turn_your_back action lighting prerequisite
+ * @file Integration tests for facing:turn_your_back action lighting prerequisite
  * @description Tests that the turn_your_back action correctly requires the actor's location to be lit
  *
  * Tests the prerequisite using the isActorLocationLit custom JSON Logic operator.
- * @see data/mods/positioning/actions/turn_your_back.action.json
+ * @see data/mods/facing/actions/turn_your_back.action.json
  * @see src/logic/operators/isActorLocationLitOperator.js
  */
 
@@ -13,9 +13,9 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 
-describe('positioning:turn_your_back lighting prerequisite', () => {
+describe('facing:turn_your_back lighting prerequisite', () => {
   let prerequisiteService;
   let jsonLogicService;
   let customOperators;
@@ -131,7 +131,7 @@ describe('positioning:turn_your_back lighting prerequisite', () => {
     });
 
     test('should preserve other action properties', () => {
-      expect(turnYourBackAction.id).toBe('positioning:turn_your_back');
+      expect(turnYourBackAction.id).toBe('facing:turn_your_back');
       expect(turnYourBackAction.template).toBe('turn your back to {target}');
     });
   });

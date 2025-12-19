@@ -16,7 +16,7 @@ import giveItemAction from '../../../data/mods/item-transfer/actions/give_item.a
 import pickUpItemAction from '../../../data/mods/item-handling/actions/pick_up_item.action.json' assert { type: 'json' };
 import placeYourselfBehindAction from '../../../data/mods/maneuvering/actions/place_yourself_behind.action.json' assert { type: 'json' };
 import stepBackAction from '../../../data/mods/personal-space/actions/step_back.action.json' assert { type: 'json' };
-import turnAroundToFaceAction from '../../../data/mods/positioning/actions/turn_around_to_face.action.json' assert { type: 'json' };
+import turnAroundToFaceAction from '../../../data/mods/facing/actions/turn_around_to_face.action.json' assert { type: 'json' };
 import fondleBreastsOverClothesAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts_over_clothes.action.json' assert { type: 'json' };
 import fondleBreastsAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts.action.json' assert { type: 'json' };
 import lickBreastsAction from '../../../data/mods/sex-breastplay/actions/lick_breasts.action.json' assert { type: 'json' };

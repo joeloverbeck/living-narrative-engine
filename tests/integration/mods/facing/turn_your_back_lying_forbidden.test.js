@@ -1,5 +1,5 @@
 /**
- * @file Integration test for positioning:turn_your_back lying_down forbidden component.
+ * @file Integration test for facing:turn_your_back lying_down forbidden component.
  * @description Verifies that turn_your_back action is not available when actor is lying down.
  */
 
@@ -7,13 +7,13 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 
-describe('positioning:turn_your_back - lying_down forbidden component', () => {
+describe('facing:turn_your_back - lying_down forbidden component', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:turn_your_back'
+      'facing',
+      'facing:turn_your_back'
     );
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
   });
@@ -37,6 +37,6 @@ describe('positioning:turn_your_back - lying_down forbidden component', () => {
     const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
     const actionIds = actions.map((a) => a.id);
 
-    expect(actionIds).not.toContain('positioning:turn_your_back');
+    expect(actionIds).not.toContain('facing:turn_your_back');
   });
 });

@@ -19,7 +19,7 @@ import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOpera
 // Import the actual action definitions
 import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 import stepBackAction from '../../../../data/mods/personal-space/actions/step_back.action.json';
 
 // Import the mouth availability condition

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "facing:event-is-action-turn-around-to-face",
+  "description": "Checks if the triggering event is for the 'facing:turn_around_to_face' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "facing:turn_around_to_face"]
+  }
+}

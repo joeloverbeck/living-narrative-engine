@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "positioning_closeness_auto_move",
+  "rule_id": "personal_space_closeness_auto_move",
   "comment": "When an entity in a closeness circle moves, automatically move all partners to maintain the circle",
   "event_type": "core:entity_moved",
   "condition": {

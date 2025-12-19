@@ -15,8 +15,8 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 ## Current Status
 
 **Total Schemes Defined**: 55
-**In Use**: 43 schemes actively implemented
-**Available**: 12 schemes ready for new mods
+**In Use**: 44 schemes actively implemented
+**Available**: 11 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
@@ -29,7 +29,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 | 8.1     | Pure Black & White| `#000000`        | Maximum accessibility                       |
 | 8.2     | White & Black     | `#ffffff`        | Light theme high contrast                   |
 | 8.3     | Yellow on Black   | `#000000`        | High visibility                             |
-| 9.2     | Pathfinder Slate  | `#2e3f47`        | Navigation, wayfinding                      |
 | 14.2    | Humble Bronze     | `#4b2f14`        | Reverent gestures, respectful submissions   |
 | 16.2    | Blighted Moss     | `#1a1f14`        | Hexcraft rituals, entropic nature magic     |
 | 17.2    | Hazy Smoke        | `#3d3a3f`        | Smoking, inhaling substances                |
@@ -155,24 +154,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Hover Contrast**: 15.42:1 AAA
 - **Use Cases**: High visibility, attention grabbing
 - **Theme**: Maximum visibility, alertness
-
-### 9. Additional Versatile Options
-
-#### 9.2 Pathfinder Slate
-
-```json
-{
-  "backgroundColor": "#2e3f47",
-  "textColor": "#ecf0f1",
-  "hoverBackgroundColor": "#4a5f6a",
-  "hoverTextColor": "#ffffff"
-}
-```
-
-- **Normal Contrast**: 11.8:1 AAA
-- **Hover Contrast**: 6.5:1 AA
-- **Use Cases**: Navigation, wayfinding, path selection
-- **Theme**: Roads, paths, neutral guidance
 
 ### 14. Honor/Deference Colors
 

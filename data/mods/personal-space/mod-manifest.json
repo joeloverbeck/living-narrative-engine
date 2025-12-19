@@ -42,6 +42,7 @@
       "event-is-action-step-back.condition.json"
     ],
     "rules": [
+      "closeness_auto_move.rule.json",
       "get_close.rule.json",
       "handle_scoot_closer.rule.json",
       "handle_scoot_closer_right.rule.json",

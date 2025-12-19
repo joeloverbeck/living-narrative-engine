@@ -140,7 +140,7 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
   describe('Rule Validation', () => {
     it('should validate closeness_auto_move rule structure', () => {
       // This test ensures the rule operation type is recognized by the registry
-      // The actual rule file is at: data/mods/positioning/rules/closeness_auto_move.rule.json
+      // The actual rule file is at: data/mods/personal-space/rules/closeness_auto_move.rule.json
 
       // Arrange
       const operationRegistry = container.resolve(tokens.OperationRegistry);

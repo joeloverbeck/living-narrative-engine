@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:turn_around_to_face rule.
+ * @file Integration tests for the facing:turn_around_to_face rule.
  */
 
 import {
@@ -10,8 +10,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import turnAroundToFaceRule from '../../../../../data/mods/positioning/rules/turn_around_to_face.rule.json';
-import eventIsActionTurnAroundToFace from '../../../../../data/mods/positioning/conditions/event-is-action-turn-around-to-face.condition.json';
+import turnAroundToFaceRule from '../../../../../data/mods/facing/rules/turn_around_to_face.rule.json';
+import eventIsActionTurnAroundToFace from '../../../../../data/mods/facing/conditions/event-is-action-turn-around-to-face.condition.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -101,7 +101,7 @@ describe('Turn Around to Face Rule', () => {
         .fn()
         .mockReturnValue([{ ...turnAroundToFaceRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'positioning:event-is-action-turn-around-to-face'
+        id === 'facing:event-is-action-turn-around-to-face'
           ? eventIsActionTurnAroundToFace
           : undefined
       ),
@@ -150,7 +150,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -184,7 +184,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -223,7 +223,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -269,7 +269,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -326,7 +326,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -368,7 +368,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -399,7 +399,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -433,7 +433,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
@@ -467,7 +467,7 @@ describe('Turn Around to Face Rule', () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: 'alice',
-        actionId: 'positioning:turn_around_to_face',
+        actionId: 'facing:turn_around_to_face',
         targetId: 'bob',
         originalInput: 'turn_around_to_face bob',
       });
