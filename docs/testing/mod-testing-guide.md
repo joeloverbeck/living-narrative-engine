@@ -747,7 +747,7 @@ beforeEach(async () => {
 
 **Medium Priority - Straddling & Seating (3 scopes)**:
 
-- `positioning:actor_im_straddling` - Entity actor is straddling
+- `straddling:actor_im_straddling` - Entity actor is straddling
 - `positioning:entity_actor_is_kneeling_before` - Entity actor is kneeling before
 - `positioning:actors_sitting_with_space_to_right` - Sitting actors with 2+ empty spots to right
 

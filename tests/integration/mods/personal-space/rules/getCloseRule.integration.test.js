@@ -16,8 +16,6 @@ import DispatchEventHandler from '../../../../../src/logic/operationHandlers/dis
 import DispatchPerceptibleEventHandler from '../../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../../../src/logic/operationHandlers/endTurnHandler.js';
 import AddPerceptionLogEntryHandler from '../../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
-import { expandMacros } from '../../../../../src/utils/macroUtils.js';
-import logSuccessAndEndTurn from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -97,19 +95,9 @@ describe('positioning_handle_get_close rule integration', () => {
 
   beforeEach(() => {
     customEntityManager = new SimpleEntityManager([]);
-    const macroRegistry = {
-      get: (type, id) =>
-        type === 'macros' && id === 'core:logSuccessAndEndTurn'
-          ? logSuccessAndEndTurn
-          : undefined,
-    };
-    const expandedRule = {
-      ...getCloseRule,
-      actions: expandMacros(getCloseRule.actions, macroRegistry, null),
-    };
 
     const dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([getCloseRule]),
       getConditionDefinition: jest.fn((id) =>
         id === 'personal-space:event-is-action-get-close'
           ? eventIsActionGetClose

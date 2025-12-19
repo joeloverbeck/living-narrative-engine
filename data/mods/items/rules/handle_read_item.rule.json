@@ -64,7 +64,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.observerMessage}",
-              "actor_description": "I read {context.itemName}. It says: {context.itemReadable.text}",
+              "actor_description": "I read {context.itemName}. {context.itemReadable.text}",
               "perception_type": "item.examine",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",

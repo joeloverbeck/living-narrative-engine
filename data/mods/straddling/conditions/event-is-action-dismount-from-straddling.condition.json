@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "straddling:event-is-action-dismount-from-straddling",
+  "description": "Checks if event is attempting the dismount_from_straddling action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "straddling:dismount_from_straddling"
+    ]
+  }
+}

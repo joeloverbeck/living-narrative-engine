@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "straddling:event-is-action-lift-onto-lap-facing-away",
+  "description": "Evaluates to true when the event is an attempt_action for lift_onto_lap_facing_away",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "straddling:lift_onto_lap_facing_away"
+    ]
+  }
+}

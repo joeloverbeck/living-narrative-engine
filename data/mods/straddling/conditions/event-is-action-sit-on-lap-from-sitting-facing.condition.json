@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "straddling:event-is-action-sit-on-lap-from-sitting-facing",
+  "description": "Checks if the event is an attempt_action for sit_on_lap_from_sitting_facing",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "straddling:sit_on_lap_from_sitting_facing"
+    ]
+  }
+}

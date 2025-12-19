@@ -155,7 +155,7 @@ describe('Target Required Components Validation - Integration', () => {
   describe('straddling actions validation', () => {
     it('should discover straddle action when target has all required components', () => {
       const actionDef = {
-        id: 'positioning:straddle_waist_facing',
+        id: 'straddling:straddle_waist_facing',
         name: 'Straddle Waist (Facing)',
         targets: {
           primary: {
@@ -184,7 +184,7 @@ describe('Target Required Components Validation - Integration', () => {
 
     it('should filter straddle action when target missing sitting_on component', () => {
       const actionDef = {
-        id: 'positioning:straddle_waist_facing',
+        id: 'straddling:straddle_waist_facing',
         name: 'Straddle Waist (Facing)',
         targets: {
           primary: {
@@ -214,7 +214,7 @@ describe('Target Required Components Validation - Integration', () => {
 
     it('should filter straddle action when target missing closeness component', () => {
       const actionDef = {
-        id: 'positioning:straddle_waist_facing',
+        id: 'straddling:straddle_waist_facing',
         name: 'Straddle Waist (Facing)',
         targets: {
           primary: {
@@ -347,7 +347,7 @@ describe('Target Required Components Validation - Integration', () => {
   describe('error messages', () => {
     it('should provide clear error message for missing component', () => {
       const actionDef = {
-        id: 'positioning:straddle_waist_facing',
+        id: 'straddling:straddle_waist_facing',
         required_components: {
           primary: ['positioning:sitting_on', 'positioning:closeness'],
         },
@@ -507,7 +507,7 @@ describe('Target Required Components Validation - Integration', () => {
       // Load actual action file
       const actionPath = path.join(
         process.cwd(),
-        'data/mods/positioning/actions/straddle_waist_facing.action.json'
+        'data/mods/straddling/actions/straddle_waist_facing.action.json'
       );
 
       let actionDef;
@@ -536,7 +536,7 @@ describe('Target Required Components Validation - Integration', () => {
       // Load actual action file
       const actionPath = path.join(
         process.cwd(),
-        'data/mods/positioning/actions/straddle_waist_facing_away.action.json'
+        'data/mods/straddling/actions/straddle_waist_facing_away.action.json'
       );
 
       let actionDef;

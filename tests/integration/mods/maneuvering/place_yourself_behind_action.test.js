@@ -276,6 +276,32 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     expect(placedBehindEvent.payload.target).toBe('test:npc');
   });
 
+  it('should emit perceptible event with sense-aware descriptions', async () => {
+    const entities = setupBehindPositioningScenario(
+      'John Smith',
+      'Jane Jones',
+      'test:room'
+    );
+    testFixture.reset(Object.values(entities));
+
+    await testFixture.executeAction('test:player', 'test:npc');
+
+    // Verify perceptible event with sense-aware fields
+    testFixture.assertPerceptibleEvent({
+      descriptionText: 'John Smith places themselves behind Jane Jones.',
+      locationId: 'test:room',
+      actorId: 'test:player',
+      targetId: 'test:npc',
+      perceptionType: 'physical.target_action',
+      actorDescription: 'I place myself behind Jane Jones.',
+      targetDescription: 'John Smith moves behind me.',
+      alternateDescriptions: {
+        auditory:
+          'I hear footsteps and the rustle of movement as someone repositions nearby.',
+      },
+    });
+  });
+
   it('should not log validation warnings for positioning:actor_placed_behind event', async () => {
     const entities = setupBehindPositioningScenario();
     testFixture.reset(Object.values(entities));

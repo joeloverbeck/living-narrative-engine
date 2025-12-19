@@ -77,12 +77,12 @@ describe('Custom Scope Validation - Integration Tests', () => {
 
     it('should include scope name in error source location', async () => {
       fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'straddling',
+        'straddling:straddle_waist_facing'
       );
 
       const scopeName = 'actor_im_straddling';
-      await fixture.registerCustomScope('positioning', scopeName);
+      await fixture.registerCustomScope('straddling', scopeName);
 
       const invalidContext = {
         actor: { id: 'actor1' },
@@ -90,13 +90,13 @@ describe('Custom Scope Validation - Integration Tests', () => {
       };
 
       const result = fixture.testEnv.unifiedScopeResolver.resolveSync(
-        `positioning:${scopeName}`,
+        `straddling:${scopeName}`,
         invalidContext
       );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain(
-        `CustomScopeResolver[positioning:${scopeName}]`
+        `CustomScopeResolver[straddling:${scopeName}]`
       );
     });
 

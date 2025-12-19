@@ -181,35 +181,51 @@
                               }
                             },
                             {
-                              "type": "SET_VARIABLE",
+                              "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                              "comment": "Dispatch sense-aware perceptible event for scooting closer.",
                               "parameters": {
-                                "variable_name": "logMessage",
-                                "value": "{context.actorName} scoots closer to {context.occupantName} on {context.targetName}."
+                                "location_id": "{context.actorPosition.locationId}",
+                                "description_text": "{context.actorName} scoots closer to {context.occupantName} on {context.targetName}.",
+                                "actor_description": "I scoot closer to {context.occupantName} on {context.targetName}.",
+                                "target_description": "{context.actorName} scoots closer to me on {context.targetName}.",
+                                "perception_type": "physical.target_action",
+                                "actor_id": "{event.payload.actorId}",
+                                "target_id": "{event.payload.secondaryId}",
+                                "alternate_descriptions": {
+                                  "auditory": "You hear the sound of someone shifting position on furniture nearby."
+                                }
                               }
                             },
                             {
-                              "type": "SET_VARIABLE",
+                              "type": "DISPATCH_EVENT",
+                              "comment": "Dispatch display event for UI.",
                               "parameters": {
-                                "variable_name": "perceptionType",
-                                "value": "physical.target_action"
+                                "eventType": "core:display_successful_action_result",
+                                "payload": {
+                                  "message": "{context.actorName} scoots closer to {context.occupantName} on {context.targetName}."
+                                }
                               }
                             },
                             {
-                              "type": "SET_VARIABLE",
+                              "type": "DISPATCH_EVENT",
+                              "comment": "Dispatch action success event for game state tracking.",
                               "parameters": {
-                                "variable_name": "locationId",
-                                "value": "{context.actorPosition.locationId}"
+                                "eventType": "core:action_success",
+                                "payload": {
+                                  "eventName": "core:action_success",
+                                  "actionId": "{event.payload.actionId}",
+                                  "actorId": "{event.payload.actorId}",
+                                  "targetId": "{event.payload.targetId}",
+                                  "success": true
+                                }
                               }
                             },
                             {
-                              "type": "SET_VARIABLE",
+                              "type": "END_TURN",
                               "parameters": {
-                                "variable_name": "targetId",
-                                "value": "{event.payload.targetId}"
+                                "entityId": "{event.payload.actorId}",
+                                "success": true
                               }
-                            },
-                            {
-                              "macro": "core:logSuccessAndEndTurn"
                             }
                           ]
                         }

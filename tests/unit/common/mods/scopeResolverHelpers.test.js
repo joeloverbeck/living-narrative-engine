@@ -613,9 +613,9 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
   });
 
   describe('Medium Priority Scopes', () => {
-    it('should register positioning:actor_im_straddling', () => {
+    it('should register straddling:actor_im_straddling', () => {
       expect(
-        mockTestEnv._registeredResolvers.has('positioning:actor_im_straddling')
+        mockTestEnv._registeredResolvers.has('straddling:actor_im_straddling')
       ).toBe(true);
     });
 

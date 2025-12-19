@@ -6,7 +6,7 @@
 import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 
 /**
- * @typedef {Object} ModNode
+ * @typedef {object} ModNode
  * @property {string} id - Mod identifier
  * @property {string[]} dependencies - Direct dependency IDs
  * @property {string[]} dependents - Mods that depend on this mod
@@ -14,7 +14,7 @@ import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
  */
 
 /**
- * @typedef {Object} ActivationResult
+ * @typedef {object} ActivationResult
  * @property {string[]} activated - Mods that will be activated
  * @property {string[]} dependencies - Mods activated as dependencies
  * @property {string[]} conflicts - Conflicting mod IDs (if any)
@@ -23,7 +23,7 @@ import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
  */
 
 /**
- * @typedef {Object} DeactivationResult
+ * @typedef {object} DeactivationResult
  * @property {string[]} deactivated - Mods that will be deactivated
  * @property {string[]} orphaned - Dependencies no longer needed
  * @property {string[]} blocked - Mods that block deactivation (dependents)
@@ -39,10 +39,12 @@ export class ModGraphService {
   #loadOrderResolver;
   #graph;
   #explicitMods;
+  #hasCircularDependency;
+  #circularDependencyError;
 
   /**
-   * @param {Object} options
-   * @param {Object} options.logger - Logger instance
+   * @param {object} options
+   * @param {object} options.logger - Logger instance
    */
   constructor({ logger }) {
     if (!logger) {
@@ -52,10 +54,13 @@ export class ModGraphService {
     this.#loadOrderResolver = new ModLoadOrderResolver(logger);
     this.#graph = new Map();
     this.#explicitMods = new Set();
+    this.#hasCircularDependency = false;
+    this.#circularDependencyError = null;
   }
 
   /**
    * Build the dependency graph from mod metadata
+   *
    * @param {Array<{id: string, dependencies: Array<{id: string}>}>} mods - Mod metadata array
    */
   buildGraph(mods) {
@@ -94,6 +99,7 @@ export class ModGraphService {
 
   /**
    * Set the currently active explicit mods
+   *
    * @param {string[]} modIds - Explicitly activated mod IDs
    */
   setExplicitMods(modIds) {
@@ -103,6 +109,7 @@ export class ModGraphService {
 
   /**
    * Calculate what happens when activating a mod
+   *
    * @param {string} modId - Mod to activate
    * @returns {ActivationResult}
    */
@@ -148,6 +155,7 @@ export class ModGraphService {
 
   /**
    * Calculate what happens when deactivating a mod
+   *
    * @param {string} modId - Mod to deactivate
    * @returns {DeactivationResult}
    */
@@ -207,9 +215,14 @@ export class ModGraphService {
 
   /**
    * Get load order for active mods using Kahn's algorithm
+   *
    * @returns {string[]} Sorted mod IDs
    */
   getLoadOrder() {
+    // Reset circular dependency state before resolution attempt
+    this.#hasCircularDependency = false;
+    this.#circularDependencyError = null;
+
     const activeMods = this.#getActiveMods();
 
     // Build manifestsMap as a Map keyed by lowercase mod ID
@@ -226,12 +239,36 @@ export class ModGraphService {
       return this.#loadOrderResolver.resolve(activeMods, manifestsMap);
     } catch (error) {
       this.#logger.error('Failed to resolve load order', error);
-      return activeMods; // Fallback to unsorted
+      // Track circular dependency state for UI consumers
+      if (error.message && error.message.includes('DEPENDENCY_CYCLE')) {
+        this.#hasCircularDependency = true;
+        this.#circularDependencyError = error.message;
+      }
+      return []; // Return empty array on circular dependency to signal the error
     }
   }
 
   /**
+   * Check if a circular dependency was detected during load order resolution
+   *
+   * @returns {boolean} True if circular dependency exists
+   */
+  hasCircularDependency() {
+    return this.#hasCircularDependency;
+  }
+
+  /**
+   * Get the circular dependency error message if one exists
+   *
+   * @returns {string|null} Error message or null if no circular dependency
+   */
+  getCircularDependencyError() {
+    return this.#circularDependencyError;
+  }
+
+  /**
    * Get all currently active mods
+   *
    * @returns {string[]}
    */
   #getActiveMods() {
@@ -246,6 +283,7 @@ export class ModGraphService {
 
   /**
    * Get all dependencies recursively
+   *
    * @param {string} modId
    * @returns {string[]}
    */
@@ -272,6 +310,7 @@ export class ModGraphService {
 
   /**
    * Get explicit mods that depend on given mod
+   *
    * @param {string} modId
    * @returns {string[]}
    */
@@ -289,6 +328,7 @@ export class ModGraphService {
 
   /**
    * Check if a mod is currently active
+   *
    * @param {string} modId
    * @returns {boolean}
    */
@@ -330,6 +370,7 @@ export class ModGraphService {
 
   /**
    * Get the current status of a mod
+   *
    * @param {string} modId
    * @returns {'explicit'|'dependency'|'core'|'inactive'|'unknown'}
    */
@@ -340,6 +381,7 @@ export class ModGraphService {
 
   /**
    * Check if any explicit mods depend on this mod
+   *
    * @param {string} modId - Mod to check
    * @returns {boolean} True if other explicit mods depend on this mod
    */
@@ -349,6 +391,7 @@ export class ModGraphService {
 
   /**
    * Get all mods with their current statuses
+   *
    * @returns {Map<string, ModNode>}
    */
   getAllNodes() {

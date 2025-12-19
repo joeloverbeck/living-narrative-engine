@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "straddling:sit_on_lap_from_sitting_facing",
+  "name": "Sit on Lap from Sitting (Facing)",
+  "description": "Transition from sitting on furniture to sitting on another sitting actor's lap while facing them",
+  "targets": {
+    "primary": {
+      "scope": "positioning:actors_both_sitting_close",
+      "placeholder": "target",
+      "description": "Sitting actor to sit on"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:sitting_on", "positioning:closeness"],
+    "primary": ["positioning:sitting_on", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["sex-states:giving_blowjob"]
+  },
+  "template": "sit on {target}'s lap (face-to-face)",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#5e2750",
+    "textColor": "#fce4f1",
+    "hoverBackgroundColor": "#732f62",
+    "hoverTextColor": "#ffffff"
+  }
+}

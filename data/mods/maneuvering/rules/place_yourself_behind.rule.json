@@ -72,35 +72,8 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} places themselves behind {context.targetName}."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.target_action"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    {
       "type": "DISPATCH_EVENT",
+      "comment": "Dispatch actor_placed_behind event for game state tracking",
       "parameters": {
         "eventType": "maneuvering:actor_placed_behind",
         "payload": {
@@ -109,6 +82,52 @@
         }
       }
     },
-    { "macro": "core:logSuccessAndEndTurn" }
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for placing behind target.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} places themselves behind {context.targetName}.",
+        "actor_description": "I place myself behind {context.targetName}.",
+        "target_description": "{context.actorName} moves behind me.",
+        "perception_type": "physical.target_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear footsteps and the rustle of movement as someone repositions nearby."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} places themselves behind {context.targetName}."
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Mark action as successful",
+      "parameters": {
+        "eventType": "core:action_success",
+        "payload": {
+          "actionId": "maneuvering:place_yourself_behind",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful action",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
   ]
 }
