@@ -233,7 +233,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
     }
 
     if (targetSitting) {
-      targetBuilder.withComponent('positioning:sitting_on', {
+      targetBuilder.withComponent('sitting-states:sitting_on', {
         furniture_id: 'stool1',
         spot_index: 0,
       });

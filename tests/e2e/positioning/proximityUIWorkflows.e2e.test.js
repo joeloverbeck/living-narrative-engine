@@ -126,7 +126,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: sofaId,
         spot_index: 0,
       });
@@ -146,7 +146,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(bobSitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: sofaId,
         spot_index: 1,
       });
@@ -209,7 +209,7 @@ describe('Proximity UI Workflows E2E', () => {
       // Update states
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -274,7 +274,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 0,
       });
@@ -294,7 +294,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(bobSitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 1,
       });
@@ -327,7 +327,7 @@ describe('Proximity UI Workflows E2E', () => {
       // Update states
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -411,7 +411,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: chairId,
         spot_index: 0,
       });
@@ -433,7 +433,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(bobSitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: chairId,
         spot_index: 1,
       });
@@ -472,7 +472,7 @@ describe('Proximity UI Workflows E2E', () => {
       // Update states
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -550,7 +550,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 0,
       });
@@ -572,7 +572,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(bobSitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 1,
       });
@@ -608,7 +608,7 @@ describe('Proximity UI Workflows E2E', () => {
       // Update states
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(
@@ -685,7 +685,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: sofaId,
         spot_index: 0,
       });
@@ -777,7 +777,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(aliceSitResult.success).toBe(true);
 
-      await entityService.updateComponent(aliceId, 'positioning:sitting_on', {
+      await entityService.updateComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 0,
       });
@@ -798,7 +798,7 @@ describe('Proximity UI Workflows E2E', () => {
       });
       expect(bobSitResult.success).toBe(true);
 
-      await entityService.updateComponent(bobId, 'positioning:sitting_on', {
+      await entityService.updateComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: benchId,
         spot_index: 1,
       });
@@ -843,7 +843,7 @@ describe('Proximity UI Workflows E2E', () => {
       // Update states
       await entityService.updateComponent(
         aliceId,
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         null
       );
       await entityService.updateComponent(

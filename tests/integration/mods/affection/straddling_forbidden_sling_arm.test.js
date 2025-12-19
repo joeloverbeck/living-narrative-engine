@@ -106,7 +106,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -141,7 +141,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })

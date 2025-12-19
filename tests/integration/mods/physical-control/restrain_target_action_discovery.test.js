@@ -215,7 +215,7 @@ describe('physical-control:restrain_target action discovery', () => {
         {},
         {
           actorCustomizer: ({ actor }) => {
-            actor.components['positioning:sitting_on'] = {
+            actor.components['sitting-states:sitting_on'] = {
               furniture_id: 'test:couch',
               spot_index: 0,
             };

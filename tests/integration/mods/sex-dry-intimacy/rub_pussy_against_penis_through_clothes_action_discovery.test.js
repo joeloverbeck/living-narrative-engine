@@ -51,7 +51,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
      *       {"isSocketCovered": [".", "penis"]},
      *       {
      *         "!!": {
-     *           "var": "entity.components.positioning:sitting_on"
+     *           "var": "entity.components.sitting-states:sitting_on"
      *         }
      *       },
      *       {
@@ -106,7 +106,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
           console.log(`      Partner entity:`, partner ? 'found' : 'NOT FOUND');
 
           // Check sitting_on component
-          if (!partner?.components?.['positioning:sitting_on']) {
+          if (!partner?.components?.['sitting-states:sitting_on']) {
             console.log('      ❌ No sitting_on component');
             return false;
           }
@@ -390,7 +390,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -474,7 +474,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -552,7 +552,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -702,7 +702,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         // No body/anatomy
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -765,7 +765,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -848,7 +848,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -927,7 +927,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -1020,7 +1020,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })

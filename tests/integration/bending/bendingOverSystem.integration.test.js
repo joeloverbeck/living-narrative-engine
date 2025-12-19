@@ -336,7 +336,7 @@ describe('Bending Over System Integration', () => {
 
     it('should prevent bending when actor is sitting', async () => {
       // First add sitting component to actor
-      testEnv.entityManager.addComponent(actor, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor, 'sitting-states:sitting_on', {
         furniture_id: 'test:chair',
         spot_index: 0,
       });
@@ -472,7 +472,7 @@ describe('Bending Over System Integration', () => {
   describe('Mutual Exclusivity', () => {
     it('should handle bending while sitting (rule level)', async () => {
       // Add sitting component to actor
-      testEnv.entityManager.addComponent(actor, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(actor, 'sitting-states:sitting_on', {
         furniture_id: 'test:chair',
         spot_index: 0,
       });
@@ -494,7 +494,7 @@ describe('Bending Over System Integration', () => {
       // Still sitting (rule doesn't remove it)
       const sittingOn = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sittingOn).toBeDefined();
     });
@@ -644,7 +644,7 @@ describe('Bending Over System Integration', () => {
       });
 
       // One actor sits
-      testEnv.entityManager.addComponent(sitter, 'positioning:sitting_on', {
+      testEnv.entityManager.addComponent(sitter, 'sitting-states:sitting_on', {
         furniture_id: sofa,
         spot_index: 0,
       });
@@ -668,7 +668,7 @@ describe('Bending Over System Integration', () => {
       // Check both states
       const sitterState = testEnv.entityManager.getComponentData(
         sitter,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       const benderState = testEnv.entityManager.getComponentData(
         actor,

@@ -76,7 +76,7 @@ describe('Violence Mod: Slap Action Integration', () => {
         }
       );
 
-      scenario.actor.components['positioning:sitting_on'] = {
+      scenario.actor.components['sitting-states:sitting_on'] = {
         furniture_id: 'test:couch',
         spot_index: 0,
       };

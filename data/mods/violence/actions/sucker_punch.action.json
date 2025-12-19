@@ -19,7 +19,7 @@
       "positioning:being_restrained",
       "positioning:restraining",
       "positioning:fallen",
-      "positioning:sitting_on"
+      "sitting-states:sitting_on"
     ]
   },
   "prerequisites": [

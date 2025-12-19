@@ -114,7 +114,7 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
     });
 
   if (includeActorSitting) {
-    actorBuilder.withComponent('positioning:sitting_on', {
+    actorBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: furnitureId,
       spot_index: 0,
     });
@@ -143,7 +143,7 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
     .asActor();
 
   if (includePrimarySitting) {
-    primaryBuilder.withComponent('positioning:sitting_on', {
+    primaryBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: furnitureId,
       spot_index: 1,
     });
@@ -231,7 +231,7 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
         return { success: true, value: new Set() };
       }
 
-      const actorSitting = actor.components?.['positioning:sitting_on'];
+      const actorSitting = actor.components?.['sitting-states:sitting_on'];
       const closenessPartners =
         actor.components?.['personal-space-states:closeness']?.partners;
 
@@ -250,7 +250,7 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
           return false;
         }
 
-        const partnerSitting = partner.components?.['positioning:sitting_on'];
+        const partnerSitting = partner.components?.['sitting-states:sitting_on'];
 
         if (!partnerSitting) {
           return false;

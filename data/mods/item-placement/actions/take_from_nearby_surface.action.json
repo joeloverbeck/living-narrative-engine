@@ -5,7 +5,7 @@
   "description": "While seated, take an item from a container on nearby furniture",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["items:inventory", "positioning:sitting_on"]
+    "actor": ["items:inventory", "sitting-states:sitting_on"]
   },
   "forbidden_components": {
     "actor": [

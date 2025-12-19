@@ -52,7 +52,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          actor: ['positioning:kneeling_before', 'positioning:sitting_on'],
+          actor: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
         },
       };
 
@@ -102,7 +102,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test {target}',
         targets: 'test:scope',
         forbidden_components: {
-          target: ['positioning:sitting_on', 'positioning:laying_down'],
+          target: ['sitting-states:sitting_on', 'positioning:laying_down'],
         },
       };
 
@@ -121,7 +121,7 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: 'test:scope',
         forbidden_components: {
           actor: ['positioning:kneeling_before'],
-          target: ['positioning:sitting_on'],
+          target: ['sitting-states:sitting_on'],
         },
       };
 
@@ -165,7 +165,7 @@ describe('Action Schema Target Forbidden Components', () => {
           },
         },
         forbidden_components: {
-          primary: ['positioning:kneeling_before', 'positioning:sitting_on'],
+          primary: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
         },
       };
 
@@ -197,7 +197,7 @@ describe('Action Schema Target Forbidden Components', () => {
         forbidden_components: {
           actor: ['positioning:running'],
           primary: ['positioning:kneeling_before'],
-          secondary: ['positioning:sitting_on'],
+          secondary: ['sitting-states:sitting_on'],
           tertiary: ['positioning:laying_down'],
         },
       };
@@ -421,7 +421,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          target: ['positioning:sitting_on'],
+          target: ['sitting-states:sitting_on'],
           primary: ['positioning:kneeling_before'],
         },
       };
@@ -442,7 +442,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope', // single target
         forbidden_components: {
-          secondary: ['positioning:sitting_on'], // multi-target role
+          secondary: ['sitting-states:sitting_on'], // multi-target role
         },
       };
 
@@ -478,7 +478,7 @@ describe('Action Schema Target Forbidden Components', () => {
           actor: ['core:actor', 'positioning:positioned'],
         },
         forbidden_components: {
-          actor: ['positioning:kneeling_before', 'positioning:sitting_on'],
+          actor: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
           primary: ['positioning:laying_down', 'positioning:running'],
           secondary: ['positioning:invisible', 'positioning:immobile'],
         },

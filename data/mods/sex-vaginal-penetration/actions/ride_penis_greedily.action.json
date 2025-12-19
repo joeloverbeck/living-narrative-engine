@@ -14,7 +14,7 @@
     "actor": ["personal-space-states:closeness", "sex-states:being_fucked_vaginally"]
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on"],
+    "actor": ["sitting-states:sitting_on"],
     "primary": []
   },
   "template": "ride {primary}'s penis greedily",

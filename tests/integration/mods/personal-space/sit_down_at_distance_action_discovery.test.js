@@ -53,10 +53,10 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
             continue; // Empty spot
           }
 
-          // Check if this occupant has positioning:sitting_on component
+          // Check if this occupant has sitting-states:sitting_on component
           const occupant =
             testFixture.entityManager.getEntityInstance(occupantId);
-          const sittingOn = occupant?.components?.['positioning:sitting_on'];
+          const sittingOn = occupant?.components?.['sitting-states:sitting_on'];
           if (
             !sittingOn ||
             sittingOn.furniture_id !== furnitureId ||
@@ -147,7 +147,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
     it('should have correct forbidden components', () => {
       expect(sitDownAtDistanceAction.forbidden_components).toBeDefined();
       expect(sitDownAtDistanceAction.forbidden_components.actor).toEqual([
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         'positioning:kneeling_before',
         'bending-states:bending_over',
         'positioning:restraining',
@@ -185,7 +185,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -224,7 +224,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -268,7 +268,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -311,7 +311,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -349,7 +349,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -359,7 +359,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 1,
         })
@@ -397,7 +397,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -407,7 +407,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 2,
         })
@@ -433,7 +433,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -451,7 +451,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -491,7 +491,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -543,7 +543,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -553,7 +553,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 2,
         })
@@ -606,7 +606,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 0,
         })
@@ -616,7 +616,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 2,
         })
@@ -670,7 +670,7 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'bench1',
           spot_index: 1,
         })

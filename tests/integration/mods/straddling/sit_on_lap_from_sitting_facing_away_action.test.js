@@ -38,7 +38,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -50,7 +50,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -64,7 +64,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
       // Assert
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
     });
 
     it('should add straddling_waist component with facing_away=true', async () => {
@@ -83,7 +83,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -95,7 +95,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -134,7 +134,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -146,7 +146,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -176,7 +176,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -188,7 +188,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 1,
         })
@@ -200,12 +200,12 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
 
       const updatedTarget =
         testFixture.entityManager.getEntityInstance('target1');
-      expect(updatedTarget.components['positioning:sitting_on']).toBeDefined();
+      expect(updatedTarget.components['sitting-states:sitting_on']).toBeDefined();
       expect(
-        updatedTarget.components['positioning:sitting_on'].furniture_id
+        updatedTarget.components['sitting-states:sitting_on'].furniture_id
       ).toBe('chair1');
       expect(
-        updatedTarget.components['positioning:sitting_on'].spot_index
+        updatedTarget.components['sitting-states:sitting_on'].spot_index
       ).toBe(1);
     });
   });
@@ -227,7 +227,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -239,7 +239,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -273,7 +273,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -285,7 +285,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -319,7 +319,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -331,7 +331,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -364,7 +364,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 0,
         })
@@ -376,7 +376,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 1,
         })
@@ -388,7 +388,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
 
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();
@@ -413,7 +413,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -425,7 +425,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 0,
         })
@@ -437,7 +437,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
 
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();

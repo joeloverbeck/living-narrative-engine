@@ -65,7 +65,7 @@ function setupSeatedContainerScenario({
       items: actorInventory,
       capacity: { maxWeight, maxItems },
     })
-    .withComponent('positioning:sitting_on', { furniture_id: furnitureId })
+    .withComponent('sitting-states:sitting_on', { furniture_id: furnitureId })
     .withComponent('anatomy:appendages', {
       appendages: [
         { id: 'left_hand', type: 'hand', isGrabbing: false },
@@ -503,8 +503,8 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify actor still seated
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:sitting_on']).toBeDefined();
-      expect(actor.components['positioning:sitting_on'].furniture_id).toBe(
+      expect(actor.components['sitting-states:sitting_on']).toBeDefined();
+      expect(actor.components['sitting-states:sitting_on'].furniture_id).toBe(
         'stool-1'
       );
     });
@@ -581,7 +581,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', { furniture_id: 'stool-1' })
+        .withComponent('sitting-states:sitting_on', { furniture_id: 'stool-1' })
         .withComponent('anatomy:appendages', {
           appendages: [
             { id: 'left_hand', type: 'hand', isGrabbing: false },
@@ -598,7 +598,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', { furniture_id: 'stool-2' })
+        .withComponent('sitting-states:sitting_on', { furniture_id: 'stool-2' })
         .withComponent('anatomy:appendages', {
           appendages: [
             { id: 'left_hand', type: 'hand', isGrabbing: false },

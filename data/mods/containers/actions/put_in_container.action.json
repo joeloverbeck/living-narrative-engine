@@ -12,7 +12,7 @@
       "bending-states:bending_over",
       "positioning:fallen",
       "positioning:restraining",
-      "positioning:sitting_on"
+      "sitting-states:sitting_on"
     ]
   },
   "prerequisites": [

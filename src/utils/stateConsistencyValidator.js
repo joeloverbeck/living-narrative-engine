@@ -121,7 +121,7 @@ export class StateConsistencyValidator {
         );
         const sittingData = this.#entityManager.getComponentData(
           entityId,
-          'positioning:sitting_on'
+          'sitting-states:sitting_on'
         );
 
         if (
@@ -171,7 +171,7 @@ export class StateConsistencyValidator {
           // Check if occupant has corresponding sitting component
           const sittingData = this.#entityManager.getComponentData(
             occupantId,
-            'positioning:sitting_on'
+            'sitting-states:sitting_on'
           );
 
           if (!sittingData) {
@@ -368,7 +368,7 @@ export class StateConsistencyValidator {
   async #repairSittingMismatch(issue) {
     await this.#entityManager.addComponent(
       issue.occupantId,
-      'positioning:sitting_on',
+      'sitting-states:sitting_on',
       {
         furniture_id: issue.furnitureId,
         spot_index: issue.spotIndex,

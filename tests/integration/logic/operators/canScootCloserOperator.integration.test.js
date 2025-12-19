@@ -40,7 +40,7 @@ describe('CanScootCloserOperator integration with EntityManager', () => {
   };
 
   const setActorSitting = async ({ furnitureId = bench.id, spotIndex }) => {
-    await entityManager.addComponent(actor.id, 'positioning:sitting_on', {
+    await entityManager.addComponent(actor.id, 'sitting-states:sitting_on', {
       furniture_id: furnitureId,
       spot_index: spotIndex,
     });

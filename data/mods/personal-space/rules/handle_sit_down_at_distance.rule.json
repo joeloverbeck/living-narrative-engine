@@ -21,7 +21,7 @@
       "comment": "Get secondary occupant's sitting position",
       "parameters": {
         "entity_ref": "{event.payload.secondaryId}",
-        "component_type": "positioning:sitting_on",
+        "component_type": "sitting-states:sitting_on",
         "result_variable": "secondarySittingData"
       }
     },
@@ -130,7 +130,7 @@
                         "comment": "Add sitting_on component to actor",
                         "parameters": {
                           "entity_ref": "actor",
-                          "component_type": "positioning:sitting_on",
+                          "component_type": "sitting-states:sitting_on",
                           "value": {
                             "furniture_id": "{event.payload.targetId}",
                             "spot_index": "{context.targetIndex}"

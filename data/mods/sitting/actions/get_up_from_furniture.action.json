@@ -5,7 +5,7 @@
   "description": "Stand up from the furniture you're sitting on",
   "targets": "sitting:furniture_im_sitting_on",
   "required_components": {
-    "actor": ["positioning:sitting_on"]
+    "actor": ["sitting-states:sitting_on"]
   },
   "forbidden_components": {
     "actor": ["positioning:biting_neck", "sex-states:giving_blowjob"]

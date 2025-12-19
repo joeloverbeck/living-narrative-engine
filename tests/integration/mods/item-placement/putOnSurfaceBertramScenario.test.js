@@ -115,7 +115,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })
@@ -194,7 +194,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: [], // EMPTY
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })
@@ -330,7 +330,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })
@@ -395,7 +395,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })
@@ -467,7 +467,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance', 'fantasy:gold_coin_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })
@@ -555,7 +555,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_2_instance',
           spot_index: 0,
         })
@@ -636,7 +636,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'fantasy:plain_wooden_stool_1_instance',
           spot_index: 0,
         })

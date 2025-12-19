@@ -152,7 +152,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       expect(forceBendOverAction.forbidden_components.primary).toEqual(
         expect.arrayContaining([
           'positioning:kneeling_before',
-          'positioning:sitting_on',
+          'sitting-states:sitting_on',
           'bending-states:bending_over',
         ])
       );

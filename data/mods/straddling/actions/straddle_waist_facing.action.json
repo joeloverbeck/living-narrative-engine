@@ -12,10 +12,10 @@
   },
   "required_components": {
     "actor": ["personal-space-states:closeness"],
-    "primary": ["positioning:sitting_on", "personal-space-states:closeness"]
+    "primary": ["sitting-states:sitting_on", "personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on", "positioning:straddling_waist"]
+    "actor": ["sitting-states:sitting_on", "positioning:straddling_waist"]
   },
   "template": "sit on {target}'s lap (face-to-face)",
   "prerequisites": [

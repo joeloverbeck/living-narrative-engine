@@ -220,7 +220,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     if (actorSitting) {
-      actorBuilder.withComponent('positioning:sitting_on', {
+      actorBuilder.withComponent('sitting-states:sitting_on', {
         furniture_id: 'stool1',
         spot_index: 0,
       });
@@ -390,7 +390,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       ]);
       expect(insertPrimaryPenisAction.forbidden_components.actor).toEqual([
         'sex-states:being_fucked_vaginally',
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
       ]);
     });
 

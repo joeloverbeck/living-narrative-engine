@@ -60,7 +60,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
             if (
               scopeName === 'sitting:actors_sitting_close' &&
-              !partner.components?.['positioning:sitting_on']
+              !partner.components?.['sitting-states:sitting_on']
             ) {
               return acc;
             }
@@ -70,7 +70,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
               return acc;
             }
 
-            if (partner.components?.['positioning:sitting_on']) {
+            if (partner.components?.['sitting-states:sitting_on']) {
               acc.add(partnerId);
             }
             return acc;
@@ -164,7 +164,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
 
     it('is not available when the target lacks the sitting requirement', () => {
       const scenario = createSeatedPair('Uma', 'Viktor');
-      delete scenario.target.components['positioning:sitting_on'];
+      delete scenario.target.components['sitting-states:sitting_on'];
 
       testFixture.reset([...scenario.entities]);
       configureActionDiscovery();

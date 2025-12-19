@@ -42,7 +42,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
 
     it('should include sitting_on in forbidden components', () => {
       expect(pickUpItemAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
   });
@@ -148,7 +148,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       };
 
       // Actor is sitting on furniture
-      scenario.actor.components['positioning:sitting_on'] = {
+      scenario.actor.components['sitting-states:sitting_on'] = {
         furnitureId: 'bench123',
       };
 

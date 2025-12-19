@@ -48,7 +48,7 @@ describe('sitting:get_up_from_furniture - giving_blowjob forbidden component', (
           }
 
           const sittingOn =
-            actorEntity.components?.['positioning:sitting_on']?.furniture_id;
+            actorEntity.components?.['sitting-states:sitting_on']?.furniture_id;
           if (!sittingOn) {
             return { success: true, value: new Set() };
           }
@@ -89,7 +89,7 @@ describe('sitting:get_up_from_furniture - giving_blowjob forbidden component', (
         .asActor()
         .build();
 
-      actor.components['positioning:sitting_on'] = {
+      actor.components['sitting-states:sitting_on'] = {
         furniture_id: 'chair1',
       };
 
@@ -125,7 +125,7 @@ describe('sitting:get_up_from_furniture - giving_blowjob forbidden component', (
         .asActor()
         .build();
 
-      actor.components['positioning:sitting_on'] = {
+      actor.components['sitting-states:sitting_on'] = {
         furniture_id: 'chair1',
       };
 

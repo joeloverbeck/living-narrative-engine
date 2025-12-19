@@ -44,11 +44,11 @@ class TargetRequiredComponentsValidator {
    * const actionDef = {
    *   required_components: {
    *     actor: ["personal-space-states:closeness"],
-   *     primary: ["positioning:sitting_on", "personal-space-states:closeness"]
+   *     primary: ["sitting-states:sitting_on", "personal-space-states:closeness"]
    *   }
    * };
    * const targetEntities = {
-   *   primary: { id: "npc1", components: { "positioning:sitting_on": {}, "personal-space-states:closeness": {} } }
+   *   primary: { id: "npc1", components: { "sitting-states:sitting_on": {}, "personal-space-states:closeness": {} } }
    * };
    * const result = validator.validateTargetRequirements(actionDef, targetEntities);
    * // { valid: true }

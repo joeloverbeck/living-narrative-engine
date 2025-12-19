@@ -32,7 +32,7 @@ describe('sitting:sit_down action discovery', () => {
       expect(sitDownAction.forbidden_components).toBeDefined();
       expect(sitDownAction.forbidden_components.actor).toBeInstanceOf(Array);
       expect(sitDownAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(sitDownAction.forbidden_components.actor).toContain(
         'positioning:kneeling_before'

@@ -170,7 +170,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       };
 
       const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
-      target.entity.components['positioning:sitting_on'] = {
+      target.entity.components['sitting-states:sitting_on'] = {
         furniture_id: 'chair1',
         spot_index: 0,
       };
@@ -203,7 +203,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       };
 
       const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
-      target.entity.components['positioning:sitting_on'] = {
+      target.entity.components['sitting-states:sitting_on'] = {
         furniture_id: 'chair1',
         spot_index: 0,
       };

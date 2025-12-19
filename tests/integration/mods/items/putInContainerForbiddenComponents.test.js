@@ -44,7 +44,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
 
     it('should include sitting_on in forbidden components', () => {
       expect(putInContainerAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
   });
@@ -65,7 +65,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
           items: ['item1'],
           capacity: { maxWeight: 10, maxItems: 10 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furnitureId: 'bench123',
         });
       const actor = actorBuilder.build();

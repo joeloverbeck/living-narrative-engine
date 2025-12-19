@@ -12,7 +12,7 @@
       "comment": "Get actor's current sitting position",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:sitting_on",
+        "component_type": "sitting-states:sitting_on",
         "result_variable": "actorSittingData"
       }
     },
@@ -118,7 +118,7 @@
                               "comment": "Remove old sitting_on component",
                               "parameters": {
                                 "entity_ref": "actor",
-                                "component_type": "positioning:sitting_on"
+                                "component_type": "sitting-states:sitting_on"
                               }
                             },
                             {
@@ -126,7 +126,7 @@
                               "comment": "Add updated sitting_on component with new index",
                               "parameters": {
                                 "entity_ref": "actor",
-                                "component_type": "positioning:sitting_on",
+                                "component_type": "sitting-states:sitting_on",
                                 "value": {
                                   "furniture_id": "{event.payload.targetId}",
                                   "spot_index": "{context.newIndex}"

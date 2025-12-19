@@ -267,7 +267,7 @@ describe('deference:crawl_to - Integration Tests', () => {
       alice.components['positioning:kneeling_before'] = {
         entityId: 'test:bob',
       };
-      alice.components['positioning:sitting_on'] = {
+      alice.components['sitting-states:sitting_on'] = {
         furniture_id: 'test:chair',
         spot_index: 0,
       };
@@ -303,7 +303,7 @@ describe('deference:crawl_to - Integration Tests', () => {
       };
 
       const forbiddenComponents = [
-        'positioning:sitting_on',
+        'sitting-states:sitting_on',
         'bending-states:bending_over',
         'positioning:lying_down',
         'positioning:straddling_waist',

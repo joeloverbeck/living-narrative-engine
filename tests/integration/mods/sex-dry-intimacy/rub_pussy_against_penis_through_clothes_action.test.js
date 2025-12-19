@@ -49,7 +49,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
       .closeToEntity('alice')
       .withBody('groin1')
       .asActor()
-      .withComponent('positioning:sitting_on', {
+      .withComponent('sitting-states:sitting_on', {
         furniture_id: 'chair1',
         spot_index: 0,
       })
@@ -311,7 +311,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
         .closeToEntity('alice')
         .withBody('groin1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })

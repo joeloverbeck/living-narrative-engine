@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:sitting_on",
+  "id": "sitting-states:sitting_on",
   "description": "Tracks which furniture entity this actor is currently sitting on",
   "dataSchema": {
     "type": "object",

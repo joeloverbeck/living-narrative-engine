@@ -102,7 +102,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
       );
 
       for (let i = 0; i < actors.length; i++) {
-        await entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+        await entityManager.addComponent(actors[i], 'sitting-states:sitting_on', {
           furniture_id: furnitureId,
           spot_index: i,
         });
@@ -180,7 +180,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
         for (let i = 0; i < actors.length; i++) {
           await entityManager.addComponent(
             actors[i],
-            'positioning:sitting_on',
+            'sitting-states:sitting_on',
             {
               furniture_id: furnitureId,
               spot_index: i,
@@ -218,7 +218,7 @@ describe('Furniture Capacity and Proximity Performance Tests', () => {
 
         // All stand
         for (const actorId of actors) {
-          entityManager.removeComponent(actorId, 'positioning:sitting_on');
+          entityManager.removeComponent(actorId, 'sitting-states:sitting_on');
           entityManager.removeComponent(actorId, 'personal-space-states:closeness');
         }
 

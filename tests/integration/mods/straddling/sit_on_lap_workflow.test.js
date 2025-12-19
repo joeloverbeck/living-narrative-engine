@@ -38,7 +38,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -50,7 +50,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -68,7 +68,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         testFixture.entityManager.getEntityInstance('target1');
 
       // Actor no longer sitting on furniture, now straddling target
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();
@@ -81,9 +81,9 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
       expect(updatedActor.components['positioning:facing_away']).toBeDefined();
 
       // Target still sitting on original furniture
-      expect(updatedTarget.components['positioning:sitting_on']).toBeDefined();
+      expect(updatedTarget.components['sitting-states:sitting_on']).toBeDefined();
       expect(
-        updatedTarget.components['positioning:sitting_on'].furniture_id
+        updatedTarget.components['sitting-states:sitting_on'].furniture_id
       ).toBe('chair2');
     });
 
@@ -100,7 +100,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 0,
         })
@@ -112,7 +112,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 1,
         })
@@ -130,15 +130,15 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         testFixture.entityManager.getEntityInstance('target1');
 
       // Actor no longer has sitting_on (moved from spot 0)
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
 
       // Target still on same couch at same spot
-      expect(updatedTarget.components['positioning:sitting_on']).toBeDefined();
+      expect(updatedTarget.components['sitting-states:sitting_on']).toBeDefined();
       expect(
-        updatedTarget.components['positioning:sitting_on'].furniture_id
+        updatedTarget.components['sitting-states:sitting_on'].furniture_id
       ).toBe('couch1');
       expect(
-        updatedTarget.components['positioning:sitting_on'].spot_index
+        updatedTarget.components['sitting-states:sitting_on'].spot_index
       ).toBe(1);
 
       // Actor now straddling target
@@ -168,7 +168,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -180,7 +180,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -198,7 +198,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
       expect(
         updatedActor.components['positioning:straddling_waist']
       ).toBeDefined();
-      expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
+      expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
     });
 
     it('should maintain target sitting_on throughout transition', async () => {
@@ -217,7 +217,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -234,7 +234,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         .atLocation('room1')
 
         .asActor()
-        .withComponent('positioning:sitting_on', targetOriginalSittingOn)
+        .withComponent('sitting-states:sitting_on', targetOriginalSittingOn)
         .build();
 
       testFixture.reset([room, chair1, chair2, actor, target]);
@@ -245,7 +245,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
         testFixture.entityManager.getEntityInstance('target1');
 
       // Target sitting_on should be completely unchanged
-      expect(updatedTarget.components['positioning:sitting_on']).toEqual(
+      expect(updatedTarget.components['sitting-states:sitting_on']).toEqual(
         targetOriginalSittingOn
       );
     });

@@ -104,7 +104,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     .asActor();
 
   if (includeActorSitting) {
-    actorBuilder.withComponent('positioning:sitting_on', {
+    actorBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 0,
     });
@@ -122,7 +122,7 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     .withBody(primaryTorsoId);
 
   if (includePrimarySitting) {
-    primaryBuilder.withComponent('positioning:sitting_on', {
+    primaryBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 1,
     });
@@ -223,7 +223,7 @@ export function installSittingCloseUncoveredPenisScopeOverride(testFixture) {
       }
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
-      const actorSitting = actor?.components?.['positioning:sitting_on'];
+      const actorSitting = actor?.components?.['sitting-states:sitting_on'];
       const closenessPartners =
         actor?.components?.['personal-space-states:closeness']?.partners;
 
@@ -242,7 +242,7 @@ export function installSittingCloseUncoveredPenisScopeOverride(testFixture) {
           return false;
         }
 
-        const partnerSitting = partner.components?.['positioning:sitting_on'];
+        const partnerSitting = partner.components?.['sitting-states:sitting_on'];
         if (!partnerSitting) {
           return false;
         }
@@ -297,7 +297,7 @@ export function installSittingCloseCoveredPenisScopeOverride(testFixture) {
       }
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
-      const actorSitting = actor?.components?.['positioning:sitting_on'];
+      const actorSitting = actor?.components?.['sitting-states:sitting_on'];
       const closenessPartners =
         actor?.components?.['personal-space-states:closeness']?.partners;
 
@@ -316,7 +316,7 @@ export function installSittingCloseCoveredPenisScopeOverride(testFixture) {
           return false;
         }
 
-        const partnerSitting = partner.components?.['positioning:sitting_on'];
+        const partnerSitting = partner.components?.['sitting-states:sitting_on'];
         if (!partnerSitting) {
           return false;
         }

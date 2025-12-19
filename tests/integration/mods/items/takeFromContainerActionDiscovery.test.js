@@ -247,7 +247,7 @@ describe('containers:take_from_container action definition', () => {
           items: [],
           capacity: { maxWeight: 20, maxItems: 5 },
         })
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'armchair1',
           spot_index: 0,
         })

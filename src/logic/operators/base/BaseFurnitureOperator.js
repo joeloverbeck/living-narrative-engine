@@ -170,7 +170,7 @@ export class BaseFurnitureOperator {
   getSittingOnData(entityId) {
     const sittingOnData = this.entityManager.getComponentData(
       entityId,
-      'positioning:sitting_on'
+      'sitting-states:sitting_on'
     );
 
     return sittingOnData || null;

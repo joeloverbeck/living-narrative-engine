@@ -143,7 +143,7 @@ describe('containers:take_from_container prerequisites', () => {
         'items:inventory'
       );
       expect(takeFromContainerAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(takeFromContainerAction.generateCombinations).toBe(true);
     });

@@ -9,7 +9,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
       getComponentData: jest.fn((entityId, componentType) => {
         if (
           entityId === 'actor1' &&
-          componentType === 'positioning:sitting_on'
+          componentType === 'sitting-states:sitting_on'
         ) {
           return { furniture_id: 'furniture1', spot_index: 0 };
         }
@@ -22,7 +22,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentLookupResolver(
       'test:furniture_lookup',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         sourceField: 'furniture_id',
       }
     );
@@ -42,7 +42,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentLookupResolver(
       'test:furniture_lookup',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         sourceField: 'furniture_id',
       }
     );
@@ -62,7 +62,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentLookupResolver(
       'test:furniture_lookup',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         sourceField: 'furniture_id',
       }
     );
@@ -79,7 +79,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
     mockEntityManager.getComponentData = jest.fn((entityId, componentType) => {
       if (
         entityId === 'target1' &&
-        componentType === 'positioning:sitting_on'
+        componentType === 'sitting-states:sitting_on'
       ) {
         return { furniture_id: 'furniture2' };
       }
@@ -89,7 +89,7 @@ describe('ScopeResolverHelpers - Component Lookup Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentLookupResolver(
       'test:target_furniture',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         sourceField: 'furniture_id',
         contextSource: 'target',
       }
@@ -150,7 +150,7 @@ describe('ScopeResolverHelpers - Array Filter Pattern', () => {
         }
         if (
           entityId === 'actor1' &&
-          componentType === 'positioning:sitting_on'
+          componentType === 'sitting-states:sitting_on'
         ) {
           return { furniture_id: 'furniture1', spot_index: 2 };
         }
@@ -166,7 +166,7 @@ describe('ScopeResolverHelpers - Array Filter Pattern', () => {
         getArray: (actor, context, em) => {
           const sitting = em.getComponentData(
             actor.id,
-            'positioning:sitting_on'
+            'sitting-states:sitting_on'
           );
           const furniture = em.getComponentData(
             sitting.furniture_id,
@@ -358,7 +358,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
     mockEntityManager = {
       getEntityIds: jest.fn(() => ['actor1', 'actor2', 'actor3']),
       hasComponent: jest.fn((entityId, componentType) => {
-        if (componentType === 'positioning:sitting_on') {
+        if (componentType === 'sitting-states:sitting_on') {
           return entityId === 'actor1' || entityId === 'actor2';
         }
         return false;
@@ -370,7 +370,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentFilterResolver(
       'test:sitting_actors',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
       }
     );
 
@@ -386,7 +386,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentFilterResolver(
       'test:filtered_sitting_actors',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
         filterFn: (entityId) => {
           return entityId === 'actor1'; // Only actor1
         },
@@ -407,7 +407,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
     const resolver = ScopeResolverHelpers.createComponentFilterResolver(
       'test:sitting_actors',
       {
-        componentType: 'positioning:sitting_on',
+        componentType: 'sitting-states:sitting_on',
       }
     );
 

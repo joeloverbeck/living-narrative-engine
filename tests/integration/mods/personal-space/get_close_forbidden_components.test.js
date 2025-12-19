@@ -51,9 +51,9 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       );
     });
 
-    it('should include positioning:sitting_on in forbidden list', () => {
+    it('should include sitting-states:sitting_on in forbidden list', () => {
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
   });
@@ -102,7 +102,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
     });
   });
 
-  describe('positioning:sitting_on forbidden component', () => {
+  describe('sitting-states:sitting_on forbidden component', () => {
     it('should NOT appear when actor is sitting on furniture', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
@@ -121,7 +121,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -148,7 +148,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       // This test confirms the forbidden_components are configured correctly
       // The blocking behavior is verified in the negative test above
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
   });

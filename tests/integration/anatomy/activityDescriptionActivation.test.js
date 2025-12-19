@@ -101,7 +101,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'giving_entity_id',
     },
     {
-      mod: 'positioning',
+      mod: 'sitting-states',
       name: 'sitting_on',
       expectedTemplate: 'is sitting on',
       priority: 62,

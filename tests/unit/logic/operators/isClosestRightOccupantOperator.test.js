@@ -36,7 +36,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should resolve actor from a custom context path', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -66,7 +66,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should resolve actor when provided directly as an id', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -96,7 +96,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should resolve actor from a custom path when provided as an id', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -129,13 +129,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -168,13 +168,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -204,13 +204,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant2' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 3 };
           }
@@ -240,7 +240,7 @@ describe('IsClosestRightOccupantOperator', () => {
       // Furniture: [actor1, occupant1, occupant2]
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -278,7 +278,7 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -303,7 +303,7 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
@@ -334,13 +334,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -371,13 +371,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -406,7 +406,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when actor is not sitting on the target furniture', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture2', spot_index: 0 };
             }
@@ -439,7 +439,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when candidate is not sitting on the target furniture', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -474,7 +474,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when spot indices are invalid', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: '0' };
             }
@@ -507,7 +507,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when candidate is not to the right of the actor', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 2 };
             }
@@ -540,7 +540,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when furniture spots data is invalid', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -573,7 +573,7 @@ describe('IsClosestRightOccupantOperator', () => {
     it('should return false when indices are out of bounds', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -617,7 +617,7 @@ describe('IsClosestRightOccupantOperator', () => {
 
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
-          if (componentId === 'positioning:sitting_on') {
+          if (componentId === 'sitting-states:sitting_on') {
             if (entityId === 'actor1') {
               return { furniture_id: 'furniture1', spot_index: 0 };
             }
@@ -678,13 +678,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 'invalid' };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 2 };
           }
@@ -715,13 +715,13 @@ describe('IsClosestRightOccupantOperator', () => {
         (entityId, componentId) => {
           if (
             entityId === 'actor1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: 0 };
           }
           if (
             entityId === 'occupant1' &&
-            componentId === 'positioning:sitting_on'
+            componentId === 'sitting-states:sitting_on'
           ) {
             return { furniture_id: 'furniture1', spot_index: null };
           }

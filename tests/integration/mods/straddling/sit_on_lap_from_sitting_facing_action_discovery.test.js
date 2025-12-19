@@ -52,9 +52,9 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
           const partner =
             testFixture.entityManager.getEntityInstance(partnerId);
           const partnerHasSittingOn =
-            !!partner?.components?.['positioning:sitting_on'];
+            !!partner?.components?.['sitting-states:sitting_on'];
           const actorHasSittingOn =
-            !!actor?.components?.['positioning:sitting_on'];
+            !!actor?.components?.['sitting-states:sitting_on'];
           return partnerHasSittingOn && actorHasSittingOn;
         });
 
@@ -106,7 +106,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -117,7 +117,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })
@@ -150,7 +150,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .closeToEntity('target1')
         .closeToEntity('target2')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 0,
         })
@@ -161,7 +161,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 1,
         })
@@ -172,7 +172,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'couch1',
           spot_index: 2,
         })
@@ -212,7 +212,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -242,7 +242,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -283,7 +283,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair1',
           spot_index: 0,
         })
@@ -293,7 +293,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:sitting_on', {
+        .withComponent('sitting-states:sitting_on', {
           furniture_id: 'chair2',
           spot_index: 0,
         })

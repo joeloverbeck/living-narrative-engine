@@ -15,7 +15,7 @@
   },
   "forbidden_components": {
     "actor": ["sex-states:fucking_vaginally", "sex-states:receiving_blowjob"],
-    "primary": ["positioning:sitting_on"]
+    "primary": ["sitting-states:sitting_on"]
   },
   "template": "slide your penis along {target}'s labia",
   "prerequisites": [

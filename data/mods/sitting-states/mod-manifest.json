@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sitting-states",
+  "version": "1.0.0",
+  "name": "Sitting States",
+  "description": "State components for sitting mechanics.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "sitting_on.component.json"
+    ]
+  }
+}

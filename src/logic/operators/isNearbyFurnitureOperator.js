@@ -15,7 +15,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * {"isNearbyFurniture": [{"var": "entity.id"}]}
  *
  * Returns true if:
- * 1. Actor has positioning:sitting_on component
+ * 1. Actor has sitting-states:sitting_on component
  * 2. The furniture actor is sitting on has furniture:near_furniture component
  * 3. The entity ID is in the nearFurnitureIds array
  *
@@ -63,7 +63,7 @@ export class IsNearbyFurnitureOperator {
       // Check if actor is sitting
       const sittingOn = this.#entityManager.getComponentData(
         actorId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
 
       if (!sittingOn) {

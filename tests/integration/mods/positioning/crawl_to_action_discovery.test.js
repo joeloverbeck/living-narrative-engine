@@ -32,7 +32,7 @@ describe('deference:crawl_to - Action Discovery', () => {
         'personal-space-states:closeness'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
         'bending-states:bending_over'
@@ -91,9 +91,9 @@ describe('deference:crawl_to - Action Discovery', () => {
     });
 
     it('should prevent crawling while sitting', () => {
-      // The action forbids positioning:sitting_on component on actor
+      // The action forbids sitting-states:sitting_on component on actor
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
 

@@ -92,7 +92,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         }
       );
 
-      await entityManager.addComponent(aliceId, 'positioning:sitting_on', {
+      await entityManager.addComponent(aliceId, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0,
       });
@@ -150,7 +150,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: aliceId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: chair1Id,
             spot_index: 0,
           },
@@ -161,7 +161,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: bobId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: chair2Id,
             spot_index: 0,
           },
@@ -237,7 +237,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: aliceId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 0,
           },
@@ -251,7 +251,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: bobId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 1,
           },
@@ -284,7 +284,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify Charlie is not sitting
       const charlieSitting = entityManager.getComponent(
         charlieId,
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
       expect(charlieSitting).toBeNull();
 
@@ -322,7 +322,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: aliceId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 0,
           },
@@ -333,7 +333,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         instanceId: charlieId,
         baseComponents: {
           'core:actor': {},
-          'positioning:sitting_on': {
+          'sitting-states:sitting_on': {
             furniture_id: furnitureId,
             spot_index: 2,
           },
@@ -369,7 +369,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         }
       );
 
-      await entityManager.addComponent(bobId, 'positioning:sitting_on', {
+      await entityManager.addComponent(bobId, 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1,
       });
@@ -439,7 +439,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       // First two actors sit
       for (let i = 0; i < 2; i++) {
-        await entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+        await entityManager.addComponent(actors[i], 'sitting-states:sitting_on', {
           furniture_id: furnitureId,
           spot_index: i,
         });
@@ -487,7 +487,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       );
 
       // Third actor sits
-      await entityManager.addComponent(actors[2], 'positioning:sitting_on', {
+      await entityManager.addComponent(actors[2], 'sitting-states:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 2,
       });
@@ -591,7 +591,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
             instanceId: actorId,
             baseComponents: {
               'core:actor': {},
-              'positioning:sitting_on': {
+              'sitting-states:sitting_on': {
                 furniture_id: furnitureId,
                 spot_index: spotIndex,
               },

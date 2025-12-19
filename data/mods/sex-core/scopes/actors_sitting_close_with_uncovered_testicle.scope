@@ -3,8 +3,8 @@
 sex-core:actors_sitting_close_with_uncovered_testicle := actor.components.personal-space-states:closeness.partners[][
   {
     "and": [
-      {"!!": {"var": "actor.components.positioning:sitting_on"}},
-      {"!!": {"var": "entity.components.positioning:sitting_on"}},
+      {"!!": {"var": "actor.components.sitting-states:sitting_on"}},
+      {"!!": {"var": "entity.components.sitting-states:sitting_on"}},
       {
         "and": [
           {"!!": {"var": "entity.components.personal-space-states:closeness.partners"}},

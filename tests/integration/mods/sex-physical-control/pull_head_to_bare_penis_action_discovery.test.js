@@ -69,7 +69,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
   }
 
   if (includeActorSitting) {
-    actorBuilder.withComponent('positioning:sitting_on', {
+    actorBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 0,
     });
@@ -105,7 +105,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .asActor();
 
   if (includePrimarySitting) {
-    primaryBuilder.withComponent('positioning:sitting_on', {
+    primaryBuilder.withComponent('sitting-states:sitting_on', {
       furniture_id: FURNITURE_ID,
       spot_index: 1,
     });
@@ -196,7 +196,7 @@ function installActorsSittingCloseScopeOverride(fixture) {
         }
 
         // Both must be sitting
-        return Boolean(partner.components?.['positioning:sitting_on']);
+        return Boolean(partner.components?.['sitting-states:sitting_on']);
       });
 
       return { success: true, value: new Set(validPartners) };

@@ -157,7 +157,7 @@ describe('actionValidationProxy - Component Constraints', () => {
     const invalidAction = {
       id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
-      required_components: ['positioning:sitting_on'], // Should be object, not array
+      required_components: ['sitting-states:sitting_on'], // Should be object, not array
     };
 
     expect(() => {
@@ -170,7 +170,7 @@ describe('actionValidationProxy - Component Constraints', () => {
       id: 'personal-space:scoot_closer',
       name: 'Scoot Closer',
       required_components: {
-        player: ['positioning:sitting_on'], // Invalid role - should be 'actor'
+        player: ['sitting-states:sitting_on'], // Invalid role - should be 'actor'
       },
     };
 
@@ -187,7 +187,7 @@ describe('ruleValidationProxy - Basic Validation', () => {
       operations: [
         {
           operation: 'UPDATE_COMPONENT',
-          params: { component: 'positioning:sitting_on' },
+          params: { component: 'sitting-states:sitting_on' },
         },
       ],
     };

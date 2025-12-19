@@ -25,7 +25,6 @@
       "kneeling_before.component.json",
       "lying_down.component.json",
       "restraining.component.json",
-      "sitting_on.component.json",
       "straddling_waist.component.json",
       "wielding.component.json"
     ],

@@ -34,7 +34,7 @@
     ],
     "primary": [
       "positioning:kneeling_before",
-      "positioning:sitting_on",
+      "sitting-states:sitting_on",
       "bending-states:bending_over"
     ]
   },

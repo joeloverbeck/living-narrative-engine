@@ -96,7 +96,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor1',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -137,7 +137,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor2',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 1,
             },
@@ -177,7 +177,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor3',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -187,7 +187,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor4',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 3,
             },
@@ -228,7 +228,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor5',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -238,7 +238,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor6',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 1,
             },
@@ -280,7 +280,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor7',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 2,
             },
@@ -328,7 +328,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor8',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -338,7 +338,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor9',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture2',
               spot_index: 0,
             },
@@ -394,7 +394,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor10',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -435,7 +435,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor10',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 0,
             },
@@ -445,7 +445,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor11',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture1',
               spot_index: 2,
             },
@@ -490,7 +490,7 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
           id: 'actor12',
           components: {
             'core:actor': {},
-            'positioning:sitting_on': {
+            'sitting-states:sitting_on': {
               furniture_id: 'furniture2',
               spot_index: 0,
             },

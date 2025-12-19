@@ -17,7 +17,7 @@
       "positioning:being_restrained",
       "positioning:restraining"
     ],
-    "primary": ["positioning:sitting_on"]
+    "primary": ["sitting-states:sitting_on"]
   },
   "template": "push {target} off you",
   "visual": {

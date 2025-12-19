@@ -39,9 +39,9 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
   });
 
   describe('Component Requirements', () => {
-    it('should require positioning:sitting_on component', () => {
+    it('should require sitting-states:sitting_on component', () => {
       expect(action.required_components.actor).toContain(
-        'positioning:sitting_on'
+        'sitting-states:sitting_on'
       );
     });
 
