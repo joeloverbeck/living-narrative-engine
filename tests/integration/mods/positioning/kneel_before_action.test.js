@@ -692,7 +692,7 @@ describe('deference:kneel_before action integration', () => {
         const bed = new ModEntityBuilder('test:bed')
           .withName('Bed')
           .atLocation('throne_room')
-          .withComponent('positioning:allows_lying_on', {})
+          .withComponent('lying:allows_lying_on', {})
           .build();
 
         // Actor is lying down

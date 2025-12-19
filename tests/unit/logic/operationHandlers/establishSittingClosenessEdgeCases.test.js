@@ -381,7 +381,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
                 return { partners: ['game:alice'] };
             }
           }
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return {
               spots: ['game:alice', 'game:bob', 'game:charlie', 'game:dave'],
             };
@@ -423,7 +423,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
           ) {
             return { partners: ['game:alice'] }; // Self-reference
           }
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: ['game:alice', null] };
           }
           return null;
@@ -471,7 +471,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       // Setup furniture with 3 spots
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: [null, null, null] };
           }
           return null;
@@ -684,7 +684,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
       // Setup successful updates but inconsistent final state
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: [null, 'game:bob', null] };
           }
           if (componentType === 'positioning:closeness') {
@@ -738,7 +738,7 @@ describe('EstablishSittingClosenessHandler - Edge Case Test Suite', () => {
           if (componentType === 'positioning:closeness') {
             return null; // No closeness component
           }
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: ['game:alice', null, 'game:bob'] };
           }
           return null;

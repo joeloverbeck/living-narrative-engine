@@ -11,7 +11,7 @@
     },
     "items:item": {},
     "items:openable": {},
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [
         null,
         null,

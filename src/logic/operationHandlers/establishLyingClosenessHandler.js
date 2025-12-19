@@ -199,7 +199,7 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
 
     const furnitureComponent = this.#entityManager.getComponentData(
       parameters.furniture_id,
-      'positioning:allows_lying_on'
+      'lying:allows_lying_on'
     );
 
     if (!furnitureComponent) {

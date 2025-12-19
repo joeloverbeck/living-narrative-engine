@@ -681,7 +681,7 @@ describe('EstablishSittingClosenessHandler', () => {
       const result = await handler.execute(parameters, executionContext);
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'positioning:sitting_closeness_established',
+        'sitting:sitting_closeness_established',
         {
           actorId: 'alice',
           furnitureId: 'couch:1',

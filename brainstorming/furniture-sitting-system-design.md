@@ -24,12 +24,12 @@ Based on analysis of existing state-defining components (`kissing`, `closeness`,
 
 ### Approach 1: Simple Array-Based Occupancy (Recommended Initial Implementation)
 
-**Component: `positioning:allows_sitting`**
+**Component: `sitting:allows_sitting`**
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:allows_sitting",
+  "id": "sitting:allows_sitting",
   "description": "Defines furniture that can be sat upon, tracking available spots and current occupants",
   "dataSchema": {
     "type": "object",
@@ -106,7 +106,7 @@ Based on analysis of existing state-defining components (`kissing`, `closeness`,
 
 ### Approach 2: Named Spot System
 
-**Component: `positioning:allows_sitting_named`**
+**Component: `sitting:allows_sitting_named`**
 
 ```json
 {
@@ -304,7 +304,7 @@ Start with the simplest possible implementation:
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:allows_sitting",
+  "id": "sitting:allows_sitting",
   "description": "Indicates furniture can be sat upon and tracks occupants",
   "dataSchema": {
     "type": "object",
@@ -387,7 +387,7 @@ This operation would:
     "actor": ["positioning:sitting_on", "positioning:kneeling_before"]
   },
   "required_components": {
-    "target": ["positioning:allows_sitting"]
+    "target": ["sitting:allows_sitting"]
   }
 }
 ```
@@ -397,10 +397,10 @@ This operation would:
 **Available Furniture Scope**
 
 ```
-positioning:available_furniture := entities(positioning:allows_sitting)[][{
+positioning:available_furniture := entities(sitting:allows_sitting)[][{
   "and": [
     {"==": [{"var": "components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]},
-    {"some": [{"var": "components.positioning:allows_sitting.spots"}, {"==": [{"var": ""}, null]}]}
+    {"some": [{"var": "components.sitting:allows_sitting.spots"}, {"==": [{"var": ""}, null]}]}
   ]
 }]
 ```
@@ -408,8 +408,8 @@ positioning:available_furniture := entities(positioning:allows_sitting)[][{
 **Occupied Furniture Scope**
 
 ```
-positioning:furniture_im_sitting_on := entities(positioning:allows_sitting)[][{
-  "in": [{"var": "actor.id"}, {"var": "components.positioning:allows_sitting.spots"}]
+positioning:furniture_im_sitting_on := entities(sitting:allows_sitting)[][{
+  "in": [{"var": "actor.id"}, {"var": "components.sitting:allows_sitting.spots"}]
 }]
 ```
 
@@ -493,7 +493,7 @@ For multi-seat furniture, consider:
 {
   "entity_id": "furniture:wooden_chair",
   "components": {
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null]
     },
     "core:description": {
@@ -510,7 +510,7 @@ For multi-seat furniture, consider:
 {
   "entity_id": "furniture:leather_couch",
   "components": {
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
     "core:description": {
@@ -636,7 +636,7 @@ The key insight is that furniture sitting is fundamentally similar to the `kneel
 
 ### Next Steps
 
-1. Create component schemas for `positioning:allows_sitting` and `positioning:sitting_on`
+1. Create component schemas for `sitting:allows_sitting` and `positioning:sitting_on`
 2. Implement custom operations `SIT_ON_FURNITURE` and `STAND_UP_FROM_FURNITURE`
 3. Define actions and rules for sitting/standing
 4. Create test furniture entities

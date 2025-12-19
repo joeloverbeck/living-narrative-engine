@@ -7,7 +7,7 @@ describe('ScopeResolverHelpers Integration - Positioning Registration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'personal-space',
       'personal-space:scoot_closer',
       null,
       null
@@ -132,9 +132,9 @@ describe('ScopeResolverHelpers Integration - Anatomy Registration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Use positioning mod since anatomy mod has no actions
+    // Use personal-space mod since anatomy mod has no actions
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'personal-space',
       'personal-space:scoot_closer',
       null,
       null
@@ -181,7 +181,7 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'personal-space',
       'personal-space:scoot_closer',
       null,
       null
@@ -213,8 +213,9 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
       testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')
     ).toBe(true);
 
-    // Verify total count is the sum of all categories (26 + 7 + 2 = 35)
-    expect(testFixture.testEnv._registeredResolvers.size).toBe(35);
+    // Verify total count is the sum of all categories (25 + 7 + 2 = 34)
+    // Note: actor_biting_my_neck was removed as unused by any mod files
+    expect(testFixture.testEnv._registeredResolvers.size).toBe(34);
   });
 
   it('should preserve original resolver functionality', () => {
@@ -236,8 +237,8 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down',
+      'sitting',
+      'sitting:sit_down',
       null,
       null
     );
@@ -248,21 +249,20 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     testFixture.cleanup();
   });
 
-  it('should register all 15 new TEAOUTTHR-006 positioning scopes', () => {
+  it('should register all 14 new TEAOUTTHR-006 positioning scopes', () => {
     const newScopes = [
       'positioning:close_actors',
       'positioning:close_actors_facing_each_other',
-      'positioning:actors_both_sitting_close',
-      'positioning:actor_biting_my_neck',
-      'positioning:actors_sitting_close',
+      'sitting:actors_both_sitting_close',
+      'sitting:actors_sitting_close',
       'positioning:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
-      'positioning:available_furniture',
-      'positioning:available_lying_furniture',
-      'positioning:furniture_im_lying_on',
-      'positioning:furniture_im_sitting_on',
+      'sitting:available_furniture',
+      'lying:available_lying_furniture',
+      'lying:furniture_im_lying_on',
+      'sitting:furniture_im_sitting_on',
       'positioning:surface_im_bending_over',
       'positioning:actors_im_facing_away_from',
     ];
@@ -282,7 +282,11 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     // 4 scopes migrated to personal-space: furniture_actor_sitting_on, closest_leftmost_occupant,
     // closest_rightmost_occupant, actors_sitting_with_space_to_right
     // 1 scope migrated to straddling: actor_im_straddling
-    expect(positioningScopes.length).toBe(21);
+    // 4 scopes migrated to sitting: actors_both_sitting_close, actors_sitting_close,
+    //   available_furniture, furniture_im_sitting_on
+    // 2 scopes migrated to lying: available_lying_furniture, furniture_im_lying_on
+    // 1 scope removed: actor_biting_my_neck (unused by any mod files)
+    expect(positioningScopes.length).toBe(14);
   });
 
   it('should call all new scopes without errors (smoke test)', () => {
@@ -295,17 +299,16 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     const scopesToTest = [
       'positioning:close_actors',
       'positioning:close_actors_facing_each_other',
-      'positioning:actors_both_sitting_close',
-      'positioning:actor_biting_my_neck',
-      'positioning:actors_sitting_close',
+      'sitting:actors_both_sitting_close',
+      'sitting:actors_sitting_close',
       'positioning:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'positioning:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
-      'positioning:available_furniture',
-      'positioning:available_lying_furniture',
-      'positioning:furniture_im_lying_on',
-      'positioning:furniture_im_sitting_on',
+      'sitting:available_furniture',
+      'lying:available_lying_furniture',
+      'lying:furniture_im_lying_on',
+      'sitting:furniture_im_sitting_on',
       'positioning:surface_im_bending_over',
       'positioning:actors_im_facing_away_from',
     ];

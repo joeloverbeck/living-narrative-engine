@@ -32,7 +32,7 @@ describe('Sitting Closeness Establishment Integration', () => {
       getComponentData: jest.fn((entityId, componentId) => {
         if (
           entityId === 'test:sofa' &&
-          componentId === 'positioning:allows_sitting'
+          componentId === 'sitting:allows_sitting'
         ) {
           return {
             spots: [
@@ -109,7 +109,7 @@ describe('Sitting Closeness Establishment Integration', () => {
 
     // Verify it was called with the correct format: event name as first param, payload as second
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-      'positioning:sitting_closeness_established', // First arg should be event name string
+      'sitting:sitting_closeness_established', // First arg should be event name string
       expect.objectContaining({
         // Second arg should be payload object
         actorId: 'test:actor2',

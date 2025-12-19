@@ -34,7 +34,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
     const barStools = new ModEntityBuilder('bar_stools_1')
       .withName('bar stools')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: ['iker_aguirre_instance', null, 'marla_kern_instance'],
       })
       .build();
@@ -84,7 +84,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
     const barStools = new ModEntityBuilder('bar_stools_1')
       .withName('bar stools')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: ['marla_kern_instance', null, 'iker_aguirre_instance'],
       })
       .build();
@@ -129,7 +129,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
     const barStools = new ModEntityBuilder('bar_stools_1')
       .withName('bar stools')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: [
           'iker_aguirre_instance',
           'bob_instance',

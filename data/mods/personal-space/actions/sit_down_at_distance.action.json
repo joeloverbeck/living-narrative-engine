@@ -5,7 +5,7 @@
   "description": "Sit on available furniture while leaving a one-seat buffer from a selected occupant.",
   "targets": {
     "primary": {
-      "scope": "positioning:available_furniture",
+      "scope": "sitting:available_furniture",
       "placeholder": "seat",
       "description": "Furniture with an open seat"
     },

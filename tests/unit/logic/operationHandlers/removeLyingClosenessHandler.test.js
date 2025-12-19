@@ -123,7 +123,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -205,7 +205,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -241,7 +241,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -276,7 +276,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -322,7 +322,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -557,7 +557,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {};
           }
@@ -748,7 +748,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }
@@ -798,7 +798,7 @@ describe('RemoveLyingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:bed' &&
-            componentType === 'positioning:allows_lying_on'
+            componentType === 'lying:allows_lying_on'
           ) {
             return {}; // Valid furniture component
           }

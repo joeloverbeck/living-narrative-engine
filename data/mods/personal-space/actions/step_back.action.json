@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "personal-space:step_back",
+  "name": "Step Back",
+  "description": "Step back from your current intimate partner, ending the closeness.",
+  "targets": "none",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:bending_over",
+      "positioning:biting_neck",
+      "positioning:straddling_waist",
+      "positioning:sitting_on",
+      "positioning:kneeling_before",
+      "positioning:lying_down",
+      "positioning:being_hugged",
+      "positioning:hugging",
+      "sex-states:giving_blowjob",
+      "sex-states:receiving_blowjob",
+      "sex-states:fucking_anally",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "template": "step back",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#7c2d12",
+    "textColor": "#fef3c7",
+    "hoverBackgroundColor": "#9a3412",
+    "hoverTextColor": "#fffbeb"
+  }
+}

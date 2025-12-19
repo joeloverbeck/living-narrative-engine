@@ -43,7 +43,7 @@
             "comment": "Get current furniture spots array",
             "parameters": {
               "entity_ref": "{event.payload.targetId}",
-              "component_type": "positioning:allows_sitting",
+              "component_type": "sitting:allows_sitting",
               "result_variable": "furnitureData"
             }
           },
@@ -78,7 +78,7 @@
                   "comment": "Free the current spot",
                   "parameters": {
                     "entity_ref": "target",
-                    "component_type": "positioning:allows_sitting",
+                    "component_type": "sitting:allows_sitting",
                     "field": {
                       "cat": ["spots.", { "var": "context.currentIndex" }]
                     },
@@ -98,7 +98,7 @@
                         "comment": "Claim the new spot",
                         "parameters": {
                           "entity_ref": "target",
-                          "component_type": "positioning:allows_sitting",
+                          "component_type": "sitting:allows_sitting",
                           "field": {
                             "cat": ["spots.", { "var": "context.newIndex" }]
                           },

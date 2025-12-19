@@ -13,7 +13,7 @@
       "imagePath": "portraits/plain_wooden_stool.png",
       "altText": "A simple wooden stool with uneven legs and a worn seat"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null]
     },
     "items:item": {}

@@ -1,0 +1,56 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sitting",
+  "version": "1.0.0",
+  "name": "Sitting System",
+  "description": "Provides sitting mechanics including sitting down on furniture, getting up, and sitting-related spatial relationships.",
+  "actionPurpose": "Sit down on or get up from furniture.",
+  "actionConsiderWhen": "Wanting to rest on furniture, change from standing to sitting, or stand up from a seated position.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "allows_sitting.component.json"
+    ],
+    "actions": [
+      "get_up_from_furniture.action.json",
+      "sit_down.action.json"
+    ],
+    "conditions": [
+      "event-is-action-get-up-from-furniture.condition.json",
+      "event-is-action-sit-down.condition.json"
+    ],
+    "rules": [
+      "handle_get_up_from_furniture.rule.json",
+      "handle_sit_down.rule.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [
+      "sitting_closeness_established.event.json"
+    ],
+    "macros": [],
+    "scopes": [
+      "actors_both_sitting_close.scope",
+      "actors_sitting_close.scope",
+      "available_furniture.scope",
+      "furniture_im_sitting_on.scope"
+    ]
+  }
+}

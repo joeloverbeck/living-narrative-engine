@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "writing",
   "version": "1.0.0",
-  "name": "Writing",
+  "name": "Writing System",
   "description": "Writing and documentation actions for creating notes, signing documents, and other written communication.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",

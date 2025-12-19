@@ -595,6 +595,75 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         );
       });
 
+      it('should extract nested target scopes from targets.primary.scope (BUG FIX)', async () => {
+        // This test reproduces the bug where straddling mod actions like lift_onto_lap_face_to_face.action.json
+        // use targets.primary.scope structure, but the extractor only checked targets.scope
+        const testPath = '/test/mod/straddling';
+        const mockActionData = {
+          $schema: 'schema://living-narrative-engine/action.schema.json',
+          id: 'straddling:lift_onto_lap_face_to_face',
+          name: 'Lift Onto Lap (Face-to-Face)',
+          targets: {
+            primary: {
+              scope: 'sitting:actors_both_sitting_close',
+              placeholder: 'primary',
+              description: 'Sitting actor close to you to lift onto your lap',
+            },
+          },
+          required_components: {
+            actor: ['positioning:sitting_on', 'positioning:closeness'],
+          },
+        };
+
+        fs.readdir.mockResolvedValue([
+          {
+            name: 'lift_onto_lap_face_to_face.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
+        ]);
+        fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
+
+        const result = await extractor.extractReferences(testPath);
+
+        // The bug: sitting:actors_both_sitting_close was NOT being extracted
+        // because the extractor only checked targets.scope, not targets.primary.scope
+        expect(result.has('sitting')).toBe(true);
+        expect(result.get('sitting')).toContain('actors_both_sitting_close');
+      });
+
+      it('should extract nested scopes from multiple target types (primary, secondary)', async () => {
+        const testPath = '/test/mod/path';
+        const mockActionData = {
+          targets: {
+            primary: {
+              scope: 'mod1:scope1',
+              placeholder: 'primary',
+            },
+            secondary: {
+              scope: 'mod2:scope2',
+              placeholder: 'secondary',
+            },
+          },
+        };
+
+        fs.readdir.mockResolvedValue([
+          {
+            name: 'multi_target.action.json',
+            isFile: () => true,
+            isDirectory: () => false,
+          },
+        ]);
+        fs.readFile.mockResolvedValue(JSON.stringify(mockActionData));
+
+        const result = await extractor.extractReferences(testPath);
+
+        expect(result.has('mod1')).toBe(true);
+        expect(result.get('mod1')).toContain('scope1');
+        expect(result.has('mod2')).toBe(true);
+        expect(result.get('mod2')).toContain('scope2');
+      });
+
       it('should extract targets as string', async () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
@@ -1126,7 +1195,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           {
             type: 'MODIFY_COMPONENT',
             parameters: {
-              component_type: 'positioning:allows_sitting',
+              component_type: 'sitting:allows_sitting',
             },
           },
         ],

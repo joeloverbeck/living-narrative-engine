@@ -5,7 +5,7 @@
   "description": "Guide your partner's head down toward your uncovered penis while seated together, initiating oral sex.",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_sitting_close",
+      "scope": "sitting:actors_sitting_close",
       "placeholder": "primary",
       "description": "Seated partner within arm's reach"
     }

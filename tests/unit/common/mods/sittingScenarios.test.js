@@ -18,7 +18,7 @@ describe('ModEntityScenarios sitting helpers', () => {
     const furniture = scenario.furniture;
     const furnitureSitting = getComponent(
       furniture,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(furnitureSitting.spots).toEqual(['actor1', 'actor2']);
 
@@ -88,10 +88,10 @@ describe('ModEntityScenarios sitting helpers', () => {
 
     const [leftFurniture, rightFurniture] = scenario.furniture;
     expect(
-      getComponent(leftFurniture, 'positioning:allows_sitting').spots
+      getComponent(leftFurniture, 'sitting:allows_sitting').spots
     ).toEqual(['actor1']);
     expect(
-      getComponent(rightFurniture, 'positioning:allows_sitting').spots
+      getComponent(rightFurniture, 'sitting:allows_sitting').spots
     ).toEqual(['actor2']);
 
     const actor1 = scenario.seatedActors.find(

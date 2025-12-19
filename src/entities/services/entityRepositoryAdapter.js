@@ -286,10 +286,10 @@ export class EntityRepositoryAdapter {
     }
     this.#componentIndex.get(componentType).add(entityId);
 
-    // Debug logging for positioning:allows_sitting component
-    if (componentType === 'positioning:allows_sitting') {
+    // Debug logging for sitting:allows_sitting component
+    if (componentType === 'sitting:allows_sitting') {
       this.#logger.debug(
-        `[DEBUG] Indexed positioning:allows_sitting for entity '${entityId}'`,
+        `[DEBUG] Indexed sitting:allows_sitting for entity '${entityId}'`,
         {
           entityId,
           componentType,

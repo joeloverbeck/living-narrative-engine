@@ -89,7 +89,7 @@ describe('Push Off Closeness Bug Reproduction', () => {
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
       );
-      expect(availableActions).not.toContain('positioning:step_back');
+      expect(availableActions).not.toContain('personal-space:step_back');
     });
   });
 

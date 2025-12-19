@@ -22,6 +22,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
       "id": "caressing",
       "version": "^1.0.0"
     }

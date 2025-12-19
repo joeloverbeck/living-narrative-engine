@@ -32,7 +32,7 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
     if (spots !== undefined) {
       await entityManager.addComponent(
         instance.id,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots,
         }
@@ -56,7 +56,7 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
   };
 
   const setBenchSpots = async (spots) => {
-    await entityManager.addComponent(bench.id, 'positioning:allows_sitting', {
+    await entityManager.addComponent(bench.id, 'sitting:allows_sitting', {
       spots,
     });
   };
@@ -223,7 +223,7 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
   });
 
   it('returns false when allows_sitting spots are invalid', async () => {
-    await entityManager.addComponent(bench.id, 'positioning:allows_sitting', {
+    await entityManager.addComponent(bench.id, 'sitting:allows_sitting', {
       spots: 'invalid',
     });
     await setActorSitting({ spotIndex: 0 });

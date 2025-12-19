@@ -99,7 +99,7 @@ const availableActions = await testFixture.getAvailableActions(
 **Requirements**:
 
 - Actor has `positioning:sitting_on` component
-- Furniture has `positioning:allows_sitting` component with `spots` array
+- Furniture has `sitting:allows_sitting` component with `spots` array
 
 **Returns**: Set of entity IDs of other actors on same furniture
 
@@ -220,7 +220,7 @@ const scenario = testFixture.createSittingPair(
 
 **Requirements**:
 
-- Furniture has `positioning:allows_sitting` component
+- Furniture has `sitting:allows_sitting` component
 - Furniture at same location as actor
 
 **Returns**: Set of furniture entity IDs allowing sitting
@@ -243,7 +243,7 @@ const scenario = testFixture.createStandardActorTarget(['Alice']);
 // Create furniture at location
 const furniture = testFixture.createEntity('furniture_chair', {
   'core:position': { locationId: 'location_livingroom' },
-  'positioning:allows_sitting': { spots: [null, null, null] },
+  'sitting:allows_sitting': { spots: [null, null, null] },
 });
 ```
 
@@ -848,7 +848,7 @@ scenario.actor.components['positioning:kneeling_before'] = {
 
 ```javascript
 const furniture = testFixture.createEntity('furniture_couch', {
-  'positioning:allows_sitting': {
+  'sitting:allows_sitting': {
     spots: [scenario.actor.id, null, null, null], // Actor at 0, 3 empty spots
   },
 });
@@ -873,7 +873,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 
 **Requirements**:
 
-- Furniture has `positioning:allows_sitting` component
+- Furniture has `sitting:allows_sitting` component
 - At least one `null` or `undefined` spot in `spots` array
 
 **Returns**: Set of furniture entity IDs with available spots
@@ -893,7 +893,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 ```javascript
 const furniture = testFixture.createEntity('furniture_couch', {
   'core:position': { locationId: 'location_livingroom' },
-  'positioning:allows_sitting': { spots: [null, 'actor_01', null] },
+  'sitting:allows_sitting': { spots: [null, 'actor_01', null] },
 });
 ```
 

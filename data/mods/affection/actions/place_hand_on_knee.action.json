@@ -3,7 +3,7 @@
   "id": "affection:place_hand_on_knee",
   "name": "Place hand on knee",
   "description": "Rest a comforting hand on a nearby companion's knee.",
-  "targets": "positioning:actors_sitting_close",
+  "targets": "sitting:actors_sitting_close",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

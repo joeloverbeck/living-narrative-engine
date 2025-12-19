@@ -68,31 +68,31 @@
 
 | Line | Snippet                                                              | Severity | Refactoring Approach |
 | ---- | -------------------------------------------------------------------- | -------- | -------------------- |
-| 80   | `hasAllowsSitting: 'positioning:allows_sitting' in this.components,` | Medium   | Config               |
-| 81   | `allowsSittingData: this.components['positioning:allows_sitting'],`  | Medium   | Config               |
+| 80   | `hasAllowsSitting: 'sitting:allows_sitting' in this.components,` | Medium   | Config               |
+| 81   | `allowsSittingData: this.components['sitting:allows_sitting'],`  | Medium   | Config               |
 
 ### src/entities/entityManager.js
 
 | Line | Snippet                                                                                                 | Severity | Refactoring Approach |
 | ---- | ------------------------------------------------------------------------------------------------------- | -------- | -------------------- | ------ | ------ |
-| 545  | `if (componentTypeId === 'positioning:allows_sitting') {`                                               | Medium   | Config               |
-| 547  | `\`[DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found ${result?.length |          | 0} entities\`,`      | Medium | Config |
-| 554  | `'positioning:allows_sitting'`                                                                          | Medium   | Config               |
+| 545  | `if (componentTypeId === 'sitting:allows_sitting') {`                                               | Medium   | Config               |
+| 547  | `\`[DEBUG] EntityManager.getEntitiesWithComponent('sitting:allows_sitting'): found ${result?.length |          | 0} entities\`,`      | Medium | Config |
+| 554  | `'sitting:allows_sitting'`                                                                          | Medium   | Config               |
 
 ### src/entities/managers/EntityQueryManager.js
 
 | Line | Snippet                                                                    | Severity | Refactoring Approach |
 | ---- | -------------------------------------------------------------------------- | -------- | -------------------- |
-| 202  | `if (componentTypeId === 'positioning:allows_sitting') {`                  | High     | Plugin               |
-| 204  | `\`EntityQueryManager detailed search for 'positioning:allows_sitting'\`,` | High     | Plugin               |
+| 202  | `if (componentTypeId === 'sitting:allows_sitting') {`                  | High     | Plugin               |
+| 204  | `\`EntityQueryManager detailed search for 'sitting:allows_sitting'\`,` | High     | Plugin               |
 
 ### src/entities/services/entityRepositoryAdapter.js
 
 | Line | Snippet                                                                    | Severity | Refactoring Approach |
 | ---- | -------------------------------------------------------------------------- | -------- | -------------------- |
-| 289  | `// Debug logging for positioning:allows_sitting component`                | Critical | Registry             |
-| 290  | `if (componentType === 'positioning:allows_sitting') {`                    | Critical | Registry             |
-| 292  | `\`[DEBUG] Indexed positioning:allows_sitting for entity '${entityId}'\`,` | Critical | Registry             |
+| 289  | `// Debug logging for sitting:allows_sitting component`                | Critical | Registry             |
+| 290  | `if (componentType === 'sitting:allows_sitting') {`                    | Critical | Registry             |
+| 292  | `\`[DEBUG] Indexed sitting:allows_sitting for entity '${entityId}'\`,` | Critical | Registry             |
 
 ### src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js
 
@@ -132,7 +132,7 @@
 
 | Line | Snippet                                                                    | Severity | Refactoring Approach |
 | ---- | -------------------------------------------------------------------------- | -------- | -------------------- |
-| 201  | `'positioning:allows_sitting'`                                             | Critical | Registry             |
+| 201  | `'sitting:allows_sitting'`                                             | Critical | Registry             |
 | 219  | `'positioning:closeness'`                                                  | Critical | Registry             |
 | 253  | `'positioning:closeness'`                                                  | Critical | Registry             |
 | 294  | `'positioning:closeness'`                                                  | Critical | Registry             |
@@ -178,12 +178,12 @@
 
 | Line | Snippet                        | Severity | Refactoring Approach |
 | ---- | ------------------------------ | -------- | -------------------- |
-| 124  | `'positioning:allows_sitting'` | Critical | Registry             |
+| 124  | `'sitting:allows_sitting'` | Critical | Registry             |
 | 135  | `'positioning:closeness'`      | Critical | Registry             |
 | 220  | `'positioning:closeness'`      | Critical | Registry             |
 | 226  | `'positioning:closeness',`     | Critical | Registry             |
 | 242  | `'positioning:closeness'`      | Critical | Registry             |
-| 319  | `'positioning:allows_sitting'` | Critical | Registry             |
+| 319  | `'sitting:allows_sitting'` | Critical | Registry             |
 | 365  | `'positioning:closeness'`      | Critical | Registry             |
 | 390  | `'positioning:closeness'`      | Critical | Registry             |
 | 445  | `'positioning:closeness'`      | Critical | Registry             |
@@ -193,7 +193,7 @@
 | Line | Snippet                        | Severity | Refactoring Approach |
 | ---- | ------------------------------ | -------- | -------------------- |
 | 175  | `'positioning:sitting_on'`     | Medium   | Config               |
-| 191  | `'positioning:allows_sitting'` | Medium   | Config               |
+| 191  | `'sitting:allows_sitting'` | Medium   | Config               |
 
 ### src/logic/services/closenessCircleService.js
 
@@ -223,8 +223,8 @@
 | 70   | `'positioning:closeness'`      | Medium   | Config               |
 | 120  | `'positioning:closeness'`      | Medium   | Config               |
 | 124  | `'positioning:sitting_on'`     | Medium   | Config               |
-| 157  | `'positioning:allows_sitting'` | Medium   | Config               |
-| 164  | `'positioning:allows_sitting'` | Medium   | Config               |
+| 157  | `'sitting:allows_sitting'` | Medium   | Config               |
+| 164  | `'sitting:allows_sitting'` | Medium   | Config               |
 | 174  | `'positioning:sitting_on'`     | Medium   | Config               |
 | 320  | `'positioning:closeness'`      | Medium   | Config               |
 | 328  | `'positioning:closeness',`     | Medium   | Config               |

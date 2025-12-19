@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sitting:event-is-action-sit-down",
+  "description": "Checks if the event is a sit_down action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sitting:sit_down"
+    ]
+  }
+}

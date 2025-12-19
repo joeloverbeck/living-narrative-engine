@@ -300,7 +300,7 @@ export class ScopeResolverHelpers {
 
               const furniture = em.getComponentData(
                 sitting.furniture_id,
-                'positioning:allows_sitting'
+                'sitting:allows_sitting'
               );
               return furniture?.spots || [];
             },
@@ -324,7 +324,7 @@ export class ScopeResolverHelpers {
 
               const furniture = em.getComponentData(
                 sitting.furniture_id,
-                'positioning:allows_sitting'
+                'sitting:allows_sitting'
               );
               if (!furniture?.spots) return [];
 
@@ -362,7 +362,7 @@ export class ScopeResolverHelpers {
 
               const furniture = em.getComponentData(
                 sitting.furniture_id,
-                'positioning:allows_sitting'
+                'sitting:allows_sitting'
               );
               if (!furniture?.spots) {
                 return [];
@@ -404,7 +404,7 @@ export class ScopeResolverHelpers {
           'positioning:furniture_allowing_sitting_at_location',
           {
             filterFn: (entityId, source, context, em) => {
-              return em.hasComponent(entityId, 'positioning:allows_sitting');
+              return em.hasComponent(entityId, 'sitting:allows_sitting');
             },
           }
         ),
@@ -582,8 +582,8 @@ export class ScopeResolverHelpers {
         ),
 
       // "actors both sitting close" - Closeness + sitting filter
-      'positioning:actors_both_sitting_close': this.createArrayFilterResolver(
-        'positioning:actors_both_sitting_close',
+      'sitting:actors_both_sitting_close': this.createArrayFilterResolver(
+        'sitting:actors_both_sitting_close',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -602,48 +602,9 @@ export class ScopeResolverHelpers {
         }
       ),
 
-      // "actor biting my neck" - Reverse biting relationship
-      'positioning:actor_biting_my_neck': this.createArrayFilterResolver(
-        'positioning:actor_biting_my_neck',
-        {
-          getArray: (actor, context, em) => {
-            const closeness = em.getComponentData(
-              actor.id,
-              'positioning:closeness'
-            );
-            return closeness?.partners || [];
-          },
-          filterFn: (partnerId, actor, context, em) => {
-            // Check if actor has being_bitten_in_neck component
-            const actorBeingBitten = em.getComponentData(
-              actor.id,
-              'positioning:being_bitten_in_neck'
-            );
-            if (!actorBeingBitten) {
-              return false;
-            }
-
-            // Check if partner has biting_neck component
-            const partnerBitingNeck = em.getComponentData(
-              partnerId,
-              'positioning:biting_neck'
-            );
-            if (!partnerBitingNeck) {
-              return false;
-            }
-
-            // Verify reciprocal relationship (opposite of actor_being_bitten_by_me)
-            return (
-              actorBeingBitten.biting_entity_id === partnerId &&
-              partnerBitingNeck.bitten_entity_id === actor.id
-            );
-          },
-        }
-      ),
-
       // "actors sitting close" - Seated actors with closeness
-      'positioning:actors_sitting_close': this.createArrayFilterResolver(
-        'positioning:actors_sitting_close',
+      'sitting:actors_sitting_close': this.createArrayFilterResolver(
+        'sitting:actors_sitting_close',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -754,7 +715,7 @@ export class ScopeResolverHelpers {
 
               const furniture = em.getComponentData(
                 sitting.furniture_id,
-                'positioning:allows_sitting'
+                'sitting:allows_sitting'
               );
               if (!furniture?.spots) {
                 return false;
@@ -793,17 +754,17 @@ export class ScopeResolverHelpers {
       // LOWER PRIORITY & SPECIALIZED SCOPES (Phase 3)
 
       // "available furniture" - Furniture with empty spots at location
-      'positioning:available_furniture': this.createLocationMatchResolver(
-        'positioning:available_furniture',
+      'sitting:available_furniture': this.createLocationMatchResolver(
+        'sitting:available_furniture',
         {
           filterFn: (entityId, source, context, em) => {
-            if (!em.hasComponent(entityId, 'positioning:allows_sitting')) {
+            if (!em.hasComponent(entityId, 'sitting:allows_sitting')) {
               return false;
             }
 
             const furniture = em.getComponentData(
               entityId,
-              'positioning:allows_sitting'
+              'sitting:allows_sitting'
             );
 
             // Check if furniture has at least one empty spot
@@ -818,18 +779,18 @@ export class ScopeResolverHelpers {
       ),
 
       // "available lying furniture" - Furniture allowing lying at location
-      'positioning:available_lying_furniture': this.createLocationMatchResolver(
-        'positioning:available_lying_furniture',
+      'lying:available_lying_furniture': this.createLocationMatchResolver(
+        'lying:available_lying_furniture',
         {
           filterFn: (entityId, source, context, em) => {
-            return em.hasComponent(entityId, 'positioning:allows_lying_on');
+            return em.hasComponent(entityId, 'lying:allows_lying_on');
           },
         }
       ),
 
       // "furniture im lying on" - Current lying surface
-      'positioning:furniture_im_lying_on': this.createComponentLookupResolver(
-        'positioning:furniture_im_lying_on',
+      'lying:furniture_im_lying_on': this.createComponentLookupResolver(
+        'lying:furniture_im_lying_on',
         {
           componentType: 'positioning:lying_down',
           sourceField: 'furniture_id',
@@ -838,8 +799,8 @@ export class ScopeResolverHelpers {
       ),
 
       // "furniture im sitting on" - Current sitting surface (alias for furniture_actor_sitting_on)
-      'positioning:furniture_im_sitting_on': this.createComponentLookupResolver(
-        'positioning:furniture_im_sitting_on',
+      'sitting:furniture_im_sitting_on': this.createComponentLookupResolver(
+        'sitting:furniture_im_sitting_on',
         {
           componentType: 'positioning:sitting_on',
           sourceField: 'furniture_id',

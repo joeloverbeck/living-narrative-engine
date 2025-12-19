@@ -297,6 +297,81 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(results.get('violence').unusedDependencies).toContain('positioning');
     });
 
+    it('should detect nested target scopes in action files (BUG FIX)', async () => {
+      // This test reproduces the bug where straddling mod's sitting dependency
+      // was reported as "unused" because nested targets.primary.scope wasn't being extracted
+      const straddlingPath = path.join(tempDir, 'straddling');
+      await fs.mkdir(straddlingPath, { recursive: true });
+      await fs.mkdir(path.join(straddlingPath, 'actions'), { recursive: true });
+
+      // Create action with nested target structure (real structure from straddling mod)
+      const liftOntoLapAction = {
+        $schema: 'schema://living-narrative-engine/action.schema.json',
+        id: 'straddling:lift_onto_lap_face_to_face',
+        name: 'Lift Onto Lap (Face-to-Face)',
+        description:
+          'Lift a close sitting actor onto your lap in a face-to-face orientation',
+        targets: {
+          primary: {
+            scope: 'sitting:actors_both_sitting_close',
+            placeholder: 'primary',
+            description: 'Sitting actor close to you to lift onto your lap',
+          },
+        },
+        required_components: {
+          actor: ['positioning:sitting_on', 'positioning:closeness'],
+          primary: ['positioning:sitting_on', 'positioning:closeness'],
+        },
+        template: 'lift {primary} onto your lap (face-to-face)',
+      };
+
+      await fs.writeFile(
+        path.join(
+          straddlingPath,
+          'actions',
+          'lift_onto_lap_face_to_face.action.json'
+        ),
+        JSON.stringify(liftOntoLapAction, null, 2)
+      );
+
+      // Set up manifestsMap where sitting IS declared as dependency
+      const manifestsMap = new Map();
+      manifestsMap.set('straddling', {
+        id: 'straddling',
+        version: '1.0.0',
+        dependencies: [
+          { id: 'sitting', version: '^1.0.0' },
+          { id: 'positioning', version: '^1.0.0' },
+        ],
+      });
+      manifestsMap.set('sitting', {
+        id: 'sitting',
+        version: '1.0.0',
+        dependencies: [],
+      });
+      manifestsMap.set('positioning', {
+        id: 'positioning',
+        version: '1.0.0',
+        dependencies: [],
+      });
+
+      const report = await validator.validateModReferences(
+        straddlingPath,
+        manifestsMap
+      );
+
+      // The BUG was: sitting was reported as "unused" even though it's used in targets.primary.scope
+      // After the fix, sitting should NOT be in unusedDependencies
+      expect(report.unusedDependencies).not.toContain('sitting');
+
+      // Verify that the sitting reference WAS actually extracted
+      expect(report.referencedMods).toContain('sitting');
+
+      // Also verify positioning is extracted from required_components
+      expect(report.referencedMods).toContain('positioning');
+      expect(report.unusedDependencies).not.toContain('positioning');
+    });
+
     it('should generate comprehensive ecosystem report', async () => {
       // Create simple violation scenario with REAL references
       const testPath = path.join(tempDir, 'test-mod');

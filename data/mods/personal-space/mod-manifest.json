@@ -14,7 +14,15 @@
       "version": "^1.0.0"
     },
     {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting",
       "version": "^1.0.0"
     }
   ],
@@ -23,19 +31,22 @@
       "get_close.action.json",
       "scoot_closer.action.json",
       "scoot_closer_right.action.json",
-      "sit_down_at_distance.action.json"
+      "sit_down_at_distance.action.json",
+      "step_back.action.json"
     ],
     "conditions": [
       "event-is-action-get-close.condition.json",
       "event-is-action-scoot-closer-right.condition.json",
       "event-is-action-scoot-closer.condition.json",
-      "event-is-action-sit-down-at-distance.condition.json"
+      "event-is-action-sit-down-at-distance.condition.json",
+      "event-is-action-step-back.condition.json"
     ],
     "rules": [
       "get_close.rule.json",
       "handle_scoot_closer.rule.json",
       "handle_scoot_closer_right.rule.json",
-      "handle_sit_down_at_distance.rule.json"
+      "handle_sit_down_at_distance.rule.json",
+      "step_back.rule.json"
     ],
     "scopes": [
       "actors_in_location_not_wielding.scope",

@@ -64,7 +64,7 @@ describe('EntityQueryManager.findEntities integration', () => {
       id: 'visible_sitter',
       components: {
         'core:visible': { value: true },
-        'positioning:allows_sitting': { spots: [null] },
+        'sitting:allows_sitting': { spots: [null] },
       },
       repository,
       logger,
@@ -101,7 +101,7 @@ describe('EntityQueryManager.findEntities integration', () => {
 
     const results = queryManager.findEntities({
       withAll: ['core:visible'],
-      withAny: ['positioning:allows_sitting', 'core:inventory'],
+      withAny: ['sitting:allows_sitting', 'core:inventory'],
     });
 
     expect(results.map((entity) => entity.id).sort()).toEqual(
@@ -115,7 +115,7 @@ describe('EntityQueryManager.findEntities integration', () => {
       id: 'allowed_sitter',
       components: {
         'core:visible': { value: true },
-        'positioning:allows_sitting': { spots: [null, null] },
+        'sitting:allows_sitting': { spots: [null, null] },
       },
       repository,
       logger,
@@ -125,7 +125,7 @@ describe('EntityQueryManager.findEntities integration', () => {
       id: 'hidden_sitter',
       components: {
         'core:visible': { value: true },
-        'positioning:allows_sitting': { spots: [null, null, null] },
+        'sitting:allows_sitting': { spots: [null, null, null] },
         'core:hidden': { value: true },
       },
       repository,
@@ -134,7 +134,7 @@ describe('EntityQueryManager.findEntities integration', () => {
 
     const results = queryManager.findEntities({
       withAll: ['core:visible'],
-      withAny: ['positioning:allows_sitting'],
+      withAny: ['sitting:allows_sitting'],
       without: ['core:hidden'],
     });
 

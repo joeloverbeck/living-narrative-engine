@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sitting:get_up_from_furniture",
+  "name": "Get up",
+  "description": "Stand up from the furniture you're sitting on",
+  "targets": "sitting:furniture_im_sitting_on",
+  "required_components": {
+    "actor": ["positioning:sitting_on"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:biting_neck", "sex-states:giving_blowjob"]
+  },
+  "template": "get up from {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#263238",
+    "textColor": "#cfd8dc",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#eceff1"
+  }
+}

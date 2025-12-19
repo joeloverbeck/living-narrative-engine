@@ -614,7 +614,7 @@ describe('Bending Over System Integration', () => {
     it('should support both sitting and bending on same furniture', async () => {
       // Create sofa that allows both sitting and bending
       const sofa = 'furniture:sofa';
-      testEnv.entityManager.addComponent(sofa, 'positioning:allows_sitting', {
+      testEnv.entityManager.addComponent(sofa, 'sitting:allows_sitting', {
         spots: [null, null, null],
       });
       testEnv.entityManager.addComponent(
@@ -652,7 +652,7 @@ describe('Bending Over System Integration', () => {
       // Directly update the sitting data by modifying the component
       const allowsSittingComponent = testEnv.entityManager.getComponentData(
         sofa,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       if (allowsSittingComponent) {
         allowsSittingComponent.spots[0] = sitter;
@@ -682,7 +682,7 @@ describe('Bending Over System Integration', () => {
     it('should handle multiple actors bending over same dual-purpose furniture', async () => {
       // Create bench that allows both sitting and bending
       const bench = 'furniture:bench';
-      testEnv.entityManager.addComponent(bench, 'positioning:allows_sitting', {
+      testEnv.entityManager.addComponent(bench, 'sitting:allows_sitting', {
         spots: [null, null],
       });
       testEnv.entityManager.addComponent(

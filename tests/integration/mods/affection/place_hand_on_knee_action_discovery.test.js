@@ -33,7 +33,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName === 'positioning:close_actors' ||
-          scopeName === 'positioning:actors_sitting_close'
+          scopeName === 'sitting:actors_sitting_close'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
@@ -59,7 +59,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
             }
 
             if (
-              scopeName === 'positioning:actors_sitting_close' &&
+              scopeName === 'sitting:actors_sitting_close' &&
               !partner.components?.['positioning:sitting_on']
             ) {
               return acc;
@@ -99,7 +99,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
         "place a hand on {target}'s knee"
       );
       expect(placeHandOnKneeAction.targets).toBe(
-        'positioning:actors_sitting_close'
+        'sitting:actors_sitting_close'
       );
     });
 

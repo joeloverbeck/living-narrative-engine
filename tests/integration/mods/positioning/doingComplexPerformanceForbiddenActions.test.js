@@ -25,7 +25,7 @@ import goAction from '../../../../data/mods/movement/actions/go.action.json';
 import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json';
 import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
-import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
+import sitDownAction from '../../../../data/mods/sitting/actions/sit_down.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 
 /**
@@ -36,11 +36,8 @@ describe('actions forbidden when doing complex performance', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Use positioning mod as it's central and other actions will work too
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
-    );
+    // Use sitting mod as it's central and other actions will work too
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
   });
 
   afterEach(() => {
@@ -530,7 +527,7 @@ describe('actions forbidden when doing complex performance', () => {
           testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
-        expect(ids).not.toContain('positioning:sit_down');
+        expect(ids).not.toContain('sitting:sit_down');
       });
 
       it('turn_your_back is NOT available when actor is doing complex performance', () => {

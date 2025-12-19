@@ -94,7 +94,7 @@ describe('EstablishLyingClosenessHandler', () => {
   const buildComponentData = () => {
     const components = {
       'furniture:1': {
-        'positioning:allows_lying_on': {},
+        'lying:allows_lying_on': {},
       },
       actor1: {
         'positioning:closeness': { partners: ['actor3'] },
@@ -211,7 +211,7 @@ describe('EstablishLyingClosenessHandler', () => {
   it('does not duplicate existing closeness partners', async () => {
     const components = {
       'furniture:1': {
-        'positioning:allows_lying_on': {},
+        'lying:allows_lying_on': {},
       },
       actor1: {
         'positioning:closeness': { partners: ['actor2'] },
@@ -258,7 +258,7 @@ describe('EstablishLyingClosenessHandler', () => {
   it('initializes closeness partners when components are missing or invalid', async () => {
     const components = {
       'furniture:1': {
-        'positioning:allows_lying_on': {},
+        'lying:allows_lying_on': {},
       },
       actor1: {
         'positioning:lying_down': { furniture_id: 'furniture:1' },
@@ -306,7 +306,7 @@ describe('EstablishLyingClosenessHandler', () => {
       (entityId, componentName) => {
         if (
           entityId === 'furniture:1' &&
-          componentName === 'positioning:allows_lying_on'
+          componentName === 'lying:allows_lying_on'
         ) {
           return {};
         }
@@ -363,7 +363,7 @@ describe('EstablishLyingClosenessHandler', () => {
       (entityId, componentName) => {
         if (
           entityId === 'furniture:1' &&
-          componentName === 'positioning:allows_lying_on'
+          componentName === 'lying:allows_lying_on'
         ) {
           return {};
         }

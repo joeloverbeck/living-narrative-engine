@@ -85,7 +85,7 @@ describe('Sit Down Action Availability', () => {
         components: {
           'core:name': { text: 'Park Bench' },
           'core:position': { location_id: 'test:park' },
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [
               { spot_id: '1', occupied: false },
               { spot_id: '2', occupied: false },
@@ -249,7 +249,7 @@ describe('Sit Down Action Availability', () => {
         components: {
           'core:name': { text: 'Park Bench' },
           'core:position': { location_id: 'test:park' },
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [
               { spot_id: '1', occupied: false },
               { spot_id: '2', occupied: false },

@@ -12,8 +12,8 @@ describe('Filter Breakdown Integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
   });
 

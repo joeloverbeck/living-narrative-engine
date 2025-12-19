@@ -79,7 +79,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [aliceId, bobId, null],
           },
         },
@@ -169,7 +169,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [
               'test:alice_chain',
               'test:bob_chain',
@@ -202,7 +202,7 @@ describe('Sitting Proximity Workflow Integration', () => {
 
       // Action: Bob stands up (affects Alice and Charlie)
       // First update furniture to remove Bob
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [
           'test:alice_chain',
           null,
@@ -272,7 +272,7 @@ describe('Sitting Proximity Workflow Integration', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null, null, null],
           },
         },
@@ -296,7 +296,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         furniture_id: furnitureId,
         spot_index: 0,
       });
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors[0], null, null, null],
       });
 
@@ -305,7 +305,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         furniture_id: furnitureId,
         spot_index: 1,
       });
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors[0], actors[1], null, null],
       });
       await handler.execute(
@@ -323,7 +323,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         furniture_id: furnitureId,
         spot_index: 2,
       });
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors[0], actors[1], actors[2], null],
       });
       await handler.execute(
@@ -341,7 +341,7 @@ describe('Sitting Proximity Workflow Integration', () => {
         furniture_id: furnitureId,
         spot_index: 3,
       });
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      entityManager.addComponent(furnitureId, 'sitting:allows_sitting', {
         spots: [actors[0], actors[1], actors[2], actors[3]],
       });
       await handler.execute(

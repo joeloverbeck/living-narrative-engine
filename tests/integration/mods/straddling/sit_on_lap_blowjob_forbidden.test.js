@@ -37,7 +37,7 @@ describe('sit_on_lap actions - giving_blowjob forbidden component', () => {
 
       scopeResolver.__sitLapOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'positioning:actors_both_sitting_close') {
+        if (scopeName === 'sitting:actors_both_sitting_close') {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };

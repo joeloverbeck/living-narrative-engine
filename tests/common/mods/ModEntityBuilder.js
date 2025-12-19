@@ -815,7 +815,7 @@ export class ModEntityScenarios {
    * @param {string} [options.furnitureId] - Identifier for the primary furniture entity
    * @param {string} [options.furnitureName] - Display name for the primary furniture entity
    * @param {string} [options.furnitureLocationId] - Location identifier for the primary furniture entity
-   * @param {object} [options.furnitureAllowsSitting] - Additional data merged into positioning:allows_sitting for the primary furniture
+   * @param {object} [options.furnitureAllowsSitting] - Additional data merged into sitting:allows_sitting for the primary furniture
    * @param {Array<object>} [options.additionalFurniture] - Extra furniture definitions with optional allows_sitting overrides
    * @param {Array<object>} [options.seatedActors] - Actor definitions for seated occupants (id, name, spotIndex, furnitureId, closeTo)
    * @param {Array<object>} [options.standingActors] - Actor definitions for standing occupants (id, name, behindTargetId, closeTo, standingData)
@@ -982,7 +982,7 @@ export class ModEntityScenarios {
         builder.withComponents(definition.components);
       }
 
-      builder.withComponent('positioning:allows_sitting', {
+      builder.withComponent('sitting:allows_sitting', {
         spots,
         ...definition.allowsSitting,
       });

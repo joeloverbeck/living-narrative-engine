@@ -21,7 +21,7 @@ This document describes the validation patterns used in the positioning mod for 
 
 ### Furniture/Object Components
 
-- **`positioning:allows_sitting`** - Object can be sat on
+- **`sitting:allows_sitting`** - Object can be sat on
 - **`positioning:allows_bending_over`** - Object can be bent over
 
 ## Validation Principles

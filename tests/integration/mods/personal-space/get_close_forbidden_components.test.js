@@ -110,7 +110,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       const furniture = new ModEntityBuilder('chair1')
         .withName('Chair')
         .atLocation('room1')
-        .withComponent('positioning:allows_sitting', {
+        .withComponent('sitting:allows_sitting', {
           spots: [null],
         })
         .build();

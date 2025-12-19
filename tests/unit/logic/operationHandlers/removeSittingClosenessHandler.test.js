@@ -127,7 +127,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -189,7 +189,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, 'game:bob', null] }; // Valid furniture component
           }
@@ -225,7 +225,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, 'game:bob', null] }; // Valid furniture component
           }
@@ -260,7 +260,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -307,7 +307,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -347,7 +347,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -651,7 +651,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return furnitureComponent;
           }
@@ -714,7 +714,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return furnitureComponent;
           }
@@ -942,7 +942,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -997,7 +997,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, null] }; // Valid furniture component
           }
@@ -1155,7 +1155,7 @@ describe('RemoveSittingClosenessHandler', () => {
         (entityId, componentType) => {
           if (
             entityId === 'furniture:couch' &&
-            componentType === 'positioning:allows_sitting'
+            componentType === 'sitting:allows_sitting'
           ) {
             return furnitureComponent;
           }

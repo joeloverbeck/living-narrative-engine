@@ -70,7 +70,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const furniture = testFixture.entityManager.getEntityInstance(
         scenario.furniture.id
       );
-      expect(furniture).toHaveComponentData('positioning:allows_sitting', {
+      expect(furniture).toHaveComponentData('sitting:allows_sitting', {
         spots: ['occupant1', 'actor1', null],
       });
 
@@ -122,7 +122,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const furniture = testFixture.entityManager.getEntityInstance(
         scenario.furniture.id
       );
-      expect(furniture).toHaveComponentData('positioning:allows_sitting', {
+      expect(furniture).toHaveComponentData('sitting:allows_sitting', {
         spots: ['occupant1', null, 'actor1', null],
       });
     });
@@ -164,7 +164,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
         scenario.furniture.id
       );
       const originalSpots = [
-        ...furnitureBefore.components['positioning:allows_sitting'].spots,
+        ...furnitureBefore.components['sitting:allows_sitting'].spots,
       ];
 
       // Act
@@ -177,7 +177,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
         scenario.furniture.id
       );
       const newSpots =
-        updatedFurniture.components['positioning:allows_sitting'].spots;
+        updatedFurniture.components['sitting:allows_sitting'].spots;
       expect(newSpots).not.toEqual(originalSpots);
       expect(newSpots).toEqual(['occupant1', 'actor1', null]);
       expect(newSpots.length).toBe(originalSpots.length);
@@ -244,7 +244,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
       const furniture = testFixture.entityManager.getEntityInstance(
         scenario.furniture.id
       );
-      expect(furniture).toHaveComponentData('positioning:allows_sitting', {
+      expect(furniture).toHaveComponentData('sitting:allows_sitting', {
         spots: ['occupant1', 'occupant2', 'actor1', null],
       });
     });

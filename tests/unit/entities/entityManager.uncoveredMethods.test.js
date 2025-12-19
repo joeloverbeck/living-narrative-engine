@@ -421,7 +421,7 @@ describeEntityManagerSuite(
       });
     });
 
-    describe("getEntitiesWithComponent debug logging for 'positioning:allows_sitting'", () => {
+    describe("getEntitiesWithComponent debug logging for 'sitting:allows_sitting'", () => {
       it('should emit diagnostic log entries with component insights', async () => {
         const bed = getBed();
         const { entityManager } = bed;
@@ -431,7 +431,7 @@ describeEntityManagerSuite(
         await bed.createBasicEntity({
           instanceId,
           overrides: {
-            'positioning:allows_sitting': { canSit: true },
+            'sitting:allows_sitting': { canSit: true },
             'core:position': { locationId: 'zone:park-bench' },
           },
         });
@@ -439,7 +439,7 @@ describeEntityManagerSuite(
         logger.debug.mockClear();
 
         const entities = entityManager.getEntitiesWithComponent(
-          'positioning:allows_sitting'
+          'sitting:allows_sitting'
         );
 
         expect(Array.isArray(entities)).toBe(true);
@@ -447,7 +447,7 @@ describeEntityManagerSuite(
 
         const debugCall = logger.debug.mock.calls.find(([message]) =>
           message.includes(
-            "EntityManager.getEntitiesWithComponent('positioning:allows_sitting')"
+            "EntityManager.getEntitiesWithComponent('sitting:allows_sitting')"
           )
         );
 

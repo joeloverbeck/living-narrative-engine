@@ -24,6 +24,10 @@
     {
       "id": "descriptors",
       "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
     }
   ],
   "content": {

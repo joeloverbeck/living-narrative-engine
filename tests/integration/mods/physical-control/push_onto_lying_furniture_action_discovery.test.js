@@ -78,7 +78,7 @@ function setupScenario(
       .withLocationComponent(furnitureLocation);
 
     if (furnitureAllowsLying) {
-      furnitureBuilder.withComponent('positioning:allows_lying_on', {});
+      furnitureBuilder.withComponent('lying:allows_lying_on', {});
     }
 
     entities.push(furnitureBuilder.build());
@@ -91,7 +91,7 @@ function setupScenario(
         .withLocationComponent(definition.locationId || furnitureLocation);
 
       if (definition.allowsLying !== false) {
-        builder.withComponent('positioning:allows_lying_on', {});
+        builder.withComponent('lying:allows_lying_on', {});
       }
 
       entities.push(builder.build());
@@ -129,7 +129,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'positioning:close_actors_facing_each_other_or_behind_target'
       );
       expect(pushOntoFurnitureAction.targets.secondary.scope).toBe(
-        'positioning:available_lying_furniture'
+        'lying:available_lying_furniture'
       );
       expect(pushOntoFurnitureAction.required_components.actor).toEqual([
         'positioning:closeness',
@@ -313,7 +313,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
       const furnitureScope =
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:available_lying_furniture',
+          'lying:available_lying_furniture',
           { actor: actorEntity }
         );
 
@@ -327,7 +327,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
       const furnitureScope =
         testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:available_lying_furniture',
+          'lying:available_lying_furniture',
           { actor: actorEntity }
         );
 

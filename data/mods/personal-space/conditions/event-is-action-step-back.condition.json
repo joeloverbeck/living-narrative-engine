@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "personal-space:event-is-action-step-back",
+  "description": "Checks if the triggering event is for the 'personal-space:step_back' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "personal-space:step_back"
+    ]
+  }
+}

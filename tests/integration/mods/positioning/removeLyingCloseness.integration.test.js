@@ -49,7 +49,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
     entityManager.createEntity('furniture:test_bed');
     entityManager.addComponent(
       'furniture:test_bed',
-      'positioning:allows_lying_on',
+      'lying:allows_lying_on',
       {}
     );
 
@@ -333,7 +333,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       entityManager.createEntity('furniture:test_bed2');
       entityManager.addComponent(
         'furniture:test_bed2',
-        'positioning:allows_lying_on',
+        'lying:allows_lying_on',
         {}
       );
       entityManager.addComponent('game:david', 'positioning:lying_down', {

@@ -12,8 +12,8 @@ describe('Scope Tracing Integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
 
     // Note: registerCustomScope is called in each test AFTER createCloseActors()

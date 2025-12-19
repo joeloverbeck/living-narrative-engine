@@ -14,10 +14,10 @@ import {
   jest,
 } from '@jest/globals';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import handleSitDownRule from '../../../data/mods/positioning/rules/handle_sit_down.rule.json';
-import handleGetUpRule from '../../../data/mods/positioning/rules/handle_get_up_from_furniture.rule.json';
-import eventIsActionSitDown from '../../../data/mods/positioning/conditions/event-is-action-sit-down.condition.json';
-import eventIsActionGetUp from '../../../data/mods/positioning/conditions/event-is-action-get-up-from-furniture.condition.json';
+import handleSitDownRule from '../../../data/mods/sitting/rules/handle_sit_down.rule.json';
+import handleGetUpRule from '../../../data/mods/sitting/rules/handle_get_up_from_furniture.rule.json';
+import eventIsActionSitDown from '../../../data/mods/sitting/conditions/event-is-action-sit-down.condition.json';
+import eventIsActionGetUp from '../../../data/mods/sitting/conditions/event-is-action-get-up-from-furniture.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -45,10 +45,10 @@ import {
 
 // Action definitions
 const sitDownAction = {
-  id: 'positioning:sit_down',
+  id: 'sitting:sit_down',
   name: 'Sit down',
   description: 'Sit down on available furniture',
-  targets: 'positioning:available_furniture',
+  targets: 'sitting:available_furniture',
   required_components: {
     actor: ['core:actor'],
   },
@@ -60,10 +60,10 @@ const sitDownAction = {
 };
 
 const getUpAction = {
-  id: 'positioning:get_up_from_furniture',
+  id: 'sitting:get_up_from_furniture',
   name: 'Get up',
   description: "Stand up from the furniture you're sitting on",
-  targets: 'positioning:furniture_im_sitting_on',
+  targets: 'sitting:furniture_im_sitting_on',
   required_components: {
     actor: ['positioning:sitting_on'],
   },
@@ -183,8 +183,8 @@ describe('Get Up Closeness Workflow', () => {
       rules: [handleSitDownRule, handleGetUpRule],
       actions: [sitDownAction, getUpAction],
       conditions: {
-        'positioning:event-is-action-sit-down': eventIsActionSitDown,
-        'positioning:event-is-action-get-up-from-furniture': eventIsActionGetUp,
+        'sitting:event-is-action-sit-down': eventIsActionSitDown,
+        'sitting:event-is-action-get-up-from-furniture': eventIsActionGetUp,
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -220,7 +220,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Create a couch
     const couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
       spots: [null, null, null],
     });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
@@ -236,12 +236,12 @@ describe('Get Up Closeness Workflow', () => {
 
     // 2. Alice and Bob sit adjacent on couch
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: alice,
       targetId: couch,
     });
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: bob,
       targetId: couch,
     });
@@ -278,7 +278,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // 4. Alice stands up
     await testEnv.dispatchAction({
-      actionId: 'positioning:get_up_from_furniture',
+      actionId: 'sitting:get_up_from_furniture',
       actorId: alice,
       targetId: couch,
     });
@@ -357,7 +357,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Create a couch
     const couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
       spots: [null, null, null],
     });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
@@ -372,17 +372,17 @@ describe('Get Up Closeness Workflow', () => {
 
     // All sit on the couch
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: alice,
       targetId: couch,
     });
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: bob,
       targetId: couch,
     });
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: charlie,
       targetId: couch,
     });
@@ -403,7 +403,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Action: Bob stands up
     await testEnv.dispatchAction({
-      actionId: 'positioning:get_up_from_furniture',
+      actionId: 'sitting:get_up_from_furniture',
       actorId: bob,
       targetId: couch,
     });
@@ -467,7 +467,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Create a couch
     const couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(couch, 'sitting:allows_sitting', {
       spots: [null, null, null],
     });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
@@ -482,17 +482,17 @@ describe('Get Up Closeness Workflow', () => {
 
     // All sit on the couch (Alice-Bob-Charlie)
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: alice,
       targetId: couch,
     });
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: bob,
       targetId: couch,
     });
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: charlie,
       targetId: couch,
     });
@@ -516,7 +516,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Action: Alice stands up
     await testEnv.dispatchAction({
-      actionId: 'positioning:get_up_from_furniture',
+      actionId: 'sitting:get_up_from_furniture',
       actorId: alice,
       targetId: couch,
     });
@@ -568,7 +568,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Create a chair
     const chair = 'furniture:chair';
-    testEnv.entityManager.addComponent(chair, 'positioning:allows_sitting', {
+    testEnv.entityManager.addComponent(chair, 'sitting:allows_sitting', {
       spots: [null],
     });
     testEnv.entityManager.addComponent(chair, DESCRIPTION_COMPONENT_ID, {
@@ -583,7 +583,7 @@ describe('Get Up Closeness Workflow', () => {
 
     // Alice sits
     await testEnv.dispatchAction({
-      actionId: 'positioning:sit_down',
+      actionId: 'sitting:sit_down',
       actorId: alice,
       targetId: chair,
     });
@@ -597,7 +597,7 @@ describe('Get Up Closeness Workflow', () => {
     // Action: Alice stands up - should not throw error
     await expect(
       testEnv.dispatchAction({
-        actionId: 'positioning:get_up_from_furniture',
+        actionId: 'sitting:get_up_from_furniture',
         actorId: alice,
         targetId: chair,
       })

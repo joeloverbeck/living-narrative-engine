@@ -13,7 +13,7 @@
       "imagePath": "portraits/park_bench.png",
       "altText": "A weathered wooden park bench with wrought-iron frame and two distinct seating areas"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null]
     }
   }

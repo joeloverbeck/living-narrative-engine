@@ -120,7 +120,7 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
       // Phase 2: Component state validation
       const furnitureComponent = this.#entityManager.getComponentData(
         parameters.furniture_id,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       this.#componentStateValidator.validateFurnitureComponent(
         parameters.furniture_id,
@@ -315,7 +315,7 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
     // Get current furniture state (after actor has stood up)
     const furnitureComponent = this.#entityManager.getComponentData(
       furnitureId,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     if (!furnitureComponent || !Array.isArray(furnitureComponent.spots)) {

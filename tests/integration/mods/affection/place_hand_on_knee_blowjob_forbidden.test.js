@@ -35,7 +35,7 @@ describe('affection:place_hand_on_knee - giving_blowjob forbidden component', ()
 
       scopeResolver.__placeHandOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'positioning:actors_sitting_close') {
+        if (scopeName === 'sitting:actors_sitting_close') {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };

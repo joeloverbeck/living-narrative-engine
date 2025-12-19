@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "lying:get_up_from_lying",
+  "name": "Get up",
+  "description": "Get up from the furniture you're lying on",
+  "targets": "lying:furniture_im_lying_on",
+  "required_components": {
+    "actor": ["positioning:lying_down"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "sex-states:being_fucked_vaginally",
+      "positioning:being_restrained"
+    ]
+  },
+  "template": "get up from {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#0d47a1",
+    "textColor": "#bbdefb",
+    "hoverBackgroundColor": "#1565c0",
+    "hoverTextColor": "#e3f2fd"
+  }
+}

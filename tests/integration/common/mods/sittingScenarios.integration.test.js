@@ -47,7 +47,7 @@ describe('Sitting scenario helpers - integration', () => {
     const furnitureSpots = getComponent(
       testFixture,
       scenario.furniture.id,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(furnitureSpots.spots).toEqual(['actor2', 'actor1', null]);
   });
@@ -78,14 +78,14 @@ describe('Sitting scenario helpers - integration', () => {
     const leftSpots = getComponent(
       testFixture,
       leftFurniture.id,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(leftSpots.spots).toEqual(['actor1']);
 
     const rightSpots = getComponent(
       testFixture,
       rightFurniture.id,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(rightSpots.spots).toEqual(['actor2']);
   });

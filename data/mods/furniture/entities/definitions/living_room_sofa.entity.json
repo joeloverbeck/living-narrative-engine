@@ -13,7 +13,7 @@
       "imagePath": "portraits/living_room_sofa.png",
       "altText": "A comfortable three-seat living room sofa"
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
     "positioning:allows_bending_over": {}

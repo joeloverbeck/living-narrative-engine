@@ -70,7 +70,7 @@ describe('Proximity UI Workflows E2E', () => {
       const sofaId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Living Room Sofa' },
           'core:location': { locationId: 'test:living_room' },
         },
@@ -237,7 +237,7 @@ describe('Proximity UI Workflows E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null] },
           'core:name': { name: 'Park Bench' },
           'core:location': { locationId: 'test:park' },
         },
@@ -354,7 +354,7 @@ describe('Proximity UI Workflows E2E', () => {
       const chairId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Dining Chairs' },
           'core:location': { locationId: 'test:dining_room' },
         },
@@ -499,7 +499,7 @@ describe('Proximity UI Workflows E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Garden Bench' },
           'core:location': { locationId: 'test:garden' },
         },
@@ -639,7 +639,7 @@ describe('Proximity UI Workflows E2E', () => {
       const sofaId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Test Sofa' },
           'core:location': { locationId: 'test:accessibility_room' },
         },
@@ -725,7 +725,7 @@ describe('Proximity UI Workflows E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null] },
           'core:name': { name: 'Accessible Bench' },
           'core:location': { locationId: 'test:accessible_room' },
         },

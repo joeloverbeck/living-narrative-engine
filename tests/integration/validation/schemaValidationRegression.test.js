@@ -196,11 +196,11 @@ describe('ModTestFixture Schema Integration - Regression Prevention', () => {
       await fixture.cleanup();
     });
 
-    it('should successfully load valid positioning rule files', async () => {
+    it('should successfully load valid sitting rule files', async () => {
       // Test another valid mod to ensure validation works across mods
       const fixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
       expect(fixture).toBeDefined();
       await fixture.cleanup();

@@ -67,7 +67,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null], // Only one spot
           },
         },
@@ -86,7 +86,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Alice sits on single-spot furniture
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [aliceId],
         }
@@ -131,7 +131,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const chair1Entity = createEntityInstance({
         instanceId: chair1Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [aliceId],
           },
         },
@@ -140,7 +140,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const chair2Entity = createEntityInstance({
         instanceId: chair2Id,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [bobId],
           },
         },
@@ -227,7 +227,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [aliceId, bobId], // Fully occupied 2-seat couch
           },
         },
@@ -276,7 +276,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Verify Charlie cannot sit (no available spots)
       const furniture = entityManager.getComponent(
         furnitureId,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       const availableSpot = furniture.spots.findIndex((spot) => spot === null);
       expect(availableSpot).toBe(-1);
@@ -312,7 +312,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [aliceId, null, charlieId, null, null], // Gap between Alice and Charlie
           },
         },
@@ -363,7 +363,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Bob sits in the gap (spot 1)
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [aliceId, bobId, charlieId, null, null],
         }
@@ -419,7 +419,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       const furnitureEntity = createEntityInstance({
         instanceId: furnitureId,
         baseComponents: {
-          'positioning:allows_sitting': {
+          'sitting:allows_sitting': {
             spots: [null, null],
           },
         },
@@ -447,7 +447,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [actors[0], actors[1]],
         }
@@ -480,7 +480,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Simulate furniture expansion (add more spots)
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [actors[0], actors[1], null], // Added third spot
         }
@@ -494,7 +494,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       await entityManager.addComponent(
         furnitureId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [actors[0], actors[1], actors[2]],
         }
@@ -574,7 +574,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
         const furnitureEntity = createEntityInstance({
           instanceId: furnitureId,
           baseComponents: {
-            'positioning:allows_sitting': {
+            'sitting:allows_sitting': {
               spots: config.spots,
             },
           },

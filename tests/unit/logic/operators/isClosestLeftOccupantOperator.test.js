@@ -39,7 +39,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'actor1'] };
           }
@@ -76,7 +76,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'actor1'] };
           }
@@ -112,7 +112,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', 'occupant2', null, 'actor1'] };
           }
@@ -148,7 +148,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', 'occupant2', null, 'actor1'] };
           }
@@ -297,7 +297,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['actor1', 'occupant1', null] };
           }
@@ -334,7 +334,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', 'occupant2', 'actor1'] };
           }
@@ -372,7 +372,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: [null, 'actor1', null] };
           }
@@ -408,7 +408,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, 'actor1'] };
           }
@@ -450,7 +450,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'actor1'] };
           }
@@ -545,7 +545,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: spotsProxy };
           }
@@ -582,7 +582,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }
@@ -619,7 +619,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: [null, null, 'actor1'] };
           }
@@ -656,7 +656,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'otherActor'] }; // Mismatch
           }
@@ -693,7 +693,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['otherOccupant', null, 'actor1'] }; // Mismatch
           }
@@ -756,7 +756,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, null] };
           }
@@ -793,7 +793,7 @@ describe('IsClosestLeftOccupantOperator', () => {
           }
           if (
             entityId === 'furniture1' &&
-            componentId === 'positioning:allows_sitting'
+            componentId === 'sitting:allows_sitting'
           ) {
             return { spots: ['occupant1', null, 'actor1'] };
           }

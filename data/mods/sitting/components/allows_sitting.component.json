@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "sitting:allows_sitting",
+  "description": "Indicates furniture can be sat upon and tracks occupants in specific spots",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["spots"],
+    "properties": {
+      "spots": {
+        "type": "array",
+        "description": "Seating positions where null = empty, entity ID = occupied",
+        "minItems": 1,
+        "maxItems": 10,
+        "items": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$"
+            }
+          ]
+        },
+        "default": [null]
+      }
+    }
+  }
+}

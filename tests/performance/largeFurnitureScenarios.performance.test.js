@@ -88,7 +88,7 @@ describe('Large Furniture Scenarios Performance', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots };
           }
           if (componentType === 'positioning:closeness') {
@@ -153,7 +153,7 @@ describe('Large Furniture Scenarios Performance', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: [...spots] }; // Return copy to avoid mutation
           }
           return null;
@@ -240,7 +240,7 @@ describe('Large Furniture Scenarios Performance', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             // Return furniture data based on the last furniture ID used
             const furnitureId =
               executionContext.variables.get('lastFurnitureId') ||
@@ -311,7 +311,7 @@ describe('Large Furniture Scenarios Performance', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             const furnitureId =
               executionContext.variables.get('currentFurnitureId');
             return { spots: [...(furnitureStates[furnitureId] || [])] };
@@ -488,7 +488,7 @@ describe('Large Furniture Scenarios Performance', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: [...currentState] };
           }
           if (componentType === 'positioning:closeness') {

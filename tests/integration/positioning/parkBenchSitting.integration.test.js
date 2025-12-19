@@ -13,9 +13,9 @@ import {
   jest,
 } from '@jest/globals';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import handleSitDownRule from '../../../data/mods/positioning/rules/handle_sit_down.rule.json';
+import handleSitDownRule from '../../../data/mods/sitting/rules/handle_sit_down.rule.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import eventIsActionSitDown from '../../../data/mods/positioning/conditions/event-is-action-sit-down.condition.json';
+import eventIsActionSitDown from '../../../data/mods/sitting/conditions/event-is-action-sit-down.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -43,10 +43,10 @@ import {
 
 // Action definition
 const sitDownAction = {
-  id: 'positioning:sit_down',
+  id: 'sitting:sit_down',
   name: 'Sit down',
   description: 'Sit down on available furniture',
-  targets: 'positioning:available_furniture',
+  targets: 'sitting:available_furniture',
   required_components: {
     actor: ['core:actor'],
   },
@@ -167,7 +167,7 @@ describe('park bench sitting issue', () => {
       rules: [handleSitDownRule],
       actions: [sitDownAction],
       conditions: {
-        'positioning:event-is-action-sit-down': eventIsActionSitDown,
+        'sitting:event-is-action-sit-down': eventIsActionSitDown,
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -189,7 +189,7 @@ describe('park bench sitting issue', () => {
     parkBench = 'p_erotica:park_bench_instance';
     testEnv.entityManager.addComponent(
       parkBench,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       {
         spots: [null, null], // Two empty spots
       }
@@ -226,12 +226,12 @@ describe('park bench sitting issue', () => {
         '[TEST] Park bench sitting spots:',
         testEnv.entityManager.getComponentData(
           parkBench,
-          'positioning:allows_sitting'
+          'sitting:allows_sitting'
         )
       );
 
       // Check if sit_down action is available
-      const canSit = testEnv.validateAction(actor, 'positioning:sit_down');
+      const canSit = testEnv.validateAction(actor, 'sitting:sit_down');
 
       // This should be true but currently fails
       expect(canSit).toBe(true);
@@ -240,7 +240,7 @@ describe('park bench sitting issue', () => {
       if (canSit) {
         const availableActions = testEnv.getAvailableActions(actor);
         const sitDownAction = availableActions.find(
-          (a) => a.id === 'positioning:sit_down'
+          (a) => a.id === 'sitting:sit_down'
         );
         console.log('[TEST] sit_down action targets:', sitDownAction?.targets);
       }
@@ -249,7 +249,7 @@ describe('park bench sitting issue', () => {
     it('should allow actor to sit on park bench', async () => {
       // Try to sit on the park bench
       await testEnv.dispatchAction({
-        actionId: 'positioning:sit_down',
+        actionId: 'sitting:sit_down',
         actorId: actor,
         targetId: parkBench,
       });
@@ -271,7 +271,7 @@ describe('park bench sitting issue', () => {
       // Check that park bench's first spot is occupied
       const benchData = testEnv.entityManager.getComponentData(
         parkBench,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(benchData.spots[0]).toBe(actor);
       expect(benchData.spots[1]).toBeNull(); // Second spot should still be empty
@@ -284,7 +284,7 @@ describe('park bench sitting issue', () => {
       });
 
       // Check if sit_down action is available
-      const canSit = testEnv.validateAction(actor, 'positioning:sit_down');
+      const canSit = testEnv.validateAction(actor, 'sitting:sit_down');
 
       // This should be false since they're in different locations
       expect(canSit).toBe(false);
@@ -297,7 +297,7 @@ describe('park bench sitting issue', () => {
 
       // Get all entities with allows_sitting component
       const furnitureEntities = testEnv.entityManager.getEntitiesWithComponent(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       console.log(
         '[TEST] Entities with allows_sitting:',
@@ -310,7 +310,7 @@ describe('park bench sitting issue', () => {
       // Verify the park bench has both required components
       const sittingComponent = testEnv.entityManager.getComponentData(
         parkBench,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       const positionComponent = testEnv.entityManager.getComponentData(
         parkBench,

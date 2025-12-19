@@ -27,7 +27,7 @@ This report analyzes the Living Narrative Engine's positioning and closeness sys
 
 ```json
 {
-  "id": "positioning:allows_sitting",
+  "id": "sitting:allows_sitting",
   "description": "Indicates furniture can be sat upon and tracks occupants in specific spots",
   "dataSchema": {
     "type": "object",
@@ -143,7 +143,7 @@ This report analyzes the Living Narrative Engine's positioning and closeness sys
   "type": "ATOMIC_MODIFY_COMPONENT",
   "parameters": {
     "entity_ref": "target",
-    "component_type": "positioning:allows_sitting",
+    "component_type": "sitting:allows_sitting",
     "field": "spots.0",
     "expected_value": null,
     "new_value": "{event.payload.actorId}"

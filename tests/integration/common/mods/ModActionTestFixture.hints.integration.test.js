@@ -24,8 +24,8 @@ describe('ModTestFixture - Error Hints', () => {
   describe('scope registration hints', () => {
     it('should provide hint when known scope not registered', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -43,8 +43,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should not provide hint when scopes registered', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {
@@ -73,8 +73,8 @@ describe('ModTestFixture - Error Hints', () => {
     it('should provide custom resolver hint for unknown scopes', async () => {
       // Create a test fixture for an action with custom scope
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -99,8 +99,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should allow suppressing hints', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -117,8 +117,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should re-enable hints after suppression', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -136,8 +136,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should not provide hint when actions are discovered', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null,
         {
@@ -165,8 +165,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should handle missing action definition gracefully', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -186,8 +186,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should handle action without targets field', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -210,8 +210,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should detect positioning category correctly', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );
@@ -260,8 +260,8 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should detect anatomy category correctly', async () => {
       testFixture = await ModTestFixture.forAction(
-        'positioning',
-        'sit_down',
+        'sitting',
+        'sitting:sit_down',
         null,
         null
       );

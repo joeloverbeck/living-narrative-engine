@@ -26,7 +26,7 @@ function installActorsSittingCloseScopeOverride(fixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'positioning:actors_sitting_close') {
+    if (scopeName === 'sitting:actors_sitting_close') {
       const actorId = context?.actor?.id;
       if (!actorId) {
         return { success: true, value: new Set() };
@@ -90,7 +90,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .withName('Velvet Couch')
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
-    .withComponent('positioning:allows_sitting', {
+    .withComponent('sitting:allows_sitting', {
       spots: [ACTOR_ID, PRIMARY_ID],
     })
     .build();
@@ -330,7 +330,7 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
       .withName('Velvet Couch')
       .atLocation(roomId)
       .withLocationComponent(roomId)
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: ['dante', 'mira'],
       })
       .build();

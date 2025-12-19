@@ -1663,7 +1663,7 @@ Use the following table to capture the state of legacy helper usage before each 
 ```javascript
 const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 const furniture = new ModEntityBuilder('furniture1')
-  .withComponent('positioning:allows_sitting', {
+  .withComponent('sitting:allows_sitting', {
     spots: ['occupant1', null, 'actor1'],
   })
   .build();

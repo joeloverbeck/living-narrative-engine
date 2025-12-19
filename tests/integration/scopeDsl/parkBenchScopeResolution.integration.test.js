@@ -77,11 +77,11 @@ describe('Park Bench Scope Resolution Integration', () => {
   });
 
   it('should find park bench with components from definition and instance override', async () => {
-    // Arrange: Create park bench definition (has positioning:allows_sitting)
+    // Arrange: Create park bench definition (has sitting:allows_sitting)
     const parkBenchDefinition = {
       id: 'test:park_bench',
       components: {
-        'positioning:allows_sitting': {
+        'sitting:allows_sitting': {
           spots: [null, null],
         },
       },
@@ -131,7 +131,7 @@ describe('Park Bench Scope Resolution Integration', () => {
     entityManager.addEntity(actor);
 
     // Act: First test the basic entity query that should find the park bench
-    const basicQuery = 'entities(positioning:allows_sitting)';
+    const basicQuery = 'entities(sitting:allows_sitting)';
 
     // Parse the query to get the AST
     const { parseDslExpression } = await import(
@@ -164,7 +164,7 @@ describe('Park Bench Scope Resolution Integration', () => {
     const parkBenchDefinition = {
       id: 'test:park_bench',
       components: {
-        'positioning:allows_sitting': {
+        'sitting:allows_sitting': {
           spots: [null, null],
         },
       },
@@ -189,11 +189,11 @@ describe('Park Bench Scope Resolution Integration', () => {
     entityManager.addEntity(parkBench);
 
     // Act & Assert: Verify entity has both components
-    expect(parkBench.hasComponent('positioning:allows_sitting')).toBe(true);
+    expect(parkBench.hasComponent('sitting:allows_sitting')).toBe(true);
     expect(parkBench.hasComponent('core:position')).toBe(true);
 
     const positioningComponent = parkBench.getComponentData(
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(positioningComponent).toEqual({ spots: [null, null] });
 
@@ -202,16 +202,16 @@ describe('Park Bench Scope Resolution Integration', () => {
 
     // Verify getAllComponents returns both
     const allComponents = parkBench.getAllComponents();
-    expect(allComponents).toHaveProperty('positioning:allows_sitting');
+    expect(allComponents).toHaveProperty('sitting:allows_sitting');
     expect(allComponents).toHaveProperty('core:position');
   });
 
-  it('should verify entities with positioning:allows_sitting are properly indexed', async () => {
+  it('should verify entities with sitting:allows_sitting are properly indexed', async () => {
     // Arrange: Same park bench setup
     const parkBenchDefinition = {
       id: 'test:park_bench',
       components: {
-        'positioning:allows_sitting': {
+        'sitting:allows_sitting': {
           spots: [null, null],
         },
       },
@@ -237,16 +237,16 @@ describe('Park Bench Scope Resolution Integration', () => {
     // Add entity to manager using addEntity to preserve Entity instance methods
     entityManager.addEntity(parkBench);
 
-    // Act: Query for entities with positioning:allows_sitting
+    // Act: Query for entities with sitting:allows_sitting
     const entitiesWithSitting = gateway.getEntitiesWithComponent(
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     // Assert: Should find the park bench
     expect(entitiesWithSitting).toHaveLength(1);
     expect(entitiesWithSitting[0].id).toBe('test:park_bench_instance');
     expect(
-      entitiesWithSitting[0].hasComponent('positioning:allows_sitting')
+      entitiesWithSitting[0].hasComponent('sitting:allows_sitting')
     ).toBe(true);
     expect(entitiesWithSitting[0].hasComponent('core:position')).toBe(true);
   });

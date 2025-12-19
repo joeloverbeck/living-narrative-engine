@@ -48,7 +48,7 @@ describe('HasSittingSpaceToRightOperator', () => {
 
       mockDependencies.entityManager.getComponentData
         .mockReturnValueOnce(sittingOnData) // positioning:sitting_on
-        .mockReturnValueOnce(allowsSittingData); // positioning:allows_sitting
+        .mockReturnValueOnce(allowsSittingData); // sitting:allows_sitting
 
       mockContext.entity = { id: 'actor123' };
       mockContext.target = { id: 'furniture123' };

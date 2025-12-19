@@ -32,7 +32,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      if (scopeName === 'positioning:actors_both_sitting_close') {
+      if (scopeName === 'sitting:actors_both_sitting_close') {
         const actorId = context?.actor?.id;
         if (!actorId) {
           return { success: true, value: new Set() };
@@ -128,7 +128,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_both_sitting_close',
+        'sitting:actors_both_sitting_close',
         { actor: { id: 'actor1' } }
       );
 
@@ -199,7 +199,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_both_sitting_close',
+        'sitting:actors_both_sitting_close',
         { actor: { id: 'actor1' } }
       );
 
@@ -245,7 +245,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_both_sitting_close',
+        'sitting:actors_both_sitting_close',
         { actor: { id: 'actor1' } }
       );
 
@@ -294,7 +294,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_both_sitting_close',
+        'sitting:actors_both_sitting_close',
         { actor: { id: 'actor1' } }
       );
 
@@ -327,7 +327,7 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_both_sitting_close',
+        'sitting:actors_both_sitting_close',
         { actor: { id: 'actor1' } }
       );
 

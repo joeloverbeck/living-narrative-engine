@@ -50,7 +50,7 @@ Actor → Action (sit_down) → Target (furniture) → Rule Processing → State
 #### 1.4.1 available_furniture Scope
 
 ```
-entities(positioning:allows_sitting)[][{
+entities(sitting:allows_sitting)[][{
   "and": [
     // Same location as actor
     {"==": [locationId check]},
@@ -63,7 +63,7 @@ entities(positioning:allows_sitting)[][{
 #### 1.4.2 furniture_im_sitting_on Scope
 
 ```
-entities(positioning:allows_sitting)[][{
+entities(sitting:allows_sitting)[][{
   "==": [entity.id, actor's furniture_id]
 }]
 ```
@@ -353,7 +353,7 @@ This is enforced through `forbidden_components` in action definitions.
 {
   "id": "living:sofa_01",
   "components": {
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     },
     "positioning:allows_bending_over": {}

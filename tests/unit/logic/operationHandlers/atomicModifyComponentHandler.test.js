@@ -235,7 +235,7 @@ describe('AtomicModifyComponentHandler', () => {
 
     const params = {
       entity_ref: 'target',
-      component_type: 'positioning:allows_sitting',
+      component_type: 'sitting:allows_sitting',
       field: 'spots.0',
       expected_value: null,
       new_value: 'actor-1',
@@ -248,14 +248,14 @@ describe('AtomicModifyComponentHandler', () => {
     // Should fetch current component
     expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
       targetId,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     // Should modify and save component
     const expectedModifiedComponent = { spots: ['actor-1', 'actor-2', null] };
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       targetId,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       expectedModifiedComponent
     );
 
@@ -311,7 +311,7 @@ describe('AtomicModifyComponentHandler', () => {
 
     const params = {
       entity_ref: 'target',
-      component_type: 'positioning:allows_sitting',
+      component_type: 'sitting:allows_sitting',
       field: 'spots.0',
       expected_value: null, // Expected empty but spot is occupied
       new_value: 'actor-1',
@@ -324,7 +324,7 @@ describe('AtomicModifyComponentHandler', () => {
     // Should fetch current component
     expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
       targetId,
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
 
     // Should NOT modify component

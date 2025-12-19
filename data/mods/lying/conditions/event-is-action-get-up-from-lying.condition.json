@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "lying:event-is-action-get-up-from-lying",
+  "description": "Checks if the event is attempting the 'Get up from lying' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "lying:get_up_from_lying"]
+  }
+}

@@ -50,7 +50,7 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .withName('Velvet Couch')
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
-    .withComponent('positioning:allows_sitting', {
+    .withComponent('sitting:allows_sitting', {
       spots: [
         includeActorSitting ? ACTOR_ID : null,
         includePrimarySitting ? PRIMARY_ID : null,
@@ -175,7 +175,7 @@ function installActorsSittingCloseScopeOverride(fixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === 'positioning:actors_sitting_close') {
+    if (scopeName === 'sitting:actors_sitting_close') {
       const actorId = context?.actor?.id;
       if (!actorId) {
         return { success: true, value: new Set() };

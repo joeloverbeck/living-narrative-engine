@@ -13,7 +13,7 @@
       "imagePath": "portraits/bar_stools.png",
       "altText": "Bar stools."
     },
-    "positioning:allows_sitting": {
+    "sitting:allows_sitting": {
       "spots": [null, null, null]
     }
   }

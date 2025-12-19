@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for positioning:get_up_from_lying forbidden components validation.
+ * @file Integration tests for lying:get_up_from_lying forbidden components validation.
  * @description Tests that get_up_from_lying should NOT be available when actor has being_fucked_vaginally component.
  */
 
@@ -10,15 +10,15 @@ import {
   ModEntityBuilder,
 } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
-import getUpFromLyingAction from '../../../../data/mods/positioning/actions/get_up_from_lying.action.json';
+import getUpFromLyingAction from '../../../../data/mods/lying/actions/get_up_from_lying.action.json';
 
-describe('positioning:get_up_from_lying - Forbidden components validation', () => {
+describe('lying:get_up_from_lying - Forbidden components validation', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:get_up_from_lying'
+      'lying',
+      'lying:get_up_from_lying'
     );
 
     // Register positioning scopes needed for furniture discovery
@@ -50,7 +50,7 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       const furniture = new ModEntityBuilder('bed1')
         .withName('Bed')
         .atLocation(room.id)
-        .withComponent('positioning:allows_lying', { spots: ['actor1', null] })
+        .withComponent('lying:allows_lying_on', {})
         .build();
 
       // Actor is lying down on the furniture
@@ -77,7 +77,7 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has being_fucked_vaginally component
-      expect(actionIds).not.toContain('positioning:get_up_from_lying');
+      expect(actionIds).not.toContain('lying:get_up_from_lying');
     });
 
     it('should appear when actor does NOT have being_fucked_vaginally component', () => {
@@ -89,7 +89,7 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       const furniture = new ModEntityBuilder('bed1')
         .withName('Bed')
         .atLocation(room.id)
-        .withComponent('positioning:allows_lying', { spots: ['actor1', null] })
+        .withComponent('lying:allows_lying_on', {})
         .build();
 
       // Actor is lying down on the furniture
@@ -111,7 +111,7 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       const actionIds = actions.map((action) => action.id);
 
       // Without the forbidden component, action should be available
-      expect(actionIds).toContain('positioning:get_up_from_lying');
+      expect(actionIds).toContain('lying:get_up_from_lying');
     });
   });
 });

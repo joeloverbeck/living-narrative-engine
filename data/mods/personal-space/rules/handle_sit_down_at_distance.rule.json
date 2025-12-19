@@ -12,7 +12,7 @@
       "comment": "Get current furniture spots array",
       "parameters": {
         "entity_ref": "{event.payload.targetId}",
-        "component_type": "positioning:allows_sitting",
+        "component_type": "sitting:allows_sitting",
         "result_variable": "furnitureData"
       }
     },
@@ -60,7 +60,7 @@
             "comment": "Re-fetch furniture data to get fresh spots array for validation",
             "parameters": {
               "entity_ref": "{event.payload.targetId}",
-              "component_type": "positioning:allows_sitting",
+              "component_type": "sitting:allows_sitting",
               "result_variable": "furnitureDataRefresh"
             }
           },
@@ -110,7 +110,7 @@
                   "comment": "Atomically claim the target spot",
                   "parameters": {
                     "entity_ref": "target",
-                    "component_type": "positioning:allows_sitting",
+                    "component_type": "sitting:allows_sitting",
                     "field": {
                       "cat": ["spots.", { "var": "context.targetIndex" }]
                     },

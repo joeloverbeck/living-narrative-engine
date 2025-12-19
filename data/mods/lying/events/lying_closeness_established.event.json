@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "lying:lying_closeness_established",
+  "description": "Dispatched when closeness relationships are established between actors lying on the same furniture.",
+  "payloadSchema": {
+    "title": "Lying: Lying Closeness Established Payload",
+    "description": "Payload for the lying:lying_closeness_established event.",
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who lay down and triggered closeness establishment."
+      },
+      "furnitureId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the furniture entity where the actors are lying."
+      },
+      "otherLyingActors": {
+        "type": "array",
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        },
+        "description": "Array of actor IDs who are lying on the same furniture and now have closeness established."
+      },
+      "operationId": {
+        "type": "string",
+        "description": "Unique identifier for this operation instance."
+      }
+    },
+    "required": ["actorId", "furnitureId", "otherLyingActors", "operationId"],
+    "additionalProperties": false
+  }
+}

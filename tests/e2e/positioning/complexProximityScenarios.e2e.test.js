@@ -87,7 +87,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null] },
           'core:name': { name: 'Garden Bench' },
           'core:location': { locationId: 'test:garden' },
         },
@@ -206,7 +206,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null, null, null] },
+          'sitting:allows_sitting': { spots: [null, null, null, null] },
           'core:name': { name: 'Long Bench' },
           'core:location': { locationId: 'test:courtyard' },
         },
@@ -356,7 +356,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const amphitheaterId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: new Array(25).fill(null) },
+          'sitting:allows_sitting': { spots: new Array(25).fill(null) },
           'core:name': { name: 'Amphitheater' },
           'core:location': { locationId: 'test:amphitheater' },
         },
@@ -488,7 +488,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const chairId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Test Chair' },
           'core:location': { locationId: 'test:stress_room' },
         },
@@ -614,7 +614,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] }, // Only 2 spots
+          'sitting:allows_sitting': { spots: [null, null] }, // Only 2 spots
           'core:name': { name: 'Small Bench' },
           'core:location': { locationId: 'test:concurrent_room' },
         },
@@ -718,7 +718,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const brokenChairId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null] },
+          'sitting:allows_sitting': { spots: [null] },
           'core:name': { name: 'Broken Chair' },
           'core:location': { locationId: 'test:broken_room' },
         },
@@ -815,7 +815,7 @@ describe('Complex Proximity Scenarios E2E', () => {
       const benchId = await entityService.createEntity({
         type: 'core:location',
         initialData: {
-          'positioning:allows_sitting': { spots: [null, null] },
+          'sitting:allows_sitting': { spots: [null, null] },
           'core:name': { name: 'Cleanup Bench' },
           'core:location': { locationId: 'test:orphan_room' },
         },

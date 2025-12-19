@@ -12,8 +12,8 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
   beforeEach(async () => {
     // Use ModTestFixture.forAction factory which returns ModActionTestFixture instance
     fixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:sit_down'
+      'sitting',
+      'sitting:sit_down'
     );
   });
 
@@ -48,8 +48,8 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
 
     it('should be accessible on ModRuleTestFixture instances', async () => {
       const ruleFixture = await ModTestFixture.forRule(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       expect(ruleFixture).toHaveProperty('scopeTracer');
@@ -373,8 +373,8 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
   describe('Inheritance verification', () => {
     it('should inherit tracer in ModActionTestFixture', async () => {
       const actionFixture = await ModTestFixture.forAction(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       expect(actionFixture).toHaveProperty('scopeTracer');
@@ -390,8 +390,8 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
 
     it('should inherit tracer in ModRuleTestFixture', async () => {
       const ruleFixture = await ModTestFixture.forRule(
-        'positioning',
-        'positioning:sit_down'
+        'sitting',
+        'sitting:sit_down'
       );
 
       expect(ruleFixture).toHaveProperty('scopeTracer');

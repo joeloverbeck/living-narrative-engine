@@ -68,7 +68,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed = createEntityInstance({
         instanceId: 'bed:1',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed);
@@ -141,7 +141,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed = createEntityInstance({
         instanceId: 'bed:1',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed);
@@ -210,7 +210,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed1 = createEntityInstance({
         instanceId: 'bed:1',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed1);
@@ -218,7 +218,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed2 = createEntityInstance({
         instanceId: 'bed:2',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed2);
@@ -278,7 +278,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed = createEntityInstance({
         instanceId: 'bed:1',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed);
@@ -322,7 +322,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
       const bed = createEntityInstance({
         instanceId: 'bed:1',
         baseComponents: {
-          'positioning:allows_lying_on': {},
+          'lying:allows_lying_on': {},
         },
       });
       entityManager.addEntity(bed);

@@ -77,8 +77,8 @@ class EntityDefinition {
       console.debug(`[DEBUG] EntityDefinition created for park bench:`, {
         id: this.id,
         componentKeys: Object.keys(this.components),
-        hasAllowsSitting: 'positioning:allows_sitting' in this.components,
-        allowsSittingData: this.components['positioning:allows_sitting'],
+        hasAllowsSitting: 'sitting:allows_sitting' in this.components,
+        allowsSittingData: this.components['sitting:allows_sitting'],
       });
     }
   }

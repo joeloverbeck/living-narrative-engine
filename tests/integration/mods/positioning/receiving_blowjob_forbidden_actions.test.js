@@ -14,7 +14,7 @@ import {
 // Import action definitions
 import bendOverAction from '../../../../data/mods/positioning/actions/bend_over.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
-import stepBackAction from '../../../../data/mods/positioning/actions/step_back.action.json';
+import stepBackAction from '../../../../data/mods/personal-space/actions/step_back.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for positioning actions

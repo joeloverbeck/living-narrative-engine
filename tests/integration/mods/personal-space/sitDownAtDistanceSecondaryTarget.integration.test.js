@@ -50,7 +50,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
     const furniture = new ModEntityBuilder('test:bar_stools')
       .withName('Bar Stools')
       .atLocation('test:bar')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: [null, 'test:occupant', null, null],
         requires_kneeling: false,
       })
@@ -98,7 +98,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       // Assert: Furniture should have actor at spot 3
       const furnitureData = testFixture.entityManager.getComponentData(
         'test:bar_stools',
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(furnitureData.spots[3]).toBe('test:actor');
     } finally {
@@ -127,7 +127,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
     const furniture = new ModEntityBuilder('test:bar_stools')
       .withName('Bar Stools')
       .atLocation('test:bar')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots: [null, null, null, null],
         requires_kneeling: false,
       })
@@ -193,7 +193,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
     const furniture = new ModEntityBuilder('test:long_bar')
       .withName('Long Bar')
       .atLocation('test:bar')
-      .withComponent('positioning:allows_sitting', {
+      .withComponent('sitting:allows_sitting', {
         spots,
         requires_kneeling: false,
       })
@@ -219,7 +219,7 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
     // Assert: Buffer spot (3) should remain empty
     const furnitureData = testFixture.entityManager.getComponentData(
       'test:long_bar',
-      'positioning:allows_sitting'
+      'sitting:allows_sitting'
     );
     expect(furnitureData.spots[3]).toBeNull();
     expect(furnitureData.spots[4]).toBe('test:actor');

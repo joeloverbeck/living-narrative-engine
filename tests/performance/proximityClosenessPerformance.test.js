@@ -148,7 +148,7 @@ describe('Proximity Closeness Performance Tests', () => {
       // Setup mock responses for consistent behavior
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: ['game:alice', null, 'game:charlie'] };
           }
           return null;
@@ -205,7 +205,7 @@ describe('Proximity Closeness Performance Tests', () => {
 
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: ['game:alice', null, 'game:charlie'] };
           }
           if (componentType === 'positioning:closeness') {
@@ -273,7 +273,7 @@ describe('Proximity Closeness Performance Tests', () => {
 
         testBed.entityManager.getComponentData.mockImplementation(
           (entityId, componentType) => {
-            if (componentType === 'positioning:allows_sitting') {
+            if (componentType === 'sitting:allows_sitting') {
               return { spots };
             }
             if (componentType === 'positioning:closeness') {
@@ -364,7 +364,7 @@ describe('Proximity Closeness Performance Tests', () => {
       // Setup mock for concurrent operations
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: new Array(10).fill(null) };
           }
           return null;

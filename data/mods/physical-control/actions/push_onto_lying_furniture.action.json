@@ -11,7 +11,7 @@
       "description": "Actor you are pushing down"
     },
     "secondary": {
-      "scope": "positioning:available_lying_furniture",
+      "scope": "lying:available_lying_furniture",
       "placeholder": "secondary",
       "description": "Furniture that can be used to pin the target down"
     }

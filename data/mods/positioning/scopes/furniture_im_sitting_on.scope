@@ -1,6 +1,0 @@
-positioning:furniture_im_sitting_on := entities(positioning:allows_sitting)[][{
-  "==": [
-    {"var": "entity.id"},
-    {"var": "actor.components.positioning:sitting_on.furniture_id"}
-  ]
-}]

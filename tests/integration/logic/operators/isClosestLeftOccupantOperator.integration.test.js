@@ -61,7 +61,7 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
   const setFurnitureSpots = async (spots) => {
     await entityManager.addComponent(
       furnitureId,
-      'positioning:allows_sitting',
+      'sitting:allows_sitting',
       {
         spots,
       }

@@ -48,7 +48,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
           },
           {
             some: [
-              { var: 'entity.components.positioning:allows_sitting.spots' },
+              { var: 'entity.components.sitting:allows_sitting.spots' },
               { '==': [{ var: '' }, null] }, // Actual null, not string "null"
             ],
           },
@@ -59,14 +59,14 @@ describe('Park Bench Real Scope DSL Debug', () => {
         parent: {
           type: 'Source',
           kind: 'entities',
-          param: 'positioning:allows_sitting',
+          param: 'sitting:allows_sitting',
         },
       },
     };
 
     scopeRegistry.initialize({
       'positioning:available_furniture': {
-        expr: 'entities(positioning:allows_sitting)[][filter]', // Simplified expression for reference
+        expr: 'entities(sitting:allows_sitting)[][filter]', // Simplified expression for reference
         ast: availableFurnitureAST,
       },
     });
@@ -94,7 +94,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       });
       await entityManager.addComponent(
         parkBenchId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [null, null],
         }
@@ -117,23 +117,23 @@ describe('Park Bench Real Scope DSL Debug', () => {
       expect(entityInstance).toBeDefined();
       expect(entityInstance.id).toBe(parkBenchId);
 
-      // Check for positioning:allows_sitting component
+      // Check for sitting:allows_sitting component
       const hasAllowsSitting = entityManager.hasComponent(
         parkBenchId,
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
       expect(hasAllowsSitting).toBe(true);
 
       // This should trigger our enhanced logging
       logger.info(
-        '[TEST] Calling EntityManager.getEntitiesWithComponent for positioning:allows_sitting...'
+        '[TEST] Calling EntityManager.getEntitiesWithComponent for sitting:allows_sitting...'
       );
       const entitiesWithSitting = entityManager.getEntitiesWithComponent(
-        'positioning:allows_sitting'
+        'sitting:allows_sitting'
       );
 
       logger.info(
-        `[TEST] EntityManager returned ${entitiesWithSitting?.length || 0} entities with positioning:allows_sitting`
+        `[TEST] EntityManager returned ${entitiesWithSitting?.length || 0} entities with sitting:allows_sitting`
       );
 
       expect(entitiesWithSitting).toBeDefined();
@@ -161,7 +161,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       });
       await entityManager.addComponent(
         parkBenchId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [null, null],
         }
@@ -194,7 +194,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       const parkBenchCheck = entityManager.getEntityInstance(parkBenchId);
       expect(parkBenchCheck).toBeDefined();
       expect(parkBenchCheck.hasComponent('core:position')).toBe(true);
-      expect(parkBenchCheck.hasComponent('positioning:allows_sitting')).toBe(
+      expect(parkBenchCheck.hasComponent('sitting:allows_sitting')).toBe(
         true
       );
 
@@ -230,7 +230,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       expect(scopeResult.has(parkBenchId)).toBe(true);
     });
 
-    it('should resolve entities(positioning:allows_sitting) source directly', async () => {
+    it('should resolve entities(sitting:allows_sitting) source directly', async () => {
       // Create entities first
       const parkBenchId = 'p_erotica:park_bench_instance';
       const actorId = 'p_erotica:ane_arrieta_instance';
@@ -239,7 +239,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       entityManager.createEntity(parkBenchId);
       await entityManager.addComponent(
         parkBenchId,
-        'positioning:allows_sitting',
+        'sitting:allows_sitting',
         {
           spots: [null, null],
         }
@@ -261,12 +261,12 @@ describe('Park Bench Real Scope DSL Debug', () => {
       };
 
       logger.info(
-        '[TEST] Testing entities(positioning:allows_sitting) source resolution...'
+        '[TEST] Testing entities(sitting:allows_sitting) source resolution...'
       );
 
       // Parse and test the source resolution directly using scope engine
       const sourceAST = parseDslExpression(
-        'entities(positioning:allows_sitting)'
+        'entities(sitting:allows_sitting)'
       );
       const sourceResult = await scopeEngine.resolve(
         sourceAST,

@@ -836,7 +836,7 @@ Returns all actors sitting on the same furniture as the actor.
 **Requirements**:
 
 - Actor must have `positioning:sitting_on` component
-- Furniture must have `positioning:allows_sitting` component
+- Furniture must have `sitting:allows_sitting` component
 
 **Example usage**: "talk to actor on couch" actions
 

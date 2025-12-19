@@ -201,7 +201,7 @@ describe('Proximity Closeness Memory Tests', () => {
           if (componentType === 'positioning:closeness') {
             return { partners: [...partners] }; // Create new array to avoid shared references
           }
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             return { spots: new Array(10).fill(null) };
           }
           return null;
@@ -442,7 +442,7 @@ describe('Proximity Closeness Memory Tests', () => {
       // Setup mocks for long-running test
       testBed.entityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
-          if (componentType === 'positioning:allows_sitting') {
+          if (componentType === 'sitting:allows_sitting') {
             const spots = new Array(8).fill(null);
             spots[0] = 'game:persistent_actor_1';
             spots[3] = 'game:persistent_actor_2';

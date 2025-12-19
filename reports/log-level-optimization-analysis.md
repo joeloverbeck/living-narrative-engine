@@ -94,7 +94,7 @@ entity.js:153 [DEBUG] Entity.componentTypeIds for park bench: {entityId: 'p_erot
 ```
 consoleLogger.js:151 TargetResolutionService: [DEBUG] TargetResolutionService resolving scope for sit_down
 consoleLogger.js:151 [DEBUG] UnifiedScopeResolver: Resolving available_furniture scope
-consoleLogger.js:151 [DEBUG] EntityQueryManager detailed search for 'positioning:allows_sitting'
+consoleLogger.js:151 [DEBUG] EntityQueryManager detailed search for 'sitting:allows_sitting'
 ```
 
 **Recommendation**: These are correctly marked as [DEBUG] but appearing at INFO level.
