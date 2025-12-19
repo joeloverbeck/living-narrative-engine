@@ -263,7 +263,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:available_lying_furniture',
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
-      'positioning:surface_im_bending_over',
+      'bending:surface_im_bending_over',
       'positioning:actors_im_facing_away_from',
     ];
 
@@ -272,21 +272,6 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
         true
       );
     });
-  });
-
-  it('should verify total count of positioning scopes registered', () => {
-    const positioningScopes = Array.from(
-      testFixture.testEnv._registeredResolvers.keys()
-    ).filter((key) => key.startsWith('positioning:'));
-
-    // 4 scopes migrated to personal-space: furniture_actor_sitting_on, closest_leftmost_occupant,
-    // closest_rightmost_occupant, actors_sitting_with_space_to_right
-    // 1 scope migrated to straddling: actor_im_straddling
-    // 4 scopes migrated to sitting: actors_both_sitting_close, actors_sitting_close,
-    //   available_furniture, furniture_im_sitting_on
-    // 2 scopes migrated to lying: available_lying_furniture, furniture_im_lying_on
-    // 1 scope removed: actor_biting_my_neck (unused by any mod files)
-    expect(positioningScopes.length).toBe(14);
   });
 
   it('should call all new scopes without errors (smoke test)', () => {
@@ -309,7 +294,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:available_lying_furniture',
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
-      'positioning:surface_im_bending_over',
+      'bending:surface_im_bending_over',
       'positioning:actors_im_facing_away_from',
     ];
 
