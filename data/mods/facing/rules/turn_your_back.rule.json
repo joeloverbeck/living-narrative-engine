@@ -1,20 +1,12 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_turn_around_to_face",
-  "comment": "Handles the 'positioning:turn_around_to_face' action. Removes the actor's facing_away component, turning them to face all previously faced-away entities.",
+  "rule_id": "handle_turn_your_back",
+  "comment": "Handles the 'facing:turn_your_back' action. Adds facing_away component to actor, setting them to face away from the target.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "positioning:event-is-action-turn-around-to-face"
+    "condition_ref": "facing:event-is-action-turn-your-back"
   },
   "actions": [
-    {
-      "type": "REMOVE_COMPONENT",
-      "comment": "Remove facing_away component so actor faces everyone",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "positioning:facing_away"
-      }
-    },
     {
       "type": "GET_NAME",
       "parameters": {
@@ -38,10 +30,21 @@
       }
     },
     {
+      "type": "ADD_COMPONENT",
+      "comment": "Add facing_away component with target in facing_away_from array",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:facing_away",
+        "value": {
+          "facing_away_from": ["{event.payload.targetId}"]
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} turns around to face {context.targetName}."
+        "value": "{context.actorName} turns their back to {context.targetName}."
       }
     },
     {
@@ -68,10 +71,10 @@
     {
       "type": "DISPATCH_EVENT",
       "parameters": {
-        "eventType": "positioning:actor_faced_everyone",
+        "eventType": "positioning:actor_turned_back",
         "payload": {
           "actor": "{event.payload.actorId}",
-          "faced": "{context.targetName}"
+          "target": "{event.payload.targetId}"
         }
       }
     },

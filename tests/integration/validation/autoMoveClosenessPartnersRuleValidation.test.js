@@ -1,5 +1,5 @@
 /**
- * @file Direct test for closeness_auto_move.rule.json validation
+ * @file Direct test for closeness_auto_move.rule.json validation (now in personal-space mod)
  * @description Verifies that the rule file that was failing in production now validates correctly
  */
 
@@ -24,7 +24,7 @@ describe('closeness_auto_move.rule.json Validation', () => {
   it('should validate closeness_auto_move.rule.json successfully', async () => {
     // Arrange - Load the exact rule file that was failing in production
     const ruleDataContent = await readFile(
-      'data/mods/positioning/rules/closeness_auto_move.rule.json',
+      'data/mods/personal-space/rules/closeness_auto_move.rule.json',
       'utf8'
     );
     const ruleData = JSON.parse(ruleDataContent);

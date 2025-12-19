@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:turn_around_to_face",
+  "id": "facing:turn_around_to_face",
   "name": "Turn Around to Face",
   "description": "Turn around to face someone you are currently facing away from.",
   "targets": {
@@ -25,9 +25,9 @@
   "template": "turn around to face {target}",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#bf360c",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#8d2c08",
+    "backgroundColor": "#2e3f47",
+    "textColor": "#ecf0f1",
+    "hoverBackgroundColor": "#4a5f6a",
     "hoverTextColor": "#ffffff"
   }
 }

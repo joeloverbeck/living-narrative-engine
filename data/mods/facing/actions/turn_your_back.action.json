@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:turn_your_back",
+  "id": "facing:turn_your_back",
   "name": "Turn Your Back",
   "description": "Turn your back to someone, facing away from them in a dismissive or defensive gesture.",
   "targets": {
@@ -45,9 +45,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#bf360c",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#8d2c08",
+    "backgroundColor": "#2e3f47",
+    "textColor": "#ecf0f1",
+    "hoverBackgroundColor": "#4a5f6a",
     "hoverTextColor": "#ffffff"
   }
 }

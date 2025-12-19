@@ -6,7 +6,7 @@
 import { describe, it, expect } from '@jest/globals';
 import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 import stepBackAction from '../../../../data/mods/personal-space/actions/step_back.action.json';
 
 describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
@@ -24,7 +24,7 @@ describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
     {
       name: 'turn_your_back',
       action: turnYourBackAction,
-      expectedId: 'positioning:turn_your_back',
+      expectedId: 'facing:turn_your_back',
     },
     {
       name: 'step_back',

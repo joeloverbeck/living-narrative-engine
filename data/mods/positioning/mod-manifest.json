@@ -40,9 +40,7 @@
     ],
     "actions": [
       "bend_over.action.json",
-      "straighten_up.action.json",
-      "turn_around_to_face.action.json",
-      "turn_your_back.action.json"
+      "straighten_up.action.json"
     ],
     "conditions": [
       "actor-can-move.condition.json",
@@ -58,16 +56,11 @@
       "entity-not-facing-away-from-actor.condition.json",
       "entity-not-in-facing-away.condition.json",
       "event-is-action-bend-over.condition.json",
-      "event-is-action-straighten-up.condition.json",
-      "event-is-action-turn-around-to-face.condition.json",
-      "event-is-action-turn-your-back.condition.json"
+      "event-is-action-straighten-up.condition.json"
     ],
     "rules": [
       "bend_over.rule.json",
-      "closeness_auto_move.rule.json",
-      "straighten_up.rule.json",
-      "turn_around_to_face.rule.json",
-      "turn_your_back.rule.json"
+      "straighten_up.rule.json"
     ],
     "entities": {
       "definitions": [],

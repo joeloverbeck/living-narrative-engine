@@ -77,7 +77,7 @@ describe('Cross-Mod References', () => {
     it('should have turn_around_to_face action with appropriate conditions', () => {
       const turnToFacePath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/turn_around_to_face.action.json'
+        'data/mods/facing/actions/turn_around_to_face.action.json'
       );
       const turnToFaceAction = JSON.parse(
         fs.readFileSync(turnToFacePath, 'utf8')
@@ -91,7 +91,7 @@ describe('Cross-Mod References', () => {
     it('should have turn_your_back action with appropriate conditions', () => {
       const turnBackPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/turn_your_back.action.json'
+        'data/mods/facing/actions/turn_your_back.action.json'
       );
       const turnBackAction = JSON.parse(fs.readFileSync(turnBackPath, 'utf8'));
 

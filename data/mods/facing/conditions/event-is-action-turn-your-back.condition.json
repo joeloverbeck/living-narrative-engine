@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "facing:event-is-action-turn-your-back",
+  "description": "Checks if the triggering event is for the 'facing:turn_your_back' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "facing:turn_your_back"]
+  }
+}

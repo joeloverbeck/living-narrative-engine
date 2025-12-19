@@ -10,7 +10,7 @@ import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
 import standUpAction from '../../../../data/mods/deference/actions/stand_up.action.json';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for positioning actions

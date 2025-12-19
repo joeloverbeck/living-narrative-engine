@@ -9,8 +9,8 @@ This document tracks which color schemes are actively used by mods in the Living
 ## Current Status
 
 **Total Schemes Defined**: 55
-**In Use**: 43 schemes actively implemented across mods
-**Available**: 12 schemes ready for future mods
+**In Use**: 44 schemes actively implemented across mods
+**Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -26,6 +26,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Deference               | Ceremonial Midnight | 14.1    | `#1f2d3d`        | Active |
 | Distress                | Obsidian Frost      | 11.7    | `#0b132b`        | Active |
 | Exercise                | Orange Flame        | 2.3     | `#e65100`        | Active |
+| Facing                  | Pathfinder Slate    | 9.2     | `#2e3f47`        | Active |
 | First-Aid               | Forest Green        | 4.1     | `#1b5e20`        | Active |
 | Gymnastics              | Journey Cobalt      | 9.1     | `#1a237e`        | Active |
 | Hexing                  | Hexed Nightshade    | 16.1    | `#1f0d2a`        | Active |
@@ -353,6 +354,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 10.5:1 AAA
 - **Use Cases**: Travel actions, long-distance movement, exploration, precision athletics
 - **Theme**: Journey, vast distances, adventure, disciplined motion
+
+#### 9.2 Pathfinder Slate - Facing
+
+```json
+{
+  "backgroundColor": "#2e3f47",
+  "textColor": "#ecf0f1",
+  "hoverBackgroundColor": "#4a5f6a",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 11.8:1 AAA
+- **Hover Contrast**: 6.5:1 AA
+- **Use Cases**: Turning to face or away from actors
+- **Theme**: Spatial orientation, navigation
 
 #### 9.3 Explorer Cyan - Movement
 
@@ -843,6 +860,7 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ## Version History
 
+- **2025-12**: Assigned Pathfinder Slate (9.2) to Facing mod
 - **2025-12**: Assigned Deep Blue (7.1) to Lying mod
 - **2025-12**: Assigned Charcoal (1.3) to Sitting mod
 - **2025-12**: Added Section 20 (Intimate Positioning Colors) with Intimate Embrace (20.1) for Straddling mod

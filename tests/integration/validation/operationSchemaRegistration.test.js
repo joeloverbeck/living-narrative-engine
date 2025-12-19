@@ -61,7 +61,7 @@ describe('Operation Schema Registration Validation', () => {
     it('should validate closeness_auto_move.rule.json without cascade errors', async () => {
       // Arrange - This is the rule that failed in the bug report
       const ruleDataContent = await readFile(
-        'data/mods/positioning/rules/closeness_auto_move.rule.json',
+        'data/mods/personal-space/rules/closeness_auto_move.rule.json',
         'utf8'
       );
       const ruleData = JSON.parse(ruleDataContent);

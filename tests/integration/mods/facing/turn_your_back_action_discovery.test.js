@@ -1,20 +1,20 @@
 /**
- * @file Integration tests for positioning:turn_your_back action discovery.
+ * @file Integration tests for facing:turn_your_back action discovery.
  * @description Tests forbidden components including fucking_anally.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 
-describe('positioning:turn_your_back action discovery', () => {
+describe('facing:turn_your_back action discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:turn_your_back'
+      'facing',
+      'facing:turn_your_back'
     );
   });
 
@@ -55,7 +55,7 @@ describe('positioning:turn_your_back action discovery', () => {
       );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('positioning:turn_your_back');
+      expect(ids).not.toContain('facing:turn_your_back');
     });
   });
 });

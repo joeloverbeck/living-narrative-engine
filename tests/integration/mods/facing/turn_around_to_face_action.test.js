@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:turn_around_to_face action.
+ * @file Integration tests for the facing:turn_around_to_face action.
  * @description Tests basic action discovery - verifies the action appears when
  * the actor has the required components (closeness and facing_away).
  */
@@ -22,7 +22,7 @@ import {
 } from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
-import turnAroundToFaceAction from '../../../../data/mods/positioning/actions/turn_around_to_face.action.json';
+import turnAroundToFaceAction from '../../../../data/mods/facing/actions/turn_around_to_face.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
   createTargetResolutionServiceWithMocks,
@@ -272,7 +272,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundToFaceAction = actions.find(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
       expect(turnAroundToFaceAction).toBeUndefined();
     });
@@ -291,7 +291,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundToFaceAction = actions.find(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
       expect(turnAroundToFaceAction).toBeUndefined();
     });
@@ -325,7 +325,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundToFaceAction = actions.find(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
       expect(turnAroundToFaceAction).toBeDefined();
       expect(turnAroundToFaceAction.command).toBe(
@@ -375,7 +375,7 @@ describe('Turn Around to Face Action Discovery', () => {
       // With the current multi-target implementation, there should be one action
       // that can target multiple entities
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
 
       expect(turnAroundActions).toHaveLength(1);
@@ -400,7 +400,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
       // Should have no turn around actions since facing_away_from is empty
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
 
       expect(turnAroundActions).toHaveLength(0);
@@ -437,7 +437,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
       // Only Bob should have an action (outsider not in closeness)
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
 
       expect(turnAroundActions).toHaveLength(1);
@@ -465,7 +465,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
 
       expect(turnAroundActions).toHaveLength(1);
@@ -512,7 +512,7 @@ describe('Turn Around to Face Action Discovery', () => {
         await actionDiscoveryService.getValidActions(aliceEntity);
       const aliceActions = aliceResult.actions;
       const aliceTurnActions = aliceActions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
       expect(aliceTurnActions).toHaveLength(1);
       expect(extractTargetIds(aliceTurnActions[0].params)).toContain(bob);
@@ -522,7 +522,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const bobResult = await actionDiscoveryService.getValidActions(bobEntity);
       const bobActions = bobResult.actions;
       const bobTurnActions = bobActions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
       expect(bobTurnActions).toHaveLength(1);
       expect(extractTargetIds(bobTurnActions[0].params)).toContain(alice);
@@ -560,7 +560,7 @@ describe('Turn Around to Face Action Discovery', () => {
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(
-        (a) => a.id === 'positioning:turn_around_to_face'
+        (a) => a.id === 'facing:turn_around_to_face'
       );
 
       // Only Bob should be a valid target

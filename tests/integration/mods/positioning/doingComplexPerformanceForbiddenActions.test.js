@@ -26,7 +26,7 @@ import getCloseAction from '../../../../data/mods/personal-space/actions/get_clo
 import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
 import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
 import sitDownAction from '../../../../data/mods/sitting/actions/sit_down.action.json';
-import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
+import turnYourBackAction from '../../../../data/mods/facing/actions/turn_your_back.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for various actions
