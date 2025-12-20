@@ -12,7 +12,7 @@
       "imagePath": "portraits/interior_of_chicken_coop.png",
       "altText": "Interior of chicken coop"
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "to the yard of Aldous' home",
         "target": "fantasy:12_kiln_lane_yard_instance",

@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "skills:craft_skill",
+  "description": "Represents proficiency in crafting, repair, and tool manipulation. Used for actions requiring manual dexterity with tools.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 10,
+        "description": "Skill level from 0 (untrained) to 100 (master craftsman)"
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}

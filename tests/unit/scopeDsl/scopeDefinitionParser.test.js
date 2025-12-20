@@ -37,7 +37,7 @@ describe('parseScopeDefinitions', () => {
     it('should parse multiple single-line scope definitions', () => {
       const content = `
         core:followers := actor.core:leading.followers[]
-        core:directions := location.movement:exits[].target
+        core:directions := location.locations:exits[].target
       `;
       const filePath = 'test.scope';
 
@@ -52,7 +52,7 @@ describe('parseScopeDefinitions', () => {
         expression: 'mocked',
       });
       expect(result.get('core:directions').expr).toBe(
-        'location.movement:exits[].target'
+        'location.locations:exits[].target'
       );
       expect(result.get('core:directions').ast).toEqual({
         type: 'scope',
@@ -66,7 +66,7 @@ describe('parseScopeDefinitions', () => {
         core:followers := actor.core:leading.followers[]
         
         // Another comment
-        core:directions := location.movement:exits[].target
+        core:directions := location.locations:exits[].target
         
       `;
       const filePath = 'test.scope';
@@ -82,7 +82,7 @@ describe('parseScopeDefinitions', () => {
         expression: 'mocked',
       });
       expect(result.get('core:directions').expr).toBe(
-        'location.movement:exits[].target'
+        'location.locations:exits[].target'
       );
       expect(result.get('core:directions').ast).toEqual({
         type: 'scope',
@@ -133,7 +133,7 @@ describe('parseScopeDefinitions', () => {
         ]
         
         // Another single-line scope
-        core:directions := location.movement:exits[].target
+        core:directions := location.locations:exits[].target
       `;
       const filePath = 'test.scope';
 
@@ -148,7 +148,7 @@ describe('parseScopeDefinitions', () => {
         expression: 'mocked',
       });
       expect(result.get('core:directions').expr).toBe(
-        'location.movement:exits[].target'
+        'location.locations:exits[].target'
       );
       expect(result.get('core:directions').ast).toEqual({
         type: 'scope',

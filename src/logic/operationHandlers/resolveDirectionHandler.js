@@ -4,18 +4,18 @@
  * @file Handler for RESOLVE_DIRECTION operation
  *
  * Resolves a direction string to a target location ID by querying the current location's
- * movement:exits component, which contains an array of exit definitions with direction,
+ * locations:exits component, which contains an array of exit definitions with direction,
  * target, and optional blocker information.
  *
  * Operation flow:
  * 1. Validate parameters (current_location_id, direction, result_variable)
- * 2. Retrieve movement:exits component from current location
+ * 2. Retrieve locations:exits component from current location
  * 3. Find exit matching the specified direction
  * 4. Store target location ID (or null if no match) in context variable
  *
  * Related files:
  * @see data/schemas/operations/resolveDirection.schema.json - Operation schema
- * @see data/mods/movement/components/exits.component.json - Exits component structure
+ * @see data/mods/locations/components/exits.component.json - Exits component structure
  * @see src/dependencyInjection/tokens/tokens-core.js - ResolveDirectionHandler token
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping

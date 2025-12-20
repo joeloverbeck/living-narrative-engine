@@ -1,4 +1,4 @@
-locks:blockers_actor_can_lock := location.movement:exits[
+locks:blockers_actor_can_lock := location.locations:exits[
   { "and": [
     { "var": "entity.blocker" },
     { "condition_ref": "locks:blocker-is-unlocked" },

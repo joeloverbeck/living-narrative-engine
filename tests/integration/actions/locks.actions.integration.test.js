@@ -88,7 +88,7 @@ function buildEntityManager({ isLocked, actorHasKey }) {
     id: 'locks:test_room',
     components: {
       'core:location': {},
-      'movement:exits': [
+      'locations:exits': [
         {
           direction: 'north',
           target: 'locks:other_room',

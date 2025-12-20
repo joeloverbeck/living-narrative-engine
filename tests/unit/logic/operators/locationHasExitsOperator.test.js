@@ -48,7 +48,7 @@ describe('LocationHasExitsOperator', () => {
       );
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'location1',
-        'movement:exits'
+        'locations:exits'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Location location1 hasExits=true (count=2)')
@@ -82,7 +82,7 @@ describe('LocationHasExitsOperator', () => {
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Location location1 has no movement:exits component'
+          'Location location1 has no locations:exits component'
         )
       );
     });

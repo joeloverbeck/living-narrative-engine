@@ -282,7 +282,7 @@ describe('ActionCandidateProcessor - integration coverage', () => {
         'core:name': { name: 'Isolated Room' },
         'core:description': { description: 'A quiet, empty chamber.' },
         'core:position': { x: 99, y: 0, z: 0 },
-        'movement:exits': {},
+        'locations:exits': {},
       });
       registry.store('entityDefinitions', isolatedLocationId, definition);
       await entityManager.createEntityInstance(isolatedLocationId, {

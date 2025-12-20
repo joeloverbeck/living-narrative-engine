@@ -1204,7 +1204,7 @@ export function createBaseRuleEnvironment({
           const location = entityManager.getEntityInstance(
             actorPosition.locationId
           );
-          const exits = location?.components?.['movement:exits'];
+          const exits = location?.components?.['locations:exits'];
 
           if (!Array.isArray(exits)) {
             return { success: true, value: new Set() };

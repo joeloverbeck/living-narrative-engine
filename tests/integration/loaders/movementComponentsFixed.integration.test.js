@@ -72,7 +72,7 @@ describe('Movement Components - Fixed validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'movement',
+        'locations',
         'components',
         'exits.component.json'
       );
@@ -92,7 +92,7 @@ describe('Movement Components - Fixed validation', () => {
       expect(result.isValid).toBe(true);
       expect(result.errors || []).toEqual([]);
       expect(componentData.metadata).toBeUndefined();
-      expect(componentData.id).toBe('movement:exits');
+      expect(componentData.id).toBe('locations:exits');
     });
 
     it('should validate movement.component.json without metadata field', () => {

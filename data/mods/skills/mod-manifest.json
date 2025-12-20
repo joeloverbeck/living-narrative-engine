@@ -8,6 +8,7 @@
   "content": {
     "components": [
       "awareness_skill.component.json",
+      "craft_skill.component.json",
       "defense_skill.component.json",
       "grappling_skill.component.json",
       "medicine_skill.component.json",

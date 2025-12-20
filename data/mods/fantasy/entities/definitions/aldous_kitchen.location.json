@@ -12,7 +12,7 @@
             "imagePath": "portraits/aldous_kitchen.png",
             "altText": "Aldous' kitchen"
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "to the front of Aldous' home",
                 "target": "fantasy:12_kiln_lane_instance",

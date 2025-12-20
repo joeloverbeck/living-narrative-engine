@@ -111,13 +111,14 @@ describe('Locations Mod Manifest Validation', () => {
     it('should have components array with location components', () => {
       expect(manifest.content.components).toBeDefined();
       expect(Array.isArray(manifest.content.components)).toBe(true);
-      expect(manifest.content.components).toHaveLength(3);
+      expect(manifest.content.components).toHaveLength(4);
       expect(manifest.content.components).toContain(
         'naturally_dark.component.json'
       );
       expect(manifest.content.components).toContain(
         'description_in_darkness.component.json'
       );
+      expect(manifest.content.components).toContain('exits.component.json');
       expect(manifest.content.components).toContain(
         'sensorial_links.component.json'
       );

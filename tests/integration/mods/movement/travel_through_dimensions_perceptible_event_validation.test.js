@@ -175,7 +175,7 @@ async function createDimensionalScenario(fixture) {
     components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
-  await fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,

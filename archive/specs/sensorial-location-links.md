@@ -24,7 +24,7 @@ We need a data-driven way to declare locations as sensorially connected so that 
 ## Non-Goals
 
 - No pathfinding or distance-based propagation.
-- No automatic inferences from `movement:exits`.
+- No automatic inferences from `locations:exits`.
 - No audio attenuation or visibility checks beyond explicit links.
 - No reformatting of existing logs for actors in the origin location.
 

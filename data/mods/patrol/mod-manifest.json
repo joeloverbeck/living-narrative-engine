@@ -20,6 +20,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "locations",
+      "version": "^1.0.0"
+    },
+    {
       "id": "anatomy",
       "version": "^1.0.0"
     },

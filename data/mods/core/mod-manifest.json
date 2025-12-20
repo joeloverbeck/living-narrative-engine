@@ -9,7 +9,9 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "actions": ["wait.action.json"],
+    "actions": [
+      "wait.action.json"
+    ],
     "components": [
       "actor.component.json",
       "apparent_age.component.json",
@@ -41,6 +43,7 @@
       "portrait.component.json",
       "position.component.json",
       "profile.component.json",
+      "progress_tracker.component.json",
       "secrets.component.json",
       "short_term_memory.component.json",
       "speech_patterns.component.json",
@@ -193,7 +196,10 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "scopes": ["actors_in_location.scope", "environment.scope"],
+    "scopes": [
+      "actors_in_location.scope",
+      "environment.scope"
+    ],
     "recipes": [],
     "goals": [],
     "tasks": [],

@@ -121,6 +121,26 @@ describe('entityHelpers', () => {
       expect(ctx.location).toEqual({ id: 'loc1' });
     });
 
+    it('exposes components as an object even when entity has none', () => {
+      const gateway = {
+        getEntityInstance: jest.fn(() => ({
+          id: 'e1',
+        })),
+      };
+      const locationProvider = { getLocation: jest.fn(() => null) };
+      const actor = { id: 'actor1' };
+
+      const ctx = createEvaluationContext(
+        'e1',
+        actor,
+        gateway,
+        locationProvider
+      );
+
+      expect(ctx.components).toEqual({});
+      expect(ctx.components).toBeDefined();
+    });
+
     it('preserves Entity class getter properties when adding components', () => {
       // Create a mock Entity class that simulates real Entity behavior
       class MockEntity {

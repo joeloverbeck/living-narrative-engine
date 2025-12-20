@@ -20,7 +20,7 @@ Component IDs like `'core:position'` and `'core:actor'` are hardcoded in 3 opera
 **Actual state**: The file already exists with 49 lines and contains all needed constants:
 - `POSITION_COMPONENT_ID = 'core:position'`
 - `ACTOR_COMPONENT_ID = 'core:actor'`
-- `EXITS_COMPONENT_ID = 'movement:exits'`
+- `EXITS_COMPONENT_ID = 'locations:exits'`
 
 ---
 
@@ -65,7 +65,7 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { POSITION_COMPONENT_ID, EXITS_COMPONENT_ID } from '../../constants/componentIds.js';
 
 // Line 141: 'core:position' → POSITION_COMPONENT_ID
-// Line 156: 'movement:exits' → EXITS_COMPONENT_ID
+// Line 156: 'locations:exits' → EXITS_COMPONENT_ID
 ```
 
 ### Step 3: Update hasOtherActorsAtLocationOperator.js
@@ -107,7 +107,7 @@ npm run test:unit -- tests/unit/logic/operators/hasOtherActorsAtLocationOperator
 
 ```bash
 # Search for remaining hardcoded IDs (should find none in these 3 operators)
-grep -E "'core:position'|'core:actor'|'movement:exits'" src/logic/operators/isActorLocationLitOperator.js src/logic/operators/locationHasExitsOperator.js src/logic/operators/hasOtherActorsAtLocationOperator.js
+grep -E "'core:position'|'core:actor'|'locations:exits'" src/logic/operators/isActorLocationLitOperator.js src/logic/operators/locationHasExitsOperator.js src/logic/operators/hasOtherActorsAtLocationOperator.js
 
 # Run specific operator tests
 npm run test:unit -- tests/unit/logic/operators/isActorLocationLitOperator.test.js tests/unit/logic/operators/locationHasExitsOperator.test.js tests/unit/logic/operators/hasOtherActorsAtLocationOperator.test.js
@@ -142,7 +142,7 @@ npx eslint src/logic/operators/isActorLocationLitOperator.js src/logic/operators
 ### Changes Made
 
 1. **isActorLocationLitOperator.js**: Added import, replaced 1 hardcoded `'core:position'`
-2. **locationHasExitsOperator.js**: Added import, replaced 2 hardcoded strings (`'core:position'`, `'movement:exits'`)
+2. **locationHasExitsOperator.js**: Added import, replaced 2 hardcoded strings (`'core:position'`, `'locations:exits'`)
 3. **hasOtherActorsAtLocationOperator.js**: Added import, replaced 3 hardcoded strings (2× `'core:position'`, 1× `'core:actor'`)
 
 ### Tests
@@ -154,6 +154,6 @@ npx eslint src/logic/operators/isActorLocationLitOperator.js src/logic/operators
 
 ```bash
 # No hardcoded component IDs remain in these operators
-grep -E "'core:position'|'core:actor'|'movement:exits'" src/logic/operators/isActorLocationLitOperator.js src/logic/operators/locationHasExitsOperator.js src/logic/operators/hasOtherActorsAtLocationOperator.js
+grep -E "'core:position'|'core:actor'|'locations:exits'" src/logic/operators/isActorLocationLitOperator.js src/logic/operators/locationHasExitsOperator.js src/logic/operators/hasOtherActorsAtLocationOperator.js
 # Returns empty (no matches)
 ```

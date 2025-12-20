@@ -1,0 +1,26 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "blockers:ancient_iron_grate",
+  "components": {
+    "core:name": {
+      "text": "ancient iron grate"
+    },
+    "core:description": {
+      "text": "A heavy grate of thick iron bars, pitted and rust-scabbed from centuries of damp. The metal looks a couple hundred years old, its surface dark with corrosion and old mineral stains."
+    },
+    "blockers:structural_resistance": {
+      "value": 60
+    },
+    "blockers:is_barred": {
+      "thickness": "thick",
+      "material": "iron"
+    },
+    "blockers:corroded": {},
+    "mechanisms:openable": {
+      "isLocked": true,
+      "isOpen": false,
+      "requiredKeyId": null,
+      "lockLabel": "weathered iron lock"
+    }
+  }
+}

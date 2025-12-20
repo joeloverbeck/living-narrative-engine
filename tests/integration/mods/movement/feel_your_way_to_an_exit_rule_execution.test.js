@@ -131,8 +131,8 @@ describe('handle_feel_your_way_to_an_exit rule', () => {
         (op) => op.type === 'PICK_RANDOM_ARRAY_ELEMENT'
       );
       expect(pickRandom).toBeDefined();
-      expect(pickRandom?.parameters.component_type).toBe('movement:exits');
-      // array_field is intentionally omitted - handler uses smart default for movement:exits
+      expect(pickRandom?.parameters.component_type).toBe('locations:exits');
+      // array_field is intentionally omitted - handler uses smart default for locations:exits
       expect(pickRandom?.parameters.array_field).toBeUndefined();
       expect(pickRandom?.parameters.result_variable).toBe('selectedExit');
     });

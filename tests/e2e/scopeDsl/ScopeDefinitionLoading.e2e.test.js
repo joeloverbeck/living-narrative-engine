@@ -412,7 +412,7 @@ describe('Scope Definition Loading E2E', () => {
           content: createScopeContent(
             'testmod',
             'complex_scope',
-            'location.movement:exits[ { "condition_ref": "movement:exit-is-unblocked" } ].target',
+            'location.locations:exits[ { "condition_ref": "movement:exit-is-unblocked" } ].target',
             { multiline: true }
           ),
         },
@@ -437,7 +437,7 @@ describe('Scope Definition Loading E2E', () => {
       const complexScope = dataRegistry.get('scopes', 'testmod:complex_scope');
       expect(complexScope).toBeDefined();
       expect(complexScope.expr).toBe(
-        'location.movement:exits[ { "condition_ref": "movement:exit-is-unblocked" } ].target'
+        'location.locations:exits[ { "condition_ref": "movement:exit-is-unblocked" } ].target'
       );
       expect(complexScope.ast).toBeDefined();
       expect(complexScope.ast.type).toBe('Step'); // Should be a step node
@@ -811,7 +811,7 @@ testmod:scope3 := entities(core:actor)`;
           content: createScopeContent(
             'testmod',
             'step_filter',
-            'location.movement:exits[{"var": "blocked", "==": false}]'
+            'location.locations:exits[{"var": "blocked", "==": false}]'
           ),
         },
       ];

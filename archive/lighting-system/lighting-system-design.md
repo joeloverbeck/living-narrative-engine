@@ -64,7 +64,7 @@ All five underground locations follow the same pattern:
     "core:name": { "text": "Location Name" },
     "core:description": { "text": "Atmospheric prose..." },
     "core:portrait": { "path": "...", "altText": "..." },
-    "movement:exits": [{ "direction": "...", "target": "...", "blocker": null }]
+    "locations:exits": [{ "direction": "...", "target": "...", "blocker": null }]
   }
 }
 ```

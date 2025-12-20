@@ -58,7 +58,7 @@ companionship:potential_leaders := entities(core:position)[
   }
 ]
 
-movement:clear_directions := location.movement:exits[
+movement:clear_directions := location.locations:exits[
   { "!": { "var": "entity.blocker" } }
 ].target
 `;

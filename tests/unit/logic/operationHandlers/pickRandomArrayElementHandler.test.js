@@ -93,7 +93,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -102,7 +102,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'actor1',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -139,7 +139,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'target',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -148,7 +148,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'target1',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -162,7 +162,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: '{context.locationId}',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -171,7 +171,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'location1',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -185,7 +185,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: '{event.payload.locationId}',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -194,7 +194,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'location2',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -206,7 +206,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: { entityId: 'location3' },
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -215,7 +215,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'location3',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -229,7 +229,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: { entityId: '{context.actorPosition}' },
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -248,7 +248,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'direct-entity-id',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -257,7 +257,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'direct-entity-id',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -265,7 +265,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -296,7 +296,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -327,7 +327,7 @@ describe('PickRandomArrayElementHandler', () => {
       expect(context.evaluationContext.context.result).toEqual(weapons[1]);
     });
 
-    test('should use smart default for movement:exits component', async () => {
+    test('should use smart default for locations:exits component', async () => {
       const exits = [{ direction: 'east', destination: 'loc4' }];
 
       mockEntityManager.getComponentData.mockReturnValue({ exits });
@@ -335,7 +335,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           result_variable: 'result',
         },
         context
@@ -352,7 +352,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           result_variable: 'result',
         },
         context
@@ -423,7 +423,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'nonexistent.path',
           result_variable: 'result',
         },
@@ -455,7 +455,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -481,7 +481,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -507,7 +507,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -528,7 +528,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -550,7 +550,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -559,7 +559,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(context.evaluationContext.context.result).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('has no movement:exits component')
+        expect.stringContaining('has no locations:exits component')
       );
     });
 
@@ -569,7 +569,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -591,7 +591,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -612,7 +612,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -630,7 +630,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -654,7 +654,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'selectedExit',
         },
@@ -671,7 +671,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'direct-id',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -692,7 +692,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'direct-id',
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -719,7 +719,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: { var: 'some.path' },
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -729,7 +729,7 @@ describe('PickRandomArrayElementHandler', () => {
       expect(mockJsonLogic.evaluate).toHaveBeenCalled();
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'resolved-entity-id',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -747,7 +747,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: { var: 'some.entity' },
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },
@@ -756,7 +756,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'entity-from-object',
-        'movement:exits'
+        'locations:exits'
       );
     });
 
@@ -770,7 +770,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: { var: 'invalid.path' },
-          component_type: 'movement:exits',
+          component_type: 'locations:exits',
           array_field: 'exits',
           result_variable: 'result',
         },

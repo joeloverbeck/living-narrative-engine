@@ -86,7 +86,7 @@ describe('ContentDependencyValidator', () => {
         {
           id: 'def:exists',
           components: {
-            'movement:exits': [
+            'locations:exits': [
               null, // Null exit
               {}, // Exit with no target or blocker
               { target: null }, // Null target
@@ -159,7 +159,7 @@ describe('ContentDependencyValidator', () => {
       getAllEntityDefinitions: jest.fn().mockReturnValue([
         {
           id: 'def:exists',
-          components: { 'movement:exits': [{ target: 'target1' }] },
+          components: { 'locations:exits': [{ target: 'target1' }] },
         },
         {
           id: 'def:target',
@@ -195,7 +195,7 @@ describe('ContentDependencyValidator', () => {
         },
         {
           id: 'def:not_spawned',
-          components: { 'movement:exits': [{ target: 'target1' }] },
+          components: { 'locations:exits': [{ target: 'target1' }] },
         },
         {
           id: 'def:target',
@@ -232,7 +232,7 @@ describe('ContentDependencyValidator', () => {
       getAllEntityDefinitions: jest.fn().mockReturnValue([
         {
           id: 'def:exists',
-          components: { 'movement:exits': [{ target: 'missing_target' }] },
+          components: { 'locations:exits': [{ target: 'missing_target' }] },
         },
       ]),
       getWorld: jest
@@ -259,7 +259,7 @@ describe('ContentDependencyValidator', () => {
       getAllEntityDefinitions: jest.fn().mockReturnValue([
         {
           id: 'def:exists',
-          components: { 'movement:exits': [{ blocker: 'missing_blocker' }] },
+          components: { 'locations:exits': [{ blocker: 'missing_blocker' }] },
         },
       ]),
       getWorld: jest
@@ -287,7 +287,7 @@ describe('ContentDependencyValidator', () => {
       getAllEntityDefinitions: jest.fn().mockReturnValue([
         {
           id: 'def:exists',
-          components: { 'movement:exits': [{ blocker: 'blocker1' }] },
+          components: { 'locations:exits': [{ blocker: 'blocker1' }] },
         },
       ]),
       getWorld: jest
@@ -317,7 +317,7 @@ describe('ContentDependencyValidator', () => {
         {
           id: 'def:room',
           components: {
-            'movement:exits': [
+            'locations:exits': [
               { target: 'room2' }, // Valid: exists and spawned
               { target: 'missing_room' }, // Invalid: no instance data
               { blocker: 'door1' }, // Valid: exists and spawned

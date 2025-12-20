@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "breaching:allows_abrasive_sawing",
+  "description": "Marker component indicating an entity supports abrasive sawing.",
+  "dataSchema": {
+    "type": "object",
+    "description": "This is a marker component and holds no specific data. Its presence indicates abrasive sawing is allowed.",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

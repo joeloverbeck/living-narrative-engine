@@ -10,6 +10,7 @@
   "content": {
     "components": [
       "description_in_darkness.component.json",
+      "exits.component.json",
       "naturally_dark.component.json",
       "sensorial_links.component.json"
     ],

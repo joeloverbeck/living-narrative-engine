@@ -178,7 +178,7 @@ describe('Complex Filter Expressions E2E', () => {
       },
       {
         id: 'test:complex_step_filter',
-        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target[{"condition_ref": "test:level-above-threshold"}]',
+        expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target[{"condition_ref": "test:level-above-threshold"}]',
         description: 'Complex step navigation with multiple filters',
       },
     ]);
@@ -280,7 +280,7 @@ describe('Complex Filter Expressions E2E', () => {
       description: 'Test location for complex filtering',
       components: {
         'core:position': { x: 0, y: 0 },
-        'movement:exits': [
+        'locations:exits': [
           { direction: 'north', target: 'north-location', blocked: false },
           { direction: 'south', target: 'south-location', blocked: true },
         ],

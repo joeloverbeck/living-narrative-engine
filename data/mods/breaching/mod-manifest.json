@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "breaching",
+  "version": "1.0.0",
+  "name": "Breaching",
+  "description": "Tools and components for breaching.",
+  "dependencies": [
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "allows_abrasive_sawing.component.json"
+    ],
+    "entities": {
+      "definitions": [
+        "hacksaw.entity.json"
+      ],
+      "instances": []
+    },
+    "scopes": []
+  }
+}

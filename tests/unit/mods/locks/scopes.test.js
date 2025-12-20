@@ -157,7 +157,7 @@ describe('Locks scopes', () => {
     const location = {
       id: 'room1',
       components: {
-        'movement:exits': [
+        'locations:exits': [
           {
             direction: 'north',
             target: 'room2',

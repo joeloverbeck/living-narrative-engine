@@ -12,7 +12,7 @@
       "imagePath": "portraits/perimeter_of_rip_in_reality.png",
       "altText": "Perimeter of rip in reality."
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "through the dimensional rift",
         "target": "patrol:eldritch_dimension_instance",

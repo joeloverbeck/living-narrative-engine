@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:progress_tracker",
+  "description": "Tracks incremental progress toward completing a multi-step task. Value starts at 0 and increases as progress is made.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Current progress value. No upper bound - threshold for completion varies by use case."
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}

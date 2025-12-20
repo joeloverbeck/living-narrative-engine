@@ -12,7 +12,7 @@
             "imagePath": "portraits/outer_service_yard.png",
             "altText": "Eira Quenreach's estate's outer service yard"
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "into the mansion",
                 "target": "dredgers:canal_vestibule_instance",

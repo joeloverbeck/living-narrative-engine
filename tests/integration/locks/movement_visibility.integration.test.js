@@ -77,7 +77,7 @@ function buildEntityManager({ isLocked, hasOpenable }) {
     id: 'room1',
     components: {
       'core:location': {},
-      'movement:exits': [
+      'locations:exits': [
         { direction: 'north', target: 'room2', blocker: blocker.id },
       ],
     },

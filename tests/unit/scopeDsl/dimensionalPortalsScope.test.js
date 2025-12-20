@@ -16,7 +16,7 @@ describe('movement:dimensional_portals Scope', () => {
 
       expect(scopeContent).toBeDefined();
       expect(scopeContent).toContain('movement:dimensional_portals');
-      expect(scopeContent).toContain('location.movement:exits');
+      expect(scopeContent).toContain('location.locations:exits');
     });
 
     it('should filter exits by blocker presence', async () => {

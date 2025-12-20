@@ -40,7 +40,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 1' },
             'core:description': { description: 'First test room' },
             'core:position': { x: 0, y: 0, z: 0 },
-            'movement:exits': {
+            'locations:exits': {
               north: { target: 'test-location-2', blocked: false },
               south: { target: null, blocked: false },
               east: { target: null, blocked: false },
@@ -56,7 +56,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 2' },
             'core:description': { description: 'Second test room' },
             'core:position': { x: 1, y: 0, z: 0 },
-            'movement:exits': {
+            'locations:exits': {
               north: { target: null, blocked: false },
               south: { target: 'test-location-1', blocked: false },
               east: { target: 'test-location-3', blocked: false },
@@ -72,7 +72,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 3' },
             'core:description': { description: 'Third test room' },
             'core:position': { x: 2, y: 0, z: 0 },
-            'movement:exits': {
+            'locations:exits': {
               north: { target: null, blocked: false },
               south: { target: null, blocked: false },
               east: { target: null, blocked: false },
@@ -387,7 +387,7 @@ export class ActionTestUtilities {
     const baseScopes = [
       {
         id: 'movement:clear_directions',
-        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
+        expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
         description:
           'Available exits from current location that are not blocked',
       },

@@ -186,7 +186,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
 
     it('should handle missing entity gracefully when used in scope filter', () => {
       // This simulates the scope evaluation:
-      // movement:dimensional_portals := location.movement:exits[
+      // movement:dimensional_portals := location.locations:exits[
       //   { "and": [
       //     { "var": "entity.blocker" },
       //     { "condition_ref": "patrol:blocker-is-dimensional-portal" }

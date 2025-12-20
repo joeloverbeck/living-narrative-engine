@@ -642,7 +642,7 @@ export class FullTurnExecutionTestBed {
             text: 'A cozy tavern with worn wooden tables and a roaring fireplace.',
           },
           'core:position': { x: 0, y: 0, z: 0 },
-          'movement:exits': {
+          'locations:exits': {
             north: { target: 'test-market', blocked: false },
             south: { target: null, blocked: false },
             east: { target: 'test-alley', blocked: false },
@@ -660,7 +660,7 @@ export class FullTurnExecutionTestBed {
             text: 'A bustling marketplace filled with vendors and shoppers.',
           },
           'core:position': { x: 0, y: 1, z: 0 },
-          'movement:exits': {
+          'locations:exits': {
             north: { target: null, blocked: false },
             south: { target: 'test-tavern', blocked: false },
             east: { target: null, blocked: false },
@@ -679,7 +679,7 @@ export class FullTurnExecutionTestBed {
             text: 'A narrow alley between buildings, dimly lit and mysterious.',
           },
           'core:position': { x: 1, y: 0, z: 0 },
-          'movement:exits': {
+          'locations:exits': {
             north: { target: null, blocked: false },
             south: { target: null, blocked: false },
             east: { target: null, blocked: false },
@@ -866,7 +866,7 @@ export class FullTurnExecutionTestBed {
       '../../../../src/scopeDsl/scopeDefinitionParser.js'
     );
 
-    const scopeContent = `movement:clear_directions := location.movement:exits[
+    const scopeContent = `movement:clear_directions := location.locations:exits[
         { "condition_ref": "movement:exit-is-unblocked" }
     ].target`;
 

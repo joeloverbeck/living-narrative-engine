@@ -12,10 +12,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "movement",
-      "version": "^1.0.0"
-    },
-    {
       "id": "containers-core",
       "version": "^1.0.0"
     },
@@ -70,6 +66,10 @@
     {
       "id": "writing",
       "version": "^1.0.0"
+    },
+    {
+      "id": "breaching",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -92,7 +92,6 @@
         "eira_quenreach.character.json",
         "flooded_approach.location.json",
         "grit_wheathook.character.json",
-        "hacksaw.entity.json",
         "hand_dredge_scoop.entity.json",
         "hobb_rusk.character.json",
         "jorren_weir.character.json",
