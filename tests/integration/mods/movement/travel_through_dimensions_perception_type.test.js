@@ -51,7 +51,7 @@ function createDimensionalScenario() {
   const perimeter = new ModEntityBuilder(perimeterId)
     .withName('perimeter of rip in reality')
     .withComponent('core:location', {})
-    .withComponent('movement:exits', [
+    .withComponent('locations:exits', [
       {
         direction: 'through the dimensional rift',
         target: dimensionId,

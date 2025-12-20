@@ -12,7 +12,7 @@
             "imagePath": "portraits/flooded_approach.png",
             "altText": "A wading route through two feet of contaminated water over broken rubble"
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "to segment C",
                 "target": "dredgers:segment_c_instance",

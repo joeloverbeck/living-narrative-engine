@@ -12,7 +12,7 @@
             "imagePath": "portraits/segment_c.png",
             "altText": "An unstable segment of the run."
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "to segment B",
                 "target": "dredgers:segment_b_instance",

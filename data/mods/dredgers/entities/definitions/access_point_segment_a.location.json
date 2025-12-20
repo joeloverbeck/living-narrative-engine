@@ -12,7 +12,7 @@
             "imagePath": "portraits/access_point_segment_a.png",
             "altText": "A choke-throat opening where \"estate tunnels\" stop and the canal-run begins."
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "to the construction zone",
                 "target": "dredgers:construction_zone_instance",

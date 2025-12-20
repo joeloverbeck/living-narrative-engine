@@ -528,14 +528,21 @@ export function createEvaluationContext(
 
   // Enhanced debug logging for scope resolution issues
 
+  // Ensure components is always a plain object to keep JSON Logic contracts stable.
+  const components =
+    entity?.components && typeof entity.components === 'object'
+      ? entity.components
+      : {};
+
   // Create flattened context for easier JSON Logic access
-  // This allows queries like {"var": "components.core:tags.tags"} to work directly
+  // This allows queries like {"var": "core:tags.tags"} to work directly
   const flattenedContext = {
     entity,
     actor,
     location,
+    components,
     // Flatten entity components to root level for easier access
-    ...(entity?.components && { components: entity.components }),
+    ...components,
     // Also provide direct access to entity properties
     id: entity?.id,
     // Include trace context so operators can capture evaluation data

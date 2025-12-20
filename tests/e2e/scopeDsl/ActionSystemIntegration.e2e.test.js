@@ -208,7 +208,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       [
         {
           id: 'test:available_exits',
-          expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
+          expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
           description: 'Available exits from current location',
         },
         {

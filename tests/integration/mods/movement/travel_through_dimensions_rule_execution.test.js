@@ -141,7 +141,7 @@ async function createDimensionalScenario(fixture, options = {}) {
     components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
-  await fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -202,7 +202,7 @@ async function createBidirectionalScenario(fixture) {
   });
 
   // Perimeter exit to dimension
-  await fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -211,7 +211,7 @@ async function createBidirectionalScenario(fixture) {
   ]);
 
   // Dimension exit back to perimeter
-  await fixture.modifyComponent(dimensionId, 'movement:exits', [
+  await fixture.modifyComponent(dimensionId, 'locations:exits', [
     {
       direction: 'through the dimensional tear back to reality',
       target: perimeterId,

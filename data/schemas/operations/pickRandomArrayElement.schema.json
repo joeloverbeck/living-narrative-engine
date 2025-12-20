@@ -19,11 +19,11 @@
               "oneOf": [{ "type": "string" }, { "type": "object" }]
             },
             "component_type": {
-              "description": "The component type ID containing the array (e.g., 'movement:exits')",
+              "description": "The component type ID containing the array (e.g., 'locations:exits')",
               "type": "string"
             },
             "array_field": {
-              "description": "Optional property path to the array within the component. If omitted, assumes the component data itself is the array or has an 'exits' field for movement:exits.",
+              "description": "Optional property path to the array within the component. If omitted, assumes the component data itself is the array or has an 'exits' field for locations:exits.",
               "type": "string"
             },
             "result_variable": {

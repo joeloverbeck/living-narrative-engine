@@ -79,7 +79,7 @@
               "entity_ref": {
                 "entityId": "{context.actorPosition.locationId}"
               },
-              "component_type": "movement:exits",
+              "component_type": "locations:exits",
                             "result_variable": "selectedExit"
             }
           },
@@ -238,7 +238,7 @@
               "entity_ref": {
                 "entityId": "{context.actorPosition.locationId}"
               },
-              "component_type": "movement:exits",
+              "component_type": "locations:exits",
                             "result_variable": "selectedExit"
             }
           },

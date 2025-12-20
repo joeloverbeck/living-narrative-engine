@@ -120,7 +120,7 @@ class ContentDependencyValidator extends IContentDependencyValidator {
         continue; // Skip validation for definitions not in current world
       }
 
-      const exits = def?.components?.['movement:exits'];
+      const exits = def?.components?.['locations:exits'];
       if (Array.isArray(exits)) {
         for (const exit of exits) {
           const { target, blocker } = exit || {};

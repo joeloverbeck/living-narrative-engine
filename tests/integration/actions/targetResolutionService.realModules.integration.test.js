@@ -44,9 +44,9 @@ async function buildRealService() {
   const scopeDefinitions = {
     'movement:clear_directions': {
       id: 'movement:clear_directions',
-      expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
+      expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
       ast: services.dslParser.parse(
-        'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target'
+        'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target'
       ),
       description: 'Available exits from current location that are not blocked',
     },

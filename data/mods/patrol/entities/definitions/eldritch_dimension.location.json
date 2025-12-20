@@ -12,7 +12,7 @@
       "imagePath": "portraits/eldritch_dimension.png",
       "altText": "Eldritch dimension."
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "through the dimensional tear back to reality",
         "target": "patrol:perimeter_of_rip_in_reality_instance",

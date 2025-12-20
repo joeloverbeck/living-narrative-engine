@@ -163,7 +163,7 @@ export class LocationHasExitsOperator {
 
     if (!exitsComponent) {
       this.#logger.debug(
-        `${this.#operatorName}: Location ${locationId} has no movement:exits component`
+        `${this.#operatorName}: Location ${locationId} has no locations:exits component`
       );
       return false;
     }

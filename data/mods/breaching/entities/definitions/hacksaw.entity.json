@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "dredgers:hacksaw",
+  "id": "breaching:hacksaw",
   "description": "A fine-tooth hacksaw for controlled cuts where bolt cutters cannot reach",
   "components": {
     "core:name": {
@@ -23,6 +23,7 @@
     },
     "descriptors:texture": {
       "texture": "worn"
-    }
+    },
+    "breaching:allows_abrasive_sawing": {}
   }
 }

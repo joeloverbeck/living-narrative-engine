@@ -2,7 +2,7 @@
 
 ## Background
 
-- `data/mods/patrol/entities/definitions/perimeter_of_rip_in_reality.location.json` and `.../eldritch_dimension.location.json` demonstrate how `movement:exits` specify `direction`, `target`, and a `blocker` entity ID. Blocking currently works as an all-or-nothing flag: any exit that names a blocker disappears from `movement:clear_directions` because its filter (`data/mods/movement/scopes/clear_directions.scope`) only passes exits where `movement:exit-is-unblocked` resolves truthy.
+- `data/mods/patrol/entities/definitions/perimeter_of_rip_in_reality.location.json` and `.../eldritch_dimension.location.json` demonstrate how `locations:exits` specify `direction`, `target`, and a `blocker` entity ID. Blocking currently works as an all-or-nothing flag: any exit that names a blocker disappears from `movement:clear_directions` because its filter (`data/mods/movement/scopes/clear_directions.scope`) only passes exits where `movement:exit-is-unblocked` resolves truthy.
 - `data/mods/movement/conditions/exit-is-unblocked.condition.json` simply checks `!entity.blocker`, which means there is no way to have a tangible blocker entity that can be toggled from a locked to unlocked state. `go.action.json` and `teleport.action.json` both rely on `movement:clear_directions`, so their action buttons vanish entirely when a blocker exists.
 - `travel_through_dimensions.action.json` sidesteps normal exits by using `movement:dimensional_portals`, which accepts exits whose `blocker` carries `movement:is_dimensional_portal`. This pattern shows we can interrogate blocker components from scope logic.
 - Inventory-aware actions in `data/mods/items/actions/*.json` (e.g., `pick_up_item`, `open_container`) require the actor to own `items:inventory` and filter candidates using scopes like `items:actor_inventory_items.scope`. Their rules (such as `handle_open_container.rule.json`) demonstrate how to gate behavior behind a specific key item ID stored either on the container component (`containers-core:container.keyItemId`) or in the actor inventory list.
@@ -50,7 +50,7 @@ Every blocker entity that should behave as a keyed door/portal must include this
 ### Scopes
 
 1. `locks:blockers_actor_can_unlock`
-   - DSL sketch: `locks:blockers_actor_can_unlock := location.movement:exits[{ "and": [ { "var": "entity.blocker" }, { "condition_ref": "locks:blocker-is-locked" }, { "condition_ref": "locks:actor-has-key-for-blocker" } ] }].blocker`
+   - DSL sketch: `locks:blockers_actor_can_unlock := location.locations:exits[{ "and": [ { "var": "entity.blocker" }, { "condition_ref": "locks:blocker-is-locked" }, { "condition_ref": "locks:actor-has-key-for-blocker" } ] }].blocker`
    - Returns actual blocker entity IDs for exits in the actor's current location where: (a) the exit lists a blocker, (b) the blocker carries `mechanisms:openable.isLocked === true`, and (c) the actor possesses the required key.
 
 2. `locks:blockers_actor_can_lock`
@@ -129,7 +129,7 @@ Both rules should share utility macros when possible (`core:display_failed_actio
 
 ## Content Guidelines
 
-- When defining a door-like blocker entity (e.g., `data/mods/locks/entities/definitions/steel_security_door.entity.json`), include `mechanisms:openable` with a `requiredKeyId` such as `items:brass_key`. Provide one or more instances (e.g., `locks:steel_security_door.instance.json`) so locations can reference them via the `movement:exits[].blocker` field.
+- When defining a door-like blocker entity (e.g., `data/mods/locks/entities/definitions/steel_security_door.entity.json`), include `mechanisms:openable` with a `requiredKeyId` such as `items:brass_key`. Provide one or more instances (e.g., `locks:steel_security_door.instance.json`) so locations can reference them via the `locations:exits[].blocker` field.
 - If multiple exits share the same blocker, they all inherit the same state. This mirrors how `perimeter_of_rip_in_reality` references `patrol:dimensional_rift_blocker_instance` from both sides; once we add `mechanisms:openable`, locking it from one side prevents traversal from all connected locations until someone unlocks it.
 - Keys can be existing items (definitions from `data/mods/items/entities/definitions/*.json`) or new ones introduced alongside the lock. Because inventory items store their unique instance IDs in `items:inventory.items`, set `requiredKeyId` to the expected instance ID for handcrafted story locks or to a definition ID and have the rule treat definition matches as valid (document whichever path we commit to in code comments and tests).
 

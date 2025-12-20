@@ -28,7 +28,7 @@ Define the new `locations:sensorial_links` component in the locations components
 - `npm run test:unit -- tests/unit/schemas/addPerceptionLogEntry.schema.test.js`
 
 ### Invariants that must remain true
-- No changes to `movement:exits` or other navigation components for the dredgers locations.
+- No changes to `locations:exits` or other navigation components for the dredgers locations.
 - No automatic reciprocity is introduced; links remain explicit and directional.
 - Location logs in the origin location remain unmodified by data-only changes.
 - Explicit recipient lists still bypass location-wide propagation.

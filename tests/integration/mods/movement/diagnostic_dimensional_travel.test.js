@@ -59,7 +59,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
     });
 
     // Add exit with blocker
-    await fixture.modifyComponent(perimeterId, 'movement:exits', [
+    await fixture.modifyComponent(perimeterId, 'locations:exits', [
       {
         direction: 'through the rift',
         target: dimensionId,

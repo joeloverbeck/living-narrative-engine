@@ -79,7 +79,7 @@ describe('Developer Experience E2E', () => {
         components: {
           'core:name': { name: 'Test Room' },
           'core:position': { x: 0, y: 0, z: 0 },
-          'movement:exits': {
+          'locations:exits': {
             north: { target: null, blocked: false },
           },
         },
@@ -233,7 +233,7 @@ describe('Developer Experience E2E', () => {
 
         // Step navigation examples
         'actor.core:inventory',
-        'location.movement:exits',
+        'location.locations:exits',
       ];
 
       // Parse and validate each documentation example
@@ -439,7 +439,7 @@ describe('Developer Experience E2E', () => {
           category: 'navigation',
         },
         {
-          expr: 'location.movement:exits[]',
+          expr: 'location.locations:exits[]',
           description: 'Exit iteration',
           category: 'navigation',
         },
@@ -475,7 +475,7 @@ describe('Developer Experience E2E', () => {
           category: 'filter',
         },
         {
-          expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}]',
+          expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}]',
           description: 'Condition reference filter',
           category: 'filter',
         },

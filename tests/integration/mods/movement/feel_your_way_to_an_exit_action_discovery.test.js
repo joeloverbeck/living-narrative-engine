@@ -239,7 +239,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'dark_room' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [{ direction: 'north', destination: 'room2' }] };
         }
         return null;
@@ -268,7 +268,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'intersection' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return {
             exits: [
               { direction: 'north', destination: 'room2' },
@@ -303,7 +303,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'lit_room' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [{ direction: 'north', destination: 'room2' }] };
         }
         return null;
@@ -332,7 +332,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'sunny_meadow' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [{ direction: 'west', destination: 'forest' }] };
         }
         return null;
@@ -361,7 +361,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'dead_end' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [] }; // Empty exits array
         }
         return null;
@@ -389,7 +389,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'sealed_chamber' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return null; // No exits component
         }
         return null;
@@ -418,7 +418,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'dark_cave' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [{ direction: 'north', destination: 'exit' }] };
         }
         return null;
@@ -441,7 +441,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'lit_room' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [{ direction: 'south', destination: 'hallway' }] };
         }
         return null;
@@ -464,7 +464,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         if (compType === 'core:position') {
           return { locationId: 'dark_pit' };
         }
-        if (compType === 'movement:exits') {
+        if (compType === 'locations:exits') {
           return { exits: [] };
         }
         return null;

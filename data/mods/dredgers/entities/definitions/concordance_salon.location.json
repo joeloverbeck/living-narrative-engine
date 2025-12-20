@@ -12,7 +12,7 @@
             "imagePath": "portraits/concordance_salon.png",
             "altText": "Eira Quenreach's concordance salon"
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "to the vestibule",
                 "target": "dredgers:canal_vestibule_instance",

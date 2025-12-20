@@ -1,0 +1,15 @@
+// Scope: blockers:sawable_barred_blockers
+// Description: Finds barred blockers with structural resistance that haven't been significantly worked on (no progress tracker or progress at 0)
+
+blockers:sawable_barred_blockers := location.locations:exits[].blocker[{
+  "and": [
+    { "!!": { "var": "entity.components.blockers:is_barred" } },
+    { "!!": { "var": "entity.components.blockers:structural_resistance" } },
+    {
+      "or": [
+        { "not": { "var": "entity.components.core:progress_tracker" } },
+        { "==": [{ "var": "entity.components.core:progress_tracker.value" }, 0] }
+      ]
+    }
+  ]
+}]

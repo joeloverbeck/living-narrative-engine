@@ -12,7 +12,7 @@
             "imagePath": "portraits/service_stair.png",
             "altText": "A narrow, staff-only stairwell"
         },
-        "movement:exits": [
+        "locations:exits": [
             {
                 "direction": "down to the lower gallery",
                 "target": "dredgers:lower_gallery_instance",

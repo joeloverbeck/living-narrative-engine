@@ -64,7 +64,7 @@ export class ScopeTestUtilities {
       },
       {
         id: 'test:step_with_filter',
-        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
+        expr: 'location.locations:exits[{"condition_ref": "movement:exit-is-unblocked"}].target',
         description: 'Test scope combining step and filter resolution',
       },
       // Complex filter expressions for comprehensive testing

@@ -168,7 +168,7 @@ function createDimensionalLocations(fixture) {
     ],
   });
 
-  fixture.modifyComponent(perimeterId, 'movement:exits', [
+  fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -214,7 +214,7 @@ function createBidirectionalDimensionalLocations(fixture) {
   });
 
   // Exit from perimeter to dimension
-  fixture.modifyComponent(perimeterId, 'movement:exits', [
+  fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -223,7 +223,7 @@ function createBidirectionalDimensionalLocations(fixture) {
   ]);
 
   // Exit from dimension to perimeter
-  fixture.modifyComponent(dimensionId, 'movement:exits', [
+  fixture.modifyComponent(dimensionId, 'locations:exits', [
     {
       direction: 'through the dimensional tear back to reality',
       target: perimeterId,

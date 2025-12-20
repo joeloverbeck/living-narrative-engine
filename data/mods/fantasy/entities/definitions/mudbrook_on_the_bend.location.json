@@ -12,7 +12,7 @@
       "imagePath": "portraits/mudbrook.png",
       "altText": "Streets of Mudbrook-on-the-Bend"
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "to the Mudbrook Municipal Aid Registry",
         "target": "fantasy:mudbrook_municipal_aid_registry_instance",

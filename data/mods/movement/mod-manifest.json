@@ -22,6 +22,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "locations",
+      "version": "^1.0.0"
+    },
+    {
       "id": "mechanisms",
       "version": "^1.0.0"
     },
@@ -63,7 +67,6 @@
     "components": [
       "can_teleport.component.json",
       "can_travel_through_dimensions.component.json",
-      "exits.component.json",
       "movement.component.json"
     ],
     "entities": {

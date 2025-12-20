@@ -4,7 +4,16 @@
   "version": "1.0.0",
   "name": "Blockers System",
   "description": "Components for physical or environmental blockers.",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "mechanisms",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "locations",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "components": [
       "corroded.component.json",
@@ -15,6 +24,12 @@
     "conditions": [
       "blocker-is-dimensional-portal.condition.json"
     ],
-    "scopes": []
+    "scopes": [],
+    "entities": {
+      "definitions": [
+        "ancient_iron_grate.entity.json"
+      ],
+      "instances": []
+    }
   }
 }

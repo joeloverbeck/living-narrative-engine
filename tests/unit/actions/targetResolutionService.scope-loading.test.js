@@ -63,7 +63,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
     it('should find the movement:clear_directions scope when properly loaded', () => {
       // Mock a properly loaded scope
       const expr =
-        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
+        'location.locations:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
       const mockScopeDefinition = {
         name: 'movement:clear_directions',
         expr: expr,
@@ -148,7 +148,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       // Mock scope without AST (which is now required)
       const mockScopeDefinition = {
         name: 'movement:clear_directions',
-        expr: 'location.movement:exits[].target',
+        expr: 'location.locations:exits[].target',
         modId: 'core',
         source: 'file',
         // Intentionally missing ast property
@@ -174,7 +174,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(result.errors).toEqual([]);
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockDslParser.parse).toHaveBeenCalledWith(
-        'location.movement:exits[].target'
+        'location.locations:exits[].target'
       );
     });
   });
@@ -185,7 +185,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
 
       // Initialize with the expected scope definition
       const expr =
-        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
+        'location.locations:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target';
       realScopeRegistry.initialize({
         'movement:clear_directions': {
           name: 'movement:clear_directions',
@@ -200,7 +200,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(scope).toBeDefined();
       expect(scope.name).toBe('movement:clear_directions');
       expect(scope.expr).toBe(
-        'location.movement:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target'
+        'location.locations:exits[{ "condition_ref": "movement:exit-is-unblocked" }].target'
       );
     });
 

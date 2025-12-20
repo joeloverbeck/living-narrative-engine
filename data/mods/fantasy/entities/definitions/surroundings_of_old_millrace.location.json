@@ -12,7 +12,7 @@
       "imagePath": "portraits/surroundings_of_old_millrace.png",
       "altText": "Surroundings of old millrace"
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "to downtown Mudbrook-on-the-Bend",
         "target": "fantasy:mudbrook_on_the_bend_instance",

@@ -80,14 +80,14 @@ describe('ComponentLoader - metadata field validation', () => {
       // This test reproduces the exact error from the log
       const componentWithMetadata = {
         $schema: 'schema://living-narrative-engine/component.schema.json',
-        id: 'movement:exits',
+        id: 'locations:exits',
         description: 'Test component with metadata',
         dataSchema: {
           type: 'object',
           properties: {},
         },
         metadata: {
-          migratedFrom: 'movement:exits',
+          migratedFrom: 'locations:exits',
           migrationDate: '2024-09-16',
           migrationTicket: 'MOVMODMIG-004',
           version: '1.0.0',
@@ -116,7 +116,7 @@ describe('ComponentLoader - metadata field validation', () => {
       // This is the expected correct structure
       const componentWithoutMetadata = {
         $schema: 'schema://living-narrative-engine/component.schema.json',
-        id: 'movement:exits',
+        id: 'locations:exits',
         description: 'Test component without metadata',
         dataSchema: {
           type: 'array',

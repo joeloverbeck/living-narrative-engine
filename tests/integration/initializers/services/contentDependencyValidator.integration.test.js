@@ -54,7 +54,7 @@ describe('ContentDependencyValidator integration', () => {
     registry.store('entityDefinitions', 'core:room', {
       id: 'core:room',
       components: {
-        'movement:exits': [
+        'locations:exits': [
           { target: 'instance:doorA', blocker: 'instance:guardA' },
           { target: 'instance:missing', blocker: 'instance:ghost' },
           {},
@@ -74,7 +74,7 @@ describe('ContentDependencyValidator integration', () => {
     registry.store('entityDefinitions', 'core:invalidExits', {
       id: 'core:invalidExits',
       components: {
-        'movement:exits': 'not-an-array',
+        'locations:exits': 'not-an-array',
       },
     });
 
@@ -174,7 +174,7 @@ describe('ContentDependencyValidator integration', () => {
     registry.store('entityDefinitions', 'core:simple', {
       id: 'core:simple',
       components: {
-        'movement:exits': [],
+        'locations:exits': [],
       },
     });
     registry.store('entityInstances', 'instance:simple', {

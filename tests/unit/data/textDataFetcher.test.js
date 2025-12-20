@@ -56,7 +56,7 @@ describe('TextDataFetcher', () => {
 
     describe('successful fetch', () => {
       it('should return raw text content from response', async () => {
-        const mockText = 'directions := location.movement:exits[].target';
+        const mockText = 'directions := location.locations:exits[].target';
         const mockResponse = {
           ok: true,
           text: jest.fn().mockResolvedValue(mockText),
@@ -72,7 +72,7 @@ describe('TextDataFetcher', () => {
       });
 
       it('should handle multi-line scope content', async () => {
-        const mockText = `directions := location.movement:exits[].target
+        const mockText = `directions := location.locations:exits[].target
 environment := entities(core:position)[
     {"and": [ 
         {"==": [{"var": "entity.components.core:position.locationId"}, 

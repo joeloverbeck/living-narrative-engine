@@ -60,7 +60,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       // Add exit with blocker to perimeter
-      await await fixture.modifyComponent(perimeterId, 'movement:exits', [
+      await await fixture.modifyComponent(perimeterId, 'locations:exits', [
         {
           direction: 'through the dimensional rift',
           target: dimensionId,
@@ -144,7 +144,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       // Add unblocked exit
-      await fixture.modifyComponent(locationId, 'movement:exits', [
+      await fixture.modifyComponent(locationId, 'locations:exits', [
         {
           direction: 'north',
           target: targetId,
@@ -230,7 +230,7 @@ async function createDimensionalScenario(fixture) {
     components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
-  await fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'locations:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,

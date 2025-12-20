@@ -194,8 +194,8 @@ class PickRandomArrayElementHandler extends BaseOperationHandler {
     }
 
     // Smart defaults based on component type
-    // For movement:exits, the array is typically in .exits
-    if (componentType === 'movement:exits') {
+    // For locations:exits, the array is typically in .exits
+    if (componentType === 'locations:exits') {
       if (Array.isArray(componentData.exits)) {
         return componentData.exits;
       }

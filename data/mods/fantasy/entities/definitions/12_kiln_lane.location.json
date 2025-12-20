@@ -12,7 +12,7 @@
       "imagePath": "portraits/12_kiln_lane.png",
       "altText": "12 Kiln Lane, home of Aldous the potter"
     },
-    "movement:exits": [
+    "locations:exits": [
       {
         "direction": "to the surroundings of the old millrace",
         "target": "fantasy:surroundings_of_old_millrace_instance",
