@@ -19,20 +19,27 @@ const makeRoutingPolicyService = () => ({
   validateAndHandle: jest.fn().mockReturnValue(true),
 });
 
+const makeRecipientSetBuilder = () => ({
+  build: jest.fn(),
+});
+
 describe('DispatchPerceptibleEventHandler', () => {
   let logger;
   let dispatcher;
   let routingPolicyService;
+  let recipientSetBuilder;
   let handler;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
     routingPolicyService = makeRoutingPolicyService();
+    recipientSetBuilder = makeRecipientSetBuilder();
     handler = new DispatchPerceptibleEventHandler({
       dispatcher,
       logger,
       routingPolicyService,
+      recipientSetBuilder,
     });
     jest.clearAllMocks();
   });
@@ -216,6 +223,16 @@ describe('DispatchPerceptibleEventHandler', () => {
           routingPolicyService: {},
         })
     ).toThrow('IRecipientRoutingPolicyService');
+
+    expect(
+      () =>
+        new DispatchPerceptibleEventHandler({
+          dispatcher,
+          logger,
+          routingPolicyService,
+          recipientSetBuilder: {},
+        })
+    ).toThrow('IRecipientSetBuilder');
   });
 
   describe('Actor Exclusion', () => {

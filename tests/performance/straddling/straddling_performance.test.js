@@ -53,6 +53,9 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       return Promise.resolve(true);
     }),
   };
+  const recipientSetBuilder = {
+    build: jest.fn(() => new Set()),
+  };
 
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
@@ -78,6 +81,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       dispatcher: eventBus,
       logger,
       routingPolicyService: { validateAndHandle: jest.fn(() => true) },
+      recipientSetBuilder,
     }),
     END_TURN: new EndTurnHandler({
       entityManager,
@@ -191,11 +195,11 @@ describe('Straddling Waist System - Performance Tests', () => {
       createHandlers,
       rules: [straddleFacingRule, straddleFacingAwayRule, dismountRule],
       conditions: {
-        'positioning:event-is-action-straddle-waist-facing':
+        'straddling:event-is-action-straddle-waist-facing':
           straddleFacingCondition,
-        'positioning:event-is-action-straddle-waist-facing-away':
+        'straddling:event-is-action-straddle-waist-facing-away':
           straddleFacingAwayCondition,
-        'positioning:event-is-action-dismount-from-straddling':
+        'straddling:event-is-action-dismount-from-straddling':
           dismountCondition,
       },
       macros: {
@@ -273,9 +277,9 @@ describe('Straddling Waist System - Performance Tests', () => {
           createHandlers,
           rules: [straddleFacingRule, straddleFacingAwayRule],
           conditions: {
-            'positioning:event-is-action-straddle-waist-facing':
+            'straddling:event-is-action-straddle-waist-facing':
               straddleFacingCondition,
-            'positioning:event-is-action-straddle-waist-facing-away':
+            'straddling:event-is-action-straddle-waist-facing-away':
               straddleFacingAwayCondition,
           },
           macros: {

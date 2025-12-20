@@ -89,6 +89,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       return Promise.resolve(true);
     }),
   };
+  const recipientSetBuilder = { build: jest.fn() };
 
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
@@ -114,6 +115,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       routingPolicyService: {
         validateAndHandle: jest.fn().mockReturnValue(true),
       },
+      recipientSetBuilder,
     }),
     END_TURN: new EndTurnHandler({
       logger,

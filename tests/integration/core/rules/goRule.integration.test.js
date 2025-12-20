@@ -67,6 +67,8 @@ describe('core_handle_go rule integration', () => {
     logger,
     safeEventDispatcher
   ) {
+    const recipientSetBuilder = { build: jest.fn() };
+
     return {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
@@ -91,6 +93,7 @@ describe('core_handle_go rule integration', () => {
         routingPolicyService: {
           validateAndHandle: jest.fn().mockReturnValue(true),
         },
+        recipientSetBuilder,
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,

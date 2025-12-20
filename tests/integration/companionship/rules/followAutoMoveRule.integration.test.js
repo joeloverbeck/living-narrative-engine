@@ -57,6 +57,8 @@ function createHandlers(
   validatedEventDispatcher,
   safeEventDispatcher
 ) {
+  const recipientSetBuilder = { build: jest.fn() };
+
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -75,6 +77,7 @@ function createHandlers(
       routingPolicyService: {
         validateAndHandle: jest.fn().mockReturnValue(true),
       },
+      recipientSetBuilder,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({

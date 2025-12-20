@@ -58,6 +58,23 @@ describe('Go Action - Perception Routing', () => {
     logger,
     safeEventDispatcher
   ) {
+    const recipientSetBuilder = {
+      build: jest.fn(({ locationId, explicitRecipients, excludedActors }) => {
+        if (explicitRecipients && explicitRecipients.length > 0) {
+          return { entityIds: new Set(explicitRecipients), mode: 'explicit' };
+        }
+        // SimpleEntityManager has getEntitiesInLocation
+        const all = entityManager.getEntitiesInLocation(locationId);
+        if (excludedActors && excludedActors.length > 0) {
+          const filtered = new Set(
+            [...all].filter((id) => !excludedActors.includes(id))
+          );
+          return { entityIds: filtered, mode: 'exclusion' };
+        }
+        return { entityIds: all, mode: 'broadcast' };
+      }),
+    };
+
     return {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
@@ -82,6 +99,7 @@ describe('Go Action - Perception Routing', () => {
         routingPolicyService: {
           validateAndHandle: jest.fn().mockReturnValue(true),
         },
+        recipientSetBuilder,
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
@@ -98,6 +116,7 @@ describe('Go Action - Perception Routing', () => {
         routingPolicyService: {
           validateAndHandle: jest.fn().mockReturnValue(true),
         },
+        recipientSetBuilder,
       }),
       IF: {
         execute: jest.fn().mockResolvedValue(undefined),

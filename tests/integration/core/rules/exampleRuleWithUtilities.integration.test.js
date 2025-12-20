@@ -142,6 +142,9 @@ describe('Example Rule Test with Utilities', () => {
         routingPolicyService: {
           validateAndHandle: jest.fn().mockReturnValue(true),
         },
+        recipientSetBuilder: {
+          build: jest.fn(),
+        },
       }),
       // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
       REGENERATE_DESCRIPTION: {

@@ -296,6 +296,10 @@ beforeAll(async () => {
           property: 'routingPolicyService',
           token: tokens.IRecipientRoutingPolicyService,
         },
+        {
+          property: 'recipientSetBuilder',
+          token: tokens.IRecipientSetBuilder,
+        },
       ],
     },
     {
@@ -536,6 +540,10 @@ beforeAll(async () => {
         {
           property: 'routingPolicyService',
           token: tokens.IRecipientRoutingPolicyService,
+        },
+        {
+          property: 'recipientSetBuilder',
+          token: tokens.IRecipientSetBuilder,
         },
       ],
     },

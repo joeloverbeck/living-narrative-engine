@@ -83,6 +83,11 @@ describe('interpreterRegistrations', () => {
         mockRecipientRoutingPolicyService
       );
 
+      const mockRecipientSetBuilder = {
+        build: jest.fn(),
+      };
+      registrar.instance(tokens.IRecipientSetBuilder, mockRecipientSetBuilder);
+
       // Act
       // Run the actual registration function
       registerInterpreters(container);

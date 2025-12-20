@@ -68,6 +68,8 @@ const createHandlers = (
   validatedEventDispatcher,
   safeEventDispatcher
 ) => {
+  const recipientSetBuilder = { build: jest.fn() };
+
   return {
     BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
       entityManager,
@@ -101,6 +103,7 @@ const createHandlers = (
       routingPolicyService: {
         validateAndHandle: jest.fn().mockReturnValue(true),
       },
+      recipientSetBuilder,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({
       dispatcher: eventBus,

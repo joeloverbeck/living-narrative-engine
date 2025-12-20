@@ -59,6 +59,16 @@ function createHandlers(
     validateAndHandle: jest.fn().mockReturnValue(true),
   };
 
+  // Create mock recipient set builder
+  const recipientSetBuilder = {
+    build: jest.fn(({ locationId }) => ({
+      entityIds: entityManager.getEntitiesInLocation
+        ? entityManager.getEntitiesInLocation(locationId)
+        : new Set(),
+      mode: 'broadcast',
+    })),
+  };
+
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -75,6 +85,7 @@ function createHandlers(
       dispatcher: eventBus,
       logger,
       routingPolicyService,
+      recipientSetBuilder,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
