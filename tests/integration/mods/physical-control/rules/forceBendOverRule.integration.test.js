@@ -61,6 +61,11 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
     }),
   };
 
+  // Create mock recipient set builder
+  const recipientSetBuilder = {
+    build: jest.fn(),
+  };
+
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -80,6 +85,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       routingPolicyService: {
         validateAndHandle: jest.fn().mockReturnValue(true),
       },
+      recipientSetBuilder,
     }),
     END_TURN: new EndTurnHandler({
       safeEventDispatcher: safeDispatcher,

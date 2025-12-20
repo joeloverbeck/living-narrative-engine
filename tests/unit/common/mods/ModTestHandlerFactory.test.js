@@ -32,6 +32,7 @@ describe('ModTestHandlerFactory', () => {
       createEntity: jest.fn(),
       deleteEntity: jest.fn(),
       getEntityIds: jest.fn(() => []), // Added for createHandlersWithPerceptionLogging
+      getEntitiesInLocation: jest.fn(() => new Set()),
     };
 
     mockEventBus = {

@@ -22,6 +22,7 @@
 
 // --- Type Imports -----------------------------------------------------------
 /** @typedef {import('../../perception/services/recipientRoutingPolicyService.js').default} RecipientRoutingPolicyService */
+/** @typedef {import('../../perception/services/recipientSetBuilder.js').default} RecipientSetBuilder */
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
@@ -30,6 +31,7 @@ import {
   normalizeEntityIds,
 } from '../../utils/handlerUtils/perceptionParamsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import RecipientSetBuilder from '../../perception/services/recipientSetBuilder.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
@@ -53,6 +55,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
   /** @type {import('../../perception/services/perceptionFilterService.js').default|null} */ #perceptionFilterService;
   /** @type {RecipientRoutingPolicyService} */ #routingPolicyService;
+  /** @type {RecipientSetBuilder} */ #recipientSetBuilder;
 
   constructor({
     logger,
@@ -60,6 +63,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     safeEventDispatcher,
     perceptionFilterService,
     routingPolicyService,
+    recipientSetBuilder,
   }) {
     super('AddPerceptionLogEntryHandler', {
       logger: { value: logger },
@@ -85,11 +89,26 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       { requiredMethods: ['validateAndHandle'] }
     );
 
+    const resolvedRecipientSetBuilder =
+      recipientSetBuilder ??
+      new RecipientSetBuilder({
+        entityManager,
+        logger,
+      });
+
+    validateDependency(
+      resolvedRecipientSetBuilder,
+      'IRecipientSetBuilder',
+      logger,
+      { requiredMethods: ['build'] }
+    );
+
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     // perceptionFilterService is optional for backward compatibility
     this.#perceptionFilterService = perceptionFilterService ?? null;
     this.#routingPolicyService = routingPolicyService;
+    this.#recipientSetBuilder = resolvedRecipientSetBuilder;
   }
 
   /**
@@ -171,10 +190,6 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     } = validated;
 
     /* ── perceive who? ──────────────────────────────────────────── */
-    // Recipients and exclusions are already normalized in #validateParams
-    const usingExplicitRecipients = recipients.length > 0;
-    const usingExclusions = excludedActors.length > 0;
-
     // Validate mutual exclusivity using unified routing policy service (error mode - abort on conflict)
     if (
       !this.#routingPolicyService.validateAndHandle(
@@ -186,27 +201,14 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       return;
     }
 
-    // Determine final recipient set
-    let entityIds;
-    if (usingExplicitRecipients) {
-      // Explicit recipients (existing behavior)
-      entityIds = new Set(recipients);
-    } else {
-      // All actors in location (existing or new exclusion behavior)
-      const allInLocation =
-        this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+    const { entityIds, mode } = this.#recipientSetBuilder.build({
+      locationId,
+      explicitRecipients: recipients,
+      excludedActors,
+    });
 
-      if (usingExclusions) {
-        // Remove excluded actors
-        const exclusionSet = new Set(excludedActors);
-        entityIds = new Set(
-          [...allInLocation].filter((id) => !exclusionSet.has(id))
-        );
-      } else {
-        // Default: all actors in location
-        entityIds = allInLocation;
-      }
-    }
+    const usingExplicitRecipients = mode === 'explicit';
+    const usingExclusions = mode === 'exclusion';
 
     /* ── sense-aware filtering ────────────────────────────────────── */
     // Extract sense_aware, alternate_descriptions, and routing parameters from params
@@ -588,16 +590,15 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
         exclusionSet.add(originating_actor_id);
       }
 
+      const linkedExclusions = [...exclusionSet];
+
       for (const linkedLocationId of linkedLocationIds) {
-        const linkedEntities =
-          this.#entityManager.getEntitiesInLocation(linkedLocationId) ??
-          new Set();
-        const linkedEntityIds =
-          exclusionSet.size > 0
-            ? new Set(
-                [...linkedEntities].filter((id) => !exclusionSet.has(id))
-              )
-            : linkedEntities;
+        const { entityIds: linkedEntityIds, mode: linkedMode } =
+          this.#recipientSetBuilder.build({
+            locationId: linkedLocationId,
+            explicitRecipients: [],
+            excludedActors: linkedExclusions,
+          });
 
         await writeEntriesForRecipients({
           locationId: linkedLocationId,
@@ -608,7 +609,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           targetDescription: prefixedTargetDescription,
           targetId: target_id,
           usingExplicitRecipients: false,
-          usingExclusions: exclusionSet.size > 0,
+          usingExclusions: linkedMode === 'exclusion',
           logLabel: `${linkedLocationId} (sensorial link)`,
         });
       }

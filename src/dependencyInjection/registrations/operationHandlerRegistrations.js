@@ -132,6 +132,7 @@ export function registerOperationHandlers(registrar) {
           dispatcher: c.resolve(tokens.ISafeEventDispatcher),
           logger: c.resolve(tokens.ILogger),
           routingPolicyService: c.resolve(tokens.IRecipientRoutingPolicyService),
+          recipientSetBuilder: c.resolve(tokens.IRecipientSetBuilder),
         }),
     ],
     [
@@ -405,6 +406,7 @@ export function registerOperationHandlers(registrar) {
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           perceptionFilterService: c.resolve(tokens.IPerceptionFilterService),
           routingPolicyService: c.resolve(tokens.IRecipientRoutingPolicyService),
+          recipientSetBuilder: c.resolve(tokens.IRecipientSetBuilder),
         }),
     ],
     [

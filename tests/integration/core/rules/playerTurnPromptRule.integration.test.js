@@ -31,6 +31,11 @@ function createHandlers(entityManager, eventBus, logger) {
     validateAndHandle: jest.fn().mockReturnValue(true),
   };
 
+  // Create mock recipient set builder
+  const recipientSetBuilder = {
+    build: jest.fn(),
+  };
+
   return {
     GET_NAME: new GetNameHandler({
       entityManager,
@@ -42,6 +47,7 @@ function createHandlers(entityManager, eventBus, logger) {
       dispatcher: eventBus,
       logger,
       routingPolicyService,
+      recipientSetBuilder,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
   };

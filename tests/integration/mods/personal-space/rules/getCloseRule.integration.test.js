@@ -52,6 +52,7 @@ function createHandlers(
   safeEventDispatcher
 ) {
   const closenessCircleService = { merge };
+  const recipientSetBuilder = { build: jest.fn() };
 
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
@@ -72,6 +73,7 @@ function createHandlers(
       routingPolicyService: {
         validateAndHandle: jest.fn().mockReturnValue(true),
       },
+      recipientSetBuilder,
     }),
     GET_NAME: new GetNameHandler({
       entityManager,

@@ -62,6 +62,7 @@ export function createTestBed() {
         createEntityInstance: jest.fn(),
         // Core entity operations frequently validated by handlers
         getComponentData: jest.fn(),
+        getEntitiesInLocation: jest.fn(() => new Set()),
         addComponent: jest.fn(),
         hasComponent: jest.fn().mockReturnValue(true),
         enableBatchOperations: jest.fn().mockReturnValue(enableBatchOperations),

@@ -39,6 +39,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       dispatcher,
       logger,
       routingPolicyService,
+      recipientSetBuilder: { build: jest.fn() },
     });
 
     jest.clearAllMocks();

@@ -13,6 +13,8 @@ import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandler
 import { ENTITY_SPOKE_ID } from '../../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
+import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
 import accessPointDefinition from '../../../../data/mods/dredgers/entities/definitions/access_point_segment_a.location.json';
 import segmentBDefinition from '../../../../data/mods/dredgers/entities/definitions/segment_b.location.json';
 import accessPointInstance from '../../../../data/mods/dredgers/entities/instances/access_point_segment_a.location.json';
@@ -48,10 +50,15 @@ function createHandlers(entityManager, eventBus, logger) {
     dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
-  // Create mock routing policy service for recipient/exclusion validation
-  const routingPolicyService = {
-    validateAndHandle: jest.fn().mockReturnValue(true),
-  };
+  const routingPolicyService = new RecipientRoutingPolicyService({
+    dispatcher: safeDispatcher,
+    logger,
+  });
+
+  const recipientSetBuilder = new RecipientSetBuilder({
+    entityManager,
+    logger,
+  });
 
   return {
     QUERY_COMPONENTS: new QueryComponentsHandler({
@@ -64,6 +71,7 @@ function createHandlers(entityManager, eventBus, logger) {
       dispatcher: eventBus,
       logger,
       routingPolicyService,
+      recipientSetBuilder,
     }),
     DISPATCH_SPEECH: new DispatchSpeechHandler({
       dispatcher: eventBus,
@@ -74,6 +82,7 @@ function createHandlers(entityManager, eventBus, logger) {
       logger,
       safeEventDispatcher: safeDispatcher,
       routingPolicyService,
+      recipientSetBuilder,
     }),
   };
 }

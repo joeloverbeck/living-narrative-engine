@@ -37,6 +37,7 @@ import PlaytimeTracker from '../../engine/playtimeTracker.js';
 import SensoryCapabilityService from '../../perception/services/sensoryCapabilityService.js';
 import PerceptionFilterService from '../../perception/services/perceptionFilterService.js';
 import RecipientRoutingPolicyService from '../../perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../perception/services/recipientSetBuilder.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -583,6 +584,18 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   safeDebug(`Registered ${String(tokens.IRecipientRoutingPolicyService)}.`);
+
+  // RecipientSetBuilder - recipient set construction for perception events
+  container.register(
+    tokens.IRecipientSetBuilder,
+    (c) =>
+      new RecipientSetBuilder({
+        entityManager: c.resolve(tokens.IEntityManager),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IRecipientSetBuilder)}.`);
 
   // ─── Storage and Playtime (migrated from persistenceRegistrations) ─────────────────────────────
   registrar.single(tokens.IStorageProvider, BrowserStorageProvider, [

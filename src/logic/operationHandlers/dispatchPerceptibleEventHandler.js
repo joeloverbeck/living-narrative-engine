@@ -69,14 +69,17 @@ class DispatchPerceptibleEventHandler {
   #logger;
   /** @type {RecipientRoutingPolicyService} */
   #routingPolicyService;
+  /** @type {import('../../perception/services/recipientSetBuilder.js').default} */
+  #recipientSetBuilder;
 
   /**
    * @param {object} deps
    * @param {ISafeEventDispatcher} deps.dispatcher - Dispatcher used to emit events.
    * @param {ILogger} deps.logger - Logger instance.
    * @param {RecipientRoutingPolicyService} deps.routingPolicyService - Unified routing policy service.
+   * @param {import('../../perception/services/recipientSetBuilder.js').default} deps.recipientSetBuilder - Service to build recipient sets.
    */
-  constructor({ dispatcher, logger, routingPolicyService }) {
+  constructor({ dispatcher, logger, routingPolicyService, recipientSetBuilder }) {
     if (!dispatcher?.dispatch) {
       throw new Error(
         'DispatchPerceptibleEventHandler requires ISafeEventDispatcher'
@@ -93,9 +96,17 @@ class DispatchPerceptibleEventHandler {
       { requiredMethods: ['validateAndHandle'] }
     );
 
+    validateDependency(
+      recipientSetBuilder,
+      'IRecipientSetBuilder',
+      logger,
+      { requiredMethods: ['build'] }
+    );
+
     this.#dispatcher = dispatcher;
     this.#logger = logger;
     this.#routingPolicyService = routingPolicyService;
+    this.#recipientSetBuilder = recipientSetBuilder;
   }
 
   /**

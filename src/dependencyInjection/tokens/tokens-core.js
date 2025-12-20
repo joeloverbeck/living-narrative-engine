@@ -392,6 +392,7 @@ export const coreTokens = freeze({
   ISensoryCapabilityService: 'ISensoryCapabilityService',
   IPerceptionFilterService: 'IPerceptionFilterService',
   IRecipientRoutingPolicyService: 'IRecipientRoutingPolicyService',
+  IRecipientSetBuilder: 'IRecipientSetBuilder',
   // GOAP Debug Tools (GOAPIMPL-025-06)
   IPlanInspector: 'IPlanInspector',
   IStateDiffViewer: 'IStateDiffViewer',
