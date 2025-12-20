@@ -88,11 +88,9 @@ describe('core_handle_go rule integration', () => {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: eventBus,
         logger,
-        addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
-          entityManager,
-          logger,
-          safeEventDispatcher: safeEventDispatcher,
-        }),
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,

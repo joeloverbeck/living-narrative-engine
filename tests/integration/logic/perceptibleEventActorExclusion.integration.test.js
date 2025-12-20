@@ -4,6 +4,7 @@
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
+import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
@@ -19,10 +20,17 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
   let logger;
   let dispatcher;
   let dispatchHandler;
+  let routingPolicyService;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
+
+    // Create real routing policy service to test mutual exclusivity behavior
+    routingPolicyService = new RecipientRoutingPolicyService({
+      dispatcher,
+      logger,
+    });
 
     // Current architecture: DispatchPerceptibleEventHandler only dispatches events.
     // Log entry creation is handled by log_perceptible_events.rule.json which
@@ -30,6 +38,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     dispatchHandler = new DispatchPerceptibleEventHandler({
       dispatcher,
       logger,
+      routingPolicyService,
     });
 
     jest.clearAllMocks();

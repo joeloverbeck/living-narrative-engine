@@ -71,6 +71,7 @@ import PickRandomArrayElementHandler from '../../../src/logic/operationHandlers/
 import AutoMoveFollowersHandler from '../../../src/logic/operationHandlers/autoMoveFollowersHandler.js';
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
+import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
 
 const ITEM_OPERATION_TYPES = new Set([
   'TRANSFER_ITEM',
@@ -485,7 +486,10 @@ export class ModTestHandlerFactory {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: eventBus,
         logger,
-        addPerceptionLogEntryHandler: { execute: jest.fn() },
+        routingPolicyService: new RecipientRoutingPolicyService({
+          dispatcher: safeDispatcher,
+          logger,
+        }),
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
@@ -740,7 +744,10 @@ export class ModTestHandlerFactory {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: eventBus,
         logger,
-        addPerceptionLogEntryHandler: { execute: jest.fn() },
+        routingPolicyService: new RecipientRoutingPolicyService({
+          dispatcher: safeDispatcher,
+          logger,
+        }),
       }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: safeDispatcher,
@@ -802,7 +809,10 @@ export class ModTestHandlerFactory {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: eventBus,
         logger,
-        addPerceptionLogEntryHandler: { execute: jest.fn() },
+        routingPolicyService: new RecipientRoutingPolicyService({
+          dispatcher: safeDispatcher,
+          logger,
+        }),
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
@@ -1459,6 +1469,10 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        routingPolicyService: new RecipientRoutingPolicyService({
+          dispatcher: safeDispatcher,
+          logger,
+        }),
       }),
       REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,

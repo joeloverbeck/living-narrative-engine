@@ -139,6 +139,9 @@ describe('Example Rule Test with Utilities', () => {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: testEnv.safeEventDispatcher,
         logger: testEnv.logger,
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       }),
       // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
       REGENERATE_DESCRIPTION: {

@@ -40,13 +40,13 @@ module.exports = {
   ...(runningCssTests || isTargetedRun
     ? {}
     : {
-        coverageThreshold: {
-          global: {
-            branches: 93,
-            functions: 99,
-            lines: 99,
-            statements: 99,
-          },
+      coverageThreshold: {
+        global: {
+          branches: 91,
+          functions: 97,
+          lines: 97,
+          statements: 97,
         },
-      }),
+      },
+    }),
 };

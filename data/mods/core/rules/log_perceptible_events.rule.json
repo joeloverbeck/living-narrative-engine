@@ -8,6 +8,7 @@
       "type": "ADD_PERCEPTION_LOG_ENTRY",
       "parameters": {
         "location_id": "{event.payload.locationId}",
+        "origin_location_id": "{event.payload.originLocationId}",
         "entry": {
           "descriptionText": "{event.payload.descriptionText}",
           "timestamp": "{event.payload.timestamp}",

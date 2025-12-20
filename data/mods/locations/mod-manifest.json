@@ -11,7 +11,8 @@
     "components": [
       "description_in_darkness.component.json",
       "light_sources.component.json",
-      "naturally_dark.component.json"
+      "naturally_dark.component.json",
+      "sensorial_links.component.json"
     ],
     "conditions": [],
     "entities": {

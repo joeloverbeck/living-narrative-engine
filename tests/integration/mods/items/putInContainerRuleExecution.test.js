@@ -420,6 +420,9 @@ describe('containers:put_in_container action integration', () => {
         entityManager: testFixture.entityManager,
         logger: testFixture.logger,
         safeEventDispatcher: { dispatch: () => {} },
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       });
 
       await perceptionLogHandler.execute({
@@ -491,6 +494,9 @@ describe('containers:put_in_container action integration', () => {
         entityManager: testFixture.entityManager,
         logger: testFixture.logger,
         safeEventDispatcher: { dispatch: () => {} },
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       });
 
       await perceptionLogHandler.execute({

@@ -292,6 +292,10 @@ beforeAll(async () => {
       dependencies: [
         { property: 'dispatcher', token: ISafeEventDispatcher },
         { property: 'logger', token: ILogger },
+        {
+          property: 'routingPolicyService',
+          token: tokens.IRecipientRoutingPolicyService,
+        },
       ],
     },
     {
@@ -528,6 +532,10 @@ beforeAll(async () => {
         {
           property: 'perceptionFilterService',
           token: tokens.IPerceptionFilterService,
+        },
+        {
+          property: 'routingPolicyService',
+          token: tokens.IRecipientRoutingPolicyService,
         },
       ],
     },

@@ -26,6 +26,11 @@ function createHandlers(entityManager, eventBus, logger) {
     dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
+  // Create mock routing policy service for recipient/exclusion validation
+  const routingPolicyService = {
+    validateAndHandle: jest.fn().mockReturnValue(true),
+  };
+
   return {
     GET_NAME: new GetNameHandler({
       entityManager,
@@ -36,7 +41,7 @@ function createHandlers(entityManager, eventBus, logger) {
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      routingPolicyService,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
   };

@@ -254,6 +254,23 @@ describe('Perceptible Event Validation Regression Tests', () => {
     expect(validatePerceptibleEvent(targetActionPayload)).toBe(true);
   });
 
+  it('accepts originLocationId in perceptible event payloads', () => {
+    const payload = {
+      eventName: 'core:perceptible_event',
+      locationId: 'test:location',
+      originLocationId: 'test:origin_location',
+      descriptionText: 'Actor performs a self action',
+      timestamp: new Date().toISOString(),
+      perceptionType: 'physical.self_action',
+      actorId: 'test:actor',
+      targetId: null,
+      involvedEntities: [],
+      contextualData: {},
+    };
+
+    expect(validatePerceptibleEvent(payload)).toBe(true);
+  });
+
   it('validates macro generates valid perceptible event structure', () => {
     // Test that the logSuccessAndEndTurn macro creates properly structured perceptible events
     const macroActions = logSuccessMacro.actions;

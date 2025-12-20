@@ -22,6 +22,10 @@
         "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location where the event occurred and can be perceived."
       },
+      "originLocationId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "Optional. The originating location ID for loop prevention during sensorial propagation."
+      },
       "descriptionText": {
         "type": "string",
         "description": "A human-readable text summarizing the event (e.g., 'Character A leaves towards the north.', 'Character B picks up the Rusty Key.'). This is the primary text to be stored in perception logs."

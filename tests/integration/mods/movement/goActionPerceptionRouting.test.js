@@ -79,11 +79,9 @@ describe('Go Action - Perception Routing', () => {
       DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
         dispatcher: eventBus,
         logger,
-        addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
-          entityManager,
-          logger,
-          safeEventDispatcher,
-        }),
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
@@ -97,6 +95,9 @@ describe('Go Action - Perception Routing', () => {
         entityManager,
         logger,
         safeEventDispatcher,
+        routingPolicyService: {
+          validateAndHandle: jest.fn().mockReturnValue(true),
+        },
       }),
       IF: {
         execute: jest.fn().mockResolvedValue(undefined),

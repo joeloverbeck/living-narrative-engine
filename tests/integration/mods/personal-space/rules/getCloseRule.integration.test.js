@@ -69,11 +69,9 @@ function createHandlers(
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeEventDispatcher,
-      }),
+      routingPolicyService: {
+        validateAndHandle: jest.fn().mockReturnValue(true),
+      },
     }),
     GET_NAME: new GetNameHandler({
       entityManager,

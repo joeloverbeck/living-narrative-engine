@@ -24,13 +24,14 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../perception/services/recipientRoutingPolicyService.js').default} RecipientRoutingPolicyService */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import {
   validateLocationId,
   normalizeEntityIds,
-  validateRecipientExclusionExclusivity,
 } from '../../utils/handlerUtils/perceptionParamsUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import {
   isValidPerceptionType,
@@ -55,6 +56,7 @@ const EVENT_ID = 'core:perceptible_event';
  * @property {object=} contextual_data      - Optional contextual data object.
  * @property {string[]=} contextual_data.recipientIds - Explicit recipients (mutually exclusive with excludedActorIds).
  * @property {string[]=} contextual_data.excludedActorIds - Actors to exclude from broadcast (mutually exclusive with recipientIds).
+ * @property {string=} origin_location_id   - Optional origin location ID for loop prevention.
  */
 
 /**
@@ -65,13 +67,16 @@ class DispatchPerceptibleEventHandler {
   #dispatcher;
   /** @type {ILogger} */
   #logger;
+  /** @type {RecipientRoutingPolicyService} */
+  #routingPolicyService;
 
   /**
    * @param {object} deps
    * @param {ISafeEventDispatcher} deps.dispatcher - Dispatcher used to emit events.
    * @param {ILogger} deps.logger - Logger instance.
+   * @param {RecipientRoutingPolicyService} deps.routingPolicyService - Unified routing policy service.
    */
-  constructor({ dispatcher, logger }) {
+  constructor({ dispatcher, logger, routingPolicyService }) {
     if (!dispatcher?.dispatch) {
       throw new Error(
         'DispatchPerceptibleEventHandler requires ISafeEventDispatcher'
@@ -81,8 +86,16 @@ class DispatchPerceptibleEventHandler {
       throw new Error('DispatchPerceptibleEventHandler requires ILogger');
     }
 
+    validateDependency(
+      routingPolicyService,
+      'IRecipientRoutingPolicyService',
+      logger,
+      { requiredMethods: ['validateAndHandle'] }
+    );
+
     this.#dispatcher = dispatcher;
     this.#logger = logger;
+    this.#routingPolicyService = routingPolicyService;
   }
 
   /**
@@ -114,6 +127,7 @@ class DispatchPerceptibleEventHandler {
       contextual_data = {},
       actor_description,
       target_description,
+      origin_location_id,
     } = params;
 
     const normalizedContextualData =
@@ -129,15 +143,12 @@ class DispatchPerceptibleEventHandler {
       normalizedContextualData.excludedActorIds
     );
 
-    // Validate mutual exclusivity using shared utility (error mode - abort on conflict)
+    // Validate mutual exclusivity using unified routing policy service (error mode - abort on conflict)
     if (
-      !validateRecipientExclusionExclusivity(
+      !this.#routingPolicyService.validateAndHandle(
         normalizedContextualData.recipientIds,
         normalizedContextualData.excludedActorIds,
-        'DISPATCH_PERCEPTIBLE_EVENT',
-        this.#dispatcher,
-        this.#logger,
-        'error'
+        'DISPATCH_PERCEPTIBLE_EVENT'
       )
     ) {
       return;
@@ -210,10 +221,16 @@ class DispatchPerceptibleEventHandler {
       return;
     }
 
+    const originLocationId =
+      typeof origin_location_id === 'string' && origin_location_id.trim()
+        ? origin_location_id
+        : validatedLocationId;
+
     const timestamp = new Date().toISOString();
     const payload = {
       eventName: EVENT_ID,
       locationId: validatedLocationId,
+      originLocationId,
       descriptionText: description_text,
       timestamp,
       perceptionType: validatedPerceptionType, // Use validated/normalized type

@@ -7,6 +7,7 @@ import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import GameDataRepository from '../../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
@@ -56,10 +57,16 @@ const createIntegrationHarness = (entityManager) => {
       recordedErrors.push(event);
     }) || (() => {});
 
+  const routingPolicyService = new RecipientRoutingPolicyService({
+    dispatcher: safeEventDispatcher,
+    logger,
+  });
+
   const handler = new AddPerceptionLogEntryHandler({
     logger,
     entityManager,
     safeEventDispatcher,
+    routingPolicyService,
   });
 
   const flushAsync = async () => {
@@ -124,6 +131,62 @@ describe('AddPerceptionLogEntryHandler integration', () => {
     }
   });
 
+  test('rejects operations with both recipientIds and excludedActorIds (mutual exclusivity)', async () => {
+    const entityManager = new SimpleEntityManager([
+      {
+        id: 'perceiver-1',
+        components: {
+          [PERCEPTION_LOG_COMPONENT_ID]: {
+            maxEntries: 5,
+            logEntries: [],
+          },
+        },
+      },
+    ]);
+
+    const env = createIntegrationHarness(entityManager);
+
+    try {
+      await env.handler.execute(
+        {
+          location_id: 'bell-tower',
+          entry: { ...baseEntry },
+          recipient_ids: ['perceiver-1'],
+          excluded_actor_ids: ['other-npc'],
+        },
+        {}
+      );
+
+      await env.flushAsync();
+
+      // New policy: error and abort when both are provided
+      expect(
+        env.logger.error.mock.calls.some(([message]) =>
+          String(message).includes(
+            'ADD_PERCEPTION_LOG_ENTRY: recipientIds and excludedActorIds are mutually exclusive'
+          )
+        )
+      ).toBe(true);
+
+      expect(
+        env.recordedErrors.some((event) =>
+          event.payload.message.includes(
+            'recipientIds and excludedActorIds are mutually exclusive'
+          )
+        )
+      ).toBe(true);
+
+      // Operation should have been aborted - no log entries added
+      const perceiver = entityManager.getComponentData(
+        'perceiver-1',
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(perceiver?.logEntries).toEqual([]);
+    } finally {
+      env.unsubscribeErrors();
+    }
+  });
+
   test('targets explicit recipients, repairs corrupted data, and reports batch errors', async () => {
     class InstrumentedEntityManager extends SimpleEntityManager {
       constructor(entities) {
@@ -172,25 +235,17 @@ describe('AddPerceptionLogEntryHandler integration', () => {
     const env = createIntegrationHarness(entityManager);
 
     try {
+      // Use only recipient_ids (no excluded_actor_ids) to test targeting
       await env.handler.execute(
         {
           location_id: 'bell-tower',
           entry: { ...baseEntry },
           recipient_ids: ['  perceiver-1  ', 'perceiver-2', 'missing-entity'],
-          excluded_actor_ids: ['  other-npc  '],
         },
         {}
       );
 
       await env.flushAsync();
-
-      expect(
-        env.logger.warn.mock.calls.some(([message]) =>
-          String(message).includes(
-            'ADD_PERCEPTION_LOG_ENTRY: recipientIds and excludedActorIds both provided; using recipientIds only'
-          )
-        )
-      ).toBe(true);
 
       const updatedOne = entityManager.getComponentData(
         'perceiver-1',

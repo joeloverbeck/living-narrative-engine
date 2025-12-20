@@ -77,7 +77,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      routingPolicyService: { validateAndHandle: jest.fn(() => true) },
     }),
     END_TURN: new EndTurnHandler({
       entityManager,

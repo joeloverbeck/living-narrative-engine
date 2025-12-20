@@ -54,6 +54,11 @@ function createHandlers(
   validatedEventDispatcher,
   safeEventDispatcher
 ) {
+  // Create mock routing policy service for recipient/exclusion validation
+  const routingPolicyService = {
+    validateAndHandle: jest.fn().mockReturnValue(true),
+  };
+
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -69,11 +74,7 @@ function createHandlers(
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeEventDispatcher,
-      }),
+      routingPolicyService,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
