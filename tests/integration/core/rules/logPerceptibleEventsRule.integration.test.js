@@ -18,6 +18,41 @@ import SystemLogicInterpreter from '../../../../src/logic/systemLogicInterpreter
 import OperationInterpreter from '../../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
+import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
+import { deepClone } from '../../../../src/utils/cloneUtils.js';
+import accessPointDefinition from '../../../../data/mods/dredgers/entities/definitions/access_point_segment_a.location.json';
+import segmentBDefinition from '../../../../data/mods/dredgers/entities/definitions/segment_b.location.json';
+import segmentCDefinition from '../../../../data/mods/dredgers/entities/definitions/segment_c.location.json';
+import floodedApproachDefinition from '../../../../data/mods/dredgers/entities/definitions/flooded_approach.location.json';
+import accessPointInstance from '../../../../data/mods/dredgers/entities/instances/access_point_segment_a.location.json';
+import segmentBInstance from '../../../../data/mods/dredgers/entities/instances/segment_b.location.json';
+import segmentCInstance from '../../../../data/mods/dredgers/entities/instances/segment_c.location.json';
+import floodedApproachInstance from '../../../../data/mods/dredgers/entities/instances/flooded_approach.location.json';
+
+const buildLocationEntity = (definition, instance) => ({
+  id: instance.instanceId,
+  components: deepClone(definition.components),
+});
+
+const createPerceiver = (id, locationId) => ({
+  id,
+  components: {
+    'core:position': { locationId },
+    'core:perceiver': {},
+    'core:perception_log': { maxEntries: 10, logEntries: [] },
+  },
+});
+
+const ACCESS_POINT_ID = accessPointInstance.instanceId;
+const SEGMENT_B_ID = segmentBInstance.instanceId;
+const SEGMENT_C_ID = segmentCInstance.instanceId;
+const FLOODED_APPROACH_ID = floodedApproachInstance.instanceId;
+const DREDGERS_LOCATIONS = [
+  buildLocationEntity(accessPointDefinition, accessPointInstance),
+  buildLocationEntity(segmentBDefinition, segmentBInstance),
+  buildLocationEntity(segmentCDefinition, segmentCInstance),
+  buildLocationEntity(floodedApproachDefinition, floodedApproachInstance),
+];
 
 /**
  * Creates handlers needed for the log_perceptible_events rule.
@@ -27,6 +62,7 @@ import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluatio
  * @param {object} logger - Logger instance
  * @param {object} validatedEventDispatcher - Validated event dispatcher instance
  * @param {object} safeEventDispatcher - Safe event dispatcher instance
+ * @param {object} routingPolicyService - Recipient routing policy service instance
  * @returns {object} Handlers object
  */
 function createHandlers(
@@ -34,7 +70,8 @@ function createHandlers(
   eventBus,
   logger,
   validatedEventDispatcher,
-  safeEventDispatcher
+  safeEventDispatcher,
+  routingPolicyService
 ) {
   // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
   if (typeof entityManager.getEntitiesInLocation !== 'function') {
@@ -49,6 +86,7 @@ function createHandlers(
       entityManager,
       logger,
       safeEventDispatcher: safeEventDispatcher,
+      routingPolicyService,
     }),
   };
 }
@@ -95,6 +133,12 @@ describe('core_handle_log_perceptible_events rule integration', () => {
       logger: testLogger,
     });
 
+    // Create recipient routing policy service for recipient/exclusion validation
+    const routingPolicyService = new RecipientRoutingPolicyService({
+      logger: testLogger,
+      dispatcher: safeEventDispatcher,
+    });
+
     // Create JSON logic evaluation service
     const jsonLogic = new JsonLogicEvaluationService({
       logger: testLogger,
@@ -108,7 +152,8 @@ describe('core_handle_log_perceptible_events rule integration', () => {
       bus,
       testLogger,
       validatedEventDispatcher,
-      safeEventDispatcher
+      safeEventDispatcher,
+      routingPolicyService
     );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
@@ -197,7 +242,8 @@ describe('core_handle_log_perceptible_events rule integration', () => {
           bus,
           testLogger,
           validatedEventDispatcher,
-          safeEventDispatcher
+          safeEventDispatcher,
+          routingPolicyService
         );
         const newOperationRegistry = new OperationRegistry({
           logger: testLogger,
@@ -299,5 +345,140 @@ describe('core_handle_log_perceptible_events rule integration', () => {
       Array.isArray(log.logEntries) &&
       log.logEntries.some((e) => e.descriptionText === 'Something happened');
     expect(found).toBe(true);
+  });
+
+  it('propagates perceptible events across dredgers sensorial links with prefix', async () => {
+    const originActorId = 'actor-origin';
+    const accessActorId = 'actor-access';
+    const segmentCActorId = 'actor-segment-c';
+    const floodedActorId = 'actor-flooded';
+    const descriptionText = 'A voice carries through the grate.';
+
+    testEnv.reset([
+      ...DREDGERS_LOCATIONS,
+      createPerceiver(originActorId, SEGMENT_B_ID),
+      createPerceiver(accessActorId, ACCESS_POINT_ID),
+      createPerceiver(segmentCActorId, SEGMENT_C_ID),
+      createPerceiver(floodedActorId, FLOODED_APPROACH_ID),
+    ]);
+
+    await testEnv.eventBus.dispatch('core:perceptible_event', {
+      locationId: SEGMENT_B_ID,
+      originLocationId: SEGMENT_B_ID,
+      descriptionText,
+      perceptionType: 'communication.speech',
+      actorId: originActorId,
+      targetId: null,
+      involvedEntities: [],
+      timestamp: new Date().toISOString(),
+    });
+
+    const originLog = testEnv.entityManager.getComponentData(
+      originActorId,
+      'core:perception_log'
+    );
+    const accessLog = testEnv.entityManager.getComponentData(
+      accessActorId,
+      'core:perception_log'
+    );
+    const segmentCLog = testEnv.entityManager.getComponentData(
+      segmentCActorId,
+      'core:perception_log'
+    );
+    const floodedLog = testEnv.entityManager.getComponentData(
+      floodedActorId,
+      'core:perception_log'
+    );
+
+    const prefixed = `(From segment B) ${descriptionText}`;
+    expect(originLog.logEntries[0].descriptionText).toBe(descriptionText);
+    expect(accessLog.logEntries[0].descriptionText).toBe(prefixed);
+    expect(segmentCLog.logEntries[0].descriptionText).toBe(prefixed);
+    expect(floodedLog.logEntries[0].descriptionText).toBe(prefixed);
+  });
+
+  it('skips sensorial propagation when originLocationId differs', async () => {
+    const originActorId = 'actor-origin';
+    const linkedActorId = 'actor-linked';
+    const descriptionText = 'A distant clang echoes.';
+
+    testEnv.reset([
+      ...DREDGERS_LOCATIONS,
+      createPerceiver(originActorId, SEGMENT_B_ID),
+      createPerceiver(linkedActorId, ACCESS_POINT_ID),
+    ]);
+
+    await testEnv.eventBus.dispatch('core:perceptible_event', {
+      locationId: SEGMENT_B_ID,
+      originLocationId: ACCESS_POINT_ID,
+      descriptionText,
+      perceptionType: 'state_change_observable',
+      actorId: originActorId,
+      targetId: null,
+      involvedEntities: [],
+      timestamp: new Date().toISOString(),
+    });
+
+    const originLog = testEnv.entityManager.getComponentData(
+      originActorId,
+      'core:perception_log'
+    );
+    const linkedLog = testEnv.entityManager.getComponentData(
+      linkedActorId,
+      'core:perception_log'
+    );
+
+    expect(originLog.logEntries).toHaveLength(1);
+    expect(originLog.logEntries[0].descriptionText).toBe(descriptionText);
+    expect(linkedLog.logEntries).toHaveLength(0);
+  });
+
+  it('does not propagate from locations without sensorial links', async () => {
+    const originActorId = 'actor-isolated';
+    const otherActorId = 'actor-remote';
+    const isolatedLocationId = 'test:isolated_location';
+    const otherLocationId = 'test:remote_location';
+    const descriptionText = 'A whisper goes nowhere.';
+
+    testEnv.reset([
+      {
+        id: isolatedLocationId,
+        components: {
+          'core:name': { text: 'isolated room' },
+        },
+      },
+      {
+        id: otherLocationId,
+        components: {
+          'core:name': { text: 'remote room' },
+        },
+      },
+      createPerceiver(originActorId, isolatedLocationId),
+      createPerceiver(otherActorId, otherLocationId),
+    ]);
+
+    await testEnv.eventBus.dispatch('core:perceptible_event', {
+      locationId: isolatedLocationId,
+      originLocationId: isolatedLocationId,
+      descriptionText,
+      perceptionType: 'state_change_observable',
+      actorId: originActorId,
+      targetId: null,
+      involvedEntities: [],
+      timestamp: new Date().toISOString(),
+    });
+
+    const originLog = testEnv.entityManager.getComponentData(
+      originActorId,
+      'core:perception_log'
+    );
+    const otherLog = testEnv.entityManager.getComponentData(
+      otherActorId,
+      'core:perception_log'
+    );
+
+    expect(originLog.logEntries).toHaveLength(1);
+    expect(originLog.logEntries[0].descriptionText).toBe(descriptionText);
+    expect(otherLog.logEntries).toHaveLength(0);
   });
 });

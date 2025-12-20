@@ -25,6 +25,10 @@
         "location_id": {
           "type": "string"
         },
+        "origin_location_id": {
+          "type": "string",
+          "description": "Optional origin location ID for loop prevention during sensorial propagation."
+        },
         "description_text": {
           "type": "string",
           "minLength": 1

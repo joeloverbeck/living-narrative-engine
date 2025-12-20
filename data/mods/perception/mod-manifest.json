@@ -3,7 +3,7 @@
   "id": "perception",
   "version": "1.0.0",
   "name": "Perception System",
-  "description": "Sense-aware perception filtering for perceptible events.",
+  "description": "Provides an optional manual override for entity sensory capabilities, which normally are anatomy-based.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {

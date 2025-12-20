@@ -391,6 +391,7 @@ export const coreTokens = freeze({
   // Perception Services (SENAWAPEREVE)
   ISensoryCapabilityService: 'ISensoryCapabilityService',
   IPerceptionFilterService: 'IPerceptionFilterService',
+  IRecipientRoutingPolicyService: 'IRecipientRoutingPolicyService',
   // GOAP Debug Tools (GOAPIMPL-025-06)
   IPlanInspector: 'IPlanInspector',
   IStateDiffViewer: 'IStateDiffViewer',

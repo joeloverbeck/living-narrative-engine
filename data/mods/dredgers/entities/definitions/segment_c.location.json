@@ -24,6 +24,13 @@
                 "blocker": null
             }
         ],
+        "locations:sensorial_links": {
+            "targets": [
+                "dredgers:access_point_segment_a_instance",
+                "dredgers:segment_b_instance",
+                "dredgers:flooded_approach_instance"
+            ]
+        },
         "locations:naturally_dark": {},
         "locations:light_sources": {
             "sources": []

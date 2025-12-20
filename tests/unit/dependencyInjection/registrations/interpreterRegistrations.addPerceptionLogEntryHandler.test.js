@@ -74,6 +74,15 @@ describe('interpreterRegistrations', () => {
         mockPerceptionFilterService
       );
 
+      // Mock recipient routing policy service (added as new dependency)
+      const mockRecipientRoutingPolicyService = {
+        validateAndHandle: jest.fn().mockReturnValue(true),
+      };
+      registrar.instance(
+        tokens.IRecipientRoutingPolicyService,
+        mockRecipientRoutingPolicyService
+      );
+
       // Act
       // Run the actual registration function
       registerInterpreters(container);

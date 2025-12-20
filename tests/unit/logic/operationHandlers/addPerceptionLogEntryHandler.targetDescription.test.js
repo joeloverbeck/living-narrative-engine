@@ -27,6 +27,7 @@ import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandler
 /** @type {jest.Mocked<any>} */ let em;
 /** @type {{ dispatch: jest.Mock }} */ let dispatcher;
 /** @type {{ filterEventForRecipients: jest.Mock }} */ let mockPerceptionFilterService;
+/** @type {{ validateAndHandle: jest.Mock }} */ let mockRoutingPolicyService;
 
 const LOC = 'loc:test_room';
 const ACTOR_ID = 'npc:pitch';
@@ -69,6 +70,10 @@ beforeEach(() => {
 
   mockPerceptionFilterService = {
     filterEventForRecipients: jest.fn(),
+  };
+
+  mockRoutingPolicyService = {
+    validateAndHandle: jest.fn().mockReturnValue(true),
   };
 });
 
@@ -113,6 +118,7 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
+        routingPolicyService: mockRoutingPolicyService,
       });
 
       await h.execute({
@@ -192,6 +198,7 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
+        routingPolicyService: mockRoutingPolicyService,
       });
 
       await h.execute({
@@ -252,6 +259,7 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
+        routingPolicyService: mockRoutingPolicyService,
       });
 
       await h.execute({
@@ -313,6 +321,7 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
+        routingPolicyService: mockRoutingPolicyService,
       });
 
       await h.execute({

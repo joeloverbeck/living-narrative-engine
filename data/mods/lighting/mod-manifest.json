@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "lighting",
   "version": "1.0.0",
-  "name": "Lighting",
+  "name": "Lighting System",
   "description": "Actions and components for managing light sources - igniting and extinguishing oil lamps, candles, torches, and other combustible light sources.",
   "actionPurpose": "Manage ambient lighting through portable and fixed light sources",
   "actionConsiderWhen": "When you want to create light in dark areas or extinguish sources to conserve fuel or create darkness",
@@ -15,6 +15,10 @@
     },
     {
       "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "locations",
       "version": "^1.0.0"
     }
   ],

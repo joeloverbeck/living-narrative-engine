@@ -15,17 +15,24 @@ const makeLogger = () => ({
 
 const makeDispatcher = () => ({ dispatch: jest.fn() });
 
+const makeRoutingPolicyService = () => ({
+  validateAndHandle: jest.fn().mockReturnValue(true),
+});
+
 describe('DispatchPerceptibleEventHandler', () => {
   let logger;
   let dispatcher;
+  let routingPolicyService;
   let handler;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
+    routingPolicyService = makeRoutingPolicyService();
     handler = new DispatchPerceptibleEventHandler({
       dispatcher,
       logger,
+      routingPolicyService,
     });
     jest.clearAllMocks();
   });
@@ -188,6 +195,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         new DispatchPerceptibleEventHandler({
           dispatcher: {},
           logger,
+          routingPolicyService,
         })
     ).toThrow('ISafeEventDispatcher');
 
@@ -196,8 +204,18 @@ describe('DispatchPerceptibleEventHandler', () => {
         new DispatchPerceptibleEventHandler({
           dispatcher,
           logger: {},
+          routingPolicyService,
         })
     ).toThrow('ILogger');
+
+    expect(
+      () =>
+        new DispatchPerceptibleEventHandler({
+          dispatcher,
+          logger,
+          routingPolicyService: {},
+        })
+    ).toThrow('IRecipientRoutingPolicyService');
   });
 
   describe('Actor Exclusion', () => {
@@ -247,7 +265,10 @@ describe('DispatchPerceptibleEventHandler', () => {
       );
     });
 
-    test('should dispatch error when both recipientIds and excludedActorIds provided', () => {
+    test('should abort when both recipientIds and excludedActorIds provided', () => {
+      // Configure the mock to return false (indicating validation failure/abort)
+      routingPolicyService.validateAndHandle.mockReturnValue(false);
+
       handler.execute(
         {
           location_id: 'loc:test',
@@ -262,21 +283,15 @@ describe('DispatchPerceptibleEventHandler', () => {
         {}
       );
 
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: expect.stringContaining(
-            'recipientIds and excludedActorIds are mutually exclusive'
-          ),
-          details: expect.objectContaining({
-            recipientIds: ['npc:observer'],
-            excludedActorIds: ['npc:c'],
-          }),
-        })
+      // Verify the routing policy service was called to validate
+      expect(routingPolicyService.validateAndHandle).toHaveBeenCalledWith(
+        ['npc:observer'],
+        ['npc:c'],
+        'DISPATCH_PERCEPTIBLE_EVENT'
       );
 
-      // Should not dispatch the event
-      expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+      // Should not dispatch any event (routing policy service handles the error dispatch)
+      expect(dispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 

@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "locations:sensorial_links",
+  "description": "Directed sensorial links to other location instances for perception propagation.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "targets": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Location instance IDs that receive forwarded perceptible logs"
+      },
+      "mode": {
+        "type": "string",
+        "description": "Reserved for future use; defaults to 'both' when omitted"
+      }
+    },
+    "required": ["targets"],
+    "additionalProperties": false
+  }
+}

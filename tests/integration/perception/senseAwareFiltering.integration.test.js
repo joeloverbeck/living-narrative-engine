@@ -149,12 +149,18 @@ const createTestEnvironment = (config = {}) => {
     logger,
   });
 
+  // Create mock routing policy service for recipient/exclusion validation
+  const routingPolicyService = {
+    validateAndHandle: jest.fn().mockReturnValue(true),
+  };
+
   // Create handler with real filter service
   const handler = new AddPerceptionLogEntryHandler({
     logger,
     entityManager,
     safeEventDispatcher: dispatcher,
     perceptionFilterService,
+    routingPolicyService,
   });
 
   return {
@@ -516,12 +522,18 @@ describe('Sense-Aware Filtering Integration Tests', () => {
       const entities = new Map([['npc:observer', { id: 'npc:observer' }]]);
       const entityManager = createMockEntityManager(entities, new Set(['npc:observer']));
 
+      // Create mock routing policy service for recipient/exclusion validation
+      const routingPolicyService = {
+        validateAndHandle: jest.fn().mockReturnValue(true),
+      };
+
       // Create handler WITHOUT perceptionFilterService
       const handler = new AddPerceptionLogEntryHandler({
         logger,
         entityManager,
         safeEventDispatcher: dispatcher,
         // perceptionFilterService: undefined - intentionally omitted
+        routingPolicyService,
       });
 
       const params = {

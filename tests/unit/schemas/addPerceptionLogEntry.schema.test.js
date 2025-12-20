@@ -168,6 +168,31 @@ describe('addPerceptionLogEntry.schema', () => {
     });
   });
 
+  describe('origin_location_id field validation', () => {
+    it('should accept origin_location_id as a string', () => {
+      const operation = createOperation({
+        origin_location_id: 'test:origin',
+      });
+
+      const valid = validate(operation);
+      if (!valid) {
+        console.error('AJV validation errors:', validate.errors);
+      }
+
+      expect(valid).toBe(true);
+    });
+
+    it('should reject origin_location_id as empty string', () => {
+      const operation = createOperation({
+        origin_location_id: '',
+      });
+
+      const valid = validate(operation);
+
+      expect(valid).toBe(false);
+    });
+  });
+
   describe('recipient_ids and excluded_actor_ids (existing oneOf pattern)', () => {
     it('should accept recipient_ids as array', () => {
       const operation = createOperation({

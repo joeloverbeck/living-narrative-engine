@@ -36,6 +36,7 @@ import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js'
 import PlaytimeTracker from '../../engine/playtimeTracker.js';
 import SensoryCapabilityService from '../../perception/services/sensoryCapabilityService.js';
 import PerceptionFilterService from '../../perception/services/perceptionFilterService.js';
+import RecipientRoutingPolicyService from '../../perception/services/recipientRoutingPolicyService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -570,6 +571,18 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   safeDebug(`Registered ${String(tokens.IPerceptionFilterService)}.`);
+
+  // RecipientRoutingPolicyService - unified routing policy for perception events
+  container.register(
+    tokens.IRecipientRoutingPolicyService,
+    (c) =>
+      new RecipientRoutingPolicyService({
+        dispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IRecipientRoutingPolicyService)}.`);
 
   // ─── Storage and Playtime (migrated from persistenceRegistrations) ─────────────────────────────
   registrar.single(tokens.IStorageProvider, BrowserStorageProvider, [

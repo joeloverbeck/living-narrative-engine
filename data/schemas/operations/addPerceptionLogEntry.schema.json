@@ -25,6 +25,11 @@
           "type": "string",
           "minLength": 1
         },
+        "origin_location_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Origin location ID for sensorial link propagation."
+        },
         "entry": {
           "type": "object",
           "minProperties": 1,

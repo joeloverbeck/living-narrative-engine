@@ -28,6 +28,10 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const DEFAULT_MAX_LOG_ENTRIES = 50;
 
+const makeRoutingPolicyService = () => ({
+  validateAndHandle: jest.fn().mockReturnValue(true),
+});
+
 /**
  * Produce a minimally-valid log entry object.
  *
@@ -47,6 +51,7 @@ const makeEntry = (id = '1') => ({
 /** @type {jest.Mocked<ILogger>}         */ let log;
 /** @type {jest.Mocked<IEntityManager>}  */ let em;
 /** @type {{ dispatch: jest.Mock }}      */ let dispatcher;
+/** @type {{ validateAndHandle: jest.Mock }} */ let routingPolicyService;
 
 beforeEach(() => {
   log = {
@@ -69,6 +74,7 @@ beforeEach(() => {
     removeComponent: jest.fn(),
   };
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  routingPolicyService = makeRoutingPolicyService();
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -82,27 +88,28 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
       expect(h).toBeInstanceOf(AddPerceptionLogEntryHandler);
     });
 
     test('throws if logger is missing or incomplete', () => {
       expect(
-        () => new AddPerceptionLogEntryHandler({ entityManager: em })
+        () => new AddPerceptionLogEntryHandler({ entityManager: em, routingPolicyService })
       ).toThrow(/logger/);
       expect(
         () =>
-          new AddPerceptionLogEntryHandler({ logger: {}, entityManager: em })
+          new AddPerceptionLogEntryHandler({ logger: {}, entityManager: em, routingPolicyService })
       ).toThrow(/logger/);
     });
 
     test('throws if entityManager is missing or incomplete', () => {
-      expect(() => new AddPerceptionLogEntryHandler({ logger: log })).toThrow(
+      expect(() => new AddPerceptionLogEntryHandler({ logger: log, routingPolicyService })).toThrow(
         /entityManager/
       );
       expect(
         () =>
-          new AddPerceptionLogEntryHandler({ logger: log, entityManager: {} })
+          new AddPerceptionLogEntryHandler({ logger: log, entityManager: {}, routingPolicyService })
       ).toThrow(/entityManager/);
     });
 
@@ -112,6 +119,7 @@ describe('AddPerceptionLogEntryHandler', () => {
           new AddPerceptionLogEntryHandler({
             logger: log,
             entityManager: em,
+            routingPolicyService,
           })
       ).toThrow(/safeEventDispatcher/);
       expect(
@@ -120,8 +128,29 @@ describe('AddPerceptionLogEntryHandler', () => {
             logger: log,
             entityManager: em,
             safeEventDispatcher: {},
+            routingPolicyService,
           })
       ).toThrow(/safeEventDispatcher/);
+    });
+
+    test('throws if routingPolicyService is missing or invalid', () => {
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+          })
+      ).toThrow(/IRecipientRoutingPolicyService/);
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+            routingPolicyService: {},
+          })
+      ).toThrow(/IRecipientRoutingPolicyService/);
     });
   });
 
@@ -133,6 +162,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
     });
 
@@ -195,6 +225,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
     });
 
@@ -371,6 +402,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC]));
       em.hasComponent.mockReturnValue(true);
@@ -484,6 +516,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
     });
 
@@ -758,6 +791,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
     });
 
@@ -827,11 +861,14 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
 
-    test('should prioritize recipientIds over excludedActorIds', async () => {
-      const entry = makeEntry('priority_test');
+    test('should abort when both recipientIds and excludedActorIds provided (unified routing policy)', async () => {
+      const entry = makeEntry('conflict_test');
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
       em.addComponent.mockResolvedValue(true);
+
+      // Configure routing policy service to return false (conflict detected, abort)
+      routingPolicyService.validateAndHandle.mockReturnValue(false);
 
       await h.execute({
         location_id: LOC,
@@ -840,23 +877,18 @@ describe('AddPerceptionLogEntryHandler', () => {
         excluded_actor_ids: [ACTOR_A],
       });
 
-      // Should log warning about both parameters
-      expect(log.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'recipientIds and excludedActorIds both provided'
-        )
+      // Verify routing policy service was called to validate mutual exclusivity
+      expect(routingPolicyService.validateAndHandle).toHaveBeenCalledWith(
+        [ACTOR_B],
+        [ACTOR_A],
+        'ADD_PERCEPTION_LOG_ENTRY'
       );
 
-      // Should NOT query location (using explicit recipients)
+      // Should NOT update any components (operation aborted)
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should NOT query location (aborted before reaching that logic)
       expect(em.getEntitiesInLocation).not.toHaveBeenCalled();
-
-      // Should only update ACTOR_B (from recipientIds, not exclusion)
-      expect(em.addComponent).toHaveBeenCalledTimes(1);
-      expect(em.addComponent).toHaveBeenCalledWith(
-        ACTOR_B,
-        PERCEPTION_LOG_COMPONENT_ID,
-        expect.anything()
-      );
     });
 
     test('should handle non-existent excluded actor IDs gracefully', async () => {
@@ -985,6 +1017,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
         perceptionFilterService: mockPerceptionFilterService,
       });
 
@@ -998,6 +1031,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
         // No perceptionFilterService provided
       });
       expect(handlerWithoutFilter).toBeInstanceOf(AddPerceptionLogEntryHandler);
@@ -1257,6 +1291,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
       });
 
       const entry = makeEntry('no_service');
@@ -1323,6 +1358,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
+        routingPolicyService,
         perceptionFilterService: mockPerceptionFilterService,
       });
 
@@ -1603,6 +1639,92 @@ describe('AddPerceptionLogEntryHandler', () => {
       expect(em.addComponent).toHaveBeenCalledTimes(1);
       const call = em.addComponent.mock.calls[0];
       expect(call[2].logEntries[0].perceivedVia).toBe('self');
+    });
+  });
+
+  describe('execute – sensorial link propagation', () => {
+    const ORIGIN_LOC = 'loc:origin';
+    const LINKED_LOC = 'loc:linked';
+    const ORIGIN_ACTOR = 'npc:origin';
+    const LINKED_ACTOR = 'npc:linked';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    beforeEach(() => {
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+      });
+
+      em.hasComponent.mockImplementation(
+        (_id, componentTypeId) =>
+          componentTypeId === PERCEPTION_LOG_COMPONENT_ID
+      );
+      em.getEntitiesInLocation.mockImplementation((locationId) => {
+        if (locationId === ORIGIN_LOC) {
+          return new Set([ORIGIN_ACTOR]);
+        }
+        if (locationId === LINKED_LOC) {
+          return new Set([LINKED_ACTOR]);
+        }
+        return new Set();
+      });
+      em.getComponentData.mockImplementation((id, componentTypeId) => {
+        if (
+          id === ORIGIN_LOC &&
+          componentTypeId === 'locations:sensorial_links'
+        ) {
+          return { targets: [LINKED_LOC] };
+        }
+        if (id === ORIGIN_LOC && componentTypeId === 'core:name') {
+          return { text: 'Segment B' };
+        }
+        if (componentTypeId === PERCEPTION_LOG_COMPONENT_ID) {
+          return { maxEntries: 10, logEntries: [] };
+        }
+        return null;
+      });
+    });
+
+    test('prefixes forwarded entries and keeps origin unprefixed', async () => {
+      const entry = makeEntry('sensorial');
+      entry.descriptionText = 'A voice carries through the grate.';
+
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        entry,
+        originating_actor_id: ORIGIN_ACTOR,
+      });
+
+      const originCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === ORIGIN_ACTOR
+      );
+      const linkedCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === LINKED_ACTOR
+      );
+
+      expect(originCall[2].logEntries[0].descriptionText).toBe(
+        entry.descriptionText
+      );
+      expect(linkedCall[2].logEntries[0].descriptionText).toBe(
+        `(From Segment B) ${entry.descriptionText}`
+      );
+    });
+
+    test('skips propagation when origin_location_id differs', async () => {
+      const entry = makeEntry('loop_guard');
+      entry.descriptionText = 'A distant clang echoes.';
+
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        origin_location_id: 'loc:elsewhere',
+        entry,
+        originating_actor_id: ORIGIN_ACTOR,
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent.mock.calls[0][0]).toBe(ORIGIN_ACTOR);
     });
   });
 });

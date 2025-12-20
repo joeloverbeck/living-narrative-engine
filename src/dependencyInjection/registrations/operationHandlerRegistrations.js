@@ -131,6 +131,7 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           dispatcher: c.resolve(tokens.ISafeEventDispatcher),
           logger: c.resolve(tokens.ILogger),
+          routingPolicyService: c.resolve(tokens.IRecipientRoutingPolicyService),
         }),
     ],
     [
@@ -403,6 +404,7 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           perceptionFilterService: c.resolve(tokens.IPerceptionFilterService),
+          routingPolicyService: c.resolve(tokens.IRecipientRoutingPolicyService),
         }),
     ],
     [
