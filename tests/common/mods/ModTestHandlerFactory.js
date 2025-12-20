@@ -72,6 +72,7 @@ import AutoMoveFollowersHandler from '../../../src/logic/operationHandlers/autoM
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../../src/perception/services/recipientSetBuilder.js';
 
 const ITEM_OPERATION_TYPES = new Set([
   'TRANSFER_ITEM',
@@ -490,6 +491,10 @@ export class ModTestHandlerFactory {
           dispatcher: safeDispatcher,
           logger,
         }),
+        recipientSetBuilder: new RecipientSetBuilder({
+          entityManager,
+          logger,
+        }),
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
@@ -748,6 +753,10 @@ export class ModTestHandlerFactory {
           dispatcher: safeDispatcher,
           logger,
         }),
+        recipientSetBuilder: new RecipientSetBuilder({
+          entityManager,
+          logger,
+        }),
       }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: safeDispatcher,
@@ -811,6 +820,10 @@ export class ModTestHandlerFactory {
         logger,
         routingPolicyService: new RecipientRoutingPolicyService({
           dispatcher: safeDispatcher,
+          logger,
+        }),
+        recipientSetBuilder: new RecipientSetBuilder({
+          entityManager,
           logger,
         }),
       }),
@@ -1471,6 +1484,10 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         routingPolicyService: new RecipientRoutingPolicyService({
           dispatcher: safeDispatcher,
+          logger,
+        }),
+        recipientSetBuilder: new RecipientSetBuilder({
+          entityManager,
           logger,
         }),
       }),
