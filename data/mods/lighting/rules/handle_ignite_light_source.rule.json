@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_ignite_light_source",
-  "comment": "Handles ignite_light_source action: marks light source as lit, adds to location's active light sources, dispatches perceptible event",
+  "comment": "Handles ignite_light_source action: marks light source as lit, dispatches perceptible event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "lighting:event-is-action-ignite-light-source"
@@ -39,50 +39,6 @@
         "entity_ref": "target",
         "component_type": "lighting:is_lit",
         "value": {}
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Check if location has light_sources component",
-      "parameters": {
-        "entity_ref": "{context.actorPosition.locationId}",
-        "component_type": "locations:light_sources",
-        "result_variable": "locationLightSources"
-      }
-    },
-    {
-      "type": "IF",
-      "comment": "If location doesn't have light_sources, add it",
-      "parameters": {
-        "condition": {
-          "!": { "var": "context.locationLightSources" }
-        },
-        "then_actions": [
-          {
-            "type": "ADD_COMPONENT",
-            "comment": "Add light_sources component to location with this light source",
-            "parameters": {
-              "entity_ref": "{context.actorPosition.locationId}",
-              "component_type": "locations:light_sources",
-              "value": {
-                "sources": ["{event.payload.targetId}"]
-              }
-            }
-          }
-        ],
-        "else_actions": [
-          {
-            "type": "MODIFY_ARRAY_FIELD",
-            "comment": "Add light source to existing light_sources array (only if not already present)",
-            "parameters": {
-              "entity_ref": "{context.actorPosition.locationId}",
-              "component_type": "locations:light_sources",
-              "field": "sources",
-              "mode": "push_unique",
-              "value": "{event.payload.targetId}"
-            }
-          }
-        ]
       }
     },
     {

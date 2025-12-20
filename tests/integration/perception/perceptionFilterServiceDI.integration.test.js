@@ -27,6 +27,7 @@ describe('PerceptionFilterService DI Integration', () => {
     mockEntityManager = {
       hasComponent: jest.fn().mockReturnValue(false),
       getComponentData: jest.fn().mockReturnValue(null),
+      getEntitiesInLocation: jest.fn().mockReturnValue(new Set()),
     };
 
     mockSensoryCapabilityService = {

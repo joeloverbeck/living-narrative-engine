@@ -12,6 +12,7 @@ import {
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
 } from '../../../src/constants/eventIds.js';
 
 // Helper to create a mock entity
@@ -84,7 +85,11 @@ describe('SpatialIndexSynchronizer', () => {
       COMPONENT_REMOVED_ID,
       expect.any(Function)
     );
-    expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(4);
+    expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(
+      COMPONENTS_BATCH_ADDED_ID,
+      expect.any(Function)
+    );
+    expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(5);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'SpatialIndexSynchronizer initialized and listening for events.'
     );

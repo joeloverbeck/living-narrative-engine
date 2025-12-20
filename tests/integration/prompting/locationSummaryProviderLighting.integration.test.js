@@ -99,7 +99,6 @@ describe('LocationSummaryProvider Lighting Integration', () => {
         [DESCRIPTION_COMPONENT_ID]: { text: 'A long subterranean corridor.' },
         [EXITS_COMPONENT_ID]: [],
         'locations:naturally_dark': {},
-        'locations:light_sources': { sources: [] },
       });
 
       entityManager.getEntityInstance.mockResolvedValue(locationEntity);
@@ -132,7 +131,6 @@ describe('LocationSummaryProvider Lighting Integration', () => {
         [DESCRIPTION_COMPONENT_ID]: { text: 'A long subterranean corridor.' },
         [EXITS_COMPONENT_ID]: [],
         'locations:naturally_dark': {},
-        'locations:light_sources': { sources: [] },
         'locations:description_in_darkness': { text: darknessDescription },
       });
 
@@ -169,7 +167,6 @@ describe('LocationSummaryProvider Lighting Integration', () => {
         [DESCRIPTION_COMPONENT_ID]: { text: 'A long subterranean corridor.' },
         [EXITS_COMPONENT_ID]: [],
         'locations:naturally_dark': {},
-        'locations:light_sources': { sources: ['torch_01'] },
         'locations:description_in_darkness': { text: 'Darkness description' },
       });
 
@@ -236,7 +233,6 @@ describe('LocationSummaryProvider Lighting Integration', () => {
         [DESCRIPTION_COMPONENT_ID]: { text: 'A very dark room.' },
         [EXITS_COMPONENT_ID]: [],
         'locations:naturally_dark': {},
-        'locations:light_sources': { sources: [] },
         // No description_in_darkness component
       });
 

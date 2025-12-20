@@ -1,7 +1,7 @@
 /**
  * @file Unit tests for LightingStateService
  * @description Tests the service that determines location lighting state
- * based on naturally_dark marker and light_sources components.
+ * based on naturally_dark marker and lit entities/inventory items.
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -22,6 +22,7 @@ describe('LightingStateService', () => {
     mockEntityManager = {
       hasComponent: jest.fn(),
       getComponentData: jest.fn(),
+      getEntitiesInLocation: jest.fn(),
     };
   });
 
@@ -39,7 +40,8 @@ describe('LightingStateService', () => {
     it('should throw if entityManager lacks required methods', () => {
       const invalidEntityManager = {
         hasComponent: jest.fn(),
-        // missing getComponentData
+        getComponentData: jest.fn(),
+        // missing getEntitiesInLocation
       };
 
       expect(
@@ -48,7 +50,7 @@ describe('LightingStateService', () => {
             entityManager: invalidEntityManager,
             logger: mockLogger,
           })
-      ).toThrow(/Invalid or missing method 'getComponentData'/);
+      ).toThrow(/Invalid or missing method 'getEntitiesInLocation'/);
     });
 
     it('should throw if logger is missing', () => {
@@ -110,42 +112,79 @@ describe('LightingStateService', () => {
         'location:outdoor_plaza',
         'locations:naturally_dark'
       );
-      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+      expect(mockEntityManager.getEntitiesInLocation).not.toHaveBeenCalled();
     });
 
-    it('should return isLit=false with empty lightSources when location HAS naturally_dark but NO light_sources component', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue(undefined);
-
-      const result = service.getLocationLightingState('location:dark_cave');
-
-      expect(result).toEqual({ isLit: false, lightSources: [] });
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
-        'location:dark_cave',
-        'locations:light_sources'
+    it('should return isLit=true with lightSources when a lit entity is in the location', () => {
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:dark_cave') {
+          return component === 'locations:naturally_dark';
+        }
+        if (entityId === 'entity:torch') {
+          return component === 'lighting:is_lit';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:torch'])
       );
-    });
-
-    it('should return isLit=false with empty lightSources when location HAS naturally_dark AND empty light_sources.sources array', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue({ sources: [] });
 
       const result = service.getLocationLightingState('location:dark_cave');
 
-      expect(result).toEqual({ isLit: false, lightSources: [] });
+      expect(result).toEqual({
+        isLit: true,
+        lightSources: ['entity:torch'],
+      });
     });
 
-    it('should return isLit=true with lightSources when location HAS naturally_dark AND non-empty light_sources.sources', () => {
-      const lightSources = ['entity:lantern_1', 'entity:torch_2'];
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue({
-        sources: lightSources,
+    it('should return isLit=true with lightSources when a lit item is in inventory', () => {
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:dark_cave') {
+          return component === 'locations:naturally_dark';
+        }
+        if (entityId === 'item:lantern') {
+          return component === 'lighting:is_lit';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:actor'])
+      );
+      mockEntityManager.getComponentData.mockImplementation((entityId) => {
+        if (entityId === 'entity:actor') {
+          return { items: ['item:lantern'] };
+        }
+        return undefined;
       });
 
-      const result = service.getLocationLightingState('location:lit_tunnel');
+      const result = service.getLocationLightingState('location:dark_cave');
 
-      expect(result).toEqual({ isLit: true, lightSources });
-      expect(result.lightSources).toBe(lightSources); // Same array reference
+      expect(result).toEqual({
+        isLit: true,
+        lightSources: ['item:lantern'],
+      });
+    });
+
+    it('should return isLit=false with empty lightSources when naturally_dark and no lit sources are present', () => {
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:dark_cave') {
+          return component === 'locations:naturally_dark';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:actor'])
+      );
+      mockEntityManager.getComponentData.mockImplementation((entityId) => {
+        if (entityId === 'entity:actor') {
+          return { items: [] };
+        }
+        return undefined;
+      });
+
+      const result = service.getLocationLightingState('location:dark_cave');
+
+      expect(result).toEqual({ isLit: false, lightSources: [] });
     });
   });
 
@@ -168,8 +207,13 @@ describe('LightingStateService', () => {
     });
 
     it('should return false for dark locations (naturally_dark with no light sources)', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue(undefined);
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:pitch_black_room') {
+          return component === 'locations:naturally_dark';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
 
       const result = service.isLocationLit('location:pitch_black_room');
 
@@ -177,10 +221,18 @@ describe('LightingStateService', () => {
     });
 
     it('should return true for artificially lit locations (naturally_dark with light sources)', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue({
-        sources: ['entity:candle_1'],
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:candlelit_room') {
+          return component === 'locations:naturally_dark';
+        }
+        if (entityId === 'entity:candle_1') {
+          return component === 'lighting:is_lit';
+        }
+        return false;
       });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:candle_1'])
+      );
 
       const result = service.isLocationLit('location:candlelit_room');
 
@@ -198,18 +250,36 @@ describe('LightingStateService', () => {
       });
     });
 
-    it('should handle undefined lightSourcesData gracefully (returns empty array)', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue(undefined);
+    it('should handle undefined entities set gracefully (returns empty array)', () => {
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:test') {
+          return component === 'locations:naturally_dark';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(undefined);
 
       const result = service.getLocationLightingState('location:test');
 
       expect(result).toEqual({ isLit: false, lightSources: [] });
     });
 
-    it('should handle null sources property gracefully', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue({ sources: null });
+    it('should handle null inventory items property gracefully', () => {
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:test') {
+          return component === 'locations:naturally_dark';
+        }
+        return false;
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:actor'])
+      );
+      mockEntityManager.getComponentData.mockImplementation((entityId) => {
+        if (entityId === 'entity:actor') {
+          return { items: null };
+        }
+        return undefined;
+      });
 
       const result = service.getLocationLightingState('location:test');
 
@@ -217,10 +287,18 @@ describe('LightingStateService', () => {
     });
 
     it('should log appropriate debug messages for lighting state queries', () => {
-      mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.getComponentData.mockReturnValue({
-        sources: ['entity:light_1'],
+      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
+        if (entityId === 'location:debug_test') {
+          return component === 'locations:naturally_dark';
+        }
+        if (entityId === 'entity:light_1') {
+          return component === 'lighting:is_lit';
+        }
+        return false;
       });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(
+        new Set(['entity:light_1'])
+      );
 
       service.getLocationLightingState('location:debug_test');
 

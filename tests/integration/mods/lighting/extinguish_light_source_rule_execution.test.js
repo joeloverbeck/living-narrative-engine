@@ -10,11 +10,10 @@ import '../../../common/mods/domainMatchers.js';
 import extinguishLightRule from '../../../../data/mods/lighting/rules/handle_extinguish_light_source.rule.json' assert { type: 'json' };
 import eventIsActionExtinguishLightSource from '../../../../data/mods/lighting/conditions/event-is-action-extinguish-light-source.condition.json' assert { type: 'json' };
 import {
-  createActorWithLightSource,
   createCandle,
   createLitOilLamp,
-  createLocationWithLightSources,
 } from '../../../common/mods/lighting/lightingFixtures.js';
+import { LightingStateService } from '../../../../src/locations/services/lightingStateService.js';
 
 describe('lighting:extinguish_light_source rule execution', () => {
   let testFixture;
@@ -32,20 +31,24 @@ describe('lighting:extinguish_light_source rule execution', () => {
     testFixture.cleanup();
   });
 
-  it('removes lighting:is_lit and updates location light sources', async () => {
+  it('removes lighting:is_lit and leaves naturally dark locations unlit', async () => {
     const locationId = 'archives';
     const lightSource = createLitOilLamp('lighting:oil_lamp');
-    const otherLight = createCandle('lighting:candle');
-    const actor = createActorWithLightSource('test:actor1', lightSource.id, {
-      name: 'Avery',
-      locationId,
-    });
-    const room = createLocationWithLightSources(locationId, [
-      lightSource.id,
-      otherLight.id,
-    ]);
+    const actor = new ModEntityBuilder('test:actor1')
+      .withName('Avery')
+      .asActor()
+      .atLocation(locationId)
+      .withComponent('items:inventory', {
+        items: [lightSource.id],
+        capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .build();
+    const room = new ModEntityBuilder(locationId)
+      .asRoom('Archives')
+      .withComponent('locations:naturally_dark', {})
+      .build();
 
-    testFixture.reset([room, actor, lightSource, otherLight]);
+    testFixture.reset([room, actor, lightSource]);
 
     await testFixture.executeAction(actor.id, lightSource.id);
 
@@ -55,9 +58,13 @@ describe('lighting:extinguish_light_source rule execution', () => {
     expect(updatedLight).toNotHaveComponent('lighting:is_lit');
 
     const location = testFixture.entityManager.getEntityInstance(room.id);
-    expect(location).toHaveComponentData('locations:light_sources', {
-      sources: [otherLight.id],
+    expect(location).toNotHaveComponent('locations:light_sources');
+
+    const lightingStateService = new LightingStateService({
+      entityManager: testFixture.entityManager,
+      logger: testFixture.logger,
     });
+    expect(lightingStateService.isLocationLit(locationId)).toBe(false);
 
     const perceptibleEvent = testFixture.events.find(
       (event) => event.eventType === 'core:perceptible_event'
@@ -90,16 +97,25 @@ describe('lighting:extinguish_light_source rule execution', () => {
     expect(turnEndedEvent?.payload.success).toBe(true);
   });
 
-  it('handles missing location light sources component gracefully', async () => {
+  it('keeps a location lit when another lit item remains in inventory', async () => {
     const locationId = 'cabin';
     const lightSource = createLitOilLamp('lighting:oil_lamp');
-    const actor = createActorWithLightSource('test:actor1', lightSource.id, {
-      name: 'Rowan',
-      locationId,
-    });
-    const room = new ModEntityBuilder(locationId).asRoom('Cabin').build();
+    const otherLight = createCandle('lighting:candle', { isLit: true });
+    const actor = new ModEntityBuilder('test:actor1')
+      .withName('Rowan')
+      .asActor()
+      .atLocation(locationId)
+      .withComponent('items:inventory', {
+        items: [lightSource.id, otherLight.id],
+        capacity: { maxWeight: 50, maxItems: 10 },
+      })
+      .build();
+    const room = new ModEntityBuilder(locationId)
+      .asRoom('Cabin')
+      .withComponent('locations:naturally_dark', {})
+      .build();
 
-    testFixture.reset([room, actor, lightSource]);
+    testFixture.reset([room, actor, lightSource, otherLight]);
 
     await testFixture.executeAction(actor.id, lightSource.id);
 
@@ -108,8 +124,11 @@ describe('lighting:extinguish_light_source rule execution', () => {
     );
     expect(updatedLight).toNotHaveComponent('lighting:is_lit');
 
-    const location = testFixture.entityManager.getEntityInstance(room.id);
-    expect(location).toNotHaveComponent('locations:light_sources');
+    const lightingStateService = new LightingStateService({
+      entityManager: testFixture.entityManager,
+      logger: testFixture.logger,
+    });
+    expect(lightingStateService.isLocationLit(locationId)).toBe(true);
 
     expect(testFixture.events).toHaveActionSuccess(
       'Rowan extinguishes oil lamp.'

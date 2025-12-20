@@ -32,9 +32,6 @@
             ]
         },
         "locations:naturally_dark": {},
-        "locations:light_sources": {
-            "sources": []
-        },
         "locations:description_in_darkness": {
             "text": "The tunnel swallows all light. Your hand finds damp brick when you reach out—rough mortar gaps where fingers catch. The air is stale and close, with an undertone of something organic and old. Each sound you make returns to you distorted, stretched by the passage's length."
         }

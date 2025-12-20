@@ -58,6 +58,7 @@ describe('LightingStateService DI Registration (LIGSYSDES-004)', () => {
       const mockEntityManager = {
         hasComponent: () => false,
         getComponentData: () => undefined,
+        getEntitiesInLocation: () => new Set(),
       };
       const mockLogger = {
         debug: () => {},

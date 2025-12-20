@@ -1,6 +1,6 @@
 /**
  * @file Unit tests for locations mod lighting component schemas
- * @description Tests schema validation for naturally_dark, light_sources, and
+ * @description Tests schema validation for naturally_dark and
  * description_in_darkness components defined in the locations mod.
  */
 
@@ -53,84 +53,6 @@ describe('Locations - Lighting Components', () => {
         'locations:naturally_dark'
       );
       expect(result.isValid).toBe(false);
-    });
-  });
-
-  describe('locations:light_sources', () => {
-    it('should accept valid sources array with entity IDs', () => {
-      const data = {
-        sources: ['lantern-001', 'torch-002', 'campfire-003'],
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(true);
-    });
-
-    it('should accept empty sources array', () => {
-      const data = {
-        sources: [],
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(true);
-    });
-
-    it('should require sources property', () => {
-      const data = {};
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(false);
-    });
-
-    it('should reject non-string items in sources array', () => {
-      const data = {
-        sources: ['lantern-001', 42, 'torch-002'],
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(false);
-    });
-
-    it('should reject sources as non-array type', () => {
-      const data = {
-        sources: 'lantern-001',
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(false);
-    });
-
-    it('should reject additional properties', () => {
-      const data = {
-        sources: ['lantern-001'],
-        extraField: 'not allowed',
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(false);
-    });
-
-    it('should accept single light source', () => {
-      const data = {
-        sources: ['single-torch'],
-      };
-      const result = testBed.validateAgainstSchema(
-        data,
-        'locations:light_sources'
-      );
-      expect(result.isValid).toBe(true);
     });
   });
 

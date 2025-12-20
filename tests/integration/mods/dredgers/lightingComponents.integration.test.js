@@ -96,20 +96,6 @@ describe('dredgers mod: lighting components', () => {
           expect(location.components['locations:naturally_dark']).toEqual({});
         });
 
-        it('should have locations:light_sources component with empty sources array', () => {
-          const location = loadLocationDefinition(filename);
-          expect(location.components['locations:light_sources']).toBeDefined();
-          expect(
-            location.components['locations:light_sources'].sources
-          ).toBeDefined();
-          expect(
-            Array.isArray(location.components['locations:light_sources'].sources)
-          ).toBe(true);
-          expect(
-            location.components['locations:light_sources'].sources
-          ).toHaveLength(0);
-        });
-
         it('should have locations:description_in_darkness component with non-empty text', () => {
           const location = loadLocationDefinition(filename);
           expect(
