@@ -32,9 +32,6 @@
             ]
         },
         "locations:naturally_dark": {},
-        "locations:light_sources": {
-            "sources": []
-        },
         "locations:description_in_darkness": {
             "text": "Complete blackness. The passage narrows—you can feel it in how the echoes shorten. Your breathing sounds too loud. Something scuttles ahead, then silence. The floor is slick with a film you'd rather not identify. The temperature drops noticeably."
         }

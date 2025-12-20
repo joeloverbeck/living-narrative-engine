@@ -25,9 +25,6 @@
             }
         ],
         "locations:naturally_dark": {},
-        "locations:light_sources": {
-            "sources": []
-        },
         "locations:description_in_darkness": {
             "text": "The darkness presses close. Your boots scrape on uneven flagstone, each step echoing off stone walls that seem too near. The air is cold and mineral, with a chalk-dust bite in your nose. Water drips somewhere ahead—a slow, arrhythmic plinking. The walls sweat with condensation you can feel but not see, and the floor slopes unpredictably underfoot."
         }

@@ -14,11 +14,6 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
- * @typedef {object} LightSourcesComponentData
- * @property {string[]} [sources] - Entity IDs of active light sources.
- */
-
-/**
  * @typedef {object} LightingState
  * @property {boolean} isLit - Whether the location has sufficient light to see
  * @property {string[]} lightSources - Entity IDs of active light sources (empty if ambient light)
@@ -28,11 +23,11 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * Service for querying location lighting state.
  *
  * Decision matrix:
- * | naturally_dark | light_sources.sources | Result |
- * |----------------|----------------------|--------|
- * | Absent         | Any                  | Lit (ambient) |
- * | Present        | Empty or missing     | Dark |
- * | Present        | Non-empty array      | Lit (artificial) |
+ * | naturally_dark | lit entities or inventory items | Result |
+ * |----------------|-------------------------------|--------|
+ * | Absent         | Any                           | Lit (ambient) |
+ * | Present        | None                          | Dark |
+ * | Present        | One or more                   | Lit (artificial) |
  */
 class LightingStateService {
   /** @type {IEntityManager} */
@@ -49,7 +44,11 @@ class LightingStateService {
    */
   constructor({ entityManager, logger }) {
     validateDependency(entityManager, 'entityManager', logger, {
-      requiredMethods: ['hasComponent', 'getComponentData'],
+      requiredMethods: [
+        'hasComponent',
+        'getComponentData',
+        'getEntitiesInLocation',
+      ],
     });
     validateDependency(logger, 'logger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -80,13 +79,29 @@ class LightingStateService {
       return { isLit: true, lightSources: [] };
     }
 
-    /** @type {LightSourcesComponentData | undefined} */
-    const lightSourcesData = this.#entityManager.getComponentData(
-      locationId,
-      'locations:light_sources'
-    );
+    const entitiesInLocation =
+      this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+    const litSources = new Set();
 
-    const sources = lightSourcesData?.sources || [];
+    for (const entityId of entitiesInLocation) {
+      if (this.#entityManager.hasComponent(entityId, 'lighting:is_lit')) {
+        litSources.add(entityId);
+        continue;
+      }
+
+      const inventory = this.#entityManager.getComponentData(
+        entityId,
+        'items:inventory'
+      );
+      const items = Array.isArray(inventory?.items) ? inventory.items : [];
+      for (const itemId of items) {
+        if (this.#entityManager.hasComponent(itemId, 'lighting:is_lit')) {
+          litSources.add(itemId);
+        }
+      }
+    }
+
+    const sources = [...litSources];
     const isLit = sources.length > 0;
 
     this.#logger.debug(

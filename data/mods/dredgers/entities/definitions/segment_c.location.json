@@ -32,9 +32,6 @@
             ]
         },
         "locations:naturally_dark": {},
-        "locations:light_sources": {
-            "sources": []
-        },
         "locations:description_in_darkness": {
             "text": "The dark here feels heavier, older. Water trickles nearby—not dripping but flowing, a thin stream somewhere below floor level. The walls vibrate faintly with some distant mechanical thrumming. The air tastes of copper and wet stone."
         }

@@ -9,6 +9,7 @@ import {
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
 } from '../constants/eventIds.js';
 
 /**
@@ -86,6 +87,10 @@ export class SpatialIndexSynchronizer {
     dispatcher.subscribe(
       COMPONENT_REMOVED_ID,
       this.onPositionChanged.bind(this)
+    );
+    dispatcher.subscribe(
+      COMPONENTS_BATCH_ADDED_ID,
+      this.onBatchComponentsAdded.bind(this)
     );
   }
 
@@ -360,5 +365,60 @@ export class SpatialIndexSynchronizer {
     this.logger.debug(
       `SpatialSync: Re-indexed ${entity.id} from '${oldLocationId}' to '${newLocationId}' due to position change.`
     );
+  }
+
+  /**
+   * Handle batch component updates to keep the spatial index in sync.
+   *
+   * @param {object|{payload: object}} eventOrPayload - Batch event or payload.
+   */
+  onBatchComponentsAdded(eventOrPayload) {
+    const payload = this.#normalizePayload(eventOrPayload);
+    if (!payload || !Array.isArray(payload.updates)) {
+      this.logger.warn(
+        'SpatialIndexSynchronizer.onBatchComponentsAdded: Invalid payload received',
+        eventOrPayload
+      );
+      return;
+    }
+
+    for (const update of payload.updates) {
+      if (update?.componentTypeId !== POSITION_COMPONENT_ID) {
+        continue;
+      }
+
+      const entityId =
+        typeof update.instanceId === 'string' ? update.instanceId.trim() : '';
+      if (!entityId) {
+        this.logger.warn(
+          'SpatialIndexSynchronizer.onBatchComponentsAdded: Invalid entity ID in batch update',
+          update
+        );
+        continue;
+      }
+
+      const oldLocationId = update.oldComponentData?.locationId ?? null;
+      const newLocationId = update.componentData?.locationId ?? null;
+
+      if (oldLocationId === newLocationId) {
+        continue;
+      }
+
+      this.spatialIndex.updateEntityLocation(
+        entityId,
+        oldLocationId,
+        newLocationId
+      );
+
+      if (newLocationId) {
+        this.#entityPositions.set(entityId, newLocationId);
+      } else {
+        this.#entityPositions.delete(entityId);
+      }
+
+      this.logger.debug(
+        `SpatialSync: Re-indexed ${entityId} from '${oldLocationId}' to '${newLocationId}' due to batch position update.`
+      );
+    }
   }
 }

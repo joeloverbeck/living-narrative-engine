@@ -11,8 +11,6 @@ import igniteLightRule from '../../../../data/mods/lighting/rules/handle_ignite_
 import eventIsActionIgniteLightSource from '../../../../data/mods/lighting/conditions/event-is-action-ignite-light-source.condition.json' assert { type: 'json' };
 import {
   createActorWithLightSource,
-  createCandle,
-  createLocationWithLightSources,
   createOilLamp,
 } from '../../../common/mods/lighting/lightingFixtures.js';
 import { LightingStateService } from '../../../../src/locations/services/lightingStateService.js';
@@ -33,7 +31,7 @@ describe('lighting:ignite_light_source rule execution', () => {
     testFixture.cleanup();
   });
 
-  it('adds lighting:is_lit and initializes location light sources', async () => {
+  it('adds lighting:is_lit without mutating location light source components', async () => {
     const locationId = 'lamp_room';
     const lightSource = createOilLamp('lighting:oil_lamp');
     const actor = createActorWithLightSource('test:actor1', lightSource.id, {
@@ -52,9 +50,7 @@ describe('lighting:ignite_light_source rule execution', () => {
     expect(updatedLight).toHaveComponent('lighting:is_lit');
 
     const location = testFixture.entityManager.getEntityInstance(room.id);
-    expect(location).toHaveComponentData('locations:light_sources', {
-      sources: [lightSource.id],
-    });
+    expect(location).toNotHaveComponent('locations:light_sources');
 
     const perceptibleEvent = testFixture.events.find(
       (event) => event.eventType === 'core:perceptible_event'
@@ -87,29 +83,6 @@ describe('lighting:ignite_light_source rule execution', () => {
     expect(turnEndedEvent?.payload.success).toBe(true);
   });
 
-  it('uses push_unique to avoid duplicating active light sources', async () => {
-    const locationId = 'gallery';
-    const lightSource = createOilLamp('lighting:oil_lamp');
-    const otherLight = createCandle('lighting:candle');
-    const actor = createActorWithLightSource('test:actor1', lightSource.id, {
-      name: 'Morgan',
-      locationId,
-    });
-    const room = createLocationWithLightSources(locationId, [
-      otherLight.id,
-      lightSource.id,
-    ]);
-
-    testFixture.reset([room, actor, lightSource, otherLight]);
-
-    await testFixture.executeAction(actor.id, lightSource.id);
-
-    const location = testFixture.entityManager.getEntityInstance(room.id);
-    expect(location).toHaveComponentData('locations:light_sources', {
-      sources: [otherLight.id, lightSource.id],
-    });
-  });
-
   it('lights a naturally dark location after ignition', async () => {
     const locationId = 'lower_gallery';
     const lightSource = createOilLamp('lighting:hooded_oil_lantern', {
@@ -122,17 +95,11 @@ describe('lighting:ignite_light_source rule execution', () => {
     const room = new ModEntityBuilder(locationId)
       .asRoom('Lower Gallery')
       .withComponent('locations:naturally_dark', {})
-      .withComponent('locations:light_sources', { sources: [] })
       .build();
 
     testFixture.reset([room, actor, lightSource]);
 
     await testFixture.executeAction(actor.id, lightSource.id);
-
-    const location = testFixture.entityManager.getEntityInstance(room.id);
-    expect(location).toHaveComponentData('locations:light_sources', {
-      sources: [lightSource.id],
-    });
 
     const lightingStateService = new LightingStateService({
       entityManager: testFixture.entityManager,

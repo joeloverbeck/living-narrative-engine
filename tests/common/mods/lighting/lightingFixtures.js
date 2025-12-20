@@ -63,15 +63,3 @@ export const createActorWithLightSource = (
 
   return builder.build();
 };
-
-export const createLocationWithLightSources = (
-  locationId,
-  sourceIds,
-  options = {}
-) =>
-  new ModEntityBuilder(locationId)
-    .asRoom(options.name || 'Lighting Room')
-    .withComponent('locations:light_sources', {
-      sources: Array.isArray(sourceIds) ? sourceIds : [],
-    })
-    .build();

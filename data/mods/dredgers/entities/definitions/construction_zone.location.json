@@ -25,9 +25,6 @@
             }
         ],
         "locations:naturally_dark": {},
-        "locations:light_sources": {
-            "sources": []
-        },
         "locations:description_in_darkness": {
             "text": "The space opens around you—you sense it in the changed echo and the way the air moves. Dust particles tickle your throat with each breath. Somewhere, timbers creak under settling weight. The ground is treacherous: loose gravel, abandoned tools, unseen drops. The smell of disturbed earth and old iron hangs heavy."
         }

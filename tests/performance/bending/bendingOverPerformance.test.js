@@ -88,6 +88,7 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
       dispatcher: eventBus,
       logger,
       routingPolicyService: { validateAndHandle: jest.fn(() => true) },
+      recipientSetBuilder: { build: jest.fn(() => new Set()) },
     }),
     END_TURN: new EndTurnHandler({
       entityManager,

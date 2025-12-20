@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_extinguish_light_source",
-  "comment": "Handles extinguish_light_source action: removes is_lit, removes from location's active light sources, dispatches perceptible event",
+  "comment": "Handles extinguish_light_source action: removes is_lit, dispatches perceptible event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "lighting:event-is-action-extinguish-light-source"
@@ -38,38 +38,6 @@
       "parameters": {
         "entity_ref": "target",
         "component_type": "lighting:is_lit"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Check if location has light_sources component",
-      "parameters": {
-        "entity_ref": "{context.actorPosition.locationId}",
-        "component_type": "locations:light_sources",
-        "result_variable": "locationLightSources"
-      }
-    },
-    {
-      "type": "IF",
-      "comment": "If location has light_sources, remove this light source from array",
-      "parameters": {
-        "condition": {
-          "!!": { "var": "context.locationLightSources" }
-        },
-        "then_actions": [
-          {
-            "type": "MODIFY_ARRAY_FIELD",
-            "comment": "Remove light source from light_sources array",
-            "parameters": {
-              "entity_ref": "{context.actorPosition.locationId}",
-              "component_type": "locations:light_sources",
-              "field": "sources",
-              "mode": "remove_by_value",
-              "value": "{event.payload.targetId}"
-            }
-          }
-        ],
-        "else_actions": []
       }
     },
     {
