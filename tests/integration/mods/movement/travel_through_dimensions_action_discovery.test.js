@@ -53,7 +53,7 @@ describe('travel_through_dimensions Action Discovery', () => {
         name: 'dimensional rift',
         components: [
           {
-            componentId: 'movement:is_dimensional_portal',
+            componentId: 'blockers:is_dimensional_portal',
             data: {},
           },
         ],
@@ -227,7 +227,7 @@ async function createDimensionalScenario(fixture) {
   const blockerId = fixture.createEntity({
     id: 'helper-blocker',
     name: 'dimensional rift',
-    components: [{ componentId: 'movement:is_dimensional_portal', data: {} }],
+    components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
   await fixture.modifyComponent(perimeterId, 'movement:exits', [

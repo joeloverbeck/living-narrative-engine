@@ -1210,7 +1210,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Filter exits that have a blocker with movement:is_dimensional_portal component
+          // Filter exits that have a blocker with blockers:is_dimensional_portal component
           const dimensionalPortals = exits
             .filter((exit) => {
               if (!exit.blocker) {
@@ -1219,7 +1219,7 @@ export function createBaseRuleEnvironment({
 
               const blocker = entityManager.getEntityInstance(exit.blocker);
               return (
-                blocker?.components?.['movement:is_dimensional_portal'] !==
+                blocker?.components?.['blockers:is_dimensional_portal'] !==
                 undefined
               );
             })

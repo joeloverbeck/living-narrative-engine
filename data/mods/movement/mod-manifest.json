@@ -32,6 +32,10 @@
     {
       "id": "bending-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "blockers",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -48,23 +52,18 @@
       "handle_travel_through_dimensions.rule.json"
     ],
     "conditions": [
-      "blocker-is-dimensional-portal.condition.json",
       "event-is-action-feel-your-way-to-an-exit.condition.json",
       "event-is-action-go.condition.json",
       "event-is-action-teleport.condition.json",
       "event-is-action-travel-through-dimensions.condition.json",
       "exit-is-unblocked.condition.json"
     ],
-    "scopes": [
-      "clear_directions.scope",
-      "dimensional_portals.scope"
-    ],
+    "scopes": ["clear_directions.scope", "dimensional_portals.scope"],
     "events": [],
     "components": [
       "can_teleport.component.json",
       "can_travel_through_dimensions.component.json",
       "exits.component.json",
-      "is_dimensional_portal.component.json",
       "movement.component.json"
     ],
     "entities": {

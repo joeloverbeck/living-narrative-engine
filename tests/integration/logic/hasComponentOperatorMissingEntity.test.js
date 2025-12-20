@@ -104,7 +104,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'movement:is_dimensional_portal',
+          'blockers:is_dimensional_portal',
         ],
       };
 
@@ -124,7 +124,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // After the fix, entity ID should be passed to entityManager.hasComponent
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
 
       // No has_component warning should be logged - only debug messages
@@ -152,7 +152,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           'patrol:dimensional_rift_blocker_instance', // Direct string, not JSON Logic
-          'movement:is_dimensional_portal',
+          'blockers:is_dimensional_portal',
         ],
       };
 
@@ -180,7 +180,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // entityManager.hasComponent should be called with the entity ID
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -199,7 +199,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'movement:is_dimensional_portal',
+              'blockers:is_dimensional_portal',
             ],
           },
         ],
@@ -228,7 +228,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // entityManager.hasComponent should be called
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -240,7 +240,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockImplementation((entityId, componentId) => {
         if (
           entityId === blockerId &&
-          componentId === 'movement:is_dimensional_portal'
+          componentId === 'blockers:is_dimensional_portal'
         ) {
           return true;
         }
@@ -250,7 +250,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'movement:is_dimensional_portal',
+          'blockers:is_dimensional_portal',
         ],
       };
 
@@ -283,7 +283,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'movement:is_dimensional_portal',
+              'blockers:is_dimensional_portal',
             ],
           },
         ],
@@ -319,7 +319,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockReturnValue(false);
 
       const rule = {
-        has_component: [blockerId, 'movement:is_dimensional_portal'],
+        has_component: [blockerId, 'blockers:is_dimensional_portal'],
       };
 
       const context = {
@@ -365,7 +365,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockReturnValue(false);
 
       const rule = {
-        has_component: [blockerId, 'movement:is_dimensional_portal'],
+        has_component: [blockerId, 'blockers:is_dimensional_portal'],
       };
 
       const context = {
@@ -377,7 +377,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // hasComponent was called, meaning entity was found
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
 
       // Should only get a debug log, not a warning

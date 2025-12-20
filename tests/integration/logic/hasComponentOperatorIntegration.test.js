@@ -148,7 +148,7 @@ describe('has_component Operator - Integration', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'movement:is_dimensional_portal',
+          'blockers:is_dimensional_portal',
         ],
       };
 
@@ -164,7 +164,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(true);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -179,7 +179,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'movement:is_dimensional_portal',
+              'blockers:is_dimensional_portal',
             ],
           },
         ],
@@ -197,7 +197,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(false);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -208,7 +208,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'movement:is_dimensional_portal',
+              'blockers:is_dimensional_portal',
             ],
           },
         ],
@@ -235,7 +235,7 @@ describe('has_component Operator - Integration', () => {
 
     it('should evaluate the exact condition from blocker-is-dimensional-portal.condition.json', () => {
       // This is the exact logic from the condition file that was failing
-      // data/mods/patrol/conditions/blocker-is-dimensional-portal.condition.json
+      // data/mods/blockers/conditions/blocker-is-dimensional-portal.condition.json
 
       // Mock a dimensional portal entity
       const portalId = 'portal-1';
@@ -244,7 +244,7 @@ describe('has_component Operator - Integration', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'movement:is_dimensional_portal',
+          'blockers:is_dimensional_portal',
         ],
       };
 
@@ -260,7 +260,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(true);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         portalId,
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -275,7 +275,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'movement:is_dimensional_portal',
+              'blockers:is_dimensional_portal',
             ],
           },
         ],
@@ -300,7 +300,7 @@ describe('has_component Operator - Integration', () => {
 
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         portalId,
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
   });

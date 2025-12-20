@@ -138,7 +138,7 @@ async function createDimensionalScenario(fixture, options = {}) {
   const blockerId = fixture.createEntity({
     id: 'rule-blocker',
     name: 'dimensional rift',
-    components: [{ componentId: 'movement:is_dimensional_portal', data: {} }],
+    components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
   await fixture.modifyComponent(perimeterId, 'movement:exits', [
@@ -198,7 +198,7 @@ async function createBidirectionalScenario(fixture) {
   const blockerId = fixture.createEntity({
     id: 'rule-bidir-blocker',
     name: 'dimensional rift',
-    components: [{ componentId: 'movement:is_dimensional_portal', data: {} }],
+    components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
   // Perimeter exit to dimension
