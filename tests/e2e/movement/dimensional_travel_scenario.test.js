@@ -163,7 +163,7 @@ function createDimensionalLocations(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'movement:is_dimensional_portal', data: {} },
+      { componentId: 'blockers:is_dimensional_portal', data: {} },
       { componentId: 'core:name', data: { text: 'dimensional rift' } },
     ],
   });
@@ -208,7 +208,7 @@ function createBidirectionalDimensionalLocations(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'movement:is_dimensional_portal', data: {} },
+      { componentId: 'blockers:is_dimensional_portal', data: {} },
       { componentId: 'core:name', data: { text: 'dimensional rift' } },
     ],
   });

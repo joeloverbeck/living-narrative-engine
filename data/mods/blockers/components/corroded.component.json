@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "blockers:corroded",
+  "description": "Marker component indicating a barrier or object is corroded.",
+  "dataSchema": {
+    "type": "object",
+    "description": "This is a marker component and holds no specific data. Its presence indicates corrosion.",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "blockers:is_barred",
+  "description": "Indicates a barrier is barred and describes its material and thickness.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "thickness": {
+        "type": "string",
+        "description": "Thickness of the barrier",
+        "enum": ["thin", "thick"],
+        "default": "thin"
+      },
+      "material": {
+        "type": "string",
+        "description": "Primary material of the barrier",
+        "enum": ["iron", "steel"],
+        "default": "iron"
+      }
+    },
+    "required": ["thickness", "material"],
+    "additionalProperties": false
+  }
+}

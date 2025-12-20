@@ -21,8 +21,8 @@ import {
  * @class HasComponentOperator
  * @description Checks if an entity has a specific component
  *
- * Usage: {"has_component": ["entity", "movement:is_dimensional_portal"]}
- * Usage: {"has_component": [{"var": "entity.blocker"}, "movement:is_dimensional_portal"]}
+ * Usage: {"has_component": ["entity", "blockers:is_dimensional_portal"]}
+ * Usage: {"has_component": [{"var": "entity.blocker"}, "blockers:is_dimensional_portal"]}
  * Returns: true if the entity has the specified component
  */
 export class HasComponentOperator {

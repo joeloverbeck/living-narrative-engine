@@ -52,7 +52,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
       name: 'dimensional rift',
       components: [
         {
-          componentId: 'movement:is_dimensional_portal',
+          componentId: 'blockers:is_dimensional_portal',
           data: {},
         },
       ],

@@ -67,7 +67,7 @@ function createDimensionalScenario() {
 
   const blocker = new ModEntityBuilder(blockerId)
     .withName('dimensional rift')
-    .withComponent('movement:is_dimensional_portal', {})
+    .withComponent('blockers:is_dimensional_portal', {})
     .build();
 
   const observer = new ModEntityBuilder(observerId)

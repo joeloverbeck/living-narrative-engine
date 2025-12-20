@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "blockers",
+  "version": "1.0.0",
+  "name": "Blockers System",
+  "description": "Components for physical or environmental blockers.",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "corroded.component.json",
+      "is_barred.component.json",
+      "is_dimensional_portal.component.json",
+      "structural_resistance.component.json"
+    ],
+    "conditions": [
+      "blocker-is-dimensional-portal.condition.json"
+    ],
+    "scopes": []
+  }
+}

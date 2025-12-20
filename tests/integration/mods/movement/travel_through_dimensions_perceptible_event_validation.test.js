@@ -172,7 +172,7 @@ async function createDimensionalScenario(fixture) {
   const blockerId = fixture.createEntity({
     id: 'validation-blocker',
     name: 'dimensional rift',
-    components: [{ componentId: 'movement:is_dimensional_portal', data: {} }],
+    components: [{ componentId: 'blockers:is_dimensional_portal', data: {} }],
   });
 
   await fixture.modifyComponent(perimeterId, 'movement:exits', [

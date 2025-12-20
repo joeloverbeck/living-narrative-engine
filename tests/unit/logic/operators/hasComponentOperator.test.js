@@ -62,14 +62,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'entity-1',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -80,14 +80,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
       expect(result).toBe(false);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'entity-1',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -99,14 +99,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const result = operator.evaluate(
-        ['entity.blocker', 'movement:is_dimensional_portal'],
+        ['entity.blocker', 'blockers:is_dimensional_portal'],
         context
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'blocker-1',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -114,7 +114,7 @@ describe('HasComponentOperator', () => {
       const context = { entity: null };
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -126,7 +126,7 @@ describe('HasComponentOperator', () => {
       const context = {};
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -140,7 +140,7 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -154,14 +154,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const result = operator.evaluate(
-        ['entityId', 'movement:is_dimensional_portal'],
+        ['entityId', 'blockers:is_dimensional_portal'],
         context
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'entity-1',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -195,7 +195,7 @@ describe('HasComponentOperator', () => {
       });
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -211,14 +211,14 @@ describe('HasComponentOperator', () => {
 
       // Pass a JSON Logic expression as the first parameter
       const result = operator.evaluate(
-        [{ var: 'entity.blocker' }, 'movement:is_dimensional_portal'],
+        [{ var: 'entity.blocker' }, 'blockers:is_dimensional_portal'],
         context
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'blocker-1',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
     });
 
@@ -228,14 +228,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const result = operator.evaluate(
-        [directEntity, 'movement:is_dimensional_portal'],
+        [directEntity, 'blockers:is_dimensional_portal'],
         {}
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'direct-entity-id',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Received entity object directly')
@@ -246,14 +246,14 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const result = operator.evaluate(
-        ['orphan-entity-id', 'movement:is_dimensional_portal'],
+        ['orphan-entity-id', 'blockers:is_dimensional_portal'],
         {}
       );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'orphan-entity-id',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('treating as entity ID')
@@ -262,7 +262,7 @@ describe('HasComponentOperator', () => {
 
     it('should return false and warn when entityPath is of an invalid type', () => {
       const result = operator.evaluate(
-        [123, 'movement:is_dimensional_portal'],
+        [123, 'blockers:is_dimensional_portal'],
         {}
       );
 
@@ -277,7 +277,7 @@ describe('HasComponentOperator', () => {
       const context = { entity: true };
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -304,7 +304,7 @@ describe('HasComponentOperator', () => {
       const context = { entity: { id: '   ' } };
 
       const result = operator.evaluate(
-        ['entity', 'movement:is_dimensional_portal'],
+        ['entity', 'blockers:is_dimensional_portal'],
         context
       );
 
@@ -409,20 +409,20 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       const undefinedPathResult = operator.evaluate(
-        [undefined, 'movement:is_dimensional_portal'],
+        [undefined, 'blockers:is_dimensional_portal'],
         {}
       );
       expect(undefinedPathResult).toBe(false);
 
       const circularPathResult = operator.evaluate(
-        [circular, 'movement:is_dimensional_portal'],
+        [circular, 'blockers:is_dimensional_portal'],
         {}
       );
 
       expect(circularPathResult).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         'circular-entity',
-        'movement:is_dimensional_portal'
+        'blockers:is_dimensional_portal'
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityPath type')
