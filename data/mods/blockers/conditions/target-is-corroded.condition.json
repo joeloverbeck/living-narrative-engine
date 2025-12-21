@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "blockers:target-is-corroded",
+  "description": "Checks if the target blocker has the corroded marker component",
+  "logic": {
+    "!!": [{ "var": "target.components.blockers:corroded" }]
+  }
+}

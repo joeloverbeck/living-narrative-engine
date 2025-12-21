@@ -561,7 +561,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
   });
 
   describe('Logging and Monitoring', () => {
-    it('should log multi-target payload creation with info level', async () => {
+    it('should log multi-target payload creation with debug level', async () => {
       const turnAction = {
         actionDefinitionId: 'test:multi',
         commandString: 'multi action',
@@ -576,7 +576,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       await commandProcessor.dispatchAction(mockActor, turnAction);
 
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'Enhanced multi-target payload created',
         expect.objectContaining({
           hasMultipleTargets: true,

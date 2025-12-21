@@ -37,6 +37,8 @@ export async function waitForCondition(
  * @returns {jest.Mock} Fetch mock that serves repository files without hitting the network.
  */
 export function createFileFetchMock() {
+  const responseCache = new Map();
+
   return jest.fn(async (resource) => {
     const requestInfo = typeof resource === 'string' ? resource : resource?.url;
 
@@ -53,6 +55,11 @@ export function createFileFetchMock() {
       .replace(/^\.\/+/, '')
       .replace(/^\/+/, '');
     const absolutePath = path.resolve(REPO_ROOT, relativePath);
+
+    const cached = responseCache.get(absolutePath);
+    if (cached) {
+      return buildResponse(requestInfo, cached.fileText, cached.fileBuffer);
+    }
 
     let fileText;
     let fileBuffer;
@@ -99,6 +106,7 @@ export function createFileFetchMock() {
       );
     }
 
+    responseCache.set(absolutePath, { fileText, fileBuffer });
     return buildResponse(requestInfo, fileText, fileBuffer);
   });
 }

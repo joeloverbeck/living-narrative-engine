@@ -69,7 +69,19 @@ export class ModScannerService {
       const entries = await fs.readdir(this.#modsPath, { withFileTypes: true });
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) {
+        const isDirectory = entry.isDirectory?.();
+        let isModDirectory = isDirectory;
+
+        if (!isModDirectory && entry.isSymbolicLink?.()) {
+          try {
+            const stat = await fs.stat(path.join(this.#modsPath, entry.name));
+            isModDirectory = stat.isDirectory();
+          } catch {
+            isModDirectory = false;
+          }
+        }
+
+        if (!isModDirectory) {
           continue;
         }
 

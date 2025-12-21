@@ -136,6 +136,116 @@ describe('LocationSummaryProvider', () => {
     );
   });
 
+  it('includes blocker details when exit blockers are locked or closed', async () => {
+    const entityManager = {
+      getEntityInstance: jest.fn(),
+      getEntitiesInLocation: jest.fn().mockResolvedValue(new Set()),
+    };
+    const summaryProvider = { getSummary: jest.fn() };
+    const safeEventDispatcher = createMockSafeEventDispatcher();
+    const lightingStateService = createMockLightingStateService();
+    const provider = new LocationSummaryProvider({
+      entityManager,
+      summaryProvider,
+      safeEventDispatcher,
+      lightingStateService,
+    });
+    const logger = createMockLogger();
+
+    const actor = createTestEntity('actor1', {
+      [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
+    });
+
+    const locationEntity = createTestEntity('loc1', {
+      [EXITS_COMPONENT_ID]: [
+        {
+          direction: 'north',
+          target: 'loc2',
+          blocker: 'blocker1',
+        },
+        {
+          direction: 'east',
+          target: 'loc3',
+          blocker: 'blocker2',
+        },
+        {
+          direction: 'south',
+          target: 'loc4',
+          blocker: null,
+        },
+      ],
+      [NAME_COMPONENT_ID]: { text: 'Room1' },
+      [DESCRIPTION_COMPONENT_ID]: { text: 'Desc1' },
+    });
+
+    const loc2Entity = createTestEntity('loc2', {
+      [NAME_COMPONENT_ID]: { text: 'Room2' },
+    });
+    const loc3Entity = createTestEntity('loc3', {
+      [NAME_COMPONENT_ID]: { text: 'Room3' },
+    });
+    const loc4Entity = createTestEntity('loc4', {
+      [NAME_COMPONENT_ID]: { text: 'Room4' },
+    });
+    const blockerLocked = createTestEntity('blocker1', {
+      [NAME_COMPONENT_ID]: { text: 'Ancient Gate' },
+      'mechanisms:openable': { isLocked: true, isOpen: false },
+    });
+    const blockerOpen = createTestEntity('blocker2', {
+      [NAME_COMPONENT_ID]: { text: 'Open Gate' },
+      'mechanisms:openable': { isLocked: false, isOpen: true },
+    });
+
+    entityManager.getEntityInstance.mockImplementation(async (id) => {
+      if (id === 'loc1') return locationEntity;
+      if (id === 'loc2') return loc2Entity;
+      if (id === 'loc3') return loc3Entity;
+      if (id === 'loc4') return loc4Entity;
+      if (id === 'blocker1') return blockerLocked;
+      if (id === 'blocker2') return blockerOpen;
+      return null;
+    });
+
+    summaryProvider.getSummary.mockImplementation((entity) => {
+      const name =
+        entity.components?.[NAME_COMPONENT_ID]?.text ||
+        DEFAULT_FALLBACK_LOCATION_NAME;
+      const description =
+        entity.components?.[DESCRIPTION_COMPONENT_ID]?.text || 'desc';
+      return { id: entity.id, name, description };
+    });
+
+    const result = await provider.build(actor, logger);
+
+    expect(result.exits).toEqual([
+      {
+        direction: 'north',
+        targetLocationId: 'loc2',
+        targetLocationName: 'Room2',
+        blockerId: 'blocker1',
+        blockerName: 'Ancient Gate',
+        isBlocked: true,
+        blockerIsLocked: true,
+        blockerIsOpen: false,
+      },
+      {
+        direction: 'east',
+        targetLocationId: 'loc3',
+        targetLocationName: 'Room3',
+        blockerId: 'blocker2',
+        blockerName: 'Open Gate',
+        isBlocked: false,
+        blockerIsLocked: false,
+        blockerIsOpen: true,
+      },
+      {
+        direction: 'south',
+        targetLocationId: 'loc4',
+        targetLocationName: 'Room4',
+      },
+    ]);
+  });
+
   it('returns null and dispatches error when location lookup fails', async () => {
     const entityManager = {
       getEntityInstance: jest.fn().mockRejectedValue(new Error('boom')),

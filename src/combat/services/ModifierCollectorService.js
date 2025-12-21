@@ -5,6 +5,7 @@
  */
 
 import jsonLogic from 'json-logic-js';
+import { resolveConditionRefs } from '../../utils/conditionRefResolver.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -33,14 +34,21 @@ class ModifierCollectorService {
   #entityManager;
   #modifierContextBuilder;
   #logger;
+  #gameDataRepository;
 
   /**
    * @param {object} deps
    * @param {IEntityManager} deps.entityManager
    * @param {ModifierContextBuilder} deps.modifierContextBuilder
    * @param {ILogger} deps.logger
+   * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} [deps.gameDataRepository]
    */
-  constructor({ entityManager, modifierContextBuilder, logger }) {
+  constructor({
+    entityManager,
+    modifierContextBuilder,
+    logger,
+    gameDataRepository = null,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error', 'info'],
     });
@@ -55,10 +63,16 @@ class ModifierCollectorService {
         requiredMethods: ['buildContext'],
       }
     );
+    if (gameDataRepository) {
+      validateDependency(gameDataRepository, 'IGameDataRepository', logger, {
+        requiredMethods: ['getConditionDefinition'],
+      });
+    }
 
     this.#entityManager = entityManager;
     this.#modifierContextBuilder = modifierContextBuilder;
     this.#logger = logger;
+    this.#gameDataRepository = gameDataRepository;
 
     this.#logger.debug('ModifierCollectorService: Initialized');
   }
@@ -200,23 +214,46 @@ class ModifierCollectorService {
       return true;
     }
 
-    // Handle condition_ref (reference to external condition file)
-    // Note: In the future, this should resolve condition_ref to actual logic
-    // For now, we only support inline JSON Logic
-    if (condition.condition_ref) {
-      this.#logger.debug(
-        `ModifierCollectorService: condition_ref not yet supported, skipping: ${condition.condition_ref}`
-      );
-      return false;
-    }
+    const normalizedCondition = this.#normalizeCondition(condition);
+    const repository =
+      this.#gameDataRepository ?? { getConditionDefinition: () => null };
 
     // Handle inline JSON Logic (wrapped in .logic property)
-    if (condition.logic) {
-      return jsonLogic.apply(condition.logic, context);
+    if (normalizedCondition.logic) {
+      const resolvedLogic = resolveConditionRefs(
+        normalizedCondition.logic,
+        repository,
+        this.#logger
+      );
+      return jsonLogic.apply(resolvedLogic, context);
     }
 
-    // Direct JSON Logic object
-    return jsonLogic.apply(condition, context);
+    // Direct JSON Logic object or condition_ref container
+    const resolvedLogic = resolveConditionRefs(
+      normalizedCondition,
+      repository,
+      this.#logger
+    );
+    return jsonLogic.apply(resolvedLogic, context);
+  }
+
+  /**
+   * Normalizes modifier condition formats for evaluation.
+   *
+   * @private
+   * @param {object} condition
+   * @returns {object}
+   */
+  #normalizeCondition(condition) {
+    if (condition.$ref && !condition.condition_ref) {
+      this.#logger.warn(
+        'ModifierCollectorService: Deprecated "$ref" in modifier condition; use "condition_ref" instead.',
+        { conditionRef: condition.$ref }
+      );
+      return { condition_ref: condition.$ref };
+    }
+
+    return condition;
   }
 
   /**

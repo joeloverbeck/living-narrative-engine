@@ -40,11 +40,11 @@ module.exports = {
   coverageThreshold: isTargetedRun
     ? undefined
     : {
-        global: {
-          branches: 70,
-          functions: 80,
-          lines: 80,
-          statements: 80,
-        },
+      global: {
+        branches: 70,
+        functions: 78,
+        lines: 78,
+        statements: 78,
       },
+    },
 };

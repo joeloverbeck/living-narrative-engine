@@ -1,0 +1,350 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_saw_through_barred_blocker_stage_three",
+  "comment": "Handles the breaching:saw_through_barred_blocker_stage_three action outcomes.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "breaching:event-is-action-saw-through-barred-blocker-stage-three"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "blockerName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "toolName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Check existing progress for increment behavior.",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "core:progress_tracker",
+        "result_variable": "progressTracker",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:craft_skill",
+        "target_skill_component": "blockers:structural_resistance",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "sawingResult",
+        "target_role": "primary"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.target_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.sawingResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "IF",
+            "comment": "Upsert progress tracker (+2)",
+            "parameters": {
+              "condition": {
+                "!": {
+                  "var": "context.progressTracker"
+                }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "primary",
+                    "component_type": "core:progress_tracker",
+                    "value": {
+                      "value": 2
+                    }
+                  }
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "primary",
+                    "component_type": "core:progress_tracker",
+                    "field": "value",
+                    "mode": "increment",
+                    "value": 2
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Open the barred blocker after the third bar is cleared.",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "mechanisms:openable",
+              "field": "isOpen",
+              "mode": "set",
+              "value": true
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} finds the perfect angle and bites deep into {context.blockerName}' bars with {context.toolName}, sending sparks flying. The opening now will allow passing through comfortably.",
+              "actor_description": "With practiced precision, I find the perfect angle with my {context.toolName}, and the blade bites deep. Metal shavings fly as I clear the third bar of {context.blockerName} and open a comfortable passage.",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear rapid, rhythmic scraping of metal on metal, punctuated by the ping of falling shavings."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} finds the perfect angle and makes major progress cutting through {context.blockerName} with {context.toolName}."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.sawingResult.outcome"
+            },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "IF",
+            "comment": "Upsert progress tracker (+1)",
+            "parameters": {
+              "condition": {
+                "!": {
+                  "var": "context.progressTracker"
+                }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "primary",
+                    "component_type": "core:progress_tracker",
+                    "value": {
+                      "value": 1
+                    }
+                  }
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "primary",
+                    "component_type": "core:progress_tracker",
+                    "field": "value",
+                    "mode": "increment",
+                    "value": 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Open the barred blocker after the third bar is cleared.",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "mechanisms:openable",
+              "field": "isOpen",
+              "mode": "set",
+              "value": true
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} steadily works the {context.toolName} across {context.blockerName}, clearing the third bar and opening the gap further. The gap will now allow passing through.",
+              "actor_description": "I settle into a steady rhythm, the {context.toolName}'s blade slowly but surely biting into the third bar of {context.blockerName} and clearing it. The opening is now wide enough to pass through.",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear a steady, grinding rasp as metal is slowly worn away."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} steadily cuts into {context.blockerName} using {context.toolName}."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.sawingResult.outcome"
+            },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} fights to find purchase on {context.blockerName} with {context.toolName}, but the blade skitters uselessly.",
+              "actor_description": "The blade of my {context.toolName} skips and slides across the surface of {context.blockerName}, failing to find purchase. No progress is made despite my efforts.",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear an unpleasant screeching noise without the rhythm of productive cutting."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} fails to make progress cutting {context.blockerName} using {context.toolName}."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.sawingResult.outcome"
+            },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "UNWIELD_ITEM",
+            "parameters": {
+              "actorEntity": "{event.payload.actorId}",
+              "itemEntity": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "type": "DROP_ITEM_AT_LOCATION",
+            "parameters": {
+              "actorEntity": "{event.payload.actorId}",
+              "itemEntity": "{event.payload.secondaryId}",
+              "locationId": "{context.actorPosition.locationId}"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "As {context.actorName} starts cutting through {context.blockerName}'s third bar, {context.actorName} loses control of {context.toolName}; it clatters to the ground.",
+              "actor_description": "The blade of my {context.toolName} catches awkwardly and jerks violently in my grip. The tool flies from my hands and clatters to the ground in front of {context.blockerName}. No progress is made.",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear a harsh scraping noise followed by a loud clatter as metal hits the ground."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} fumbles and drops {context.toolName} while sawing {context.blockerName}."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    }
+  ]
+}

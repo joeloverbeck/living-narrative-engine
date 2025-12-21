@@ -737,6 +737,7 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           chanceCalculationService: c.resolve(tokens.ChanceCalculationService),
+          gameDataRepository: c.resolve(tokens.IGameDataRepository),
         }),
     ],
     [

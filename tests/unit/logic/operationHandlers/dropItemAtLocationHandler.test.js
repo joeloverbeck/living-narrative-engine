@@ -191,7 +191,7 @@ describe('DropItemAtLocationHandler', () => {
       })
     );
 
-    const infoCall = contextLogger.info.mock.calls.find(([message]) =>
+    const infoCall = contextLogger.debug.mock.calls.find(([message]) =>
       message.includes('POST-DROP VERIFICATION')
     );
     expect(infoCall?.[1]).toMatchObject({ allComponents: 'N/A' });

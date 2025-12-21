@@ -705,7 +705,7 @@ class CommandProcessor extends ICommandProcessor {
     // Determine log level and message based on target type
     if (payload.targets && Object.keys(payload.targets).length > 1) {
       logData.targetPlaceholders = Object.keys(payload.targets);
-      this.#logger.info('Enhanced multi-target payload created', logData);
+      this.#logger.debug('Enhanced multi-target payload created', logData);
     } else if (payload.targetId !== null && payload.targetId !== undefined) {
       this.#logger.debug('Legacy-compatible payload created', logData);
     } else {

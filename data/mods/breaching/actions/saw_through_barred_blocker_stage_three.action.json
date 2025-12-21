@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "breaching:saw_through_barred_blocker_stage_three",
+  "name": "Saw Through",
+  "template": "hack through {barredBlocker} with {sawingTool} ({chance}% chance)",
+  "description": "Attempt to cut through a barred obstacle using an abrasive sawing tool like a hacksaw.",
+  "targets": {
+    "primary": {
+      "scope": "blockers:sawable_barred_blockers_stage_three",
+      "placeholder": "barredBlocker",
+      "description": "The barred obstacle to cut through"
+    },
+    "secondary": {
+      "scope": "breaching:abrasive_sawing_tools",
+      "placeholder": "sawingTool",
+      "description": "The tool to use"
+    }
+  },
+  "required_components": {
+    "primary": [
+      "blockers:is_barred",
+      "blockers:structural_resistance"
+    ]
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:craft_skill"
+    },
+    "targetSkill": {
+      "component": "blockers:structural_resistance",
+      "targetRole": "primary"
+    },
+    "modifiers": [
+      {
+        "tag": "corroded",
+        "condition": {
+          "condition_ref": "blockers:target-is-corroded"
+        },
+        "value": 10,
+        "type": "flat",
+        "description": "Corroded bars are easier to cut through"
+      }
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#C44D0E",
+    "textColor": "#FFFAF2",
+    "hoverBackgroundColor": "#B1480D",
+    "hoverTextColor": "#FFFAF2"
+  }
+}

@@ -434,7 +434,7 @@ export class TurnOrderTickerRenderer {
       const remainingCount = this.#actorQueueElement?.children.length || 0;
 
       if (remainingCount === 0) {
-        this.#logger.info('Last actor removed from ticker', { entityId });
+        this.#logger.debug('Last actor removed from ticker', { entityId });
       } else {
         this.#logger.debug('Actor removed from ticker', {
           entityId,

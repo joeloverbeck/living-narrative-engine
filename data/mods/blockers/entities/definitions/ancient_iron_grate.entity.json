@@ -15,12 +15,6 @@
       "thickness": "thick",
       "material": "iron"
     },
-    "blockers:corroded": {},
-    "mechanisms:openable": {
-      "isLocked": true,
-      "isOpen": false,
-      "requiredKeyId": null,
-      "lockLabel": "weathered iron lock"
-    }
+    "blockers:corroded": {}
   }
 }

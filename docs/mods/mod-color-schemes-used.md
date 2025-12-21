@@ -8,8 +8,8 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 57
-**In Use**: 46 schemes actively implemented across mods
+**Total Schemes Defined**: 58
+**In Use**: 47 schemes actively implemented across mods
 **Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -19,6 +19,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Affection               | Soft Purple         | 3.1     | `#6a1b9a`        | Active |
 | Ballet                  | Indigo Professional | 10.1    | `#283593`        | Active |
 | Bending                 | Yielding Posture    | 21.1    | `#5a4033`        | Active |
+| Breaching               | Rust Orange         | 2.4     | `#C44D0E`        | Active |
 | Caressing               | Dark Purple         | 7.2     | `#311b92`        | Active |
 | Clothing                | Earth Brown         | 4.2     | `#6d4c41`        | Active |
 | Companionship           | Deep Teal           | 3.3     | `#00695c`        | Active |
@@ -68,7 +69,7 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Color Scheme Definitions (In Use)
 
-All schemes are WCAG 2.1 AA compliant (minimum 4.5:1 contrast ratio).
+All schemes are WCAG 2.1 AA compliant (minimum 4.5:1 contrast ratio) unless noted.
 Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ### 1. Neutral/System Colors
@@ -138,6 +139,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 4.56:1 AA
 - **Use Cases**: Fire attacks, energy bursts, special moves
 - **Theme**: Energy, excitement, dynamism
+
+#### 2.4 Rust Orange - Breaching
+
+```json
+{
+  "backgroundColor": "#C44D0E",
+  "textColor": "#FFFAF2",
+  "hoverBackgroundColor": "#B1480D",
+  "hoverTextColor": "#FFFAF2"
+}
+```
+
+- **Normal Contrast**: 4.58:1 AA
+- **Hover Contrast**: 5.31:1 AA
+- **Use Cases**: Breaching actions, abrasive sawing, industrial cutting
+- **Theme**: Rusted metal, sparks, and tunnel grit
 
 ### 3. Social/Intimacy Colors
 

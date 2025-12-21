@@ -16,7 +16,7 @@
             {
                 "direction": "to the access point (segment A)",
                 "target": "dredgers:access_point_segment_a_instance",
-                "blocker": null
+                "blocker": "dredgers:ancient_iron_grate_segment_a_to_b_instance"
             },
             {
                 "direction": "to segment C",

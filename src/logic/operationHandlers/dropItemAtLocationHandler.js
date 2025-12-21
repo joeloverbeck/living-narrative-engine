@@ -229,7 +229,7 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
         updateCount: updates.length,
       });
 
-      // DIAGNOSTIC: Verify item components after drop (INFO level to avoid browser crash from excessive logs)
+      // DIAGNOSTIC: Verify item components after drop (debug-only to avoid noisy INFO logs)
       const itemPosition = this.#entityManager.getComponentData(
         itemEntity,
         POSITION_COMPONENT_ID
@@ -243,7 +243,7 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
         'items:portable'
       );
 
-      log.info('[DROP_ITEM] POST-DROP VERIFICATION', {
+      log.debug('[DROP_ITEM] POST-DROP VERIFICATION', {
         itemEntity,
         locationId,
         itemPosition,

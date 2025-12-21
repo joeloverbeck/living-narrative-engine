@@ -6,10 +6,6 @@
   "description": "Components for physical or environmental blockers.",
   "dependencies": [
     {
-      "id": "mechanisms",
-      "version": "^1.0.0"
-    },
-    {
       "id": "locations",
       "version": "^1.0.0"
     }
@@ -22,9 +18,14 @@
       "structural_resistance.component.json"
     ],
     "conditions": [
-      "blocker-is-dimensional-portal.condition.json"
+      "blocker-is-dimensional-portal.condition.json",
+      "target-is-corroded.condition.json"
     ],
-    "scopes": [],
+    "scopes": [
+      "sawable_barred_blockers.scope",
+      "sawable_barred_blockers_stage_two.scope",
+      "sawable_barred_blockers_stage_three.scope"
+    ],
     "entities": {
       "definitions": [
         "ancient_iron_grate.entity.json"

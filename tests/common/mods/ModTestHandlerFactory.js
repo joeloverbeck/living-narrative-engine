@@ -1637,6 +1637,7 @@ export class ModTestHandlerFactory {
       RESOLVE_OUTCOME: new ResolveOutcomeHandler({
         chanceCalculationService,
         logger,
+        gameDataRepository,
       }),
       MODIFY_PART_HEALTH: new ModifyPartHealthHandler({
         logger,
