@@ -259,6 +259,74 @@ describe('Breaching Mod Scopes', () => {
       const normalized = normalizeScopeResults(result);
       expect(normalized).not.toContain('blocker-1');
     });
+
+    test('should exclude blockers without is_barred', () => {
+      const blocker = createEntityInstance('blocker-1', {
+        'blockers:structural_resistance': { value: 100 },
+      });
+
+      const location = createEntityInstance('location-1', {
+        'locations:exits': [
+          { blocker: 'blocker-1' }
+        ]
+      });
+
+      const actor = createEntityInstance('actor-1', {
+        'core:actor': { name: 'Test Actor' },
+      });
+
+      mockEntityManager._addEntity(blocker);
+      mockEntityManager._addEntity(location);
+      mockEntityManager._addEntity(actor);
+
+      const runtimeCtx = {
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        actor,
+        location,
+      };
+      runtimeCtx.jsonLogicEval = createJsonLogicEvalMock(runtimeCtx);
+
+      const scopeDef = scopeRegistry.getScope('blockers:sawable_barred_blockers');
+      const result = scopeEngine.resolve(scopeDef.ast, actor, runtimeCtx);
+
+      const normalized = normalizeScopeResults(result);
+      expect(normalized).not.toContain('blocker-1');
+    });
+
+    test('should exclude blockers without structural resistance', () => {
+      const blocker = createEntityInstance('blocker-1', {
+        'blockers:is_barred': {},
+      });
+
+      const location = createEntityInstance('location-1', {
+        'locations:exits': [
+          { blocker: 'blocker-1' }
+        ]
+      });
+
+      const actor = createEntityInstance('actor-1', {
+        'core:actor': { name: 'Test Actor' },
+      });
+
+      mockEntityManager._addEntity(blocker);
+      mockEntityManager._addEntity(location);
+      mockEntityManager._addEntity(actor);
+
+      const runtimeCtx = {
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        actor,
+        location,
+      };
+      runtimeCtx.jsonLogicEval = createJsonLogicEvalMock(runtimeCtx);
+
+      const scopeDef = scopeRegistry.getScope('blockers:sawable_barred_blockers');
+      const result = scopeEngine.resolve(scopeDef.ast, actor, runtimeCtx);
+
+      const normalized = normalizeScopeResults(result);
+      expect(normalized).not.toContain('blocker-1');
+    });
   });
 
   describe('breaching:abrasive_sawing_tools', () => {

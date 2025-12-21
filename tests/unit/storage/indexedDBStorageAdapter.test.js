@@ -141,7 +141,7 @@ describe('IndexedDBStorageAdapter', () => {
       await initPromise;
 
       expect(mockIndexedDB.open).toHaveBeenCalledWith('ActionTraces', 1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'IndexedDBStorageAdapter: Database opened successfully'
       );
     });

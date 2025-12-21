@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import craftSkillComponent from '../../../../../data/mods/skills/components/craft_skill.component.json';
 import { TestBedClass } from '../../../../common/entities/testBed.js';
 
 describe('skills:craft_skill component schema', () => {
@@ -43,6 +44,12 @@ describe('skills:craft_skill component schema', () => {
   it('rejects missing value', () => {
     const result = validate({});
     expect(result.isValid).toBe(false);
+  });
+
+  it('defines default value as 10', () => {
+    expect(
+      craftSkillComponent.dataSchema.properties.value.default
+    ).toBe(10);
   });
 
   it('rejects additional properties', () => {

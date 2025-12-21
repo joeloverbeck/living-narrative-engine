@@ -100,7 +100,7 @@ export class IndexedDBStorageAdapter {
 
       request.onsuccess = () => {
         this.#db = request.result;
-        this.#logger.info(
+        this.#logger.debug(
           'IndexedDBStorageAdapter: Database opened successfully'
         );
 

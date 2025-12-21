@@ -66,6 +66,7 @@ export function registerCombatServices(container) {
         entityManager: c.resolve(tokens.IEntityManager),
         modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
         logger: c.resolve(tokens.ILogger),
+        gameDataRepository: c.resolve(tokens.IGameDataRepository),
       })
   );
 

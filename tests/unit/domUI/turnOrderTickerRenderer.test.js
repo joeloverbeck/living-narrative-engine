@@ -2364,7 +2364,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
 
         await renderer.removeActor('actor-1');
 
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           'Last actor removed from ticker',
           expect.objectContaining({ entityId: 'actor-1' })
         );

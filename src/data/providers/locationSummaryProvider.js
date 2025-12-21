@@ -25,6 +25,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /** Component ID for darkness description */
 const DESCRIPTION_IN_DARKNESS_COMPONENT_ID = 'locations:description_in_darkness';
+const OPENABLE_COMPONENT_ID = 'mechanisms:openable';
 
 export class LocationSummaryProvider extends ILocationSummaryProvider {
   /** @type {IEntityManager} */
@@ -79,12 +80,47 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
           const targetSummary = targetEntity
             ? this.#summaryProvider.getSummary(targetEntity)
             : null;
-          return {
+          const exitSummary = {
             direction: exitData.direction || DEFAULT_FALLBACK_EXIT_DIRECTION,
             targetLocationId: exitData.target,
             targetLocationName:
               targetSummary?.name || DEFAULT_FALLBACK_LOCATION_NAME,
           };
+          if (!exitData.blocker) {
+            return exitSummary;
+          }
+          try {
+            const blockerEntity = await this.#entityManager.getEntityInstance(
+              exitData.blocker
+            );
+            if (!blockerEntity) {
+              return exitSummary;
+            }
+            const blockerSummary = this.#summaryProvider.getSummary(
+              blockerEntity
+            );
+            const openableState =
+              blockerEntity.getComponentData(OPENABLE_COMPONENT_ID) || {};
+            const blockerIsLocked = openableState.isLocked === true;
+            const blockerIsOpen = openableState.isOpen === true;
+            const isBlocked =
+              blockerIsLocked || openableState.isOpen === false;
+            return {
+              ...exitSummary,
+              blockerId: exitData.blocker,
+              blockerName: blockerSummary?.name || 'Unknown blocker',
+              isBlocked,
+              blockerIsLocked,
+              blockerIsOpen,
+            };
+          } catch (err) {
+            safeDispatchError(
+              this.#dispatcher,
+              `LocationSummaryProvider: Error fetching blocker entity '${exitData.blocker}': ${err.message}`,
+              { error: err.message, stack: err.stack, exitData }
+            );
+            return exitSummary;
+          }
         } catch (err) {
           safeDispatchError(
             this.#dispatcher,

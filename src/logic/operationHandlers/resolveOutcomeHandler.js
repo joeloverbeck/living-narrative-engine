@@ -88,6 +88,8 @@ class ResolveOutcomeHandler {
   #chanceCalculationService;
   /** @type {ILogger} */
   #logger;
+  /** @type {import('../../interfaces/IGameDataRepository.js').IGameDataRepository|null} */
+  #gameDataRepository;
 
   /**
    * Creates an instance of ResolveOutcomeHandler.
@@ -97,16 +99,17 @@ class ResolveOutcomeHandler {
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @throws {Error} If any dependency is missing or invalid.
    */
-  constructor({ chanceCalculationService, logger }) {
+  constructor({ chanceCalculationService, logger, gameDataRepository = null }) {
     // Validate logger
     if (
       !logger ||
+      typeof logger.info !== 'function' ||
       typeof logger.debug !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function'
     ) {
       throw new Error(
-        'ResolveOutcomeHandler requires a valid ILogger instance with debug, warn, and error methods.'
+        'ResolveOutcomeHandler requires a valid ILogger instance with info, debug, warn, and error methods.'
       );
     }
 
@@ -122,6 +125,7 @@ class ResolveOutcomeHandler {
 
     this.#chanceCalculationService = chanceCalculationService;
     this.#logger = logger;
+    this.#gameDataRepository = gameDataRepository;
 
     this.#logger.debug('ResolveOutcomeHandler initialized.');
   }
@@ -185,6 +189,8 @@ class ResolveOutcomeHandler {
       event?.payload?.targets?.secondary?.entityId;
     const tertiaryTargetId =
       event?.payload?.tertiaryId || event?.payload?.targets?.tertiary?.entityId;
+    const actionId =
+      event?.payload?.actionId || event?.payload?.action?.definitionId;
 
     const selectedTargetRole = target_role || 'secondary';
 
@@ -258,6 +264,10 @@ class ResolveOutcomeHandler {
         fixedDifficulty: difficulty_modifier,
       },
     };
+    const actionModifiers = this.#resolveActionModifiers(actionId);
+    if (actionModifiers) {
+      pseudoActionDef.chanceBased.modifiers = actionModifiers;
+    }
 
     // --- 4. Delegate to ChanceCalculationService ---
     const outcomeResult = this.#chanceCalculationService.resolveOutcome({
@@ -282,6 +292,30 @@ class ResolveOutcomeHandler {
       modifiers: outcomeResult.modifiers,
     };
 
+    this.#logger.info('RESOLVE_OUTCOME: Outcome resolved.', {
+      outcome: result.outcome,
+      roll: result.roll,
+      threshold: result.threshold,
+      margin: result.margin,
+      isCritical: result.isCritical,
+      modifiers: result.modifiers,
+      actorId,
+      targetId,
+      primaryTargetId,
+      secondaryTargetId,
+      tertiaryTargetId,
+      targetRole: selectedTargetRole,
+      actorSkillComponent: actor_skill_component,
+      targetSkillComponent: target_skill_component,
+      actorSkillDefault: actor_skill_default,
+      targetSkillDefault: target_skill_default,
+      formula,
+      difficultyModifier: difficulty_modifier,
+      contestType: pseudoActionDef.chanceBased.contestType,
+      resultVariable: result_variable,
+      eventType: event?.type,
+    });
+
     // --- 6. Store in Context Variable (FAIL-FAST) ---
     if (!executionContext?.evaluationContext?.context) {
       const error = new ResolveOutcomeOperationError(
@@ -301,6 +335,54 @@ class ResolveOutcomeHandler {
     this.#logger.debug(
       `RESOLVE_OUTCOME: Stored result in "${result_variable}" - outcome: ${result.outcome}, roll: ${result.roll}, threshold: ${result.threshold}`
     );
+  }
+
+  /**
+   * Resolves action modifiers from the repository when available.
+   *
+   * @private
+   * @param {string|undefined|null} actionId
+   * @returns {Array<object>|null}
+   */
+  #resolveActionModifiers(actionId) {
+    if (!actionId || !this.#gameDataRepository) {
+      return null;
+    }
+
+    const actionDef = this.#getActionDefinition(actionId);
+    const modifiers = actionDef?.chanceBased?.modifiers;
+
+    if (Array.isArray(modifiers) && modifiers.length > 0) {
+      return modifiers;
+    }
+
+    return null;
+  }
+
+  /**
+   * Attempts to resolve an action definition from the repository.
+   *
+   * @private
+   * @param {string} actionId
+   * @returns {object|null}
+   */
+  #getActionDefinition(actionId) {
+    if (!this.#gameDataRepository) {
+      return null;
+    }
+
+    if (typeof this.#gameDataRepository.getActionDefinition === 'function') {
+      return this.#gameDataRepository.getActionDefinition(actionId) ?? null;
+    }
+
+    if (typeof this.#gameDataRepository.getAllActionDefinitions === 'function') {
+      const allActions = this.#gameDataRepository.getAllActionDefinitions();
+      if (Array.isArray(allActions)) {
+        return allActions.find((action) => action?.id === actionId) ?? null;
+      }
+    }
+
+    return null;
   }
 }
 

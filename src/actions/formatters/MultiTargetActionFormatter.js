@@ -122,6 +122,14 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         );
       }
 
+      const singleCombination = this.#buildSingleCombination(resolvedTargets);
+      template = this.#applyChanceAndTags({
+        actionDef,
+        template,
+        combination: singleCombination,
+        options,
+      });
+
       // Format single action with first target from each definition (legacy behavior for single entities)
       return this.#formatSingleMultiTarget(
         template,
@@ -171,76 +179,12 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     for (const combination of combinations) {
       let template = actionDef.template || actionDef.name;
 
-      // Calculate chance per-combination for chance-based actions
-      // This ensures each target combination gets its own accurate percentage
-      if (
-        actionDef.chanceBased?.enabled &&
-        template.includes('{chance}') &&
-        _options?.chanceCalculationService &&
-        _options?.actorId
-      ) {
-        // Determine if we need a target for chance calculation
-        // Fixed-difficulty actions don't require a target (actor skill vs fixed difficulty)
-        // Contested/opposed actions require a target for the opponent's skill
-        const contestType = actionDef.chanceBased.contestType;
-        const isFixedDifficulty = contestType === 'fixed_difficulty';
-
-        let targetId = null;
-        if (
-          !isFixedDifficulty &&
-          actionDef.chanceBased.targetSkill?.targetRole
-        ) {
-          // Contested action with explicit target role
-          const targetRole = actionDef.chanceBased.targetSkill.targetRole;
-          targetId = combination[targetRole]?.[0]?.id;
-        } else if (!isFixedDifficulty) {
-          // Contested action without explicit targetRole - fallback to secondary then primary
-          targetId =
-            combination.secondary?.[0]?.id ?? combination.primary?.[0]?.id;
-        }
-        // For fixed-difficulty, targetId remains null - ChanceCalculationService handles this
-
-        // Calculate if: fixed-difficulty (no target needed) OR we have a target for contested
-        const canCalculate = isFixedDifficulty || !!targetId;
-
-        if (canCalculate) {
-          try {
-            // For modifier context, always pass the primary target from the combination
-            // even for fixed-difficulty actions (targetId is for skill resolution only)
-            const primaryTargetForModifiers =
-              combination.primary?.[0]?.id ?? targetId;
-
-            const displayResult =
-              _options.chanceCalculationService.calculateForDisplay({
-                actorId: _options.actorId,
-                primaryTargetId: primaryTargetForModifiers,
-                secondaryTargetId: combination.secondary?.[0]?.id,
-                tertiaryTargetId: combination.tertiary?.[0]?.id,
-                actionDef,
-              });
-            // Remove % since template already has it
-            template = template.replace(
-              '{chance}',
-              displayResult.displayText.replace('%', '')
-            );
-
-            // Append modifier tags if present
-            const activeTags = displayResult.activeTags ?? [];
-            if (activeTags.length > 0) {
-              const tagsString = this.#formatModifierTags(activeTags);
-              if (tagsString) {
-                template = this.#appendTagsToTemplate(template, tagsString);
-              }
-            }
-          } catch (error) {
-            this.#logger.warn('Failed to calculate chance for tag display', {
-              actionId: actionDef.id,
-              error: error.message,
-            });
-            // Continue without tags - don't break action display
-          }
-        }
-      }
+      template = this.#applyChanceAndTags({
+        actionDef,
+        template,
+        combination,
+        options: _options,
+      });
 
       const result = this.#formatSingleMultiTarget(
         template,
@@ -487,6 +431,101 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     }
 
     return { ok: true, value: formattedTemplate };
+  }
+
+  /**
+   * Apply chance injection and modifier tags to a template.
+   *
+   * @private
+   * @param {object} params
+   * @param {ActionDefinition} params.actionDef
+   * @param {string} params.template
+   * @param {Object<string, ResolvedTarget[]>} params.combination
+   * @param {FormattingOptions} params.options
+   * @returns {string}
+   */
+  #applyChanceAndTags({ actionDef, template, combination, options }) {
+    if (
+      !actionDef.chanceBased?.enabled ||
+      !template.includes('{chance}') ||
+      !options?.chanceCalculationService ||
+      !options?.actorId
+    ) {
+      return template;
+    }
+
+    // Determine if we need a target for chance calculation
+    // Fixed-difficulty actions don't require a target (actor skill vs fixed difficulty)
+    // Contested/opposed actions require a target for the opponent's skill
+    const contestType = actionDef.chanceBased.contestType;
+    const isFixedDifficulty = contestType === 'fixed_difficulty';
+
+    let targetId = null;
+    if (!isFixedDifficulty && actionDef.chanceBased.targetSkill?.targetRole) {
+      const targetRole = actionDef.chanceBased.targetSkill.targetRole;
+      targetId = combination[targetRole]?.[0]?.id;
+    } else if (!isFixedDifficulty) {
+      targetId = combination.secondary?.[0]?.id ?? combination.primary?.[0]?.id;
+    }
+
+    const canCalculate = isFixedDifficulty || !!targetId;
+    if (!canCalculate) {
+      return template;
+    }
+
+    try {
+      const primaryTargetForModifiers =
+        combination.primary?.[0]?.id ?? targetId;
+
+      const displayResult = options.chanceCalculationService.calculateForDisplay({
+        actorId: options.actorId,
+        primaryTargetId: primaryTargetForModifiers,
+        secondaryTargetId: combination.secondary?.[0]?.id,
+        tertiaryTargetId: combination.tertiary?.[0]?.id,
+        actionDef,
+      });
+
+      let updatedTemplate = template.replace(
+        '{chance}',
+        displayResult.displayText.replace('%', '')
+      );
+
+      const activeTags = displayResult.activeTags ?? [];
+      if (activeTags.length > 0) {
+        const tagsString = this.#formatModifierTags(activeTags);
+        if (tagsString) {
+          updatedTemplate = this.#appendTagsToTemplate(
+            updatedTemplate,
+            tagsString
+          );
+        }
+      }
+
+      return updatedTemplate;
+    } catch (error) {
+      this.#logger.warn('Failed to calculate chance for tag display', {
+        actionId: actionDef.id,
+        error: error.message,
+      });
+      return template;
+    }
+  }
+
+  /**
+   * Build a single-target combination from resolved targets.
+   *
+   * @private
+   * @param {Object<string, ResolvedTarget[]>} resolvedTargets
+   * @returns {Object<string, ResolvedTarget[]>}
+   */
+  #buildSingleCombination(resolvedTargets) {
+    const combination = {};
+    for (const [key, targets] of Object.entries(resolvedTargets || {})) {
+      if (Array.isArray(targets) && targets.length > 0) {
+        combination[key] = [targets[0]];
+      }
+    }
+    return combination;
   }
 
   /**

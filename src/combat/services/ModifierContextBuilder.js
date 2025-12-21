@@ -99,6 +99,11 @@ class ModifierContextBuilder {
         tertiary: tertiaryContext,
         location: locationContext,
       },
+      actor: actorContext,
+      target: primaryContext,
+      secondaryTarget: secondaryContext,
+      tertiaryTarget: tertiaryContext,
+      location: locationContext,
     };
 
     this.#logger.debug('ModifierContextBuilder: Context built', {

@@ -35,6 +35,9 @@
             "instanceId": "dredgers:flooded_approach_instance"
         },
         {
+            "instanceId": "dredgers:ancient_iron_grate_segment_a_to_b_instance"
+        },
+        {
             "instanceId": "dredgers:keyring_instance"
         },
         {
@@ -144,6 +147,9 @@
         },
         {
             "instanceId": "dredgers:saffi_two_tides_instance"
+        },
+        {
+            "instanceId": "dredgers:pitch_instance"
         }
     ]
 }

@@ -51,6 +51,12 @@ const EXPECTED_COLOR_SCHEMES = {
     hoverBackgroundColor: '#b71c1c', // Updated to match current actions
     hoverTextColor: '#ffebee', // Updated to match current actions
   },
+  breaching: {
+    backgroundColor: '#C44D0E',
+    textColor: '#FFFAF2',
+    hoverBackgroundColor: '#B1480D',
+    hoverTextColor: '#FFFAF2',
+  },
 };
 
 // WCAG 2.1 AA minimum contrast ratio

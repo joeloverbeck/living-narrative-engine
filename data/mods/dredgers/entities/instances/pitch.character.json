@@ -9,7 +9,8 @@
         "items:inventory": {
             "items": [
                 "dredgers:rotgut_flask_instance",
-                "dredgers:hooded_oil_lantern_instance_1"
+                "dredgers:hooded_oil_lantern_instance_1",
+                "dredgers:hacksaw_instance"
             ],
             "capacity": {
                 "maxWeight": 50.0,

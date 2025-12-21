@@ -621,8 +621,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           exit.targetLocationName ||
           exit.targetLocationId ||
           DEFAULT_FALLBACK_LOCATION_NAME;
+        const blockedSuffix = exit.isBlocked
+          ? ` (blocked by ${exit.blockerName || 'Unknown blocker'})`
+          : '';
         segments.push(
-          `- **${formatDirection(exit.direction)}** leads to ${targetName}`
+          `- **${formatDirection(exit.direction)}** leads to ${targetName}${blockedSuffix}`
         );
       });
       this.#logger.debug(

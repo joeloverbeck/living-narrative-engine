@@ -235,6 +235,43 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       expect(result).toContain('- **Description**: A wise looking individual.');
     });
 
+    test('should annotate blocked exits with the blocker name', () => {
+      const mockGameState = {
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location.',
+          exits: [
+            {
+              direction: 'to segment B',
+              targetLocationName: 'Segment B',
+              blockerName: 'ancient iron grate',
+              isBlocked: true,
+            },
+            {
+              direction: 'to segment C',
+              targetLocationName: 'Segment C',
+              blockerName: 'open gate',
+              isBlocked: false,
+            },
+            {
+              direction: 'to segment D',
+              targetLocationName: 'Segment D',
+            },
+          ],
+          characters: [],
+        },
+      };
+
+      const result = provider.getWorldContextContent(mockGameState);
+
+      expect(result).toContain(
+        '- **to segment B** leads to Segment B (blocked by ancient iron grate)'
+      );
+      expect(result).toContain('- **to segment C** leads to Segment C');
+      expect(result).toContain('- **to segment D** leads to Segment D');
+      expect(result).not.toContain('blocked by open gate');
+    });
+
     test('should handle characters without apparent age', () => {
       const mockGameState = {
         currentLocation: {

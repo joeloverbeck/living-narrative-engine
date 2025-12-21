@@ -16,6 +16,11 @@
  * @property {string} [targetLocationName] - Optional. The name of the target location. (Added to support prompt requirements)
  * @property {string} [description] - Optional. e.g., "a dark archway". (Future consideration)
  * @property {boolean} [isLocked] - Optional. If the exit is known to be locked. (Future consideration)
+ * @property {string} [blockerId] - Optional. Entity instance ID of a blocker that gates this exit.
+ * @property {string} [blockerName] - Optional. Display name for the blocker entity.
+ * @property {boolean} [isBlocked] - Optional. Whether the blocker currently prevents traversal.
+ * @property {boolean} [blockerIsLocked] - Optional. Whether the blocker is locked.
+ * @property {boolean} [blockerIsOpen] - Optional. Whether the blocker is open.
  */
 
 /**

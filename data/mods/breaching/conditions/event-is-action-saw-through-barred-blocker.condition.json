@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "breaching:event-is-action-saw-through-barred-blocker",
+  "description": "Checks if the event is the saw through barred blocker action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "breaching:saw_through_barred_blocker"]
+  }
+}

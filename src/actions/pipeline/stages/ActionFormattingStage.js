@@ -284,6 +284,11 @@ export class ActionFormattingStage extends PipelineStage {
       // each combination. The formatter handles per-combination chance calculation.
       if (actionDef.generateCombinations) continue;
 
+      // Skip multi-target actions so the formatter can inject chance and tags
+      if (actionWithTarget.isMultiTarget || actionDef.isMultiTarget) {
+        continue;
+      }
+
       // Get target ID from resolvedTargets or targetContexts
       const targetId = this.#extractTargetId(actionWithTarget, context);
 

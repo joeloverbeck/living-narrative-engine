@@ -28,7 +28,15 @@ function createMocks() {
           tertiary: null,
           location: null,
         },
+        actor: { id: 'actor-123', components: {} },
+        target: null,
+        secondaryTarget: null,
+        tertiaryTarget: null,
+        location: null,
       }),
+    },
+    gameDataRepository: {
+      getConditionDefinition: jest.fn(),
     },
   };
 }
@@ -38,18 +46,21 @@ describe('ModifierCollectorService', () => {
   let mockLogger;
   let mockEntityManager;
   let mockModifierContextBuilder;
+  let mockGameDataRepository;
 
   beforeEach(() => {
     ({
       logger: mockLogger,
       entityManager: mockEntityManager,
       modifierContextBuilder: mockModifierContextBuilder,
+      gameDataRepository: mockGameDataRepository,
     } = createMocks());
 
     service = new ModifierCollectorService({
       entityManager: mockEntityManager,
       modifierContextBuilder: mockModifierContextBuilder,
       logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
     });
   });
 
@@ -380,27 +391,102 @@ describe('ModifierCollectorService', () => {
         expect(result.modifiers[0].tag).toBe('always active');
       });
 
-      it('should skip condition_ref and log debug message', () => {
+      it('should resolve condition_ref and apply modifier', () => {
+        const primaryTarget = {
+          id: 'target-456',
+          components: { 'blockers:corroded': {} },
+        };
+        mockModifierContextBuilder.buildContext.mockReturnValue({
+          entity: {
+            actor: { id: 'actor-123', components: {} },
+            primary: primaryTarget,
+            secondary: null,
+            tertiary: null,
+            location: null,
+          },
+          actor: { id: 'actor-123', components: {} },
+          target: primaryTarget,
+          secondaryTarget: null,
+          tertiaryTarget: null,
+          location: null,
+        });
+        mockGameDataRepository.getConditionDefinition.mockImplementation(
+          (id) => {
+            if (id === 'blockers:target-is-corroded') {
+              return {
+                logic: { '!!': [{ var: 'target.components.blockers:corroded' }] },
+              };
+            }
+            return null;
+          }
+        );
+
         const result = service.collectModifiers({
           actorId: 'actor-123',
+          primaryTargetId: 'target-456',
           actionConfig: {
             modifiers: [
               {
                 condition: {
-                  condition_ref: 'some:condition_ref',
+                  condition_ref: 'blockers:target-is-corroded',
                 },
                 value: 10,
                 type: 'flat',
-                tag: 'should be skipped',
+                tag: 'corroded',
               },
             ],
           },
         });
 
-        expect(result.modifiers).toHaveLength(0);
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('condition_ref not yet supported')
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].tag).toBe('corroded');
+        expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
+          'blockers:target-is-corroded'
         );
+      });
+
+      it('should resolve deprecated $ref condition references', () => {
+        const primaryTarget = {
+          id: 'target-456',
+          components: { 'blockers:corroded': {} },
+        };
+        mockModifierContextBuilder.buildContext.mockReturnValue({
+          entity: {
+            actor: { id: 'actor-123', components: {} },
+            primary: primaryTarget,
+            secondary: null,
+            tertiary: null,
+            location: null,
+          },
+          actor: { id: 'actor-123', components: {} },
+          target: primaryTarget,
+          secondaryTarget: null,
+          tertiaryTarget: null,
+          location: null,
+        });
+        mockGameDataRepository.getConditionDefinition.mockReturnValue({
+          logic: { '!!': [{ var: 'target.components.blockers:corroded' }] },
+        });
+
+        const result = service.collectModifiers({
+          actorId: 'actor-123',
+          primaryTargetId: 'target-456',
+          actionConfig: {
+            modifiers: [
+              {
+                condition: {
+                  $ref: 'blockers:target-is-corroded',
+                },
+                value: 10,
+                type: 'flat',
+                tag: 'corroded',
+              },
+            ],
+          },
+        });
+
+        expect(result.modifiers).toHaveLength(1);
+        expect(result.modifiers[0].tag).toBe('corroded');
       });
     });
 

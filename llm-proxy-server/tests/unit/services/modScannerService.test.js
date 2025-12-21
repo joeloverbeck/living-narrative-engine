@@ -290,6 +290,46 @@ describe('ModScannerService', () => {
       expect(mods[0].id).toBe('valid_mod');
     });
 
+    test('includes symlinked mod directories', async () => {
+      const mockEntries = [
+        {
+          name: 'p_erotica',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+      ];
+
+      const manifest = {
+        id: 'p_erotica',
+        name: 'P Erotica',
+        version: '1.0.0',
+      };
+
+      fs.readdir.mockImplementation((dirPath) => {
+        if (dirPath === mockModsPath) {
+          return Promise.resolve(mockEntries);
+        }
+        const error = new Error('ENOENT');
+        error.code = 'ENOENT';
+        return Promise.reject(error);
+      });
+
+      fs.readFile.mockResolvedValue(JSON.stringify(manifest));
+      fs.stat.mockImplementation((statPath) => {
+        if (statPath === path.join(mockModsPath, 'p_erotica')) {
+          return Promise.resolve({ isDirectory: () => true });
+        }
+        const error = new Error('ENOENT');
+        error.code = 'ENOENT';
+        return Promise.reject(error);
+      });
+
+      const mods = await service.scanMods();
+
+      expect(mods).toHaveLength(1);
+      expect(mods[0].id).toBe('p_erotica');
+    });
+
     test('uses default values for missing optional fields', async () => {
       const mockEntries = [{ name: 'minimal-mod', isDirectory: () => true }];
 

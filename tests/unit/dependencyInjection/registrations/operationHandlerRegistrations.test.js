@@ -231,6 +231,7 @@ beforeAll(async () => {
     IValidatedEventDispatcher,
     ISafeEventDispatcher,
     IEntityManager,
+    IGameDataRepository,
     RebuildLeaderListCacheHandler: RebuildLeaderListCacheHandlerToken,
     JsonLogicEvaluationService: JsonLogicEvaluationServiceToken,
     OperationInterpreter: OperationInterpreterToken,
@@ -897,6 +898,7 @@ beforeAll(async () => {
           property: 'chanceCalculationService',
           token: ChanceCalculationServiceToken,
         },
+        { property: 'gameDataRepository', token: IGameDataRepository },
       ],
     },
     {

@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "breaching",
   "version": "1.0.0",
-  "name": "Breaching",
-  "description": "Tools and components for breaching.",
+  "name": "Breaching System",
+  "description": "Actions, tools and components for breaching.",
   "dependencies": [
     {
       "id": "items",
@@ -12,9 +12,23 @@
     {
       "id": "descriptors",
       "version": "^1.0.0"
+    },
+    {
+      "id": "blockers",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
     }
   ],
   "content": {
+    "actions": [
+      "saw_through_barred_blocker.action.json"
+    ],
+    "rules": [
+      "handle_saw_through_barred_blocker.rule.json"
+    ],
     "components": [
       "allows_abrasive_sawing.component.json"
     ],
@@ -24,6 +38,11 @@
       ],
       "instances": []
     },
-    "scopes": []
+    "scopes": [
+      "abrasive_sawing_tools.scope"
+    ],
+    "conditions": [
+      "event-is-action-saw-through-barred-blocker.condition.json"
+    ]
   }
 }

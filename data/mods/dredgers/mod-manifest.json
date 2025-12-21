@@ -12,6 +12,14 @@
       "version": "^1.0.0"
     },
     {
+      "id": "blockers",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "mechanisms",
+      "version": "^1.0.0"
+    },
+    {
       "id": "containers-core",
       "version": "^1.0.0"
     },
@@ -100,6 +108,7 @@
         "long_rope.entity.json",
         "lower_gallery.location.json",
         "mattock.entity.json",
+        "missing_keys.entity.json",
         "outer_service_yard.location.json",
         "pitch.character.json",
         "plain_notebook.entity.json",
@@ -117,6 +126,7 @@
       ],
       "instances": [
         "access_point_segment_a.location.json",
+        "ancient_iron_grate_segment_a_to_b.entity.json",
         "block_and_tackle_instance.entity.json",
         "bolt_cutters_instance.entity.json",
         "bucket_instance.entity.json",
@@ -145,6 +155,7 @@
         "long_rope_instance_2.entity.json",
         "lower_gallery.location.json",
         "mattock_instance.entity.json",
+        "missing_keys.entity.json",
         "outer_service_yard.location.json",
         "pencil.entity.json",
         "pitch.character.json",

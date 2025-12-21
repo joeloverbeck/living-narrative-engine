@@ -1,0 +1,13 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:ancient_iron_grate_segment_a_to_b_instance",
+    "definitionId": "blockers:ancient_iron_grate",
+    "componentOverrides": {
+        "mechanisms:openable": {
+            "isLocked": true,
+            "isOpen": false,
+            "requiredKeyId": "dredgers:missing_keys_instance",
+            "lockLabel": "weathered iron lock"
+        }
+    }
+}

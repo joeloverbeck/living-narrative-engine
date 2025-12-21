@@ -124,7 +124,7 @@ describe('ResolveOutcomeHandler', () => {
         () =>
           new ResolveOutcomeHandler({
             chanceCalculationService: mockChanceCalculationService,
-            logger: { info: jest.fn() }, // Missing debug, warn, error
+            logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() }, // Missing info
           })
       ).toThrow(/ILogger instance/);
     });
@@ -417,6 +417,46 @@ describe('ResolveOutcomeHandler', () => {
           },
         },
       });
+    });
+
+    test('merges action modifiers when action definition is available', () => {
+      const actionDef = {
+        id: 'breaching:saw_through_barred_blocker',
+        chanceBased: {
+          modifiers: [
+            {
+              tag: 'corroded',
+              condition: { condition_ref: 'blockers:target-is-corroded' },
+              value: 10,
+              type: 'flat',
+            },
+          ],
+        },
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getActionDefinition: jest.fn(() => actionDef),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        result_variable: 'combat_result',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toEqual(
+        actionDef.chanceBased.modifiers
+      );
     });
 
     test('passes custom default values to pseudo-actionDef', () => {
@@ -725,6 +765,19 @@ describe('ResolveOutcomeHandler', () => {
 
       handler.execute(params, ctx);
 
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'RESOLVE_OUTCOME: Outcome resolved.',
+        expect.objectContaining({
+          outcome: 'SUCCESS',
+          roll: 50,
+          threshold: 65,
+          margin: -15,
+          isCritical: false,
+          actorId: 'actor-123',
+          targetId: 'target-456',
+          resultVariable: 'outcome',
+        })
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('RESOLVE_OUTCOME: Stored result in "outcome"')
       );

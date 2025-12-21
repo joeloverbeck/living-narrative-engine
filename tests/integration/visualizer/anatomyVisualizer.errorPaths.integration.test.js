@@ -16,7 +16,8 @@ import {
   jest,
 } from '@jest/globals';
 import {
-  createFileFetchMock,
+  performSharedBootstrap,
+  cleanupSharedBootstrap,
   waitForCondition,
   TEST_TIMEOUT_MS,
 } from '../../common/visualizer/visualizerTestUtils.js';
@@ -33,11 +34,47 @@ const VISUALIZER_HTML = `
   </div>
 `;
 
-// Pre-create fetch mock once (file I/O is expensive)
-const sharedFetchMock = createFileFetchMock();
-
 describe('anatomy-visualizer entrypoint error handling', () => {
   let readyStateValue;
+  let sharedBootstrapContext;
+
+  beforeAll(async () => {
+    sharedBootstrapContext = await performSharedBootstrap();
+  });
+
+  afterAll(() => {
+    cleanupSharedBootstrap();
+    sharedBootstrapContext = null;
+  });
+
+  async function mockBootstrapWithSharedContext(wrapPostInitHook = null) {
+    const bootstrapperModule = await import(
+      '../../../src/bootstrapper/CommonBootstrapper.js'
+    );
+    const { CommonBootstrapper } = bootstrapperModule;
+
+    jest
+      .spyOn(CommonBootstrapper.prototype, 'bootstrap')
+      .mockImplementation(async function wrapBootstrap(options = {}) {
+        const { postInitHook, ...rest } = options;
+        const wrappedHook =
+          typeof wrapPostInitHook === 'function'
+            ? wrapPostInitHook(postInitHook)
+            : postInitHook;
+
+        if (typeof wrappedHook === 'function') {
+          await wrappedHook(
+            sharedBootstrapContext.services,
+            sharedBootstrapContext.container
+          );
+        }
+
+        return {
+          container: sharedBootstrapContext.container,
+          services: sharedBootstrapContext.services,
+        };
+      });
+  }
 
   beforeEach(() => {
     jest.restoreAllMocks();
@@ -51,9 +88,9 @@ describe('anatomy-visualizer entrypoint error handling', () => {
 
     document.body.innerHTML = VISUALIZER_HTML;
     global.alert = jest.fn();
-    // Use pre-created fetch mock
-    global.fetch = sharedFetchMock;
-    window.fetch = sharedFetchMock;
+    // Use shared bootstrap fetch mock to keep services consistent
+    global.fetch = sharedBootstrapContext.fetchMock;
+    window.fetch = sharedBootstrapContext.fetchMock;
   });
 
   afterEach(() => {
@@ -75,46 +112,26 @@ describe('anatomy-visualizer entrypoint error handling', () => {
       );
       const { tokens } = tokensModule;
 
-      const bootstrapperModule = await import(
-        '../../../src/bootstrapper/CommonBootstrapper.js'
-      );
-      const { CommonBootstrapper } = bootstrapperModule;
-      const originalBootstrap = CommonBootstrapper.prototype.bootstrap;
+      await mockBootstrapWithSharedContext((postInitHook) => {
+        if (typeof postInitHook !== 'function') {
+          return postInitHook;
+        }
 
-      jest
-        .spyOn(CommonBootstrapper.prototype, 'bootstrap')
-        .mockImplementation(async function wrapBootstrap(options = {}) {
-          const { postInitHook, ...rest } = options;
-          const wrappedHook =
-            typeof postInitHook === 'function'
-              ? async (services, container) => {
-                  container.setOverride(
-                    tokens.ClothingManagementService,
-                    () => {
-                      throw new Error(
-                        'Clothing service unavailable for integration coverage test.'
-                      );
-                    }
-                  );
-                  try {
-                    return await postInitHook(services, container);
-                  } finally {
-                    container.clearOverride(tokens.ClothingManagementService);
-                  }
-                }
-              : postInitHook;
-
-          return originalBootstrap.call(this, {
-            ...rest,
-            postInitHook: wrappedHook,
+        return async (services, container) => {
+          container.setOverride(tokens.ClothingManagementService, () => {
+            throw new Error(
+              'Clothing service unavailable for integration coverage test.'
+            );
           });
-        });
+          try {
+            return await postInitHook(services, container);
+          } finally {
+            container.clearOverride(tokens.ClothingManagementService);
+          }
+        };
+      });
 
-      const loggerStrategyModule = await import(
-        '../../../src/logging/loggerStrategy.js'
-      );
-      const LoggerStrategy = loggerStrategyModule.default;
-      const warnSpy = jest.spyOn(LoggerStrategy.prototype, 'warn');
+      const warnSpy = jest.spyOn(sharedBootstrapContext.services.logger, 'warn');
 
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
@@ -140,6 +157,7 @@ describe('anatomy-visualizer entrypoint error handling', () => {
   it(
     'handles missing back button gracefully',
     async () => {
+      await mockBootstrapWithSharedContext();
       const backButton = document.getElementById('back-button');
       backButton?.remove();
 
@@ -163,6 +181,7 @@ describe('anatomy-visualizer entrypoint error handling', () => {
   it(
     'propagates initialization failures through the fatal error handler',
     async () => {
+      await mockBootstrapWithSharedContext();
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
       );
