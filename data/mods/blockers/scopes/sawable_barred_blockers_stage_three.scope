@@ -1,0 +1,11 @@
+// Scope: blockers:sawable_barred_blockers_stage_three
+// Description: Finds barred blockers with structural resistance that have progress recorded at stage 2 (progress tracker value == 2)
+
+blockers:sawable_barred_blockers_stage_three := location.locations:exits[].blocker[{
+  "and": [
+    { "!!": { "var": "entity.components.blockers:is_barred" } },
+    { "!!": { "var": "entity.components.blockers:structural_resistance" } },
+    { "!!": { "var": "entity.components.core:progress_tracker" } },
+    { "==": [{ "var": "entity.components.core:progress_tracker.value" }, 2] }
+  ]
+}]
