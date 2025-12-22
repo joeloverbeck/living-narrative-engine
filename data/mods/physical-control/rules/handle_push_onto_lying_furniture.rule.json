@@ -48,7 +48,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:lying_down",
+        "component_type": "lying-states:lying_on",
         "value": {
           "furniture_id": "{event.payload.secondaryId}"
         }

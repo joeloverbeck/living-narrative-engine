@@ -111,7 +111,7 @@ describe('physical-control:push_off action discovery', () => {
         'positioning:straddling_waist',
         'hugging-states:hugging',
         'hugging-states:being_hugged',
-        'positioning:lying_down',
+        'lying-states:lying_on',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
       ]);

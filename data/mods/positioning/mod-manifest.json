@@ -22,7 +22,6 @@
       "facing_away.component.json",
       "fallen.component.json",
       "kneeling_before.component.json",
-      "lying_down.component.json",
       "straddling_waist.component.json",
       "wielding.component.json"
     ],

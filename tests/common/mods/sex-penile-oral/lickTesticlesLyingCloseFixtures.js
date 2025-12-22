@@ -73,7 +73,7 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
     .asActor();
 
   if (includeActorLying) {
-    actorBuilder.withComponent('positioning:lying_down', {
+    actorBuilder.withComponent('lying-states:lying_on', {
       furniture_id: bedId,
       state: 'lying_on_back',
     });
@@ -111,7 +111,7 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
     });
 
   if (includePrimaryLying) {
-    primaryBuilder.withComponent('positioning:lying_down', {
+    primaryBuilder.withComponent('lying-states:lying_on', {
       furniture_id: useDifferentFurniture ? secondBedId : bedId,
       state: 'lying_on_back',
     });
@@ -191,7 +191,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
       const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
 
       // Get actor's lying position
-      const actorLying = actorEntity?.components['positioning:lying_down'];
+      const actorLying = actorEntity?.components['lying-states:lying_on'];
       if (!actorLying) {
         return { success: true, value: new Set() };
       }
@@ -209,7 +209,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
         if (!partnerEntity) return false;
 
         // Check lying position
-        const partnerLying = partnerEntity.components['positioning:lying_down'];
+        const partnerLying = partnerEntity.components['lying-states:lying_on'];
         if (!partnerLying) return false;
 
         // Check same furniture

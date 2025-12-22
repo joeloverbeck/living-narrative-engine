@@ -126,7 +126,7 @@ describe('movement:teleport action discovery', () => {
   describe('Action discovery with forbidden components', () => {
     it('should NOT appear when actor is lying down', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:lying_down component:
+      // If Alice has lying-states:lying_on component:
       // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //

@@ -81,7 +81,7 @@ describe('handle_push_onto_lying_furniture rule', () => {
     const addComponent = handlePushOntoLyingFurnitureRule.actions.find(
       (op) =>
         op.type === 'ADD_COMPONENT' &&
-        op.parameters.component_type === 'positioning:lying_down'
+        op.parameters.component_type === 'lying-states:lying_on'
     );
 
     expect(addComponent).toBeDefined();

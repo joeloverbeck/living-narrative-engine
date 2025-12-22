@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "lying-states",
+  "version": "1.0.0",
+  "name": "Lying States",
+  "description": "State components for lying mechanics. Separated from action mod to allow other mods to check lying state without circular dependencies.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "lying_on.component.json"
+    ]
+  }
+}

@@ -120,8 +120,8 @@
 | ---- | ------------------------------------------------------------------------ | -------- | -------------------- |
 | 199  | `'positioning:allows_lying_on'`                                          | Critical | Registry             |
 | 210  | `'positioning:closeness'`                                                | Critical | Registry             |
-| 231  | `'positioning:lying_down'`                                               | Critical | Registry             |
-| 247  | `'positioning:lying_down'`                                               | Critical | Registry             |
+| 231  | `'lying-states:lying_on'`                                               | Critical | Registry             |
+| 247  | `'lying-states:lying_on'`                                               | Critical | Registry             |
 | 286  | `'positioning:closeness'`                                                | Critical | Registry             |
 | 290  | `'positioning:closeness'`                                                | Critical | Registry             |
 | 318  | `'positioning:closeness',`                                               | Critical | Registry             |
@@ -168,8 +168,8 @@
 | 210  | `'positioning:closeness',`      | Critical | Registry             |
 | 226  | `'positioning:closeness'`       | Critical | Registry             |
 | 327  | `'positioning:allows_lying_on'` | Critical | Registry             |
-| 349  | `'positioning:lying_down'`      | Critical | Registry             |
-| 364  | `'positioning:lying_down'`      | Critical | Registry             |
+| 349  | `'lying-states:lying_on'`      | Critical | Registry             |
+| 364  | `'lying-states:lying_on'`      | Critical | Registry             |
 | 399  | `'positioning:closeness'`       | Critical | Registry             |
 | 424  | `'positioning:closeness'`       | Critical | Registry             |
 | 479  | `'positioning:closeness'`       | Critical | Registry             |

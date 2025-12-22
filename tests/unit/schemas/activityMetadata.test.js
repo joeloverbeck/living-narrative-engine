@@ -83,8 +83,8 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 67,
     },
     {
-      mod: 'positioning',
-      name: 'lying_down',
+      mod: 'lying-states',
+      name: 'lying_on',
       targetRole: 'furniture_id',
       priority: 64,
     },

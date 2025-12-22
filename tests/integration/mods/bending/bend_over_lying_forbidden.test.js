@@ -31,7 +31,7 @@ describe('bending:bend_over - lying_down forbidden component', () => {
     ]);
 
     // Add lying_down component to actor
-    scenario.actor.components['positioning:lying_down'] = {
+    scenario.actor.components['lying-states:lying_on'] = {
       furniture_id: 'bed1',
     };
 

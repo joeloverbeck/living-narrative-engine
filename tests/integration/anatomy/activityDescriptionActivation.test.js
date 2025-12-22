@@ -87,8 +87,8 @@ describe('Activity Description System Activation', () => {
       targetRole: 'embraced_entity_id',
     },
     {
-      mod: 'positioning',
-      name: 'lying_down',
+      mod: 'lying-states',
+      name: 'lying_on',
       expectedTemplate: 'is lying on',
       priority: 64,
       targetRole: 'furniture_id',

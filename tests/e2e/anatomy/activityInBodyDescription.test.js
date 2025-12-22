@@ -25,7 +25,7 @@ describe('Activity Integration in Body Descriptions', () => {
       { mod: 'sex-states', name: 'giving_blowjob' },
       { mod: 'hugging-states', name: 'hugging' },
       { mod: 'positioning', name: 'kneeling_before' },
-      { mod: 'positioning', name: 'lying_down' },
+      { mod: 'lying-states', name: 'lying_on' },
       { mod: 'sex-states', name: 'receiving_blowjob' },
       { mod: 'sitting-states', name: 'sitting_on' },
       { mod: 'positioning', name: 'straddling_waist' },

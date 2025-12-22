@@ -123,7 +123,7 @@ describe('ScopeConditionAnalyzer', () => {
               {
                 or: [
                   { condition_ref: 'positioning:actor-in-entity-facing-away' },
-                  { '!!': { var: 'entity.components.positioning:lying_down' } },
+                  { '!!': { var: 'entity.components.lying-states:lying_on' } },
                 ],
               },
               {

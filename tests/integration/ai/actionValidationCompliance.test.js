@@ -40,7 +40,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // 4. AI only receives actions for valid targets
       //
       // TEST SCENARIO:
-      // - AI Character is close to NPC1 (positioning:kneeling_before) and NPC2 (positioning:lying_down)
+      // - AI Character is close to NPC1 (positioning:kneeling_before) and NPC2 (lying-states:lying_on)
       // - Both NPCs are in forbidden states for kneel_before action
       // - Available actions should not include kneel_before targeting either NPC
       expect(true).toBe(true);
@@ -71,7 +71,7 @@ describe('Expected AI Action Validation Compliance', () => {
       //
       // TEST SCENARIO:
       // - Servant has positioning:kneeling_before targeting Noble (forbidden for new kneel_before)
-      // - Human Player has positioning:lying_down (forbidden for kneel_before)
+      // - Human Player has lying-states:lying_on (forbidden for kneel_before)
       // - AI Noble is standing (valid target for Knight)
       // - Circular actions prevented (Noble cannot kneel before Servant already kneeling before Noble)
       expect(true).toBe(true);
@@ -98,8 +98,8 @@ describe('Expected AI Action Validation Compliance', () => {
       // EXPECTED BEHAVIOR:
       // Action filtering should dynamically respond to positioning component changes:
       // 1. Initially, target is valid (no forbidden components) - actions available
-      // 2. Target gains positioning:lying_down component - actions filtered out
-      // 3. Target loses positioning:lying_down component - actions become available again
+      // 2. Target gains lying-states:lying_on component - actions filtered out
+      // 3. Target loses lying-states:lying_on component - actions become available again
       // 4. Real-time validation reflects current entity state, not cached state
       //
       // DYNAMIC UPDATE REQUIREMENTS:
@@ -162,7 +162,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // EXPECTED BEHAVIOR:
       // Target validation should apply to all actions with positioning requirements, not just positioning actions:
       // 1. Some non-positioning actions may also have forbidden_components for positioning states
-      // 2. Lying Target has positioning:lying_down component
+      // 2. Lying Target has lying-states:lying_on component
       // 3. Standing Target has no positioning components
       // 4. Actions requiring standing targets should exclude Lying Target
       //

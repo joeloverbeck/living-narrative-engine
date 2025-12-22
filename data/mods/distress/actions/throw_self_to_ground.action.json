@@ -8,7 +8,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:fallen",
-      "positioning:lying_down",
+      "lying-states:lying_on",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "sitting-states:sitting_on",

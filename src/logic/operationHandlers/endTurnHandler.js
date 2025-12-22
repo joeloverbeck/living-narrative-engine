@@ -52,7 +52,7 @@ export class EndTurnOperationError extends Error {
  *
  * @typedef {object} EndTurnParameters
  * @property {string} entityId - ID of the entity whose turn ended.
- * @property {boolean} success - Whether the turn completed successfully.
+ * @property {boolean} success - Execution integrity flag. True = no runtime errors (independent of action outcome).
  * @property {object=} error - Optional error information.
  */
 

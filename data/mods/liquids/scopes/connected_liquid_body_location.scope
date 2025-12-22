@@ -1,0 +1,10 @@
+// Scope: liquids:connected_liquid_body_location
+// Description: Returns the location entity where the target liquid body is positioned.
+// Used as secondary target scope with contextFrom: "primary" so 'target' refers to the selected connected liquid body.
+
+liquids:connected_liquid_body_location := entities(locations:exits)[][{
+  "==": [
+    {"var": "entity.id"},
+    {"var": "target.components.core:position.locationId"}
+  ]
+}]

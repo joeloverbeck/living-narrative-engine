@@ -112,7 +112,7 @@ describe('sex-anal-penetration:insert_finger_into_asshole action discovery', () 
             const facingAway =
               partner.components?.['positioning:facing_away']
                 ?.facing_away_from || [];
-            const isLyingDown = partner.components?.['positioning:lying_down'];
+            const isLyingDown = partner.components?.['lying-states:lying_on'];
 
             return facingAway.includes(actorId) || isLyingDown;
           });

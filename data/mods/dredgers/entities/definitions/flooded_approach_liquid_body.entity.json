@@ -8,6 +8,8 @@
     "core:description": {
       "text": "Contaminated water pooled across the flooded approach."
     },
-    "liquids:liquid_body": {}
+    "liquids:liquid_body": {
+      "connected_liquid_body_ids": ["dredgers:canal_run_segment_c_liquid_body"]
+    }
   }
 }

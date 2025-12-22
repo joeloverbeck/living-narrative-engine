@@ -664,7 +664,8 @@
       "Bash(time npm run test:memory:*)",
       "mcp__morphllm-fast-apply__get_file_info",
       "Bash(do echo \"=== Run $i ===\" NODE_ENV=test npx jest tests/performance/clothing/armorSystemPerformance.performance.test.js --testNamePattern=\"should have constant-time O\\\\\\(1\\\\\\) priority lookup\" --no-coverage --silent)",
-      "Bash(timeout 30 npm run validate:operations:*)"
+      "Bash(timeout 30 npm run validate:operations:*)",
+      "Skill(sc:design)"
     ],
     "deny": [],
     "ask": []

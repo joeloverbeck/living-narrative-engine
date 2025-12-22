@@ -12,7 +12,7 @@
       "comment": "Get actor's lying position info",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:lying_down",
+        "component_type": "lying-states:lying_on",
         "result_variable": "lyingInfo"
       }
     },
@@ -64,7 +64,7 @@
             "comment": "Remove lying_down from actor",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:lying_down"
+              "component_type": "lying-states:lying_on"
             }
           },
           {

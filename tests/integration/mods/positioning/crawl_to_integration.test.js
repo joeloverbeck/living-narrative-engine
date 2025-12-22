@@ -305,7 +305,7 @@ describe('deference:crawl_to - Integration Tests', () => {
       const forbiddenComponents = [
         'sitting-states:sitting_on',
         'bending-states:bending_over',
-        'positioning:lying_down',
+        'lying-states:lying_on',
         'positioning:straddling_waist',
         'hugging-states:being_hugged',
         'hugging-states:hugging',

@@ -22,14 +22,14 @@
   "forbidden_components": {
     "actor": [
       "positioning:biting_neck",
-      "positioning:lying_down",
+      "lying-states:lying_on",
       "hugging-states:hugging",
       "hugging-states:being_hugged",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "positioning:fallen"
     ],
-    "primary": ["positioning:lying_down", "positioning:kneeling_before"]
+    "primary": ["lying-states:lying_on", "positioning:kneeling_before"]
   },
   "template": "push {primary} down onto {secondary}",
   "visual": {

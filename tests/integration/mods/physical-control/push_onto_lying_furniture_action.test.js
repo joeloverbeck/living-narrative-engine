@@ -114,7 +114,7 @@ describe('Physical Control Mod: push_onto_lying_furniture action', () => {
     expect(actorAfter.components['personal-space-states:closeness']).toBeUndefined();
     expect(targetAfter.components['personal-space-states:closeness']).toBeUndefined();
 
-    const lyingState = targetAfter.components['positioning:lying_down'];
+    const lyingState = targetAfter.components['lying-states:lying_on'];
     expect(lyingState).toBeDefined();
     expect(lyingState.furniture_id).toBe(FURNITURE_ID);
 

@@ -54,7 +54,7 @@ describe('maneuvering:place_yourself_behind discovery posture validation', () =>
     fixture.reset([room, bed, scenario.actor, scenario.target]);
     fixture.entityManager.addComponent(
       scenario.target.id,
-      'positioning:lying_down',
+      'lying-states:lying_on',
       {
         furniture_id: bed.id,
       }
