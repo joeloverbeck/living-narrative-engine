@@ -115,13 +115,26 @@
               ],
               "else_actions": [
                 {
+                  "type": "MATH",
+                  "parameters": {
+                    "result_variable": "progressAfterCritical",
+                    "expression": {
+                      "operator": "add",
+                      "operands": [
+                        { "var": "context.progressTracker.value" },
+                        2
+                      ]
+                    }
+                  }
+                },
+                {
                   "type": "MODIFY_COMPONENT",
                   "parameters": {
                     "entity_ref": "primary",
                     "component_type": "core:progress_tracker",
                     "field": "value",
-                    "mode": "increment",
-                    "value": 2
+                    "mode": "set",
+                    "value": "{context.progressAfterCritical}"
                   }
                 }
               ]
@@ -190,13 +203,26 @@
               ],
               "else_actions": [
                 {
+                  "type": "MATH",
+                  "parameters": {
+                    "result_variable": "progressAfterSuccess",
+                    "expression": {
+                      "operator": "add",
+                      "operands": [
+                        { "var": "context.progressTracker.value" },
+                        1
+                      ]
+                    }
+                  }
+                },
+                {
                   "type": "MODIFY_COMPONENT",
                   "parameters": {
                     "entity_ref": "primary",
                     "component_type": "core:progress_tracker",
                     "field": "value",
-                    "mode": "increment",
-                    "value": 1
+                    "mode": "set",
+                    "value": "{context.progressAfterSuccess}"
                   }
                 }
               ]

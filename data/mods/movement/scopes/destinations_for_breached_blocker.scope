@@ -1,0 +1,12 @@
+// Scope: movement:destinations_for_breached_blocker
+// Description: Returns exit targets that match the breached blocker from contextFrom
+
+movement:destinations_for_breached_blocker := location.locations:exits[{
+  "==": [
+    { "var": "entity.blocker" },
+    { "or": [
+      { "var": "target.id" },
+      { "var": "target" }
+    ]}
+  ]
+}].target

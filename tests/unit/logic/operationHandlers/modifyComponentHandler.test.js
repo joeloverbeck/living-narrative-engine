@@ -320,19 +320,19 @@ describe('ModifyComponentHandler', () => {
     };
     const ctx = buildCtx({ logger: ctxLogger });
     // Use an invalid mode to trigger a warning
-    await handler.execute(
-      {
-        entity_ref: 'actor',
-        component_type: 'c',
-        field: 'f',
-        mode: 'inc', // Invalid mode on purpose
-        value: 'bad',
-      },
-      ctx
-    );
-    expect(ctxLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unsupported mode "inc"')
-    );
+    await expect(
+      handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'c',
+          field: 'f',
+          mode: 'inc', // Invalid mode on purpose
+          value: 'bad',
+        },
+        ctx
+      )
+    ).rejects.toThrow('Unsupported mode "inc"');
+    expect(ctxLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 

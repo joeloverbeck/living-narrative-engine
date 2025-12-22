@@ -23,8 +23,8 @@
     ],
     "scopes": [
       "sawable_barred_blockers.scope",
-      "sawable_barred_blockers_stage_two.scope",
-      "sawable_barred_blockers_stage_three.scope"
+      "sawable_barred_blockers_stage_three.scope",
+      "sawable_barred_blockers_stage_two.scope"
     ],
     "entities": {
       "definitions": [

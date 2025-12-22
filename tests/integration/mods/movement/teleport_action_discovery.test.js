@@ -6,6 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import teleportAction from '../../../../data/mods/movement/actions/teleport.action.json';
+import passThroughBreachAction from '../../../../data/mods/movement/actions/pass_through_breach.action.json';
 
 describe('movement:teleport action discovery', () => {
   let testFixture;
@@ -57,6 +58,34 @@ describe('movement:teleport action discovery', () => {
       expect(teleportAction.prerequisites).toBeDefined();
       expect(teleportAction.prerequisites.length).toBe(1);
       expect(teleportAction.prerequisites[0].logic.condition_ref).toBe(
+        'anatomy:actor-can-move'
+      );
+    });
+  });
+
+  describe('Pass-through breach action structure validation', () => {
+    it('should have correct action structure', () => {
+      expect(passThroughBreachAction).toBeDefined();
+      expect(passThroughBreachAction.id).toBe('movement:pass_through_breach');
+      expect(passThroughBreachAction.generateCombinations).toBe(true);
+      expect(passThroughBreachAction.targets.primary.scope).toBe(
+        'breaching:breached_blockers_at_location'
+      );
+      expect(passThroughBreachAction.targets.secondary.scope).toBe(
+        'movement:destinations_for_breached_blocker'
+      );
+      expect(passThroughBreachAction.targets.secondary.contextFrom).toBe(
+        'primary'
+      );
+    });
+
+    it('should have required template and prerequisites', () => {
+      expect(passThroughBreachAction.template).toBe(
+        'pass through the breach in {breachedBlocker} into {destination}'
+      );
+      expect(passThroughBreachAction.prerequisites).toBeDefined();
+      expect(passThroughBreachAction.prerequisites.length).toBe(2);
+      expect(passThroughBreachAction.prerequisites[0].logic.condition_ref).toBe(
         'anatomy:actor-can-move'
       );
     });

@@ -15,6 +15,7 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import MathHandler from '../../../src/logic/operationHandlers/mathHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
@@ -505,6 +506,10 @@ export class ModTestHandlerFactory {
         logger,
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
+      MATH: new MathHandler({
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       LOG_MESSAGE: new LogHandler({ logger }),
       // Alias used by older schemas/tests
       LOG: new LogHandler({ logger }),

@@ -1,0 +1,6 @@
+// Scope: breaching:breached_blockers_at_location
+// Description: Returns breached blockers from the actor's current location exits
+
+breaching:breached_blockers_at_location := location.locations:exits[].blocker[{
+  "!!": { "var": "entity.components.breaching:breached" }
+}]

@@ -1,0 +1,50 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "movement:pass_through_breach",
+  "name": "Pass Through Breach",
+  "description": "Move through a breached blocker into the destination beyond it.",
+  "generateCombinations": true,
+  "targets": {
+    "primary": {
+      "scope": "breaching:breached_blockers_at_location",
+      "placeholder": "breachedBlocker",
+      "description": "Breached blocker to pass through"
+    },
+    "secondary": {
+      "scope": "movement:destinations_for_breached_blocker",
+      "placeholder": "destination",
+      "description": "Location beyond the breached blocker",
+      "contextFrom": "primary"
+    }
+  },
+  "template": "pass through the breach in {breachedBlocker} into {destination}",
+  "forbidden_components": {
+    "actor": [
+      "bending-states:bending_over",
+      "positioning:doing_complex_performance",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to see where you are going."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#006064",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#00838f",
+    "hoverTextColor": "#ffffff"
+  }
+}

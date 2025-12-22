@@ -24,6 +24,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
@@ -107,10 +108,11 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     }
     const { entityId, type: componentType } = validated;
     if (mode !== 'set') {
-      logger.warn(
-        `MODIFY_COMPONENT: Unsupported mode "${mode}". Only "set" is allowed now.`
+      throw new InvalidArgumentError(
+        `MODIFY_COMPONENT: Unsupported mode "${mode}". Only "set" is allowed now.`,
+        'mode',
+        mode
       );
-      return;
     }
     if (
       field === null ||

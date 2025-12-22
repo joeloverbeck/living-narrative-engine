@@ -99,6 +99,34 @@ describe('Movement Scopes', () => {
     });
   });
 
+  describe('Destinations For Breached Blocker Scope', () => {
+    let scopeContent;
+    let scopePath;
+
+    beforeEach(() => {
+      scopePath = path.resolve(
+        process.cwd(),
+        'data/mods/movement/scopes/destinations_for_breached_blocker.scope'
+      );
+      scopeContent = fs.readFileSync(scopePath, 'utf8');
+    });
+
+    it('should exist and have content', () => {
+      expect(scopeContent).toBeDefined();
+      expect(scopeContent.length).toBeGreaterThan(0);
+    });
+
+    it('should reference exits and targets', () => {
+      expect(scopeContent).toMatch(/location\.locations:exits/);
+      expect(scopeContent).toMatch(/\.target/);
+    });
+
+    it('should compare exit blockers to the target context', () => {
+      expect(scopeContent).toMatch(/entity\.blocker/);
+      expect(scopeContent).toMatch(/target/);
+    });
+  });
+
   describe('Movement Scopes Directory', () => {
     let scopesDir;
 

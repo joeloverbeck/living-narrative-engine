@@ -14,7 +14,7 @@
       "version": "^1.0.0"
     },
     {
-      "id": "mechanisms",
+      "id": "locations",
       "version": "^1.0.0"
     },
     {
@@ -29,16 +29,17 @@
   "content": {
     "actions": [
       "saw_through_barred_blocker.action.json",
-      "saw_through_barred_blocker_stage_two.action.json",
-      "saw_through_barred_blocker_stage_three.action.json"
+      "saw_through_barred_blocker_stage_three.action.json",
+      "saw_through_barred_blocker_stage_two.action.json"
     ],
     "rules": [
       "handle_saw_through_barred_blocker.rule.json",
-      "handle_saw_through_barred_blocker_stage_two.rule.json",
-      "handle_saw_through_barred_blocker_stage_three.rule.json"
+      "handle_saw_through_barred_blocker_stage_three.rule.json",
+      "handle_saw_through_barred_blocker_stage_two.rule.json"
     ],
     "components": [
-      "allows_abrasive_sawing.component.json"
+      "allows_abrasive_sawing.component.json",
+      "breached.component.json"
     ],
     "entities": {
       "definitions": [
@@ -47,12 +48,13 @@
       "instances": []
     },
     "scopes": [
-      "abrasive_sawing_tools.scope"
+      "abrasive_sawing_tools.scope",
+      "breached_blockers_at_location.scope"
     ],
     "conditions": [
-      "event-is-action-saw-through-barred-blocker.condition.json",
+      "event-is-action-saw-through-barred-blocker-stage-three.condition.json",
       "event-is-action-saw-through-barred-blocker-stage-two.condition.json",
-      "event-is-action-saw-through-barred-blocker-stage-three.condition.json"
+      "event-is-action-saw-through-barred-blocker.condition.json"
     ]
   }
 }

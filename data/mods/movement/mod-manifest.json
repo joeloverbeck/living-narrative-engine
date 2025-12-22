@@ -40,12 +40,17 @@
     {
       "id": "blockers",
       "version": "^1.0.0"
+    },
+    {
+      "id": "breaching",
+      "version": "^1.0.0"
     }
   ],
   "content": {
     "actions": [
       "feel_your_way_to_an_exit.action.json",
       "go.action.json",
+      "pass_through_breach.action.json",
       "teleport.action.json",
       "travel_through_dimensions.action.json"
     ],
@@ -53,16 +58,22 @@
       "go.rule.json",
       "handle_feel_your_way_to_an_exit.rule.json",
       "handle_teleport.rule.json",
-      "handle_travel_through_dimensions.rule.json"
+      "handle_travel_through_dimensions.rule.json",
+      "pass_through_breach.rule.json"
     ],
     "conditions": [
       "event-is-action-feel-your-way-to-an-exit.condition.json",
       "event-is-action-go.condition.json",
+      "event-is-action-pass-through-breach.condition.json",
       "event-is-action-teleport.condition.json",
       "event-is-action-travel-through-dimensions.condition.json",
       "exit-is-unblocked.condition.json"
     ],
-    "scopes": ["clear_directions.scope", "dimensional_portals.scope"],
+    "scopes": [
+      "clear_directions.scope",
+      "destinations_for_breached_blocker.scope",
+      "dimensional_portals.scope"
+    ],
     "events": [],
     "components": [
       "can_teleport.component.json",

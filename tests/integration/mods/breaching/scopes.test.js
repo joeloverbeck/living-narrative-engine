@@ -69,6 +69,10 @@ describe('Breaching Mod Scopes', () => {
       '../../../../data/mods/breaching/scopes/abrasive_sawing_tools.scope',
       import.meta.url
     );
+    const breachedScopePath = new URL(
+      '../../../../data/mods/breaching/scopes/breached_blockers_at_location.scope',
+      import.meta.url
+    );
 
     const sawableScopes = parseScopeDefinitions(
       readFileSync(sawableScopePath, 'utf8'),
@@ -78,10 +82,15 @@ describe('Breaching Mod Scopes', () => {
       readFileSync(abrasiveScopePath, 'utf8'),
       abrasiveScopePath.pathname
     );
+    const breachedScopes = parseScopeDefinitions(
+      readFileSync(breachedScopePath, 'utf8'),
+      breachedScopePath.pathname
+    );
 
     const scopeDefinitions = {
       ...Object.fromEntries(sawableScopes),
       ...Object.fromEntries(abrasiveScopes),
+      ...Object.fromEntries(breachedScopes),
     };
 
     const parsedScopes = {};
@@ -362,6 +371,48 @@ describe('Breaching Mod Scopes', () => {
       const normalized = normalizeScopeResults(result);
       expect(normalized).toContain('tools:hacksaw');
       expect(normalized).not.toContain('tools:hammer');
+    });
+  });
+
+  describe('breaching:breached_blockers_at_location', () => {
+    test('should return breached blockers from location exits', () => {
+      const breachedBlocker = createEntityInstance('blocker-1', {
+        'breaching:breached': {},
+      });
+      const intactBlocker = createEntityInstance('blocker-2', {});
+
+      const location = createEntityInstance('location-1', {
+        'locations:exits': [
+          { blocker: 'blocker-1' },
+          { blocker: 'blocker-2' },
+        ],
+      });
+
+      const actor = createEntityInstance('actor-1', {
+        'core:actor': { name: 'Test Actor' },
+      });
+
+      mockEntityManager._addEntity(breachedBlocker);
+      mockEntityManager._addEntity(intactBlocker);
+      mockEntityManager._addEntity(location);
+      mockEntityManager._addEntity(actor);
+
+      const runtimeCtx = {
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        actor,
+        location,
+      };
+      runtimeCtx.jsonLogicEval = createJsonLogicEvalMock(runtimeCtx);
+
+      const scopeDef = scopeRegistry.getScope(
+        'breaching:breached_blockers_at_location'
+      );
+      const result = scopeEngine.resolve(scopeDef.ast, actor, runtimeCtx);
+
+      const normalized = normalizeScopeResults(result);
+      expect(normalized).toContain('blocker-1');
+      expect(normalized).not.toContain('blocker-2');
     });
   });
 });
