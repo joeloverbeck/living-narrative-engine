@@ -14,9 +14,9 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 
 ## Current Status
 
-**Total Schemes Defined**: 58
-**In Use**: 48 schemes actively implemented
-**Available**: 10 schemes ready for new mods
+**Total Schemes Defined**: 62
+**In Use**: 50 schemes actively implemented
+**Available**: 12 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
@@ -30,7 +30,10 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 | 8.2     | White & Black     | `#ffffff`        | Light theme high contrast                   |
 | 8.3     | Yellow on Black   | `#000000`        | High visibility                             |
 | 14.2    | Humble Bronze     | `#4b2f14`        | Reverent gestures, respectful submissions   |
+| 16.2    | Blighted Moss     | `#1a1f14`        | Contaminated water traversal, canals        |
 | 17.2    | Hazy Smoke        | `#3d3a3f`        | Smoking, inhaling substances                |
+| 23.2    | Sunlit Lagoon     | `#4fc3f7`        | Wading, surface swimming, light water travel |
+| 23.3    | Deep Current Blue | `#0f5e7a`        | Diving, submerging, deeper water traversal  |
 
 ## Available Color Scheme Definitions
 
@@ -172,6 +175,24 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Use Cases**: Quiet reverence, service oaths, humble acknowledgements of hierarchy
 - **Theme**: Warm bronze and cream palette that keeps focus on respectful intent
 
+### 16. Hex/Corruption Colors
+
+#### 16.2 Blighted Moss
+
+```json
+{
+  "backgroundColor": "#1a1f14",
+  "textColor": "#d8ffd6",
+  "hoverBackgroundColor": "#23301c",
+  "hoverTextColor": "#e8ffe5"
+}
+```
+
+- **Normal Contrast**: 15.36:1 AAA
+- **Hover Contrast**: 13.15:1 AAA
+- **Use Cases**: Contaminated water traversal, submerged movement, canal interactions
+- **Theme**: Muted bog-green palette suggesting decay, blight, and creeping vines
+
 ### 17. Intoxicants/Vice Colors
 
 #### 17.2 Hazy Smoke
@@ -189,6 +210,40 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Hover Contrast**: 6.82:1 AA
 - **Use Cases**: Smoking, inhaling substances, drug-related actions
 - **Theme**: Smoky purple-gray evoking haze, pipe smoke, and altered states
+
+### 23. Aquatic/Fluid Colors
+
+#### 23.2 Sunlit Lagoon
+
+```json
+{
+  "backgroundColor": "#4fc3f7",
+  "textColor": "#0b1f2a",
+  "hoverBackgroundColor": "#81d4fa",
+  "hoverTextColor": "#0b1f2a"
+}
+```
+
+- **Normal Contrast**: 8.43:1 AAA
+- **Hover Contrast**: 10.24:1 AAA
+- **Use Cases**: Wading, surface swimming, entering bright water
+- **Theme**: Clear, sunlit water with buoyant, airy motion
+
+#### 23.3 Deep Current Blue
+
+```json
+{
+  "backgroundColor": "#0f5e7a",
+  "textColor": "#e6f7ff",
+  "hoverBackgroundColor": "#14729b",
+  "hoverTextColor": "#f3fbff"
+}
+```
+
+- **Normal Contrast**: 6.59:1 AA
+- **Hover Contrast**: 5.13:1 AA
+- **Use Cases**: Diving, submerging, deeper water traversal
+- **Theme**: Calm depth and steady current without murky undertones
 
 ## Implementation Guide
 

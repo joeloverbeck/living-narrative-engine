@@ -44,6 +44,10 @@
     {
       "id": "breaching",
       "version": "^1.0.0"
+    },
+    {
+      "id": "liquids-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {

@@ -11,7 +11,8 @@
       "positioning:lying_down",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "sitting-states:sitting_on"
+      "sitting-states:sitting_on",
+      "liquids-states:in_liquid_body"
     ]
   },
   "template": "throw yourself to the ground in grief",

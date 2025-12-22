@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_enter_liquid_body",
-  "comment": "Handles liquids:enter_liquid_body action outcomes.",
+  "rule_id": "handle_climb_out_of_liquid_body",
+  "comment": "Handles liquids:climb_out_of_liquid_body action outcomes.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "liquids:event-is-action-enter-liquid-body"
+    "condition_ref": "liquids:event-is-action-climb-out-of-liquid-body"
   },
   "actions": [
     {
@@ -30,20 +30,17 @@
       }
     },
     {
-      "type": "ADD_COMPONENT",
+      "type": "REMOVE_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "liquids-states:in_liquid_body",
-        "value": {
-          "liquid_body_id": "{event.payload.targetId}"
-        }
+        "component_type": "liquids-states:in_liquid_body"
       }
     },
     {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} enters the {context.liquidBodyName}."
+        "value": "{context.actorName} climbs out of the {context.liquidBodyName}."
       }
     },
     {
@@ -57,12 +54,12 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.logMessage}",
-        "actor_description": "I enter the {context.liquidBodyName}.",
+        "actor_description": "I climb out of the {context.liquidBodyName}.",
         "perception_type": "physical.self_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
         "alternate_descriptions": {
-          "auditory": "I hear a splash as someone enters a body of liquid."
+          "auditory": "I hear a splash as someone climbs out of a body of liquid."
         }
       }
     },

@@ -19,7 +19,8 @@
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "positioning:fallen",
-      "sitting-states:sitting_on"
+      "sitting-states:sitting_on",
+      "liquids-states:in_liquid_body"
     ]
   },
   "template": "get close to {target}",

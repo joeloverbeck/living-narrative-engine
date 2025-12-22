@@ -17,7 +17,8 @@
       "positioning:doing_complex_performance",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "positioning:fallen",
+      "liquids-states:in_liquid_body"
     ]
   },
   "prerequisites": [

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "liquids:event-is-action-climb-out-of-liquid-body",
+  "description": "Checks if the event is a climb_out_of_liquid_body action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "liquids:climb_out_of_liquid_body"
+    ]
+  }
+}
