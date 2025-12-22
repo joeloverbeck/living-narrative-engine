@@ -1250,11 +1250,13 @@ export function createBaseRuleEnvironment({
               return { success: true, value: new Set() };
             }
 
-            // Create runtime context
+            // Create runtime context with target/targets from context if available
             const runtimeCtx = {
               entityManager,
               logger: testLogger,
               jsonLogicEval: jsonLogic,
+              target: context?.target,
+              targets: context?.targets,
             };
 
             // Resolve the scope using the engine

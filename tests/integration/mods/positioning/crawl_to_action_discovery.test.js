@@ -38,7 +38,7 @@ describe('deference:crawl_to - Action Discovery', () => {
         'bending-states:bending_over'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
         'positioning:straddling_waist'
@@ -55,7 +55,7 @@ describe('deference:crawl_to - Action Discovery', () => {
         'positioning:kneeling_before'
       );
       expect(crawlToAction.forbidden_components.primary).toContain(
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
       expect(crawlToAction.forbidden_components.primary).toContain(
         'bending-states:bending_over'
@@ -105,9 +105,9 @@ describe('deference:crawl_to - Action Discovery', () => {
     });
 
     it('should prevent crawling to lying targets', () => {
-      // The action forbids positioning:lying_down component on target
+      // The action forbids lying-states:lying_on component on target
       expect(crawlToAction.forbidden_components.primary).toContain(
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
     });
   });

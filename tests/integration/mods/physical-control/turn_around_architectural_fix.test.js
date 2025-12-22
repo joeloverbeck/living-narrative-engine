@@ -123,11 +123,11 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(actionJson).not.toContain('kissing:kissing');
 
       // Can have forbidden_components for positioning mod components
-      // (positioning:biting_neck and positioning:lying_down are valid as they're from positioning mod)
+      // (positioning:biting_neck and lying-states:lying_on are valid as they're from positioning mod)
       if (turnAroundAction.forbidden_components) {
         expect(turnAroundAction.forbidden_components.actor).toEqual([
           'positioning:biting_neck',
-          'positioning:lying_down',
+          'lying-states:lying_on',
           'physical-control-states:being_restrained',
         ]);
       }
@@ -512,7 +512,7 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       if (turnAroundAction.forbidden_components) {
         expect(turnAroundAction.forbidden_components.actor).toEqual([
           'positioning:biting_neck',
-          'positioning:lying_down',
+          'lying-states:lying_on',
           'physical-control-states:being_restrained',
         ]);
       }

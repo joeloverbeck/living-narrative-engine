@@ -60,9 +60,9 @@ describe('distress:throw_self_to_ground', () => {
       ).rejects.toThrow('forbidden component');
     });
 
-    it('should be forbidden when actor has positioning:lying_down', async () => {
+    it('should be forbidden when actor has lying-states:lying_on', async () => {
       const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
-      scenario.actor.components['positioning:lying_down'] = {
+      scenario.actor.components['lying-states:lying_on'] = {
         furniture_id: 'some_bed',
       };
 

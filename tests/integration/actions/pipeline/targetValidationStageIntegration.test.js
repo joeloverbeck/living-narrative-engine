@@ -166,7 +166,7 @@ describe('TargetComponentValidationStage Integration', () => {
           id: 'bending:bend_over',
           forbidden_components: {
             primary: ['positioning:bent_over'],
-            secondary: ['positioning:lying_down'],
+            secondary: ['lying-states:lying_on'],
           },
           target_entities: {
             primary: {
@@ -175,7 +175,7 @@ describe('TargetComponentValidationStage Integration', () => {
             },
             secondary: {
               id: 'surface-1',
-              components: ['positioning:surface', 'positioning:lying_down'],
+              components: ['positioning:surface', 'lying-states:lying_on'],
             },
           },
         },
@@ -187,7 +187,7 @@ describe('TargetComponentValidationStage Integration', () => {
       mockEntityManager.getAllComponentTypesForEntity
         .mockReturnValueOnce(['core:actor', 'positioning:standing']) // npc-1
         .mockReturnValueOnce(['core:actor']) // actor-1
-        .mockReturnValueOnce(['positioning:surface', 'positioning:lying_down']); // surface-1
+        .mockReturnValueOnce(['positioning:surface', 'lying-states:lying_on']); // surface-1
 
       const result = await validationStage.executeInternal(context);
 

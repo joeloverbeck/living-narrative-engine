@@ -5,7 +5,7 @@
   "description": "Get up from the furniture you're lying on",
   "targets": "lying:furniture_im_lying_on",
   "required_components": {
-    "actor": ["positioning:lying_down"]
+    "actor": ["lying-states:lying_on"]
   },
   "forbidden_components": {
     "actor": [

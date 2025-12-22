@@ -23,7 +23,7 @@ describe('lying:get_up_from_lying action discovery', () => {
     it('should require lying_down component', () => {
       expect(getUpFromLyingAction.required_components).toBeDefined();
       expect(getUpFromLyingAction.required_components.actor).toEqual([
-        'positioning:lying_down',
+        'lying-states:lying_on',
       ]);
     });
 
@@ -51,7 +51,7 @@ describe('lying:get_up_from_lying action discovery', () => {
   describe('Action discovery scenarios', () => {
     it('should appear when actor has lying_down component', () => {
       // EXPECTED BEHAVIOR:
-      // 1. Alice has positioning:lying_down component with furniture_id
+      // 1. Alice has lying-states:lying_on component with furniture_id
       // 2. lying:furniture_im_lying_on scope resolves to the furniture entity
       // 3. Action's required_components.actor check passes
       // 4. Expected: lying:get_up_from_lying action should be available
@@ -61,7 +61,7 @@ describe('lying:get_up_from_lying action discovery', () => {
 
     it('should NOT appear when actor is not lying down', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice does NOT have positioning:lying_down component:
+      // If Alice does NOT have lying-states:lying_on component:
       // - Action's required_components.actor check fails
       // - lying:get_up_from_lying action should NOT be available
       //
@@ -71,7 +71,7 @@ describe('lying:get_up_from_lying action discovery', () => {
 
     it('should target the specific furniture actor is lying on', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:lying_down with furniture_id='bedroom_bed':
+      // If Alice has lying-states:lying_on with furniture_id='bedroom_bed':
       // - lying:furniture_im_lying_on scope should resolve to 'bedroom_bed'
       // - Action should target only that specific furniture
       // - Other furniture in the room should not be targets
@@ -87,13 +87,13 @@ describe('lying:get_up_from_lying action discovery', () => {
       // - Whether actor is near other furniture
       // - Whether actor has other positioning components
       //
-      // As long as actor has positioning:lying_down, get_up should be available
+      // As long as actor has lying-states:lying_on, get_up should be available
       expect(true).toBe(true);
     });
 
     it('should handle edge case of deleted furniture gracefully', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:lying_down but furniture no longer exists:
+      // If Alice has lying-states:lying_on but furniture no longer exists:
       // - Scope resolution may fail or return empty
       // - Action may not appear (safe fallback)
       // - Or action appears but execution handles missing furniture

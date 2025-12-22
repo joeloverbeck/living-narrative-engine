@@ -1,0 +1,57 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "liquids:swim_to_connected_liquid_body",
+  "name": "Swim to Connected Liquid Body",
+  "description": "Swim through the water to reach a connected liquid body.",
+  "template": "swim to {connectedLocation} via {connectedLiquidBody} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["liquids-states:in_liquid_body", "skills:mobility_skill"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "liquids:connected_liquid_bodies_for_actor",
+      "placeholder": "connectedLiquidBody",
+      "description": "Connected liquid body to swim to"
+    },
+    "secondary": {
+      "scope": "liquids:connected_liquid_body_location",
+      "placeholder": "connectedLocation",
+      "description": "Location of the connected liquid body",
+      "contextFrom": "primary"
+    }
+  },
+  "prerequisites": [],
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:mobility_skill",
+      "property": "value",
+      "default": 0
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
+  "visual": {
+    "backgroundColor": "#3aaea3",
+    "textColor": "#0b1f2a",
+    "hoverBackgroundColor": "#5ed0c6",
+    "hoverTextColor": "#0b1f2a"
+  }
+}

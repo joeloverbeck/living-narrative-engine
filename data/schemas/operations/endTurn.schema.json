@@ -27,7 +27,8 @@
           "minLength": 1
         },
         "success": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Execution integrity indicator. True means the rule executed without runtime errors. This is independent of whether the action achieved its narrative goal - a FAILURE or FUMBLE outcome should still use success=true because the rule logic executed correctly."
         },
         "error": {
           "type": "object"

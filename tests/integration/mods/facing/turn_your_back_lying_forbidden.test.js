@@ -28,7 +28,7 @@ describe('facing:turn_your_back - lying_down forbidden component', () => {
     const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
     // Add lying_down component to actor
-    scenario.actor.components['positioning:lying_down'] = {
+    scenario.actor.components['lying-states:lying_on'] = {
       furniture_id: 'bed1',
     };
 

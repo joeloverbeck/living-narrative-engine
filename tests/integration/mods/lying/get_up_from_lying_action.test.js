@@ -26,7 +26,7 @@ function setupActorLyingOnFurniture(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('positioning:lying_down', {
+    .withComponent('lying-states:lying_on', {
       furniture_id: 'test:bed1',
     })
     .build();
@@ -65,7 +65,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Verify precondition
       const actorBefore =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorBefore.components['positioning:lying_down']).toBeDefined();
+      expect(actorBefore.components['lying-states:lying_on']).toBeDefined();
 
       // Act: Get up
       await testFixture.executeAction('test:actor1', 'test:bed1');
@@ -73,7 +73,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Assert: Component removed
       const actorAfter =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['positioning:lying_down']).toBeUndefined();
+      expect(actorAfter.components['lying-states:lying_on']).toBeUndefined();
     });
 
     it('should unlock actor movement', async () => {
@@ -89,7 +89,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
 
       // Assert: lying_down component removed (movement restriction removed)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:lying_down']).toBeUndefined();
+      expect(actor.components['lying-states:lying_on']).toBeUndefined();
     });
 
     it('should dispatch perceptible event with correct message', async () => {
@@ -130,7 +130,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
         .withName('Bob')
         .atLocation('living_room')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:couch1',
         })
         .build();
@@ -149,7 +149,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Assert
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:lying_down']).toBeUndefined();
+      expect(updatedActor.components['lying-states:lying_on']).toBeUndefined();
     });
 
     it('should work with any furniture type marked with allows_lying_on', async () => {
@@ -160,7 +160,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
         .withName('Carol')
         .atLocation('garden')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:hammock1',
         })
         .build();
@@ -179,7 +179,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Assert
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:lying_down']).toBeUndefined();
+      expect(updatedActor.components['lying-states:lying_on']).toBeUndefined();
     });
   });
 
@@ -221,7 +221,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:nonexistent_bed', // References deleted furniture
         })
         .build();
@@ -251,7 +251,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Get initial state (already lying in this setup)
       const initialActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(initialActor.components['positioning:lying_down']).toBeDefined();
+      expect(initialActor.components['lying-states:lying_on']).toBeDefined();
 
       // Act: Get up
       await testFixture.executeAction('test:actor1', 'test:bed1');
@@ -259,7 +259,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
       // Assert: Actor should be in "normal" state
       const finalActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(finalActor.components['positioning:lying_down']).toBeUndefined();
+      expect(finalActor.components['lying-states:lying_on']).toBeUndefined();
 
       // Should be able to do other actions now
       // (More comprehensive testing in LYIFURSYS-007)
@@ -304,7 +304,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
 
       const lyingDownComponentAction = removeComponentActions.find(
         (action) =>
-          action.parameters.component_type === 'positioning:lying_down'
+          action.parameters.component_type === 'lying-states:lying_on'
       );
       expect(lyingDownComponentAction).toBeDefined();
     });

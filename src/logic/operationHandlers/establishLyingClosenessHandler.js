@@ -231,7 +231,7 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
   async #findValidatedLyingActors(parameters, logger) {
     // Get all entities with lying_down component
     const allLyingEntities = this.#entityManager.getEntitiesWithComponent(
-      'positioning:lying_down'
+      'lying-states:lying_on'
     );
 
     // Filter for actors lying on the SAME furniture, excluding the current actor
@@ -247,7 +247,7 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
 
       const lyingComponent = this.#entityManager.getComponentData(
         entityId,
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
 
       // Check if they're lying on the same furniture

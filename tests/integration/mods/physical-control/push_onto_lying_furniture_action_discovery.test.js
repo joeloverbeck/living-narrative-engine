@@ -136,7 +136,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
-        'positioning:lying_down',
+        'lying-states:lying_on',
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'physical-control-states:being_restrained',
@@ -144,7 +144,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'positioning:fallen',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.primary).toEqual([
-        'positioning:lying_down',
+        'lying-states:lying_on',
         'positioning:kneeling_before',
       ]);
     });
@@ -218,7 +218,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
     it('fails validation when the actor is lying down', () => {
       setupScenario(testFixture, {
         actorComponents: {
-          'positioning:lying_down': { furniture_id: 'test:bed' },
+          'lying-states:lying_on': { furniture_id: 'test:bed' },
         },
       });
 
@@ -288,7 +288,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
     it('fails validation when the primary target is lying or kneeling', () => {
       setupScenario(testFixture, {
         targetComponents: {
-          'positioning:lying_down': { furniture_id: 'test:bed' },
+          'lying-states:lying_on': { furniture_id: 'test:bed' },
           'positioning:kneeling_before': { entity_id: ACTOR_ID },
         },
       });

@@ -34,6 +34,18 @@
     {
       "id": "liquids-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "locations",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "lying-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -42,17 +54,22 @@
     ],
     "actions": [
       "climb_out_of_liquid_body.action.json",
-      "enter_liquid_body.action.json"
+      "enter_liquid_body.action.json",
+      "swim_to_connected_liquid_body.action.json"
     ],
     "rules": [
       "handle_climb_out_of_liquid_body.rule.json",
-      "handle_enter_liquid_body.rule.json"
+      "handle_enter_liquid_body.rule.json",
+      "handle_swim_to_connected_liquid_body.rule.json"
     ],
     "conditions": [
       "event-is-action-climb-out-of-liquid-body.condition.json",
-      "event-is-action-enter-liquid-body.condition.json"
+      "event-is-action-enter-liquid-body.condition.json",
+      "event-is-action-swim-to-connected-liquid-body.condition.json"
     ],
     "scopes": [
+      "connected_liquid_bodies_for_actor.scope",
+      "connected_liquid_body_location.scope",
       "liquid_bodies_at_location.scope",
       "liquid_body_actor_is_in.scope"
     ],

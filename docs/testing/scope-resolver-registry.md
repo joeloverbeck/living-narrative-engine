@@ -951,7 +951,7 @@ const bed = testFixture.createEntity('furniture_bed', {
 
 **Requirements**:
 
-- Actor has `positioning:lying_down` component with `furniture_id` field
+- Actor has `lying-states:lying_on` component with `furniture_id` field
 
 **Returns**: Set containing single furniture entity ID, or empty set
 
@@ -968,7 +968,7 @@ const bed = testFixture.createEntity('furniture_bed', {
 **Test Setup**:
 
 ```javascript
-scenario.actor.components['positioning:lying_down'] = {
+scenario.actor.components['lying-states:lying_on'] = {
   furniture_id: 'furniture_bed_01',
 };
 ```

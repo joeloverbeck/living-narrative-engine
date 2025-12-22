@@ -346,7 +346,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
   #getFormerLyingOccupants(furnitureId, departingActorId) {
     // Get all entities with lying_down component
     const allLyingEntities = this.#entityManager.getEntitiesWithComponent(
-      'positioning:lying_down'
+      'lying-states:lying_on'
     );
 
     // Filter for actors lying on the SAME furniture, excluding the departing actor
@@ -361,7 +361,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
 
       const lyingComponent = this.#entityManager.getComponentData(
         entityId,
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
 
       if (lyingComponent && lyingComponent.furniture_id === furnitureId) {

@@ -4,8 +4,18 @@
   "description": "Marker component for entities that represent a body of liquid.",
   "dataSchema": {
     "type": "object",
-    "description": "Marker component data. Always an empty object.",
-    "properties": {},
+    "description": "Metadata for a body of liquid, including optional connection data.",
+    "properties": {
+      "connected_liquid_body_ids": {
+        "type": "array",
+        "description": "Liquid body entity IDs reachable from this body.",
+        "uniqueItems": true,
+        "default": [],
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        }
+      }
+    },
     "additionalProperties": false
   }
 }

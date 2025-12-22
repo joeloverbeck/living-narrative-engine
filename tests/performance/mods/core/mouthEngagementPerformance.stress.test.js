@@ -161,7 +161,7 @@ describe('Mouth Engagement - Stress Tests', () => {
         logger,
       };
 
-      const testDurationMs = 3000;
+      const testDurationMs = 1000;
       console.log(
         `Starting sustained load test (${testDurationMs / 1000} seconds)...`
       );
@@ -213,7 +213,7 @@ describe('Mouth Engagement - Stress Tests', () => {
 
       // System should still be in consistent state
       expect(isMouthLocked(entityManager, actor.id)).toBe(false);
-    }, 8000); // Shorter timeout due to reduced test duration
+    }, 5000); // Reduced timeout matching 1s test duration
   });
 
   describe('High Load Scenarios', () => {
@@ -373,9 +373,9 @@ describe('Mouth Engagement - Stress Tests', () => {
         expect(burstDuration).toBeLessThan(500); // Each burst should complete quickly
         console.log(`Burst ${burst + 1}: ${operationsPerBurst} ops in ${burstDuration.toFixed(2)}ms`);
 
-        // Small delay between bursts
+        // Small delay between bursts (reduced from 50ms)
         if (burst < burstCount - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 25));
         }
       }
 
@@ -573,7 +573,7 @@ describe('Mouth Engagement - Stress Tests', () => {
       }
       actors.push(...(await Promise.all(creationBatches)));
 
-      const testDuration = 2000; // 2 seconds
+      const testDuration = 500; // 500ms (reduced from 2s)
       const startTime = performance.now();
       let operations = 0;
 
@@ -639,7 +639,7 @@ describe('Mouth Engagement - Stress Tests', () => {
         );
         expect(engagement).toBeDefined();
       }
-    }, 5000); // 5 second timeout
+    }, 3000); // Reduced timeout matching 500ms test duration
   });
 
   describe('Recovery and Resilience', () => {

@@ -21,7 +21,7 @@
       "hugging-states:hugging",
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
-      "positioning:lying_down",
+      "lying-states:lying_on",
       "positioning:straddling_waist",
       "positioning:doing_complex_performance",
       "physical-control-states:being_restrained",
@@ -29,7 +29,7 @@
       "positioning:fallen",
       "liquids-states:in_liquid_body"
     ],
-    "primary": ["positioning:lying_down", "sex-states:giving_blowjob"]
+    "primary": ["lying-states:lying_on", "sex-states:giving_blowjob"]
   },
   "template": "place yourself behind {target}",
   "prerequisites": [

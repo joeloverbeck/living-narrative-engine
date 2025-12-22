@@ -98,14 +98,14 @@ describe('EstablishLyingClosenessHandler', () => {
       },
       actor1: {
         'personal-space-states:closeness': { partners: ['actor3'] },
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
       actor2: {
         'personal-space-states:closeness': { partners: ['actor3'] },
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
       actor3: {
-        'positioning:lying_down': { furniture_id: 'furniture:2' },
+        'lying-states:lying_on': { furniture_id: 'furniture:2' },
       },
     };
 
@@ -215,11 +215,11 @@ describe('EstablishLyingClosenessHandler', () => {
       },
       actor1: {
         'personal-space-states:closeness': { partners: ['actor2'] },
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
       actor2: {
         'personal-space-states:closeness': { partners: ['actor1'] },
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
     };
 
@@ -261,11 +261,11 @@ describe('EstablishLyingClosenessHandler', () => {
         'lying:allows_lying_on': {},
       },
       actor1: {
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
       actor2: {
         'personal-space-states:closeness': { partners: 'actor1' },
-        'positioning:lying_down': { furniture_id: 'furniture:1' },
+        'lying-states:lying_on': { furniture_id: 'furniture:1' },
       },
     };
 
@@ -313,7 +313,7 @@ describe('EstablishLyingClosenessHandler', () => {
 
         if (
           entityId === 'actor1' &&
-          componentName === 'positioning:lying_down'
+          componentName === 'lying-states:lying_on'
         ) {
           return { furniture_id: 'furniture:1' };
         }
@@ -370,7 +370,7 @@ describe('EstablishLyingClosenessHandler', () => {
 
         if (
           entityId === 'actor1' &&
-          componentName === 'positioning:lying_down'
+          componentName === 'lying-states:lying_on'
         ) {
           return { furniture_id: 'furniture:1' };
         }

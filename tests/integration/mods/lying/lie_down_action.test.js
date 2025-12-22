@@ -6,7 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import lyingDownComponent from '../../../../data/mods/positioning/components/lying_down.component.json';
+import lyingOnComponent from '../../../../data/mods/lying-states/components/lying_on.component.json';
 
 /**
  * Creates standardized lying scenario.
@@ -62,8 +62,8 @@ describe('lying:lie_down action rule execution', () => {
 
       // Assert: lying_down component added
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:lying_down']).toBeDefined();
-      expect(actor.components['positioning:lying_down'].furniture_id).toBe(
+      expect(actor.components['lying-states:lying_on']).toBeDefined();
+      expect(actor.components['lying-states:lying_on'].furniture_id).toBe(
         'test:bed1'
       );
     });
@@ -78,7 +78,7 @@ describe('lying:lie_down action rule execution', () => {
 
       // Assert: Actor has lying_down component (movement restriction enforced by game rules)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:lying_down']).toBeDefined();
+      expect(actor.components['lying-states:lying_on']).toBeDefined();
       // Note: Movement restriction is enforced by the positioning system, not tested here
     });
 
@@ -114,8 +114,8 @@ describe('lying:lie_down action rule execution', () => {
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:lying_down']).toBeDefined();
-      expect(actor.components['positioning:lying_down'].furniture_id).toBe(
+      expect(actor.components['lying-states:lying_on']).toBeDefined();
+      expect(actor.components['lying-states:lying_on'].furniture_id).toBe(
         'test:bed1'
       );
     });
@@ -144,7 +144,7 @@ describe('lying:lie_down action rule execution', () => {
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
       expect(
-        updatedActor.components['positioning:lying_down'].furniture_id
+        updatedActor.components['lying-states:lying_on'].furniture_id
       ).toBe('test:couch1');
     });
 
@@ -170,9 +170,9 @@ describe('lying:lie_down action rule execution', () => {
 
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:lying_down']).toBeDefined();
+      expect(updatedActor.components['lying-states:lying_on']).toBeDefined();
       expect(
-        updatedActor.components['positioning:lying_down'].furniture_id
+        updatedActor.components['lying-states:lying_on'].furniture_id
       ).toBe('test:hammock1');
     });
   });
@@ -212,12 +212,12 @@ describe('lying:lie_down action rule execution', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:lying_down']).toBeDefined();
-      expect(bobEntity.components['positioning:lying_down']).toBeDefined();
+      expect(aliceEntity.components['lying-states:lying_on']).toBeDefined();
+      expect(bobEntity.components['lying-states:lying_on']).toBeDefined();
       expect(
-        aliceEntity.components['positioning:lying_down'].furniture_id
+        aliceEntity.components['lying-states:lying_on'].furniture_id
       ).toBe('test:bed1');
-      expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
+      expect(bobEntity.components['lying-states:lying_on'].furniture_id).toBe(
         'test:bed1'
       );
     });
@@ -265,13 +265,13 @@ describe('lying:lie_down action rule execution', () => {
         testFixture.entityManager.getEntityInstance('test:carol');
 
       expect(
-        aliceEntity.components['positioning:lying_down'].furniture_id
+        aliceEntity.components['lying-states:lying_on'].furniture_id
       ).toBe('test:bed1');
-      expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
+      expect(bobEntity.components['lying-states:lying_on'].furniture_id).toBe(
         'test:bed1'
       );
       expect(
-        carolEntity.components['positioning:lying_down'].furniture_id
+        carolEntity.components['lying-states:lying_on'].furniture_id
       ).toBe('test:bed1');
     });
   });
@@ -426,15 +426,15 @@ describe('lying:lie_down action rule execution', () => {
 
   describe('Component validation', () => {
     it('should match the expected lying_down component schema', () => {
-      expect(lyingDownComponent.id).toBe('positioning:lying_down');
-      expect(lyingDownComponent.dataSchema.type).toBe('object');
-      expect(lyingDownComponent.dataSchema.properties).toHaveProperty(
+      expect(lyingOnComponent.id).toBe('lying-states:lying_on');
+      expect(lyingOnComponent.dataSchema.type).toBe('object');
+      expect(lyingOnComponent.dataSchema.properties).toHaveProperty(
         'furniture_id'
       );
-      expect(lyingDownComponent.dataSchema.properties.furniture_id.$ref).toBe(
+      expect(lyingOnComponent.dataSchema.properties.furniture_id.$ref).toBe(
         'schema://living-narrative-engine/common.schema.json#/definitions/namespacedId'
       );
-      expect(lyingDownComponent.dataSchema.required).toContain('furniture_id');
+      expect(lyingOnComponent.dataSchema.required).toContain('furniture_id');
     });
   });
 
@@ -532,11 +532,11 @@ describe('lying:lie_down action rule execution', () => {
       );
       expect(addComponentActions.length).toBeGreaterThan(0);
 
-      const lyingDownComponentAction = addComponentActions.find(
+      const lyingOnComponentAction = addComponentActions.find(
         (action) =>
-          action.parameters.component_type === 'positioning:lying_down'
+          action.parameters.component_type === 'lying-states:lying_on'
       );
-      expect(lyingDownComponentAction).toBeDefined();
+      expect(lyingOnComponentAction).toBeDefined();
     });
 
     it('should include LOCK_MOVEMENT action in rule', () => {

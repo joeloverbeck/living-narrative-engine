@@ -231,7 +231,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target is lying down
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:lying_down',
+        'lying-states:lying_on',
         {}
       );
 
@@ -307,7 +307,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target has multiple forbidden states (should still be blocked)
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:lying_down',
+        'lying-states:lying_on',
         {}
       );
       fixture.entityManager.addComponent(
@@ -367,7 +367,7 @@ describe('Positioning Target Validation Scenarios', () => {
       );
       fixture.entityManager.addComponent(
         prisoner.id,
-        'positioning:lying_down',
+        'lying-states:lying_on',
         {}
       );
 
@@ -526,7 +526,7 @@ describe('Positioning Target Validation Scenarios', () => {
       );
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:lying_down',
+        'lying-states:lying_on',
         {}
       );
 
@@ -546,7 +546,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target stands up (should become valid)
       fixture.entityManager.removeComponent(
         target.id,
-        'positioning:lying_down'
+        'lying-states:lying_on'
       );
 
       // Try again with no forbidden components - should succeed

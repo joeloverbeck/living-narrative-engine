@@ -696,14 +696,14 @@ describe('deference:kneel_before action integration', () => {
           .build();
 
         // Actor is lying down
-        scenario.actor.components['positioning:lying_down'] = {
+        scenario.actor.components['lying-states:lying_on'] = {
           furniture_id: 'test:bed',
         };
 
         testFixture.reset([...Object.values(scenario), bed]);
 
         // In real gameplay, action discovery would prevent this
-        // because actor has positioning:lying_down
+        // because actor has lying-states:lying_on
         // Bypass validation to test rule execution behavior
         await testFixture.executeAction('test:actor1', 'test:target1', {
           skipDiscovery: true,
@@ -720,8 +720,8 @@ describe('deference:kneel_before action integration', () => {
         // Verify the lying component structure
         const actor =
           testFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actor.components['positioning:lying_down']).toBeDefined();
-        expect(actor.components['positioning:lying_down'].furniture_id).toBe(
+        expect(actor.components['lying-states:lying_on']).toBeDefined();
+        expect(actor.components['lying-states:lying_on'].furniture_id).toBe(
           'test:bed'
         );
       });

@@ -176,7 +176,7 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
             const facingAway =
               partner.components?.['positioning:facing_away']
                 ?.facing_away_from || [];
-            const isLyingDown = partner.components?.['positioning:lying_down'];
+            const isLyingDown = partner.components?.['lying-states:lying_on'];
 
             return facingAway.includes(actorId) || isLyingDown;
           });

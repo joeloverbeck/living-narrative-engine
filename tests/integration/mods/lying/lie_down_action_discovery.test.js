@@ -47,7 +47,7 @@ describe('lying:lie_down action discovery', () => {
         'sitting-states:sitting_on',
         'bending-states:bending_over',
         'positioning:kneeling_before',
-        'positioning:lying_down',
+        'lying-states:lying_on',
         'sex-states:fucking_anally',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
@@ -116,7 +116,7 @@ describe('lying:lie_down action discovery', () => {
 
     it('should NOT appear when actor is already lying', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:lying_down component:
+      // If Alice has lying-states:lying_on component:
       // - Action's forbidden_components.actor check fails
       // - lying:lie_down action should NOT be available
       //

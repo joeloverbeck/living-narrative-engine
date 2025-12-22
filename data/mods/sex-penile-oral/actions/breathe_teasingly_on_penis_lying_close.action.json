@@ -11,8 +11,8 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:lying_down", "personal-space-states:closeness"],
-    "primary": ["positioning:lying_down", "personal-space-states:closeness"]
+    "actor": ["lying-states:lying_on", "personal-space-states:closeness"],
+    "primary": ["lying-states:lying_on", "personal-space-states:closeness"]
   },
   "forbidden_components": {
     "actor": ["sex-states:giving_blowjob"]

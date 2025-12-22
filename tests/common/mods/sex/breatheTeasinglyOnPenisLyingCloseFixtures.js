@@ -127,7 +127,7 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
     .asActor();
 
   if (includeActorLying) {
-    actorBuilder.withComponent('positioning:lying_down', {
+    actorBuilder.withComponent('lying-states:lying_on', {
       furniture_id: FURNITURE_ID,
     });
   }
@@ -144,7 +144,7 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
     .withBody(primaryTorsoId);
 
   if (includePrimaryLying) {
-    primaryBuilder.withComponent('positioning:lying_down', {
+    primaryBuilder.withComponent('lying-states:lying_on', {
       furniture_id: useDifferentFurniture ? FURNITURE_ID_ALT : FURNITURE_ID,
     });
   }
@@ -243,7 +243,7 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
       }
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
-      const actorLying = actor?.components?.['positioning:lying_down'];
+      const actorLying = actor?.components?.['lying-states:lying_on'];
       const closenessPartners =
         actor?.components?.['personal-space-states:closeness']?.partners;
 
@@ -262,7 +262,7 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
           return false;
         }
 
-        const partnerLying = partner.components?.['positioning:lying_down'];
+        const partnerLying = partner.components?.['lying-states:lying_on'];
         if (!partnerLying) {
           return false;
         }

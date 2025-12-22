@@ -1,0 +1,15 @@
+// Scope: liquids:connected_liquid_bodies_for_actor
+// Description: Returns liquid body entities that are connected to the liquid body the actor is currently in.
+// Uses get_component_value to dynamically fetch the connected_liquid_body_ids from the actor's current liquid body.
+// The actor must have liquids-states:in_liquid_body component.
+
+liquids:connected_liquid_bodies_for_actor := entities(liquids:liquid_body)[][{
+  "in": [
+    { "var": "entity.id" },
+    { "get_component_value": [
+      { "var": "actor.components.liquids-states:in_liquid_body.liquid_body_id" },
+      "liquids:liquid_body",
+      "connected_liquid_body_ids"
+    ]}
+  ]
+}]

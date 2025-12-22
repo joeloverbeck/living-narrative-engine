@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "liquids:event-is-action-swim-to-connected-liquid-body",
+  "description": "Checks if the event is a swim_to_connected_liquid_body action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "liquids:swim_to_connected_liquid_body"
+    ]
+  }
+}

@@ -60,13 +60,13 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
     entityManager.createEntity('game:david');
 
     // Set up lying down components (Alice, Bob, Charlie are lying on the same bed)
-    entityManager.addComponent('game:alice', 'positioning:lying_down', {
+    entityManager.addComponent('game:alice', 'lying-states:lying_on', {
       furniture_id: 'furniture:test_bed',
     });
-    entityManager.addComponent('game:bob', 'positioning:lying_down', {
+    entityManager.addComponent('game:bob', 'lying-states:lying_on', {
       furniture_id: 'furniture:test_bed',
     });
-    entityManager.addComponent('game:charlie', 'positioning:lying_down', {
+    entityManager.addComponent('game:charlie', 'lying-states:lying_on', {
       furniture_id: 'furniture:test_bed',
     });
 
@@ -96,7 +96,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
   describe('Complete Workflow Integration', () => {
     it('should remove closeness and update movement locks when actor stands from lying', async () => {
       // Remove Alice's lying component to simulate her standing up
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -148,7 +148,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
 
     it('should remove all closeness when all actors stand up', async () => {
       // Alice stands up first (Bob and Charlie still lying)
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
       await handler.execute(
         {
           furniture_id: 'furniture:test_bed',
@@ -158,7 +158,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       );
 
       // Bob stands up second (Charlie still lying)
-      entityManager.removeComponent('game:bob', 'positioning:lying_down');
+      entityManager.removeComponent('game:bob', 'lying-states:lying_on');
       await handler.execute(
         {
           furniture_id: 'furniture:test_bed',
@@ -206,8 +206,8 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
 
     it('should handle no other lying actors gracefully', async () => {
       // Remove Bob and Charlie's lying components
-      entityManager.removeComponent('game:bob', 'positioning:lying_down');
-      entityManager.removeComponent('game:charlie', 'positioning:lying_down');
+      entityManager.removeComponent('game:bob', 'lying-states:lying_on');
+      entityManager.removeComponent('game:charlie', 'lying-states:lying_on');
 
       // Alice is now alone
       const parameters = {
@@ -238,7 +238,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       });
 
       // Remove Alice's lying component
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -286,7 +286,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       });
 
       // Remove Bob's lying component
-      entityManager.removeComponent('game:bob', 'positioning:lying_down');
+      entityManager.removeComponent('game:bob', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -336,7 +336,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
         'lying:allows_lying_on',
         {}
       );
-      entityManager.addComponent('game:david', 'positioning:lying_down', {
+      entityManager.addComponent('game:david', 'lying-states:lying_on', {
         furniture_id: 'furniture:test_bed2',
       });
 
@@ -349,7 +349,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       });
 
       // Remove Alice's lying component from bed1
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -375,7 +375,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
 
     it('should handle two actors lying together', async () => {
       // Setup: Only Alice and Bob lying together
-      entityManager.removeComponent('game:charlie', 'positioning:lying_down');
+      entityManager.removeComponent('game:charlie', 'lying-states:lying_on');
       entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: ['game:bob'],
       });
@@ -384,7 +384,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       });
 
       // Remove Alice's lying component
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -423,7 +423,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
 
   describe('Result Variable Handling', () => {
     it('should store result variable when requested', async () => {
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -459,7 +459,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
     it('should handle actor with no closeness component', async () => {
       // Remove Alice's closeness component
       entityManager.removeComponent('game:alice', 'personal-space-states:closeness');
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',
@@ -498,7 +498,7 @@ describe('REMOVE_LYING_CLOSENESS Integration Tests', () => {
       entityManager.addComponent('game:alice', 'personal-space-states:closeness', {
         partners: [],
       });
-      entityManager.removeComponent('game:alice', 'positioning:lying_down');
+      entityManager.removeComponent('game:alice', 'lying-states:lying_on');
 
       const parameters = {
         furniture_id: 'furniture:test_bed',

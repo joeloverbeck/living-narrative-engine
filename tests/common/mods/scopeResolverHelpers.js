@@ -792,7 +792,7 @@ export class ScopeResolverHelpers {
       'lying:furniture_im_lying_on': this.createComponentLookupResolver(
         'lying:furniture_im_lying_on',
         {
-          componentType: 'positioning:lying_down',
+          componentType: 'lying-states:lying_on',
           sourceField: 'furniture_id',
           contextSource: 'actor',
         }

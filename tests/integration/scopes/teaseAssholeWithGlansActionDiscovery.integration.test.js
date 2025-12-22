@@ -261,7 +261,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
                       },
                       {
                         '!!': {
-                          var: 'entity.components.positioning:lying_down',
+                          var: 'entity.components.lying-states:lying_on',
                         },
                       },
                     ],
@@ -461,7 +461,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
             ...(targetLyingDown && {
-              'positioning:lying_down': {
+              'lying-states:lying_on': {
                 furniture_id: 'bed1',
               },
             }),

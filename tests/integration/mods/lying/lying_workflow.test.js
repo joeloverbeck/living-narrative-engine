@@ -42,16 +42,16 @@ describe('Complete Lying Workflow', () => {
       // Verify initial state: standing (no lying component)
       let currentActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down']).toBeUndefined();
+      expect(currentActor.components['lying-states:lying_on']).toBeUndefined();
 
       // Act 1: Lie down
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Lying state
       currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down']).toBeDefined();
+      expect(currentActor.components['lying-states:lying_on']).toBeDefined();
       expect(
-        currentActor.components['positioning:lying_down'].furniture_id
+        currentActor.components['lying-states:lying_on'].furniture_id
       ).toBe('test:bed1');
 
       // Act 2: Get up (requires switching to get_up_from_lying action)
@@ -65,7 +65,7 @@ describe('Complete Lying Workflow', () => {
       // Assert: Back to standing state
       currentActor =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down']).toBeUndefined();
+      expect(currentActor.components['lying-states:lying_on']).toBeUndefined();
 
       getUpFixture.cleanup();
     });
@@ -121,7 +121,7 @@ describe('Complete Lying Workflow', () => {
       currentActor =
         lieDownFixture2.entityManager.getEntityInstance('test:actor1');
       expect(
-        currentActor.components['positioning:lying_down'].furniture_id
+        currentActor.components['lying-states:lying_on'].furniture_id
       ).toBe('test:couch1');
 
       getUpFixture.cleanup();
@@ -151,7 +151,7 @@ describe('Complete Lying Workflow', () => {
 
       let currentActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      const lyingState = currentActor.components['positioning:lying_down'];
+      const lyingState = currentActor.components['lying-states:lying_on'];
       expect(lyingState).toBeDefined();
       expect(lyingState.furniture_id).toBe('test:bed1');
 
@@ -165,7 +165,7 @@ describe('Complete Lying Workflow', () => {
 
       currentActor =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down']).toBeUndefined();
+      expect(currentActor.components['lying-states:lying_on']).toBeUndefined();
 
       getUpFixture.cleanup();
     });
@@ -221,7 +221,7 @@ describe('Complete Lying Workflow', () => {
       // Assert: Clean final state
       currentActor =
         getUpFixture2.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down']).toBeUndefined();
+      expect(currentActor.components['lying-states:lying_on']).toBeUndefined();
 
       getUpFixture.cleanup();
       lieDownFixture2.cleanup();
@@ -237,7 +237,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -278,7 +278,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -318,7 +318,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Knight')
         .atLocation('throne_room')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -357,7 +357,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -390,7 +390,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -424,7 +424,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -476,7 +476,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -553,12 +553,12 @@ describe('Complete Lying Workflow', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:lying_down']).toBeDefined();
-      expect(bobEntity.components['positioning:lying_down']).toBeDefined();
+      expect(aliceEntity.components['lying-states:lying_on']).toBeDefined();
+      expect(bobEntity.components['lying-states:lying_on']).toBeDefined();
       expect(
-        aliceEntity.components['positioning:lying_down'].furniture_id
+        aliceEntity.components['lying-states:lying_on'].furniture_id
       ).toBe('test:bed1');
-      expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
+      expect(bobEntity.components['lying-states:lying_on'].furniture_id).toBe(
         'test:bed1'
       );
     });
@@ -571,7 +571,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -580,7 +580,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Bob')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -605,8 +605,8 @@ describe('Complete Lying Workflow', () => {
       const bobEntity =
         getUpFixture.entityManager.getEntityInstance('test:bob');
 
-      expect(aliceEntity.components['positioning:lying_down']).toBeUndefined();
-      expect(bobEntity.components['positioning:lying_down']).toBeDefined();
+      expect(aliceEntity.components['lying-states:lying_on']).toBeUndefined();
+      expect(bobEntity.components['lying-states:lying_on']).toBeDefined();
 
       getUpFixture.cleanup();
     });
@@ -619,7 +619,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -674,7 +674,7 @@ describe('Complete Lying Workflow', () => {
       // Assert: lying_down component present (movement restriction enforced by game rules)
       const actorEntity =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorEntity.components['positioning:lying_down']).toBeDefined();
+      expect(actorEntity.components['lying-states:lying_on']).toBeDefined();
     });
 
     it('should allow movement after getting up', async () => {
@@ -686,7 +686,7 @@ describe('Complete Lying Workflow', () => {
         .withName('Alice')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('positioning:lying_down', {
+        .withComponent('lying-states:lying_on', {
           furniture_id: 'test:bed1',
         })
         .build();
@@ -709,7 +709,7 @@ describe('Complete Lying Workflow', () => {
       // Assert: lying_down component removed (movement allowed)
       const actorEntity =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorEntity.components['positioning:lying_down']).toBeUndefined();
+      expect(actorEntity.components['lying-states:lying_on']).toBeUndefined();
 
       getUpFixture.cleanup();
     });
@@ -781,10 +781,10 @@ describe('Complete Lying Workflow', () => {
       const finalBob =
         lieDownFixture2.entityManager.getEntityInstance('test:bob');
 
-      expect(finalAlice.components['positioning:lying_down'].furniture_id).toBe(
+      expect(finalAlice.components['lying-states:lying_on'].furniture_id).toBe(
         'test:couch1'
       );
-      expect(finalBob.components['positioning:lying_down'].furniture_id).toBe(
+      expect(finalBob.components['lying-states:lying_on'].furniture_id).toBe(
         'test:couch1'
       );
       // Both on couch now

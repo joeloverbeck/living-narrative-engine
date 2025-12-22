@@ -54,7 +54,7 @@ describe('lying:get_up_from_lying - Forbidden components validation', () => {
         .build();
 
       // Actor is lying down on the furniture
-      scenario.actor.components['positioning:lying_down'] = {
+      scenario.actor.components['lying-states:lying_on'] = {
         furniture_id: 'bed1',
         spot_index: 0,
       };
@@ -93,7 +93,7 @@ describe('lying:get_up_from_lying - Forbidden components validation', () => {
         .build();
 
       // Actor is lying down on the furniture
-      scenario.actor.components['positioning:lying_down'] = {
+      scenario.actor.components['lying-states:lying_on'] = {
         furniture_id: 'bed1',
         spot_index: 0,
       };

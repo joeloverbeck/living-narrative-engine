@@ -669,12 +669,12 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
     it('should hide activities when forbidden components are present', () => {
       const entity = createStandardEntity({
         id: 'actor1',
-        additionalComponents: new Map([['positioning:lying_down', {}]]),
+        additionalComponents: new Map([['lying-states:lying_on', {}]]),
       });
 
       const activity = {
         conditions: {
-          forbiddenComponents: ['positioning:lying_down'],
+          forbiddenComponents: ['lying-states:lying_on'],
         },
       };
 
@@ -689,7 +689,7 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
 
       const activity = {
         conditions: {
-          forbiddenComponents: ['positioning:lying_down'],
+          forbiddenComponents: ['lying-states:lying_on'],
         },
       };
 

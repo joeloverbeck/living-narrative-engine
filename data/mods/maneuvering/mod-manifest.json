@@ -31,6 +31,10 @@
     {
       "id": "liquids-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "lying-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {

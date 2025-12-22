@@ -128,7 +128,7 @@ function toHaveActionFailure(received) {
  * @param {string} componentType - Component type to check for
  * @returns {{pass: boolean, message: Function}} Jest matcher result
  * @example expect(entity).toHaveComponent('core:sitting')
- * @example expect(actor).toHaveComponent('positioning:lying_down')
+ * @example expect(actor).toHaveComponent('lying-states:lying_on')
  */
 function toHaveComponent(received, componentType) {
   const { printExpected, printReceived, matcherHint } = this.utils;

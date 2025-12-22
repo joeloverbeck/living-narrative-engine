@@ -14,7 +14,7 @@
       "positioning:straddling_waist",
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
-      "positioning:lying_down",
+      "lying-states:lying_on",
       "hugging-states:being_hugged",
       "hugging-states:hugging",
       "sex-states:giving_blowjob",

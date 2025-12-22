@@ -80,7 +80,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' }, // Already lying
+          'lying-states:lying_on': { furniture_id: 'bed:1' }, // Already lying
         },
       });
       entityManager.addEntity(alice);
@@ -91,7 +91,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' }, // Just lay down
+          'lying-states:lying_on': { furniture_id: 'bed:1' }, // Just lay down
         },
       });
       entityManager.addEntity(bob);
@@ -153,7 +153,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(alice);
@@ -164,7 +164,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(bob);
@@ -175,7 +175,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(charlie);
@@ -230,7 +230,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(alice);
@@ -241,7 +241,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:2' },
+          'lying-states:lying_on': { furniture_id: 'bed:2' },
         },
       });
       entityManager.addEntity(bob);
@@ -290,7 +290,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(alice);
@@ -334,7 +334,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: ['test:diane'] }, // Already close to diane
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(alice);
@@ -345,7 +345,7 @@ describe('EstablishLyingClosenessHandler - Integration', () => {
           'core:actor': { isPlayerControlled: false },
           'personal-space-states:closeness': { partners: [] },
           'core:movement': { locked: false },
-          'positioning:lying_down': { furniture_id: 'bed:1' },
+          'lying-states:lying_on': { furniture_id: 'bed:1' },
         },
       });
       entityManager.addEntity(bob);

@@ -34,7 +34,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
 
     it('should filter out kneel_before when target is lying down', () => {
       // EXPECTED BEHAVIOR:
-      // When target has positioning:lying_down component:
+      // When target has lying-states:lying_on component:
       // 1. Target validation identifies this as a forbidden state
       // 2. Target is excluded from kneel_before action discovery results
       // 3. User does not see "kneel before [lying actor]" in available actions
@@ -96,7 +96,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       // EXPECTED BEHAVIOR:
       // Multiple forbidden states should all be handled:
       // 1. positioning:kneeling_before - forbidden
-      // 2. positioning:lying_down - forbidden
+      // 2. lying-states:lying_on - forbidden
       // 3. bending-states:bending_over - forbidden
       // 4. Any combination of these - forbidden
       // 5. Standing/default state - allowed
@@ -166,7 +166,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       //       "scope": "personal-space:close_actors",
       //       "forbidden_components": [
       //         "positioning:kneeling_before",
-      //         "positioning:lying_down",
+      //         "lying-states:lying_on",
       //         "bending-states:bending_over"
       //       ]
       //     }

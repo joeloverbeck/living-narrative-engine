@@ -3,12 +3,12 @@
 // Excludes targets who are currently fucking the actor vaginally (to prevent impossible positioning)
 sex-core:actors_lying_close_with_uncovered_penis := actor.components.personal-space-states:closeness.partners[][{
   "and": [
-    {"!!": {"var": "entity.components.positioning:lying_down"}},
-    {"!!": {"var": "actor.components.positioning:lying_down"}},
+    {"!!": {"var": "entity.components.lying-states:lying_on"}},
+    {"!!": {"var": "actor.components.lying-states:lying_on"}},
     {
       "==": [
-        {"var": "actor.components.positioning:lying_down.furniture_id"},
-        {"var": "entity.components.positioning:lying_down.furniture_id"}
+        {"var": "actor.components.lying-states:lying_on.furniture_id"},
+        {"var": "entity.components.lying-states:lying_on.furniture_id"}
       ]
     },
     {"hasPartOfType": [".", "penis"]},

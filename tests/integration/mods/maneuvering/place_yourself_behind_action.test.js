@@ -145,7 +145,7 @@ function setupLyingBehindScenario() {
     .build();
 
   // Actor is lying down on the bed
-  scenario.actor.components['positioning:lying_down'] = {
+  scenario.actor.components['lying-states:lying_on'] = {
     furniture_id: 'test:bed',
   };
 
@@ -506,7 +506,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     testFixture.reset(Object.values(entities));
 
     // In normal action discovery, this action would not appear in available actions
-    // because the actor has the positioning:lying_down component.
+    // because the actor has the lying-states:lying_on component.
     // However, we're testing the rule execution directly to verify the logic.
 
     // NOTE: This test shows what would happen if somehow the action was triggered
@@ -539,8 +539,8 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Verify the lying component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:player');
-    expect(actor.components['positioning:lying_down']).toBeDefined();
-    expect(actor.components['positioning:lying_down'].furniture_id).toBe(
+    expect(actor.components['lying-states:lying_on']).toBeDefined();
+    expect(actor.components['lying-states:lying_on'].furniture_id).toBe(
       'test:bed'
     );
 
