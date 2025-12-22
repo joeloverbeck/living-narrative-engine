@@ -44,6 +44,31 @@ describe('Movement Action Loading Integration', () => {
       expect(action.id).toBe('movement:go');
     });
 
+    it('should load pass-through breach action from movement mod', () => {
+      const manifestPath = path.resolve(
+        process.cwd(),
+        'data/mods/movement/mod-manifest.json'
+      );
+      const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+      const manifest = JSON.parse(manifestContent);
+
+      expect(manifest.content.actions).toContain(
+        'pass_through_breach.action.json'
+      );
+
+      const actionPath = path.resolve(
+        process.cwd(),
+        'data/mods/movement/actions/pass_through_breach.action.json'
+      );
+      expect(fs.existsSync(actionPath)).toBe(true);
+
+      const actionContent = fs.readFileSync(actionPath, 'utf8');
+      const action = JSON.parse(actionContent);
+
+      expect(action).toBeDefined();
+      expect(action.id).toBe('movement:pass_through_breach');
+    });
+
     it('should load movement conditions referenced by go action', () => {
       // Load the condition file
       const conditionPath = path.resolve(
@@ -148,16 +173,25 @@ describe('Movement Action Loading Integration', () => {
       // Verify actions are listed
       expect(manifest.content.actions).toBeDefined();
       expect(manifest.content.actions).toContain('go.action.json');
+      expect(manifest.content.actions).toContain(
+        'pass_through_breach.action.json'
+      );
 
       // Verify conditions are listed (actor-can-move moved to anatomy mod)
       expect(manifest.content.conditions).toBeDefined();
       expect(manifest.content.conditions).toContain(
         'exit-is-unblocked.condition.json'
       );
+      expect(manifest.content.conditions).toContain(
+        'event-is-action-pass-through-breach.condition.json'
+      );
 
       // Verify scopes are listed
       expect(manifest.content.scopes).toBeDefined();
       expect(manifest.content.scopes).toContain('clear_directions.scope');
+      expect(manifest.content.scopes).toContain(
+        'destinations_for_breached_blocker.scope'
+      );
     });
 
     it('should maintain dependency on anatomy mod', () => {

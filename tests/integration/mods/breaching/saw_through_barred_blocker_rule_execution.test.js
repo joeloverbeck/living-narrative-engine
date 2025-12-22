@@ -83,15 +83,23 @@ describe('breaching:saw_through_barred_blocker rule execution', () => {
       const addOp = progressIf.parameters.then_actions.find(
         (action) => action.type === 'ADD_COMPONENT'
       );
+      const mathOp = progressIf.parameters.else_actions.find(
+        (action) => action.type === 'MATH'
+      );
       const modifyOp = progressIf.parameters.else_actions.find(
         (action) => action.type === 'MODIFY_COMPONENT'
       );
 
       expect(addOp.parameters.component_type).toBe('core:progress_tracker');
       expect(addOp.parameters.value).toEqual({ value: 2 });
+      expect(mathOp.parameters.result_variable).toBe('progressAfterCritical');
+      expect(mathOp.parameters.expression).toEqual({
+        operator: 'add',
+        operands: [{ var: 'context.progressTracker.value' }, 2],
+      });
       expect(modifyOp.parameters.component_type).toBe('core:progress_tracker');
-      expect(modifyOp.parameters.mode).toBe('increment');
-      expect(modifyOp.parameters.value).toBe(2);
+      expect(modifyOp.parameters.mode).toBe('set');
+      expect(modifyOp.parameters.value).toBe('{context.progressAfterCritical}');
 
       const eventOp = findOutcomeEvent(criticalIf);
       expect(eventOp).toBeDefined();
@@ -109,15 +117,23 @@ describe('breaching:saw_through_barred_blocker rule execution', () => {
       const addOp = progressIf.parameters.then_actions.find(
         (action) => action.type === 'ADD_COMPONENT'
       );
+      const mathOp = progressIf.parameters.else_actions.find(
+        (action) => action.type === 'MATH'
+      );
       const modifyOp = progressIf.parameters.else_actions.find(
         (action) => action.type === 'MODIFY_COMPONENT'
       );
 
       expect(addOp.parameters.component_type).toBe('core:progress_tracker');
       expect(addOp.parameters.value).toEqual({ value: 1 });
+      expect(mathOp.parameters.result_variable).toBe('progressAfterSuccess');
+      expect(mathOp.parameters.expression).toEqual({
+        operator: 'add',
+        operands: [{ var: 'context.progressTracker.value' }, 1],
+      });
       expect(modifyOp.parameters.component_type).toBe('core:progress_tracker');
-      expect(modifyOp.parameters.mode).toBe('increment');
-      expect(modifyOp.parameters.value).toBe(1);
+      expect(modifyOp.parameters.mode).toBe('set');
+      expect(modifyOp.parameters.value).toBe('{context.progressAfterSuccess}');
 
       const eventOp = findOutcomeEvent(successIf);
       expect(eventOp).toBeDefined();

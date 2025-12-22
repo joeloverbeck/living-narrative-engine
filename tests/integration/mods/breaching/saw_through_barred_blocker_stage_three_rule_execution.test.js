@@ -41,11 +41,11 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
         action.type === 'IF'
     );
 
-  const findOpenOp = (ifOp) =>
+  const findBreachedOp = (ifOp) =>
     ifOp?.parameters?.then_actions?.find(
       (action) =>
-        action.type === 'MODIFY_COMPONENT' &&
-        action.parameters?.component_type === 'mechanisms:openable'
+        action.type === 'ADD_COMPONENT' &&
+        action.parameters?.component_type === 'breaching:breached'
     );
 
   describe('Rule wiring', () => {
@@ -91,7 +91,7 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
   });
 
   describe('Outcome handling', () => {
-    it('should upsert progress, open the blocker, and emit a perceptible event on CRITICAL_SUCCESS', () => {
+    it('should upsert progress, mark the blocker breached, and emit a perceptible event on CRITICAL_SUCCESS', () => {
       const criticalIf = findIfByOutcome(sawThroughRule.actions, 'CRITICAL_SUCCESS');
       expect(criticalIf).toBeDefined();
 
@@ -101,21 +101,27 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
       const addOp = progressIf.parameters.then_actions.find(
         (action) => action.type === 'ADD_COMPONENT'
       );
+      const mathOp = progressIf.parameters.else_actions.find(
+        (action) => action.type === 'MATH'
+      );
       const modifyOp = progressIf.parameters.else_actions.find(
         (action) => action.type === 'MODIFY_COMPONENT'
       );
 
       expect(addOp.parameters.component_type).toBe('core:progress_tracker');
       expect(addOp.parameters.value).toEqual({ value: 2 });
+      expect(mathOp.parameters.result_variable).toBe('progressAfterCritical');
+      expect(mathOp.parameters.expression).toEqual({
+        operator: 'add',
+        operands: [{ var: 'context.progressTracker.value' }, 2],
+      });
       expect(modifyOp.parameters.component_type).toBe('core:progress_tracker');
-      expect(modifyOp.parameters.mode).toBe('increment');
-      expect(modifyOp.parameters.value).toBe(2);
+      expect(modifyOp.parameters.mode).toBe('set');
+      expect(modifyOp.parameters.value).toBe('{context.progressAfterCritical}');
 
-      const openOp = findOpenOp(criticalIf);
-      expect(openOp).toBeDefined();
-      expect(openOp.parameters.field).toBe('isOpen');
-      expect(openOp.parameters.mode).toBe('set');
-      expect(openOp.parameters.value).toBe(true);
+      const breachedOp = findBreachedOp(criticalIf);
+      expect(breachedOp).toBeDefined();
+      expect(breachedOp.parameters.value).toEqual({});
 
       const eventOp = findOutcomeEvent(criticalIf);
       expect(eventOp).toBeDefined();
@@ -124,7 +130,7 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
       expect(eventOp.parameters.target_description).toBeUndefined();
     });
 
-    it('should upsert progress, open the blocker, and emit a perceptible event on SUCCESS', () => {
+    it('should upsert progress, mark the blocker breached, and emit a perceptible event on SUCCESS', () => {
       const successIf = findIfByOutcome(sawThroughRule.actions, 'SUCCESS');
       expect(successIf).toBeDefined();
 
@@ -134,21 +140,27 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
       const addOp = progressIf.parameters.then_actions.find(
         (action) => action.type === 'ADD_COMPONENT'
       );
+      const mathOp = progressIf.parameters.else_actions.find(
+        (action) => action.type === 'MATH'
+      );
       const modifyOp = progressIf.parameters.else_actions.find(
         (action) => action.type === 'MODIFY_COMPONENT'
       );
 
       expect(addOp.parameters.component_type).toBe('core:progress_tracker');
       expect(addOp.parameters.value).toEqual({ value: 1 });
+      expect(mathOp.parameters.result_variable).toBe('progressAfterSuccess');
+      expect(mathOp.parameters.expression).toEqual({
+        operator: 'add',
+        operands: [{ var: 'context.progressTracker.value' }, 1],
+      });
       expect(modifyOp.parameters.component_type).toBe('core:progress_tracker');
-      expect(modifyOp.parameters.mode).toBe('increment');
-      expect(modifyOp.parameters.value).toBe(1);
+      expect(modifyOp.parameters.mode).toBe('set');
+      expect(modifyOp.parameters.value).toBe('{context.progressAfterSuccess}');
 
-      const openOp = findOpenOp(successIf);
-      expect(openOp).toBeDefined();
-      expect(openOp.parameters.field).toBe('isOpen');
-      expect(openOp.parameters.mode).toBe('set');
-      expect(openOp.parameters.value).toBe(true);
+      const breachedOp = findBreachedOp(successIf);
+      expect(breachedOp).toBeDefined();
+      expect(breachedOp.parameters.value).toEqual({});
 
       const eventOp = findOutcomeEvent(successIf);
       expect(eventOp).toBeDefined();

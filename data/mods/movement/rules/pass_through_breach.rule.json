@@ -1,0 +1,236 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_pass_through_breach",
+  "comment": "Handles the 'movement:pass_through_breach' action. Reads blocker/destination from multi-target payload.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "movement:event-is-action-pass-through-breach"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Fetch actor name and position components in bulk.",
+      "parameters": {
+        "entity_ref": "actor",
+        "pairs": [
+          {
+            "component_type": "core:name",
+            "result_variable": "actorNameComponent"
+          },
+          {
+            "component_type": "core:position",
+            "result_variable": "actorPositionComponentPreMove"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Proceed only if the actor has the required components.",
+      "parameters": {
+        "condition": {
+          "and": [
+            {
+              "var": "context.actorNameComponent"
+            },
+            {
+              "var": "context.actorPositionComponentPreMove"
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name of the current location (pre-move).",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.actorPositionComponentPreMove.locationId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "currentLocationNameComponentPreMove"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Resolve destination from multi-target payload (secondary target).",
+            "parameters": {
+              "variable_name": "resolvedTargetLocationId",
+              "value": "{event.payload.secondaryId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Resolve breached blocker from multi-target payload (primary target).",
+            "parameters": {
+              "variable_name": "resolvedBreachedBlockerId",
+              "value": "{event.payload.primaryId}"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Check if valid blocker and destination were provided.",
+            "parameters": {
+              "condition": {
+                "and": [
+                  {
+                    "!=": [
+                      {
+                        "var": "context.resolvedTargetLocationId"
+                      },
+                      null
+                    ]
+                  },
+                  {
+                    "!=": [
+                      {
+                        "var": "context.resolvedBreachedBlockerId"
+                      },
+                      null
+                    ]
+                  }
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Fetch the name of the target location for messaging.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.resolvedTargetLocationId}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "targetLocationNameComponent"
+                  }
+                },
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Fetch the name of the breached blocker for messaging.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.resolvedBreachedBlockerId}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "breachedBlockerNameComponent"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor leaving current location.",
+                  "parameters": {
+                    "location_id": "{context.actorPositionComponentPreMove.locationId}",
+                    "description_text": "{context.actorNameComponent.text} leaves to go to {context.targetLocationNameComponent.text}.",
+                    "actor_description": "I leave to go to {context.targetLocationNameComponent.text}.",
+                    "perception_type": "movement.departure",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear footsteps moving away.",
+                      "tactile": "I feel faint vibrations from nearby footsteps."
+                    }
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Update the actor's locationId to the destination.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:position",
+                    "field": "locationId",
+                    "mode": "set",
+                    "value": "{context.resolvedTargetLocationId}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch the primary 'entity_moved' event for other systems.",
+                  "parameters": {
+                    "eventType": "core:entity_moved",
+                    "payload": {
+                      "eventName": "core:entity_moved",
+                      "entityId": "{event.payload.actorId}",
+                      "previousLocationId": "{context.actorPositionComponentPreMove.locationId}",
+                      "currentLocationId": "{context.resolvedTargetLocationId}",
+                      "originalCommand": "{event.payload.originalInput}"
+                    }
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor entering new location.",
+                  "parameters": {
+                    "location_id": "{context.resolvedTargetLocationId}",
+                    "description_text": "{context.actorNameComponent.text} arrives from {context.currentLocationNameComponentPreMove.text}.",
+                    "actor_description": "I arrive from {context.currentLocationNameComponentPreMove.text}.",
+                    "perception_type": "movement.arrival",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear footsteps approaching.",
+                      "tactile": "I feel the faint thud of footsteps nearby."
+                    }
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "comment": "Prepare success message for the UI.",
+                  "parameters": {
+                    "variable_name": "successMessage",
+                    "value": "{context.actorNameComponent.text} passes through the breach in {context.breachedBlockerNameComponent.text} into {context.targetLocationNameComponent.text}."
+                  }
+                },
+                {
+                  "macro": "core:displaySuccessAndEndTurn"
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch a UI event indicating the failed move.",
+                  "parameters": {
+                    "eventType": "core:display_failed_action_result",
+                    "payload": {
+                      "message": "{context.actorNameComponent.text} tries to pass through the breach, but cannot find a valid destination."
+                    }
+                  }
+                },
+                {
+                  "type": "END_TURN",
+                  "comment": "End the turn after a failed move.",
+                  "parameters": {
+                    "entityId": "{event.payload.actorId}",
+                    "success": false,
+                    "error": {
+                      "message": "Failed to move: No valid breached blocker or destination could be determined."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "END_TURN",
+            "comment": "Action failed because actor is missing required components.",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": false,
+              "error": {
+                "message": "Actor is missing required components for movement."
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

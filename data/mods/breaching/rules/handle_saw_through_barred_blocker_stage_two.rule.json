@@ -115,27 +115,38 @@
               ],
               "else_actions": [
                 {
+                  "type": "MATH",
+                  "parameters": {
+                    "result_variable": "progressAfterCritical",
+                    "expression": {
+                      "operator": "add",
+                      "operands": [
+                        { "var": "context.progressTracker.value" },
+                        2
+                      ]
+                    }
+                  }
+                },
+                {
                   "type": "MODIFY_COMPONENT",
                   "parameters": {
                     "entity_ref": "primary",
                     "component_type": "core:progress_tracker",
                     "field": "value",
-                    "mode": "increment",
-                    "value": 2
+                    "mode": "set",
+                    "value": "{context.progressAfterCritical}"
                   }
                 }
               ]
             }
           },
           {
-            "type": "MODIFY_COMPONENT",
-            "comment": "Open the barred blocker after the second bar is cleared.",
+            "type": "ADD_COMPONENT",
+            "comment": "Mark the barred blocker as breached after the second bar is cleared.",
             "parameters": {
               "entity_ref": "primary",
-              "component_type": "mechanisms:openable",
-              "field": "isOpen",
-              "mode": "set",
-              "value": true
+              "component_type": "breaching:breached",
+              "value": {}
             }
           },
           {
@@ -201,13 +212,26 @@
               ],
               "else_actions": [
                 {
+                  "type": "MATH",
+                  "parameters": {
+                    "result_variable": "progressAfterSuccess",
+                    "expression": {
+                      "operator": "add",
+                      "operands": [
+                        { "var": "context.progressTracker.value" },
+                        1
+                      ]
+                    }
+                  }
+                },
+                {
                   "type": "MODIFY_COMPONENT",
                   "parameters": {
                     "entity_ref": "primary",
                     "component_type": "core:progress_tracker",
                     "field": "value",
-                    "mode": "increment",
-                    "value": 1
+                    "mode": "set",
+                    "value": "{context.progressAfterSuccess}"
                   }
                 }
               ]
