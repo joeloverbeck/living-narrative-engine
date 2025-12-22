@@ -252,7 +252,7 @@ describe('throwable_items scope definition', () => {
     );
 
     // Should reference wielding component for wielded items
-    expect(scopeContent).toContain('positioning:wielding');
+    expect(scopeContent).toContain('item-handling-states:wielding');
     expect(scopeContent).toContain('wielded_item_ids');
 
     // Should reference inventory component

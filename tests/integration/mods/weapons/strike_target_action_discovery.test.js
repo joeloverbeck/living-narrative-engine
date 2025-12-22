@@ -40,10 +40,10 @@ describe('strike_target action definition', () => {
   });
 
   describe('Required Components', () => {
-    it('should require actor to have positioning:wielding component', () => {
+    it('should require actor to have item-handling-states:wielding component', () => {
       expect(actionJson.required_components).toBeDefined();
       expect(actionJson.required_components.actor).toContain(
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
     });
 

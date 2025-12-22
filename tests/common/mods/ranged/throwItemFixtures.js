@@ -108,7 +108,7 @@ export const createWieldingActorFixture = (overrides = {}) => ({
     'core:name': { value: overrides.name || 'Wielder' },
     'core:position': { locationId: overrides.locationId || 'test-location' },
     'items:inventory': { items: overrides.inventoryItems || [] },
-    'positioning:wielding': {
+    'item-handling-states:wielding': {
       wielded_item_ids: overrides.wieldedItemIds || ['dagger-001'],
     },
     'skills:ranged_skill': { value: overrides.rangedSkill ?? 15 },

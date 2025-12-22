@@ -190,7 +190,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'test:actor',
           components: {
             'core:actor': { name: 'Thrower' },
-            'positioning:wielding': { wielded_item_ids: ['sword-001'] },
+            'item-handling-states:wielding': { wielded_item_ids: ['sword-001'] },
             'items:inventory': { items: [] },
           },
         },
@@ -236,7 +236,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'test:actor',
           components: {
             'core:actor': { name: 'Thrower' },
-            'positioning:wielding': { wielded_item_ids: ['sword-001'] },
+            'item-handling-states:wielding': { wielded_item_ids: ['sword-001'] },
             'items:inventory': { items: ['rock-001'] },
           },
         },
@@ -403,7 +403,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'test:actor',
           components: {
             'core:actor': { name: 'Thrower' },
-            // No positioning:wielding component
+            // No item-handling-states:wielding component
             'items:inventory': { items: ['rock-001'] },
           },
         },
@@ -440,7 +440,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'test:actor',
           components: {
             'core:actor': { name: 'Thrower' },
-            'positioning:wielding': { wielded_item_ids: ['sword-001'] },
+            'item-handling-states:wielding': { wielded_item_ids: ['sword-001'] },
             // No items:inventory component
           },
         },

@@ -15,7 +15,7 @@
     "actor": [
       "personal-space-states:closeness",
       "positioning:doing_complex_performance",
-      "positioning:wielding",
+      "item-handling-states:wielding",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "positioning:fallen",

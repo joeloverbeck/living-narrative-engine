@@ -25,6 +25,15 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
+ * Depth analysis results for mod dependency chains.
+ *
+ * @typedef {object} DepthAnalysis
+ * @property {number} maxDepth - Maximum chain length in the graph
+ * @property {string[]} deepestChain - Mod IDs in the deepest chain (leaf to root)
+ * @property {number} averageDepth - Average depth across all mods
+ */
+
+/**
  * Service for calculating and caching mod configuration statistics.
  * Provides a clean API for UI components to consume statistics data.
  */
@@ -201,5 +210,113 @@ export default class ModStatisticsService {
     this.#cache.isValid = true;
 
     return health;
+  }
+
+  /**
+   * Analyze dependency chain depths across all active mods.
+   *
+   * @returns {DepthAnalysis} Depth analysis results
+   */
+  getDependencyDepthAnalysis() {
+    // Check cache
+    if (this.#cache.isValid && this.#cache.data.depth) {
+      return this.#cache.data.depth;
+    }
+
+    const nodes = this.#modGraphService.getAllNodes();
+
+    if (nodes.size === 0) {
+      const result = { maxDepth: 0, deepestChain: [], averageDepth: 0 };
+      this.#cache.data.depth = result;
+      this.#cache.isValid = true;
+      return result;
+    }
+
+    // Calculate depth for each active mod
+    const depths = new Map();
+    const chains = new Map();
+
+    for (const [modId, node] of nodes) {
+      if (node.status === 'inactive') continue;
+      const { depth, chain } = this.#calculateDepth(modId, nodes, new Set());
+      depths.set(modId, depth);
+      chains.set(modId, chain);
+    }
+
+    // Find maximum depth and deepest chain
+    let maxDepth = 0;
+    let deepestChain = [];
+
+    for (const [modId, depth] of depths) {
+      if (depth > maxDepth) {
+        maxDepth = depth;
+        deepestChain = chains.get(modId);
+      }
+    }
+
+    // Calculate average
+    const depthValues = Array.from(depths.values());
+    const averageDepth =
+      depthValues.length > 0
+        ? depthValues.reduce((sum, d) => sum + d, 0) / depthValues.length
+        : 0;
+
+    const result = {
+      maxDepth,
+      deepestChain,
+      averageDepth: Math.round(averageDepth * 10) / 10, // One decimal place
+    };
+
+    this.#cache.data.depth = result;
+    this.#cache.isValid = true;
+    return result;
+  }
+
+  /**
+   * Calculate depth for a single mod (recursive helper).
+   *
+   * @param {string} modId - Mod to calculate depth for
+   * @param {Map<string, object>} nodes - All nodes map
+   * @param {Set<string>} visited - Visited nodes (for cycle detection)
+   * @returns {{depth: number, chain: string[]}} Depth and chain
+   */
+  #calculateDepth(modId, nodes, visited) {
+    // Cycle detection
+    if (visited.has(modId)) {
+      return { depth: 0, chain: [] };
+    }
+
+    const node = nodes.get(modId);
+    if (!node || node.status === 'inactive') {
+      return { depth: 0, chain: [] };
+    }
+
+    // No dependencies = depth of 1
+    if (!node.dependencies || node.dependencies.length === 0) {
+      return { depth: 1, chain: [modId] };
+    }
+
+    visited.add(modId);
+
+    // Find max depth among dependencies
+    let maxChildDepth = 0;
+    let maxChildChain = [];
+
+    for (const depId of node.dependencies) {
+      const { depth, chain } = this.#calculateDepth(
+        depId,
+        nodes,
+        new Set(visited)
+      );
+      if (depth > maxChildDepth) {
+        maxChildDepth = depth;
+        maxChildChain = chain;
+      }
+    }
+
+    return {
+      depth: 1 + maxChildDepth,
+      chain: [modId, ...maxChildChain],
+    };
   }
 }

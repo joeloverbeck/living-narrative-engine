@@ -48,7 +48,7 @@ describe('unwield_item rule execution', () => {
           items: ['test-sword'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['test-sword'],
         })
         .build();
@@ -80,7 +80,7 @@ describe('unwield_item rule execution', () => {
           items: ['silver-blade'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['silver-blade'],
         })
         .build();
@@ -114,7 +114,7 @@ describe('unwield_item rule execution', () => {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['test-weapon'],
         })
         .build();
@@ -126,7 +126,7 @@ describe('unwield_item rule execution', () => {
       // Verify wielding component was removed (single item unwielded)
       const wieldingComponent = fixture.entityManager.getComponentData(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeNull();
     });
@@ -154,7 +154,7 @@ describe('unwield_item rule execution', () => {
           items: ['dagger', 'sword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['dagger', 'sword'],
         })
         .build();
@@ -167,7 +167,7 @@ describe('unwield_item rule execution', () => {
       // Verify wielding component still exists
       const wieldingComponent = fixture.entityManager.getComponentData(
         'dual-wielder',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).not.toBeNull();
       expect(wieldingComponent.wielded_item_ids).toEqual(['sword']);
@@ -192,7 +192,7 @@ describe('unwield_item rule execution', () => {
           items: ['longsword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['longsword'],
         })
         .build();
@@ -227,7 +227,7 @@ describe('unwield_item rule execution', () => {
           items: ['simple-knife'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['simple-knife'],
         })
         .build();
@@ -270,7 +270,7 @@ describe('unwield_item rule execution', () => {
           items: ['test-sword', 'test-dagger'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           // Only wielding the dagger, NOT the sword
           wielded_item_ids: ['test-dagger'],
         })
@@ -291,7 +291,7 @@ describe('unwield_item rule execution', () => {
       // Verify wielding component unchanged (still wielding dagger)
       const wieldingComponent = fixture.entityManager.getComponentData(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).not.toBeNull();
       expect(wieldingComponent.wielded_item_ids).toEqual(['test-dagger']);
@@ -306,7 +306,7 @@ describe('unwield_item rule execution', () => {
         .withComponent('weapons:weapon', {})
         .build();
 
-      // Actor WITHOUT wielding component - Note: action requires positioning:wielding
+      // Actor WITHOUT wielding component - Note: action requires item-handling-states:wielding
       // so we add it with empty array to match action requirements, then test handler idempotency
       const actor = new ModEntityBuilder('test-actor')
         .withName('Test Actor')
@@ -316,7 +316,7 @@ describe('unwield_item rule execution', () => {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: [], // Component exists but empty
         })
         .build();
@@ -352,7 +352,7 @@ describe('unwield_item rule execution', () => {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['test-weapon'],
         })
         .build();

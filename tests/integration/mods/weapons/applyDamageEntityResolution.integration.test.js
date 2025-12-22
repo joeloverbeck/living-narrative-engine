@@ -46,7 +46,7 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['sword'] }) // Required for swing action
+        .withComponent('item-handling-states:wielding', { itemIds: ['sword'] }) // Required for swing action
         .build();
 
       // Create target (defender) with position, anatomy, and defense skill
@@ -116,7 +116,7 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 80 })
-        .withComponent('positioning:wielding', { itemIds: ['axe'] }) // Required for swing action
+        .withComponent('item-handling-states:wielding', { itemIds: ['axe'] }) // Required for swing action
         .build();
 
       const targetBodyPart = new ModEntityBuilder('target-chest')
@@ -184,7 +184,7 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
         .asActor()
         .withComponent('core:position', { locationId: 'arena' })
         .withComponent('skills:melee_skill', { level: 100 }) // Max skill for guaranteed success
-        .withComponent('positioning:wielding', { itemIds: ['greatsword'] }) // Required for swing action
+        .withComponent('item-handling-states:wielding', { itemIds: ['greatsword'] }) // Required for swing action
         .build();
 
       const targetTorso = new ModEntityBuilder('enemy-torso')
@@ -257,7 +257,7 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['test-weapon'] }) // Required for swing action
+        .withComponent('item-handling-states:wielding', { itemIds: ['test-weapon'] }) // Required for swing action
         .build();
 
       const targetPart = new ModEntityBuilder('target-body-part')

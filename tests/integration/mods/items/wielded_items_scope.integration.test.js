@@ -4,7 +4,7 @@
  * @description Tests the scope that returns entity IDs of items currently being wielded
  *
  * The scope:
- * - Accesses actor's positioning:wielding component
+ * - Accesses actor's item-handling-states:wielding component
  * - Returns wielded_item_ids array via [] iterator
  * @see data/mods/items/scopes/wielded_items.scope
  * @see tickets/UNWITEACT-001-create-scope-file.md
@@ -103,7 +103,7 @@ describe('items:wielded_items scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'positioning:wielding': {
+        'item-handling-states:wielding': {
           wielded_item_ids: ['weapons:iron_sword'],
         },
       });
@@ -130,7 +130,7 @@ describe('items:wielded_items scope', () => {
     test('should return multiple wielded item IDs', () => {
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Dual Wielder' },
-        'positioning:wielding': {
+        'item-handling-states:wielding': {
           wielded_item_ids: ['weapons:iron_sword', 'weapons:dagger'],
         },
       });
@@ -156,7 +156,7 @@ describe('items:wielded_items scope', () => {
     test('should return empty set when wielded_item_ids is empty array', () => {
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Unarmed Actor' },
-        'positioning:wielding': {
+        'item-handling-states:wielding': {
           wielded_item_ids: [],
         },
       });
@@ -182,7 +182,7 @@ describe('items:wielded_items scope', () => {
     test('should return empty set when actor has no wielding component', () => {
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Unarmed Actor' },
-        // No positioning:wielding component
+        // No item-handling-states:wielding component
       });
 
       mockEntityManager._addEntity(actor);
@@ -204,7 +204,7 @@ describe('items:wielded_items scope', () => {
     test('should preserve order of wielded items (primary/secondary)', () => {
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Sword and Shield' },
-        'positioning:wielding': {
+        'item-handling-states:wielding': {
           wielded_item_ids: ['weapons:longsword', 'weapons:shield'],
         },
       });
@@ -235,7 +235,7 @@ describe('items:wielded_items scope', () => {
       // The scope should return both as valid targets for unwield_item
       const actor = createEntityInstance('warrior-1', {
         'core:actor': { name: 'Warrior' },
-        'positioning:wielding': {
+        'item-handling-states:wielding': {
           wielded_item_ids: ['weapons:iron_sword', 'weapons:round_shield'],
         },
       });
@@ -264,7 +264,7 @@ describe('items:wielded_items scope', () => {
       // The scope should return empty, meaning unwield_item action shouldn't appear
       const actor = createEntityInstance('unarmed-actor', {
         'core:actor': { name: 'Unarmed' },
-        // No positioning:wielding component
+        // No item-handling-states:wielding component
       });
 
       mockEntityManager._addEntity(actor);

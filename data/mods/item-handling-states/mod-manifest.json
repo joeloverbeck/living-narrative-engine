@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "item-handling-states",
+  "version": "1.0.0",
+  "name": "Item Handling States",
+  "description": "State components for item handling - wielding and related combat stances.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": ["wielding.component.json"],
+    "conditions": ["entity-is-not-wielding.condition.json"]
+  }
+}

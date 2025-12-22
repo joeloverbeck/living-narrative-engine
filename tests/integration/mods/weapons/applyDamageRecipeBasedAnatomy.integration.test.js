@@ -47,7 +47,7 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['sword'] })
+        .withComponent('item-handling-states:wielding', { itemIds: ['sword'] })
         .build();
 
       // Create target body part WITHOUT hit_probability_weight
@@ -141,7 +141,7 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['sword'] })
+        .withComponent('item-handling-states:wielding', { itemIds: ['sword'] })
         .build();
 
       // Create body part with explicit hit_probability_weight = 0
@@ -228,7 +228,7 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['sword'] })
+        .withComponent('item-handling-states:wielding', { itemIds: ['sword'] })
         .build();
 
       // Create body part with explicit hit_probability_weight = 0
@@ -314,7 +314,7 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('skills:melee_skill', { level: 50 })
-        .withComponent('positioning:wielding', { itemIds: ['sword'] })
+        .withComponent('item-handling-states:wielding', { itemIds: ['sword'] })
         .build();
 
       const targetTorso = new ModEntityBuilder('target-torso')

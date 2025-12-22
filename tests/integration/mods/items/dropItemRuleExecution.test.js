@@ -298,7 +298,7 @@ describe('item-handling:drop_item action integration', () => {
           items: ['test-sword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['test-sword'],
         })
         .build();
@@ -322,7 +322,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify wielding component was removed (since it was the only wielded item)
       const wieldingComponent = testFixture.entityManager.getComponentData(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeNull();
 
@@ -357,7 +357,7 @@ describe('item-handling:drop_item action integration', () => {
           items: ['sword', 'dagger'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['sword', 'dagger'],
         })
         .build();
@@ -384,7 +384,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify wielding component still exists with just the dagger
       const wieldingComponent = testFixture.entityManager.getComponentData(
         'dual-wielder',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).not.toBeNull();
       expect(wieldingComponent.wielded_item_ids).toEqual(['dagger']);
@@ -419,7 +419,7 @@ describe('item-handling:drop_item action integration', () => {
           items: ['wielded-sword', 'potion'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['wielded-sword'],
         })
         .build();
@@ -447,7 +447,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify wielding component still exists unchanged
       const wieldingComponent = testFixture.entityManager.getComponentData(
         'adventurer',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).not.toBeNull();
       expect(wieldingComponent.wielded_item_ids).toEqual(['wielded-sword']);

@@ -122,9 +122,9 @@ describe('quickly_wield_weapon action', () => {
       await fixture.executeAction('test-actor', 'test-sword');
 
       const actorEntity = fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorEntity.components['positioning:wielding']).toBeDefined();
+      expect(actorEntity.components['item-handling-states:wielding']).toBeDefined();
       expect(
-        actorEntity.components['positioning:wielding'].wielded_item_ids
+        actorEntity.components['item-handling-states:wielding'].wielded_item_ids
       ).toContain('test-sword');
     });
 
@@ -212,7 +212,7 @@ describe('quickly_wield_weapon action', () => {
           items: ['existing-sword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['existing-sword'],
         })
         .build();
@@ -237,10 +237,10 @@ describe('quickly_wield_weapon action', () => {
 
       const actorEntity = fixture.entityManager.getEntityInstance('test-actor');
       expect(
-        actorEntity.components['positioning:wielding'].wielded_item_ids
+        actorEntity.components['item-handling-states:wielding'].wielded_item_ids
       ).toContain('existing-sword');
       expect(
-        actorEntity.components['positioning:wielding'].wielded_item_ids
+        actorEntity.components['item-handling-states:wielding'].wielded_item_ids
       ).toContain('new-sword');
     });
   });

@@ -557,4 +557,326 @@ describe('ModStatisticsService', () => {
       expect(health.errors).toEqual([]);
     });
   });
+
+  describe('getDependencyDepthAnalysis', () => {
+    it('should return zeros for empty graph', () => {
+      mockModGraphService.getAllNodes.mockReturnValue(new Map());
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBe(0);
+      expect(result.deepestChain).toEqual([]);
+      expect(result.averageDepth).toBe(0);
+    });
+
+    it('should return depth 1 for mod with no dependencies', () => {
+      const nodes = new Map([
+        [
+          'standalone',
+          {
+            id: 'standalone',
+            dependencies: [],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBe(1);
+      expect(result.deepestChain).toEqual(['standalone']);
+    });
+
+    it('should calculate correct depth for linear chain', () => {
+      // Chain: mod-c → mod-b → mod-a (depth 3)
+      const nodes = new Map([
+        [
+          'mod-a',
+          {
+            id: 'mod-a',
+            dependencies: [],
+            dependents: ['mod-b'],
+            status: 'core',
+          },
+        ],
+        [
+          'mod-b',
+          {
+            id: 'mod-b',
+            dependencies: ['mod-a'],
+            dependents: ['mod-c'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'mod-c',
+          {
+            id: 'mod-c',
+            dependencies: ['mod-b'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBe(3);
+      expect(result.deepestChain).toEqual(['mod-c', 'mod-b', 'mod-a']);
+    });
+
+    it('should find longest path when multiple paths exist', () => {
+      // mod-d depends on mod-b (short) and mod-c (long via mod-a)
+      const nodes = new Map([
+        [
+          'mod-a',
+          {
+            id: 'mod-a',
+            dependencies: [],
+            dependents: ['mod-c'],
+            status: 'core',
+          },
+        ],
+        [
+          'mod-b',
+          {
+            id: 'mod-b',
+            dependencies: [],
+            dependents: ['mod-d'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'mod-c',
+          {
+            id: 'mod-c',
+            dependencies: ['mod-a'],
+            dependents: ['mod-d'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'mod-d',
+          {
+            id: 'mod-d',
+            dependencies: ['mod-b', 'mod-c'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBe(3); // mod-d → mod-c → mod-a
+      expect(result.deepestChain[0]).toBe('mod-d');
+      expect(result.deepestChain).toContain('mod-c');
+      expect(result.deepestChain).toContain('mod-a');
+    });
+
+    it('should calculate correct average depth', () => {
+      const nodes = new Map([
+        [
+          'core',
+          { id: 'core', dependencies: [], dependents: ['dep'], status: 'core' },
+        ], // depth 1
+        [
+          'dep',
+          {
+            id: 'dep',
+            dependencies: ['core'],
+            dependents: ['leaf'],
+            status: 'dependency',
+          },
+        ], // depth 2
+        [
+          'leaf',
+          {
+            id: 'leaf',
+            dependencies: ['dep'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ], // depth 3
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.averageDepth).toBe(2); // (1 + 2 + 3) / 3 = 2
+    });
+
+    it('should exclude inactive mods from analysis', () => {
+      const nodes = new Map([
+        [
+          'active',
+          {
+            id: 'active',
+            dependencies: [],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'inactive',
+          {
+            id: 'inactive',
+            dependencies: ['deep1', 'deep2'],
+            dependents: [],
+            status: 'inactive',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBe(1);
+      expect(result.deepestChain).toEqual(['active']);
+    });
+
+    it('should cache results until invalidation', () => {
+      const nodes = new Map([
+        [
+          'mod',
+          { id: 'mod', dependencies: [], dependents: [], status: 'explicit' },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result1 = service.getDependencyDepthAnalysis();
+      const result2 = service.getDependencyDepthAnalysis();
+
+      expect(result1).toBe(result2);
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(1);
+
+      service.invalidateCache();
+      service.getDependencyDepthAnalysis();
+
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle circular dependencies without infinite loop', () => {
+      const nodes = new Map([
+        [
+          'mod-a',
+          {
+            id: 'mod-a',
+            dependencies: ['mod-b'],
+            dependents: ['mod-b'],
+            status: 'explicit',
+          },
+        ],
+        [
+          'mod-b',
+          {
+            id: 'mod-b',
+            dependencies: ['mod-a'],
+            dependents: ['mod-a'],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      // Should complete without hanging
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.maxDepth).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(result.deepestChain)).toBe(true);
+    });
+
+    it('should mark cache as valid after computation', () => {
+      const nodes = new Map([
+        [
+          'mod',
+          { id: 'mod', dependencies: [], dependents: [], status: 'explicit' },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      expect(service.isCacheValid()).toBe(false);
+      service.getDependencyDepthAnalysis();
+      expect(service.isCacheValid()).toBe(true);
+    });
+
+    it('should round average depth to one decimal place', () => {
+      // Set up mods with depths that produce non-integer average
+      // Two mods: depth 1 and depth 2, average = 1.5
+      const nodes = new Map([
+        [
+          'root',
+          { id: 'root', dependencies: [], dependents: ['child'], status: 'core' },
+        ], // depth 1
+        [
+          'child',
+          {
+            id: 'child',
+            dependencies: ['root'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ], // depth 2
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getDependencyDepthAnalysis();
+
+      expect(result.averageDepth).toBe(1.5); // (1 + 2) / 2 = 1.5
+    });
+  });
 });

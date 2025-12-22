@@ -33,9 +33,9 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       expect(getCloseAction.forbidden_components.actor).toBeInstanceOf(Array);
     });
 
-    it('should include positioning:wielding in forbidden list', () => {
+    it('should include item-handling-states:wielding in forbidden list', () => {
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
     });
 
@@ -58,7 +58,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
     });
   });
 
-  describe('positioning:wielding forbidden component', () => {
+  describe('item-handling-states:wielding forbidden component', () => {
     it('should NOT appear when actor has wielding component', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
@@ -67,7 +67,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['weapons:some_sword'],
         })
         .build();
@@ -97,7 +97,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       // This test confirms the forbidden_components are configured correctly
       // The blocking behavior is verified in the negative test above
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
     });
   });

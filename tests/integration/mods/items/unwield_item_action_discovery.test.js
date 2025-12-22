@@ -39,7 +39,7 @@ describe('unwield_item action definition', () => {
 
     it('should require actor to have wielding component', () => {
       expect(actionJson.required_components.actor).toContain(
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
     });
 

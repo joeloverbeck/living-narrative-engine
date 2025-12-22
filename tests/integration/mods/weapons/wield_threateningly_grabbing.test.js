@@ -65,7 +65,7 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // Verify wielding component was created with the weapon
       const actorInstance =
         fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorInstance).toHaveComponentData('positioning:wielding', {
+      expect(actorInstance).toHaveComponentData('item-handling-states:wielding', {
         wielded_item_ids: ['dagger'],
       });
     });
@@ -103,7 +103,7 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // Verify wielding component was created with the weapon
       const actorInstance =
         fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorInstance).toHaveComponentData('positioning:wielding', {
+      expect(actorInstance).toHaveComponentData('item-handling-states:wielding', {
         wielded_item_ids: ['greatsword'],
       });
     });
@@ -142,7 +142,7 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // Verify wielding component was created with the weapon
       const actorInstance =
         fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorInstance).toHaveComponentData('positioning:wielding', {
+      expect(actorInstance).toHaveComponentData('item-handling-states:wielding', {
         wielded_item_ids: ['revolver'],
       });
     });
@@ -182,7 +182,7 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // when unwielding specific items
       const actorInstance =
         fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorInstance).toHaveComponentData('positioning:wielding', {
+      expect(actorInstance).toHaveComponentData('item-handling-states:wielding', {
         wielded_item_ids: ['sword'],
       });
     });
