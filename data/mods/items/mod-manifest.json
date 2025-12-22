@@ -26,12 +26,12 @@
       "version": "1.0.0"
     },
     {
-      "id": "positioning",
+      "id": "descriptors",
       "version": "1.0.0"
     },
     {
-      "id": "descriptors",
-      "version": "1.0.0"
+      "id": "item-handling-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {

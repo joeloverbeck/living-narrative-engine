@@ -57,7 +57,7 @@ describe('item-handling:drop_wielded_item action definition', () => {
     it('should require actor to have wielding component', () => {
       expect(dropWieldedItemAction.required_components).toBeDefined();
       expect(dropWieldedItemAction.required_components.actor).toContain(
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
     });
 
@@ -153,7 +153,7 @@ describe('item-handling:drop_wielded_item action definition', () => {
   describe('Expected action discovery behavior (manual testing)', () => {
     it('should appear when actor is wielding items', () => {
       // Manual test case:
-      // 1. Create actor with positioning:wielding component
+      // 1. Create actor with item-handling-states:wielding component
       // 2. Actor has wielded_item_ids containing at least one item
       // 3. Expected: drop_wielded_item action should be available for each wielded item
       expect(true).toBe(true);
@@ -161,7 +161,7 @@ describe('item-handling:drop_wielded_item action definition', () => {
 
     it('should NOT appear when actor is not wielding anything', () => {
       // Manual test case:
-      // 1. Create actor without positioning:wielding component
+      // 1. Create actor without item-handling-states:wielding component
       // 2. Expected: drop_wielded_item action should NOT be available
       expect(true).toBe(true);
     });

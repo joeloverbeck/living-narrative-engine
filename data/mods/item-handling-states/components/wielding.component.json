@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:wielding",
+  "id": "item-handling-states:wielding",
   "description": "Tracks items an actor is actively wielding in a combat-ready or threatening manner. Presence indicates the actor has one or more items in wielding stance.",
   "dataSchema": {
     "type": "object",

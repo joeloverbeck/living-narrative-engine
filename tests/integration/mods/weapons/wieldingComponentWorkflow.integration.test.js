@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for wielding component workflow
- * Tests the positioning:wielding component addition during wield_threateningly action
+ * Tests the item-handling-states:wielding component addition during wield_threateningly action
  * Part of WIECOM-003 implementation
  */
 
@@ -32,7 +32,7 @@ describe('Wielding Component Workflow', () => {
   });
 
   describe('First Wield - Component Creation', () => {
-    it('should create positioning:wielding component when actor has no wielding component', async () => {
+    it('should create item-handling-states:wielding component when actor has no wielding component', async () => {
       // Arrange: Actor without wielding component
       const actor = new ModEntityBuilder('test-actor')
         .withName('Test Actor')
@@ -59,7 +59,7 @@ describe('Wielding Component Workflow', () => {
       // Assert: Component should be created with weapon ID in array
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toEqual(['sword-id']);
@@ -106,7 +106,7 @@ describe('Wielding Component Workflow', () => {
           items: ['sword-id', 'dagger-id'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['sword-id'],
         })
         .build();
@@ -133,7 +133,7 @@ describe('Wielding Component Workflow', () => {
       // Assert: Both weapons should be in the array
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toEqual([
@@ -154,7 +154,7 @@ describe('Wielding Component Workflow', () => {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['sword-id'],
         })
         .build();
@@ -174,7 +174,7 @@ describe('Wielding Component Workflow', () => {
       // Assert: Array should still have only one entry (push_unique prevents duplicates)
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toEqual(['sword-id']);
@@ -218,7 +218,7 @@ describe('Wielding Component Workflow', () => {
       // Verify wielding component was created (proves operations ran in sequence)
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
     });
@@ -275,7 +275,7 @@ describe('Wielding Component Workflow', () => {
       const queryWieldingOp = wieldThreateninglyRule.actions.find(
         (action) =>
           action.type === 'QUERY_COMPONENT' &&
-          action.parameters?.component_type === 'positioning:wielding'
+          action.parameters?.component_type === 'item-handling-states:wielding'
       );
       expect(queryWieldingOp).toBeDefined();
       expect(queryWieldingOp.parameters.result_variable).toBe(
@@ -316,7 +316,7 @@ describe('Wielding Component Workflow', () => {
         (action) => action.type === 'ADD_COMPONENT'
       );
       expect(addOp).toBeDefined();
-      expect(addOp.parameters.component_type).toBe('positioning:wielding');
+      expect(addOp.parameters.component_type).toBe('item-handling-states:wielding');
       expect(addOp.parameters.value.wielded_item_ids).toBeDefined();
     });
 

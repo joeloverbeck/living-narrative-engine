@@ -322,7 +322,7 @@ describe('damage propagation multi-target chains e2e', () => {
         items: ['prop-chain-blade'],
         capacity: 3,
       })
-      .withComponent('positioning:wielding', {
+      .withComponent('item-handling-states:wielding', {
         wielded_item_ids: ['prop-chain-blade'],
       })
       .build();

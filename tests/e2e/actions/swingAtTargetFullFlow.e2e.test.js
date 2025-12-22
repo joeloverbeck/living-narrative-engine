@@ -82,7 +82,7 @@ const createCombatants = ({ weaponBuilder, weaponId, attackSkill = 80 }) => {
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:melee_skill', { level: attackSkill })
     .withComponent('items:inventory', { items: [weaponId], capacity: 5 })
-    .withComponent('positioning:wielding', { wielded_item_ids: [weaponId] })
+    .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
     .build();
 
   const room = new ModEntityBuilder(ROOM_ID)
@@ -342,7 +342,7 @@ describe('swing_at_target full flow (critical e2e)', () => {
 
     const wielding = testEnv.entityManager.getComponentData(
       attacker.id,
-      'positioning:wielding'
+      'item-handling-states:wielding'
     );
     const weaponPosition = testEnv.entityManager.getComponentData(
       weapon.id,

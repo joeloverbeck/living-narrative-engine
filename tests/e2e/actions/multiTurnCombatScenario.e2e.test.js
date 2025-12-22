@@ -104,7 +104,7 @@ const createCombatants = ({
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:melee_skill', { level: 95 })
     .withComponent('items:inventory', { items: [weaponId], capacity: 3 })
-    .withComponent('positioning:wielding', { wielded_item_ids: [weaponId] })
+    .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
     .build();
 
   const room = new ModEntityBuilder(ROOM_ID)

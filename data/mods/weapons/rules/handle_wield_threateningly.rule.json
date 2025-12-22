@@ -80,7 +80,7 @@
       "comment": "Check if actor already has wielding component",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:wielding",
+        "component_type": "item-handling-states:wielding",
         "result_variable": "existingWielding",
         "missing_value": null
       }
@@ -96,7 +96,7 @@
             "comment": "Append weapon to existing wielded_item_ids array",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:wielding",
+              "component_type": "item-handling-states:wielding",
               "field": "wielded_item_ids",
               "mode": "push_unique",
               "value": "{event.payload.targetId}"
@@ -109,7 +109,7 @@
             "comment": "Create new wielding component with weapon in array",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:wielding",
+              "component_type": "item-handling-states:wielding",
               "value": {
                 "wielded_item_ids": ["{event.payload.targetId}"]
               }

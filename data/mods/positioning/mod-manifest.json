@@ -22,8 +22,7 @@
       "facing_away.component.json",
       "fallen.component.json",
       "kneeling_before.component.json",
-      "straddling_waist.component.json",
-      "wielding.component.json"
+      "straddling_waist.component.json"
     ],
     "conditions": [
       "actor-in-entity-facing-away.condition.json",
@@ -31,7 +30,6 @@
       "actor-kneeling-before-entity.condition.json",
       "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
-      "entity-is-not-wielding.condition.json",
       "entity-kneeling-before-actor.condition.json",
       "entity-not-facing-away-from-actor.condition.json",
       "entity-not-in-facing-away.condition.json"

@@ -55,7 +55,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['wielded-sword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['wielded-sword'],
         })
         .build();
@@ -79,7 +79,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       // Verify wielding component was removed (it was the only wielded item)
       const wieldingComponent = testFixture.entityManager.getComponentData(
         'fighter',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeNull();
 
@@ -113,7 +113,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['greatsword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['greatsword'],
         })
         .withComponent('anatomy:can_grab', {
@@ -173,7 +173,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['sword', 'dagger'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['sword', 'dagger'],
         })
         .build();
@@ -200,7 +200,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       // Verify wielding component still exists with just the dagger
       const wieldingComponent = testFixture.entityManager.getComponentData(
         'dual-wielder',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).not.toBeNull();
       expect(wieldingComponent.wielded_item_ids).toEqual(['dagger']);
@@ -231,7 +231,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['pistol'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['pistol'],
         })
         .build();
@@ -273,7 +273,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['rifle'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['rifle'],
         })
         .build();
@@ -317,7 +317,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
           items: ['axe'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['axe'],
         })
         .build();

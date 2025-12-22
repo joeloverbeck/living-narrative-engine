@@ -42,7 +42,7 @@ describe('Wielding Edge Cases', () => {
           items: ['dagger-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: [], // Empty array - valid but edge case
         })
         .build();
@@ -62,7 +62,7 @@ describe('Wielding Edge Cases', () => {
       // Assert - should append to the empty array
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toContain('dagger-id');
@@ -97,7 +97,7 @@ describe('Wielding Edge Cases', () => {
       // Assert
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toEqual([
@@ -115,7 +115,7 @@ describe('Wielding Edge Cases', () => {
           items: ['weapons:silver_revolver', 'dagger-1'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['weapons:silver_revolver'],
         })
         .build();
@@ -142,7 +142,7 @@ describe('Wielding Edge Cases', () => {
       // Assert
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent.wielded_item_ids).toEqual([
         'weapons:silver_revolver',
@@ -162,7 +162,7 @@ describe('Wielding Edge Cases', () => {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['sword-id'],
         })
         .build();
@@ -179,13 +179,13 @@ describe('Wielding Edge Cases', () => {
       // Act: Remove the wielding component
       fixture.entityManager.removeComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
 
       // Assert: Component should be removed (getComponent returns null when not found)
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeFalsy();
     });
@@ -210,7 +210,7 @@ describe('Wielding Edge Cases', () => {
           items: weaponIds,
           capacity: { maxWeight: 100, maxItems: 20 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: weaponIds.slice(0, 4), // First 4 weapons
         })
         .build();
@@ -232,7 +232,7 @@ describe('Wielding Edge Cases', () => {
       // Assert: All 5 weapons should be in array
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent.wielded_item_ids).toHaveLength(5);
       expect(wieldingComponent.wielded_item_ids).toEqual(weaponIds);
@@ -250,7 +250,7 @@ describe('Wielding Edge Cases', () => {
           items: ['existing-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
-        .withComponent('positioning:wielding', {
+        .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['non-existent-weapon'], // This weapon doesn't exist
         })
         .build();
@@ -270,7 +270,7 @@ describe('Wielding Edge Cases', () => {
       // Assert: Should append to array even with stale reference
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toContain('existing-weapon');
@@ -308,7 +308,7 @@ describe('Wielding Edge Cases', () => {
       // Assert
       const wieldingComponent = fixture.entityManager.getComponent(
         'test_actor_1',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent.wielded_item_ids).toEqual([
         'weapon_with_underscore',
@@ -341,7 +341,7 @@ describe('Wielding Edge Cases', () => {
       // Assert
       const wieldingComponent = fixture.entityManager.getComponent(
         'test-actor-1',
-        'positioning:wielding'
+        'item-handling-states:wielding'
       );
       expect(wieldingComponent.wielded_item_ids).toEqual([
         'weapon-with-hyphen',

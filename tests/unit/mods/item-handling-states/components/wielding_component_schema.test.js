@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for positioning:wielding component schema validation
+ * @file Unit tests for item-handling-states:wielding component schema validation
  * @see specs/wielding-component.md
  */
 
@@ -13,7 +13,7 @@ import addFormats from 'ajv-formats';
 const testFilePath = fileURLToPath(import.meta.url);
 const testDir = path.dirname(testFilePath);
 
-describe('positioning:wielding Component Schema', () => {
+describe('item-handling-states:wielding Component Schema', () => {
   let ajv;
   let component;
   let dataValidator;
@@ -49,7 +49,7 @@ describe('positioning:wielding Component Schema', () => {
     // Load the wielding component
     const componentPath = path.resolve(
       testDir,
-      '../../../../../data/mods/positioning/components/wielding.component.json'
+      '../../../../../data/mods/item-handling-states/components/wielding.component.json'
     );
     component = JSON.parse(readFileSync(componentPath, 'utf8'));
 
@@ -70,7 +70,7 @@ describe('positioning:wielding Component Schema', () => {
     });
 
     it('should have correct id', () => {
-      expect(component.id).toBe('positioning:wielding');
+      expect(component.id).toBe('item-handling-states:wielding');
     });
 
     it('should have a description', () => {

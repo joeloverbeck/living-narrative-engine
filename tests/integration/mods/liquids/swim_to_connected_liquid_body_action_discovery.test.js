@@ -170,6 +170,78 @@ describe('liquids:swim_to_connected_liquid_body action discovery', () => {
       const ids = Array.from(result.value || []);
       expect(ids).toHaveLength(0);
     });
+
+    it('respects connection directionality (one-way connections do not reverse)', () => {
+      // Setup: A -> B (unidirectional), B does NOT list A
+      const roomA = ModEntityScenarios.createRoom('room-a', 'Source Pool');
+      const roomB = ModEntityScenarios.createRoom('room-b', 'Destination Pool');
+
+      const liquidBodyA = new ModEntityBuilder('liquids:source_pool')
+        .withName('Source Pool')
+        .atLocation(roomA.id)
+        .withComponent('liquids:liquid_body', {
+          connected_liquid_body_ids: ['liquids:dest_pool'], // A -> B
+        })
+        .build();
+
+      const liquidBodyB = new ModEntityBuilder('liquids:dest_pool')
+        .withName('Destination Pool')
+        .atLocation(roomB.id)
+        .withComponent('liquids:liquid_body', {
+          connected_liquid_body_ids: [], // B does NOT list A (no reverse connection)
+        })
+        .build();
+
+      // Actor in A should see B as target
+      const actorInA = new ModEntityBuilder('liquids:actor_a')
+        .withName('Swimmer at Source')
+        .atLocation(roomA.id)
+        .asActor()
+        .withComponent('liquids-states:in_liquid_body', {
+          liquid_body_id: liquidBodyA.id,
+        })
+        .withComponent('skills:mobility_skill', { value: 50 })
+        .build();
+
+      fixture.reset([roomA, roomB, liquidBodyA, liquidBodyB, actorInA]);
+
+      const resultFromA = fixture.testEnv.unifiedScopeResolver.resolveSync(
+        'liquids:connected_liquid_bodies_for_actor',
+        {
+          actor: actorInA,
+          actorEntity: actorInA,
+        }
+      );
+
+      const idsFromA = Array.from(resultFromA.value || []);
+      expect(idsFromA).toContain(liquidBodyB.id);
+      expect(idsFromA).not.toContain(liquidBodyA.id);
+
+      // Actor in B should NOT see A as target (directionality respected)
+      const actorInB = new ModEntityBuilder('liquids:actor_b')
+        .withName('Swimmer at Destination')
+        .atLocation(roomB.id)
+        .asActor()
+        .withComponent('liquids-states:in_liquid_body', {
+          liquid_body_id: liquidBodyB.id,
+        })
+        .withComponent('skills:mobility_skill', { value: 50 })
+        .build();
+
+      fixture.reset([roomA, roomB, liquidBodyA, liquidBodyB, actorInB]);
+
+      const resultFromB = fixture.testEnv.unifiedScopeResolver.resolveSync(
+        'liquids:connected_liquid_bodies_for_actor',
+        {
+          actor: actorInB,
+          actorEntity: actorInB,
+        }
+      );
+
+      const idsFromB = Array.from(resultFromB.value || []);
+      expect(idsFromB).toHaveLength(0); // B has no outbound connections
+      expect(idsFromB).not.toContain(liquidBodyA.id); // A -> B doesn't imply B -> A
+    });
   });
 
   describe('Scope resolution - connected_liquid_body_location', () => {

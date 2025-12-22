@@ -341,7 +341,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
         { componentId: 'skills:craft_skill', data: { value: 60 } },
         { componentId: 'items:inventory', data: { items: [] } },
         {
-          componentId: 'positioning:wielding',
+          componentId: 'item-handling-states:wielding',
           data: { wielded_item_ids: [] },
         },
       ],
@@ -359,7 +359,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     await fixture.modifyComponent(actorId, 'items:inventory', {
       items: [toolId],
     });
-    await fixture.modifyComponent(actorId, 'positioning:wielding', {
+    await fixture.modifyComponent(actorId, 'item-handling-states:wielding', {
       wielded_item_ids: [toolId],
     });
 
@@ -383,7 +383,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     );
     const toolAfter = fixture.entityManager.getEntityInstance(toolId);
 
-    expect(actorAfter).toNotHaveComponent('positioning:wielding');
+    expect(actorAfter).toNotHaveComponent('item-handling-states:wielding');
     expect(inventoryAfter.items).not.toContain(toolId);
     expect(toolAfter.components['core:position'].locationId).toBe(locationId);
   });

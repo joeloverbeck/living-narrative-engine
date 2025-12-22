@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for wielding activity descriptions
- * Tests the integration between positioning:wielding component and activity description system
+ * Tests the integration between item-handling-states:wielding component and activity description system
  * with focus on multi-item array formatting.
  * @see specs/wielding-component.md
  */
@@ -18,10 +18,10 @@ import '../../../common/mods/domainMatchers.js';
  * @param testBed
  */
 function registerWieldingComponents(testBed) {
-  // Register positioning:wielding component definition using loadComponents pattern
+  // Register item-handling-states:wielding component definition using loadComponents pattern
   testBed.loadComponents({
-    'positioning:wielding': {
-      id: 'positioning:wielding',
+    'item-handling-states:wielding': {
+      id: 'item-handling-states:wielding',
       dataSchema: {
         type: 'object',
         properties: {
@@ -133,7 +133,7 @@ function addWieldingComponent(
     priority: 70,
   };
 
-  entityManager.addComponent(entityId, 'positioning:wielding', {
+  entityManager.addComponent(entityId, 'item-handling-states:wielding', {
     wielded_item_ids: weaponIds,
     activityMetadata: { ...defaultMetadata, ...customMetadata },
   });
@@ -174,7 +174,7 @@ describe('Wielding Activity Description Integration', () => {
       expect(activities).toBeDefined();
       expect(activities.length).toBeGreaterThan(0);
       const wieldingActivity = activities.find(
-        (a) => a.sourceComponent === 'positioning:wielding'
+        (a) => a.sourceComponent === 'item-handling-states:wielding'
       );
       expect(wieldingActivity).toBeDefined();
       expect(wieldingActivity.isMultiTarget).toBe(true);
@@ -321,7 +321,7 @@ describe('Wielding Activity Description Integration', () => {
       // Assert - Activity should not be included when shouldDescribeInActivity is false
       // The system filters out activities with shouldDescribeInActivity: false
       const wieldingActivity = activities.find(
-        (a) => a.sourceComponent === 'positioning:wielding'
+        (a) => a.sourceComponent === 'item-handling-states:wielding'
       );
       expect(wieldingActivity).toBeUndefined();
     });
@@ -345,7 +345,7 @@ describe('Wielding Activity Description Integration', () => {
 
       // Assert
       const wieldingActivity = activities.find(
-        (a) => a.sourceComponent === 'positioning:wielding'
+        (a) => a.sourceComponent === 'item-handling-states:wielding'
       );
       expect(wieldingActivity).toBeDefined();
       expect(wieldingActivity.priority).toBe(70);
@@ -369,7 +369,7 @@ describe('Wielding Activity Description Integration', () => {
 
       // Assert
       const wieldingActivity = activities.find(
-        (a) => a.sourceComponent === 'positioning:wielding'
+        (a) => a.sourceComponent === 'item-handling-states:wielding'
       );
       expect(wieldingActivity).toBeDefined();
       expect(wieldingActivity.isMultiTarget).toBe(true);

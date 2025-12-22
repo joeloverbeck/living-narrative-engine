@@ -7,7 +7,7 @@
   "generateCombinations": true,
   "required_components": {
     "actor": [
-      "positioning:wielding"
+      "item-handling-states:wielding"
     ],
     "primary": [
       "weapons:weapon",

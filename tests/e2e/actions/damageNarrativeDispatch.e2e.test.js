@@ -120,7 +120,7 @@ const createCombatants = ({
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:melee_skill', { level: 90 })
     .withComponent('items:inventory', { items: [weaponId], capacity: 5 })
-    .withComponent('positioning:wielding', { wielded_item_ids: [weaponId] })
+    .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
     .build();
 
   const room = new ModEntityBuilder(ROOM_ID)
@@ -460,7 +460,7 @@ describe('Damage Narrative Dispatch E2E', () => {
       .withComponent('core:position', { locationId: ROOM_ID })
       .withComponent('skills:melee_skill', { level: 90 })
       .withComponent('items:inventory', { items: [weaponId], capacity: 5 })
-      .withComponent('positioning:wielding', { wielded_item_ids: [weaponId] })
+      .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
       .build();
 
     const room = new ModEntityBuilder(ROOM_ID)

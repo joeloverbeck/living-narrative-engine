@@ -802,7 +802,7 @@ describe('ActivityMetadataCollectionSystem', () => {
         };
 
         const result = hooks.parseInlineMetadata(
-          'positioning:wielding',
+          'item-handling-states:wielding',
           componentData,
           activityMetadata
         );
@@ -830,7 +830,7 @@ describe('ActivityMetadataCollectionSystem', () => {
         };
 
         const result = hooks.parseInlineMetadata(
-          'positioning:wielding',
+          'item-handling-states:wielding',
           componentData,
           activityMetadata
         );
@@ -862,7 +862,7 @@ describe('ActivityMetadataCollectionSystem', () => {
         };
 
         const result = hooks.parseInlineMetadata(
-          'positioning:wielding',
+          'item-handling-states:wielding',
           componentData,
           activityMetadata
         );
