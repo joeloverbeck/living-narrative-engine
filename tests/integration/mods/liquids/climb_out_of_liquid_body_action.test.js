@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for liquids:enter_liquid_body action execution.
+ * @file Integration tests for liquids:climb_out_of_liquid_body action execution.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -9,10 +9,10 @@ import {
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
 
-const ACTION_ID = 'liquids:enter_liquid_body';
+const ACTION_ID = 'liquids:climb_out_of_liquid_body';
 const ROOM_ID = 'canal-a';
 
-describe('liquids:enter_liquid_body action integration', () => {
+describe('liquids:climb_out_of_liquid_body action integration', () => {
   let fixture;
 
   const loadScenario = () => {
@@ -22,6 +22,9 @@ describe('liquids:enter_liquid_body action integration', () => {
       .withName('Edda')
       .asActor()
       .atLocation(ROOM_ID)
+      .withComponent('liquids-states:in_liquid_body', {
+        liquid_body_id: 'liquids:canal_run',
+      })
       .build();
 
     const liquidBody = new ModEntityBuilder('liquids:canal_run')
@@ -44,16 +47,15 @@ describe('liquids:enter_liquid_body action integration', () => {
     fixture?.cleanup();
   });
 
-  it('adds in_liquid_body and dispatches sense-aware success events', async () => {
+  it('removes in_liquid_body and dispatches sense-aware success events', async () => {
     const { actorId, liquidBodyId } = loadScenario();
 
     await fixture.executeAction(actorId, liquidBodyId);
 
-    const message = 'Edda enters the Canal Run.';
+    const message = 'Edda climbs out of the Canal Run.';
     fixture.assertActionSuccess(message);
-    fixture.assertComponentAdded(actorId, 'liquids-states:in_liquid_body', {
-      liquid_body_id: liquidBodyId,
-    });
+    const actorEntity = fixture.entityManager.getEntityInstance(actorId);
+    expect(actorEntity.components['liquids-states:in_liquid_body']).toBeUndefined();
 
     fixture.assertPerceptibleEvent({
       descriptionText: message,
@@ -68,10 +70,10 @@ describe('liquids:enter_liquid_body action integration', () => {
     );
 
     expect(perceptibleEvent?.payload.actorDescription).toBe(
-      'I enter the Canal Run.'
+      'I climb out of the Canal Run.'
     );
     expect(perceptibleEvent?.payload.alternateDescriptions).toEqual({
-      auditory: 'I hear a splash as someone enters a body of liquid.',
+      auditory: 'I hear a splash as someone climbs out of a body of liquid.',
     });
   });
 });

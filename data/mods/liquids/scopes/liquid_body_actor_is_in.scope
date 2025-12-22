@@ -1,0 +1,6 @@
+liquids:liquid_body_actor_is_in := entities(liquids:liquid_body)[][{
+  "==": [
+    {"var": "entity.id"},
+    {"var": "actor.components.liquids-states:in_liquid_body.liquid_body_id"}
+  ]
+}]

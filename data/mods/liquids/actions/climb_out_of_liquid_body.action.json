@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "liquids:climb_out_of_liquid_body",
+  "name": "Climb Out of Liquid Body",
+  "description": "Climb out of the liquid body you are currently in.",
+  "targets": {
+    "primary": {
+      "scope": "liquids:liquid_body_actor_is_in",
+      "placeholder": "liquidBody",
+      "description": "Liquid body to climb out of"
+    }
+  },
+  "required_components": {
+    "actor": ["liquids-states:in_liquid_body"]
+  },
+  "forbidden_components": {
+    "actor": []
+  },
+  "template": "climb out of the {liquidBody}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#3aaea3",
+    "textColor": "#0b1f2a",
+    "hoverBackgroundColor": "#5ed0c6",
+    "hoverTextColor": "#0b1f2a"
+  }
+}

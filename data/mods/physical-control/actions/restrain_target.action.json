@@ -9,7 +9,12 @@
     "actor": ["skills:grappling_skill"]
   },
   "forbidden_components": {
-    "actor": ["physical-control-states:being_restrained", "positioning:fallen", "sitting-states:sitting_on"],
+    "actor": [
+      "physical-control-states:being_restrained",
+      "positioning:fallen",
+      "sitting-states:sitting_on",
+      "liquids-states:in_liquid_body"
+    ],
     "primary": ["physical-control-states:being_restrained"]
   },
   "prerequisites": [
