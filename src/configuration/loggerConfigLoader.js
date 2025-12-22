@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { fetchWithRetry } from '../utils/index.js';
+import { isNodeEnvironment } from '../utils/environmentUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
@@ -123,15 +124,19 @@ export class LoggerConfigLoader {
 
     let parsedResponse;
     try {
-      parsedResponse = await fetchWithRetry(
-        path,
-        { method: 'GET', headers: { Accept: 'application/json' } },
-        this.#defaultMaxRetries,
-        this.#defaultBaseDelayMs,
-        this.#defaultMaxDelayMs,
-        this.#safeEventDispatcher,
-        this.#logger
-      );
+      if (isNodeEnvironment() && !isUrlLike(path)) {
+        parsedResponse = await readConfigFromFile(path);
+      } else {
+        parsedResponse = await fetchWithRetry(
+          path,
+          { method: 'GET', headers: { Accept: 'application/json' } },
+          this.#defaultMaxRetries,
+          this.#defaultBaseDelayMs,
+          this.#defaultMaxDelayMs,
+          this.#safeEventDispatcher,
+          this.#logger
+        );
+      }
 
       if (typeof parsedResponse !== 'object' || parsedResponse === null) {
         logWarn(
@@ -209,6 +214,27 @@ export class LoggerConfigLoader {
       };
     }
   }
+}
+
+function isUrlLike(value) {
+  return /^https?:\/\//i.test(value) || /^file:\/\//i.test(value);
+}
+
+async function readConfigFromFile(filePath) {
+  if (!isNodeEnvironment()) {
+    throw new Error('readConfigFromFile is only supported in Node.js');
+  }
+
+  const dynamicImport = (specifier) => import(specifier);
+  const [{ readFile }, pathModule] = await Promise.all([
+    dynamicImport('fs/promises'),
+    dynamicImport('path'),
+  ]);
+  const resolvedPath = pathModule.isAbsolute(filePath)
+    ? filePath
+    : pathModule.resolve(process.cwd(), filePath);
+  const contents = await readFile(resolvedPath, 'utf8');
+  return JSON.parse(contents);
 }
 
 // --- FILE END ---

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "liquids:event-is-action-enter-liquid-body",
+  "description": "Checks if the event is an enter_liquid_body action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "liquids:enter_liquid_body"
+    ]
+  }
+}

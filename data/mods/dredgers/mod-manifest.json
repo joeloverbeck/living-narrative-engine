@@ -36,6 +36,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "liquids",
+      "version": "^1.0.0"
+    },
+    {
       "id": "descriptors",
       "version": "^1.0.0"
     },
@@ -91,6 +95,9 @@
         "block_and_tackle.entity.json",
         "bolt_cutters.entity.json",
         "bucket.entity.json",
+        "canal_run_segment_a_liquid_body.entity.json",
+        "canal_run_segment_b_liquid_body.entity.json",
+        "canal_run_segment_c_liquid_body.entity.json",
         "canal_vestibule.location.json",
         "canvas_straps.entity.json",
         "concordance_salon.location.json",
@@ -99,6 +106,7 @@
         "dredgers_cart.entity.json",
         "eira_quenreach.character.json",
         "flooded_approach.location.json",
+        "flooded_approach_liquid_body.entity.json",
         "grit_wheathook.character.json",
         "hand_dredge_scoop.entity.json",
         "hobb_rusk.character.json",
@@ -130,6 +138,9 @@
         "block_and_tackle_instance.entity.json",
         "bolt_cutters_instance.entity.json",
         "bucket_instance.entity.json",
+        "canal_run_segment_a_liquid_body.entity.json",
+        "canal_run_segment_b_liquid_body.entity.json",
+        "canal_run_segment_c_liquid_body.entity.json",
         "canal_vestibule.location.json",
         "canvas_straps_instance.entity.json",
         "concordance_salon.location.json",
@@ -142,6 +153,7 @@
         "dredgers_cart.entity.json",
         "eira_quenreach.character.json",
         "flooded_approach.location.json",
+        "flooded_approach_liquid_body.entity.json",
         "hacksaw_instance.entity.json",
         "hand_dredge_scoop_instance.entity.json",
         "hobb_rusk.character.json",

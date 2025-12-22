@@ -41,11 +41,23 @@ class BuildError extends Error {
       lines.push(chalk.red('\nErrors:'));
       this.details.errors.forEach((error, index) => {
         lines.push(chalk.red(`  ${index + 1}. ${error.message}`));
+        if (error.bundle) {
+          lines.push(chalk.gray(`     Bundle: ${error.bundle}`));
+        }
+        if (error.entry) {
+          lines.push(chalk.gray(`     Entry: ${error.entry}`));
+        }
+        if (error.outfile) {
+          lines.push(chalk.gray(`     Outfile: ${error.outfile}`));
+        }
         if (error.file) {
           lines.push(chalk.gray(`     File: ${error.file}`));
         }
         if (error.type) {
           lines.push(chalk.gray(`     Type: ${error.type}`));
+        }
+        if (error.command) {
+          lines.push(chalk.gray(`     Command: ${error.command}`));
         }
       });
     }
@@ -103,9 +115,13 @@ class BuildError extends Error {
         {
           type: 'bundle_error',
           message: originalError.message,
+          bundle: bundleName,
+          entry: originalError.entry,
+          outfile: originalError.outfile,
+          command: originalError.command,
         },
       ],
-      suggestion: 'Check the console output for detailed error messages',
+      suggestion: 'Fix the reported bundle error and re-run the build',
     });
   }
 

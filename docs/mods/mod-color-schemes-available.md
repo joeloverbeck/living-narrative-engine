@@ -15,8 +15,8 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 ## Current Status
 
 **Total Schemes Defined**: 58
-**In Use**: 47 schemes actively implemented
-**Available**: 11 schemes ready for new mods
+**In Use**: 48 schemes actively implemented
+**Available**: 10 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
@@ -30,7 +30,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 | 8.2     | White & Black     | `#ffffff`        | Light theme high contrast                   |
 | 8.3     | Yellow on Black   | `#000000`        | High visibility                             |
 | 14.2    | Humble Bronze     | `#4b2f14`        | Reverent gestures, respectful submissions   |
-| 16.2    | Blighted Moss     | `#1a1f14`        | Hexcraft rituals, entropic nature magic     |
 | 17.2    | Hazy Smoke        | `#3d3a3f`        | Smoking, inhaling substances                |
 
 ## Available Color Scheme Definitions
@@ -172,24 +171,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Hover Contrast**: 12.18:1 AAA
 - **Use Cases**: Quiet reverence, service oaths, humble acknowledgements of hierarchy
 - **Theme**: Warm bronze and cream palette that keeps focus on respectful intent
-
-### 16. Hex/Corruption Colors
-
-#### 16.2 Blighted Moss
-
-```json
-{
-  "backgroundColor": "#1a1f14",
-  "textColor": "#d8ffd6",
-  "hoverBackgroundColor": "#23301c",
-  "hoverTextColor": "#e8ffe5"
-}
-```
-
-- **Normal Contrast**: 15.36:1 AAA
-- **Hover Contrast**: 13.15:1 AAA
-- **Use Cases**: Hexcraft rituals, entropic nature magic, lingering curses
-- **Theme**: Muted bog-green palette suggesting decay, blight, and creeping vines
 
 ### 17. Intoxicants/Vice Colors
 

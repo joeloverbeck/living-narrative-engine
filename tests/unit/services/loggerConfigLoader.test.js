@@ -12,6 +12,9 @@ import { fetchWithRetry } from '../../../src/utils';
 jest.mock('../../../src/utils', () => ({
   fetchWithRetry: jest.fn(),
 }));
+jest.mock('../../../src/utils/environmentUtils.js', () => ({
+  isNodeEnvironment: () => false,
+}));
 
 const mockLogger = () => ({
   info: jest.fn(),

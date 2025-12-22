@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "dredgers:canal_run_segment_a_liquid_body_instance",
+  "definitionId": "dredgers:canal_run_segment_a_liquid_body",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "dredgers:access_point_segment_a_instance"
+    }
+  }
+}

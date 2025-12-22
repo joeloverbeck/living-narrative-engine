@@ -1,0 +1,61 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "liquids",
+  "version": "1.0.0",
+  "name": "Liquids System",
+  "description": "Actions and components related to liquid bodies and behaviors related to them, such as entering liquid bodies, traversing between liquid bodies, etc.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "physical-control-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "liquids-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "liquid_body.component.json"
+    ],
+    "actions": [
+      "enter_liquid_body.action.json"
+    ],
+    "rules": [
+      "handle_enter_liquid_body.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-enter-liquid-body.condition.json"
+    ],
+    "scopes": [
+      "liquid_bodies_at_location.scope"
+    ],
+    "events": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

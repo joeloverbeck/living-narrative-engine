@@ -53,6 +53,10 @@ class FakeContainer {
 
     return value;
   }
+
+  isRegistered(token) {
+    return this.registrations.has(token);
+  }
 }
 
 /**
@@ -360,5 +364,50 @@ describe('configureMinimalContainer', () => {
       '[MinimalContainerConfig] Failed to register validation services:',
       expect.any(Error)
     );
+  });
+
+  it('skips validation service registration when already registered', async () => {
+    process.env.NODE_ENV = 'test';
+    delete process.env.DEBUG_LOG_MODE;
+
+    const { configureMinimalContainer, tokens, validationMocks } =
+      await importModuleWithMocks({ withValidation: true });
+
+    const container = new FakeContainer();
+
+    registerInstance(container, tokens.IModReferenceExtractor, {
+      id: 'reference-extractor',
+    });
+    registerInstance(container, tokens.IModCrossReferenceValidator, {
+      id: 'cross-validator',
+    });
+    registerInstance(container, tokens.IModValidationOrchestrator, {
+      id: 'orchestrator',
+    });
+    registerInstance(container, tokens.IViolationReporter, {
+      id: 'reporter',
+    });
+
+    await configureMinimalContainer(container, {
+      includeValidationServices: true,
+    });
+
+    expect(validationMocks.ModReferenceExtractor).not.toHaveBeenCalled();
+    expect(validationMocks.ModCrossReferenceValidator).not.toHaveBeenCalled();
+    expect(validationMocks.ModValidationOrchestrator).not.toHaveBeenCalled();
+    expect(validationMocks.ViolationReporter).not.toHaveBeenCalled();
+
+    expect(container.resolve(tokens.IModReferenceExtractor)).toEqual({
+      id: 'reference-extractor',
+    });
+    expect(container.resolve(tokens.IModCrossReferenceValidator)).toEqual({
+      id: 'cross-validator',
+    });
+    expect(container.resolve(tokens.IModValidationOrchestrator)).toEqual({
+      id: 'orchestrator',
+    });
+    expect(container.resolve(tokens.IViolationReporter)).toEqual({
+      id: 'reporter',
+    });
   });
 });

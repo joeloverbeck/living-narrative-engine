@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "dredgers:flooded_approach_liquid_body_instance",
+  "definitionId": "dredgers:flooded_approach_liquid_body",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "dredgers:flooded_approach_instance"
+    }
+  }
+}

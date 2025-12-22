@@ -9,8 +9,8 @@ This document tracks which color schemes are actively used by mods in the Living
 ## Current Status
 
 **Total Schemes Defined**: 58
-**In Use**: 47 schemes actively implemented across mods
-**Available**: 11 schemes ready for future mods
+**In Use**: 48 schemes actively implemented across mods
+**Available**: 10 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -40,6 +40,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Items                   | Aurora Depths       | 11.1    | `#004d61`        | Active |
 | Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
 | Lighting                | Warm Lantern Glow   | 22.1    | `#8B5A2B`        | Active |
+| Liquids                 | Blighted Moss       | 16.2    | `#1a1f14`        | Active |
 | Lying                   | Deep Blue           | 7.1     | `#0d47a1`        | Active |
 | Maneuvering             | Midnight Green      | 7.3     | `#004d40`        | Active |
 | Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
@@ -756,6 +757,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Hexcraft, corrupting gazes, occult debuffs
 - **Theme**: Eldritch violet base with a toxic glow, evoking creeping corruption and hypnotic danger
 
+#### 16.2 Blighted Moss - Liquids
+
+```json
+{
+  "backgroundColor": "#1a1f14",
+  "textColor": "#d8ffd6",
+  "hoverBackgroundColor": "#23301c",
+  "hoverTextColor": "#e8ffe5"
+}
+```
+
+- **Normal Contrast**: 15.36:1 AAA
+- **Hover Contrast**: 13.15:1 AAA
+- **Use Cases**: Contaminated water traversal, submerged movement, canal interactions
+- **Theme**: Muted bog-green palette suggesting decay, blight, and creeping vines
+
 ### 17. Intoxicants/Vice Colors
 
 #### 17.1 Tavern Amber - Intoxicants
@@ -915,6 +932,7 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ## Version History
 
+- **2025-12**: Assigned Blighted Moss (16.2) to Liquids mod
 - **2025-12**: Added Section 21 (Posture/Position Colors) with Yielding Posture (21.1) for Bending mod
 - **2025-12**: Assigned Pathfinder Slate (9.2) to Facing mod
 - **2025-12**: Assigned Deep Blue (7.1) to Lying mod

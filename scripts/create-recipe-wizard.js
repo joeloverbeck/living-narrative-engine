@@ -22,6 +22,7 @@ import {
   BODY_DESCRIPTOR_REGISTRY,
   getAllDescriptorNames,
 } from '../src/anatomy/registries/bodyDescriptorRegistry.js';
+import { overrideContainerToken } from './utils/cliContainerOverrides.js';
 
 /**
  * Creates validation context with full mod loading
@@ -42,8 +43,16 @@ async function createWizardContext(verbose = false) {
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
   const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js'))
     .default;
-  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
-  container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
+  overrideContainerToken(
+    container,
+    tokens.IDataFetcher,
+    () => new NodeDataFetcher()
+  );
+  overrideContainerToken(
+    container,
+    tokens.ITextDataFetcher,
+    () => new NodeTextDataFetcher()
+  );
 
   // Resolve core services
   const dataRegistry = container.resolve(tokens.IDataRegistry);

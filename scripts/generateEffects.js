@@ -15,6 +15,7 @@ import { goapTokens } from '../src/dependencyInjection/tokens/tokens-goap.js';
 import { createLoadContext } from '../src/loaders/LoadContext.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { overrideDataFetcher } from './utils/cliContainerOverrides.js';
 
 /**
  *
@@ -28,7 +29,7 @@ async function main() {
 
   // Override data fetcher for Node.js environment
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
-  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
+  overrideDataFetcher(container, tokens.IDataFetcher, () => new NodeDataFetcher());
 
   const logger = container.resolve(tokens.ILogger);
   const effectsGenerator = container.resolve(goapTokens.IEffectsGenerator);
