@@ -1,0 +1,6 @@
+liquids:liquid_bodies_at_location := entities(liquids:liquid_body)[][{"and": [
+  {"==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]}
+]}]

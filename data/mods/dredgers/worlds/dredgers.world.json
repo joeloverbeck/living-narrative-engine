@@ -35,6 +35,18 @@
             "instanceId": "dredgers:flooded_approach_instance"
         },
         {
+            "instanceId": "dredgers:canal_run_segment_a_liquid_body_instance"
+        },
+        {
+            "instanceId": "dredgers:canal_run_segment_b_liquid_body_instance"
+        },
+        {
+            "instanceId": "dredgers:canal_run_segment_c_liquid_body_instance"
+        },
+        {
+            "instanceId": "dredgers:flooded_approach_liquid_body_instance"
+        },
+        {
             "instanceId": "dredgers:ancient_iron_grate_segment_a_to_b_instance"
         },
         {

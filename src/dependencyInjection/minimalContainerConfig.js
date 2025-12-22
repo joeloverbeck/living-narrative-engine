@@ -116,6 +116,10 @@ export async function configureMinimalContainer(container, options = {}) {
  */
 async function registerValidationServices(container, logger) {
   const registrar = new Registrar(container);
+  const isRegistered =
+    typeof container.isRegistered === 'function'
+      ? (token) => container.isRegistered(token)
+      : () => false;
 
   try {
     // Dynamic imports for CLI validation services (Node.js-only)
@@ -152,51 +156,59 @@ async function registerValidationServices(container, logger) {
     const ModDependencyValidator = modDependencyValidatorModule.default;
 
     // Register ModReferenceExtractor
-    registrar.singletonFactory(
-      tokens.IModReferenceExtractor,
-      (c) =>
-        new ModReferenceExtractor({
-          logger: c.resolve(tokens.ILogger),
-          ajvValidator: c.resolve(tokens.ISchemaValidator),
-        })
-    );
+    if (!isRegistered(tokens.IModReferenceExtractor)) {
+      registrar.singletonFactory(
+        tokens.IModReferenceExtractor,
+        (c) =>
+          new ModReferenceExtractor({
+            logger: c.resolve(tokens.ILogger),
+            ajvValidator: c.resolve(tokens.ISchemaValidator),
+          })
+      );
+    }
 
     // Register ModCrossReferenceValidator
-    registrar.singletonFactory(
-      tokens.IModCrossReferenceValidator,
-      (c) =>
-        new ModCrossReferenceValidator({
-          logger: c.resolve(tokens.ILogger),
-          modDependencyValidator: ModDependencyValidator,
-          referenceExtractor: c.resolve(tokens.IModReferenceExtractor),
-        })
-    );
+    if (!isRegistered(tokens.IModCrossReferenceValidator)) {
+      registrar.singletonFactory(
+        tokens.IModCrossReferenceValidator,
+        (c) =>
+          new ModCrossReferenceValidator({
+            logger: c.resolve(tokens.ILogger),
+            modDependencyValidator: ModDependencyValidator,
+            referenceExtractor: c.resolve(tokens.IModReferenceExtractor),
+          })
+      );
+    }
 
     // Register ModValidationOrchestrator
-    registrar.singletonFactory(
-      tokens.IModValidationOrchestrator,
-      (c) =>
-        new ModValidationOrchestrator({
-          logger: c.resolve(tokens.ILogger),
-          modDependencyValidator: ModDependencyValidator,
-          modCrossReferenceValidator: c.resolve(
-            tokens.IModCrossReferenceValidator
-          ),
-          modLoadOrderResolver: c.resolve(tokens.ModLoadOrderResolver),
-          modManifestLoader: c.resolve(tokens.ModManifestLoader),
-          pathResolver: c.resolve(tokens.IPathResolver),
-          configuration: c.resolve(tokens.IConfiguration),
-        })
-    );
+    if (!isRegistered(tokens.IModValidationOrchestrator)) {
+      registrar.singletonFactory(
+        tokens.IModValidationOrchestrator,
+        (c) =>
+          new ModValidationOrchestrator({
+            logger: c.resolve(tokens.ILogger),
+            modDependencyValidator: ModDependencyValidator,
+            modCrossReferenceValidator: c.resolve(
+              tokens.IModCrossReferenceValidator
+            ),
+            modLoadOrderResolver: c.resolve(tokens.ModLoadOrderResolver),
+            modManifestLoader: c.resolve(tokens.ModManifestLoader),
+            pathResolver: c.resolve(tokens.IPathResolver),
+            configuration: c.resolve(tokens.IConfiguration),
+          })
+      );
+    }
 
     // Register ViolationReporter
-    registrar.singletonFactory(
-      tokens.IViolationReporter,
-      (c) =>
-        new ViolationReporter({
-          logger: c.resolve(tokens.ILogger),
-        })
-    );
+    if (!isRegistered(tokens.IViolationReporter)) {
+      registrar.singletonFactory(
+        tokens.IViolationReporter,
+        (c) =>
+          new ViolationReporter({
+            logger: c.resolve(tokens.ILogger),
+          })
+      );
+    }
 
     logger.debug(
       '[MinimalContainerConfig] Validation services registered successfully'

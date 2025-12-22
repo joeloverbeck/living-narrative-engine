@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "liquids:enter_liquid_body",
+  "name": "Enter Liquid Body",
+  "description": "Enter a nearby liquid body.",
+  "targets": {
+    "primary": {
+      "scope": "liquids:liquid_bodies_at_location",
+      "placeholder": "liquidBody",
+      "description": "Liquid body to enter"
+    }
+  },
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": [
+      "sitting-states:sitting_on",
+      "positioning:kneeling_before",
+      "bending-states:bending_over",
+      "positioning:straddling_waist",
+      "hugging-states:being_hugged",
+      "hugging-states:hugging",
+      "positioning:doing_complex_performance",
+      "sex-states:fucking_anally",
+      "positioning:lying_down",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "positioning:fallen",
+      "liquids-states:in_liquid_body"
+    ]
+  },
+  "template": "enter the {liquidBody}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#1a1f14",
+    "textColor": "#d8ffd6",
+    "hoverBackgroundColor": "#23301c",
+    "hoverTextColor": "#e8ffe5"
+  }
+}

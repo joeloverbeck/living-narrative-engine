@@ -25,6 +25,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { performance } from 'perf_hooks';
+import { overrideDataFetcher } from './utils/cliContainerOverrides.js';
 
 // Handle both Node.js ES modules and Jest environment
 let __filename, __dirname;
@@ -123,7 +124,7 @@ async function main() {
     // Override data fetcher for CLI environment
     const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js'))
       .default;
-    container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
+    overrideDataFetcher(container, tokens.IDataFetcher, () => new NodeDataFetcher());
 
     // Load schemas before validation
     if (!config.quiet) {

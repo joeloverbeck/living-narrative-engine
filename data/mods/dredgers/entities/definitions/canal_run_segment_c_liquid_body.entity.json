@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "dredgers:canal_run_segment_c_liquid_body",
+  "components": {
+    "core:name": {
+      "text": "canal run (segment C)"
+    },
+    "core:description": {
+      "text": "Opaque canal water pressing close to the segment C path."
+    },
+    "liquids:liquid_body": {}
+  }
+}

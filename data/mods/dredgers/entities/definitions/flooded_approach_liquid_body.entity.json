@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "dredgers:flooded_approach_liquid_body",
+  "components": {
+    "core:name": {
+      "text": "flooded approach water"
+    },
+    "core:description": {
+      "text": "Contaminated water pooled across the flooded approach."
+    },
+    "liquids:liquid_body": {}
+  }
+}

@@ -262,7 +262,8 @@ class BuildSystem {
       }
 
       // Run esbuild
-      await this.runEsbuild(args);
+      const command = ['npx', 'esbuild', ...args].join(' ');
+      await this.runEsbuild(args, command);
 
       const duration = Date.now() - startTime;
 
@@ -272,12 +273,10 @@ class BuildSystem {
         duration,
       };
     } catch (error) {
-      return {
-        bundle: bundleConfig.name,
-        success: false,
-        error,
-        duration: Date.now() - startTime,
-      };
+      error.bundle = bundleConfig.name;
+      error.entry = bundleConfig.entry;
+      error.outfile = bundleConfig.outfile;
+      throw error;
     }
   }
 
@@ -287,14 +286,11 @@ class BuildSystem {
    * @param {Array<string>} args - Command arguments
    * @returns {Promise<void>}
    */
-  runEsbuild(args) {
+  runEsbuild(args, command) {
     return new Promise((resolve, reject) => {
       // Log the command being run for debugging
       if (this.options.verbose) {
-        console.log(
-          'Running esbuild with args:',
-          ['esbuild', ...args].join(' ')
-        );
+        console.log('Running esbuild with args:', ['esbuild', ...args].join(' '));
       }
 
       // Use npx to run esbuild
@@ -304,8 +300,12 @@ class BuildSystem {
       });
 
       let stderr = '';
+      let stdout = '';
 
       if (!this.options.verbose) {
+        proc.stdout.on('data', (data) => {
+          stdout += data.toString();
+        });
         proc.stderr.on('data', (data) => {
           stderr += data.toString();
         });
@@ -315,7 +315,16 @@ class BuildSystem {
         if (code === 0) {
           resolve();
         } else {
-          reject(new Error(stderr || `esbuild exited with code ${code}`));
+          const message =
+            stderr.trim() ||
+            stdout.trim() ||
+            `esbuild exited with code ${code}`;
+          const error = new Error(message);
+          error.command = command || ['npx', 'esbuild', ...args].join(' ');
+          error.exitCode = code;
+          error.stderr = stderr.trim();
+          error.stdout = stdout.trim();
+          reject(error);
         }
       });
 
@@ -330,12 +339,18 @@ class BuildSystem {
    * @param {Array} bundles - Bundle configurations
    */
   handleBuildResults(results, bundles) {
-    const failures = results.filter((r) => r.status === 'rejected');
+    const failures = results
+      .map((result, index) => ({ result, index }))
+      .filter(({ result }) => result.status === 'rejected');
 
     if (failures.length > 0) {
-      const errors = failures.map((failure, index) => {
+      const errors = failures.map(({ result, index }) => {
         const bundle = bundles[index];
-        return BuildError.buildFailure(bundle.name, failure.reason);
+        const reason = result.reason;
+        const enrichedError = BuildError.buildFailure(bundle.name, reason);
+        enrichedError.details.errors[0].entry = bundle.entry;
+        enrichedError.details.errors[0].outfile = bundle.outfile;
+        return enrichedError;
       });
 
       throw new BuildError(`${failures.length} bundle(s) failed to build`, {

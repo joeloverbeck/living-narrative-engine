@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "liquids:liquid_body",
+  "description": "Marker component for entities that represent a body of liquid.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Marker component data. Always an empty object.",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

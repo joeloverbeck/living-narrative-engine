@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "dredgers:canal_run_segment_b_liquid_body",
+  "components": {
+    "core:name": {
+      "text": "canal run (segment B)"
+    },
+    "core:description": {
+      "text": "Greasy canal water running alongside the segment B footpath."
+    },
+    "liquids:liquid_body": {}
+  }
+}

@@ -22,6 +22,7 @@ import {
   formatExitMessage,
   formatErrorResult,
 } from './validateRecipeCore.js';
+import { overrideContainerToken } from './utils/cliContainerOverrides.js';
 
 const VALID_FORMATS = new Set(['text', 'json', 'junit']);
 
@@ -628,8 +629,16 @@ async function registerNodeFetchers(container) {
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
   const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js'))
     .default;
-  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
-  container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
+  overrideContainerToken(
+    container,
+    tokens.IDataFetcher,
+    () => new NodeDataFetcher()
+  );
+  overrideContainerToken(
+    container,
+    tokens.ITextDataFetcher,
+    () => new NodeTextDataFetcher()
+  );
 }
 
 /**

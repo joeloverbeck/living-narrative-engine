@@ -135,5 +135,7 @@
     "build:with-validation": "npm run validate && npm run build",
     "validate:socket-consistency": "node scripts/validateSocketConsistency.js",
     "analytics:notes": "node scripts/notes-analytics-dashboard.js"
+    ,
+    "randomness:check": "node scripts/randomnessCheck.js"
   }
 }
