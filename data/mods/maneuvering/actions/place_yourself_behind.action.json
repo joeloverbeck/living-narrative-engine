@@ -22,7 +22,7 @@
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
       "lying-states:lying_on",
-      "positioning:straddling_waist",
+      "straddling-states:straddling_waist",
       "positioning:doing_complex_performance",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",

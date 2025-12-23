@@ -34,6 +34,25 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
+ * Footprint data for a single explicit mod.
+ *
+ * @typedef {object} ModFootprint
+ * @property {string} modId - Explicit mod ID
+ * @property {string[]} dependencies - List of transitive dependency IDs
+ * @property {number} count - Number of transitive dependencies
+ */
+
+/**
+ * Full footprint analysis across all explicit mods.
+ *
+ * @typedef {object} FootprintAnalysis
+ * @property {ModFootprint[]} footprints - Per-mod footprint data sorted by count desc
+ * @property {number} totalUniqueDeps - Total unique dependencies across all explicit mods
+ * @property {number} sharedDepsCount - Number of dependencies shared by 2+ explicit mods
+ * @property {number} overlapPercentage - Percentage of deps that are shared (0-100)
+ */
+
+/**
  * Service for calculating and caching mod configuration statistics.
  * Provides a clean API for UI components to consume statistics data.
  */
@@ -273,6 +292,77 @@ export default class ModStatisticsService {
   }
 
   /**
+   * Get transitive dependency footprint for each explicit mod.
+   *
+   * @returns {FootprintAnalysis} Footprint analysis with overlap data
+   */
+  getTransitiveDependencyFootprints() {
+    // Check cache
+    if (this.#cache.isValid && this.#cache.data.footprints) {
+      return this.#cache.data.footprints;
+    }
+
+    const nodes = this.#modGraphService.getAllNodes();
+
+    // Find explicit mods
+    const explicitMods = [];
+    for (const [modId, node] of nodes) {
+      if (node.status === 'explicit') {
+        explicitMods.push(modId);
+      }
+    }
+
+    // Calculate footprint for each explicit mod
+    const footprints = [];
+    const allDeps = new Set();
+    const depCounts = new Map(); // Count how many explicit mods depend on each dep
+
+    for (const modId of explicitMods) {
+      const deps = this.#collectTransitiveDeps(modId, nodes, new Set());
+
+      footprints.push({
+        modId,
+        dependencies: Array.from(deps),
+        count: deps.size,
+      });
+
+      // Track for overlap analysis
+      for (const depId of deps) {
+        allDeps.add(depId);
+        depCounts.set(depId, (depCounts.get(depId) || 0) + 1);
+      }
+    }
+
+    // Sort by count descending
+    footprints.sort((a, b) => b.count - a.count);
+
+    // Calculate shared dependencies (used by 2+ explicit mods)
+    let sharedDepsCount = 0;
+    for (const count of depCounts.values()) {
+      if (count >= 2) {
+        sharedDepsCount++;
+      }
+    }
+
+    const totalUniqueDeps = allDeps.size;
+    const overlapPercentage =
+      totalUniqueDeps > 0
+        ? Math.round((sharedDepsCount / totalUniqueDeps) * 100)
+        : 0;
+
+    const result = {
+      footprints,
+      totalUniqueDeps,
+      sharedDepsCount,
+      overlapPercentage,
+    };
+
+    this.#cache.data.footprints = result;
+    this.#cache.isValid = true;
+    return result;
+  }
+
+  /**
    * Calculate depth for a single mod (recursive helper).
    *
    * @param {string} modId - Mod to calculate depth for
@@ -318,5 +408,41 @@ export default class ModStatisticsService {
       depth: 1 + maxChildDepth,
       chain: [modId, ...maxChildChain],
     };
+  }
+
+  /**
+   * Collect all transitive dependencies for a mod.
+   *
+   * @param {string} modId - Starting mod
+   * @param {Map<string, object>} nodes - All nodes
+   * @param {Set<string>} visited - Already visited (cycle prevention)
+   * @returns {Set<string>} All dependency mod IDs
+   */
+  #collectTransitiveDeps(modId, nodes, visited) {
+    const result = new Set();
+
+    if (visited.has(modId)) {
+      return result;
+    }
+    visited.add(modId);
+
+    const node = nodes.get(modId);
+    if (!node || node.status === 'inactive') {
+      return result;
+    }
+
+    for (const depId of node.dependencies || []) {
+      if (depId !== modId) {
+        // Don't include self
+        result.add(depId);
+        // Recursively add transitive deps
+        const transitive = this.#collectTransitiveDeps(depId, nodes, visited);
+        for (const transitiveId of transitive) {
+          result.add(transitiveId);
+        }
+      }
+    }
+
+    return result;
   }
 }

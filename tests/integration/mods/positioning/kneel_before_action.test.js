@@ -261,7 +261,7 @@ function setupStraddlingScenario() {
     .build();
 
   // Actor is straddling the straddled target's waist
-  scenario.actor.components['positioning:straddling_waist'] = {
+  scenario.actor.components['straddling-states:straddling_waist'] = {
     target_id: 'test:straddled_target',
     facing_away: false,
   };
@@ -735,7 +735,7 @@ describe('deference:kneel_before action integration', () => {
         // Verify initial state
         const initialActor =
           testFixture.entityManager.getEntityInstance('test:actor1');
-        expect(initialActor.components['positioning:straddling_waist']).toEqual(
+        expect(initialActor.components['straddling-states:straddling_waist']).toEqual(
           {
             target_id: 'test:straddled_target',
             facing_away: false,
@@ -756,7 +756,7 @@ describe('deference:kneel_before action integration', () => {
           entityId: 'test:target1',
         });
         // Actor still retains straddling component as rule doesn't remove it
-        expect(updatedActor.components['positioning:straddling_waist']).toEqual(
+        expect(updatedActor.components['straddling-states:straddling_waist']).toEqual(
           {
             target_id: 'test:straddled_target',
             facing_away: false,

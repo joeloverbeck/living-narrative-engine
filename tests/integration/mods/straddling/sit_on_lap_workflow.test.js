@@ -70,13 +70,13 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
       // Actor no longer sitting on furniture, now straddling target
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].target_id
+        updatedActor.components['straddling-states:straddling_waist'].target_id
       ).toBe('target1');
       expect(
-        updatedActor.components['positioning:straddling_waist'].facing_away
+        updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(true);
       expect(updatedActor.components['positioning:facing_away']).toBeDefined();
 
@@ -143,10 +143,10 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
 
       // Actor now straddling target
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].target_id
+        updatedActor.components['straddling-states:straddling_waist'].target_id
       ).toBe('target1');
     });
   });
@@ -196,7 +196,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
 
       // Should never have both components simultaneously
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
     });

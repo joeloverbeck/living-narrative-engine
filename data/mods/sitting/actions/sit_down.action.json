@@ -12,7 +12,7 @@
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
       "bending-states:bending_over",
-      "positioning:straddling_waist",
+      "straddling-states:straddling_waist",
       "hugging-states:being_hugged",
       "hugging-states:hugging",
       "positioning:doing_complex_performance",

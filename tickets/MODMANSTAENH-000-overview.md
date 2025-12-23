@@ -60,7 +60,7 @@ MODMANSTAENH-001 (Infrastructure)
 | Ticket | Title | Status |
 |--------|-------|--------|
 | MODMANSTAENH-007 | Dependency Depth Calculation | Completed |
-| MODMANSTAENH-008 | Transitive Footprint Calculation | Not Started |
+| MODMANSTAENH-008 | Transitive Footprint Calculation | Completed |
 | MODMANSTAENH-009 | Core vs Optional Ratio Calculation | Not Started |
 | MODMANSTAENH-010 | Dependency Depth UI Section | Not Started |
 | MODMANSTAENH-011 | Transitive Footprint UI Section | Not Started |

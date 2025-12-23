@@ -67,11 +67,11 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     await testFixture.executeAction('test:actor1', 'test:target1');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:straddling_waist']).toBeDefined();
-    expect(actor.components['positioning:straddling_waist'].target_id).toBe(
+    expect(actor.components['straddling-states:straddling_waist']).toBeDefined();
+    expect(actor.components['straddling-states:straddling_waist'].target_id).toBe(
       'test:target1'
     );
-    expect(actor.components['positioning:straddling_waist'].facing_away).toBe(
+    expect(actor.components['straddling-states:straddling_waist'].facing_away).toBe(
       true
     );
   });
@@ -184,7 +184,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
 
     // Both components should be present
     const straddlingComponent =
-      actor.components['positioning:straddling_waist'];
+      actor.components['straddling-states:straddling_waist'];
     const facingAwayComponent = actor.components['positioning:facing_away'];
 
     expect(straddlingComponent).toBeDefined();

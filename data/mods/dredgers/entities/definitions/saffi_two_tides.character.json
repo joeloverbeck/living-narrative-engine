@@ -792,6 +792,9 @@
         },
         "skills:awareness_skill": {
             "value": 77
+        },
+        "skills:mobility_skill": {
+            "value": 88
         }
     }
 }

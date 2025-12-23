@@ -403,7 +403,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
           furniture_id: 'chair1',
           spot_index: 1,
         })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'other_actor',
           facing_away: false,
         })

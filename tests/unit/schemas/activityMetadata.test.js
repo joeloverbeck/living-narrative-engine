@@ -101,7 +101,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 62,
     },
     {
-      mod: 'positioning',
+      mod: 'straddling-states',
       name: 'straddling_waist',
       targetRole: 'target_id',
       priority: 82,

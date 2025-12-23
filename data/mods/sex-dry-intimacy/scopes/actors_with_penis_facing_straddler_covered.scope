@@ -9,7 +9,7 @@ sex-dry-intimacy:actors_with_penis_facing_straddler_covered := sex-core:actors_w
       {
         "==": [
           { "var": "entity.id" },
-          { "var": "actor.components.positioning:straddling_waist.target_id" }
+          { "var": "actor.components.straddling-states:straddling_waist.target_id" }
         ]
       }
     ]

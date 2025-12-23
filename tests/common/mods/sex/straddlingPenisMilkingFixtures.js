@@ -112,7 +112,7 @@ export function buildStraddlingMilkingScenario(options = {}) {
   }
 
   if (includeStraddling) {
-    actorBuilder.withComponent('positioning:straddling_waist', {
+    actorBuilder.withComponent('straddling-states:straddling_waist', {
       target_id: STRADDLING_MILKING_PRIMARY_ID,
       facing_away: Boolean(targetFacingAway),
     });

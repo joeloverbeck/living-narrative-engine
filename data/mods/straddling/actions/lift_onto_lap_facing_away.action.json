@@ -16,7 +16,7 @@
   },
   "forbidden_components": {
     "actor": ["sex-states:giving_blowjob"],
-    "primary": ["positioning:straddling_waist"]
+    "primary": ["straddling-states:straddling_waist"]
   },
   "template": "lift {primary} onto your lap (facing away)",
   "prerequisites": [

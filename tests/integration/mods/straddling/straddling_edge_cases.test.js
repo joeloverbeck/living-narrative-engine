@@ -235,7 +235,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'test:target',
           facing_away: false,
         })
@@ -272,7 +272,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'test:target',
           facing_away: false,
         })
@@ -323,7 +323,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'test:target',
           facing_away: false,
         })
@@ -448,7 +448,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'test:target1',
           facing_away: false,
         })

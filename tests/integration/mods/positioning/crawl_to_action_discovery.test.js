@@ -41,7 +41,7 @@ describe('deference:crawl_to - Action Discovery', () => {
         'lying-states:lying_on'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
-        'positioning:straddling_waist'
+        'straddling-states:straddling_waist'
       );
       expect(crawlToAction.forbidden_components.actor).toContain(
         'hugging-states:being_hugged'

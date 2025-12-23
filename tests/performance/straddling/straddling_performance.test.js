@@ -443,7 +443,7 @@ describe('Straddling Waist System - Performance Tests', () => {
 
       testEnv.entityManager.addComponent(
         actorId,
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         {
           target_id: 'test:target',
           facing_away: false,

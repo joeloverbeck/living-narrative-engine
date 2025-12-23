@@ -108,7 +108,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'furniture_id',
     },
     {
-      mod: 'positioning',
+      mod: 'straddling-states',
       name: 'straddling_waist',
       expectedTemplate: 'is straddling',
       priority: 82,
@@ -199,7 +199,7 @@ describe('Activity Description System Activation', () => {
   describe('Priority Distribution', () => {
     it('should have correct priority ordering (highest first)', () => {
       const priorities = [
-        { id: 'positioning:straddling_waist', priority: 82 },
+        { id: 'straddling-states:straddling_waist', priority: 82 },
         { id: 'sex-states:giving_blowjob', priority: 80 },
         { id: 'sex-states:receiving_blowjob', priority: 78 },
         { id: 'positioning:biting_neck', priority: 73 },

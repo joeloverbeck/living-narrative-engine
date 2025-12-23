@@ -248,7 +248,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
     }
 
     if (targetStraddling) {
-      targetBuilder.withComponent('positioning:straddling_waist', {
+      targetBuilder.withComponent('straddling-states:straddling_waist', {
         target_id: 'alice',
         facing_away: false,
       });

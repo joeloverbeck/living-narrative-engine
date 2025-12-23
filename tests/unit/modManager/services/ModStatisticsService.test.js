@@ -879,4 +879,328 @@ describe('ModStatisticsService', () => {
       expect(result.averageDepth).toBe(1.5); // (1 + 2) / 2 = 1.5
     });
   });
+
+  describe('getTransitiveDependencyFootprints', () => {
+    it('should return empty footprints for no explicit mods', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', dependencies: [], dependents: [], status: 'core' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.footprints).toEqual([]);
+      expect(result.totalUniqueDeps).toBe(0);
+      expect(result.overlapPercentage).toBe(0);
+    });
+
+    it('should calculate correct footprint for single explicit mod', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['anatomy'],
+            status: 'core',
+          },
+        ],
+        [
+          'anatomy',
+          {
+            id: 'anatomy',
+            dependencies: ['core'],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['anatomy'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.footprints).toHaveLength(1);
+      expect(result.footprints[0].modId).toBe('explicit1');
+      expect(result.footprints[0].count).toBe(2); // anatomy + core
+      expect(result.footprints[0].dependencies).toContain('anatomy');
+      expect(result.footprints[0].dependencies).toContain('core');
+    });
+
+    it('should sort footprints by count descending', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', dependencies: [], dependents: [], status: 'core' }],
+        [
+          'dep1',
+          { id: 'dep1', dependencies: ['core'], dependents: [], status: 'dependency' },
+        ],
+        [
+          'dep2',
+          { id: 'dep2', dependencies: ['core'], dependents: [], status: 'dependency' },
+        ],
+        [
+          'small',
+          { id: 'small', dependencies: ['core'], dependents: [], status: 'explicit' },
+        ],
+        [
+          'large',
+          {
+            id: 'large',
+            dependencies: ['core', 'dep1', 'dep2'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.footprints[0].modId).toBe('large');
+      expect(result.footprints[1].modId).toBe('small');
+    });
+
+    it('should calculate correct overlap percentage', () => {
+      // Two explicit mods both depending on 'core' (shared)
+      // explicit1 also depends on dep1, explicit2 on dep2 (unique)
+      const nodes = new Map([
+        ['core', { id: 'core', dependencies: [], dependents: [], status: 'core' }],
+        ['dep1', { id: 'dep1', dependencies: [], dependents: [], status: 'dependency' }],
+        ['dep2', { id: 'dep2', dependencies: [], dependents: [], status: 'dependency' }],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core', 'dep1'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'explicit2',
+          {
+            id: 'explicit2',
+            dependencies: ['core', 'dep2'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.totalUniqueDeps).toBe(3); // core, dep1, dep2
+      expect(result.sharedDepsCount).toBe(1); // only core is shared
+      expect(result.overlapPercentage).toBe(33); // 1/3 ≈ 33%
+    });
+
+    it('should report 100% overlap when all deps are shared', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', dependencies: [], dependents: [], status: 'core' }],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'explicit2',
+          {
+            id: 'explicit2',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.overlapPercentage).toBe(100);
+    });
+
+    it('should report 0% overlap when no deps are shared', () => {
+      const nodes = new Map([
+        ['dep1', { id: 'dep1', dependencies: [], dependents: [], status: 'dependency' }],
+        ['dep2', { id: 'dep2', dependencies: [], dependents: [], status: 'dependency' }],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['dep1'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'explicit2',
+          {
+            id: 'explicit2',
+            dependencies: ['dep2'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.sharedDepsCount).toBe(0);
+      expect(result.overlapPercentage).toBe(0);
+    });
+
+    it('should include transitive dependencies', () => {
+      // explicit1 → dep1 → core (transitive)
+      const nodes = new Map([
+        [
+          'core',
+          { id: 'core', dependencies: [], dependents: ['dep1'], status: 'core' },
+        ],
+        [
+          'dep1',
+          {
+            id: 'dep1',
+            dependencies: ['core'],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['dep1'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.footprints[0].dependencies).toContain('core');
+      expect(result.footprints[0].dependencies).toContain('dep1');
+      expect(result.footprints[0].count).toBe(2);
+    });
+
+    it('should cache results until invalidation', () => {
+      const nodes = new Map([
+        [
+          'explicit1',
+          { id: 'explicit1', dependencies: [], dependents: [], status: 'explicit' },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result1 = service.getTransitiveDependencyFootprints();
+      const result2 = service.getTransitiveDependencyFootprints();
+
+      expect(result1).toBe(result2);
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(1);
+
+      service.invalidateCache();
+      service.getTransitiveDependencyFootprints();
+
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle circular dependencies without infinite loop', () => {
+      const nodes = new Map([
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['mod-a'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'mod-a',
+          {
+            id: 'mod-a',
+            dependencies: ['mod-b'],
+            dependents: ['mod-b', 'explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'mod-b',
+          {
+            id: 'mod-b',
+            dependencies: ['mod-a'],
+            dependents: ['mod-a'],
+            status: 'dependency',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      // Should complete without hanging
+      const result = service.getTransitiveDependencyFootprints();
+
+      expect(result.footprints).toHaveLength(1);
+      expect(Array.isArray(result.footprints[0].dependencies)).toBe(true);
+    });
+  });
 });

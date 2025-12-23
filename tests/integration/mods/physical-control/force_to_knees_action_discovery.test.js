@@ -142,7 +142,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       expect(forceToKneesAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
         'positioning:kneeling_before',
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'lying-states:lying_on',
@@ -347,7 +347,7 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         { target_id: scenario.target.id, facing_away: false }
       );
 

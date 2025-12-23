@@ -34,7 +34,7 @@
       "comment": "Add straddling_waist component with facing_away=true",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:straddling_waist",
+        "component_type": "straddling-states:straddling_waist",
         "value": {
           "target_id": "{event.payload.targetId}",
           "facing_away": true

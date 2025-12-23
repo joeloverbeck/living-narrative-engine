@@ -12,7 +12,7 @@
       "comment": "Get straddling_waist data to check orientation",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:straddling_waist",
+        "component_type": "straddling-states:straddling_waist",
         "result_variable": "straddlingData"
       }
     },
@@ -43,7 +43,7 @@
       "comment": "Remove straddling_waist component",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:straddling_waist"
+        "component_type": "straddling-states:straddling_waist"
       }
     },
     {

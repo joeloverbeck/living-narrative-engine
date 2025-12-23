@@ -65,6 +65,37 @@ describe('liquids:enter_liquid_body action discovery', () => {
         'liquids-states:in_liquid_body',
       ]);
     });
+
+    it('has prerequisites for movement capability and lighting', () => {
+      expect(enterLiquidBodyAction.prerequisites).toBeDefined();
+      expect(enterLiquidBodyAction.prerequisites.length).toBe(2);
+
+      const movementPrereq = enterLiquidBodyAction.prerequisites.find(
+        (prereq) => prereq.logic?.condition_ref === 'anatomy:actor-can-move'
+      );
+      const lightingPrereq = enterLiquidBodyAction.prerequisites.find(
+        (prereq) => prereq.logic?.isActorLocationLit
+      );
+
+      expect(movementPrereq).toBeDefined();
+      expect(lightingPrereq).toBeDefined();
+    });
+
+    it('has correct failure messages for prerequisites', () => {
+      const movementPrereq = enterLiquidBodyAction.prerequisites.find(
+        (prereq) => prereq.logic?.condition_ref === 'anatomy:actor-can-move'
+      );
+      const lightingPrereq = enterLiquidBodyAction.prerequisites.find(
+        (prereq) => prereq.logic?.isActorLocationLit
+      );
+
+      expect(movementPrereq.failure_message).toBe(
+        'You cannot enter the liquid body without functioning legs.'
+      );
+      expect(lightingPrereq.failure_message).toBe(
+        'It is too dark to see where you are going.'
+      );
+    });
   });
 
   describe('Scope resolution', () => {
@@ -113,20 +144,66 @@ describe('liquids:enter_liquid_body action discovery', () => {
   });
 
   describe('Action discovery', () => {
+    /**
+     * Creates an actor with functioning legs that satisfy the anatomy:actor-can-move condition.
+     * The condition uses hasPartWithComponentValue operator to check for body parts
+     * with core:movement component where locked=false.
+     *
+     * @param {string} actorId - Entity ID for the actor
+     * @param {string} name - Actor's name
+     * @param {string} locationId - Location ID where the actor is
+     * @returns {{actor: object, bodyParts: object[]}} Actor entity and body part entities
+     */
+    const createActorWithFunctioningLegs = (actorId, name, locationId) => {
+      const rootPartId = `${actorId}-body-root`;
+      const legPartId = `${actorId}-leg`;
+
+      // Create body part entities
+      const rootPart = new ModEntityBuilder(rootPartId)
+        .asBodyPart({ subType: 'torso', children: [legPartId] })
+        .build();
+
+      const legPart = new ModEntityBuilder(legPartId)
+        .asBodyPart({ parent: rootPartId, subType: 'leg' })
+        .withComponent('core:movement', { locked: false })
+        .build();
+
+      // Create actor with body anatomy referencing the parts
+      const actorBuilder = new ModEntityBuilder(actorId)
+        .withName(name)
+        .atLocation(locationId)
+        .asActor();
+
+      const actor = actorBuilder.build();
+
+      // Add anatomy:body component with body graph structure
+      actor.components['anatomy:body'] = {
+        body: {
+          root: rootPartId,
+          parts: { leg: legPartId },
+        },
+      };
+
+      return {
+        actor,
+        bodyParts: [rootPart, legPart],
+      };
+    };
+
     it('is discoverable when a liquid body is at the actor location', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Canal Edge');
-      const actor = new ModEntityBuilder('liquids:actor1')
-        .withName('Kara')
-        .atLocation(room.id)
-        .asActor()
-        .build();
+      const { actor, bodyParts } = createActorWithFunctioningLegs(
+        'liquids:actor1',
+        'Kara',
+        room.id
+      );
       const liquidBody = new ModEntityBuilder('liquids:canal_edge')
         .withName('Canal Edge')
         .atLocation(room.id)
         .withComponent('liquids:liquid_body', {})
         .build();
 
-      fixture.reset([room, actor, liquidBody]);
+      fixture.reset([room, actor, liquidBody, ...bodyParts]);
       configureActionDiscovery();
 
       const availableActions = fixture.testEnv.getAvailableActions(actor.id);

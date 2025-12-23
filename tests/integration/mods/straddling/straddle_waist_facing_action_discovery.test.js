@@ -534,7 +534,7 @@ describe('straddle_waist_facing action discovery - Integration Tests', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })

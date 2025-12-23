@@ -35,9 +35,9 @@ describe('straddling:actor_im_straddling scope integration', () => {
 
     const mockScopes = {
       'straddling:actor_im_straddling': {
-        expr: 'entities(core:actor)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:straddling_waist.target_id"}]}]',
+        expr: 'entities(core:actor)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.straddling-states:straddling_waist.target_id"}]}]',
         definition:
-          'straddling:actor_im_straddling := entities(core:actor)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:straddling_waist.target_id"}]}]',
+          'straddling:actor_im_straddling := entities(core:actor)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.straddling-states:straddling_waist.target_id"}]}]',
         modId: 'positioning',
       },
     };
@@ -56,7 +56,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:straddling_waist': {
+          'straddling-states:straddling_waist': {
             target_id: 'test:actor2',
             facing_away: false,
           },
@@ -123,7 +123,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:straddling_waist': {
+          'straddling-states:straddling_waist': {
             target_id: 'test:actor3',
             facing_away: true,
           },
@@ -176,7 +176,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:straddling_waist': {
+          'straddling-states:straddling_waist': {
             target_id: 'test:actor2',
             facing_away: false,
           },
@@ -213,7 +213,7 @@ describe('straddling:actor_im_straddling scope integration', () => {
         id: 'test:actor1',
         components: {
           'core:actor': { name: 'Actor 1' },
-          'positioning:straddling_waist': {
+          'straddling-states:straddling_waist': {
             target_id: 'test:actor2',
             facing_away: true,
           },

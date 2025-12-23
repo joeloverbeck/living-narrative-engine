@@ -108,7 +108,7 @@ describe('physical-control:push_off action discovery', () => {
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'lying-states:lying_on',
@@ -197,7 +197,7 @@ describe('physical-control:push_off action discovery', () => {
     it('is not available when the actor is straddling the target', () => {
       const scenario = testFixture.createCloseActors(['Zoe', 'Rin']);
 
-      scenario.actor.components['positioning:straddling_waist'] = {
+      scenario.actor.components['straddling-states:straddling_waist'] = {
         target_id: scenario.target.id,
         facing_away: false,
       };

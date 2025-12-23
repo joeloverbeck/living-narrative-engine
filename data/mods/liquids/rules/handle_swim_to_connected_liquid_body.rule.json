@@ -77,15 +77,15 @@
             "comment": "Departure event at current location.",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} swims effortlessly through the water toward {context.connectedLocationName}.",
-              "actor_description": "I swim effortlessly through the water toward {context.connectedLocationName}.",
+              "description_text": "{context.actorName} swims effortlessly toward {context.connectedLocationName} via {context.connectedLiquidBodyName}.",
+              "actor_description": "I swim effortlessly toward {context.connectedLocationName} via {context.connectedLiquidBodyName}.",
               "perception_type": "physical.self_action",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "involved_entities": [],
               "alternate_descriptions": {
-                "auditory": "I hear smooth, confident strokes cutting through the water.",
-                "tactile": "I feel the water ripple from powerful swimming movements nearby."
+                "auditory": "I hear smooth, confident strokes cutting through a body of liquid.",
+                "tactile": "I feel a body of liquid ripple from powerful swimming movements nearby."
               }
             }
           },
@@ -129,8 +129,8 @@
               "target_id": "{event.payload.primaryId}",
               "involved_entities": [],
               "alternate_descriptions": {
-                "auditory": "I hear someone arrive with a splash from the connecting water.",
-                "tactile": "I feel the water surge as someone swims in."
+                "auditory": "I hear someone arrive with a splash from the connecting body of liquid.",
+                "tactile": "I feel the body of liquid surge as someone swims in."
               }
             }
           },
@@ -163,15 +163,15 @@
             "comment": "Departure event at current location.",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} swims through the water toward {context.connectedLocationName}.",
-              "actor_description": "I swim through the water toward {context.connectedLocationName}.",
+              "description_text": "{context.actorName} swims toward {context.connectedLocationName} via {context.connectedLiquidBodyName}.",
+              "actor_description": "I swim toward {context.connectedLocationName} via {context.connectedLiquidBodyName}.",
               "perception_type": "physical.self_action",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "involved_entities": [],
               "alternate_descriptions": {
-                "auditory": "I hear steady strokes moving through the water.",
-                "tactile": "I feel the water ripple from swimming movements nearby."
+                "auditory": "I hear steady strokes moving through a body of liquid.",
+                "tactile": "I feel a body of liquid ripple from swimming movements nearby."
               }
             }
           },
@@ -215,8 +215,8 @@
               "target_id": "{event.payload.primaryId}",
               "involved_entities": [],
               "alternate_descriptions": {
-                "auditory": "I hear someone arrive with a splash from the connecting water.",
-                "tactile": "I feel the water surge as someone swims in."
+                "auditory": "I hear someone arrive with a splash from the connecting body of liquid.",
+                "tactile": "I feel the body of liquid surge as someone swims in."
               }
             }
           },

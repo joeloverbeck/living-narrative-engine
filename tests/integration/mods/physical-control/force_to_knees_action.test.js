@@ -79,7 +79,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
 
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         {
           target_id: scenario.target.id,
           facing_away: false,
@@ -88,7 +88,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
 
       await expect(async () => {
         await testFixture.executeAction(scenario.actor.id, scenario.target.id);
-      }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
+      }).rejects.toThrow(/forbidden component.*straddling-states:straddling_waist/i);
     });
   });
 
