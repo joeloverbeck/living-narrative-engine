@@ -107,7 +107,7 @@ describe('physical-control:push_off action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(pushOffAction.forbidden_components.actor).toEqual([
-        'positioning:biting_neck',
+        'biting-states:biting_neck',
         'straddling-states:straddling_waist',
         'hugging-states:hugging',
         'hugging-states:being_hugged',

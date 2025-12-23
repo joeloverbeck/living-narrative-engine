@@ -45,9 +45,9 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       );
     });
 
-    it('should include positioning:doing_complex_performance in forbidden list', () => {
+    it('should include performances-states:doing_complex_performance in forbidden list', () => {
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 

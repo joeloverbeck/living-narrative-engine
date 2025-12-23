@@ -35,13 +35,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
       // Setup biting relationship
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -56,19 +56,19 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
       );
     });
 
-    it('removes positioning:biting_neck component from actor', async () => {
+    it('removes biting-states:biting_neck component from actor', async () => {
       const scenario = testFixture.createStandardActorTarget([
         'Vampire',
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -82,23 +82,23 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         scenario.actor.id
       );
       expect(
-        actorInstance.components['positioning:biting_neck']
+        actorInstance.components['biting-states:biting_neck']
       ).toBeUndefined();
     });
 
-    it('removes positioning:being_bitten_in_neck component from target', async () => {
+    it('removes biting-states:being_bitten_in_neck component from target', async () => {
       const scenario = testFixture.createStandardActorTarget([
         'Vampire',
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -112,7 +112,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         scenario.target.id
       );
       expect(
-        targetInstance.components['positioning:being_bitten_in_neck']
+        targetInstance.components['biting-states:being_bitten_in_neck']
       ).toBeUndefined();
     });
 
@@ -122,13 +122,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -147,10 +147,10 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
       );
 
       expect(
-        actorInstance.components['positioning:biting_neck']
+        actorInstance.components['biting-states:biting_neck']
       ).toBeUndefined();
       expect(
-        targetInstance.components['positioning:being_bitten_in_neck']
+        targetInstance.components['biting-states:being_bitten_in_neck']
       ).toBeUndefined();
     });
   });
@@ -159,13 +159,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('only removes actor component when IDs match', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -179,7 +179,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         scenario.actor.id
       );
       expect(
-        actorInstance.components['positioning:biting_neck']
+        actorInstance.components['biting-states:biting_neck']
       ).toBeUndefined();
     });
 
@@ -187,13 +187,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
       // Actor's component references different entity
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'different_entity_id',
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -208,7 +208,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         scenario.actor.id
       );
       // Component should remain because ID doesn't match
-      expect(actorInstance.components['positioning:biting_neck']).toEqual({
+      expect(actorInstance.components['biting-states:biting_neck']).toEqual({
         bitten_entity_id: 'different_entity_id',
         initiated: true,
         consented: false,
@@ -218,14 +218,14 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('does not remove target component when biting_entity_id does not match', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
       // Target's component references different entity
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: 'different_actor_id',
         consented: false,
       };
@@ -240,7 +240,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
       );
       // Component should remain because ID doesn't match
       expect(
-        targetInstance.components['positioning:being_bitten_in_neck']
+        targetInstance.components['biting-states:being_bitten_in_neck']
       ).toEqual({
         biting_entity_id: 'different_actor_id',
         consented: false,
@@ -253,13 +253,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -294,13 +294,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('generates correct perceptible event message', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -326,13 +326,13 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         'Jonathan',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -352,7 +352,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('handles missing target gracefully', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'nonexistent',
         initiated: true,
         consented: false,
@@ -387,7 +387,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('only responds to violence:tear_out_throat action', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
@@ -418,19 +418,19 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
         .build();
 
       unrelatedEntity.components['personal-space-states:closeness'] = { partners: [] };
-      unrelatedEntity.components['positioning:biting_neck'] = {
+      unrelatedEntity.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'someone_else',
         initiated: true,
         consented: false,
       };
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
         consented: false,
       };
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
         consented: false,
       };
@@ -447,7 +447,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
 
       // Unrelated entity should still have its component
       const charlie = testFixture.entityManager.getEntityInstance('charlie');
-      expect(charlie.getComponentData('positioning:biting_neck')).toEqual({
+      expect(charlie.getComponentData('biting-states:biting_neck')).toEqual({
         bitten_entity_id: 'someone_else',
         initiated: true,
         consented: false,

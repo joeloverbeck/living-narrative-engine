@@ -678,9 +678,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
     });
   });
 
-  it('should have 20+ total positioning-related scopes registered', () => {
+  it('should have 19+ total positioning-related scopes registered', () => {
     // Count all positioning-related scopes across multiple namespaces
     // (positioning, sitting, straddling, personal-space)
+    // Note: Some scopes were migrated to domain-specific mods (e.g., biting-states)
     const positioningRelatedPrefixes = [
       'positioning:',
       'sitting:',
@@ -692,6 +693,6 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
     ).filter((key) =>
       positioningRelatedPrefixes.some((prefix) => key.startsWith(prefix))
     );
-    expect(positioningScopes.length).toBeGreaterThanOrEqual(20);
+    expect(positioningScopes.length).toBeGreaterThanOrEqual(19);
   });
 });

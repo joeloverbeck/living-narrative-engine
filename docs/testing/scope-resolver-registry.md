@@ -402,7 +402,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 
 ---
 
-### `positioning:actor_being_bitten_by_me`
+### `biting-states:actor_being_bitten_by_me`
 
 **Description**: Entity whose neck the actor is currently biting, with reciprocal validation.
 
@@ -410,8 +410,8 @@ scenario.actor.components['positioning:standing_behind'] = {
 
 **Requirements**:
 
-- Actor has `positioning:biting_neck` component with `bitten_entity_id`
-- Target has `positioning:being_bitten_in_neck` component with `biting_entity_id`
+- Actor has `biting-states:biting_neck` component with `bitten_entity_id`
+- Target has `biting-states:being_bitten_in_neck` component with `biting_entity_id`
 - Both components reference each other (reciprocal relationship)
 
 **Returns**: Set containing single bitten entity ID, or empty set
@@ -421,7 +421,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 ```javascript
 {
   "id": "violence:tear_out_throat",
-  "targets": "positioning:actor_being_bitten_by_me",
+  "targets": "biting-states:actor_being_bitten_by_me",
   // ...
 }
 ```
@@ -429,10 +429,10 @@ scenario.actor.components['positioning:standing_behind'] = {
 **Test Setup**:
 
 ```javascript
-scenario.actor.components['positioning:biting_neck'] = {
+scenario.actor.components['biting-states:biting_neck'] = {
   bitten_entity_id: scenario.target.id,
 };
-scenario.target.components['positioning:being_bitten_in_neck'] = {
+scenario.target.components['biting-states:being_bitten_in_neck'] = {
   biting_entity_id: scenario.actor.id,
 };
 ```
@@ -623,8 +623,8 @@ scenario.actor.components['positioning:closeness'] = {
 
 **Requirements**:
 
-- Actor has `positioning:being_bitten_in_neck` component
-- Partner has `positioning:biting_neck` component
+- Actor has `biting-states:being_bitten_in_neck` component
+- Partner has `biting-states:biting_neck` component
 - Reciprocal relationship validated
 
 **Returns**: Set containing single biting entity ID, or empty set
@@ -642,10 +642,10 @@ scenario.actor.components['positioning:closeness'] = {
 **Test Setup**:
 
 ```javascript
-scenario.actor.components['positioning:being_bitten_in_neck'] = {
+scenario.actor.components['biting-states:being_bitten_in_neck'] = {
   biting_entity_id: scenario.target.id,
 };
-scenario.target.components['positioning:biting_neck'] = {
+scenario.target.components['biting-states:biting_neck'] = {
   bitten_entity_id: scenario.actor.id,
 };
 ```
@@ -1428,7 +1428,7 @@ ScopeResolverHelpers.createComponentLookupResolver(scopeName, config);
 
 **Config Parameters**:
 
-- `componentType` (string): Component to read from (e.g., `'positioning:biting_neck'`)
+- `componentType` (string): Component to read from (e.g., `'biting-states:biting_neck'`)
 - `sourceField` (string): Field containing target entity ID (e.g., `'bitten_entity_id'`)
 - `resultField` (string, optional): Field to extract from result (default: `'id'`)
 - `contextSource` (string, optional): Where to get source entity (`'actor'` | `'target'`, default: `'actor'`)
@@ -1634,7 +1634,7 @@ ScopeResolverHelpers._registerResolvers(
 | All sitting actors           | `positioning:sitting_actors`                                  | Positioning |
 | All kneeling actors          | `positioning:kneeling_actors`                                 | Positioning |
 | Furniture actor behind       | `positioning:furniture_actor_behind`                          | Positioning |
-| Entity being bitten          | `positioning:actor_being_bitten_by_me`                        | Positioning |
+| Entity being bitten          | `biting-states:actor_being_bitten_by_me`                        | Positioning |
 | Close actors (facing/behind) | `personal-space:close_actors_facing_each_other_or_behind_target` | Positioning |
 | Close actors (base)          | `personal-space:close_actors`                                    | Positioning |
 | Close actors facing          | `personal-space:close_actors_facing_each_other`                  | Positioning |

@@ -35,7 +35,7 @@ describe('Activity Metadata Schema Validation', () => {
     },
     { mod: 'kissing', name: 'kissing', targetRole: 'partner', priority: 72 },
     {
-      mod: 'positioning',
+      mod: 'biting-states',
       name: 'being_bitten_in_neck',
       targetRole: 'biting_entity_id',
       priority: 70,
@@ -59,7 +59,7 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 68,
     },
     {
-      mod: 'positioning',
+      mod: 'biting-states',
       name: 'biting_neck',
       targetRole: 'bitten_entity_id',
       priority: 73,

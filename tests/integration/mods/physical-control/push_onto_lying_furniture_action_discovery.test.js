@@ -135,7 +135,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.actor).toEqual([
-        'positioning:biting_neck',
+        'biting-states:biting_neck',
         'lying-states:lying_on',
         'hugging-states:hugging',
         'hugging-states:being_hugged',

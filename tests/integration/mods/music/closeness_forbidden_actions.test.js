@@ -92,7 +92,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withComponent('music:performance_mood', {
           mood: 'cheerful',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('lute1')
@@ -142,7 +142,7 @@ describe('music actions forbidden when actor is in closeness', () => {
         .withComponent('music:performance_mood', {
           mood: 'cheerful',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .withComponent('personal-space-states:closeness', {
           partners: ['partner1'],
         })

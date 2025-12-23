@@ -16,7 +16,7 @@
   "forbidden_components": {
     "actor": [
       "bending-states:bending_over",
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "recovery-states:fallen"

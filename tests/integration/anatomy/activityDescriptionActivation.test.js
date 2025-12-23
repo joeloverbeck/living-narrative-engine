@@ -45,7 +45,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'partner',
     },
     {
-      mod: 'positioning',
+      mod: 'biting-states',
       name: 'being_bitten_in_neck',
       expectedTemplate: 'neck is being bitten',
       priority: 70,
@@ -66,7 +66,7 @@ describe('Activity Description System Activation', () => {
       targetRole: 'surface_id',
     },
     {
-      mod: 'positioning',
+      mod: 'biting-states',
       name: 'biting_neck',
       expectedTemplate: 'is biting',
       priority: 73,
@@ -202,7 +202,7 @@ describe('Activity Description System Activation', () => {
         { id: 'straddling-states:straddling_waist', priority: 82 },
         { id: 'sex-states:giving_blowjob', priority: 80 },
         { id: 'sex-states:receiving_blowjob', priority: 78 },
-        { id: 'positioning:biting_neck', priority: 73 },
+        { id: 'biting-states:biting_neck', priority: 73 },
         { id: 'kissing:kissing', priority: 72 },
       ];
 

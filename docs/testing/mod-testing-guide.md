@@ -771,7 +771,7 @@ beforeEach(async () => {
 - `positioning:sitting_actors` - All sitting actors
 - `positioning:kneeling_actors` - All kneeling actors
 - `positioning:furniture_actor_behind` - Furniture actor is standing behind
-- `positioning:actor_being_bitten_by_me` - Entity actor is biting (reciprocal)
+- `biting-states:actor_being_bitten_by_me` - Entity actor is biting (reciprocal)
 - `personal-space:close_actors_facing_each_other_or_behind_target` - Complex facing/behind logic
 
 </details>
@@ -803,9 +803,9 @@ beforeEach(async () => {
 
   // Create custom scope resolver using factory
   const bitingResolver = ScopeResolverHelpers.createComponentLookupResolver(
-    'positioning:actor_being_bitten_by_me',
+    'biting-states:actor_being_bitten_by_me',
     {
-      componentType: 'positioning:biting_neck',
+      componentType: 'biting-states:biting_neck',
       sourceField: 'bitten_entity_id',
       contextSource: 'actor',
     }
@@ -815,7 +815,7 @@ beforeEach(async () => {
   ScopeResolverHelpers._registerResolvers(
     testFixture.testEnv,
     testFixture.testEnv.entityManager,
-    { 'positioning:actor_being_bitten_by_me': bitingResolver }
+    { 'biting-states:actor_being_bitten_by_me': bitingResolver }
   );
 });
 ```
@@ -1478,13 +1478,13 @@ See [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) fo
 // Check if scope is custom
 const action = require('./data/mods/violence/actions/tear_out_throat.action.json');
 console.log('Targets scope:', action.targets);
-// Example: "positioning:actor_being_bitten_by_me"
+// Example: "biting-states:actor_being_bitten_by_me"
 
 // If not in standard library, create custom resolver
 const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
-  'positioning:actor_being_bitten_by_me',
+  'biting-states:actor_being_bitten_by_me',
   {
-    componentType: 'positioning:biting_neck',
+    componentType: 'biting-states:biting_neck',
     sourceField: 'bitten_entity_id',
     contextSource: 'actor',
   }
@@ -1493,7 +1493,7 @@ const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
 ScopeResolverHelpers._registerResolvers(
   testFixture.testEnv,
   testFixture.testEnv.entityManager,
-  { 'positioning:actor_being_bitten_by_me': customResolver }
+  { 'biting-states:actor_being_bitten_by_me': customResolver }
 );
 ```
 

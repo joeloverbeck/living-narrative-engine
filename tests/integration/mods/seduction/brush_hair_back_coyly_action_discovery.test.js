@@ -50,7 +50,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       expect(brushHairBackCoylyAction.forbidden_components).toEqual({
         actor: [
           'hugging-states:hugging',
-          'positioning:doing_complex_performance',
+          'performances-states:doing_complex_performance',
           'physical-control-states:restraining',
         ],
       });

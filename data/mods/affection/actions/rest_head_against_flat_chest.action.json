@@ -16,7 +16,7 @@
   "forbidden_components": {
     "actor": [
       "kissing:kissing",
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "sex-states:giving_blowjob"
     ],
     "primary": ["sex-states:giving_blowjob"]

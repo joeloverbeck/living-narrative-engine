@@ -27,7 +27,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:biting_neck",
+        "component_type": "biting-states:biting_neck",
         "result_variable": "actorBitingComponent"
       }
     },
@@ -35,7 +35,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "positioning:being_bitten_in_neck",
+        "component_type": "biting-states:being_bitten_in_neck",
         "result_variable": "targetBeingBittenComponent"
       }
     },
@@ -58,7 +58,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:biting_neck"
+              "component_type": "biting-states:biting_neck"
             }
           }
         ]
@@ -85,7 +85,7 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "positioning:being_bitten_in_neck"
+              "component_type": "biting-states:being_bitten_in_neck"
             }
           }
         ]

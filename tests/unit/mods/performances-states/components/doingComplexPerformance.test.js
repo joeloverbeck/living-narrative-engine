@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for positioning mod doing_complex_performance component
+ * @file Unit tests for performances-states mod doing_complex_performance component
  */
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
@@ -12,7 +12,7 @@ import addFormats from 'ajv-formats';
 const testFilePath = fileURLToPath(import.meta.url);
 const testDir = path.dirname(testFilePath);
 
-describe('Positioning Mod - doing_complex_performance Component', () => {
+describe('Performances-States Mod - doing_complex_performance Component', () => {
   let ajv;
   let component;
 
@@ -47,7 +47,7 @@ describe('Positioning Mod - doing_complex_performance Component', () => {
     // Load the doing_complex_performance component
     const componentPath = path.resolve(
       testDir,
-      '../../../../../data/mods/positioning/components/doing_complex_performance.component.json'
+      '../../../../../data/mods/performances-states/components/doing_complex_performance.component.json'
     );
     component = JSON.parse(readFileSync(componentPath, 'utf8'));
   });
@@ -64,7 +64,7 @@ describe('Positioning Mod - doing_complex_performance Component', () => {
   });
 
   it('should have correct id', () => {
-    expect(component.id).toBe('positioning:doing_complex_performance');
+    expect(component.id).toBe('performances-states:doing_complex_performance');
   });
 
   it('should have a description', () => {

@@ -141,7 +141,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         'physical-control-states:restraining'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 

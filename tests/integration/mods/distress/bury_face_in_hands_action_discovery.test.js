@@ -41,9 +41,9 @@ describe('distress:bury_face_in_hands action discovery', () => {
       expect(buryFaceInHandsAction.required_components).toEqual({});
       expect(buryFaceInHandsAction.forbidden_components).toEqual({
         actor: [
-          'positioning:biting_neck',
+          'biting-states:biting_neck',
           'hugging-states:hugging',
-          'positioning:doing_complex_performance',
+          'performances-states:doing_complex_performance',
           'physical-control-states:restraining',
         ],
       });

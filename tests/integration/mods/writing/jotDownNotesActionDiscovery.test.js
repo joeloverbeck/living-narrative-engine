@@ -93,7 +93,7 @@ describe('writing:jot_down_notes action definition', () => {
     expect(jotDownNotesAction.forbidden_components).toBeDefined();
     expect(jotDownNotesAction.forbidden_components.actor).toBeDefined();
     expect(jotDownNotesAction.forbidden_components.actor).toEqual([
-      'positioning:doing_complex_performance',
+      'performances-states:doing_complex_performance',
       'physical-control-states:restraining',
     ]);
   });
@@ -304,7 +304,7 @@ describe('writing:jot_down_notes action definition', () => {
           items: ['notebook_3', 'pencil_3'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const notebook = new ModEntityBuilder('notebook_3')

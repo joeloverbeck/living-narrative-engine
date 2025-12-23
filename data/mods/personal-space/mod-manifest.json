@@ -50,7 +50,11 @@
       "version": "^1.0.0"
     },
     {
-      "id": "positioning",
+      "id": "performances-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "biting-states",
       "version": "^1.0.0"
     },
     {

@@ -128,7 +128,7 @@ describe('observation:examine_owned_item lighting prerequisite', () => {
     test('should preserve forbidden_components', () => {
       expect(examineOwnedItemAction.forbidden_components).toBeDefined();
       expect(examineOwnedItemAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
       expect(examineOwnedItemAction.forbidden_components.actor).toContain(
         'physical-control-states:restraining'

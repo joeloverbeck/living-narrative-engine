@@ -15,14 +15,14 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "facing-states:facing_away",
       "sitting-states:sitting_on",
       "straddling-states:straddling_waist",
       "hugging-states:hugging",
       "sex-states:giving_blowjob",
       "sex-states:receiving_blowjob",
-      "positioning:doing_complex_performance",
+      "performances-states:doing_complex_performance",
       "sex-states:fucking_anally",
       "lying-states:lying_on",
       "physical-control-states:being_restrained",

@@ -8,7 +8,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "sex-states:giving_blowjob"],
+    "actor": ["biting-states:biting_neck", "sex-states:giving_blowjob"],
     "target": ["sex-states:giving_blowjob"]
   },
   "template": "lick {target}'s lips",

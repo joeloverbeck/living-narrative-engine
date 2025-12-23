@@ -31,7 +31,7 @@ describe('facing:turn_your_back action discovery', () => {
         Array
       );
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:biting_neck'
+        'biting-states:biting_neck'
       );
       expect(turnYourBackAction.forbidden_components.actor).toContain(
         'facing-states:facing_away'

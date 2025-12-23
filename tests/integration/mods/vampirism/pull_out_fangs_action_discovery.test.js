@@ -35,11 +35,11 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -56,10 +56,10 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
   });
 
   describe('Negative Discovery Cases', () => {
-    it('does NOT discover when actor lacks positioning:biting_neck component', () => {
+    it('does NOT discover when actor lacks biting-states:biting_neck component', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -74,13 +74,13 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when target lacks positioning:being_bitten_in_neck component', () => {
+    it('does NOT discover when target lacks biting-states:being_bitten_in_neck component', () => {
       const scenario = testFixture.createStandardActorTarget([
         'Vampire',
         'Target',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
@@ -102,11 +102,11 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
         'Victim',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'someone-else',
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -121,20 +121,20 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when actor has positioning:being_bitten_in_neck (forbidden)', () => {
+    it('does NOT discover when actor has biting-states:being_bitten_in_neck (forbidden)', () => {
       const scenario = testFixture.createStandardActorTarget([
         'Victim',
         'Vampire',
       ]);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.actor.components['positioning:being_bitten_in_neck'] = {
+      scenario.actor.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.target.id,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -159,11 +159,11 @@ describe('vampirism:pull_out_fangs - Action Discovery', () => {
       delete scenario.actor.components['personal-space-states:closeness'];
       delete scenario.target.components['personal-space-states:closeness'];
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 

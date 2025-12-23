@@ -63,7 +63,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:doing_complex_performance",
+        "component_type": "performances-states:doing_complex_performance",
         "value": {}
       }
     },

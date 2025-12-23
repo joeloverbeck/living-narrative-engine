@@ -147,7 +147,7 @@ describe('Cross-Mod References', () => {
   });
 
   describe('Mod Manifest Dependencies', () => {
-    it('should have movement mod declare dependency on positioning mod', () => {
+    it('should have movement mod declare dependency on recovery-states mod', () => {
       const movementManifestPath = path.resolve(
         process.cwd(),
         'data/mods/movement/mod-manifest.json'
@@ -156,12 +156,12 @@ describe('Cross-Mod References', () => {
         fs.readFileSync(movementManifestPath, 'utf8')
       );
 
-      // Movement now depends on positioning (reversed to avoid circular dependency)
+      // Movement depends on recovery-states for fallen state component
       // Dependencies are objects with id and version, not just strings
-      const hasPositioningDep = movementManifest.dependencies.some(
-        (dep) => dep.id === 'positioning'
+      const hasRecoveryStatesDep = movementManifest.dependencies.some(
+        (dep) => dep.id === 'recovery-states'
       );
-      expect(hasPositioningDep).toBe(true);
+      expect(hasRecoveryStatesDep).toBe(true);
     });
 
     it('should have movement mod available as a dependency', () => {

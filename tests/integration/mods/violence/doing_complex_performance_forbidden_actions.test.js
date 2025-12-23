@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that violence actions are correctly forbidden when actor is doing a complex performance.
  * @description Ensures that violence actions (slap, sucker punch) are not available when the acting actor
- * has the positioning:doing_complex_performance component.
+ * has the performances-states:doing_complex_performance component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -30,15 +30,15 @@ describe('violence actions forbidden during complex performance', () => {
   });
 
   describe('Action structure validation', () => {
-    it('slap should have positioning:doing_complex_performance as forbidden component', () => {
+    it('slap should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(slapAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('sucker_punch should have positioning:doing_complex_performance as forbidden component', () => {
+    it('sucker_punch should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(suckerPunchAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });
@@ -56,10 +56,10 @@ describe('violence actions forbidden during complex performance', () => {
       // 1. Structure validation (tested above)
       // 2. Blocking when doing_complex_performance component present (tested below)
       expect(slapAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
       expect(suckerPunchAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });
@@ -123,7 +123,7 @@ describe('violence actions forbidden during complex performance', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Add doing_complex_performance component to actor
-      scenario.actor.components['positioning:doing_complex_performance'] = {};
+      scenario.actor.components['performances-states:doing_complex_performance'] = {};
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
@@ -141,7 +141,7 @@ describe('violence actions forbidden during complex performance', () => {
       const scenario = testFixture.createCloseActors(['Charlie', 'Diana']);
 
       // Add doing_complex_performance component to actor
-      scenario.actor.components['positioning:doing_complex_performance'] = {};
+      scenario.actor.components['performances-states:doing_complex_performance'] = {};
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);

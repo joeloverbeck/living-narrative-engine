@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:biting_neck",
+  "id": "biting-states:biting_neck",
   "description": "Marks an entity actively biting another entity's neck, occupying the mouth and preventing conflicting mouth-based or proximity actions.",
   "dataSchema": {
     "type": "object",

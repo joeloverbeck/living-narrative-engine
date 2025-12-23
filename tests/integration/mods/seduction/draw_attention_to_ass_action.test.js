@@ -45,7 +45,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
         forbidden: {
           actor: [
             'hugging-states:hugging',
-            'positioning:doing_complex_performance',
+            'performances-states:doing_complex_performance',
           ],
         },
       });

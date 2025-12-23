@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "bending-states:bending_over",
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "straddling-states:straddling_waist",
       "sitting-states:sitting_on",
       "deference-states:kneeling_before",

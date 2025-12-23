@@ -51,9 +51,9 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       );
     });
 
-    it('should forbid positioning:doing_complex_performance component', () => {
+    it('should forbid performances-states:doing_complex_performance component', () => {
       expect(action.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });

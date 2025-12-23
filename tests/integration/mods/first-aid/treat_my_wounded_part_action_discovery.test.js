@@ -141,7 +141,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorDoingComplexPerformance) {
-      actorBuilder.withComponent('positioning:doing_complex_performance', {});
+      actorBuilder.withComponent('performances-states:doing_complex_performance', {});
     }
 
     if (coverWound) {
@@ -278,7 +278,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
       expect.arrayContaining([
         'hugging-states:hugging',
         'sex-states:giving_blowjob',
-        'positioning:doing_complex_performance',
+        'performances-states:doing_complex_performance',
         'bending-states:bending_over',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
@@ -370,7 +370,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:doing_complex_performance', () => {
+  it('is hidden when actor has performances-states:doing_complex_performance', () => {
     loadScenario({ actorDoingComplexPerformance: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);
