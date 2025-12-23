@@ -318,13 +318,13 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
       );
 
       // Dispatch location exit/enter events
-      this.#dispatcher.dispatch('positioning:entity_exited_location', {
+      this.#dispatcher.dispatch('movement:entity_exited_location', {
         entityId: partnerId,
         locationId: position.locationId,
         newLocationId: destinationId,
       });
 
-      this.#dispatcher.dispatch('positioning:entity_entered_location', {
+      this.#dispatcher.dispatch('movement:entity_entered_location', {
         entityId: partnerId,
         locationId: destinationId,
         previousLocationId: position.locationId,

@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:entity_entered_location",
+  "id": "movement:entity_entered_location",
   "description": "Dispatched when an entity enters a location due to closeness auto-move.",
   "payloadSchema": {
-    "title": "Positioning: Entity Entered Location Payload",
-    "description": "Payload for the positioning:entity_entered_location event.",
+    "title": "Movement: Entity Entered Location Payload",
+    "description": "Payload for the movement:entity_entered_location event.",
     "type": "object",
     "properties": {
       "entityId": {

@@ -82,7 +82,10 @@
       "destinations_for_breached_blocker.scope",
       "dimensional_portals.scope"
     ],
-    "events": [],
+    "events": [
+      "entity_entered_location.event.json",
+      "entity_exited_location.event.json"
+    ],
     "components": [
       "can_teleport.component.json",
       "can_travel_through_dimensions.component.json",

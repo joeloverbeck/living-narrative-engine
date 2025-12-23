@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:actor_faced_forward",
+  "id": "facing:actor_faced_forward",
   "description": "Dispatched when an actor faces forward toward another actor after previously facing away.",
   "payloadSchema": {
-    "title": "Positioning: Actor Faced Forward Payload",
-    "description": "Payload for the positioning:actor_faced_forward event.",
+    "title": "Facing: Actor Faced Forward Payload",
+    "description": "Payload for the facing:actor_faced_forward event.",
     "type": "object",
     "properties": {
       "actor": {

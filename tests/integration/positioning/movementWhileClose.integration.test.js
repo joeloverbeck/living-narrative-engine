@@ -242,7 +242,7 @@ describe('Movement While Close - Integration', () => {
 
       // Verify exit event
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'positioning:entity_exited_location',
+        'movement:entity_exited_location',
         expect.objectContaining({
           entityId: partnerId,
           locationId: oldLocation,
@@ -252,7 +252,7 @@ describe('Movement While Close - Integration', () => {
 
       // Verify enter event
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'positioning:entity_entered_location',
+        'movement:entity_entered_location',
         expect.objectContaining({
           entityId: partnerId,
           locationId: newLocation,

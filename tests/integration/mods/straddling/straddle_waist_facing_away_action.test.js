@@ -89,7 +89,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     ).toContain('test:target1');
   });
 
-  it('should dispatch positioning:actor_turned_back event', async () => {
+  it('should dispatch facing:actor_turned_back event', async () => {
     const entities = setupStraddleFacingAwayScenario();
     testFixture.reset(Object.values(entities));
 
@@ -99,7 +99,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     // console.log('All events:', testFixture.events.map(e => e.eventType));
 
     const turnedBackEvent = testFixture.events.find(
-      (e) => e.eventType === 'positioning:actor_turned_back'
+      (e) => e.eventType === 'facing:actor_turned_back'
     );
 
     expect(turnedBackEvent).toBeDefined();

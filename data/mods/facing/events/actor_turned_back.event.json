@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "positioning:actor_turned_back",
+  "id": "facing:actor_turned_back",
   "description": "Dispatched when an actor turns their back to a target entity",
   "payloadSchema": {
     "type": "object",

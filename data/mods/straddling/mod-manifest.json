@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "facing",
+      "version": "^1.0.0"
+    },
+    {
       "id": "facing-states",
       "version": "^1.0.0"
     },
@@ -23,10 +27,6 @@
     },
     {
       "id": "personal-space-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "positioning",
       "version": "^1.0.0"
     },
     {

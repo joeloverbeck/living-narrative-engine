@@ -243,7 +243,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const turnedBackEvent = testFixture.events.find(
-        (e) => e.eventType === 'positioning:actor_turned_back'
+        (e) => e.eventType === 'facing:actor_turned_back'
       );
 
       expect(turnedBackEvent).toBeDefined();

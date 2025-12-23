@@ -79,7 +79,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Dispatch event indicating PRIMARY has turned their back to actor",
       "parameters": {
-        "eventType": "positioning:actor_turned_back",
+        "eventType": "facing:actor_turned_back",
         "payload": {
           "actor": "{event.payload.primaryId}",
           "target": "{event.payload.actorId}"
