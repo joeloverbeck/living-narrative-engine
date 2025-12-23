@@ -18,7 +18,7 @@
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
       "bending-states:bending_over",
-      "positioning:straddling_waist",
+      "straddling-states:straddling_waist",
       "hugging-states:being_hugged",
       "hugging-states:hugging",
       "positioning:doing_complex_performance",
@@ -31,7 +31,20 @@
     ]
   },
   "template": "enter the {liquidBody}",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-can-move"
+      },
+      "failure_message": "You cannot enter the liquid body without functioning legs."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to see where you are going."
+    }
+  ],
   "visual": {
     "backgroundColor": "#3aaea3",
     "textColor": "#0b1f2a",

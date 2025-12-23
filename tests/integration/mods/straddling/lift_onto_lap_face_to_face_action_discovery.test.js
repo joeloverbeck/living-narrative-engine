@@ -270,7 +270,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
         .withName('Straddler')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'actor1',
           facing_away: false,
         })
@@ -437,7 +437,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
         .atLocation('room1')
         .closeToEntity('actor1')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'chair2',
           facing_away: false,
         })

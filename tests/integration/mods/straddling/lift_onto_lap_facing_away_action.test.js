@@ -105,7 +105,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
       const updatedTarget =
         testFixture.entityManager.getEntityInstance('target1');
       const straddling =
-        updatedTarget.components['positioning:straddling_waist'];
+        updatedTarget.components['straddling-states:straddling_waist'];
 
       expect(straddling).toBeDefined();
       expect(straddling.target_id).toBe('actor1');
@@ -384,7 +384,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
         updatedTarget.components['sitting-states:sitting_on']
       ).toBeUndefined();
       expect(
-        updatedTarget.components['positioning:straddling_waist']
+        updatedTarget.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(updatedTarget.components['positioning:facing_away']).toBeDefined();
     });

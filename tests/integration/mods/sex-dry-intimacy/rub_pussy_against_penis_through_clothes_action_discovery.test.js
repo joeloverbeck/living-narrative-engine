@@ -57,7 +57,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
      *       {
      *         "==": [
      *           {"var": "entity.id"},
-     *           {"var": "actor.components.positioning:straddling_waist.target_id"}
+     *           {"var": "actor.components.straddling-states:straddling_waist.target_id"}
      *         ]
      *       }
      *     ]
@@ -88,7 +88,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
         const closeness = actor?.components?.['personal-space-states:closeness'];
-        const straddling = actor?.components?.['positioning:straddling_waist'];
+        const straddling = actor?.components?.['straddling-states:straddling_waist'];
 
         console.log('  Actor closeness partners:', closeness?.partners);
         console.log('  Actor straddling:', straddling);
@@ -347,13 +347,13 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
       );
     });
 
-    it('should require personal-space-states:closeness and positioning:straddling_waist on actor', () => {
+    it('should require personal-space-states:closeness and straddling-states:straddling_waist on actor', () => {
       expect(rubPussyAgainstPenisAction.required_components).toBeDefined();
       expect(rubPussyAgainstPenisAction.required_components.actor).toContain(
         'personal-space-states:closeness'
       );
       expect(rubPussyAgainstPenisAction.required_components.actor).toContain(
-        'positioning:straddling_waist'
+        'straddling-states:straddling_waist'
       );
     });
 
@@ -378,7 +378,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -541,7 +541,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         // Missing closeness component
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -619,7 +619,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -690,7 +690,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('beth')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'beth',
           facing_away: false,
         })
@@ -753,7 +753,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -833,7 +833,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: true, // Facing away
         })
@@ -915,7 +915,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -1008,7 +1008,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })

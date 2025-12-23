@@ -37,7 +37,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
       .atLocation('room1')
       .closeToEntity('bob')
       .asActor()
-      .withComponent('positioning:straddling_waist', {
+      .withComponent('straddling-states:straddling_waist', {
         target_id: 'bob',
         facing_away: false,
       })
@@ -271,7 +271,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })
@@ -299,7 +299,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
         .atLocation('room1')
         .closeToEntity('bob')
         .asActor()
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'bob',
           facing_away: false,
         })

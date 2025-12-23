@@ -5,6 +5,10 @@
   "version": "1.0.0",
   "dependencies": [
     {
+      "id": "straddling-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },

@@ -15,7 +15,7 @@
     "primary": ["sitting-states:sitting_on", "personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["sitting-states:sitting_on", "positioning:straddling_waist"]
+    "actor": ["sitting-states:sitting_on", "straddling-states:straddling_waist"]
   },
   "template": "sit on {target}'s lap (facing away)",
   "prerequisites": [

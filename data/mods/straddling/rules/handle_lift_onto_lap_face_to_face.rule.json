@@ -42,7 +42,7 @@
       "comment": "Add straddling_waist component to PRIMARY with face-to-face orientation",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:straddling_waist",
+        "component_type": "straddling-states:straddling_waist",
         "value": {
           "target_id": "{event.payload.actorId}",
           "facing_away": false

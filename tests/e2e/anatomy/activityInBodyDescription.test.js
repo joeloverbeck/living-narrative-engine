@@ -28,7 +28,7 @@ describe('Activity Integration in Body Descriptions', () => {
       { mod: 'lying-states', name: 'lying_on' },
       { mod: 'sex-states', name: 'receiving_blowjob' },
       { mod: 'sitting-states', name: 'sitting_on' },
-      { mod: 'positioning', name: 'straddling_waist' },
+      { mod: 'straddling-states', name: 'straddling_waist' },
     ];
 
     componentSchemas = components.map(({ mod, name }) => {
@@ -71,7 +71,7 @@ describe('Activity Integration in Body Descriptions', () => {
 
       // Verify we can sort by priority (highest first)
       const sorted = [...priorities].sort((a, b) => b.priority - a.priority);
-      expect(sorted[0].id).toBe('positioning:straddling_waist'); // priority 82
+      expect(sorted[0].id).toBe('straddling-states:straddling_waist'); // priority 82
       expect(sorted[sorted.length - 1].id).toBe('companionship:leading'); // priority 58
     });
   });
@@ -227,7 +227,7 @@ describe('Activity Integration in Body Descriptions', () => {
     it('should support multi-activity composition through priority ordering', () => {
       // Simulate scenario: entity has multiple activity components
       const activityComponents = [
-        { id: 'positioning:straddling_waist', priority: 82 },
+        { id: 'straddling-states:straddling_waist', priority: 82 },
         { id: 'kissing:kissing', priority: 72 },
         { id: 'hand-holding:holding_hand', priority: 67 },
       ];
@@ -238,7 +238,7 @@ describe('Activity Integration in Body Descriptions', () => {
       );
 
       // Verify expected ordering
-      expect(sorted[0].id).toBe('positioning:straddling_waist');
+      expect(sorted[0].id).toBe('straddling-states:straddling_waist');
       expect(sorted[1].id).toBe('kissing:kissing');
       expect(sorted[2].id).toBe('hand-holding:holding_hand');
 

@@ -95,7 +95,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })
@@ -130,7 +130,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: true,
         })
@@ -163,7 +163,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       });
 
       // Ensure no straddling component exists
-      delete scenario.actor.components['positioning:straddling_waist'];
+      delete scenario.actor.components['straddling-states:straddling_waist'];
 
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
       testFixture.reset([room, scenario.actor, scenario.target]);
@@ -215,7 +215,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })
@@ -233,7 +233,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       // Attempt to execute action (should throw validation error)
       await expect(async () => {
         await testFixture.executeAction('actor1', 'target1');
-      }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
+      }).rejects.toThrow(/forbidden component.*straddling-states:straddling_waist/i);
     });
 
     it('should succeed when actor is NOT straddling', async () => {
@@ -263,7 +263,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
         .withComponent('personal-space-states:closeness', {
           partners: ['target1', 'target2'],
         })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })

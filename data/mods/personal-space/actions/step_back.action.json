@@ -11,7 +11,7 @@
     "actor": [
       "bending-states:bending_over",
       "positioning:biting_neck",
-      "positioning:straddling_waist",
+      "straddling-states:straddling_waist",
       "sitting-states:sitting_on",
       "positioning:kneeling_before",
       "lying-states:lying_on",

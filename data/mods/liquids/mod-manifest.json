@@ -8,6 +8,14 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "straddling-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },

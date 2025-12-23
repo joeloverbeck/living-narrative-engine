@@ -107,7 +107,7 @@ function setupStraddlingTurnBackScenario() {
       components: {
         [NAME_COMPONENT_ID]: { text: 'Straddling Player' },
         [POSITION_COMPONENT_ID]: { locationId: 'test:room' },
-        'positioning:straddling_waist': {
+        'straddling-states:straddling_waist': {
           target_id: 'test:straddled_target',
           facing_away: false,
         },
@@ -650,13 +650,13 @@ describe('facing:turn_your_back action integration', () => {
 
     // Verify initial state with straddling component
     const initialActor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(initialActor.components['positioning:straddling_waist']).toEqual({
+    expect(initialActor.components['straddling-states:straddling_waist']).toEqual({
       target_id: 'test:straddled_target',
       facing_away: false,
     });
 
     // In normal action discovery, this action would not appear in available actions
-    // because the actor has the positioning:straddling_waist component.
+    // because the actor has the straddling-states:straddling_waist component.
     // However, we're testing the rule execution directly to verify the logic.
 
     // NOTE: This test shows what would happen if somehow the action was triggered
@@ -677,7 +677,7 @@ describe('facing:turn_your_back action integration', () => {
     ).toEqual(['test:target1']);
 
     // Verify straddling component retained
-    expect(actor.components['positioning:straddling_waist']).toEqual({
+    expect(actor.components['straddling-states:straddling_waist']).toEqual({
       target_id: 'test:straddled_target',
       facing_away: false,
     });

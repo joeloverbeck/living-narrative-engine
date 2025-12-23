@@ -306,7 +306,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         'sitting-states:sitting_on',
         'bending-states:bending_over',
         'lying-states:lying_on',
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         'hugging-states:being_hugged',
         'hugging-states:hugging',
         'personal-space-states:closeness',

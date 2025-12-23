@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["positioning:straddling_waist"]
+    "actor": ["straddling-states:straddling_waist"]
   },
   "forbidden_components": {
     "actor": []

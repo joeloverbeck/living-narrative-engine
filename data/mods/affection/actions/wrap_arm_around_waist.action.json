@@ -8,7 +8,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing", "positioning:straddling_waist"],
+    "actor": ["kissing:kissing", "straddling-states:straddling_waist"],
     "target": ["sex-states:giving_blowjob"]
   },
   "template": "wrap an arm around {target}'s waist",

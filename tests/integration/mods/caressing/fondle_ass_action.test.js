@@ -156,7 +156,7 @@ describe('caressing:fondle_ass action integration', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })
@@ -200,7 +200,7 @@ describe('caressing:fondle_ass action integration', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: true,
         })
@@ -236,7 +236,7 @@ describe('caressing:fondle_ass action integration', () => {
       });
 
       // Ensure no straddling component exists
-      delete scenario.actor.components['positioning:straddling_waist'];
+      delete scenario.actor.components['straddling-states:straddling_waist'];
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -253,7 +253,7 @@ describe('caressing:fondle_ass action integration', () => {
 
       // Simulate that actor was straddling but has now dismounted
       // (no straddling component present)
-      delete scenario.actor.components['positioning:straddling_waist'];
+      delete scenario.actor.components['straddling-states:straddling_waist'];
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -279,7 +279,7 @@ describe('caressing:fondle_ass action integration', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('personal-space-states:closeness', { partners: ['target1'] })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })
@@ -301,7 +301,7 @@ describe('caressing:fondle_ass action integration', () => {
       // Attempt to execute action (should throw validation error)
       await expect(async () => {
         await testFixture.executeAction('actor1', 'target1');
-      }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
+      }).rejects.toThrow(/forbidden component.*straddling-states:straddling_waist/i);
     });
 
     it('should succeed when actor is NOT straddling', async () => {
@@ -335,7 +335,7 @@ describe('caressing:fondle_ass action integration', () => {
         .withComponent('personal-space-states:closeness', {
           partners: ['target1', 'target2'],
         })
-        .withComponent('positioning:straddling_waist', {
+        .withComponent('straddling-states:straddling_waist', {
           target_id: 'target1',
           facing_away: false,
         })

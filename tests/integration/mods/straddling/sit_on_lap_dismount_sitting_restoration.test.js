@@ -85,10 +85,10 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         testFixtureFacingAway.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].facing_away
+        updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(true);
       expect(updatedActor.components['positioning:facing_away']).toBeDefined();
 
@@ -105,7 +105,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         Object.keys(updatedActor.components)
       );
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeUndefined();
       expect(
         updatedActor.components['positioning:facing_away']
@@ -184,10 +184,10 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         testFixtureFacing.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].facing_away
+        updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(false);
       expect(
         updatedActor.components['positioning:facing_away']
@@ -206,7 +206,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         Object.keys(updatedActor.components)
       );
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeUndefined();
       expect(
         updatedActor.components['positioning:facing_away']

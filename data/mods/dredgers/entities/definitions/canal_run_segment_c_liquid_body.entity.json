@@ -10,8 +10,8 @@
     },
     "liquids:liquid_body": {
       "connected_liquid_body_ids": [
-        "dredgers:flooded_approach_liquid_body",
-        "dredgers:canal_run_segment_b_liquid_body"
+        "dredgers:flooded_approach_liquid_body_instance",
+        "dredgers:canal_run_segment_b_liquid_body_instance"
       ]
     }
   }

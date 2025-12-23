@@ -151,7 +151,7 @@ describe('affection:link_arms action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(linkArmsAction.forbidden_components.actor).toEqual([
-        'positioning:straddling_waist',
+        'straddling-states:straddling_waist',
         'hugging-states:being_hugged',
         'hugging-states:hugging',
       ]);

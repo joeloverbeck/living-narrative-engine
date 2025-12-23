@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "straddling-states",
+  "version": "1.0.0",
+  "name": "Straddling States",
+  "description": "State components for straddling mechanics.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "straddling_waist.component.json"
+    ]
+  }
+}

@@ -42,7 +42,7 @@
       "comment": "Add straddling_waist component with facing orientation",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:straddling_waist",
+        "component_type": "straddling-states:straddling_waist",
         "value": {
           "target_id": "{event.payload.targetId}",
           "facing_away": false

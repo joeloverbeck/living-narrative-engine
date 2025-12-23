@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:biting_neck",
-      "positioning:straddling_waist",
+      "straddling-states:straddling_waist",
       "hugging-states:hugging",
       "hugging-states:being_hugged",
       "lying-states:lying_on",

@@ -676,7 +676,7 @@ export class ScopeResolverHelpers {
       'straddling:actor_im_straddling': this.createComponentLookupResolver(
         'straddling:actor_im_straddling',
         {
-          componentType: 'positioning:straddling_waist',
+          componentType: 'straddling-states:straddling_waist',
           sourceField: 'target_id',
           contextSource: 'actor',
         }

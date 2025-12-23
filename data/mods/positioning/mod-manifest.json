@@ -21,8 +21,7 @@
       "doing_complex_performance.component.json",
       "facing_away.component.json",
       "fallen.component.json",
-      "kneeling_before.component.json",
-      "straddling_waist.component.json"
+      "kneeling_before.component.json"
     ],
     "conditions": [
       "actor-in-entity-facing-away.condition.json",

@@ -1,12 +1,12 @@
 /**
- * @file Unit tests for the positioning:straddling_waist component schema validation
+ * @file Unit tests for the straddling-states:straddling_waist component schema validation
  * @description Tests that the component schema correctly validates straddling waist data
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TestBedClass } from '../../../common/entities/testBed.js';
 
-describe('positioning:straddling_waist Component - Schema Validation', () => {
+describe('straddling-states:straddling_waist Component - Schema Validation', () => {
   let testBed;
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       validData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(true);
@@ -39,7 +39,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       validData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(true);
@@ -52,7 +52,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       invalidData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(false);
@@ -66,7 +66,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       invalidData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(false);
@@ -81,7 +81,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       invalidData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(false);
@@ -95,7 +95,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       invalidData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(false);
@@ -115,7 +115,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       invalidData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(false);
@@ -129,7 +129,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
 
     const result = testBed.validateAgainstSchema(
       validData,
-      'positioning:straddling_waist'
+      'straddling-states:straddling_waist'
     );
 
     expect(result.isValid).toBe(true);

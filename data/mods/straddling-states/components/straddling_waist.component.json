@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:straddling_waist",
+  "id": "straddling-states:straddling_waist",
   "description": "Tracks which entity this actor is currently straddling and the orientation (facing or facing away).",
   "dataSchema": {
     "type": "object",

@@ -20,7 +20,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:straddling_waist"]
+    "actor": ["straddling-states:straddling_waist"]
   },
   "template": "fondle {primary}'s ass over the {secondary}",
   "prerequisites": [],

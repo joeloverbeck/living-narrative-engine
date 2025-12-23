@@ -42,7 +42,7 @@ function setupDismountScenario(
     .asActor()
     .build();
 
-  actor.components['positioning:straddling_waist'] = {
+  actor.components['straddling-states:straddling_waist'] = {
     target_id: 'test:target1',
     facing_away: facingAway,
   };
@@ -81,7 +81,7 @@ describe('Dismount from Straddling - Action Execution', () => {
       await testFixture.executeAction('test:actor1', 'test:target1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:straddling_waist']).toBeUndefined();
+      expect(actor.components['straddling-states:straddling_waist']).toBeUndefined();
     });
 
     it('should not remove facing_away component when facing_away=false', async () => {
@@ -121,7 +121,7 @@ describe('Dismount from Straddling - Action Execution', () => {
       await testFixture.executeAction('test:actor1', 'test:target1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['positioning:straddling_waist']).toBeUndefined();
+      expect(actor.components['straddling-states:straddling_waist']).toBeUndefined();
       expect(actor.components['positioning:facing_away']).toBeUndefined();
     });
 

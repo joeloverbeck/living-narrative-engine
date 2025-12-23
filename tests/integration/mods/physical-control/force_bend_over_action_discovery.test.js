@@ -142,7 +142,7 @@ describe('physical-control:force_bend_over action discovery', () => {
         expect.arrayContaining([
           'positioning:biting_neck',
           'positioning:kneeling_before',
-          'positioning:straddling_waist',
+          'straddling-states:straddling_waist',
           'hugging-states:hugging',
           'hugging-states:being_hugged',
           'sex-states:receiving_blowjob',

@@ -164,7 +164,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       const actor = createActorWithArms('actor1', 'Alice', 'room1', [
         'target1',
       ]);
-      actor.entity.components['positioning:straddling_waist'] = {
+      actor.entity.components['straddling-states:straddling_waist'] = {
         target_id: 'target1',
         facing_away: false,
       };
@@ -197,7 +197,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       const actor = createActorWithArms('actor1', 'Alice', 'room1', [
         'target1',
       ]);
-      actor.entity.components['positioning:straddling_waist'] = {
+      actor.entity.components['straddling-states:straddling_waist'] = {
         target_id: 'target1',
         facing_away: true,
       };
@@ -232,7 +232,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       );
 
       // Ensure no straddling component exists
-      delete scenario.actor.components['positioning:straddling_waist'];
+      delete scenario.actor.components['straddling-states:straddling_waist'];
 
       testFixture.reset([...scenario.allEntities]);
       await configureActionDiscovery();
@@ -279,7 +279,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       const actor = createActorWithArms('actor1', 'Alice', 'room1', [
         'target1',
       ]);
-      actor.entity.components['positioning:straddling_waist'] = {
+      actor.entity.components['straddling-states:straddling_waist'] = {
         target_id: 'target1',
         facing_away: false,
       };
@@ -297,7 +297,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       // Attempt to execute action (should throw validation error)
       await expect(async () => {
         await testFixture.executeAction(actor.entity.id, target.entity.id);
-      }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
+      }).rejects.toThrow(/forbidden component.*straddling-states:straddling_waist/i);
     });
 
     it('should succeed when actor is NOT straddling', async () => {
@@ -323,7 +323,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         'target1',
         'target2',
       ]);
-      actor.entity.components['positioning:straddling_waist'] = {
+      actor.entity.components['straddling-states:straddling_waist'] = {
         target_id: 'target1',
         facing_away: false,
       };

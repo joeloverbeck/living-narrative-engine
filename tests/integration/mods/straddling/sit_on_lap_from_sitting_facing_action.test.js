@@ -105,13 +105,13 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].target_id
+        updatedActor.components['straddling-states:straddling_waist'].target_id
       ).toBe('target1');
       expect(
-        updatedActor.components['positioning:straddling_waist'].facing_away
+        updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(false);
     });
 
@@ -384,10 +384,10 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
       expect(
-        updatedActor.components['positioning:straddling_waist'].target_id
+        updatedActor.components['straddling-states:straddling_waist'].target_id
       ).toBe('target1');
     });
 
@@ -433,7 +433,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
       expect(
-        updatedActor.components['positioning:straddling_waist']
+        updatedActor.components['straddling-states:straddling_waist']
       ).toBeDefined();
     });
   });

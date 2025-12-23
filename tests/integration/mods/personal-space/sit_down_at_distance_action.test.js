@@ -664,7 +664,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
         .build();
 
       // Actor is straddling the straddled target's waist
-      actor.components['positioning:straddling_waist'] = {
+      actor.components['straddling-states:straddling_waist'] = {
         target_id: 'straddled1',
         facing_away: false,
       };
@@ -679,13 +679,13 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       ]);
 
       // Verify initial state
-      expect(actor.components['positioning:straddling_waist']).toEqual({
+      expect(actor.components['straddling-states:straddling_waist']).toEqual({
         target_id: 'straddled1',
         facing_away: false,
       });
 
       // In normal action discovery, this action would not appear in available actions
-      // because the actor has the positioning:straddling_waist component.
+      // because the actor has the straddling-states:straddling_waist component.
       // However, we're testing the rule execution directly to verify the logic.
 
       // NOTE: This test shows what would happen if somehow the action was triggered
@@ -712,7 +712,7 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Actor should still retain straddling component as rule doesn't remove it
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:straddling_waist']).toEqual({
+      expect(updatedActor.components['straddling-states:straddling_waist']).toEqual({
         target_id: 'straddled1',
         facing_away: false,
       });
