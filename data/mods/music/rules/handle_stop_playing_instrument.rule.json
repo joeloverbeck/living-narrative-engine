@@ -53,7 +53,7 @@
       "comment": "Remove doing_complex_performance marker since actor is no longer performing",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:doing_complex_performance"
+        "component_type": "performances-states:doing_complex_performance"
       }
     },
     {

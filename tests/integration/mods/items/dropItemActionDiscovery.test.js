@@ -55,7 +55,7 @@ describe('item-handling:drop_item action definition', () => {
   it('should forbid actor performing complex performance', () => {
     expect(dropItemAction.forbidden_components).toBeDefined();
     expect(dropItemAction.forbidden_components.actor).toContain(
-      'positioning:doing_complex_performance'
+      'performances-states:doing_complex_performance'
     );
   });
 

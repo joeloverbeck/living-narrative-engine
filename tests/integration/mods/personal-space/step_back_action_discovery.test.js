@@ -32,7 +32,7 @@ describe('personal-space:step_back action discovery', () => {
         'bending-states:bending_over'
       );
       expect(stepBackAction.forbidden_components.actor).toContain(
-        'positioning:biting_neck'
+        'biting-states:biting_neck'
       );
     });
 

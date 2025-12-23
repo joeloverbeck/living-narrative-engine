@@ -272,7 +272,7 @@ describe('ValidateMods CLI Integration', () => {
       id: testModName,
       name: 'Test Mod',
       version: '1.0.0',
-      dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing 'positioning' dependency
+      dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing 'anatomy' dependency (component references anatomy:body)
     };
     await fs.writeFile(
       path.join(tempModPath, 'mod-manifest.json'),
@@ -286,7 +286,7 @@ describe('ValidateMods CLI Integration', () => {
         properties: {
           reference: {
             type: 'string',
-            default: 'positioning:standing', // Reference to undeclared dependency
+            default: 'anatomy:body', // Reference to undeclared dependency (anatomy mod exists but is not declared)
           },
         },
       },

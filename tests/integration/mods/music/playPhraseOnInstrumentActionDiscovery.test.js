@@ -99,7 +99,7 @@ describe('music:play_phrase_on_instrument - Action Discovery', () => {
           .withComponent('music:performance_mood', {
             mood: 'cheerful',
           })
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const instrument = new ModEntityBuilder('lute1')

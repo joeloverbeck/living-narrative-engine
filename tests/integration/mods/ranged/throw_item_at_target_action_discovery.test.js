@@ -107,7 +107,7 @@ describe('throw_item_at_target action definition', () => {
 
     it('should forbid doing_complex_performance state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });

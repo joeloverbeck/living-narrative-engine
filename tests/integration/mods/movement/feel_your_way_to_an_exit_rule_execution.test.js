@@ -461,12 +461,12 @@ describe('handle_feel_your_way_to_an_exit rule', () => {
       expect(skillsDep.version).toBe('^1.0.0');
     });
 
-    it('has positioning as a dependency for fallen component', () => {
-      const positioningDep = movementManifest.dependencies.find(
-        (dep) => dep.id === 'positioning'
+    it('has recovery-states as a dependency for fallen component', () => {
+      const recoveryStatesDep = movementManifest.dependencies.find(
+        (dep) => dep.id === 'recovery-states'
       );
-      expect(positioningDep).toBeDefined();
-      expect(positioningDep.version).toBe('^1.0.0');
+      expect(recoveryStatesDep).toBeDefined();
+      expect(recoveryStatesDep.version).toBe('^1.0.0');
     });
   });
 

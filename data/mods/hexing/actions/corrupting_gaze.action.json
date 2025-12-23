@@ -10,7 +10,7 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:doing_complex_performance",
+      "performances-states:doing_complex_performance",
       "physical-control-states:being_restrained"
     ],
     "primary": ["warding:corrupted"]

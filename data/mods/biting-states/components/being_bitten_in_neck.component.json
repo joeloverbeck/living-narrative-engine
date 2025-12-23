@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:being_bitten_in_neck",
+  "id": "biting-states:being_bitten_in_neck",
   "description": "Marks an entity whose neck is currently being bitten by another actor, preventing conflicting neck-based actions and anatomically implausible interactions.",
   "dataSchema": {
     "type": "object",

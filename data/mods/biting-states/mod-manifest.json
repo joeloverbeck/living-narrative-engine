@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "biting-states",
+  "version": "1.0.0",
+  "name": "Biting States",
+  "description": "State components for neck biting mechanics. Separated to allow other mods to check biting state without circular dependencies.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "being_bitten_in_neck.component.json",
+      "biting_neck.component.json"
+    ],
+    "scopes": [
+      "actor_being_bitten_by_me.scope"
+    ]
+  }
+}

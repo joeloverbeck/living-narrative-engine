@@ -130,7 +130,7 @@ class ScopeDiscoveryService {
   static _inferCategory(modId, scopeName) {
     // Check if mod ID matches a known category
     const knownCategories = [
-      'positioning',
+      'personal-space',
       'inventory',
       'items',
       'anatomy',
@@ -138,6 +138,8 @@ class ScopeDiscoveryService {
       'intimacy',
       'violence',
       'clothing',
+      'movement',
+      'caressing',
     ];
 
     // Direct match with mod ID

@@ -47,7 +47,7 @@ describe('seduction:stretch_sexily action discovery', () => {
       expect(stretchSexilyAction.forbidden_components).toEqual({
         actor: [
           'hugging-states:hugging',
-          'positioning:doing_complex_performance',
+          'performances-states:doing_complex_performance',
           'physical-control-states:being_restrained',
         ],
       });

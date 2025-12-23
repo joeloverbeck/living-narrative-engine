@@ -180,7 +180,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'other_entity',
         initiated: true,
       };
@@ -225,7 +225,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: 'other_vampire',
       };
 

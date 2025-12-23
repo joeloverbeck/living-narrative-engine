@@ -111,8 +111,8 @@ describe('affection:link_arms action discovery', () => {
 
             if (
               armAvailable &&
-              !partner.components?.['positioning:being_bitten_in_neck'] && // keep legacy exclusions if present
-              !partner.components?.['positioning:being_bitten_in_neck']
+              !partner.components?.['biting-states:being_bitten_in_neck'] && // keep legacy exclusions if present
+              !partner.components?.['biting-states:being_bitten_in_neck']
             ) {
               if (normalPosition || partnerKneeling) {
                 acc.add(partnerId);

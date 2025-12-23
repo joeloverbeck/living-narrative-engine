@@ -93,7 +93,7 @@ describe('writing:sign_document action definition', () => {
     expect(signDocumentAction.forbidden_components).toBeDefined();
     expect(signDocumentAction.forbidden_components.actor).toBeDefined();
     expect(signDocumentAction.forbidden_components.actor).toEqual([
-      'positioning:doing_complex_performance',
+      'performances-states:doing_complex_performance',
       'physical-control-states:restraining',
     ]);
   });
@@ -290,7 +290,7 @@ describe('writing:sign_document action definition', () => {
           items: ['contract_3', 'pencil_3'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const contract = new ModEntityBuilder('contract_3')

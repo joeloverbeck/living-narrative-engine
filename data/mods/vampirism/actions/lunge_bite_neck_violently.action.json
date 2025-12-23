@@ -9,13 +9,13 @@
   },
   "forbidden_components": {
     "actor": [
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "sex-states:giving_blowjob",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "recovery-states:fallen"
     ],
-    "primary": ["positioning:being_bitten_in_neck"]
+    "primary": ["biting-states:being_bitten_in_neck"]
   },
   "template": "bite {target}'s neck violently",
   "visual": {

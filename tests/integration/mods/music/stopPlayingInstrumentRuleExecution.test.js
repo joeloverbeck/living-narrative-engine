@@ -50,7 +50,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'cheerful',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('lute1')
@@ -83,7 +83,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'solemn',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('piano1')
@@ -116,7 +116,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'mournful',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('violin1')
@@ -133,7 +133,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
       const musicianAfter =
         testFixture.entityManager.getEntityInstance('musician1');
       expect(musicianAfter).not.toHaveComponent(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
@@ -154,7 +154,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'cheerful',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('lute1')
@@ -257,7 +257,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'aggressive',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('drum1')
@@ -366,7 +366,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
         .withComponent('music:performance_mood', {
           mood: 'tender',
         })
-        .withComponent('positioning:doing_complex_performance', {})
+        .withComponent('performances-states:doing_complex_performance', {})
         .build();
 
       const instrument = new ModEntityBuilder('violin1')
@@ -401,7 +401,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
       );
       testFixture.entityManager.addComponent(
         'musician1',
-        'positioning:doing_complex_performance',
+        'performances-states:doing_complex_performance',
         {}
       );
 

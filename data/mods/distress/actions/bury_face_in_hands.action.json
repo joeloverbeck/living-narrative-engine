@@ -7,9 +7,9 @@
   "required_components": {},
   "forbidden_components": {
     "actor": [
-      "positioning:biting_neck",
+      "biting-states:biting_neck",
       "hugging-states:hugging",
-      "positioning:doing_complex_performance",
+      "performances-states:doing_complex_performance",
       "physical-control-states:restraining"
     ]
   },

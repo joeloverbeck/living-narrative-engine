@@ -67,7 +67,7 @@ describe('observation:examine_owned_item action definition', () => {
     it('should forbid action during complex performance', () => {
       expect(examineOwnedItemAction.forbidden_components).toBeDefined();
       expect(examineOwnedItemAction.forbidden_components.actor).toEqual([
-        'positioning:doing_complex_performance',
+        'performances-states:doing_complex_performance',
         'physical-control-states:restraining',
       ]);
     });

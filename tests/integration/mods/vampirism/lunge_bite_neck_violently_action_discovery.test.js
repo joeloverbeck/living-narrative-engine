@@ -69,7 +69,7 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
           'core:actor': {},
           'core:position': { locationId: 'room1' },
           'vampirism:is_vampire': {},
-          'positioning:biting_neck': {
+          'biting-states:biting_neck': {
             bitten_entity_id: 'other_entity',
             initiated: true,
           },
@@ -147,7 +147,7 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
         components: {
           'core:actor': {},
           'core:position': { locationId: 'room1' },
-          'positioning:being_bitten_in_neck': {
+          'biting-states:being_bitten_in_neck': {
             biting_entity_id: 'other_vampire',
           },
         },

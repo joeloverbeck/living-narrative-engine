@@ -36,11 +36,11 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       ]);
 
       // Establish bite relationship
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -58,11 +58,11 @@ describe('vampirism:drink_blood - Action Discovery', () => {
     it('discovers action with reciprocal component ID matching', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -79,11 +79,11 @@ describe('vampirism:drink_blood - Action Discovery', () => {
   });
 
   describe('Negative Discovery Cases', () => {
-    it('does NOT discover when actor lacks positioning:biting_neck component', () => {
+    it('does NOT discover when actor lacks biting-states:biting_neck component', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Only add being_bitten component to target, not biting to actor
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -98,17 +98,17 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when actor has positioning:being_bitten_in_neck (actor is victim)', () => {
+    it('does NOT discover when actor has biting-states:being_bitten_in_neck (actor is victim)', () => {
       const scenario = testFixture.createStandardActorTarget([
         'Victim',
         'Vampire',
       ]);
 
       // Actor is the victim being bitten
-      scenario.actor.components['positioning:being_bitten_in_neck'] = {
+      scenario.actor.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.target.id,
       };
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: false,
       };
@@ -124,14 +124,14 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when target lacks positioning:being_bitten_in_neck component', () => {
+    it('does NOT discover when target lacks biting-states:being_bitten_in_neck component', () => {
       const scenario = testFixture.createStandardActorTarget([
         'Vampire',
         'Target',
       ]);
 
       // Only add biting component to actor, not being_bitten to target
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
@@ -154,11 +154,11 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       ]);
 
       // Mismatched IDs
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'wrong-id',
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -194,11 +194,11 @@ describe('vampirism:drink_blood - Action Discovery', () => {
       delete scenario.actor.components['personal-space-states:closeness'];
       delete scenario.target.components['personal-space-states:closeness'];
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 

@@ -186,7 +186,7 @@ describe('affection:rest_head_against_chest action discovery', () => {
       ]);
       expect(restHeadAgainstChestAction.forbidden_components.actor).toEqual([
         'kissing:kissing',
-        'positioning:biting_neck',
+        'biting-states:biting_neck',
         'sex-states:giving_blowjob',
       ]);
       expect(restHeadAgainstChestAction.visual).toEqual({

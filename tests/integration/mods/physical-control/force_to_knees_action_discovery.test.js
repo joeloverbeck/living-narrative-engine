@@ -140,7 +140,7 @@ describe('physical-control:force_to_knees action discovery', () => {
         'personal-space-states:closeness',
       ]);
       expect(forceToKneesAction.forbidden_components.actor).toEqual([
-        'positioning:biting_neck',
+        'biting-states:biting_neck',
         'deference-states:kneeling_before',
         'straddling-states:straddling_waist',
         'hugging-states:hugging',

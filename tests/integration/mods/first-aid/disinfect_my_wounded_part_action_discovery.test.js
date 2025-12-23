@@ -268,7 +268,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
       expect.arrayContaining([
         'hugging-states:hugging',
         'sex-states:giving_blowjob',
-        'positioning:doing_complex_performance',
+        'performances-states:doing_complex_performance',
         'bending-states:bending_over',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',

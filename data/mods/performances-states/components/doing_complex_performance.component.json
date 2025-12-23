@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:doing_complex_performance",
+  "id": "performances-states:doing_complex_performance",
   "description": "Marker component indicating the entity is engaged in a complex performance activity that requires concentration and prevents certain physical actions",
   "dataSchema": {
     "type": "object",

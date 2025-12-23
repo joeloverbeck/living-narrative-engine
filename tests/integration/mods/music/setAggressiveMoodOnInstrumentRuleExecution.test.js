@@ -130,7 +130,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       const actorInstance =
         testFixture.entityManager.getEntityInstance('actor1');
       expect(actorInstance).toHaveComponent(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
@@ -166,7 +166,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       expect(actorInstance).toHaveComponent('music:performance_mood');
       expect(actorInstance).toHaveComponent('music:playing_music');
       expect(actorInstance).toHaveComponent(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
 
       // Verify component data
@@ -281,7 +281,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       expect(actorInstance).toHaveComponent('music:performance_mood');
       expect(actorInstance).toHaveComponent('music:playing_music');
       expect(actorInstance).toHaveComponent(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
       expect(testFixture.events).toHaveActionSuccess();
     });

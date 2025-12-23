@@ -35,7 +35,7 @@ describe('bending:bend_over action discovery', () => {
         'hugging-states:being_hugged'
       );
       expect(bendOverAction.forbidden_components.actor).toContain(
-        'positioning:biting_neck'
+        'biting-states:biting_neck'
       );
     });
 

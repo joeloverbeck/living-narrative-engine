@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "performances-states",
+  "version": "1.0.0",
+  "name": "Performances States",
+  "description": "State components for performance mechanics (music, concentration-requiring activities).",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "doing_complex_performance.component.json"
+    ]
+  }
+}

@@ -1901,7 +1901,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'positioning:sitting_actors',
         'positioning:kneeling_actors',
         'positioning:furniture_actor_behind',
-        'positioning:actor_being_bitten_by_me',
+        'biting-states:actor_being_bitten_by_me',
         'personal-space:close_actors_facing_each_other_or_behind_target',
         'personal-space:close_actors_facing_each_other_or_behind_target_with_hands',
         'personal-space:close_actors',

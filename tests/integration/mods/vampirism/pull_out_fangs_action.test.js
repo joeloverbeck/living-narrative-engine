@@ -37,11 +37,11 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         location: 'underworld',
       });
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -56,9 +56,9 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         scenario.target.id
       );
 
-      expect(actorInstance).toNotHaveComponent('positioning:biting_neck');
+      expect(actorInstance).toNotHaveComponent('biting-states:biting_neck');
       expect(targetInstance).toNotHaveComponent(
-        'positioning:being_bitten_in_neck'
+        'biting-states:being_bitten_in_neck'
       );
     });
 
@@ -68,11 +68,11 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
       });
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -99,11 +99,11 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         location: 'loft',
       });
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: 'unrelated-target',
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -115,8 +115,8 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         scenario.actor.id
       );
 
-      expect(actorInstance).toHaveComponent('positioning:biting_neck');
-      expect(actorInstance).toHaveComponentData('positioning:biting_neck', {
+      expect(actorInstance).toHaveComponent('biting-states:biting_neck');
+      expect(actorInstance).toHaveComponentData('biting-states:biting_neck', {
         bitten_entity_id: 'unrelated-target',
         initiated: true,
       });
@@ -127,11 +127,11 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         location: 'mystic_falls',
       });
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: 'stranger',
       };
 
@@ -144,29 +144,29 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
       );
 
       expect(targetInstance).toHaveComponent(
-        'positioning:being_bitten_in_neck'
+        'biting-states:being_bitten_in_neck'
       );
       expect(targetInstance).toHaveComponentData(
-        'positioning:being_bitten_in_neck',
+        'biting-states:being_bitten_in_neck',
         { biting_entity_id: 'stranger' }
       );
     });
   });
 
   describe('Validation', () => {
-    it('rejects action when actor has forbidden positioning:being_bitten_in_neck component', async () => {
+    it('rejects action when actor has forbidden biting-states:being_bitten_in_neck component', async () => {
       const scenario = testFixture.createCloseActors(['Blade', 'Frost'], {
         location: 'club',
       });
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.actor.components['positioning:being_bitten_in_neck'] = {
+      scenario.actor.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: 'hunter',
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 
@@ -184,11 +184,11 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         location: 'crypt',
       });
 
-      scenario.actor.components['positioning:biting_neck'] = {
+      scenario.actor.components['biting-states:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['positioning:being_bitten_in_neck'] = {
+      scenario.target.components['biting-states:being_bitten_in_neck'] = {
         biting_entity_id: scenario.actor.id,
       };
 

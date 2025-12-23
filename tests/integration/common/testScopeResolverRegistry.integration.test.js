@@ -24,15 +24,15 @@ describe('TestScopeResolverRegistry - Integration', () => {
   });
 
   describe('Auto-Discovery with Real Mod Data', () => {
-    it('should discover and register scopes from positioning mod', async () => {
-      const count = await registry.discoverAndRegister(['positioning']);
+    it('should discover and register scopes from personal-space mod', async () => {
+      const count = await registry.discoverAndRegister(['personal-space']);
 
-      // Positioning mod should have multiple scopes
+      // personal-space mod should have multiple scopes
       expect(count).toBeGreaterThan(0);
 
       // Check that specific known scopes are registered
       const list = registry.list();
-      expect(list.some((id) => id.startsWith('positioning:'))).toBe(true);
+      expect(list.some((id) => id.startsWith('personal-space:'))).toBe(true);
     }, 10000);
 
     it('should discover and register scopes from inventory/items mod', async () => {
@@ -55,7 +55,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
     it('should discover from multiple mods', async () => {
       const count = await registry.discoverAndRegister([
-        'positioning',
+        'personal-space',
         'items',
       ]);
 
@@ -63,29 +63,31 @@ describe('TestScopeResolverRegistry - Integration', () => {
       expect(count).toBeGreaterThan(0);
 
       const list = registry.list();
-      expect(list.some((id) => id.startsWith('positioning:'))).toBe(true);
+      expect(list.some((id) => id.startsWith('personal-space:'))).toBe(true);
       expect(list.some((id) => id.startsWith('items:'))).toBe(true);
     }, 10000);
 
     it('should filter by categories', async () => {
-      await registry.discoverAndRegister(['positioning', 'items'], {
-        categories: ['positioning'],
+      await registry.discoverAndRegister(['personal-space', 'items'], {
+        categories: ['personal-space'],
       });
 
-      // Should only have positioning scopes
+      // Should only have personal-space scopes
       const list = registry.list();
-      const hasPositioning = list.some((id) => id.startsWith('positioning:'));
+      const hasPersonalSpace = list.some((id) =>
+        id.startsWith('personal-space:')
+      );
 
-      expect(hasPositioning).toBe(true);
+      expect(hasPersonalSpace).toBe(true);
       // Items might still show up if the mod ID doesn't match the filter
       // This is expected behavior based on current implementation
     }, 10000);
   });
 
   describe('ScopeDiscoveryService Integration', () => {
-    it('should discover scope files from positioning mod', async () => {
+    it('should discover scope files from personal-space mod', async () => {
       const discovered =
-        await ScopeDiscoveryService.discoverScopes('positioning');
+        await ScopeDiscoveryService.discoverScopes('personal-space');
 
       expect(discovered.length).toBeGreaterThan(0);
 
@@ -100,11 +102,11 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
     it('should infer categories correctly', async () => {
       const discovered =
-        await ScopeDiscoveryService.discoverScopes('positioning');
+        await ScopeDiscoveryService.discoverScopes('personal-space');
 
-      // All positioning scopes should be in positioning category
+      // All personal-space scopes should be in personal-space category
       for (const metadata of discovered) {
-        expect(metadata.category).toBe('positioning');
+        expect(metadata.category).toBe('personal-space');
       }
     }, 5000);
 
@@ -129,7 +131,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
     it('should create resolver from scope file', async () => {
       // Discover a scope first
       const discovered =
-        await ScopeDiscoveryService.discoverScopes('positioning');
+        await ScopeDiscoveryService.discoverScopes('personal-space');
 
       expect(discovered.length).toBeGreaterThan(0);
 
@@ -146,7 +148,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
     it('should create multiple resolvers', async () => {
       const discovered =
-        await ScopeDiscoveryService.discoverScopes('positioning');
+        await ScopeDiscoveryService.discoverScopes('personal-space');
 
       const resolvers = await ScopeResolverFactory.createResolvers(discovered);
 
@@ -162,7 +164,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
   describe('End-to-End: Discovery → Registration → Resolution', () => {
     it('should complete full workflow', async () => {
       // 1. Auto-discover and register
-      const count = await registry.discoverAndRegister(['positioning']);
+      const count = await registry.discoverAndRegister(['personal-space']);
       expect(count).toBeGreaterThan(0);
 
       // 2. Verify registration
@@ -182,11 +184,11 @@ describe('TestScopeResolverRegistry - Integration', () => {
     }, 10000);
 
     it('should organize scopes by category', async () => {
-      await registry.discoverAndRegister(['positioning', 'items']);
+      await registry.discoverAndRegister(['personal-space', 'items']);
 
       const byCategory = registry.listByCategory();
 
-      // Should have at least positioning category
+      // Should have at least personal-space category
       expect(Object.keys(byCategory).length).toBeGreaterThan(0);
 
       // Each category should have scope IDs
@@ -202,10 +204,10 @@ describe('TestScopeResolverRegistry - Integration', () => {
       const start = Date.now();
 
       await registry.discoverAndRegister([
-        'positioning',
+        'personal-space',
         'items',
-        'anatomy',
-        'affection',
+        'movement',
+        'caressing',
       ]);
 
       const elapsed = Date.now() - start;
@@ -217,14 +219,14 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
     it('should handle repeated registrations efficiently', async () => {
       // First registration
-      await registry.discoverAndRegister(['positioning']);
+      await registry.discoverAndRegister(['personal-space']);
       const firstCount = registry.count();
 
       // Clear and re-register
       registry.clear();
 
       const start = Date.now();
-      await registry.discoverAndRegister(['positioning']);
+      await registry.discoverAndRegister(['personal-space']);
       const elapsed = Date.now() - start;
 
       // Second registration should be similar speed
@@ -237,10 +239,10 @@ describe('TestScopeResolverRegistry - Integration', () => {
     it('should continue with other mods if one fails', async () => {
       const count = await registry.discoverAndRegister([
         'nonexistent-mod',
-        'positioning',
+        'personal-space',
       ]);
 
-      // Should still register positioning scopes despite failure on nonexistent-mod
+      // Should still register personal-space scopes despite failure on nonexistent-mod
       expect(count).toBeGreaterThan(0);
     }, 10000);
 
@@ -250,7 +252,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
     });
 
     it('should handle invalid category filter', async () => {
-      const count = await registry.discoverAndRegister(['positioning'], {
+      const count = await registry.discoverAndRegister(['personal-space'], {
         categories: ['totally_fake_category'],
       });
 
@@ -278,7 +280,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
       });
 
       // Create test registry
-      await registry.discoverAndRegister(['positioning']);
+      await registry.discoverAndRegister(['personal-space']);
 
       // Production registry should still work
       expect(productionRegistry.hasScope('test:scope1')).toBe(true);

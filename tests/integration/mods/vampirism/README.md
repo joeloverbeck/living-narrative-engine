@@ -38,7 +38,7 @@ describe('vampirism:{action} - Action Discovery', () => {
 
     // Add required components
     scenario.actor.components['vampirism:is_vampire'] = {};
-    scenario.actor.components['positioning:biting_neck'] = {
+    scenario.actor.components['biting-states:biting_neck'] = {
       bitten_entity_id: scenario.target.id,
       initiated: true,
     };
@@ -64,10 +64,10 @@ describe('vampirism:{action} - Action Discovery', () => {
 
 ### Positioning Components (from positioning mod)
 
-- **`positioning:biting_neck`**: Actor is currently biting a target's neck
+- **`biting-states:biting_neck`**: Actor is currently biting a target's neck
   - `bitten_entity_id`: Entity being bitten
   - `initiated`: Whether the bite was initiated
-- **`positioning:being_bitten_in_neck`**: Entity is having their neck bitten
+- **`biting-states:being_bitten_in_neck`**: Entity is having their neck bitten
   - `biting_entity_id`: Entity doing the biting
 - **`positioning:closeness`**: Actors are in close proximity
   - `partners`: Array of entity IDs in close proximity
@@ -78,13 +78,13 @@ describe('vampirism:{action} - Action Discovery', () => {
 
 ```javascript
 // Actor biting target's neck
-scenario.actor.components['positioning:biting_neck'] = {
+scenario.actor.components['biting-states:biting_neck'] = {
   bitten_entity_id: scenario.target.id,
   initiated: true,
 };
 
 // Target being bitten by actor (reciprocal)
-scenario.target.components['positioning:being_bitten_in_neck'] = {
+scenario.target.components['biting-states:being_bitten_in_neck'] = {
   biting_entity_id: scenario.actor.id,
 };
 ```
@@ -127,11 +127,11 @@ expect(ids).not.toContain(ACTION_ID);
 
 ### Blood Actions
 
-- **`drink_blood`**: Uses `positioning:actor_being_bitten_by_me`
+- **`drink_blood`**: Uses `biting-states:actor_being_bitten_by_me`
   - Requires reciprocal bite relationship (biting_neck ↔ being_bitten_in_neck)
   - Requires existing bite to be established
 
-- **`pull_out_fangs`**: Uses `positioning:actor_being_bitten_by_me`
+- **`pull_out_fangs`**: Uses `biting-states:actor_being_bitten_by_me`
   - Same as drink_blood (withdrawing from existing bite)
   - Requires reciprocal bite relationship
 

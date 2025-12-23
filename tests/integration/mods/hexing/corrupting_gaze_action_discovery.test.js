@@ -213,7 +213,7 @@ describe('hexing:corrupting_gaze action discovery', () => {
 
     it('is not available when actor is doing a complex performance', () => {
       const { actor } = setupScenario({
-        actorComponents: { 'positioning:doing_complex_performance': {} },
+        actorComponents: { 'performances-states:doing_complex_performance': {} },
       });
       configureActionDiscovery();
 

@@ -259,11 +259,11 @@ describe('handle_draw_salt_boundary rule', () => {
     ).toBe(true);
   });
 
-  it('has positioning as a dependency for fallen component', () => {
-    const positioningDep = wardingManifest.dependencies.find(
-      (dep) => dep.id === 'positioning'
+  it('has recovery-states as a dependency for fallen component', () => {
+    const recoveryStatesDep = wardingManifest.dependencies.find(
+      (dep) => dep.id === 'recovery-states'
     );
-    expect(positioningDep).toBeDefined();
-    expect(positioningDep.version).toBe('>=1.0.0');
+    expect(recoveryStatesDep).toBeDefined();
+    expect(recoveryStatesDep.version).toBe('^1.0.0');
   });
 });

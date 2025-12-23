@@ -482,8 +482,8 @@ export class ScopeResolverHelpers {
         ),
 
       // Biting relationship scope - filters closeness partners for biting relationship
-      'positioning:actor_being_bitten_by_me': this.createArrayFilterResolver(
-        'positioning:actor_being_bitten_by_me',
+      'biting-states:actor_being_bitten_by_me': this.createArrayFilterResolver(
+        'biting-states:actor_being_bitten_by_me',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -496,7 +496,7 @@ export class ScopeResolverHelpers {
             // Check if actor has biting_neck component
             const actorBitingNeck = em.getComponentData(
               actor.id,
-              'positioning:biting_neck'
+              'biting-states:biting_neck'
             );
             if (!actorBitingNeck) {
               return false;
@@ -505,7 +505,7 @@ export class ScopeResolverHelpers {
             // Check if target has being_bitten_in_neck component
             const partnerBeingBitten = em.getComponentData(
               partnerId,
-              'positioning:being_bitten_in_neck'
+              'biting-states:being_bitten_in_neck'
             );
             if (!partnerBeingBitten) {
               return false;

@@ -1,7 +1,7 @@
 /**
  * @file Integration tests verifying that specific actions are correctly forbidden when actor has doing_complex_performance component.
  * @description Ensures that actions requiring free hands/focus are not available when the acting actor
- * has the positioning:doing_complex_performance component (e.g., playing a musical instrument).
+ * has the performances-states:doing_complex_performance component (e.g., playing a musical instrument).
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -47,108 +47,108 @@ describe('actions forbidden when doing complex performance', () => {
   });
 
   describe('Action structure validation', () => {
-    it('remove_clothing should have positioning:doing_complex_performance as forbidden component', () => {
+    it('remove_clothing should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(removeClothingAction.forbidden_components).toBeDefined();
       expect(removeClothingAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('bury_face_in_hands should have positioning:doing_complex_performance as forbidden component', () => {
+    it('bury_face_in_hands should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(buryFaceInHandsAction.forbidden_components).toBeDefined();
       expect(buryFaceInHandsAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('drop_item should have positioning:doing_complex_performance as forbidden component', () => {
+    it('drop_item should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(dropItemAction.forbidden_components).toBeDefined();
       expect(dropItemAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('examine_item should have positioning:doing_complex_performance as forbidden component', () => {
+    it('examine_item should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(examineItemAction.forbidden_components).toBeDefined();
       expect(examineItemAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('brush_hair_back_coyly should have positioning:doing_complex_performance as forbidden component', () => {
+    it('brush_hair_back_coyly should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(brushHairBackCoylyAction.forbidden_components).toBeDefined();
       expect(brushHairBackCoylyAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('draw_attention_to_ass should have positioning:doing_complex_performance as forbidden component', () => {
+    it('draw_attention_to_ass should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(drawAttentionToAssAction.forbidden_components).toBeDefined();
       expect(drawAttentionToAssAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('draw_attention_to_breasts should have positioning:doing_complex_performance as forbidden component', () => {
+    it('draw_attention_to_breasts should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(drawAttentionToBreastsAction.forbidden_components).toBeDefined();
       expect(drawAttentionToBreastsAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('grab_crotch_draw_attention should have positioning:doing_complex_performance as forbidden component', () => {
+    it('grab_crotch_draw_attention should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(grabCrotchDrawAttentionAction.forbidden_components).toBeDefined();
       expect(
         grabCrotchDrawAttentionAction.forbidden_components.actor
-      ).toContain('positioning:doing_complex_performance');
+      ).toContain('performances-states:doing_complex_performance');
     });
 
-    it('stretch_sexily should have positioning:doing_complex_performance as forbidden component', () => {
+    it('stretch_sexily should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(stretchSexilyAction.forbidden_components).toBeDefined();
       expect(stretchSexilyAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('go should have positioning:doing_complex_performance as forbidden component', () => {
+    it('go should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(goAction.forbidden_components).toBeDefined();
       expect(goAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('get_close should have positioning:doing_complex_performance as forbidden component', () => {
+    it('get_close should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(getCloseAction.forbidden_components).toBeDefined();
       expect(getCloseAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('kneel_before should have positioning:doing_complex_performance as forbidden component', () => {
+    it('kneel_before should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(kneelBeforeAction.forbidden_components).toBeDefined();
       expect(kneelBeforeAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('place_yourself_behind should have positioning:doing_complex_performance as forbidden component', () => {
+    it('place_yourself_behind should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(placeYourselfBehindAction.forbidden_components).toBeDefined();
       expect(placeYourselfBehindAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('sit_down should have positioning:doing_complex_performance as forbidden component', () => {
+    it('sit_down should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(sitDownAction.forbidden_components).toBeDefined();
       expect(sitDownAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
 
-    it('turn_your_back should have positioning:doing_complex_performance as forbidden component', () => {
+    it('turn_your_back should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(turnYourBackAction.forbidden_components).toBeDefined();
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });
@@ -166,7 +166,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('clothing:equipment', {
             equipped_items: ['shirt1'],
           })
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         // Create a clothing item
@@ -198,7 +198,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         testFixture.reset([room, actor]);
@@ -225,7 +225,7 @@ describe('actions forbidden when doing complex performance', () => {
             max_weight: 100,
             current_weight: 5,
           })
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const book = new ModEntityBuilder('book1')
@@ -255,7 +255,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const vase = new ModEntityBuilder('vase1')
@@ -287,7 +287,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .withComponent('anatomy:has_anatomy', {})
           .build();
 
@@ -308,7 +308,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .withComponent('anatomy:has_anatomy', {})
           .build();
 
@@ -329,7 +329,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .withComponent('anatomy:has_anatomy', {})
           .build();
 
@@ -352,7 +352,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .withComponent('anatomy:has_anatomy', {})
           .build();
 
@@ -375,7 +375,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         testFixture.reset([room, actor]);
@@ -398,7 +398,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         // Create a direction from room1 to room2
@@ -430,7 +430,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const target = new ModEntityBuilder('actor2')
@@ -456,7 +456,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const target = new ModEntityBuilder('actor2')
@@ -482,7 +482,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const target = new ModEntityBuilder('actor2')
@@ -508,7 +508,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const chair = new ModEntityBuilder('chair1')
@@ -537,7 +537,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('positioning:doing_complex_performance', {})
+          .withComponent('performances-states:doing_complex_performance', {})
           .build();
 
         const target = new ModEntityBuilder('actor2')
@@ -572,10 +572,10 @@ describe('actions forbidden when doing complex performance', () => {
       // 1. Structure validation (tested above)
       // 2. Blocking when doing_complex_performance component present (tested above)
       expect(stretchSexilyAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
       expect(removeClothingAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });

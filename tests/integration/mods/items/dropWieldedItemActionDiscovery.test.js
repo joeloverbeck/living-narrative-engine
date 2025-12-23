@@ -70,7 +70,7 @@ describe('item-handling:drop_wielded_item action definition', () => {
     it('should forbid actor performing complex performance', () => {
       expect(dropWieldedItemAction.forbidden_components).toBeDefined();
       expect(dropWieldedItemAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
+        'performances-states:doing_complex_performance'
       );
     });
   });

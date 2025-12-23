@@ -512,12 +512,12 @@ describe('handle_swim_to_connected_liquid_body rule', () => {
       expect(liquidsDep.version).toBe('^1.0.0');
     });
 
-    it('has positioning as a dependency for forbidden_components', () => {
-      const positioningDep = liquidsManifest.dependencies.find(
-        (dep) => dep.id === 'positioning'
+    it('has recovery-states as a dependency for forbidden_components', () => {
+      const recoveryStatesDep = liquidsManifest.dependencies.find(
+        (dep) => dep.id === 'recovery-states'
       );
-      expect(positioningDep).toBeDefined();
-      expect(positioningDep.version).toBe('^1.0.0');
+      expect(recoveryStatesDep).toBeDefined();
+      expect(recoveryStatesDep.version).toBe('^1.0.0');
     });
   });
 

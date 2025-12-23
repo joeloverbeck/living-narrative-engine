@@ -140,7 +140,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       ]);
       expect(forceBendOverAction.forbidden_components.actor).toEqual(
         expect.arrayContaining([
-          'positioning:biting_neck',
+          'biting-states:biting_neck',
           'deference-states:kneeling_before',
           'straddling-states:straddling_waist',
           'hugging-states:hugging',

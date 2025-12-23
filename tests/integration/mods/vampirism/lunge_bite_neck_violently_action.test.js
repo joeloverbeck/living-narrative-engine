@@ -49,7 +49,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         scenario.actor.id
       );
 
-      expect(actorInstance).toHaveComponentData('positioning:biting_neck', {
+      expect(actorInstance).toHaveComponentData('biting-states:biting_neck', {
         bitten_entity_id: scenario.target.id,
         initiated: true,
       });
@@ -74,7 +74,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       );
 
       expect(targetInstance).toHaveComponentData(
-        'positioning:being_bitten_in_neck',
+        'biting-states:being_bitten_in_neck',
         {
           biting_entity_id: scenario.actor.id,
         }
@@ -102,9 +102,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         scenario.target.id
       );
 
-      expect(actorInstance).toHaveComponent('positioning:biting_neck');
+      expect(actorInstance).toHaveComponent('biting-states:biting_neck');
       expect(targetInstance).toHaveComponent(
-        'positioning:being_bitten_in_neck'
+        'biting-states:being_bitten_in_neck'
       );
     });
 
@@ -313,11 +313,11 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         scenario1.target.id
       );
 
-      expect(actor1).toHaveComponentData('positioning:biting_neck', {
+      expect(actor1).toHaveComponentData('biting-states:biting_neck', {
         bitten_entity_id: scenario1.target.id,
         initiated: true,
       });
-      expect(target1).toHaveComponentData('positioning:being_bitten_in_neck', {
+      expect(target1).toHaveComponentData('biting-states:being_bitten_in_neck', {
         biting_entity_id: scenario1.actor.id,
       });
     });
