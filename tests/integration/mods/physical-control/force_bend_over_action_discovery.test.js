@@ -141,7 +141,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       expect(forceBendOverAction.forbidden_components.actor).toEqual(
         expect.arrayContaining([
           'positioning:biting_neck',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           'straddling-states:straddling_waist',
           'hugging-states:hugging',
           'hugging-states:being_hugged',
@@ -151,7 +151,7 @@ describe('physical-control:force_bend_over action discovery', () => {
       );
       expect(forceBendOverAction.forbidden_components.primary).toEqual(
         expect.arrayContaining([
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           'sitting-states:sitting_on',
           'bending-states:bending_over',
         ])
@@ -230,7 +230,7 @@ describe('physical-control:force_bend_over action discovery', () => {
     it('fails validation when the primary target holds forbidden positioning components', () => {
       setupScenario(testFixture, {
         primaryComponents: {
-          'positioning:kneeling_before': { entity_id: ACTOR_ID },
+          'deference-states:kneeling_before': { entity_id: ACTOR_ID },
           'bending-states:bending_over': { surface_id: 'test:other-surface' },
         },
       });

@@ -22,7 +22,7 @@
       "bending-states:bending_over",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "targets": {
@@ -66,7 +66,7 @@
           "logic": {
             "!!": [
               {
-                "var": "entity.secondary.components.positioning:fallen"
+                "var": "entity.secondary.components.recovery-states:fallen"
               }
             ]
           }

@@ -14,7 +14,7 @@
       "hugging-states:hugging",
       "sitting-states:sitting_on",
       "bending-states:bending_over",
-      "positioning:kneeling_before",
+      "deference-states:kneeling_before",
       "straddling-states:straddling_waist",
       "sex-states:giving_blowjob",
       "sex-states:receiving_blowjob",
@@ -22,7 +22,7 @@
       "lying-states:lying_on",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "template": "bend over {target}",

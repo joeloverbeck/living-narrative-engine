@@ -126,10 +126,10 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
             const actorBehind = partnerFacingAway.includes(actorId);
 
             const actorKneelingBefore =
-              actorEntity.components?.['positioning:kneeling_before']
+              actorEntity.components?.['deference-states:kneeling_before']
                 ?.entityId === partnerId;
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ===
+              partner.components?.['deference-states:kneeling_before']?.entityId ===
               actorId;
 
             const armAvailable = hasSubType(partnerId, 'arm');

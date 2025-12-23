@@ -95,7 +95,7 @@ describe('throw_item_at_target action definition', () => {
 
     it('should forbid fallen state', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
     });
 

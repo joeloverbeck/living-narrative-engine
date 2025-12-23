@@ -17,7 +17,7 @@
     "actor": [
       "bending-states:bending_over",
       "sex-states:being_fucked_vaginally",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "physical-control-states:restraining",
       "sitting-states:sitting_on"
     ]

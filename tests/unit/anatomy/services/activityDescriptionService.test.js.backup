@@ -1376,9 +1376,9 @@ describe('ActivityDescriptionService', () => {
       // Create mock entity with correct API (componentTypeIds getter + getComponentData method)
       const mockEntity = {
         id: 'jon',
-        componentTypeIds: ['positioning:kneeling_before'],
+        componentTypeIds: ['deference-states:kneeling_before'],
         getComponentData: jest.fn((id) => {
-          if (id === 'positioning:kneeling_before') {
+          if (id === 'deference-states:kneeling_before') {
             return {
               entityId: 'alicia',
               activityMetadata: {
@@ -1424,7 +1424,7 @@ describe('ActivityDescriptionService', () => {
       // Verify inline metadata was collected and processed
       expect(result).toContain('jon'); // Actor name in result
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
     });
 
@@ -1830,13 +1830,13 @@ describe('ActivityDescriptionService', () => {
         const mockEntity = {
           id: 'jon',
           componentTypeIds: [
-            'positioning:kneeling_before',
+            'deference-states:kneeling_before',
             'kissing:kissing',
             'activity:description_metadata',
             'core:name',
           ],
           components: {
-            'positioning:kneeling_before': {
+            'deference-states:kneeling_before': {
               entityId: 'alicia',
               activityMetadata: {
                 shouldDescribeInActivity: true,
@@ -1862,7 +1862,7 @@ describe('ActivityDescriptionService', () => {
           hasComponent: jest.fn((compId) => {
             return (
               compId === 'activity:description_metadata' ||
-              compId === 'positioning:kneeling_before'
+              compId === 'deference-states:kneeling_before'
             );
           }),
           getComponentData: jest.fn(
@@ -1901,9 +1901,9 @@ describe('ActivityDescriptionService', () => {
       it('should return empty string when no metadata component exists', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['positioning:kneeling_before', 'core:name'],
+          componentTypeIds: ['deference-states:kneeling_before', 'core:name'],
           components: {
-            'positioning:kneeling_before': { entityId: 'alicia' },
+            'deference-states:kneeling_before': { entityId: 'alicia' },
             'core:name': { text: 'Jon Ureña' },
           },
           hasComponent: jest.fn(() => false),
@@ -3651,15 +3651,15 @@ describe('ActivityDescriptionService', () => {
           template: '{actor} is kneeling',
           priority: 70,
           conditions: {
-            requiredComponents: ['positioning:kneeling_before'],
+            requiredComponents: ['deference-states:kneeling_before'],
           },
-          componentId: 'positioning:kneeling_before_meta',
+          componentId: 'deference-states:kneeling_before_meta',
         });
 
         let description = await service.generateActivityDescription(actor.id);
         expect(description).not.toContain('kneeling');
 
-        addComponent(actor, 'positioning:kneeling_before', {
+        addComponent(actor, 'deference-states:kneeling_before', {
           entityId: 'alicia',
         });
 

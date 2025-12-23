@@ -175,7 +175,7 @@ describe('violence:peck_target prerequisites', () => {
         'physical-control-states:being_restrained'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
     });
 

@@ -532,7 +532,7 @@ describe('Bending Over System Edge Cases', () => {
         furniture_id: 'test:chair',
         spot_index: 0,
       });
-      testEnv.entityManager.addComponent(actor, 'positioning:kneeling_before', {
+      testEnv.entityManager.addComponent(actor, 'deference-states:kneeling_before', {
         entityId: 'test:target',
       });
 
@@ -559,7 +559,7 @@ describe('Bending Over System Edge Cases', () => {
 
       const kneeling = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(kneeling).toBeDefined();
     });

@@ -14,6 +14,15 @@ Add a collapsible "Fragility Warnings" section to SummaryPanelView that displays
 
 ---
 
+## Architecture Notes (CORRECTED)
+
+**Key Pattern**: `SummaryPanelView` does NOT have direct access to services. It receives data via the `render()` method, following the same pattern as other sections (hotspots, healthStatus, depthAnalysis, footprintAnalysis, profileRatio).
+
+**Constructor signature**: `{ container, logger, onSave }` - no service parameters
+**Data injection**: Via `render({ ..., fragilityAnalysis, ... })` parameter
+
+---
+
 ## Files to Touch
 
 ### Modified Files
@@ -42,10 +51,22 @@ Add a collapsible "Fragility Warnings" section to SummaryPanelView that displays
 ```javascript
 /**
  * Render fragility warnings section
- * @returns {HTMLElement}
+ * @param {object|null} fragilityAnalysis - From ModStatisticsService.getSingleParentDependencies()
+ * @param {Array<{modId: string, singleDependent: string, status: string}>} [fragilityAnalysis.atRiskMods]
+ * @param {number} [fragilityAnalysis.totalAtRisk]
+ * @param {number} [fragilityAnalysis.percentageOfDeps]
  */
-#renderFragilitySection() {
-  const analysis = this.#modStatisticsService.getSingleParentDependencies();
+#renderFragilitySection(fragilityAnalysis) {
+  this.#fragilitySection.innerHTML = '';
+
+  // Hide section if no data
+  if (!fragilityAnalysis) {
+    this.#fragilitySection.hidden = true;
+    return;
+  }
+  this.#fragilitySection.hidden = false;
+
+  const analysis = fragilityAnalysis;
 
   const section = document.createElement('section');
   section.className = 'summary-panel__section summary-panel__section--collapsible';
@@ -278,63 +299,50 @@ NODE_ENV=test npx jest tests/unit/modManager/ --no-coverage --silent
 
 ---
 
-## Test Cases to Add
+## Test Cases to Add (CORRECTED)
+
+**Note**: Tests follow the actual SummaryPanelView architecture pattern where:
+- Constructor takes `{ container, logger, onSave }` only
+- Data is passed via `render({ ..., fragilityAnalysis, ... })`
 
 ```javascript
 describe('Fragility Warnings Section', () => {
-  let mockModGraphService;
-  let mockModStatisticsService;
+  let container;
   let mockLogger;
+  let onSave;
+  let view;
 
   beforeEach(() => {
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    mockModGraphService = {
-      getAllNodes: jest.fn().mockReturnValue(new Map()),
-      getLoadOrder: jest.fn().mockReturnValue([]),
-    };
-
-    mockModStatisticsService = {
-      getDependencyHotspots: jest.fn().mockReturnValue([]),
-      getHealthStatus: jest.fn().mockReturnValue({
-        hasCircularDeps: false, missingDeps: [], loadOrderValid: true, warnings: [], errors: []
-      }),
-      getDependencyDepthAnalysis: jest.fn().mockReturnValue({
-        maxDepth: 0, deepestChain: [], averageDepth: 0
-      }),
-      getTransitiveDependencyFootprints: jest.fn().mockReturnValue({
-        footprints: [], totalUniqueDeps: 0, sharedDepsCount: 0, overlapPercentage: 0
-      }),
-      getCoreOptionalRatio: jest.fn().mockReturnValue({
-        foundationCount: 0, optionalCount: 0, totalActive: 0,
-        foundationPercentage: 0, optionalPercentage: 0, foundationMods: [], profile: 'balanced'
-      }),
-      getSingleParentDependencies: jest.fn(),
-      invalidateCache: jest.fn(),
-    };
+    container = document.createElement('div');
+    mockLogger = { error: jest.fn() };
+    onSave = jest.fn().mockResolvedValue(undefined);
+    view = new SummaryPanelView({ container, logger: mockLogger, onSave });
   });
 
+  const renderWithFragility = (fragilityAnalysis) => {
+    view.render({
+      loadOrder: ['core'],
+      activeCount: 1,
+      explicitCount: 1,
+      dependencyCount: 0,
+      hotspots: [],
+      healthStatus: null,
+      depthAnalysis: null,
+      footprintAnalysis: null,
+      profileRatio: null,
+      fragilityAnalysis,
+      hasUnsavedChanges: false,
+      isSaving: false,
+      isLoading: false,
+    });
+  };
+
   it('should display success message when no fragile deps', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [],
       totalAtRisk: 0,
       percentageOfDeps: 0
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const successMessage = container.querySelector('.summary-panel__success');
     expect(successMessage).toBeTruthy();
@@ -342,7 +350,7 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should display count and percentage of at-risk mods', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
         { modId: 'core', singleDependent: 'anatomy', status: 'core' },
@@ -350,16 +358,6 @@ describe('Fragility Warnings Section', () => {
       totalAtRisk: 2,
       percentageOfDeps: 40
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const count = container.querySelector('.summary-panel__fragility-count');
     const label = container.querySelector('.summary-panel__fragility-label');
@@ -369,23 +367,13 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should display at-risk mods with their single dependent', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const items = container.querySelectorAll('.summary-panel__fragility-item');
     expect(items).toHaveLength(1);
@@ -398,7 +386,7 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should show correct badge for core status', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'core', singleDependent: 'anatomy', status: 'core' },
       ],
@@ -406,39 +394,19 @@ describe('Fragility Warnings Section', () => {
       percentageOfDeps: 50
     });
 
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
-
     const badge = container.querySelector('.summary-panel__fragility-badge');
     expect(badge.textContent).toBe('core');
     expect(badge.classList.contains('summary-panel__fragility-badge--core')).toBe(true);
   });
 
   it('should show correct badge for dependency status', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const badge = container.querySelector('.summary-panel__fragility-badge');
     expect(badge.textContent).toBe('dep');
@@ -446,23 +414,13 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should include warning icon in header when risks exist', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const headers = container.querySelectorAll('.summary-panel__section-header');
     const fragilityHeader = Array.from(headers).find(h =>
@@ -473,21 +431,11 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should not include warning icon when no risks', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [],
       totalAtRisk: 0,
       percentageOfDeps: 0
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const headers = container.querySelectorAll('.summary-panel__section-header');
     const fragilityHeader = Array.from(headers).find(h =>
@@ -498,23 +446,13 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should start collapsed', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const headers = container.querySelectorAll('.summary-panel__section-header');
     const fragilityHeader = Array.from(headers).find(h =>
@@ -525,23 +463,13 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should toggle section on header click', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const headers = container.querySelectorAll('.summary-panel__section-header');
     const fragilityHeader = Array.from(headers).find(h =>
@@ -554,47 +482,34 @@ describe('Fragility Warnings Section', () => {
   });
 
   it('should display explanation text', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     const explanation = container.querySelector('.summary-panel__fragility-explanation');
     expect(explanation).toBeTruthy();
     expect(explanation.textContent).toContain('only one dependent');
   });
 
+  it('should hide section when fragilityAnalysis is null', () => {
+    renderWithFragility(null);
+
+    const fragilitySection = container.querySelector('[aria-label="Fragility warnings"]');
+    expect(fragilitySection.hidden).toBe(true);
+  });
+
   it('should have correct BEM class structure', () => {
-    mockModStatisticsService.getSingleParentDependencies.mockReturnValue({
+    renderWithFragility({
       atRiskMods: [
         { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
       ],
       totalAtRisk: 1,
       percentageOfDeps: 25
     });
-
-    const container = document.createElement('div');
-    const view = new SummaryPanelView({
-      container,
-      modGraphService: mockModGraphService,
-      modStatisticsService: mockModStatisticsService,
-      logger: mockLogger,
-    });
-
-    view.render();
 
     expect(container.querySelector('.summary-panel__fragility-stats')).toBeTruthy();
     expect(container.querySelector('.summary-panel__fragility-count')).toBeTruthy();
@@ -606,3 +521,47 @@ describe('Fragility Warnings Section', () => {
   });
 });
 ```
+
+---
+
+## Outcome
+
+**Status:** ✅ Completed
+
+### Files Modified
+
+1. **`src/modManager/views/SummaryPanelView.js`**
+   - Added `#fragilitySection` private field
+   - Created section element in `#createStructure()` with `aria-label="Fragility warnings"`
+   - Added `fragilityAnalysis` parameter to `render()` method with full JSDoc
+   - Implemented `#renderFragilitySection(fragilityAnalysis)` private method
+
+2. **`css/mod-manager.css`**
+   - Added 16 new CSS rules for `.summary-panel__fragility-*` classes
+   - Added `.summary-panel__success` class for success messages
+
+3. **`tests/unit/modManager/views/SummaryPanelView.test.js`**
+   - Added 13 new test cases in "Fragility Warnings Section" describe block
+   - Tests cover: success state, at-risk display, badges, warning icons, collapsible behavior, XSS prevention
+
+### Actual vs Planned Changes
+
+| Aspect | Ticket Plan | Actual Implementation |
+|--------|-------------|----------------------|
+| Data Source | ❌ Direct service call | ✅ Data injection via `render()` |
+| Constructor | ❌ `{ ..., modStatisticsService }` | ✅ `{ container, logger, onSave }` |
+| API Pattern | ❌ `this.#modStatisticsService.getSingleParentDependencies()` | ✅ `fragilityAnalysis` parameter |
+| Test Setup | ❌ Service mocking | ✅ `renderWithFragility()` helper |
+
+### Test Results
+
+```
+Test Suites: 20 passed, 20 total
+Tests:       755 passed, 755 total
+```
+
+All existing tests continue to pass. 13 new fragility section tests added and passing.
+
+### Notes
+
+The ticket was corrected early in implementation to document the actual `SummaryPanelView` architecture pattern. The view follows data injection via `render()` method, not direct service access. This matches all other sections (hotspots, health, depth, footprint, profile).

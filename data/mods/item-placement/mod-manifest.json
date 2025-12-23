@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },
@@ -27,10 +31,6 @@
     },
     {
       "id": "items",
-      "version": "1.0.0"
-    },
-    {
-      "id": "positioning",
       "version": "1.0.0"
     }
   ],

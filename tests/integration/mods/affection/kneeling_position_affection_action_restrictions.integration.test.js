@@ -166,8 +166,8 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       'data/mods/positioning/conditions/entity-not-in-facing-away.condition.json',
       'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
-      'data/mods/positioning/conditions/entity-kneeling-before-actor.condition.json',
-      'data/mods/positioning/conditions/actor-kneeling-before-entity.condition.json',
+      'data/mods/deference-states/conditions/entity-kneeling-before-actor.condition.json',
+      'data/mods/deference-states/conditions/actor-kneeling-before-entity.condition.json',
       'data/mods/bending-states/conditions/entity-is-bending-over.condition.json',
     ];
 
@@ -411,7 +411,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     const targetEntityId = targetId.id || targetId;
     entityManager.addComponent(
       kneelingEntityId,
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       {
         entityId: targetEntityId,
       }
@@ -726,7 +726,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       ).toBe(false);
 
       // Act 2: Actor2 stands up
-      entityManager.removeComponent(actor2.id, 'positioning:kneeling_before');
+      entityManager.removeComponent(actor2.id, 'deference-states:kneeling_before');
 
       // Clear cache after component removal since SimpleEntityManager doesn't emit events
       clearEntityCache();

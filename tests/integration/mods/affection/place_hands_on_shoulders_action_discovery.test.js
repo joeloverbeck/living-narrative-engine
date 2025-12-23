@@ -73,10 +73,10 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
 
             // Check kneeling states
             const actorKneelingBefore =
-              actorEntity.components?.['positioning:kneeling_before']
+              actorEntity.components?.['deference-states:kneeling_before']
                 ?.entityId === partnerId;
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ===
+              partner.components?.['deference-states:kneeling_before']?.entityId ===
               actorId;
 
             // Available if:

@@ -352,7 +352,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .kneelingBefore('target-entity')
         .build();
 
-      expect(entity.components['positioning:kneeling_before']).toEqual({
+      expect(entity.components['deference-states:kneeling_before']).toEqual({
         entityId: 'target-entity',
       });
     });
@@ -554,7 +554,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         });
 
         expect(
-          kneelingScenario.actor.components['positioning:kneeling_before']
+          kneelingScenario.actor.components['deference-states:kneeling_before']
         ).toBeDefined();
 
         const facingAwayScenario = ModEntityScenarios.createPositioningScenario(
@@ -640,7 +640,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .facing('north')
         .build();
       expect(
-        positioningEntity.components['positioning:kneeling_before']
+        positioningEntity.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(positioningEntity.components['positioning:facing']).toBeDefined();
     });

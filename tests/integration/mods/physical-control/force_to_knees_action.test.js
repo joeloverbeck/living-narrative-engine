@@ -105,7 +105,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       ModAssertionHelpers.assertComponentAdded(
         testFixture.entityManager,
         scenario.target.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         { entityId: scenario.actor.id }
       );
 
@@ -130,7 +130,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       );
 
       expect(
-        actorAfter.components['positioning:kneeling_before']
+        actorAfter.components['deference-states:kneeling_before']
       ).toBeUndefined();
       expect(actorAfter.components['personal-space-states:closeness'].partners).toEqual([
         scenario.target.id,
@@ -177,7 +177,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       ModAssertionHelpers.assertComponentAdded(
         testFixture.entityManager,
         target.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         { entityId: actor.id }
       );
 

@@ -5,7 +5,7 @@
   "description": "Stand up from a kneeling position.",
   "targets": "none",
   "required_components": {
-    "actor": ["positioning:kneeling_before"]
+    "actor": ["deference-states:kneeling_before"]
   },
   "forbidden_components": {
     "actor": [

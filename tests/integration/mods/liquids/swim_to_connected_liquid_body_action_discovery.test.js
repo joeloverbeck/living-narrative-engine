@@ -81,11 +81,12 @@ describe('liquids:swim_to_connected_liquid_body action discovery', () => {
       ]);
     });
 
-    it('forbids being restrained, restraining, or fallen', () => {
+    it('forbids being restrained, restraining, fallen, or submerged', () => {
       expect(swimToConnectedLiquidBodyAction.forbidden_components.actor).toEqual([
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
+        'liquids-states:submerged',
       ]);
     });
   });

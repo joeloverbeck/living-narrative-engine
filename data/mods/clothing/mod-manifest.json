@@ -9,6 +9,10 @@
   "author": "Living Narrative Engine",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },

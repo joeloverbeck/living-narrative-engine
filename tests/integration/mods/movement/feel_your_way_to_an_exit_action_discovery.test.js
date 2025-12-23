@@ -132,7 +132,7 @@ describe('movement:feel_your_way_to_an_exit action discovery', () => {
         'bending-states:bending_over'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
       expect(feelYourWayAction.forbidden_components.actor).toContain(
         'physical-control-states:being_restrained'

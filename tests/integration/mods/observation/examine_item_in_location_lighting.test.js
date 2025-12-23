@@ -138,7 +138,7 @@ describe('observation:examine_item_in_location lighting prerequisite', () => {
       ).toContain('positioning:doing_complex_performance');
       expect(
         examineItemInLocationAction.forbidden_components.actor
-      ).toContain('positioning:fallen');
+      ).toContain('recovery-states:fallen');
       expect(
         examineItemInLocationAction.forbidden_components.actor
       ).toContain('physical-control-states:being_restrained');

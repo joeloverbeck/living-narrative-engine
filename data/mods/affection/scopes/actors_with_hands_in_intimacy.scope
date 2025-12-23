@@ -3,7 +3,7 @@
 affection:actors_with_hands_in_intimacy := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartSubTypeContaining": [".", "hand", {"matchAtEnd": true}]},
-    {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
-    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+    {"!": {"condition_ref": "deference-states:entity-kneeling-before-actor"}},
+    {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
   ]
 }]

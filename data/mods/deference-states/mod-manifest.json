@@ -1,0 +1,15 @@
+{
+  "id": "deference-states",
+  "version": "1.0.0",
+  "name": "Deference States",
+  "description": "State components and conditions for deference mechanics. Separated from action mod to allow other mods to check kneeling state without circular dependencies.",
+  "dependencies": [],
+  "content": {
+    "components": ["kneeling_before.component.json"],
+    "conditions": [
+      "actor-kneeling-before-entity.condition.json",
+      "entity-kneeling-before-actor.condition.json"
+    ],
+    "scopes": ["entity_actor_is_kneeling_before.scope"]
+  }
+}

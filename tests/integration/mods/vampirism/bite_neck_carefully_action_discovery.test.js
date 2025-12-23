@@ -39,7 +39,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
             // Check kneeling before filters
             const actorKneeling = em.getComponentData(
               actor.id,
-              'positioning:kneeling_before'
+              'deference-states:kneeling_before'
             );
             if (actorKneeling?.entity_id === partnerId) {
               return false; // Actor kneeling before partner
@@ -47,7 +47,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
 
             const partnerKneeling = em.getComponentData(
               partnerId,
-              'positioning:kneeling_before'
+              'deference-states:kneeling_before'
             );
             if (partnerKneeling?.entity_id === actor.id) {
               return false; // Partner kneeling before actor
@@ -277,7 +277,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.actor.components['positioning:kneeling_before'] = {
+      scenario.actor.components['deference-states:kneeling_before'] = {
         entity_id: scenario.target.id,
       };
 
@@ -299,7 +299,7 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
-      scenario.target.components['positioning:kneeling_before'] = {
+      scenario.target.components['deference-states:kneeling_before'] = {
         entity_id: scenario.actor.id,
       };
 

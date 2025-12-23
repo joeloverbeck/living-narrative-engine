@@ -11,6 +11,6 @@ personal-space:close_actors_or_entity_kneeling_before_actor := actor.components.
         {"condition_ref": "positioning:actor-is-behind-entity"}
       ]
     },
-    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+    {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
   ]
 }]

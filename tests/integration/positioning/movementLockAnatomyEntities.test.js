@@ -332,7 +332,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       // Assert: Kneeling component was added
       const kneelingComponent = testEnv.entityManager.getComponentData(
         actorId,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(kneelingComponent).toBeDefined();
       expect(kneelingComponent.entityId).toBe(targetId);
@@ -345,7 +345,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
       // Verify kneeling state exists
       const kneelingComponent = testEnv.entityManager.getComponentData(
         actorId,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(kneelingComponent).toBeDefined();
 
@@ -421,7 +421,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
 
       // Assert: Kneeling component was removed
       const actor = testEnv.entityManager.getEntityInstance(actorId);
-      expect(actor.components['positioning:kneeling_before']).toBeUndefined();
+      expect(actor.components['deference-states:kneeling_before']).toBeUndefined();
     });
 
     it('should allow movement after standing up', async () => {

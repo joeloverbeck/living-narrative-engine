@@ -111,7 +111,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
-      entityManager.addComponent(actorId, 'positioning:kneeling_before', {
+      entityManager.addComponent(actorId, 'deference-states:kneeling_before', {
         entityId: targetId,
       });
 
@@ -231,7 +231,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
-      entityManager.addComponent(actorId, 'positioning:kneeling_before', {
+      entityManager.addComponent(actorId, 'deference-states:kneeling_before', {
         entityId: targetId,
       });
 
@@ -290,7 +290,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       entityManager.addComponent(actorId, 'personal-space-states:closeness', {
         partners: [targetId],
       });
-      entityManager.addComponent(actorId, 'positioning:kneeling_before', {
+      entityManager.addComponent(actorId, 'deference-states:kneeling_before', {
         entityId: targetId,
       });
 

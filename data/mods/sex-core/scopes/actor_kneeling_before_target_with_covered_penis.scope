@@ -7,7 +7,7 @@ sex-core:actor_kneeling_before_target_with_covered_penis := actor.components.per
       {"socketExposure": [".", "penis", "any", true]},
       {
         "==": [
-          {"var": "actor.components.positioning:kneeling_before.entityId"},
+          {"var": "actor.components.deference-states:kneeling_before.entityId"},
           {"var": "id"}
         ]
       }

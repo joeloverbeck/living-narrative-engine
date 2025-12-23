@@ -446,11 +446,11 @@ describe('ModEntityBuilder', () => {
       builder = new ModEntityBuilder('test_entity');
     });
 
-    it('should add positioning:kneeling_before component', () => {
+    it('should add deference-states:kneeling_before component', () => {
       const result = builder.kneelingBefore('target1');
 
       expect(
-        result.entityData.components['positioning:kneeling_before']
+        result.entityData.components['deference-states:kneeling_before']
       ).toEqual({
         entityId: 'target1',
       });
@@ -728,7 +728,7 @@ describe('ModEntityBuilder', () => {
 
       it('should validate kneeling component structure', () => {
         const builder = new ModEntityBuilder('test_entity');
-        builder.entityData.components['positioning:kneeling_before'] = {};
+        builder.entityData.components['deference-states:kneeling_before'] = {};
 
         expect(() => builder.validate()).toThrow(
           "Kneeling component missing 'entityId' property"
@@ -744,7 +744,7 @@ describe('ModEntityBuilder', () => {
           id: 'target1',
           components: { 'core:name': { text: 'Target' } },
         };
-        builder.entityData.components['positioning:kneeling_before'] = {
+        builder.entityData.components['deference-states:kneeling_before'] = {
           entityId: nestedEntity, // Should be string ID
         };
 
@@ -882,7 +882,7 @@ describe('ModEntityBuilder', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'complex_room' },
           'personal-space-states:closeness': { partners: ['partner1', 'partner2'] },
           'anatomy:body': { body: { root: 'torso1' } },
-          'positioning:kneeling_before': { entityId: 'target1' },
+          'deference-states:kneeling_before': { entityId: 'target1' },
           'positioning:facing': { direction: 'north' },
           'custom:trait': { value: 'special' },
         },
@@ -1132,7 +1132,7 @@ describe('ModEntityScenarios', () => {
         positioning: 'kneeling',
       });
 
-      expect(result.actor.components['positioning:kneeling_before']).toEqual({
+      expect(result.actor.components['deference-states:kneeling_before']).toEqual({
         entityId: 'target1',
       });
     });

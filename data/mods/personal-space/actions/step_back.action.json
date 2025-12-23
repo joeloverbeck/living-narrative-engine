@@ -13,7 +13,7 @@
       "positioning:biting_neck",
       "straddling-states:straddling_waist",
       "sitting-states:sitting_on",
-      "positioning:kneeling_before",
+      "deference-states:kneeling_before",
       "lying-states:lying_on",
       "hugging-states:being_hugged",
       "hugging-states:hugging",
@@ -22,7 +22,7 @@
       "sex-states:fucking_anally",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "template": "step back",

@@ -53,6 +53,37 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
+ * Ratio analysis of foundation vs optional mods.
+ *
+ * @typedef {object} RatioAnalysis
+ * @property {number} foundationCount - Number of foundation mods (core + dependencies)
+ * @property {number} optionalCount - Number of optional mods (explicit)
+ * @property {number} totalActive - Total active mods
+ * @property {number} foundationPercentage - Foundation percentage (0-100)
+ * @property {number} optionalPercentage - Optional percentage (0-100)
+ * @property {string[]} foundationMods - List of foundation mod IDs
+ * @property {string} profile - Classification: 'foundation-heavy' | 'balanced' | 'content-heavy'
+ */
+
+/**
+ * Single at-risk mod entry.
+ *
+ * @typedef {object} OrphanRisk
+ * @property {string} modId - The at-risk dependency mod ID
+ * @property {string} singleDependent - The only mod depending on it
+ * @property {string} status - Status of the at-risk mod ('dependency' | 'core')
+ */
+
+/**
+ * Analysis of mods at risk of becoming orphaned.
+ *
+ * @typedef {object} OrphanRiskAnalysis
+ * @property {OrphanRisk[]} atRiskMods - List of mods with only one dependent
+ * @property {number} totalAtRisk - Count of at-risk mods
+ * @property {number} percentageOfDeps - Percentage of dependencies that are at-risk
+ */
+
+/**
  * Service for calculating and caching mod configuration statistics.
  * Provides a clean API for UI components to consume statistics data.
  */
@@ -358,6 +389,127 @@ export default class ModStatisticsService {
     };
 
     this.#cache.data.footprints = result;
+    this.#cache.isValid = true;
+    return result;
+  }
+
+  /**
+   * Calculate ratio of foundation vs optional mods.
+   *
+   * @returns {RatioAnalysis} Ratio analysis with profile classification
+   */
+  getCoreOptionalRatio() {
+    // Check cache
+    if (this.#cache.isValid && this.#cache.data.ratio) {
+      return this.#cache.data.ratio;
+    }
+
+    const nodes = this.#modGraphService.getAllNodes();
+
+    const foundationMods = [];
+    let optionalCount = 0;
+    let totalActive = 0;
+
+    for (const [modId, node] of nodes) {
+      if (node.status === 'inactive') continue;
+
+      totalActive++;
+
+      if (node.status === 'core' || node.status === 'dependency') {
+        foundationMods.push(modId);
+      } else if (node.status === 'explicit') {
+        optionalCount++;
+      }
+    }
+
+    const foundationCount = foundationMods.length;
+    const foundationPercentage =
+      totalActive > 0 ? Math.round((foundationCount / totalActive) * 100) : 0;
+    const optionalPercentage =
+      totalActive > 0 ? Math.round((optionalCount / totalActive) * 100) : 0;
+
+    // Classify profile
+    let profile;
+    if (foundationPercentage >= 60) {
+      profile = 'foundation-heavy';
+    } else if (optionalPercentage >= 60) {
+      profile = 'content-heavy';
+    } else {
+      profile = 'balanced';
+    }
+
+    const result = {
+      foundationCount,
+      optionalCount,
+      totalActive,
+      foundationPercentage,
+      optionalPercentage,
+      foundationMods,
+      profile,
+    };
+
+    this.#cache.data.ratio = result;
+    this.#cache.isValid = true;
+    return result;
+  }
+
+  /**
+   * Find dependencies that have only one dependent (orphan risk).
+   * These mods would become orphaned if their single dependent is deactivated.
+   *
+   * @returns {OrphanRiskAnalysis} Analysis of single-parent dependencies
+   */
+  getSingleParentDependencies() {
+    // Check cache
+    if (this.#cache.isValid && this.#cache.data.orphanRisk) {
+      return this.#cache.data.orphanRisk;
+    }
+
+    const nodes = this.#modGraphService.getAllNodes();
+
+    const atRiskMods = [];
+    let totalDependencies = 0;
+
+    for (const [modId, node] of nodes) {
+      // Skip inactive mods
+      if (node.status === 'inactive') continue;
+
+      // Only look at dependencies (not explicit mods)
+      if (node.status === 'explicit') continue;
+
+      // Count as a dependency
+      totalDependencies++;
+
+      // Check if this mod has only one active dependent
+      const activeDependents = (node.dependents || []).filter((depId) => {
+        const depNode = nodes.get(depId);
+        return depNode && depNode.status !== 'inactive';
+      });
+
+      if (activeDependents.length === 1) {
+        atRiskMods.push({
+          modId,
+          singleDependent: activeDependents[0],
+          status: node.status,
+        });
+      }
+    }
+
+    // Sort by mod ID for consistent ordering
+    atRiskMods.sort((a, b) => a.modId.localeCompare(b.modId));
+
+    const percentageOfDeps =
+      totalDependencies > 0
+        ? Math.round((atRiskMods.length / totalDependencies) * 100)
+        : 0;
+
+    const result = {
+      atRiskMods,
+      totalAtRisk: atRiskMods.length,
+      percentageOfDeps,
+    };
+
+    this.#cache.data.orphanRisk = result;
     this.#cache.isValid = true;
     return result;
   }

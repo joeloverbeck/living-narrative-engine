@@ -5,7 +5,7 @@
   "description": "Move closer to the target, entering their personal space.",
   "targets": {
     "primary": {
-      "scope": "personal-space:actors_in_location_not_wielding",
+      "scope": "item-handling-states:actors_in_location_not_wielding",
       "placeholder": "target",
       "description": "Actor to get close to"
     }
@@ -18,7 +18,7 @@
       "item-handling-states:wielding",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "sitting-states:sitting_on",
       "liquids-states:in_liquid_body"
     ]

@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "liquids-states:submerged",
+  "description": "Indicates the actor is submerged underwater (from failed swimming).",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation.",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true
+          },
+          "template": {
+            "type": "string",
+            "default": "{actor} is submerged"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 75
+          }
+        }
+      }
+    }
+  }
+}

@@ -121,7 +121,7 @@ describe('UNLOCK_MOVEMENT Schema Validation Integration', () => {
           type: 'REMOVE_COMPONENT',
           parameters: {
             entity_ref: 'actor',
-            component_type: 'positioning:kneeling_before',
+            component_type: 'deference-states:kneeling_before',
           },
         },
         {

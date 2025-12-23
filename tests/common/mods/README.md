@@ -134,7 +134,7 @@ testFixture.assertPerceptibleEvent({
 });
 
 // Component addition (for positioning actions)
-testFixture.assertComponentAdded('actor1', 'positioning:kneeling_before', {
+testFixture.assertComponentAdded('actor1', 'deference-states:kneeling_before', {
   entityId: 'target1',
 });
 

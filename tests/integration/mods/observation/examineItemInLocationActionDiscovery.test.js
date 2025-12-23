@@ -79,7 +79,7 @@ describe('observation:examine_item_in_location action definition', () => {
       expect(examineItemInLocationAction.forbidden_components).toBeDefined();
       expect(examineItemInLocationAction.forbidden_components.actor).toEqual([
         'positioning:doing_complex_performance',
-        'positioning:fallen',
+        'recovery-states:fallen',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
       ]);

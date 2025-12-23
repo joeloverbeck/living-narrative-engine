@@ -8,7 +8,7 @@
  *              2. Primary target: Beak body part with damage-types:damage_capabilities
  *                 (via violence:actor_beak_body_parts scope)
  *              3. Secondary target: Other actors in location (via core:actors_in_location scope)
- *              4. Actor must NOT have forbidden components (positioning:fallen, etc.)
+ *              4. Actor must NOT have forbidden components (recovery-states:fallen, etc.)
  *              5. Target must NOT be dead (core:dead)
  * @see data/mods/violence/actions/peck_target.action.json
  * @see data/mods/violence/conditions/actor-has-beak.condition.json
@@ -113,7 +113,7 @@ describe('violence:peck_target action discovery', () => {
 
     it('has forbidden actor positioning states', () => {
       expect(peckTargetAction.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
       expect(peckTargetAction.forbidden_components.actor).toContain(
         'hugging-states:hugging'
@@ -346,14 +346,14 @@ describe('violence:peck_target action discovery', () => {
       expect(result.actions).not.toHaveAction(ACTION_ID);
     });
 
-    it('is not available when actor has positioning:fallen', async () => {
+    it('is not available when actor has recovery-states:fallen', async () => {
       const { actor, target } = testBed.createActorTargetScenario({
         actorId: 'fallen_bird1',
         targetId: 'enemy1',
         location: 'battlefield',
         closeProximity: false,
         actorComponents: {
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
           'anatomy:body': {
             root: 'fallen_bird1_body',
             bodyParts: [

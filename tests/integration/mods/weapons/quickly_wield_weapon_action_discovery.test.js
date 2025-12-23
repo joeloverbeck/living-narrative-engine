@@ -50,9 +50,9 @@ describe('quickly_wield_weapon action definition', () => {
       );
     });
 
-    it('should forbid positioning:fallen', () => {
+    it('should forbid recovery-states:fallen', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
     });
 

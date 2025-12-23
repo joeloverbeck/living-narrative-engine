@@ -109,7 +109,7 @@ describe('affection:place_hands_on_flat_chest action discovery', () => {
             actorEntity.components?.['positioning:facing_away']
               ?.facing_away_from ?? [];
           const actorKneelingBefore =
-            actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+            actorEntity.components?.['deference-states:kneeling_before']?.entityId ??
             null;
 
           const validTargets = closeness.reduce((acc, partnerId) => {
@@ -122,7 +122,7 @@ describe('affection:place_hands_on_flat_chest action discovery', () => {
               partner.components?.['positioning:facing_away']
                 ?.facing_away_from ?? [];
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ??
+              partner.components?.['deference-states:kneeling_before']?.entityId ??
               null;
 
             const facingEachOther =

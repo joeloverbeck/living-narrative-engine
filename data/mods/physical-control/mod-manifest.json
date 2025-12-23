@@ -8,6 +8,14 @@
   "actionConsiderWhen": "Asserting physical dominance, forcing someone into a position, pushing someone away, or physically controlling another.",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "straddling-states",
       "version": "^1.0.0"
     },

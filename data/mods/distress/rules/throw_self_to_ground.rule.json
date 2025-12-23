@@ -27,7 +27,7 @@
       "comment": "Add fallen component to actor",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:fallen",
+        "component_type": "recovery-states:fallen",
         "value": {}
       }
     },

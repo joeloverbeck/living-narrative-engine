@@ -240,7 +240,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:kneeling_before': {
+            'deference-states:kneeling_before': {
               entityId: 'target1',
             },
           },
@@ -529,7 +529,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:kneeling_before': {
+            'deference-states:kneeling_before': {
               entityId: 'target1',
             },
           },
@@ -594,7 +594,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
           id: 'actor1',
           components: {
             // NO closeness component
-            'positioning:kneeling_before': {
+            'deference-states:kneeling_before': {
               entityId: 'target1',
             },
           },

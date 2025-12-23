@@ -13,7 +13,7 @@
       "sex-states:giving_blowjob",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ],
     "primary": ["positioning:being_bitten_in_neck"]
   },

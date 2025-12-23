@@ -66,10 +66,10 @@ describe('deference:crawl_to - Integration Tests', () => {
       const aliceAfterKneel =
         testFixture.entityManager.getEntityInstance('test:alice');
       expect(
-        aliceAfterKneel.components['positioning:kneeling_before']
+        aliceAfterKneel.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(
-        aliceAfterKneel.components['positioning:kneeling_before'].entityId
+        aliceAfterKneel.components['deference-states:kneeling_before'].entityId
       ).toBe('test:bob');
       // Closeness was removed by kneel_before
       expect(
@@ -86,7 +86,7 @@ describe('deference:crawl_to - Integration Tests', () => {
 
       // Both kneeling and closeness components present
       expect(
-        aliceAfterCrawl.components['positioning:kneeling_before']
+        aliceAfterCrawl.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(aliceAfterCrawl.components['personal-space-states:closeness']).toBeDefined();
       expect(
@@ -132,7 +132,7 @@ describe('deference:crawl_to - Integration Tests', () => {
       expect(bobEntity.components['personal-space-states:closeness']).toBeDefined();
       // No kneeling component added
       expect(
-        aliceEntity.components['positioning:kneeling_before']
+        aliceEntity.components['deference-states:kneeling_before']
       ).toBeUndefined();
     });
 
@@ -168,10 +168,10 @@ describe('deference:crawl_to - Integration Tests', () => {
         testFixture.entityManager.getEntityInstance('test:alice');
 
       expect(
-        aliceEntity.components['positioning:kneeling_before']
+        aliceEntity.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(
-        aliceEntity.components['positioning:kneeling_before'].entityId
+        aliceEntity.components['deference-states:kneeling_before'].entityId
       ).toBe('test:bob');
       // Closeness removed by kneel_before
       expect(aliceEntity.components['personal-space-states:closeness']).toBeUndefined();
@@ -209,12 +209,12 @@ describe('deference:crawl_to - Integration Tests', () => {
         .build();
 
       // Alice kneeling before Bob
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'test:bob',
       };
 
       // Carol kneeling before Dave
-      carol.components['positioning:kneeling_before'] = {
+      carol.components['deference-states:kneeling_before'] = {
         entityId: 'test:dave',
       };
 
@@ -264,7 +264,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         .build();
 
       // Invalid state: kneeling, sitting, and being hugged
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'test:bob',
       };
       alice.components['sitting-states:sitting_on'] = {
@@ -298,7 +298,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         .asActor()
         .build();
 
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'test:bob',
       };
 

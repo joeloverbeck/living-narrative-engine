@@ -301,6 +301,21 @@
             }
           },
           {
+            "type": "ADD_COMPONENT",
+            "comment": "Mark actor as submerged after fumbling the swim attempt.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "liquids-states:submerged",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
             "type": "SET_VARIABLE",
             "parameters": {
               "variable_name": "logMessage",

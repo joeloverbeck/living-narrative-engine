@@ -44,7 +44,7 @@ describe('Exercise Mod: Show Off Biceps Action', () => {
         forbidden: {
           actor: [
             'hugging-states:hugging',
-            'positioning:fallen',
+            'recovery-states:fallen',
             'physical-control-states:being_restrained',
             'physical-control-states:restraining',
           ],

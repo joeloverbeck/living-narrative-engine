@@ -655,15 +655,15 @@ export class ModAssertionHelpers {
   static assertKneelingPosition(entityManager, actorId, targetId) {
     const actor = entityManager.getEntityInstance(actorId);
     expect(actor).toBeDefined();
-    expect(actor.components['positioning:kneeling_before']).toBeDefined();
+    expect(actor.components['deference-states:kneeling_before']).toBeDefined();
 
     if (targetId) {
-      expect(actor.components['positioning:kneeling_before'].target).toBe(
+      expect(actor.components['deference-states:kneeling_before'].target).toBe(
         targetId
       );
     }
 
-    return actor.components['positioning:kneeling_before'];
+    return actor.components['deference-states:kneeling_before'];
   }
 
   /**

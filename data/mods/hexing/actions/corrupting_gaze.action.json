@@ -46,7 +46,7 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.actor.components.positioning:fallen" }]
+            "!!": [{ "var": "entity.actor.components.recovery-states:fallen" }]
           }
         },
         "type": "flat",

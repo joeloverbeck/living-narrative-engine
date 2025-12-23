@@ -37,7 +37,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
       const builder = new ModEntityBuilder('actor1').withName('Actor');
 
       // This should fail validation
-      builder.entityData.components['positioning:kneeling_before'] = {
+      builder.entityData.components['deference-states:kneeling_before'] = {
         entityId: targetEntity, // BUG: should be targetEntity.id
       };
 
@@ -280,7 +280,7 @@ describe('ModEntityBuilder Validation - Integration Tests', () => {
       };
 
       const builder = new ModEntityBuilder('actor1').withName('Actor');
-      builder.entityData.components['positioning:kneeling_before'] = {
+      builder.entityData.components['deference-states:kneeling_before'] = {
         entityId: targetEntity,
       };
 

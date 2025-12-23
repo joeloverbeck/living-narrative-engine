@@ -148,10 +148,10 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       expect(sitDownAtDistanceAction.forbidden_components).toBeDefined();
       expect(sitDownAtDistanceAction.forbidden_components.actor).toEqual([
         'sitting-states:sitting_on',
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         'bending-states:bending_over',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ]);
     });
 

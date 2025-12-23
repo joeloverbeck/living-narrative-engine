@@ -117,7 +117,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     }
 
     if (actorFallen) {
-      actorBuilder.withComponent('positioning:fallen', {});
+      actorBuilder.withComponent('recovery-states:fallen', {});
     }
 
     if (actorBendingOver) {
@@ -282,7 +282,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
         'bending-states:bending_over',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ])
     );
     // No forbidden_components.primary (unlike disinfect_my which forbids first-aid:disinfected)
@@ -328,7 +328,7 @@ describe('first-aid:treat_my_wounded_part action definition', () => {
     expect(matches).toHaveLength(0);
   });
 
-  it('is hidden when actor has positioning:fallen', () => {
+  it('is hidden when actor has recovery-states:fallen', () => {
     loadScenario({ actorFallen: true });
     const availableActions = fixture.testEnv.getAvailableActions('actor1');
     const matches = availableActions.filter((a) => a.id === ACTION_ID);

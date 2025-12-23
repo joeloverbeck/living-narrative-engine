@@ -537,11 +537,11 @@ export class ScopeResolverHelpers {
             // Exclude if either actor is kneeling before the other
             const actorKneeling = em.getComponentData(
               actor.id,
-              'positioning:kneeling_before'
+              'deference-states:kneeling_before'
             );
             const partnerKneeling = em.getComponentData(
               partnerId,
-              'positioning:kneeling_before'
+              'deference-states:kneeling_before'
             );
 
             return !(
@@ -652,11 +652,11 @@ export class ScopeResolverHelpers {
               // Check kneeling relationships
               const actorKneeling = em.getComponentData(
                 actor.id,
-                'positioning:kneeling_before'
+                'deference-states:kneeling_before'
               );
               const partnerKneeling = em.getComponentData(
                 partnerId,
-                'positioning:kneeling_before'
+                'deference-states:kneeling_before'
               );
 
               // Actor must NOT be kneeling before partner
@@ -683,11 +683,11 @@ export class ScopeResolverHelpers {
       ),
 
       // "entity actor is kneeling before" - Kneeling target lookup
-      'positioning:entity_actor_is_kneeling_before':
+      'deference-states:entity_actor_is_kneeling_before':
         this.createComponentLookupResolver(
-          'positioning:entity_actor_is_kneeling_before',
+          'deference-states:entity_actor_is_kneeling_before',
           {
-            componentType: 'positioning:kneeling_before',
+            componentType: 'deference-states:kneeling_before',
             sourceField: 'entity_id',
             contextSource: 'actor',
           }

@@ -7,7 +7,7 @@ sex-core:actor_kneeling_before_target_with_testicle := actor.components.personal
       {"socketExposure": [".", ["left_testicle", "right_testicle"]]},
       {
         "==": [
-          {"var": "actor.components.positioning:kneeling_before.entityId"},
+          {"var": "actor.components.deference-states:kneeling_before.entityId"},
           {"var": "id"}
         ]
       }

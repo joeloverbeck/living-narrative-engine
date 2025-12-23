@@ -104,10 +104,10 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
               const actorBehind = partnerFacingAway.includes(actorId);
 
               const actorKneelingBefore =
-                actorEntity.components?.['positioning:kneeling_before']
+                actorEntity.components?.['deference-states:kneeling_before']
                   ?.entityId === partnerId;
               const partnerKneelingBefore =
-                partner.components?.['positioning:kneeling_before']
+                partner.components?.['deference-states:kneeling_before']
                   ?.entityId === actorId;
 
               const normalPosition =

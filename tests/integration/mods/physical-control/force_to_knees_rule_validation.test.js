@@ -58,7 +58,7 @@ describe('handle_force_to_knees rule', () => {
     const addComponent = handleForceToKneesRule.actions.find(
       (op) =>
         op.type === 'ADD_COMPONENT' &&
-        op.parameters.component_type === 'positioning:kneeling_before'
+        op.parameters.component_type === 'deference-states:kneeling_before'
     );
 
     expect(addComponent).toBeDefined();

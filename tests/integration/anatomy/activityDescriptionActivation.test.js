@@ -235,7 +235,7 @@ describe('Activity Description System Activation', () => {
     it('should match kneeling_before reference implementation structure', () => {
       const referencePath = join(
         process.cwd(),
-        'data/mods/positioning/components/kneeling_before.component.json'
+        'data/mods/deference-states/components/kneeling_before.component.json'
       );
       const referenceData = JSON.parse(readFileSync(referencePath, 'utf8'));
       const referenceMetadata =

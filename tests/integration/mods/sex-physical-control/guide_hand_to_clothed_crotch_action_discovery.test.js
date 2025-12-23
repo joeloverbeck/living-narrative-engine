@@ -100,7 +100,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
       }
 
       const actorKneelingBefore =
-        actor.components?.['positioning:kneeling_before']?.entityId || null;
+        actor.components?.['deference-states:kneeling_before']?.entityId || null;
       const actorFacingAway =
         actor.components?.['positioning:facing_away']?.facing_away_from || [];
 
@@ -120,7 +120,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
         }
 
         const partnerKneelingBefore =
-          partner.components?.['positioning:kneeling_before']?.entityId || null;
+          partner.components?.['deference-states:kneeling_before']?.entityId || null;
 
         if (partnerKneelingBefore === actorId) {
           return false;

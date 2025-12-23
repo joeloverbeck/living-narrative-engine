@@ -4,8 +4,14 @@
   "description": "Marker component for entities that represent a body of liquid.",
   "dataSchema": {
     "type": "object",
-    "description": "Metadata for a body of liquid, including optional connection data.",
+    "description": "Metadata for a body of liquid, including visibility and connection data.",
     "properties": {
+      "visibility": {
+        "type": "string",
+        "description": "The visual clarity of the liquid body, affecting surfacing difficulty.",
+        "enum": ["pristine", "clear", "murky", "opaque"],
+        "default": "clear"
+      },
       "connected_liquid_body_ids": {
         "type": "array",
         "description": "Liquid body entity IDs reachable from this body.",
@@ -16,6 +22,7 @@
         }
       }
     },
+    "required": ["visibility"],
     "additionalProperties": false
   }
 }

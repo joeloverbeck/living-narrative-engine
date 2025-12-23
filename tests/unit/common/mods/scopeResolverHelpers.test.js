@@ -613,10 +613,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register positioning:entity_actor_is_kneeling_before', () => {
+    it('should register deference-states:entity_actor_is_kneeling_before', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:entity_actor_is_kneeling_before'
+          'deference-states:entity_actor_is_kneeling_before'
         )
       ).toBe(true);
     });

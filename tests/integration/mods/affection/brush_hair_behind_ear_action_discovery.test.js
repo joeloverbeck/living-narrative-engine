@@ -98,10 +98,10 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
             const actorBehind = partnerFacingAway.includes(actorId);
 
             const actorKneelingBefore =
-              actorEntity.components?.['positioning:kneeling_before']
+              actorEntity.components?.['deference-states:kneeling_before']
                 ?.entityId === partnerId;
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ===
+              partner.components?.['deference-states:kneeling_before']?.entityId ===
               actorId;
 
             const hairAvailable = hasSubType(partnerId, 'hair');
@@ -193,7 +193,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         ['Sophia', 'Liam'],
         ['torso', 'hair']
       );
-      scenario.target.components['positioning:kneeling_before'] = {
+      scenario.target.components['deference-states:kneeling_before'] = {
         entityId: scenario.actor.id,
       };
 
@@ -254,7 +254,7 @@ describe('affection:brush_hair_behind_ear action discovery', () => {
         ['Emma', 'Oliver'],
         ['torso', 'hair']
       );
-      scenario.actor.components['positioning:kneeling_before'] = {
+      scenario.actor.components['deference-states:kneeling_before'] = {
         entityId: scenario.target.id,
       };
 

@@ -51,7 +51,7 @@ const sitDownAction = {
     actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
+    actor: ['sitting-states:sitting_on', 'deference-states:kneeling_before'],
   },
   template: 'sit down on {target}',
   prerequisites: [],

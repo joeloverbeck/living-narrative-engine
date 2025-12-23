@@ -442,6 +442,301 @@
   color: var(--primary-text-color);
 }
 
+/* Depth Section */
+.summary-panel__depth-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 0.75rem;
+}
+
+.summary-panel__depth-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-panel__depth-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-text-color);
+}
+
+.summary-panel__depth-label {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+}
+
+.summary-panel__depth-chain-title {
+  font-size: 0.8125rem;
+  color: var(--secondary-text-color);
+  margin: 0.5rem 0 0.25rem 0;
+}
+
+.summary-panel__depth-chain {
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.summary-panel__depth-chain-node {
+  display: flex;
+  align-items: center;
+}
+
+.summary-panel__depth-chain-connector {
+  color: var(--tertiary-text-color, var(--secondary-text-color));
+  margin-right: 0.25rem;
+}
+
+.summary-panel__depth-chain-mod {
+  color: var(--primary-text-color);
+}
+
+/* Footprint Section */
+.summary-panel__footprint-overlap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #444);
+}
+
+.summary-panel__footprint-overlap-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-info, #4af);
+}
+
+.summary-panel__footprint-overlap-label {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #aaa);
+}
+
+.summary-panel__footprint-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-panel__footprint-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-subtle, #333);
+}
+
+.summary-panel__footprint-item:last-child {
+  border-bottom: none;
+}
+
+.summary-panel__footprint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-panel__footprint-mod {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: var(--primary-text-color, #fff);
+}
+
+.summary-panel__footprint-count {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #aaa);
+}
+
+.summary-panel__footprint-deps {
+  font-size: 0.6875rem;
+  color: var(--tertiary-text-color, #666);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.summary-panel__footprint-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color, #444);
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #aaa);
+}
+
+/* Profile Section */
+.summary-panel__profile-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+  align-self: center;
+  margin-bottom: 0.5rem;
+}
+
+.summary-panel__profile-badge--foundation-heavy {
+  background-color: var(--color-foundation, #2a5a8a);
+  color: var(--text-light, #fff);
+}
+
+.summary-panel__profile-badge--content-heavy {
+  background-color: var(--color-optional, #8a5a2a);
+  color: var(--text-light, #fff);
+}
+
+.summary-panel__profile-badge--balanced {
+  background-color: var(--color-balanced, #5a8a5a);
+  color: var(--text-light, #fff);
+}
+
+.summary-panel__profile-bar-container {
+  display: flex;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  background-color: var(--secondary-bg-color, #333);
+}
+
+.summary-panel__profile-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.summary-panel__profile-bar--foundation {
+  background-color: var(--color-foundation, #2a5a8a);
+}
+
+.summary-panel__profile-bar--optional {
+  background-color: var(--color-optional, #8a5a2a);
+}
+
+.summary-panel__profile-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.summary-panel__profile-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-panel__profile-legend-color {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.125rem;
+}
+
+.summary-panel__profile-legend-color--foundation {
+  background-color: var(--color-foundation, #2a5a8a);
+}
+
+.summary-panel__profile-legend-color--optional {
+  background-color: var(--color-optional, #8a5a2a);
+}
+
+.summary-panel__profile-total {
+  font-size: 0.8125rem;
+  color: var(--secondary-text-color, #aaa);
+  text-align: center;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-color, #444);
+}
+
+/* Fragility Section */
+.summary-panel__success {
+  color: var(--success-color, #4a4);
+  font-style: italic;
+  margin: 0;
+}
+
+.summary-panel__fragility-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.summary-panel__fragility-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--warning-color, #fa4);
+}
+
+.summary-panel__fragility-label {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #aaa);
+}
+
+.summary-panel__fragility-explanation {
+  font-size: 0.75rem;
+  color: var(--text-muted-color, #666);
+  font-style: italic;
+  margin: 0 0 0.75rem 0;
+}
+
+.summary-panel__fragility-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-panel__fragility-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.summary-panel__fragility-item:last-child {
+  border-bottom: none;
+}
+
+.summary-panel__fragility-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-panel__fragility-badge {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.summary-panel__fragility-badge--core {
+  background-color: var(--color-core, #5a5a8a);
+  color: var(--text-light-color, #fff);
+}
+
+.summary-panel__fragility-badge--dependency {
+  background-color: var(--color-dependency, #5a8a5a);
+  color: var(--text-light-color, #fff);
+}
+
+.summary-panel__fragility-mod {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: var(--primary-text-color, #fff);
+}
+
+.summary-panel__fragility-dependent {
+  font-size: 0.6875rem;
+  color: var(--text-muted-color, #666);
+  margin-left: 2.5rem;
+  margin-top: 0.125rem;
+}
+
+.summary-panel__fragility-dependent strong {
+  color: var(--secondary-text-color, #aaa);
+}
+
 .summary-panel__save {
   display: flex;
   flex-direction: column;

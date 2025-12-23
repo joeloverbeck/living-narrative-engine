@@ -153,8 +153,8 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       'data/mods/positioning/conditions/entity-not-in-facing-away.condition.json',
       'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
-      'data/mods/positioning/conditions/entity-kneeling-before-actor.condition.json',
-      'data/mods/positioning/conditions/actor-kneeling-before-entity.condition.json',
+      'data/mods/deference-states/conditions/entity-kneeling-before-actor.condition.json',
+      'data/mods/deference-states/conditions/actor-kneeling-before-entity.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -206,7 +206,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
             // Add kneeling_before component to actor
             entityManager.addComponent(
               actor.id,
-              'positioning:kneeling_before',
+              'deference-states:kneeling_before',
               {
                 entityId: target.id,
               }
@@ -456,7 +456,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       const actor2AfterKneeling =
         entityManager.getEntityInstance('test:actor2');
       expect(
-        actor2AfterKneeling.components['positioning:kneeling_before']
+        actor2AfterKneeling.components['deference-states:kneeling_before']
       ).toEqual({
         entityId: 'test:actor1',
       });
@@ -492,7 +492,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       const actor1AfterKneeling =
         entityManager.getEntityInstance('test:actor1');
       expect(
-        actor1AfterKneeling.components['positioning:kneeling_before']
+        actor1AfterKneeling.components['deference-states:kneeling_before']
       ).toEqual({
         entityId: 'test:actor2',
       });
@@ -525,11 +525,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
 
       // ASSERT: Verify that kneeling_before is NOT present on either actor
       expect(
-        actor1Entity.components['positioning:kneeling_before']
+        actor1Entity.components['deference-states:kneeling_before']
       ).toBeUndefined();
       const actor2Entity = entityManager.getEntityInstance('test:actor2');
       expect(
-        actor2Entity.components['positioning:kneeling_before']
+        actor2Entity.components['deference-states:kneeling_before']
       ).toBeUndefined();
 
       // The fondle_penis action may not be available due to anatomy mocking limitations,
@@ -555,7 +555,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       const actor2AfterKneeling =
         entityManager.getEntityInstance('test:actor2');
       expect(
-        actor2AfterKneeling.components['positioning:kneeling_before']
+        actor2AfterKneeling.components['deference-states:kneeling_before']
       ).toEqual({
         entityId: 'test:actor1',
       });
@@ -591,7 +591,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       const actor1AfterKneeling =
         entityManager.getEntityInstance('test:actor1');
       expect(
-        actor1AfterKneeling.components['positioning:kneeling_before']
+        actor1AfterKneeling.components['deference-states:kneeling_before']
       ).toEqual({
         entityId: 'test:actor2',
       });
@@ -727,11 +727,11 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
 
       // Verify Actor1 has no kneeling restrictions toward Actor3
       expect(
-        actor1Entity.components['positioning:kneeling_before']
+        actor1Entity.components['deference-states:kneeling_before']
       ).toBeUndefined();
       const actor3Entity = entityManager.getEntityInstance('test:actor3');
       expect(
-        actor3Entity.components['positioning:kneeling_before']
+        actor3Entity.components['deference-states:kneeling_before']
       ).toBeUndefined();
 
       // The key validation is that Actor2's kneeling state doesn't affect

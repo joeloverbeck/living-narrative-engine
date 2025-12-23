@@ -466,13 +466,13 @@ export class ModEntityBuilder {
   }
 
   /**
-   * Adds positioning:kneeling_before component.
+   * Adds deference-states:kneeling_before component.
    *
    * @param {string} targetEntityId - The entity being knelt before
    * @returns {ModEntityBuilder} This builder for chaining
    */
   kneelingBefore(targetEntityId) {
-    this.entityData.components['positioning:kneeling_before'] = {
+    this.entityData.components['deference-states:kneeling_before'] = {
       entityId: targetEntityId,
     };
     return this;
@@ -677,7 +677,7 @@ export class ModEntityBuilder {
 
     // Validate kneeling component if present
     const hasKneeling =
-      this.entityData.components['positioning:kneeling_before'];
+      this.entityData.components['deference-states:kneeling_before'];
     if (hasKneeling) {
       if (!hasKneeling.entityId) {
         throw new Error(

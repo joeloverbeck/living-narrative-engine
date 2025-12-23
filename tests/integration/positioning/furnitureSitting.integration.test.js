@@ -52,7 +52,7 @@ const sitDownAction = {
     actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
+    actor: ['sitting-states:sitting_on', 'deference-states:kneeling_before'],
   },
   template: 'sit down on {target.components.core:description.short}',
   prerequisites: [],
@@ -501,7 +501,7 @@ describe('furniture sitting system', () => {
 
     it('should prevent sitting while kneeling', async () => {
       // Add kneeling component
-      testEnv.entityManager.addComponent(actor, 'positioning:kneeling_before', {
+      testEnv.entityManager.addComponent(actor, 'deference-states:kneeling_before', {
         entityId: 'test:target',
       });
 

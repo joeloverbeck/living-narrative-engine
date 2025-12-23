@@ -74,7 +74,7 @@ function buildEjaculateInMouthScenario(options = {}) {
   }
 
   if (targetKneeling) {
-    primaryBuilder.withComponent('positioning:kneeling_before', {
+    primaryBuilder.withComponent('deference-states:kneeling_before', {
       kneeling_before_id: ACTOR_ID,
     });
   }

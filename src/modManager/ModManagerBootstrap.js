@@ -278,10 +278,15 @@ export class ModManagerBootstrap {
         if (node.status === 'dependency') dependencyCount++;
       }
 
-      // Get dependency hotspots and health status from statistics service
+      // Get statistics: hotspots, health, depth, footprint, profile ratio, and fragility analysis
       const modStatisticsService = this.#container.get('modStatisticsService');
       const hotspots = modStatisticsService.getDependencyHotspots(5);
       const healthStatus = modStatisticsService.getHealthStatus();
+      const depthAnalysis = modStatisticsService.getDependencyDepthAnalysis();
+      const footprintAnalysis =
+        modStatisticsService.getTransitiveDependencyFootprints();
+      const profileRatio = modStatisticsService.getCoreOptionalRatio();
+      const fragilityAnalysis = modStatisticsService.getSingleParentDependencies();
 
       this.#summaryPanelView.render({
         loadOrder: state.resolvedMods || [],
@@ -290,6 +295,10 @@ export class ModManagerBootstrap {
         dependencyCount,
         hotspots,
         healthStatus,
+        depthAnalysis,
+        footprintAnalysis,
+        profileRatio,
+        fragilityAnalysis,
         hasUnsavedChanges: state.hasUnsavedChanges,
         isSaving: state.isSaving,
         isLoading: state.isLoading,

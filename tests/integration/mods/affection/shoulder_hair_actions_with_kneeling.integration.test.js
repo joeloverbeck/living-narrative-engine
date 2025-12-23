@@ -181,8 +181,8 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       'data/mods/positioning/conditions/entity-not-in-facing-away.condition.json',
       'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
-      'data/mods/positioning/conditions/entity-kneeling-before-actor.condition.json',
-      'data/mods/positioning/conditions/actor-kneeling-before-entity.condition.json',
+      'data/mods/deference-states/conditions/entity-kneeling-before-actor.condition.json',
+      'data/mods/deference-states/conditions/actor-kneeling-before-entity.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -437,7 +437,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
   function makeActorKneelBefore(kneelerId, targetId) {
     entityManager.addComponent(
       kneelerId.id || kneelerId,
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       {
         entityId: targetId.id || targetId,
       }
@@ -744,7 +744,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       // Act 2: Actor1 stands up
       entityManager.removeComponent(
         actor1.id || actor1,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
 
       // Act 3: Get actions again

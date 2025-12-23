@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "recovery-states",
+  "version": "1.0.0",
+  "name": "Recovery States",
+  "description": "State components for recovery mechanics. Separated from recovery action mod to allow other mods to check fallen state without circular dependencies.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "fallen.component.json"
+    ]
+  }
+}

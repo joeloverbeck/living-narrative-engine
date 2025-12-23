@@ -1,0 +1,141 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "liquids:rise_to_surface",
+  "name": "Rise to Surface",
+  "description": "Attempt to rise to the surface from a submerged state.",
+  "template": "rise to the surface in the {liquidBody} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": [
+      "liquids-states:in_liquid_body",
+      "liquids-states:submerged",
+      "skills:mobility_skill"
+    ]
+  },
+  "forbidden_components": {
+    "actor": [
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "recovery-states:fallen"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "liquids:liquid_body_actor_is_in",
+      "placeholder": "liquidBody",
+      "description": "Liquid body to rise to the surface of"
+    }
+  },
+  "prerequisites": [],
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:mobility_skill",
+      "property": "value",
+      "default": 0
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "==": [
+              {
+                "get_component_value": [
+                  { "var": "entity.actor.components.liquids-states:in_liquid_body.liquid_body_id" },
+                  "liquids:liquid_body",
+                  "visibility"
+                ]
+              },
+              "pristine"
+            ]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "liquid pristine",
+        "targetRole": "actor",
+        "description": "Bonus for pristine liquid visibility"
+      },
+      {
+        "condition": {
+          "logic": {
+            "==": [
+              {
+                "get_component_value": [
+                  { "var": "entity.actor.components.liquids-states:in_liquid_body.liquid_body_id" },
+                  "liquids:liquid_body",
+                  "visibility"
+                ]
+              },
+              "clear"
+            ]
+          }
+        },
+        "type": "flat",
+        "value": 5,
+        "tag": "liquid clear",
+        "targetRole": "actor",
+        "description": "Bonus for clear liquid visibility"
+      },
+      {
+        "condition": {
+          "logic": {
+            "==": [
+              {
+                "get_component_value": [
+                  { "var": "entity.actor.components.liquids-states:in_liquid_body.liquid_body_id" },
+                  "liquids:liquid_body",
+                  "visibility"
+                ]
+              },
+              "murky"
+            ]
+          }
+        },
+        "type": "flat",
+        "value": -5,
+        "tag": "liquid murky",
+        "targetRole": "actor",
+        "description": "Penalty for murky liquid visibility"
+      },
+      {
+        "condition": {
+          "logic": {
+            "==": [
+              {
+                "get_component_value": [
+                  { "var": "entity.actor.components.liquids-states:in_liquid_body.liquid_body_id" },
+                  "liquids:liquid_body",
+                  "visibility"
+                ]
+              },
+              "opaque"
+            ]
+          }
+        },
+        "type": "flat",
+        "value": -10,
+        "tag": "liquid opaque",
+        "targetRole": "actor",
+        "description": "Penalty for opaque liquid visibility"
+      }
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#3aaea3",
+    "textColor": "#0b1f2a",
+    "hoverBackgroundColor": "#5ed0c6",
+    "hoverTextColor": "#0b1f2a"
+  }
+}

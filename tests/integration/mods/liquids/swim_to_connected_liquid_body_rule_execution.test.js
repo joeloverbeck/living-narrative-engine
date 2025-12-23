@@ -405,20 +405,39 @@ describe('handle_swim_to_connected_liquid_body rule', () => {
   });
 
   describe('FUMBLE branch', () => {
-    it('leaves components unchanged on FUMBLE', () => {
+    it('adds submerged component on FUMBLE', () => {
       const branch = findIfByOutcome(handleSwimRule.actions, 'FUMBLE');
       const actions = branch?.parameters.then_actions ?? [];
 
-      // Should not modify any components
+      // Should not modify any components (doesn't change location or liquid body)
       expect(actions.some((op) => op.type === 'MODIFY_COMPONENT')).toBe(false);
 
-      // Should not add any components
-      expect(actions.some((op) => op.type === 'ADD_COMPONENT')).toBe(false);
-
-      // Should not regenerate description (no state change)
-      expect(actions.some((op) => op.type === 'REGENERATE_DESCRIPTION')).toBe(
-        false
+      // Should add submerged component
+      const addComponentOp = actions.find((op) => op.type === 'ADD_COMPONENT');
+      expect(addComponentOp).toBeDefined();
+      expect(addComponentOp?.parameters.entity_ref).toBe('actor');
+      expect(addComponentOp?.parameters.component_type).toBe(
+        'liquids-states:submerged'
       );
+      expect(addComponentOp?.parameters.value).toEqual({});
+    });
+
+    it('regenerates description after adding submerged component', () => {
+      const branch = findIfByOutcome(handleSwimRule.actions, 'FUMBLE');
+      const actions = branch?.parameters.then_actions ?? [];
+
+      const regenOp = actions.find((op) => op.type === 'REGENERATE_DESCRIPTION');
+      expect(regenOp).toBeDefined();
+      expect(regenOp?.parameters.entity_ref).toBe('actor');
+
+      // REGENERATE_DESCRIPTION should come after ADD_COMPONENT
+      const addComponentIndex = actions.findIndex(
+        (op) => op.type === 'ADD_COMPONENT'
+      );
+      const regenIndex = actions.findIndex(
+        (op) => op.type === 'REGENERATE_DESCRIPTION'
+      );
+      expect(regenIndex).toBeGreaterThan(addComponentIndex);
     });
 
     it('dispatches perception with uncoordinated/submerged message', () => {

@@ -436,7 +436,7 @@
             "type": "ADD_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "positioning:fallen",
+              "component_type": "recovery-states:fallen",
               "value": {}
             }
           },

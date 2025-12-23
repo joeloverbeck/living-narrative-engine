@@ -1910,7 +1910,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'sitting:actors_sitting_close',
         'personal-space:close_actors_or_entity_kneeling_before_actor',
         'straddling:actor_im_straddling',
-        'positioning:entity_actor_is_kneeling_before',
+        'deference-states:entity_actor_is_kneeling_before',
         'personal-space:actors_sitting_with_space_to_right',
         'sitting:available_furniture',
         'lying:available_lying_furniture',

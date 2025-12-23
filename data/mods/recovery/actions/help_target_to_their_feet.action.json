@@ -11,10 +11,10 @@
     }
   },
   "required_components": {
-    "primary": ["positioning:fallen"]
+    "primary": ["recovery-states:fallen"]
   },
   "forbidden_components": {
-    "actor": ["physical-control-states:being_restrained", "positioning:fallen"]
+    "actor": ["physical-control-states:being_restrained", "recovery-states:fallen"]
   },
   "template": "help {target} to their feet",
   "prerequisites": [],

@@ -6,7 +6,7 @@ sex-core:actors_with_penis_facing_each_other := actor.components.personal-space-
     {"condition_ref": "positioning:entity-not-in-facing-away"},
     {"!": {"condition_ref": "positioning:entity-in-facing-away"}},
     {"socketExposure": [".", "penis"]},
-    {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
-    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+    {"!": {"condition_ref": "deference-states:entity-kneeling-before-actor"}},
+    {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
   ]
 }]

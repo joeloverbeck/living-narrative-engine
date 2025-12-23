@@ -120,7 +120,7 @@ function setupKneelingBehindScenario() {
   );
 
   // Actor is kneeling before someone else
-  scenario.actor.components['positioning:kneeling_before'] = {
+  scenario.actor.components['deference-states:kneeling_before'] = {
     entityId: 'test:someone_else',
   };
 
@@ -446,7 +446,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     testFixture.reset(Object.values(entities));
 
     // In normal action discovery, this action would not appear in available actions
-    // because the actor has the positioning:kneeling_before component.
+    // because the actor has the deference-states:kneeling_before component.
     await testFixture.executeAction('test:player', 'test:npc', {
       skipDiscovery: true,
     });
@@ -493,8 +493,8 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Verify the kneeling component is properly structured
     const actor = testFixture.entityManager.getEntityInstance('test:player');
-    expect(actor.components['positioning:kneeling_before']).toBeDefined();
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+    expect(actor.components['deference-states:kneeling_before']).toBeDefined();
+    expect(actor.components['deference-states:kneeling_before'].entityId).toBe(
       'test:someone_else'
     );
   });

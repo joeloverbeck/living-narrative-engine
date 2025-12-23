@@ -24,7 +24,7 @@ describe('Activity Integration in Body Descriptions', () => {
       { mod: 'positioning', name: 'biting_neck' },
       { mod: 'sex-states', name: 'giving_blowjob' },
       { mod: 'hugging-states', name: 'hugging' },
-      { mod: 'positioning', name: 'kneeling_before' },
+      { mod: 'deference-states', name: 'kneeling_before' },
       { mod: 'lying-states', name: 'lying_on' },
       { mod: 'sex-states', name: 'receiving_blowjob' },
       { mod: 'sitting-states', name: 'sitting_on' },
@@ -275,7 +275,7 @@ describe('Activity Integration in Body Descriptions', () => {
     it('should match kneeling_before metadata structure exactly', () => {
       const referencePath = join(
         process.cwd(),
-        'data/mods/positioning/components/kneeling_before.component.json'
+        'data/mods/deference-states/components/kneeling_before.component.json'
       );
       const referenceData = JSON.parse(readFileSync(referencePath, 'utf8'));
       const referenceMetadata =

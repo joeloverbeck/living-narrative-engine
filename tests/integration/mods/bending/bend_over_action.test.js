@@ -98,7 +98,7 @@ function setupKneelingScenario() {
     .build();
 
   // Actor is kneeling before the target
-  scenario.actor.components['positioning:kneeling_before'] = {
+  scenario.actor.components['deference-states:kneeling_before'] = {
     entityId: 'test:target1',
   };
 
@@ -288,7 +288,7 @@ describe('bending:bend_over action integration', () => {
       // Verify initial state
       const initialActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(initialActor.components['positioning:kneeling_before']).toEqual({
+      expect(initialActor.components['deference-states:kneeling_before']).toEqual({
         entityId: 'test:target1',
       });
 
@@ -306,7 +306,7 @@ describe('bending:bend_over action integration', () => {
         surface_id: 'test:surface1',
       });
       // Actor still retains kneeling component as rule doesn't remove it
-      expect(updatedActor.components['positioning:kneeling_before']).toEqual({
+      expect(updatedActor.components['deference-states:kneeling_before']).toEqual({
         entityId: 'test:target1',
       });
     });

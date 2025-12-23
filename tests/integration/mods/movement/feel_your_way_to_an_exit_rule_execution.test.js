@@ -393,7 +393,7 @@ describe('handle_feel_your_way_to_an_exit rule', () => {
       const fallenAdd = actions.find(
         (op) =>
           op.type === 'ADD_COMPONENT' &&
-          op.parameters.component_type === 'positioning:fallen'
+          op.parameters.component_type === 'recovery-states:fallen'
       );
       expect(fallenAdd?.parameters.entity_ref).toBe('actor');
     });

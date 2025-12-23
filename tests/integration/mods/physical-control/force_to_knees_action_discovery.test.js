@@ -141,17 +141,17 @@ describe('physical-control:force_to_knees action discovery', () => {
       ]);
       expect(forceToKneesAction.forbidden_components.actor).toEqual([
         'positioning:biting_neck',
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         'straddling-states:straddling_waist',
         'hugging-states:hugging',
         'hugging-states:being_hugged',
         'lying-states:lying_on',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ]);
       expect(forceToKneesAction.forbidden_components.primary).toEqual([
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         'sitting-states:sitting_on',
       ]);
       expect(forceToKneesAction.visual).toEqual({
@@ -213,12 +213,12 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.target.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         { entityId: scenario.actor.id }
       );
       const targetKneeling = testFixture.entityManager.getComponentData(
         scenario.target.id,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(targetKneeling?.entityId).toBe(scenario.actor.id);
 
@@ -239,12 +239,12 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         { entityId: scenario.target.id }
       );
       const actorKneeling = testFixture.entityManager.getComponentData(
         scenario.actor.id,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(actorKneeling?.entityId).toBe(scenario.target.id);
 

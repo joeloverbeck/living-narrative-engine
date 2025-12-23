@@ -25,7 +25,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // - AI gets filtered results, not raw action discovery
       //
       // TEST SCENARIO:
-      // - Player has positioning:kneeling_before component (forbidden for kneel_before action)
+      // - Player has deference-states:kneeling_before component (forbidden for kneel_before action)
       // - AI should not see "kneel before Player" in available actions
       // - Only valid targets appear in AI action choices
       expect(true).toBe(true);
@@ -40,7 +40,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // 4. AI only receives actions for valid targets
       //
       // TEST SCENARIO:
-      // - AI Character is close to NPC1 (positioning:kneeling_before) and NPC2 (lying-states:lying_on)
+      // - AI Character is close to NPC1 (deference-states:kneeling_before) and NPC2 (lying-states:lying_on)
       // - Both NPCs are in forbidden states for kneel_before action
       // - Available actions should not include kneel_before targeting either NPC
       expect(true).toBe(true);
@@ -70,7 +70,7 @@ describe('Expected AI Action Validation Compliance', () => {
       // 4. Noble cannot kneel before Servant (circular prevention)
       //
       // TEST SCENARIO:
-      // - Servant has positioning:kneeling_before targeting Noble (forbidden for new kneel_before)
+      // - Servant has deference-states:kneeling_before targeting Noble (forbidden for new kneel_before)
       // - Human Player has lying-states:lying_on (forbidden for kneel_before)
       // - AI Noble is standing (valid target for Knight)
       // - Circular actions prevented (Noble cannot kneel before Servant already kneeling before Noble)
@@ -82,7 +82,7 @@ describe('Expected AI Action Validation Compliance', () => {
     it('should provide consistent action filtering across AI requests', () => {
       // EXPECTED BEHAVIOR:
       // Action filtering should be deterministic and consistent across multiple requests:
-      // 1. Target has positioning:kneeling_before component (forbidden state)
+      // 1. Target has deference-states:kneeling_before component (forbidden state)
       // 2. Multiple calls to getAvailableActions should return identical results
       // 3. All requests should consistently exclude forbidden actions
       // 4. No race conditions or state-dependent variations in filtering
@@ -130,7 +130,7 @@ describe('Expected AI Action Validation Compliance', () => {
     it('should handle AI characters with positioning components', () => {
       // EXPECTED BEHAVIOR:
       // AI characters can have their own positioning states while still requesting actions:
-      // 1. AI Character has positioning:kneeling_before component (is kneeling before Target)
+      // 1. AI Character has deference-states:kneeling_before component (is kneeling before Target)
       // 2. AI should still receive appropriate available actions
       // 3. Circular positioning should be prevented (Target cannot kneel before AI already kneeling before Target)
       // 4. AI's own positioning state should not break action discovery
@@ -145,7 +145,7 @@ describe('Expected AI Action Validation Compliance', () => {
     it('should handle AI with missing or corrupted positioning data', () => {
       // EXPECTED BEHAVIOR:
       // Target validation should gracefully handle malformed positioning component data:
-      // 1. Target has positioning:kneeling_before component with null data
+      // 1. Target has deference-states:kneeling_before component with null data
       // 2. Validation logic should not crash or throw errors
       // 3. Corrupted data should be treated safely (either as valid or invalid consistently)
       // 4. AI action discovery should continue functioning despite data issues
@@ -195,9 +195,9 @@ describe('Expected AI Action Validation Compliance', () => {
     it('should maintain AI action consistency across save/load cycles', () => {
       // EXPECTED BEHAVIOR:
       // AI action validation should produce consistent results after game state persistence:
-      // 1. Before save: Target has positioning:kneeling_before component
+      // 1. Before save: Target has deference-states:kneeling_before component
       // 2. Game state is saved and restored
-      // 3. After load: Same target still has positioning:kneeling_before component
+      // 3. After load: Same target still has deference-states:kneeling_before component
       // 4. Action validation produces identical results in both sessions
       //
       // PERSISTENCE REQUIREMENTS:

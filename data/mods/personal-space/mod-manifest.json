@@ -10,6 +10,14 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "straddling-states",
       "version": "^1.0.0"
     },
@@ -90,7 +98,6 @@
       "step_back.rule.json"
     ],
     "scopes": [
-      "actors_in_location_not_wielding.scope",
       "actors_sitting_with_space_to_right.scope",
       "close_actors.scope",
       "close_actors_facing_each_other.scope",

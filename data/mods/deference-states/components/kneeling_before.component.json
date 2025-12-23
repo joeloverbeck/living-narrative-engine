@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:kneeling_before",
+  "id": "deference-states:kneeling_before",
   "description": "Tracks which entity the component holder is currently kneeling before. Represents a positional state where the actor has assumed a kneeling position directed toward another entity.",
   "dataSchema": {
     "type": "object",

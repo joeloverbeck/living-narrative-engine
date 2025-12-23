@@ -5,7 +5,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import fallenComponent from '../../../../data/mods/positioning/components/fallen.component.json';
+import fallenComponent from '../../../../data/mods/recovery-states/components/fallen.component.json';
 
 const ACTION_ID = 'distress:throw_self_to_ground';
 
@@ -15,14 +15,14 @@ describe('distress:throw_self_to_ground', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('distress', ACTION_ID);
 
-    // Mock component definition for positioning:fallen so ADD_COMPONENT works
+    // Mock component definition for recovery-states:fallen so ADD_COMPONENT works
     if (
       testFixture.testEnv.dataRegistry.getComponentDefinition &&
       testFixture.testEnv.dataRegistry.getComponentDefinition.mockImplementation
     ) {
       testFixture.testEnv.dataRegistry.getComponentDefinition.mockImplementation(
         (id) => {
-          if (id === 'positioning:fallen') return fallenComponent;
+          if (id === 'recovery-states:fallen') return fallenComponent;
           return null;
         }
       );
@@ -47,9 +47,9 @@ describe('distress:throw_self_to_ground', () => {
       );
     });
 
-    it('should be forbidden when actor has positioning:fallen', async () => {
+    it('should be forbidden when actor has recovery-states:fallen', async () => {
       const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
-      scenario.actor.components['positioning:fallen'] = {};
+      scenario.actor.components['recovery-states:fallen'] = {};
 
       // Reset fixture with modified actor
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
@@ -93,7 +93,7 @@ describe('distress:throw_self_to_ground', () => {
   });
 
   describe('Rule Execution', () => {
-    it('should add positioning:fallen component and log message', async () => {
+    it('should add recovery-states:fallen component and log message', async () => {
       const scenario = testFixture.createStandardActorTarget(['Bob', 'Alice']);
 
       await testFixture.executeAction(scenario.actor.id, null);
@@ -107,8 +107,8 @@ describe('distress:throw_self_to_ground', () => {
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorInstance.components['positioning:fallen']).toBeDefined();
-      expect(actorInstance.components['positioning:fallen']).toEqual({
+      expect(actorInstance.components['recovery-states:fallen']).toBeDefined();
+      expect(actorInstance.components['recovery-states:fallen']).toEqual({
         activityMetadata: {
           shouldDescribeInActivity: true,
           template: '{actor} has fallen to the ground',

@@ -25,7 +25,7 @@ describe('Action Pipeline Target Validation Integration', () => {
       // - Integration should happen between discovery and formatting stages
       //
       // TEST SCENARIO:
-      // - Actor is close to Target with positioning:kneeling_before component
+      // - Actor is close to Target with deference-states:kneeling_before component
       // - Pipeline should exclude kneel_before actions for this target
       // - Only valid targets appear in final action list
       expect(true).toBe(true);
@@ -138,7 +138,7 @@ describe('Action Pipeline Target Validation Integration', () => {
       // - PERFORMANCE_WARNING: Validation taking too long
       //
       // ERROR STRUCTURE:
-      // { type: 'VALIDATION_ERROR', entityId: 'actor1', component: 'positioning:kneeling_before', reason: 'malformed data' }
+      // { type: 'VALIDATION_ERROR', entityId: 'actor1', component: 'deference-states:kneeling_before', reason: 'malformed data' }
       expect(true).toBe(true);
     });
   });

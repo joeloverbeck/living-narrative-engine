@@ -72,7 +72,7 @@ describe('actions forbidden when in a liquid body', () => {
         scopeName === 'core:actors_in_location' ||
         scopeName === 'positioning:actors_in_location_facing' ||
         scopeName === 'maneuvering:actors_in_location_not_facing_away_from_actor' ||
-        scopeName === 'personal-space:actors_in_location_not_wielding'
+        scopeName === 'item-handling-states:actors_in_location_not_wielding'
       ) {
         const actorId = context?.actor?.id;
         if (!actorId) {

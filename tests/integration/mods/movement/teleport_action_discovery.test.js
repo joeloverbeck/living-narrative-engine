@@ -146,7 +146,7 @@ describe('movement:teleport action discovery', () => {
 
     it('should NOT appear when actor is kneeling', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:kneeling_before component:
+      // If Alice has deference-states:kneeling_before component:
       // - Prerequisites check anatomy:actor-can-move fails (movement locked)
       // - movement:teleport action should NOT be available
       //

@@ -362,7 +362,7 @@ describe('Bending Over System Integration', () => {
 
     it('should prevent bending when actor is kneeling', async () => {
       // First add kneeling component to actor
-      testEnv.entityManager.addComponent(actor, 'positioning:kneeling_before', {
+      testEnv.entityManager.addComponent(actor, 'deference-states:kneeling_before', {
         entityId: 'test:target',
       });
 
@@ -505,7 +505,7 @@ describe('Bending Over System Integration', () => {
 
     it('should handle bending while kneeling (rule level)', async () => {
       // Add kneeling component to actor
-      testEnv.entityManager.addComponent(actor, 'positioning:kneeling_before', {
+      testEnv.entityManager.addComponent(actor, 'deference-states:kneeling_before', {
         entityId: 'test:target',
       });
 
@@ -525,7 +525,7 @@ describe('Bending Over System Integration', () => {
 
       const kneeling = testEnv.entityManager.getComponentData(
         actor,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(kneeling).toBeDefined();
     });

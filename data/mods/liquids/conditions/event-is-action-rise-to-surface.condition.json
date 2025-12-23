@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "liquids:event-is-action-rise-to-surface",
+  "description": "Checks if the event is for the rise_to_surface action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "liquids:rise_to_surface"
+    ]
+  }
+}

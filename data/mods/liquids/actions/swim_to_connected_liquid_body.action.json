@@ -12,7 +12,8 @@
     "actor": [
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen",
+      "liquids-states:submerged"
     ]
   },
   "targets": {

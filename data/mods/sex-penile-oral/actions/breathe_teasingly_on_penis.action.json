@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "actor": ["personal-space-states:closeness", "positioning:kneeling_before"]
+    "actor": ["personal-space-states:closeness", "deference-states:kneeling_before"]
   },
   "forbidden_components": {
     "actor": ["sex-states:giving_blowjob"]

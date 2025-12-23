@@ -11,7 +11,7 @@
   "forbidden_components": {
     "actor": [
       "physical-control-states:being_restrained",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "sitting-states:sitting_on",
       "liquids-states:in_liquid_body"
     ],
@@ -65,7 +65,7 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:fallen" }]
+            "!!": [{ "var": "entity.primary.components.recovery-states:fallen" }]
           }
         },
         "type": "flat",

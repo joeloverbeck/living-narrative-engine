@@ -28,14 +28,14 @@ describe('violence:handleBeakFumble macro', () => {
   });
 
   describe('ADD_COMPONENT Operation', () => {
-    it('should add positioning:fallen component to actor', () => {
+    it('should add recovery-states:fallen component to actor', () => {
       const addComponentOp = handleBeakFumble.actions.find(
         (op) => op.type === 'ADD_COMPONENT'
       );
       expect(addComponentOp).toBeDefined();
       expect(addComponentOp.parameters.entity_ref).toBe('actor');
       expect(addComponentOp.parameters.component_type).toBe(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
     });
 

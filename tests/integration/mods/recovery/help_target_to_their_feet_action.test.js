@@ -30,7 +30,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
           'core:name': { text: options.actorName || 'Helper' },
           'core:position': { locationId },
           'core:actor': {},
-          ...(options.actorFallen ? { 'positioning:fallen': {} } : {}),
+          ...(options.actorFallen ? { 'recovery-states:fallen': {} } : {}),
           ...(options.actorRestrained
             ? { 'physical-control-states:being_restrained': {} }
             : {}),
@@ -44,7 +44,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
           'core:actor': {},
           ...(options.targetFallen === false
             ? {}
-            : { 'positioning:fallen': {} }),
+            : { 'recovery-states:fallen': {} }),
         },
       },
     ];
@@ -133,7 +133,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     await testFixture.executeAction(actorId, targetId);
 
     const target = testFixture.entityManager.getEntityInstance(targetId);
-    expect(target).toNotHaveComponent('positioning:fallen');
+    expect(target).toNotHaveComponent('recovery-states:fallen');
 
     const perceptibleEvent = testFixture.events.find(
       (event) => event.eventType === 'core:perceptible_event'
@@ -186,7 +186,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     });
 
     const target = testFixture.entityManager.getEntityInstance(targetId);
-    expect(target).toHaveComponent('positioning:fallen');
+    expect(target).toHaveComponent('recovery-states:fallen');
 
     const failureEvent = testFixture.events.find(
       (event) => event.eventType === 'core:display_failed_action_result'

@@ -144,10 +144,10 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       }
 
       const partnerKneelingBeforeActor =
-        partner.components?.['positioning:kneeling_before']?.entityId ===
+        partner.components?.['deference-states:kneeling_before']?.entityId ===
         actorId;
       const actorKneelingBeforePartner =
-        actorEntity?.components?.['positioning:kneeling_before']?.entityId ===
+        actorEntity?.components?.['deference-states:kneeling_before']?.entityId ===
         partnerId;
 
       if (partnerKneelingBeforeActor || actorKneelingBeforePartner) {
