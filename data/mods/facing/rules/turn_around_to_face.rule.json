@@ -68,7 +68,7 @@
     {
       "type": "DISPATCH_EVENT",
       "parameters": {
-        "eventType": "facing:actor_faced_everyone",
+        "eventType": "facing-states:actor_faced_everyone",
         "payload": {
           "actor": "{event.payload.actorId}",
           "faced": "{context.targetName}"

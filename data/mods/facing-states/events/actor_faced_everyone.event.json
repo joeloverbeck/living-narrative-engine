@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "facing:actor_faced_everyone",
+  "id": "facing-states:actor_faced_everyone",
   "description": "Dispatched when an actor turns around to face everyone they were facing away from.",
   "payloadSchema": {
     "type": "object",

@@ -118,7 +118,7 @@
           {
             "type": "DISPATCH_EVENT",
             "parameters": {
-              "eventType": "facing:actor_faced_forward",
+              "eventType": "facing-states:actor_faced_forward",
               "payload": {
                 "actor": "{event.payload.targetId}",
                 "facing": "{event.payload.actorId}"

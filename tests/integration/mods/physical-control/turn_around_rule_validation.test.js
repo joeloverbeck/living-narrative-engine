@@ -137,11 +137,11 @@ describe('handle_turn_around rule', () => {
       expect(hasSuccessMacro).toBe(true);
     });
 
-    it('dispatches facing:actor_faced_forward event', () => {
+    it('dispatches facing-states:actor_faced_forward event', () => {
       const dispatchEvent = thenActions.find(
         (op) =>
           op.type === 'DISPATCH_EVENT' &&
-          op.parameters.eventType === 'facing:actor_faced_forward'
+          op.parameters.eventType === 'facing-states:actor_faced_forward'
       );
 
       expect(dispatchEvent).toBeDefined();

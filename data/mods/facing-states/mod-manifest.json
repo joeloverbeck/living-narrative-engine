@@ -27,6 +27,11 @@
     "scopes": [
       "actors_im_facing_away_from.scope",
       "actors_in_location_facing.scope"
+    ],
+    "events": [
+      "actor_faced_everyone.event.json",
+      "actor_faced_forward.event.json",
+      "actor_turned_back.event.json"
     ]
   }
 }

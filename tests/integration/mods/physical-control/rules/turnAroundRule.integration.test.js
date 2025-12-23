@@ -221,14 +221,14 @@ describe('physical_control_handle_turn_around rule integration', () => {
 
       // Check events
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).toContain('facing:actor_faced_forward');
+      expect(types).toContain('facing-states:actor_faced_forward');
       expect(types).toContain('core:perceptible_event');
       expect(types).toContain('core:display_successful_action_result');
       expect(types).toContain('core:turn_ended');
 
       // Check actor_faced_forward event payload
       const facedForwardEvent = testEnv.events.find(
-        (e) => e.eventType === 'facing:actor_faced_forward'
+        (e) => e.eventType === 'facing-states:actor_faced_forward'
       );
       expect(facedForwardEvent.payload).toEqual({
         actor: 'target1',
