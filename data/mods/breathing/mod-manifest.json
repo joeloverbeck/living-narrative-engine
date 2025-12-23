@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "breathing",
+  "version": "1.0.0",
+  "name": "Breathing System",
+  "description": "Provides anatomy-driven oxygen tracking, hypoxia progression, and asphyxiation mechanics for drowning and strangulation scenarios.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "rules": [],
+    "events": []
+  }
+}

@@ -76,11 +76,6 @@
       "definitions": [],
       "instances": []
     },
-    "events": [
-      "actor_faced_everyone.event.json",
-      "actor_faced_forward.event.json",
-      "actor_turned_back.event.json"
-    ],
     "macros": [],
     "scopes": []
   }

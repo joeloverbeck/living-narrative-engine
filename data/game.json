@@ -30,7 +30,9 @@
     "violence",
     "warding",
     "affection",
-    "movement"
+    "movement",
+    "breathing",
+    "facing"
   ],
   "startWorld": "dredgers:dredgers"
 }

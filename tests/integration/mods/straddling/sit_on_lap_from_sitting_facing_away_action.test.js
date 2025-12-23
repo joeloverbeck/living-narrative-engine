@@ -250,7 +250,7 @@ describe('sit_on_lap_from_sitting_facing_away - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const turnedBackEvent = testFixture.events.find(
-        (e) => e.eventType === 'facing:actor_turned_back'
+        (e) => e.eventType === 'facing-states:actor_turned_back'
       );
       expect(turnedBackEvent).toBeDefined();
       expect(turnedBackEvent.payload.actor).toBe('actor1');

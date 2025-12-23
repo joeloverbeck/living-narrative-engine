@@ -71,7 +71,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Dispatch event indicating actor has turned their back to target",
       "parameters": {
-        "eventType": "facing:actor_turned_back",
+        "eventType": "facing-states:actor_turned_back",
         "payload": {
           "actor": "{event.payload.actorId}",
           "target": "{event.payload.targetId}"

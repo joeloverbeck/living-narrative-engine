@@ -323,7 +323,7 @@ describe('facing:turn_your_back action integration', () => {
     });
 
     const customEvent = testEnv.events.find(
-      (e) => e.eventType === 'facing:actor_turned_back'
+      (e) => e.eventType === 'facing-states:actor_turned_back'
     );
     expect(customEvent).toBeDefined();
     expect(customEvent.payload.actor).toBe('test:actor1');
