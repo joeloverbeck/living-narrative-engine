@@ -54,7 +54,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const validTargets = closeness.reduce((acc, partnerId) => {
@@ -64,7 +64,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
@@ -153,7 +153,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
 
     it('is available when the actor stands behind the target', () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
@@ -188,7 +188,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
 
     it('is not available when the actor faces away from the target', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
-      scenario.actor.components['positioning:facing_away'] = {
+      scenario.actor.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 

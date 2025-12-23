@@ -5,8 +5,8 @@ kissing:actors_with_arms_facing_each_other_or_behind_target := actor.components.
     {"hasPartOfType": [".", "arm"]},
     {
       "or": [
-        {"condition_ref": "positioning:both-actors-facing-each-other"},
-        {"condition_ref": "positioning:actor-is-behind-entity"}
+        {"condition_ref": "facing-states:both-actors-facing-each-other"},
+        {"condition_ref": "facing-states:actor-is-behind-entity"}
       ]
     }
   ]

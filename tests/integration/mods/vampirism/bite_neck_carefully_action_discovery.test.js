@@ -55,10 +55,10 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
 
             // Check facing direction
             const actorFacingAway =
-              em.getComponentData(actor.id, 'positioning:facing_away')
+              em.getComponentData(actor.id, 'facing-states:facing_away')
                 ?.facing_away_from || [];
             const partnerFacingAway =
-              em.getComponentData(partnerId, 'positioning:facing_away')
+              em.getComponentData(partnerId, 'facing-states:facing_away')
                 ?.facing_away_from || [];
 
             const facingEachOther =

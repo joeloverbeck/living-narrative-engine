@@ -19,7 +19,7 @@ describe('Scope DSL support for hyphenated identifiers', () => {
       sex-dry-intimacy:actors_with_covered_penis_im_facing_away_from := sex-core:actors_with_penis_in_intimacy[][
         {
           "and": [
-            { "condition_ref": "positioning:entity-in-facing-away" },
+            { "condition_ref": "facing-states:entity-in-facing-away" },
             { "isSocketCovered": [".", "penis"] }
           ]
         }

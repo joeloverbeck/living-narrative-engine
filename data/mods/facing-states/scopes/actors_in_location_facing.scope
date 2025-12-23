@@ -1,14 +1,14 @@
 // Scope for actors in the same location that the actor is not facing away from
 // Used by actions that require the actor to be facing or at least not have their back turned
 // This scope filters out any actors that exist in the actor's facing_away_from array
-positioning:actors_in_location_facing := entities(core:position)[][{
+facing-states:actors_in_location_facing := entities(core:position)[][{
   "and": [
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
     {
       "!": {
-        "condition_ref": "positioning:entity-in-facing-away"
+        "condition_ref": "facing-states:entity-in-facing-away"
       }
     }
   ]

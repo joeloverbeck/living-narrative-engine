@@ -24,7 +24,7 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
         'sitting:sit_down'
       );
 
-      // This should automatically load positioning:actor-in-entity-facing-away
+      // This should automatically load facing-states:actor-in-entity-facing-away
       // which is referenced in the scope's condition_ref
       await testFixture.registerCustomScope(
         'sex-dry-intimacy',
@@ -33,11 +33,11 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
       // Verify condition was loaded by checking the mock was extended
       const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       expect(condition).toBeDefined();
-      expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+      expect(condition.id).toBe('facing-states:actor-in-entity-facing-away');
       expect(condition.logic).toBeDefined();
     });
 
@@ -102,7 +102,7 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
       // Verify the condition was loaded
       const condition1 =
         testFixture.testEnv.dataRegistry.getConditionDefinition(
-          'positioning:actor-in-entity-facing-away'
+          'facing-states:actor-in-entity-facing-away'
         );
 
       expect(condition1).toBeDefined();
@@ -192,7 +192,7 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
       // Load a condition manually first
       await testFixture.loadDependencyConditions([
-        'positioning:actor-in-entity-facing-away',
+        'facing-states:actor-in-entity-facing-away',
       ]);
 
       // Now register a scope that references the same condition
@@ -203,7 +203,7 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
       // Both should work - the second load should be idempotent
       const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       expect(condition).toBeDefined();
@@ -239,11 +239,11 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
 
       // Verify the dependency was loaded
       const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       expect(condition).toBeDefined();
-      expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+      expect(condition.id).toBe('facing-states:actor-in-entity-facing-away');
     });
 
     it('should handle multiple scope registrations', async () => {

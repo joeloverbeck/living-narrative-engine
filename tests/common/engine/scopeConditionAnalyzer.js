@@ -208,7 +208,7 @@ class ScopeConditionAnalyzer {
    * @throws {Error} If condition file cannot be loaded or ID format is invalid
    * @example
    * const condition = await ScopeConditionAnalyzer.loadConditionDefinition(
-   *   'positioning:actor-in-entity-facing-away'
+   *   'facing-states:actor-in-entity-facing-away'
    * );
    */
   static async loadConditionDefinition(conditionId) {

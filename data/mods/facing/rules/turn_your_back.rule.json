@@ -34,7 +34,7 @@
       "comment": "Add facing_away component with target in facing_away_from array",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:facing_away",
+        "component_type": "facing-states:facing_away",
         "value": {
           "facing_away_from": ["{event.payload.targetId}"]
         }

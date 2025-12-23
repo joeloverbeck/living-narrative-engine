@@ -2,7 +2,7 @@
 // Mirrors caressing scope but namespaced for distress mod targeting torso_upper garments
 distress:close_actors_facing_each_other_with_torso_clothing := actor.components.personal-space-states:closeness.partners[][{
   "and": [
-    {"condition_ref": "positioning:both-actors-facing-each-other"},
+    {"condition_ref": "facing-states:both-actors-facing-each-other"},
     {"!": {"isSlotExposed": [".", "torso_upper"]}}
   ]
 }]

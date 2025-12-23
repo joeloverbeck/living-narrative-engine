@@ -17,7 +17,7 @@
     }
   },
   "required_components": {
-    "actor": ["personal-space-states:closeness", "positioning:facing_away"]
+    "actor": ["personal-space-states:closeness", "facing-states:facing_away"]
   },
   "template": "grind your ass against {primary}'s penis through the {secondary}",
   "visual": {

@@ -111,9 +111,9 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
     // Register the conditions used by the scope and action
     dataRegistry.store(
       'conditions',
-      'positioning:both-actors-facing-each-other',
+      'facing-states:both-actors-facing-each-other',
       {
-        id: 'positioning:both-actors-facing-each-other',
+        id: 'facing-states:both-actors-facing-each-other',
         description:
           'Checks if both actors are facing each other (neither is facing away from the other).',
         logic: {
@@ -123,7 +123,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
                 in: [
                   { var: 'entity.id' },
                   {
-                    var: 'actor.components.positioning:facing_away.facing_away_from',
+                    var: 'actor.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -133,7 +133,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
                 in: [
                   { var: 'actor.id' },
                   {
-                    var: 'entity.components.positioning:facing_away.facing_away_from',
+                    var: 'entity.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -452,7 +452,7 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
 
     // Set up actor's facing_away data if applicable
     if (facingAway) {
-      entityManager.addComponent(actorId, 'positioning:facing_away', {
+      entityManager.addComponent(actorId, 'facing-states:facing_away', {
         facing_away_from: [partnerId],
       });
     }

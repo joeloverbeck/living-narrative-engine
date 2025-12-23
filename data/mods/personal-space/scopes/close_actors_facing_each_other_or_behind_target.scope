@@ -6,8 +6,8 @@ personal-space:close_actors_facing_each_other_or_behind_target := actor.componen
   "and": [
     {
       "or": [
-        {"condition_ref": "positioning:both-actors-facing-each-other"},
-        {"condition_ref": "positioning:actor-is-behind-entity"}
+        {"condition_ref": "facing-states:both-actors-facing-each-other"},
+        {"condition_ref": "facing-states:actor-is-behind-entity"}
       ]
     },
     {"!": {"condition_ref": "deference-states:entity-kneeling-before-actor"}},

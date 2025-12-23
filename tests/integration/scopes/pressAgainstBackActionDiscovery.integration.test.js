@@ -98,14 +98,14 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/positioning/conditions/actor-in-entity-facing-away.condition.json'
+          '../../../data/mods/facing-states/conditions/actor-in-entity-facing-away.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
       actualCondition
     );
 
@@ -276,7 +276,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
           'personal-space-states:closeness': {
             partners: ['actor1'],
           },
-          'positioning:facing_away': {
+          'facing-states:facing_away': {
             facing_away_from: ['actor1'], // Target is facing away from actor
           },
           ...targetFacingConfig,
@@ -353,7 +353,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
           'personal-space-states:closeness': {
             partners: ['actor1'],
           },
-          'positioning:facing_away': {
+          'facing-states:facing_away': {
             facing_away_from: ['actor1'],
           },
         },
@@ -414,7 +414,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
       );
 
       setupEntitiesWithBreasts({
-        'positioning:facing_away': {
+        'facing-states:facing_away': {
           facing_away_from: [], // Target is not facing away from actor
         },
       });
@@ -465,7 +465,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [], // No closeness partners
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
           },

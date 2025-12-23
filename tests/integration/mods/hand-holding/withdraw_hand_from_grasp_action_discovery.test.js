@@ -67,10 +67,10 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
           const holderFacingAway =
-            holderEntity.components?.['positioning:facing_away']
+            holderEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const facingEachOther =

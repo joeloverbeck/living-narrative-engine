@@ -4,8 +4,8 @@ kissing:close_actors_with_mouth_facing_each_other_or_behind_target := actor.comp
     {"hasPartSubTypeContaining": [".", "mouth", {"matchAtEnd": true}]},
     {
       "or": [
-        {"condition_ref": "positioning:both-actors-facing-each-other"},
-        {"condition_ref": "positioning:actor-is-behind-entity"}
+        {"condition_ref": "facing-states:both-actors-facing-each-other"},
+        {"condition_ref": "facing-states:actor-is-behind-entity"}
       ]
     }
   ]

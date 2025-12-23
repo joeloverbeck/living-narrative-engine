@@ -95,8 +95,8 @@ describe('Fondle Penis Action Discovery Integration Tests', () => {
     dataRegistry.store('actions', fondlePenisAction.id, fondlePenisAction);
 
     // Store the condition
-    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
-      id: 'positioning:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'facing-states:entity-not-in-facing-away', {
+      id: 'facing-states:entity-not-in-facing-away',
       logic: {
         not: {
           in: [

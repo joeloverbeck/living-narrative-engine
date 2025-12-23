@@ -39,7 +39,7 @@ function setupAnatomyComponents() {
     .build();
 
   // Add facing_away component manually
-  target.components['positioning:facing_away'] = {
+  target.components['facing-states:facing_away'] = {
     facing_away_from: ['alice'],
   };
 

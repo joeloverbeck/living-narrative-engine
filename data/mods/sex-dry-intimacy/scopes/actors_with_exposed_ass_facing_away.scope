@@ -3,7 +3,7 @@
 sex-dry-intimacy:actors_with_exposed_ass_facing_away := caressing:actors_with_ass_cheeks_in_intimacy[][
   {
     "and": [
-      { "condition_ref": "positioning:actor-in-entity-facing-away" },
+      { "condition_ref": "facing-states:actor-in-entity-facing-away" },
       {
         "socketExposure": [".", ["left_ass", "right_ass"]]
       }

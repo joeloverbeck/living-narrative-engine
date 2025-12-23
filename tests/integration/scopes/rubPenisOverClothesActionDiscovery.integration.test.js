@@ -186,14 +186,14 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
     );
 
     // Store the condition
-    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
-      id: 'positioning:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'facing-states:entity-not-in-facing-away', {
+      id: 'facing-states:entity-not-in-facing-away',
       logic: {
         '!': {
           in: [
             { var: 'actor.id' },
             {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -363,7 +363,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -374,7 +374,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -550,7 +550,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -561,7 +561,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [entityIds.actor], // Target is facing away from actor
             },
             'anatomy:body': {
@@ -643,7 +643,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.target],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -654,7 +654,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: [entityIds.actor],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -720,7 +720,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: entityIds.actor,
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             // No closeness component

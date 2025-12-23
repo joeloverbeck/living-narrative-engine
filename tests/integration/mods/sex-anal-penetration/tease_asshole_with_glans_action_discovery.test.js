@@ -38,7 +38,7 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice with exposed asshole
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
       scenario.target.components['anatomy:body_part_types'] = {
@@ -79,7 +79,7 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice with exposed asshole
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
       scenario.target.components['anatomy:body_part_types'] = {

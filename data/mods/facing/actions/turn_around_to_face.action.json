@@ -5,13 +5,13 @@
   "description": "Turn around to face someone you are currently facing away from.",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_im_facing_away_from",
+      "scope": "facing-states:actors_im_facing_away_from",
       "placeholder": "target",
       "description": "Actor you are facing away from"
     }
   },
   "required_components": {
-    "actor": ["personal-space-states:closeness", "positioning:facing_away"]
+    "actor": ["personal-space-states:closeness", "facing-states:facing_away"]
   },
   "forbidden_components": {
     "actor": [

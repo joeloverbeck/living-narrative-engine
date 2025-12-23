@@ -26,16 +26,16 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load a real condition from the positioning mod
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     // Verify the condition is properly loaded
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
 
     expect(condition).toBeDefined();
-    expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+    expect(condition.id).toBe('facing-states:actor-in-entity-facing-away');
     expect(condition.description).toBeDefined();
     expect(typeof condition.description).toBe('string');
   });
@@ -45,22 +45,22 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load multiple real conditions
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
-      'positioning:entity-not-in-facing-away',
+      'facing-states:actor-in-entity-facing-away',
+      'facing-states:entity-not-in-facing-away',
     ]);
 
     // Verify both conditions are loaded
     const condition1 = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
     const condition2 = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:entity-not-in-facing-away'
+      'facing-states:entity-not-in-facing-away'
     );
 
     expect(condition1).toBeDefined();
     expect(condition2).toBeDefined();
-    expect(condition1.id).toBe('positioning:actor-in-entity-facing-away');
-    expect(condition2.id).toBe('positioning:entity-not-in-facing-away');
+    expect(condition1.id).toBe('facing-states:actor-in-entity-facing-away');
+    expect(condition2.id).toBe('facing-states:entity-not-in-facing-away');
   });
 
   it('should integrate with scope resolution workflow', async () => {
@@ -71,12 +71,12 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load dependency condition
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     // Verify the condition is accessible during scope resolution
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
 
     expect(condition).toBeDefined();
@@ -98,7 +98,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load the condition that a custom scope might reference
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     // Create entities for testing
@@ -119,22 +119,22 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     // Verify the condition is available in the test environment
     const loadedCondition =
       testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
     expect(loadedCondition).toBeDefined();
-    expect(loadedCondition.id).toBe('positioning:actor-in-entity-facing-away');
+    expect(loadedCondition.id).toBe('facing-states:actor-in-entity-facing-away');
   });
 
   it('should handle conditions with complex logic definitions', async () => {
     testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
 
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
 
     // Verify condition has logic definition
@@ -147,7 +147,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load conditions
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     // Perform some test operations
@@ -164,11 +164,11 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Verify condition is still available after reset
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
 
     expect(condition).toBeDefined();
-    expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+    expect(condition.id).toBe('facing-states:actor-in-entity-facing-away');
   });
 
   it('should work in a complete action discovery workflow', async () => {
@@ -179,7 +179,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load dependency conditions
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     // Create test scenario
@@ -206,7 +206,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Verify loaded condition is accessible
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
     expect(condition).toBeDefined();
   });
@@ -216,28 +216,28 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load first condition
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
     ]);
 
     const condition1 = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
+      'facing-states:actor-in-entity-facing-away'
     );
     expect(condition1).toBeDefined();
 
     // Load second condition later
     await testFixture.loadDependencyConditions([
-      'positioning:entity-not-in-facing-away',
+      'facing-states:entity-not-in-facing-away',
     ]);
 
     const condition2 = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:entity-not-in-facing-away'
+      'facing-states:entity-not-in-facing-away'
     );
     expect(condition2).toBeDefined();
 
     // First condition should still be available
     const condition1Again =
       testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
     expect(condition1Again).toBeDefined();
     expect(condition1Again).toEqual(condition1);
@@ -252,14 +252,14 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
       // Before: Would require 10+ lines of boilerplate
       // After: One simple call
       await testFixture.loadDependencyConditions([
-        'positioning:actor-in-entity-facing-away',
-        'positioning:entity-not-in-facing-away',
+        'facing-states:actor-in-entity-facing-away',
+        'facing-states:entity-not-in-facing-away',
       ]);
 
       // Verify both are loaded and accessible
       const conditions = [
-        'positioning:actor-in-entity-facing-away',
-        'positioning:entity-not-in-facing-away',
+        'facing-states:actor-in-entity-facing-away',
+        'facing-states:entity-not-in-facing-away',
       ].map((id) =>
         testFixture.testEnv.dataRegistry.getConditionDefinition(id)
       );

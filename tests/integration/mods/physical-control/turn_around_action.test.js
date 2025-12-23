@@ -489,7 +489,7 @@ describe('Turn Around Action Discovery', () => {
 
     it('should show action when actor is behind target', async () => {
       // Bob is facing away from Alice (Alice is behind Bob)
-      entityManager.addComponent(bob, 'positioning:facing_away', {
+      entityManager.addComponent(bob, 'facing-states:facing_away', {
         facing_away_from: [alice],
       });
 

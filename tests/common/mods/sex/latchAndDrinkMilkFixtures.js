@@ -88,7 +88,7 @@ export function buildLatchAndDrinkMilkScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: actorFacingAwayFromTarget ? [targetId] : [],
     });
 
@@ -108,7 +108,7 @@ export function buildLatchAndDrinkMilkScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: targetFacingAwayFromActor ? [actorId] : [],
     })
     .withBody(torsoId);

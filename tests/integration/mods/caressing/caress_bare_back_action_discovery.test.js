@@ -93,7 +93,7 @@ describe('caressing:caress_bare_back action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const getCoveringSlots = (targetEntity, socketName) => {
@@ -178,7 +178,7 @@ describe('caressing:caress_bare_back action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
 
             const facingEachOther =
@@ -292,7 +292,7 @@ describe('caressing:caress_bare_back action discovery', () => {
     it('is available when the actor is behind the target with an uncovered back', () => {
       const scenario = testFixture.createCloseActors(['Jordan', 'Riley']);
       setBackCoverage(scenario.target, { covered: false });
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
@@ -347,10 +347,10 @@ describe('caressing:caress_bare_back action discovery', () => {
       const scenario = testFixture.createCloseActors(['Morgan', 'Shawn']);
       setBackCoverage(scenario.target, { covered: false });
 
-      scenario.actor.components['positioning:facing_away'] = {
+      scenario.actor.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [],
       };
 

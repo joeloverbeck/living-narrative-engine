@@ -96,14 +96,14 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
     // Store the condition
     dataRegistry.store(
       'conditions',
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
       {
-        id: 'positioning:actor-in-entity-facing-away',
+        id: 'facing-states:actor-in-entity-facing-away',
         logic: {
           in: [
             { var: 'actor.id' },
             {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -257,7 +257,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
                     or: [
                       {
                         condition_ref:
-                          'positioning:actor-in-entity-facing-away',
+                          'facing-states:actor-in-entity-facing-away',
                       },
                       {
                         '!!': {
@@ -457,7 +457,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
             ...(targetLyingDown && {
@@ -647,7 +647,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
             'anatomy:body': {

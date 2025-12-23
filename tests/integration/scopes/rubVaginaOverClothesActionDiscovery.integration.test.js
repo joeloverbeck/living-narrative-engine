@@ -60,7 +60,7 @@ const closeActorsFacingScopeContent = fs.readFileSync(
 
 // Import actual action and condition files
 import rubVaginaOverClothesAction from '../../../data/mods/sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json';
-import bothActorsFacingEachOtherCondition from '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json';
+import bothActorsFacingEachOtherCondition from '../../../data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -248,14 +248,14 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       bothActorsFacingEachOtherCondition.id,
       bothActorsFacingEachOtherCondition
     );
-    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
-      id: 'positioning:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'facing-states:entity-not-in-facing-away', {
+      id: 'facing-states:entity-not-in-facing-away',
       logic: {
         '!': {
           in: [
             { var: 'actor.id' },
             {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -477,7 +477,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -488,7 +488,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -730,7 +730,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -741,7 +741,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'], // Facing away from actor
             },
             'anatomy:body': {
@@ -833,7 +833,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -844,7 +844,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -926,7 +926,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {

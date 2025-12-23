@@ -120,7 +120,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
           const closenessPartners =
             actorEntity.components?.['personal-space-states:closeness']?.partners || [];
           const actorFacingAway = new Set(
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || []
           );
 
@@ -137,7 +137,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
             }
 
             const partnerFacingAway = new Set(
-              partnerEntity.components?.['positioning:facing_away']
+              partnerEntity.components?.['facing-states:facing_away']
                 ?.facing_away_from || []
             );
             if (partnerFacingAway.has(actorEntity.id || actorId)) {
@@ -348,7 +348,7 @@ describe('distress:clutch_onto_upper_clothing action discovery', () => {
     it('is not available when actors are facing away from each other', () => {
       const scenario = testFixture.createCloseActors(['Mira', 'Noah']);
 
-      scenario.actor.components['positioning:facing_away'] = {
+      scenario.actor.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 

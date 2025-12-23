@@ -3,6 +3,6 @@
 affection:actors_with_arms_facing_each_other := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "arm"]},
-    {"condition_ref": "positioning:both-actors-facing-each-other"}
+    {"condition_ref": "facing-states:both-actors-facing-each-other"}
   ]
 }]

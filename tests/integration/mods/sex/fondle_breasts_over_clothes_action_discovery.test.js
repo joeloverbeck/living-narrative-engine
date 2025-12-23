@@ -116,7 +116,7 @@ describe('sex-breastplay:fondle_breasts_over_clothes action discovery', () => {
     it('should NOT appear when actors are facing away', () => {
       // EXPECTED BEHAVIOR:
       // If Beth is facing away from Alice:
-      // - positioning:entity-not-in-facing-away condition fails
+      // - facing-states:entity-not-in-facing-away condition fails
       // - sex-breastplay:actors_with_breasts_facing_each_other_covered scope returns empty set
       // - Action should NOT be available
       //

@@ -65,7 +65,7 @@ describe('violence:grab_neck action discovery', () => {
 
     it('is available when the actor stands behind the target', () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
@@ -99,7 +99,7 @@ describe('violence:grab_neck action discovery', () => {
     it('is not available when the actor faces away from the target', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
 
-      scenario.actor.components['positioning:facing_away'] = {
+      scenario.actor.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 

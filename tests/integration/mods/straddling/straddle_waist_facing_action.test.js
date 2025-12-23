@@ -167,6 +167,6 @@ describe('Straddle Waist Facing - Action Execution', () => {
     await testFixture.executeAction('test:actor1', 'test:target1');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away']).toBeUndefined();
+    expect(actor.components['facing-states:facing_away']).toBeUndefined();
   });
 });

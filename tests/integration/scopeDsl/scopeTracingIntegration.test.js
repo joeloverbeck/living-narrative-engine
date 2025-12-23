@@ -484,7 +484,7 @@ describe('Scope Tracing Integration', () => {
     beforeEach(async () => {
       // Register scope for tracing
       await testFixture.registerCustomScope(
-        'positioning',
+        'facing-states',
         'actors_im_facing_away_from'
       );
     });
@@ -498,7 +498,7 @@ describe('Scope Tracing Integration', () => {
       // Setup incorrect components (empty facing_away_from)
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [] } // BUG: Should have actor ID
       );
 
@@ -507,7 +507,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_im_facing_away_from',
+        'facing-states:actors_im_facing_away_from',
         actorEntity
       );
 
@@ -544,7 +544,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_im_facing_away_from',
+        'facing-states:actors_im_facing_away_from',
         actorEntity
       );
 
@@ -566,7 +566,7 @@ describe('Scope Tracing Integration', () => {
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_im_facing_away_from',
+        'facing-states:actors_im_facing_away_from',
         actorEntity
       );
 
@@ -588,7 +588,7 @@ describe('Scope Tracing Integration', () => {
 
       // This should work correctly
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:actors_im_facing_away_from',
+        'facing-states:actors_im_facing_away_from',
         actorEntity
       );
 

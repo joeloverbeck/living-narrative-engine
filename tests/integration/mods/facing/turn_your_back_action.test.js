@@ -238,9 +238,9 @@ describe('facing:turn_your_back action integration', () => {
 
     // Check that facing_away component was added
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away']).toBeDefined();
+    expect(actor.components['facing-states:facing_away']).toBeDefined();
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['test:target1']);
 
     // Check success message
@@ -366,7 +366,7 @@ describe('facing:turn_your_back action integration', () => {
     // Component should be added correctly
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['test:target1']);
 
     // Perceptible event should be visible to all in location
@@ -411,7 +411,7 @@ describe('facing:turn_your_back action integration', () => {
 
     // Should not have added the component
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away']).toBeUndefined();
+    expect(actor.components['facing-states:facing_away']).toBeUndefined();
   });
 
   it('creates facing_away component with array structure', async () => {
@@ -441,7 +441,7 @@ describe('facing:turn_your_back action integration', () => {
     });
 
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    const facingAwayComponent = actor.components['positioning:facing_away'];
+    const facingAwayComponent = actor.components['facing-states:facing_away'];
 
     // Verify component structure matches schema
     expect(facingAwayComponent).toBeDefined();
@@ -481,9 +481,9 @@ describe('facing:turn_your_back action integration', () => {
     const actor = testEnv.entityManager.getEntityInstance(
       'game:player_character'
     );
-    expect(actor.components['positioning:facing_away']).toBeDefined();
+    expect(actor.components['facing-states:facing_away']).toBeDefined();
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['npcs:bartender_instance']);
 
     // Verify success message includes proper names
@@ -505,7 +505,7 @@ describe('facing:turn_your_back action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:facing_away': {
+          'facing-states:facing_away': {
             facing_away_from: ['test:existing_target'],
           },
         },
@@ -533,7 +533,7 @@ describe('facing:turn_your_back action integration', () => {
     // The ADD_COMPONENT operation would replace existing component
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['test:target1']);
   });
 
@@ -565,7 +565,7 @@ describe('facing:turn_your_back action integration', () => {
     });
 
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    const component = actor.components['positioning:facing_away'];
+    const component = actor.components['facing-states:facing_away'];
 
     // Verify the component structure matches the schema requirements
     expect(component).toBeDefined();
@@ -601,9 +601,9 @@ describe('facing:turn_your_back action integration', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away']).toBeDefined();
+    expect(actor.components['facing-states:facing_away']).toBeDefined();
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['test:target1']);
 
     // Verify success message would still be generated
@@ -671,9 +671,9 @@ describe('facing:turn_your_back action integration', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away']).toBeDefined();
+    expect(actor.components['facing-states:facing_away']).toBeDefined();
     expect(
-      actor.components['positioning:facing_away'].facing_away_from
+      actor.components['facing-states:facing_away'].facing_away_from
     ).toEqual(['test:target1']);
 
     // Verify straddling component retained

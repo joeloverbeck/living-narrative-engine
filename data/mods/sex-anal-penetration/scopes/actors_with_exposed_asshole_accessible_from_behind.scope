@@ -12,7 +12,7 @@ sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind := actor
     },
     {
       "or": [
-        {"condition_ref": "positioning:actor-in-entity-facing-away"},
+        {"condition_ref": "facing-states:actor-in-entity-facing-away"},
         {"!!": {"var": "entity.components.lying-states:lying_on"}}
       ]
     }

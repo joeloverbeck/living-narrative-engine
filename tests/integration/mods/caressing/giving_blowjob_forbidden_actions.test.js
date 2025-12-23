@@ -96,7 +96,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       }
 
       const actorFacingAway =
-        actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
+        actorEntity.components?.['facing-states:facing_away']?.facing_away_from ||
         [];
 
       return closeness.reduce((acc, partnerId) => {
@@ -106,7 +106,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
         }
 
         const partnerFacingAway =
-          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          partner.components?.['facing-states:facing_away']?.facing_away_from ||
           [];
         const facingEachOther =
           !actorFacingAway.includes(partnerId) &&
@@ -143,7 +143,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
       }
 
       const actorFacingAway =
-        actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
+        actorEntity.components?.['facing-states:facing_away']?.facing_away_from ||
         [];
       const actorKneelingBefore =
         actorEntity.components?.['deference-states:kneeling_before']?.entityId;
@@ -155,7 +155,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
         }
 
         const partnerFacingAway =
-          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          partner.components?.['facing-states:facing_away']?.facing_away_from ||
           [];
         const facingEachOther =
           !actorFacingAway.includes(partnerId) &&

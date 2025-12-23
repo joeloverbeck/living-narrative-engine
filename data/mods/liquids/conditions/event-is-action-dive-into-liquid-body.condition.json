@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "liquids:event-is-action-dive-into-liquid-body",
+  "description": "Checks if the event is a dive_into_liquid_body action attempt",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "liquids:dive_into_liquid_body"
+    ]
+  }
+}

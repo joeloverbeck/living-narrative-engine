@@ -33,7 +33,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "positioning:facing_away",
+        "component_type": "facing-states:facing_away",
         "result_variable": "targetFacingState",
         "missing_value": null
       }
@@ -49,7 +49,7 @@
             "comment": "Add actor to existing facing_away_from array",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "positioning:facing_away",
+              "component_type": "facing-states:facing_away",
               "field": "facing_away_from",
               "mode": "push_unique",
               "value": "{event.payload.actorId}"
@@ -62,7 +62,7 @@
             "comment": "Create new facing_away component with actor in facing_away_from array",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "positioning:facing_away",
+              "component_type": "facing-states:facing_away",
               "value": {
                 "facing_away_from": ["{event.payload.actorId}"]
               }

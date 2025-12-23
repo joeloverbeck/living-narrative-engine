@@ -6,8 +6,8 @@ sex-breastplay:actors_with_breasts_facing_each_other_or_away := actor.components
     {"hasPartOfType": [".", "breast"]},
     {
       "or": [
-        {"condition_ref": "positioning:both-actors-facing-each-other"},
-        {"condition_ref": "positioning:actor-is-behind-entity"}
+        {"condition_ref": "facing-states:both-actors-facing-each-other"},
+        {"condition_ref": "facing-states:actor-is-behind-entity"}
       ]
     },
     {"socketExposure": [".", ["left_chest", "right_chest"]]}

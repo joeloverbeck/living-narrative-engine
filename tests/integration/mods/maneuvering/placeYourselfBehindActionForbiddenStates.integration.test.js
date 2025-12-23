@@ -32,9 +32,9 @@ describe('maneuvering:place_yourself_behind discovery posture validation', () =>
     await fixture.executeAction(scenario.actor.id, scenario.target.id);
 
     const target = fixture.entityManager.getEntityInstance(scenario.target.id);
-    expect(target.components['positioning:facing_away']).toBeDefined();
+    expect(target.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain(scenario.actor.id);
   });
 
@@ -65,6 +65,6 @@ describe('maneuvering:place_yourself_behind discovery posture validation', () =>
     }).rejects.toThrow(/forbidden component/i);
 
     const actor = fixture.entityManager.getEntityInstance(scenario.actor.id);
-    expect(actor.components['positioning:facing_away']).toBeUndefined();
+    expect(actor.components['facing-states:facing_away']).toBeUndefined();
   });
 });

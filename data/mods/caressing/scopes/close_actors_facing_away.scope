@@ -1,5 +1,5 @@
 // Scope for actors in closeness who are facing away (actor is in entity's facing_away_from array)
 // Used by massage_back action to ensure actors can only massage the back of entities facing away from them
 caressing:close_actors_facing_away := actor.components.personal-space-states:closeness.partners[][{
-  "condition_ref": "positioning:actor-in-entity-facing-away"
+  "condition_ref": "facing-states:actor-in-entity-facing-away"
 }]

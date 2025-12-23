@@ -264,7 +264,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
       'bending:surface_im_bending_over',
-      'positioning:actors_im_facing_away_from',
+      'facing-states:actors_im_facing_away_from',
     ];
 
     newScopes.forEach((scopeName) => {
@@ -295,7 +295,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
       'bending:surface_im_bending_over',
-      'positioning:actors_im_facing_away_from',
+      'facing-states:actors_im_facing_away_from',
     ];
 
     scopesToTest.forEach((scopeName) => {

@@ -203,7 +203,7 @@ describe('lift_onto_lap_face_to_face - Action Execution', () => {
       const updatedTarget =
         testFixture.entityManager.getEntityInstance('target1');
       expect(
-        updatedTarget.components['positioning:facing_away']
+        updatedTarget.components['facing-states:facing_away']
       ).toBeUndefined();
     });
   });

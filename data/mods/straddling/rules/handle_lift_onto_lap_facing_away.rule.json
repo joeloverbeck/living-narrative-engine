@@ -54,7 +54,7 @@
       "comment": "Add facing_away component to PRIMARY to track which entity they're facing away from",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:facing_away",
+        "component_type": "facing-states:facing_away",
         "value": {
           "facing_away_from": ["{event.payload.actorId}"]
         }

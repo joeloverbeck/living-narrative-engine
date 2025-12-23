@@ -309,7 +309,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .asActor()
         .withComponent('bending-states:bending_over', { surface_id: 'test:table' })
         .withComponent('personal-space-states:closeness', { target_id: 'test:target' })
-        .withComponent('positioning:facing_away', { target_id: 'test:target' })
+        .withComponent('facing-states:facing_away', { target_id: 'test:target' })
         .build();
 
       testFixture.reset([room, table, actor, target]);

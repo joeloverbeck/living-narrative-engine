@@ -34,7 +34,7 @@ describe('facing:turn_your_back action discovery', () => {
         'positioning:biting_neck'
       );
       expect(turnYourBackAction.forbidden_components.actor).toContain(
-        'positioning:facing_away'
+        'facing-states:facing_away'
       );
     });
 

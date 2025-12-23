@@ -802,7 +802,7 @@ describe('personal_space_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'personal-space-states:closeness': { partners: ['b1'] },
-          'positioning:facing_away': { facing_away_from: ['b1'] },
+          'facing-states:facing_away': { facing_away_from: ['b1'] },
           'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
@@ -888,7 +888,7 @@ describe('personal_space_handle_step_back rule integration', () => {
       testEnv.entityManager.getComponentData('a1', 'personal-space-states:closeness')
     ).toBeNull();
     expect(
-      testEnv.entityManager.getComponentData('a1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('a1', 'facing-states:facing_away')
     ).toBeNull();
 
     // Verify actor's movement components are unlocked
@@ -936,7 +936,7 @@ describe('personal_space_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'personal-space-states:closeness': { partners: ['b1', 'c1'] },
-          'positioning:facing_away': { facing_away_from: ['b1', 'c1'] },
+          'facing-states:facing_away': { facing_away_from: ['b1', 'c1'] },
           'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
@@ -1060,7 +1060,7 @@ describe('personal_space_handle_step_back rule integration', () => {
       testEnv.entityManager.getComponentData('a1', 'personal-space-states:closeness')
     ).toBeNull();
     expect(
-      testEnv.entityManager.getComponentData('a1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('a1', 'facing-states:facing_away')
     ).toBeNull();
     expect(
       testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
@@ -1199,7 +1199,7 @@ describe('personal_space_handle_step_back rule integration', () => {
       testEnv.entityManager.getComponentData('a1', 'personal-space-states:closeness')
     ).toBeNull();
     expect(
-      testEnv.entityManager.getComponentData('a1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('a1', 'facing-states:facing_away')
     ).toBeNull(); // Should still be null
     expect(
       testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
@@ -1245,7 +1245,7 @@ describe('personal_space_handle_step_back rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'personal-space-states:closeness': { partners: ['b1', 'c1', 'd1'] },
-          'positioning:facing_away': { facing_away_from: ['b1', 'c1'] }, // facing away from b1 and c1
+          'facing-states:facing_away': { facing_away_from: ['b1', 'c1'] }, // facing away from b1 and c1
           'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
@@ -1284,7 +1284,7 @@ describe('personal_space_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           'personal-space-states:closeness': { partners: ['a1', 'c1', 'd1'] },
-          'positioning:facing_away': { facing_away_from: ['d1'] }, // facing away from d1
+          'facing-states:facing_away': { facing_away_from: ['d1'] }, // facing away from d1
           'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
@@ -1362,7 +1362,7 @@ describe('personal_space_handle_step_back rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'D' },
           'personal-space-states:closeness': { partners: ['a1', 'b1', 'c1'] },
-          'positioning:facing_away': { facing_away_from: ['a1'] }, // facing away from a1
+          'facing-states:facing_away': { facing_away_from: ['a1'] }, // facing away from a1
           'anatomy:body': {
             recipeId: 'anatomy:human',
             body: {
@@ -1410,7 +1410,7 @@ describe('personal_space_handle_step_back rule integration', () => {
       testEnv.entityManager.getComponentData('a1', 'personal-space-states:closeness')
     ).toBeNull();
     expect(
-      testEnv.entityManager.getComponentData('a1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('a1', 'facing-states:facing_away')
     ).toBeNull();
     expect(
       testEnv.entityManager.getComponentData('leg-left-a1', 'core:movement')
@@ -1437,15 +1437,15 @@ describe('personal_space_handle_step_back rule integration', () => {
 
     // Verify facing states of remaining partners are preserved correctly
     expect(
-      testEnv.entityManager.getComponentData('b1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('b1', 'facing-states:facing_away')
     ).toEqual({
       facing_away_from: ['d1'], // b1 still facing away from d1
     });
     expect(
-      testEnv.entityManager.getComponentData('c1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('c1', 'facing-states:facing_away')
     ).toBeNull(); // c1 still has no facing_away component
     expect(
-      testEnv.entityManager.getComponentData('d1', 'positioning:facing_away')
+      testEnv.entityManager.getComponentData('d1', 'facing-states:facing_away')
     ).toEqual({
       facing_away_from: ['a1'], // d1 still faces away from a1, but a1 no longer in closeness circle
     });

@@ -86,7 +86,7 @@ export function buildPressAgainstChestScenario(options = {}) {
     .withLocationComponent(roomId)
     .asActor()
     .withBody(actorTorsoId)
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: actorFacingAwayFromTarget ? [targetId] : [],
     });
 
@@ -99,7 +99,7 @@ export function buildPressAgainstChestScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: targetFacingAwayFromActor ? [actorId] : [],
     });
 

@@ -465,10 +465,10 @@ export class ScopeResolverHelpers {
             },
             filterFn: (partnerId, actor, context, em) => {
               const actorFacingAway =
-                em.getComponentData(actor.id, 'positioning:facing_away')
+                em.getComponentData(actor.id, 'facing-states:facing_away')
                   ?.facing_away_from || [];
               const partnerFacingAway =
-                em.getComponentData(partnerId, 'positioning:facing_away')
+                em.getComponentData(partnerId, 'facing-states:facing_away')
                   ?.facing_away_from || [];
 
               const facingEachOther =
@@ -566,10 +566,10 @@ export class ScopeResolverHelpers {
             },
             filterFn: (partnerId, actor, context, em) => {
               const actorFacingAway =
-                em.getComponentData(actor.id, 'positioning:facing_away')
+                em.getComponentData(actor.id, 'facing-states:facing_away')
                   ?.facing_away_from || [];
               const partnerFacingAway =
-                em.getComponentData(partnerId, 'positioning:facing_away')
+                em.getComponentData(partnerId, 'facing-states:facing_away')
                   ?.facing_away_from || [];
 
               // Both must be facing each other (not facing away from each other)
@@ -635,10 +635,10 @@ export class ScopeResolverHelpers {
             filterFn: (partnerId, actor, context, em) => {
               // Get facing away data
               const actorFacingAway =
-                em.getComponentData(actor.id, 'positioning:facing_away')
+                em.getComponentData(actor.id, 'facing-states:facing_away')
                   ?.facing_away_from || [];
               const partnerFacingAway =
-                em.getComponentData(partnerId, 'positioning:facing_away')
+                em.getComponentData(partnerId, 'facing-states:facing_away')
                   ?.facing_away_from || [];
 
               // Check if facing each other
@@ -819,13 +819,13 @@ export class ScopeResolverHelpers {
       ),
 
       // "actors im facing away from" - Facing-away targets in closeness
-      'positioning:actors_im_facing_away_from': this.createArrayFilterResolver(
-        'positioning:actors_im_facing_away_from',
+      'facing-states:actors_im_facing_away_from': this.createArrayFilterResolver(
+        'facing-states:actors_im_facing_away_from',
         {
           getArray: (actor, context, em) => {
             const facingAway = em.getComponentData(
               actor.id,
-              'positioning:facing_away'
+              'facing-states:facing_away'
             );
             return facingAway?.facing_away_from || [];
           },

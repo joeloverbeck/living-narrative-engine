@@ -5,7 +5,7 @@
   "description": "Kneel before another actor as a sign of respect, submission, or reverence. Requires you to be facing the target.",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_in_location_facing",
+      "scope": "facing-states:actors_in_location_facing",
       "placeholder": "actor",
       "description": "The actor to kneel before"
     }

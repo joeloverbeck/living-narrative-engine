@@ -134,7 +134,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         {
@@ -149,7 +149,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify actor has facing_away component before action
       const aliceBefore = testEnv.entityManager.getEntityInstance('alice');
-      expect(aliceBefore.components['positioning:facing_away']).toBeDefined();
+      expect(aliceBefore.components['facing-states:facing_away']).toBeDefined();
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
@@ -161,7 +161,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify facing_away component was removed
       const aliceAfter = testEnv.entityManager.getEntityInstance('alice');
-      expect(aliceAfter.components['positioning:facing_away']).toBeUndefined();
+      expect(aliceAfter.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should dispatch the actor_faced_everyone event', async () => {
@@ -172,7 +172,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         {
@@ -211,7 +211,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         {
@@ -257,7 +257,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         {
@@ -297,7 +297,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob', 'charlie'] },
-            'positioning:facing_away': { facing_away_from: ['bob', 'charlie'] },
+            'facing-states:facing_away': { facing_away_from: ['bob', 'charlie'] },
           },
         },
         {
@@ -321,10 +321,10 @@ describe('Turn Around to Face Rule', () => {
       // Verify Alice is facing away from both Bob and Charlie
       const aliceBefore = testEnv.entityManager.getEntityInstance('alice');
       expect(
-        aliceBefore.components['positioning:facing_away'].facing_away_from
+        aliceBefore.components['facing-states:facing_away'].facing_away_from
       ).toContain('bob');
       expect(
-        aliceBefore.components['positioning:facing_away'].facing_away_from
+        aliceBefore.components['facing-states:facing_away'].facing_away_from
       ).toContain('charlie');
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
@@ -337,7 +337,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify entire component was removed
       const aliceAfter = testEnv.entityManager.getEntityInstance('alice');
-      expect(aliceAfter.components['positioning:facing_away']).toBeUndefined();
+      expect(aliceAfter.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should still dispatch event with specific target name', async () => {
@@ -348,7 +348,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob', 'charlie'] },
-            'positioning:facing_away': { facing_away_from: ['bob', 'charlie'] },
+            'facing-states:facing_away': { facing_away_from: ['bob', 'charlie'] },
           },
         },
         {
@@ -394,7 +394,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         // Bob doesn't exist
@@ -410,7 +410,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify facing_away component was still removed
       const alice = testEnv.entityManager.getEntityInstance('alice');
-      expect(alice.components['positioning:facing_away']).toBeUndefined();
+      expect(alice.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should handle actor without facing_away component', async () => {
@@ -444,7 +444,7 @@ describe('Turn Around to Face Rule', () => {
 
       // The rule should execute without error
       const alice = testEnv.entityManager.getEntityInstance('alice');
-      expect(alice.components['positioning:facing_away']).toBeUndefined();
+      expect(alice.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should handle empty facing_away_from array', async () => {
@@ -455,7 +455,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: [] },
+            'facing-states:facing_away': { facing_away_from: [] },
           },
         },
         {
@@ -478,7 +478,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Component should still be removed
       const alice = testEnv.entityManager.getEntityInstance('alice');
-      expect(alice.components['positioning:facing_away']).toBeUndefined();
+      expect(alice.components['facing-states:facing_away']).toBeUndefined();
     });
   });
 
@@ -491,7 +491,7 @@ describe('Turn Around to Face Rule', () => {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'test-location' },
             'personal-space-states:closeness': { partners: ['bob'] },
-            'positioning:facing_away': { facing_away_from: ['bob'] },
+            'facing-states:facing_away': { facing_away_from: ['bob'] },
           },
         },
         {
@@ -512,7 +512,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify the rule didn't execute - facing_away should still exist
       const alice = testEnv.entityManager.getEntityInstance('alice');
-      expect(alice.components['positioning:facing_away']).toBeDefined();
+      expect(alice.components['facing-states:facing_away']).toBeDefined();
 
       // Verify no actor_faced_everyone event was dispatched
       const types = testEnv.events.map((e) => e.eventType);

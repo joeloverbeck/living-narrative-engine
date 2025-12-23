@@ -75,7 +75,7 @@ describe('Turn around and kneel before interaction', () => {
     // Load necessary scope files
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
-      'data/mods/positioning/scopes/actors_in_location_facing.scope',
+      'data/mods/facing-states/scopes/actors_in_location_facing.scope',
       'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
     ];
 
@@ -107,9 +107,9 @@ describe('Turn around and kneel before interaction', () => {
       'data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       'data/mods/core/conditions/entity-has-actor-component.condition.json',
       'data/mods/core/conditions/actor-mouth-available.condition.json',
-      'data/mods/positioning/conditions/entity-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
-      'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
+      'data/mods/facing-states/conditions/entity-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json',
+      'data/mods/facing-states/conditions/actor-is-behind-entity.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -170,7 +170,7 @@ describe('Turn around and kneel before interaction', () => {
 
           if (target) {
             const facingAwayComponent =
-              target.components['positioning:facing_away'];
+              target.components['facing-states:facing_away'];
             if (facingAwayComponent?.facing_away_from?.includes(actor.id)) {
               // Target is already facing away from actor, turn back to face
               const updatedList = facingAwayComponent.facing_away_from.filter(
@@ -180,12 +180,12 @@ describe('Turn around and kneel before interaction', () => {
                 // Remove component if empty
                 entityManager.removeComponent(
                   target.id,
-                  'positioning:facing_away'
+                  'facing-states:facing_away'
                 );
               } else {
                 entityManager.addComponent(
                   target.id,
-                  'positioning:facing_away',
+                  'facing-states:facing_away',
                   {
                     facing_away_from: updatedList,
                   }
@@ -194,7 +194,7 @@ describe('Turn around and kneel before interaction', () => {
             } else {
               // Turn target around to face away from actor
               const currentList = facingAwayComponent?.facing_away_from || [];
-              entityManager.addComponent(target.id, 'positioning:facing_away', {
+              entityManager.addComponent(target.id, 'facing-states:facing_away', {
                 facing_away_from: [...currentList, actor.id],
               });
             }
@@ -427,7 +427,7 @@ describe('Turn around and kneel before interaction', () => {
 
     // 2. Verify actor2 has facing_away component (actor2 is facing away from actor1)
     const actor2AfterTurn = entityManager.getEntityInstance('test:actor2');
-    expect(actor2AfterTurn.components['positioning:facing_away']).toEqual({
+    expect(actor2AfterTurn.components['facing-states:facing_away']).toEqual({
       facing_away_from: ['test:actor1'],
     });
 
@@ -462,7 +462,7 @@ describe('Turn around and kneel before interaction', () => {
 
     // Verify actor2 is facing away
     let actor2Current = entityManager.getEntityInstance('test:actor2');
-    expect(actor2Current.components['positioning:facing_away']).toEqual({
+    expect(actor2Current.components['facing-states:facing_away']).toEqual({
       facing_away_from: ['test:actor1'],
     });
 
@@ -479,7 +479,7 @@ describe('Turn around and kneel before interaction', () => {
     // 3. Verify actor2 no longer has facing_away component (or actor1 not in the list)
     actor2Current = entityManager.getEntityInstance('test:actor2');
     const facingAwayComponent =
-      actor2Current.components['positioning:facing_away'];
+      actor2Current.components['facing-states:facing_away'];
 
     expect(
       !facingAwayComponent ||

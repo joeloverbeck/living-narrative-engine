@@ -107,7 +107,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     // Load necessary scope files
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
-      'data/mods/positioning/scopes/actors_in_location_facing.scope',
+      'data/mods/facing-states/scopes/actors_in_location_facing.scope',
       'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
       'data/mods/personal-space/scopes/close_actors.scope',
       'data/mods/affection/scopes/close_actors_facing_each_other.scope',
@@ -162,10 +162,10 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       'data/mods/core/conditions/entity-at-location.condition.json',
       'data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       'data/mods/core/conditions/entity-has-actor-component.condition.json',
-      'data/mods/positioning/conditions/entity-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/entity-not-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
-      'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
+      'data/mods/facing-states/conditions/entity-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/entity-not-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json',
+      'data/mods/facing-states/conditions/actor-is-behind-entity.condition.json',
       'data/mods/deference-states/conditions/entity-kneeling-before-actor.condition.json',
       'data/mods/deference-states/conditions/actor-kneeling-before-entity.condition.json',
       'data/mods/bending-states/conditions/entity-is-bending-over.condition.json',
@@ -352,7 +352,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       body: { root: `${entityId}-root` },
     });
     // Add empty facing_away component to indicate actors are facing each other
-    entityManager.addComponent(entityId, 'positioning:facing_away', {
+    entityManager.addComponent(entityId, 'facing-states:facing_away', {
       facing_away_from: [],
     });
     return actor;

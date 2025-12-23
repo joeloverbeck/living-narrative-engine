@@ -1,6 +1,6 @@
 /**
- * @file Unit tests for migrated positioning conditions
- * @description Tests the logic of conditions migrated from intimacy to positioning mod
+ * @file Unit tests for migrated facing-states conditions
+ * @description Tests the logic of conditions in the facing-states mod
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -8,11 +8,11 @@ import jsonLogic from 'json-logic-js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-describe('Migrated Positioning Conditions', () => {
+describe('Migrated Facing States Conditions', () => {
   const loadCondition = async (conditionName) => {
     const filePath = path.join(
       process.cwd(),
-      'data/mods/positioning/conditions',
+      'data/mods/facing-states/conditions',
       `${conditionName}.condition.json`
     );
     const content = await fs.readFile(filePath, 'utf8');
@@ -27,7 +27,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['entity1', 'entity2'],
             },
           },
@@ -48,7 +48,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['entity2', 'entity3'],
             },
           },
@@ -69,7 +69,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -95,7 +95,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor2', 'actor3'],
             },
           },
@@ -116,7 +116,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1', 'actor2'],
             },
           },
@@ -139,7 +139,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1', 'actor2'],
             },
           },
@@ -160,7 +160,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor2', 'actor3'],
             },
           },
@@ -180,7 +180,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor3'],
             },
           },
@@ -188,7 +188,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'actor2',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor4'],
             },
           },
@@ -206,7 +206,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor2'],
             },
           },
@@ -214,7 +214,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'actor2',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -232,7 +232,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: [],
             },
           },
@@ -240,7 +240,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'actor2',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
           },
@@ -258,7 +258,7 @@ describe('Migrated Positioning Conditions', () => {
         actor: {
           id: 'actor1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor2'],
             },
           },
@@ -266,7 +266,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'actor2',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
           },
@@ -289,7 +289,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
           },
@@ -310,7 +310,7 @@ describe('Migrated Positioning Conditions', () => {
         entity: {
           id: 'entity1',
           components: {
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor2'],
             },
           },
@@ -323,7 +323,7 @@ describe('Migrated Positioning Conditions', () => {
   });
 
   describe('ID namespace validation', () => {
-    it('should have positioning namespace for all migrated conditions', async () => {
+    it('should have facing-states namespace for all migrated conditions', async () => {
       const conditions = [
         'entity-in-facing-away',
         'entity-not-in-facing-away',
@@ -334,7 +334,7 @@ describe('Migrated Positioning Conditions', () => {
 
       for (const conditionName of conditions) {
         const condition = await loadCondition(conditionName);
-        expect(condition.id).toBe(`positioning:${conditionName}`);
+        expect(condition.id).toBe(`facing-states:${conditionName}`);
       }
     });
   });

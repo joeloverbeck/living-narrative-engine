@@ -1,14 +1,14 @@
 /**
- * @file Unit tests for the positioning:facing_away component.
+ * @file Unit tests for the facing-states:facing_away component.
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import facingAwayComponent from '../../../../../data/mods/positioning/components/facing_away.component.json';
+import facingAwayComponent from '../../../../../data/mods/facing-states/components/facing_away.component.json';
 
-describe('positioning:facing_away component', () => {
+describe('facing-states:facing_away component', () => {
   describe('component definition', () => {
     it('has correct id', () => {
-      expect(facingAwayComponent.id).toBe('positioning:facing_away');
+      expect(facingAwayComponent.id).toBe('facing-states:facing_away');
     });
 
     it('has appropriate description', () => {

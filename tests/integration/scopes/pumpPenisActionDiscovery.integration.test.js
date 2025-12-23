@@ -95,14 +95,14 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
     dataRegistry.store('actions', pumpPenisAction.id, pumpPenisAction);
 
     // Store the condition
-    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
-      id: 'positioning:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'facing-states:entity-not-in-facing-away', {
+      id: 'facing-states:entity-not-in-facing-away',
       logic: {
         not: {
           in: [
             { var: 'actor.id' },
             {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -418,7 +418,7 @@ describe('Pump Penis Action Discovery Integration Tests', () => {
               partners: ['actor1'],
               facing_away_from: [],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'], // Facing away from actor
             },
             'anatomy:body': {

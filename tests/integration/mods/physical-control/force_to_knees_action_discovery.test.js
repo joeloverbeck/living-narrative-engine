@@ -57,9 +57,9 @@ describe('physical-control:force_to_knees action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity?.components?.['positioning:facing_away']
+            actorEntity?.components?.['facing-states:facing_away']
               ?.facing_away_from ||
-            entityManager.getComponentData(actorId, 'positioning:facing_away')
+            entityManager.getComponentData(actorId, 'facing-states:facing_away')
               ?.facing_away_from ||
             [];
 
@@ -70,11 +70,11 @@ describe('physical-control:force_to_knees action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner?.components?.['positioning:facing_away']
+              partner?.components?.['facing-states:facing_away']
                 ?.facing_away_from ||
               entityManager.getComponentData(
                 partnerId,
-                'positioning:facing_away'
+                'facing-states:facing_away'
               )?.facing_away_from ||
               [];
 
@@ -265,12 +265,12 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.actor.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.target.id] }
       );
       const actorFacingAway = testFixture.entityManager.getComponentData(
         scenario.actor.id,
-        'positioning:facing_away'
+        'facing-states:facing_away'
       );
       expect(actorFacingAway?.facing_away_from).toEqual([scenario.target.id]);
 
@@ -321,12 +321,12 @@ describe('physical-control:force_to_knees action discovery', () => {
       testFixture.reset([room, scenario.actor, scenario.target]);
       await testFixture.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       const targetFacingAway = testFixture.entityManager.getComponentData(
         scenario.target.id,
-        'positioning:facing_away'
+        'facing-states:facing_away'
       );
       expect(targetFacingAway?.facing_away_from).toEqual([scenario.actor.id]);
 
