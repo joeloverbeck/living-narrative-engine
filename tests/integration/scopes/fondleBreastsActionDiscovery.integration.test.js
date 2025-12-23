@@ -96,14 +96,14 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json'
+          '../../../data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'positioning:both-actors-facing-each-other',
+      'facing-states:both-actors-facing-each-other',
       facingEachOtherCondition
     );
 
@@ -111,14 +111,14 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/positioning/conditions/actor-is-behind-entity.condition.json'
+          '../../../data/mods/facing-states/conditions/actor-is-behind-entity.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'positioning:actor-is-behind-entity',
+      'facing-states:actor-is-behind-entity',
       actorBehindCondition
     );
 
@@ -286,7 +286,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['target1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: actorFacingAway ? ['target1'] : [],
             },
           },
@@ -298,7 +298,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
             'anatomy:body': {

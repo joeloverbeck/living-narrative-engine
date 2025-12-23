@@ -122,7 +122,7 @@ describe('ScopeConditionAnalyzer', () => {
             and: [
               {
                 or: [
-                  { condition_ref: 'positioning:actor-in-entity-facing-away' },
+                  { condition_ref: 'facing-states:actor-in-entity-facing-away' },
                   { '!!': { var: 'entity.components.lying-states:lying_on' } },
                 ],
               },
@@ -139,7 +139,7 @@ describe('ScopeConditionAnalyzer', () => {
 
       const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
-      expect(refs).toContain('positioning:actor-in-entity-facing-away');
+      expect(refs).toContain('facing-states:actor-in-entity-facing-away');
       expect(refs.size).toBe(1);
     });
 
@@ -338,12 +338,12 @@ describe('ScopeConditionAnalyzer', () => {
   describe('validateConditions', () => {
     it('should identify valid conditions', async () => {
       const validation = await ScopeConditionAnalyzer.validateConditions(
-        new Set(['positioning:actor-in-entity-facing-away']),
+        new Set(['facing-states:actor-in-entity-facing-away']),
         'test/scope/path.scope'
       );
 
       expect(validation.valid).toContain(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
       expect(validation.missing).toEqual([]);
     });
@@ -363,14 +363,14 @@ describe('ScopeConditionAnalyzer', () => {
     it('should handle mix of valid and missing conditions', async () => {
       const validation = await ScopeConditionAnalyzer.validateConditions(
         new Set([
-          'positioning:actor-in-entity-facing-away',
+          'facing-states:actor-in-entity-facing-away',
           'positioning:nonexistent-condition',
         ]),
         'test/scope/path.scope'
       );
 
       expect(validation.valid).toContain(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
       expect(validation.missing).toContain('positioning:nonexistent-condition');
     });
@@ -387,12 +387,12 @@ describe('ScopeConditionAnalyzer', () => {
 
     it('should handle array input', async () => {
       const validation = await ScopeConditionAnalyzer.validateConditions(
-        ['positioning:actor-in-entity-facing-away'],
+        ['facing-states:actor-in-entity-facing-away'],
         'test/scope/path.scope'
       );
 
       expect(validation.valid).toContain(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
     });
 
@@ -410,23 +410,23 @@ describe('ScopeConditionAnalyzer', () => {
   describe('loadConditionDefinition', () => {
     it('should load valid condition definition', async () => {
       const condition = await ScopeConditionAnalyzer.loadConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       expect(condition).toBeDefined();
-      expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+      expect(condition.id).toBe('facing-states:actor-in-entity-facing-away');
       expect(condition.logic).toBeDefined();
     });
 
     it('should cache loaded conditions', async () => {
       // Load once
       const condition1 = await ScopeConditionAnalyzer.loadConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       // Load again - should return cached version
       const condition2 = await ScopeConditionAnalyzer.loadConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       // Should be the exact same object reference
@@ -464,7 +464,7 @@ describe('ScopeConditionAnalyzer', () => {
     it('should clear the condition cache', async () => {
       // Load a condition to populate cache
       await ScopeConditionAnalyzer.loadConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       // Clear cache
@@ -473,7 +473,7 @@ describe('ScopeConditionAnalyzer', () => {
       // The condition should still load (from file, not cache)
       // but we can't easily verify if it came from cache or file
       const condition = await ScopeConditionAnalyzer.loadConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
 
       expect(condition).toBeDefined();

@@ -100,14 +100,14 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     // Store the condition
     dataRegistry.store(
       'conditions',
-      'positioning:actor-in-entity-facing-away',
+      'facing-states:actor-in-entity-facing-away',
       {
-        id: 'positioning:actor-in-entity-facing-away',
+        id: 'facing-states:actor-in-entity-facing-away',
         logic: {
           in: [
             { var: 'actor.id' },
             {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -256,7 +256,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
               // Evaluate the full scope logic for the action
               const fullScopeLogic = {
                 and: [
-                  { condition_ref: 'positioning:actor-in-entity-facing-away' },
+                  { condition_ref: 'facing-states:actor-in-entity-facing-away' },
                   {
                     or: [
                       {
@@ -446,7 +446,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
             ...(targetHasAssparts && {
@@ -659,7 +659,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
 
       // Check facing away condition
       const facingAwayResult = jsonLogicEval.evaluate(
-        { condition_ref: 'positioning:actor-in-entity-facing-away' },
+        { condition_ref: 'facing-states:actor-in-entity-facing-away' },
         scopeContext
       );
       console.log('Actor is in entity facing away:', facingAwayResult);
@@ -680,7 +680,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       // Try evaluating the full scope
       const fullScopeLogic = {
         and: [
-          { condition_ref: 'positioning:actor-in-entity-facing-away' },
+          { condition_ref: 'facing-states:actor-in-entity-facing-away' },
           {
             or: [
               {
@@ -931,7 +931,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
             'personal-space-states:closeness': {
               partners: ['actor1'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1'],
             },
             'anatomy:body': {

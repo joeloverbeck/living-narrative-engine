@@ -25,7 +25,7 @@ function setupGrindingScenario() {
     .withName('Alice')
     .atLocation('room1')
     .closeToEntity('bob')
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: ['bob'],
     })
     .asActor()

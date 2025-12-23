@@ -168,7 +168,7 @@ describe('personal-space:close_actors scope integration', () => {
             'personal-space-states:closeness': {
               partners: ['close-1', 'close-2', 'close-3'],
             },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['close-2'],
             },
           },
@@ -222,7 +222,7 @@ describe('personal-space:close_actors scope integration', () => {
       expect(result.has('close-2')).toBe(true);
       expect(result.has('close-3')).toBe(true);
 
-      // Note: positioning:actors_im_facing_away_from scope would need to be registered
+      // Note: facing-states:actors_im_facing_away_from scope would need to be registered
       // separately for a complete test. For now, we're just testing
       // the close_actors scope.
     });

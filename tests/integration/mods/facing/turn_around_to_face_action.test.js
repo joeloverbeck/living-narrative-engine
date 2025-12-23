@@ -72,7 +72,7 @@ describe('Turn Around to Face Action Discovery', () => {
     // Load the scope file
     const scopePath = path.join(
       process.cwd(),
-      'data/mods/positioning/scopes/actors_im_facing_away_from.scope'
+      'data/mods/facing-states/scopes/actors_im_facing_away_from.scope'
     );
     const scopeContent = fs.readFileSync(scopePath, 'utf-8');
     const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
@@ -94,7 +94,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
     // Store the condition definition in the data registry
     const entityNotInFacingAwayCondition = {
-      id: 'positioning:entity-not-in-facing-away',
+      id: 'facing-states:entity-not-in-facing-away',
       description:
         "Checks if the entity is not in the actor's facing_away_from array",
       logic: {
@@ -102,7 +102,7 @@ describe('Turn Around to Face Action Discovery', () => {
           in: [
             { var: 'entity.id' },
             {
-              var: 'actor.components.positioning:facing_away.facing_away_from',
+              var: 'actor.components.facing-states:facing_away.facing_away_from',
             },
           ],
         },
@@ -301,7 +301,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -316,7 +316,7 @@ describe('Turn Around to Face Action Discovery', () => {
       });
 
       // Alice is facing away from Bob
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
 
@@ -357,14 +357,14 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob, charlie]) };
           }
           return { success: true, value: new Set() };
         });
 
       // Alice is facing away from Bob and Charlie, but not Diana
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob, charlie],
       });
 
@@ -390,7 +390,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should handle empty facing_away_from array', async () => {
       // Alice has facing_away component but empty array
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [],
       });
 
@@ -411,7 +411,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -427,7 +427,7 @@ describe('Turn Around to Face Action Discovery', () => {
       });
 
       // Alice is facing away from Bob and the outsider
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob, outsider],
       });
 
@@ -449,14 +449,14 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
         });
 
       // Alice is only facing away from Bob
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
 
@@ -479,7 +479,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope, context) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             // Check which actor is requesting
             if (context?.actor?.id === alice) {
               return { success: true, value: new Set([bob]) };
@@ -499,10 +499,10 @@ describe('Turn Around to Face Action Discovery', () => {
       });
 
       // Both are facing away from each other
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
-      entityManager.addComponent(bob, 'positioning:facing_away', {
+      entityManager.addComponent(bob, 'facing-states:facing_away', {
         facing_away_from: [alice],
       });
 
@@ -533,7 +533,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'positioning:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -551,7 +551,7 @@ describe('Turn Around to Face Action Discovery', () => {
       });
 
       // Alice faces away from Bob but faces Charlie
-      entityManager.addComponent(alice, 'positioning:facing_away', {
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
 

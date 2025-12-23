@@ -1340,7 +1340,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const scopeContent = `
           personal-space:close_actors_facing := actor.components.personal-space-states:closeness.partners[][{
-            "condition_ref": "positioning:both-actors-facing-each-other"
+            "condition_ref": "facing-states:both-actors-facing-each-other"
           }]
         `;
 
@@ -1352,7 +1352,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         expect(result.get('personal-space-states')).toContain('closeness');
-        expect(result.get('positioning')).toContain(
+        expect(result.get('facing-states')).toContain(
           'both-actors-facing-each-other'
         );
       });
@@ -1409,7 +1409,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
           // Scope for actors in closeness who are facing each other
           // Used by actions that require face-to-face interaction
           personal-space:close_actors_facing_each_other := actor.components.personal-space-states:closeness.partners[][{
-            "condition_ref": "positioning:both-actors-facing-each-other"
+            "condition_ref": "facing-states:both-actors-facing-each-other"
           }]
         `;
 

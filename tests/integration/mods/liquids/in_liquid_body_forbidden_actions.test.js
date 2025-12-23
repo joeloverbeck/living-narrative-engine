@@ -70,7 +70,7 @@ describe('actions forbidden when in a liquid body', () => {
 
       if (
         scopeName === 'core:actors_in_location' ||
-        scopeName === 'positioning:actors_in_location_facing' ||
+        scopeName === 'facing-states:actors_in_location_facing' ||
         scopeName === 'maneuvering:actors_in_location_not_facing_away_from_actor' ||
         scopeName === 'item-handling-states:actors_in_location_not_wielding'
       ) {

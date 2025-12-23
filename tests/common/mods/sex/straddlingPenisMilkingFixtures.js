@@ -138,7 +138,7 @@ export function buildStraddlingMilkingScenario(options = {}) {
   }
 
   if (targetFacingAway) {
-    primaryBuilder.withComponent('positioning:facing_away', {
+    primaryBuilder.withComponent('facing-states:facing_away', {
       facing_away_from: [STRADDLING_MILKING_ACTOR_ID],
     });
   }

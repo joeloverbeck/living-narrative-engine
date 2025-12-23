@@ -98,13 +98,13 @@ export function buildRubPenisAgainstPenisScenario(options = {}) {
   }
 
   if (targetFacingAway) {
-    targetBuilder.withComponent('positioning:facing_away', {
+    targetBuilder.withComponent('facing-states:facing_away', {
       facing_away_from: [RUB_PENIS_AGAINST_PENIS_ACTOR_ID],
     });
   }
 
   if (actorFacingAway) {
-    actorBuilder.withComponent('positioning:facing_away', {
+    actorBuilder.withComponent('facing-states:facing_away', {
       facing_away_from: [RUB_PENIS_AGAINST_PENIS_PRIMARY_ID],
     });
   }
@@ -251,9 +251,9 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
         }
 
         const facingAwayFrom = Array.isArray(
-          partner.components?.['positioning:facing_away']?.facing_away_from
+          partner.components?.['facing-states:facing_away']?.facing_away_from
         )
-          ? partner.components['positioning:facing_away'].facing_away_from
+          ? partner.components['facing-states:facing_away'].facing_away_from
           : [];
 
         if (facingAwayFrom.includes(actorId)) {
@@ -261,9 +261,9 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
         }
 
         const actorFacingAwayFrom = Array.isArray(
-          actor.components?.['positioning:facing_away']?.facing_away_from
+          actor.components?.['facing-states:facing_away']?.facing_away_from
         )
-          ? actor.components['positioning:facing_away'].facing_away_from
+          ? actor.components['facing-states:facing_away'].facing_away_from
           : [];
 
         if (actorFacingAwayFrom.includes(partnerId)) {

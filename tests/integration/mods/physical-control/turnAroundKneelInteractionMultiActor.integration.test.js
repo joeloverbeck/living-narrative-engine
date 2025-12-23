@@ -77,7 +77,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     // Load necessary scope files
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
-      'data/mods/positioning/scopes/actors_in_location_facing.scope',
+      'data/mods/facing-states/scopes/actors_in_location_facing.scope',
       'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
     ];
 
@@ -109,9 +109,9 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       'data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       'data/mods/core/conditions/entity-has-actor-component.condition.json',
       'data/mods/core/conditions/actor-mouth-available.condition.json',
-      'data/mods/positioning/conditions/entity-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
-      'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
+      'data/mods/facing-states/conditions/entity-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json',
+      'data/mods/facing-states/conditions/actor-is-behind-entity.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -336,7 +336,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
           if (actionId === 'physical-control:turn_around') {
             const targetEntity = entityManager.getEntityInstance(targetId);
             const facingAwayComponent =
-              targetEntity.components['positioning:facing_away'];
+              targetEntity.components['facing-states:facing_away'];
 
             if (
               !facingAwayComponent ||
@@ -345,7 +345,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
               // Not currently facing away, so turn them around (add component)
               entityManager.addComponent(
                 targetEntity.id,
-                'positioning:facing_away',
+                'facing-states:facing_away',
                 {
                   facing_away_from: [actorId],
                 }
@@ -358,7 +358,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
               if (updatedList.length > 0) {
                 entityManager.addComponent(
                   targetEntity.id,
-                  'positioning:facing_away',
+                  'facing-states:facing_away',
                   {
                     facing_away_from: updatedList,
                   }
@@ -366,7 +366,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
               } else {
                 entityManager.removeComponent(
                   targetEntity.id,
-                  'positioning:facing_away'
+                  'facing-states:facing_away'
                 );
               }
             }
@@ -407,7 +407,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
 
     // Verify actor2 is facing away from actor1
     const actor2AfterTurn = entityManager.getEntityInstance('test:actor2');
-    expect(actor2AfterTurn.components['positioning:facing_away']).toEqual({
+    expect(actor2AfterTurn.components['facing-states:facing_away']).toEqual({
       facing_away_from: ['test:actor1'],
     });
 

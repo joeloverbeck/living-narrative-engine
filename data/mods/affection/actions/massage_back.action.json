@@ -8,7 +8,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:facing_away"]
+    "actor": ["facing-states:facing_away"]
   },
   "template": "massage {target}'s back",
   "prerequisites": [],

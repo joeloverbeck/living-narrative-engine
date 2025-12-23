@@ -156,7 +156,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
       const updatedActor =
         testFixture.entityManager.getEntityInstance('actor1');
       expect(
-        updatedActor.components['positioning:facing_away']
+        updatedActor.components['facing-states:facing_away']
       ).toBeUndefined();
     });
 

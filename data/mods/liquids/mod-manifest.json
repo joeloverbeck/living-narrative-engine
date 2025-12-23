@@ -70,18 +70,21 @@
     ],
     "actions": [
       "climb_out_of_liquid_body.action.json",
+      "dive_into_liquid_body.action.json",
       "enter_liquid_body.action.json",
       "rise_to_surface.action.json",
       "swim_to_connected_liquid_body.action.json"
     ],
     "rules": [
       "handle_climb_out_of_liquid_body.rule.json",
+      "handle_dive_into_liquid_body.rule.json",
       "handle_enter_liquid_body.rule.json",
       "handle_rise_to_surface.rule.json",
       "handle_swim_to_connected_liquid_body.rule.json"
     ],
     "conditions": [
       "event-is-action-climb-out-of-liquid-body.condition.json",
+      "event-is-action-dive-into-liquid-body.condition.json",
       "event-is-action-enter-liquid-body.condition.json",
       "event-is-action-rise-to-surface.condition.json",
       "event-is-action-swim-to-connected-liquid-body.condition.json"

@@ -79,7 +79,7 @@ describe('affection:link_arms action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const validTargets = closeness.reduce((acc, partnerId) => {
@@ -89,7 +89,7 @@ describe('affection:link_arms action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
@@ -185,7 +185,7 @@ describe('affection:link_arms action discovery', () => {
         ['Maya', 'Noah'],
         ['torso', 'arm', 'arm']
       );
-      scenario.target.components['positioning:facing_away'] = {
+      scenario.target.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.actor.id],
       };
 
@@ -224,7 +224,7 @@ describe('affection:link_arms action discovery', () => {
         ['Chloe', 'Evan'],
         ['torso', 'arm', 'arm']
       );
-      scenario.actor.components['positioning:facing_away'] = {
+      scenario.actor.components['facing-states:facing_away'] = {
         facing_away_from: [scenario.target.id],
       };
 

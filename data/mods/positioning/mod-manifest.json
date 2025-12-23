@@ -18,17 +18,9 @@
     "components": [
       "being_bitten_in_neck.component.json",
       "biting_neck.component.json",
-      "doing_complex_performance.component.json",
-      "facing_away.component.json"
+      "doing_complex_performance.component.json"
     ],
-    "conditions": [
-      "actor-in-entity-facing-away.condition.json",
-      "actor-is-behind-entity.condition.json",
-      "both-actors-facing-each-other.condition.json",
-      "entity-in-facing-away.condition.json",
-      "entity-not-facing-away-from-actor.condition.json",
-      "entity-not-in-facing-away.condition.json"
-    ],
+    "conditions": [],
     "entities": {
       "definitions": [],
       "instances": []
@@ -42,9 +34,7 @@
     ],
     "macros": [],
     "scopes": [
-      "actor_being_bitten_by_me.scope",
-      "actors_im_facing_away_from.scope",
-      "actors_in_location_facing.scope"
+      "actor_being_bitten_by_me.scope"
     ],
     "actions": [],
     "rules": []

@@ -163,7 +163,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Assert - Check that target now has facing_away component with actor in the array
     const facingAwayComponent = testEnv.entityManager.getComponent(
       targetId,
-      'positioning:facing_away'
+      'facing-states:facing_away'
     );
 
     expect(facingAwayComponent).toBeDefined();
@@ -191,7 +191,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       text: 'Target Jones',
     });
     // Target already faces away from someone else
-    testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
+    testEnv.entityManager.addComponent(targetId, 'facing-states:facing_away', {
       facing_away_from: [existingFacingAwayId],
     });
 
@@ -211,7 +211,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Assert - Check that target's facing_away component now includes both entities
     const facingAwayComponent = testEnv.entityManager.getComponent(
       targetId,
-      'positioning:facing_away'
+      'facing-states:facing_away'
     );
 
     expect(facingAwayComponent).toBeDefined();
@@ -242,7 +242,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       text: 'Target Jones',
     });
     // Target already faces away from the actor
-    testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
+    testEnv.entityManager.addComponent(targetId, 'facing-states:facing_away', {
       facing_away_from: [actorId],
     });
 
@@ -262,7 +262,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Assert - Check that no duplicate was added
     const facingAwayComponent = testEnv.entityManager.getComponent(
       targetId,
-      'positioning:facing_away'
+      'facing-states:facing_away'
     );
 
     expect(facingAwayComponent).toBeDefined();

@@ -168,9 +168,9 @@ describe('physical_control_handle_turn_around rule integration', () => {
 
       // Check that facing_away component was created
       const target = testEnv.entityManager.getEntityInstance('target1');
-      expect(target?.components['positioning:facing_away']).toBeDefined();
+      expect(target?.components['facing-states:facing_away']).toBeDefined();
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).toContain('actor1');
 
       // Only check for events that should exist if rule worked
@@ -202,7 +202,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'personal-space-states:closeness': { partners: ['actor1'] },
-            'positioning:facing_away': { facing_away_from: ['actor1'] },
+            'facing-states:facing_away': { facing_away_from: ['actor1'] },
           },
         },
       ]);
@@ -217,7 +217,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
 
       // Check that actor was removed from facing_away array
       const target = testEnv.entityManager.getEntityInstance('target1');
-      expect(target.components['positioning:facing_away']).toBeUndefined();
+      expect(target.components['facing-states:facing_away']).toBeUndefined();
 
       // Check events
       const types = testEnv.events.map((e) => e.eventType);
@@ -262,7 +262,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['actor1', 'actor2'],
             },
           },
@@ -279,12 +279,12 @@ describe('physical_control_handle_turn_around rule integration', () => {
 
       // Check that only actor1 was removed
       const target = testEnv.entityManager.getEntityInstance('target1');
-      expect(target.components['positioning:facing_away']).toBeDefined();
+      expect(target.components['facing-states:facing_away']).toBeDefined();
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).not.toContain('actor1');
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).toContain('actor2');
     });
   });
@@ -314,7 +314,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
-            'positioning:facing_away': { facing_away_from: ['actor2'] },
+            'facing-states:facing_away': { facing_away_from: ['actor2'] },
           },
         },
       ]);
@@ -330,13 +330,13 @@ describe('physical_control_handle_turn_around rule integration', () => {
       // Check that actor1 was added to existing array
       const target = testEnv.entityManager.getEntityInstance('target1');
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).toContain('actor1');
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).toContain('actor2');
       expect(
-        target.components['positioning:facing_away'].facing_away_from
+        target.components['facing-states:facing_away'].facing_away_from
       ).toHaveLength(2);
     });
   });

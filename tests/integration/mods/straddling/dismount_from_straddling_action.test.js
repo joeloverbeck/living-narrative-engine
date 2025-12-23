@@ -49,7 +49,7 @@ function setupDismountScenario(
   actor.components['movement:movement_locked'] = {};
 
   if (facingAway) {
-    actor.components['positioning:facing_away'] = {
+    actor.components['facing-states:facing_away'] = {
       facing_away_from: ['test:target1'],
     };
   }
@@ -92,7 +92,7 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
       // Should remain undefined (never was added)
-      expect(actor.components['positioning:facing_away']).toBeUndefined();
+      expect(actor.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should unlock actor movement', async () => {
@@ -122,7 +122,7 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actor.components['straddling-states:straddling_waist']).toBeUndefined();
-      expect(actor.components['positioning:facing_away']).toBeUndefined();
+      expect(actor.components['facing-states:facing_away']).toBeUndefined();
     });
 
     it('should unlock actor movement', async () => {
@@ -186,7 +186,7 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       const facingActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(facingActor.components['positioning:facing_away']).toBeUndefined();
+      expect(facingActor.components['facing-states:facing_away']).toBeUndefined();
 
       // Test facing away case
       const facingAwayEntities = setupDismountScenario('Alice', 'Bob', true);
@@ -196,7 +196,7 @@ describe('Dismount from Straddling - Action Execution', () => {
       const facingAwayActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
       expect(
-        facingAwayActor.components['positioning:facing_away']
+        facingAwayActor.components['facing-states:facing_away']
       ).toBeUndefined();
     });
   });

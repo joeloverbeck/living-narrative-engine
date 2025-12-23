@@ -38,7 +38,7 @@ function buildAnalPenetrationScenario() {
     .atLocation('room1')
     .asActor()
     .withComponent('personal-space-states:closeness', { closeActorIds: ['alice'] })
-    .withComponent('positioning:facing_away', { facing_away_from: ['alice'] })
+    .withComponent('facing-states:facing_away', { facing_away_from: ['alice'] })
     .withComponent('anatomy:body_part_types', { types: ['asshole'] })
     .withComponent('clothing:socket_coverage', { sockets: {} })
     .build();

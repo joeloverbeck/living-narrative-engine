@@ -89,7 +89,7 @@ export function buildSqueezeBreastsArdentlyScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: actorFacingAwayFromTarget ? [targetId] : [],
     });
 
@@ -110,7 +110,7 @@ export function buildSqueezeBreastsArdentlyScenario(options = {}) {
     .withLocationComponent(roomId)
     .asActor()
     .withBody(torsoId)
-    .withComponent('positioning:facing_away', {
+    .withComponent('facing-states:facing_away', {
       facing_away_from: targetFacingAwayFromActor ? [actorId] : [],
     });
 
@@ -202,7 +202,7 @@ export function installSqueezeBreastsArdentlyScopeOverride(testFixture) {
       }
 
       const actorFacingAwayComponent =
-        actor.components?.['positioning:facing_away'];
+        actor.components?.['facing-states:facing_away'];
       const actorFacingAway = Array.isArray(
         actorFacingAwayComponent?.facing_away_from
       )
@@ -226,7 +226,7 @@ export function installSqueezeBreastsArdentlyScopeOverride(testFixture) {
         }
 
         const partnerFacingAwayComponent =
-          partner.components?.['positioning:facing_away'];
+          partner.components?.['facing-states:facing_away'];
         const partnerFacingAway = Array.isArray(
           partnerFacingAwayComponent?.facing_away_from
         )

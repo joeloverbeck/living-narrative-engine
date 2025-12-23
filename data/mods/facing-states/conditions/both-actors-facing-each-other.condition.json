@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "positioning:both-actors-facing-each-other",
+  "id": "facing-states:both-actors-facing-each-other",
   "description": "Checks if both actors are facing each other (neither is facing away from the other).",
   "logic": {
     "and": [
@@ -9,7 +9,7 @@
           "in": [
             { "var": "entity.id" },
             {
-              "var": "actor.components.positioning:facing_away.facing_away_from"
+              "var": "actor.components.facing-states:facing_away.facing_away_from"
             }
           ]
         }
@@ -19,7 +19,7 @@
           "in": [
             { "var": "actor.id" },
             {
-              "var": "entity.components.positioning:facing_away.facing_away_from"
+              "var": "entity.components.facing-states:facing_away.facing_away_from"
             }
           ]
         }

@@ -105,7 +105,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
           ? entityManager.getEntityInstance.bind(entityManager)
           : entityManager.getEntity.bind(entityManager);
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']
+          actorEntity.components?.['facing-states:facing_away']
             ?.facing_away_from ?? [];
         const actorKneelingBefore =
           actorEntity.components?.['deference-states:kneeling_before']?.entityId ??
@@ -118,7 +118,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ??
+            partner.components?.['facing-states:facing_away']?.facing_away_from ??
             [];
           const partnerKneelingBefore =
             partner.components?.['deference-states:kneeling_before']?.entityId ??
@@ -196,7 +196,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
       const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [actor.id] }
       );
 
@@ -234,7 +234,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
       const { actor, target } = createScenarioWithNoses();
       await testBed.mocks.entityManager.addComponent(
         actor.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [target.id] }
       );
 

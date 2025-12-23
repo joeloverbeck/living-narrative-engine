@@ -78,7 +78,7 @@ describe('Sit on Lap from Sitting - Workflow Integration', () => {
       expect(
         updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(true);
-      expect(updatedActor.components['positioning:facing_away']).toBeDefined();
+      expect(updatedActor.components['facing-states:facing_away']).toBeDefined();
 
       // Target still sitting on original furniture
       expect(updatedTarget.components['sitting-states:sitting_on']).toBeDefined();

@@ -7,7 +7,7 @@ maneuvering:actors_in_location_not_facing_away_from_actor := entities(core:posit
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
     {
-      "condition_ref": "positioning:entity-not-facing-away-from-actor"
+      "condition_ref": "facing-states:entity-not-facing-away-from-actor"
     }
   ]
 }]

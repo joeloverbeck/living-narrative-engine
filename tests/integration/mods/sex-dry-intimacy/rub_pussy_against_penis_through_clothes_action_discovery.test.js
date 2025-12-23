@@ -47,7 +47,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
      *   sex-dry-intimacy:actors_with_penis_facing_straddler_covered := actor.components.personal-space-states:closeness.partners[][{
      *     "and": [
      *       {"hasPartOfType": [".", "penis"]},
-     *       {"condition_ref": "positioning:entity-not-in-facing-away"},
+     *       {"condition_ref": "facing-states:entity-not-in-facing-away"},
      *       {"isSocketCovered": [".", "penis"]},
      *       {
      *         "!!": {
@@ -122,7 +122,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
           console.log('      ✅ Is straddling target');
 
           // Check if partner is NOT in facing_away targets
-          const facingAway = actor?.components?.['positioning:facing_away'];
+          const facingAway = actor?.components?.['facing-states:facing_away'];
           if (
             facingAway &&
             Array.isArray(facingAway.targets) &&
@@ -837,7 +837,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
           target_id: 'bob',
           facing_away: true, // Facing away
         })
-        .withComponent('positioning:facing_away', {
+        .withComponent('facing-states:facing_away', {
           targets: ['bob'],
         })
         .build();

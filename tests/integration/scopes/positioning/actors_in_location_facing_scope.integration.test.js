@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for positioning:actors_in_location_facing scope
+ * @file Integration tests for facing-states:actors_in_location_facing scope
  * @description Tests the actors_in_location_facing scope that filters out actors the current actor is facing away from
  */
 
@@ -16,7 +16,7 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
-describe('positioning:actors_in_location_facing scope integration', () => {
+describe('facing-states:actors_in_location_facing scope integration', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
@@ -49,12 +49,12 @@ describe('positioning:actors_in_location_facing scope integration', () => {
               '!!': { var: 'entity.components.core:actor' },
             },
           },
-          'positioning:entity-in-facing-away': {
+          'facing-states:entity-in-facing-away': {
             logic: {
               in: [
                 { var: 'entity.id' },
                 {
-                  var: 'actor.components.positioning:facing_away.facing_away_from',
+                  var: 'actor.components.facing-states:facing_away.facing_away_from',
                 },
               ],
             },
@@ -75,10 +75,10 @@ describe('positioning:actors_in_location_facing scope integration', () => {
 
     // Register mock scopes for testing
     const mockScopes = {
-      'positioning:actors_in_location_facing': {
-        expr: 'entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "positioning:entity-in-facing-away"}}]}]',
+      'facing-states:actors_in_location_facing': {
+        expr: 'entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "facing-states:entity-in-facing-away"}}]}]',
         definition:
-          'positioning:actors_in_location_facing := entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "positioning:entity-in-facing-away"}}]}]',
+          'facing-states:actors_in_location_facing := entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "facing-states:entity-in-facing-away"}}]}]',
         modId: 'positioning',
       },
     };
@@ -101,7 +101,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
           components: {
             'core:actor': { name: 'Actor 1' },
             [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['test:actor2'],
             },
           },
@@ -133,7 +133,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
 
       // Parse and resolve the scope expression
       const scopeDef = scopeRegistry.getScope(
-        'positioning:actors_in_location_facing'
+        'facing-states:actors_in_location_facing'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
@@ -183,7 +183,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
 
       // Parse and resolve the scope expression
       const scopeDef = scopeRegistry.getScope(
-        'positioning:actors_in_location_facing'
+        'facing-states:actors_in_location_facing'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
@@ -224,7 +224,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
 
       // Parse and resolve the scope expression
       const scopeDef = scopeRegistry.getScope(
-        'positioning:actors_in_location_facing'
+        'facing-states:actors_in_location_facing'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, loneActor, runtimeCtx);
@@ -242,7 +242,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
           components: {
             'core:actor': { name: 'Actor 1' },
             [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
-            'positioning:facing_away': {
+            'facing-states:facing_away': {
               facing_away_from: ['test:actor2', 'test:actor3'], // Facing away from both
             },
           },
@@ -281,7 +281,7 @@ describe('positioning:actors_in_location_facing scope integration', () => {
 
       // Parse and resolve the scope expression
       const scopeDef = scopeRegistry.getScope(
-        'positioning:actors_in_location_facing'
+        'facing-states:actors_in_location_facing'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);

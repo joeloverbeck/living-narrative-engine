@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "positioning:facing_away",
+  "id": "facing-states:facing_away",
   "description": "Tracks which actors this entity is facing away from in an intimate context. Used for position-aware intimate actions.",
   "dataSchema": {
     "type": "object",

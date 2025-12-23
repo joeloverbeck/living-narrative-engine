@@ -3,7 +3,7 @@
 sex-penile-manual:actors_with_penis_facing_each_other_covered := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
-    {"condition_ref": "positioning:entity-not-in-facing-away"},
+    {"condition_ref": "facing-states:entity-not-in-facing-away"},
     {"socketExposure": [".", "penis", "any", true]}
   ]
 }]

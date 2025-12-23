@@ -102,7 +102,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
       const actorKneelingBefore =
         actor.components?.['deference-states:kneeling_before']?.entityId || null;
       const actorFacingAway =
-        actor.components?.['positioning:facing_away']?.facing_away_from || [];
+        actor.components?.['facing-states:facing_away']?.facing_away_from || [];
 
       const validPartners = closenessPartners.filter((partnerId) => {
         if (!partnerId) {
@@ -127,7 +127,7 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
         }
 
         const partnerFacingAway =
-          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          partner.components?.['facing-states:facing_away']?.facing_away_from ||
           [];
 
         const facingEachOther =

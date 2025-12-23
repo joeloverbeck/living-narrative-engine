@@ -29,7 +29,7 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
 
   describe('Condition Loading', () => {
     it('should load condition definitions for scopes using condition_ref', async () => {
-      // This scope uses: {"condition_ref": "positioning:actor-in-entity-facing-away"}
+      // This scope uses: {"condition_ref": "facing-states:actor-in-entity-facing-away"}
       await ScopeResolverHelpers.registerCustomScope(
         testEnv,
         'sex-anal-penetration',
@@ -39,15 +39,15 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
       // Verify condition was loaded into registry
       expect(testEnv._loadedConditions).toBeDefined();
       expect(
-        testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')
+        testEnv._loadedConditions.has('facing-states:actor-in-entity-facing-away')
       ).toBe(true);
 
       // Verify condition can be retrieved from dataRegistry
       const conditionDef = testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
+        'facing-states:actor-in-entity-facing-away'
       );
       expect(conditionDef).toBeDefined();
-      expect(conditionDef.id).toBe('positioning:actor-in-entity-facing-away');
+      expect(conditionDef.id).toBe('facing-states:actor-in-entity-facing-away');
     });
 
     it('should discover and load transitive condition dependencies', async () => {
@@ -60,7 +60,7 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
 
       // Verify the primary condition was loaded
       expect(
-        testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')
+        testEnv._loadedConditions.has('facing-states:actor-in-entity-facing-away')
       ).toBe(true);
 
       // All discovered conditions should be retrievable

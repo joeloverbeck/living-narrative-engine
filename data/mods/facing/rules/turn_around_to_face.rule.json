@@ -12,7 +12,7 @@
       "comment": "Remove facing_away component so actor faces everyone",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:facing_away"
+        "component_type": "facing-states:facing_away"
       }
     },
     {

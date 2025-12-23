@@ -113,7 +113,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     const actorFacingAway =
-      actorEntity?.components?.['positioning:facing_away']?.facing_away_from ||
+      actorEntity?.components?.['facing-states:facing_away']?.facing_away_from ||
       [];
 
     const validPartners = partners.filter((partnerId) => {
@@ -132,7 +132,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       }
 
       const partnerFacingAway =
-        partner.components?.['positioning:facing_away']?.facing_away_from || [];
+        partner.components?.['facing-states:facing_away']?.facing_away_from || [];
 
       const facingEachOther =
         !partnerFacingAway.includes(actorId) &&
@@ -227,7 +227,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     if (targetFacingAway) {
-      targetBuilder.withComponent('positioning:facing_away', {
+      targetBuilder.withComponent('facing-states:facing_away', {
         facing_away_from: ['alana'],
       });
     }

@@ -57,9 +57,9 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     // Register the conditions used by the scope
     dataRegistry.store(
       'conditions',
-      'positioning:both-actors-facing-each-other',
+      'facing-states:both-actors-facing-each-other',
       {
-        id: 'positioning:both-actors-facing-each-other',
+        id: 'facing-states:both-actors-facing-each-other',
         logic: {
           and: [
             {
@@ -67,7 +67,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
                 in: [
                   { var: 'entity.id' },
                   {
-                    var: 'actor.components.positioning:facing_away.facing_away_from',
+                    var: 'actor.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -77,7 +77,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
                 in: [
                   { var: 'actor.id' },
                   {
-                    var: 'entity.components.positioning:facing_away.facing_away_from',
+                    var: 'entity.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -87,12 +87,12 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       }
     );
 
-    dataRegistry.store('conditions', 'positioning:actor-is-behind-entity', {
-      id: 'positioning:actor-is-behind-entity',
+    dataRegistry.store('conditions', 'facing-states:actor-is-behind-entity', {
+      id: 'facing-states:actor-is-behind-entity',
       logic: {
         in: [
           { var: 'actor.id' },
-          { var: 'entity.components.positioning:facing_away.facing_away_from' },
+          { var: 'entity.components.facing-states:facing_away.facing_away_from' },
         ],
       },
     });
@@ -164,7 +164,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
               partners: [targetId],
             },
             ...(facingAwayConfig.actorFacingAway && {
-              'positioning:facing_away': {
+              'facing-states:facing_away': {
                 facing_away_from: [targetId],
               },
             }),
@@ -182,7 +182,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
               },
             },
             ...(facingAwayConfig.targetFacingAway && {
-              'positioning:facing_away': {
+              'facing-states:facing_away': {
                 facing_away_from: [actorId],
               },
             }),

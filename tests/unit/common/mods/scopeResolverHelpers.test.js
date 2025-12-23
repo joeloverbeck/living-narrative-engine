@@ -669,10 +669,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register positioning:actors_im_facing_away_from', () => {
+    it('should register facing-states:actors_im_facing_away_from', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'positioning:actors_im_facing_away_from'
+          'facing-states:actors_im_facing_away_from'
         )
       ).toBe(true);
     });

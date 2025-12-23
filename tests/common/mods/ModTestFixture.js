@@ -1917,7 +1917,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'lying:furniture_im_lying_on',
         'sitting:furniture_im_sitting_on',
         'bending:surface_im_bending_over',
-        'positioning:actors_im_facing_away_from',
+        'facing-states:actors_im_facing_away_from',
       ],
       inventory: [
         'items:actor_inventory_items',
@@ -2699,13 +2699,13 @@ beforeEach(async () => {
    * @example
    * // Load single condition
    * await testFixture.loadDependencyConditions([
-   *   'positioning:actor-in-entity-facing-away'
+   *   'facing-states:actor-in-entity-facing-away'
    * ]);
    * @example
    * // Load multiple conditions (additive)
    * await testFixture.loadDependencyConditions([
-   *   'positioning:actor-in-entity-facing-away',
-   *   'positioning:entity-not-in-facing-away'
+   *   'facing-states:actor-in-entity-facing-away',
+   *   'facing-states:entity-not-in-facing-away'
    * ]);
    */
   async loadDependencyConditions(conditionIds) {
@@ -2788,7 +2788,7 @@ beforeEach(async () => {
    * @returns {Promise<void>}
    * @throws {Error} If scope file not found, conditions missing, or parsing fails
    * @example
-   * // Auto-loads positioning:actor-in-entity-facing-away and other dependencies
+   * // Auto-loads facing-states:actor-in-entity-facing-away and other dependencies
    * await testFixture.registerCustomScope(
    *   'sex-anal-penetration',
    *   'actors_with_exposed_asshole_accessible_from_behind'

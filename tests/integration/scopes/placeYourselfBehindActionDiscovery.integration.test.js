@@ -93,7 +93,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
       '../../../data/mods/core/conditions/entity-at-location.condition.json',
       '../../../data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       '../../../data/mods/core/conditions/entity-has-actor-component.condition.json',
-      '../../../data/mods/positioning/conditions/entity-not-facing-away-from-actor.condition.json',
+      '../../../data/mods/facing-states/conditions/entity-not-facing-away-from-actor.condition.json',
     ];
 
     const dataRegistry = new InMemoryDataRegistry();

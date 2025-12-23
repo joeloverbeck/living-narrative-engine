@@ -57,7 +57,7 @@ describe('affection:rest_head_on_shoulder - giving_blowjob forbidden component',
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const validTargets = closeness.reduce((acc, partnerId) => {
@@ -67,7 +67,7 @@ describe('affection:rest_head_on_shoulder - giving_blowjob forbidden component',
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&

@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "liquids:dive_into_liquid_body",
+  "name": "Dive Into Liquid Body",
+  "description": "Dive into a nearby liquid body, submerging yourself.",
+  "targets": {
+    "primary": {
+      "scope": "liquids:liquid_bodies_at_location",
+      "placeholder": "liquidBody",
+      "description": "Liquid body to dive into"
+    }
+  },
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": [
+      "sitting-states:sitting_on",
+      "deference-states:kneeling_before",
+      "bending-states:bending_over",
+      "straddling-states:straddling_waist",
+      "hugging-states:being_hugged",
+      "hugging-states:hugging",
+      "positioning:doing_complex_performance",
+      "sex-states:fucking_anally",
+      "lying-states:lying_on",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "recovery-states:fallen",
+      "liquids-states:in_liquid_body"
+    ]
+  },
+  "template": "dive into the {liquidBody}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-can-move"
+      },
+      "failure_message": "You cannot dive into the liquid body without functioning legs."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to see where you are going."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#3aaea3",
+    "textColor": "#0b1f2a",
+    "hoverBackgroundColor": "#5ed0c6",
+    "hoverTextColor": "#0b1f2a"
+  }
+}

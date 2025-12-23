@@ -60,7 +60,7 @@ describe('hugging:release_hug action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']
+          actorEntity.components?.['facing-states:facing_away']
             ?.facing_away_from || [];
 
         return closeness.reduce((acc, partnerId) => {
@@ -70,7 +70,7 @@ describe('hugging:release_hug action integration', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            partner.components?.['facing-states:facing_away']?.facing_away_from ||
             [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&

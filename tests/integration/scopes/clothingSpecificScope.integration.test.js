@@ -95,9 +95,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     // Register the conditions used by the scope and action
     dataRegistry.store(
       'conditions',
-      'positioning:both-actors-facing-each-other',
+      'facing-states:both-actors-facing-each-other',
       {
-        id: 'positioning:both-actors-facing-each-other',
+        id: 'facing-states:both-actors-facing-each-other',
         description:
           'Checks if both actors are facing each other (neither is facing away from the other).',
         logic: {
@@ -107,7 +107,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
                 in: [
                   { var: 'entity.id' },
                   {
-                    var: 'actor.components.positioning:facing_away.facing_away_from',
+                    var: 'actor.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -117,7 +117,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
                 in: [
                   { var: 'actor.id' },
                   {
-                    var: 'entity.components.positioning:facing_away.facing_away_from',
+                    var: 'entity.components.facing-states:facing_away.facing_away_from',
                   },
                 ],
               },
@@ -384,9 +384,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
                   // Check if neither is facing away from the other
                   const actorFacingAway =
-                    actor.components?.['positioning:facing_away'];
+                    actor.components?.['facing-states:facing_away'];
                   const targetFacingAway =
-                    target.components?.['positioning:facing_away'];
+                    target.components?.['facing-states:facing_away'];
                   if (
                     actorFacingAway?.facing_away_from?.includes(partnerId) ||
                     targetFacingAway?.facing_away_from?.includes(actor.id)
@@ -529,7 +529,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Set up actor's facing_away data if applicable
     if (facingAway) {
-      entityManager.addComponent(actorId, 'positioning:facing_away', {
+      entityManager.addComponent(actorId, 'facing-states:facing_away', {
         facing_away_from: [partnerId],
       });
     }
@@ -546,7 +546,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Set up partner's facing_away data if applicable
     if (partnerFacingAway) {
-      entityManager.addComponent(partnerId, 'positioning:facing_away', {
+      entityManager.addComponent(partnerId, 'facing-states:facing_away', {
         facing_away_from: [actorId],
       });
     }
@@ -563,7 +563,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     const originalEvaluate = jsonLogicEval.evaluate.bind(jsonLogicEval);
     jsonLogicEval.evaluate = jest.fn((logic, context) => {
       if (
-        logic?.condition_ref === 'positioning:both-actors-facing-each-other'
+        logic?.condition_ref === 'facing-states:both-actors-facing-each-other'
       ) {
         return shouldFacingConditionReturnTrue;
       }
@@ -601,7 +601,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Add facing_away component if applicable
     if (facingAway) {
-      entityManager.addComponent(targetId, 'positioning:facing_away', {
+      entityManager.addComponent(targetId, 'facing-states:facing_away', {
         facing_away_from: [actorId],
       });
     }
@@ -661,7 +661,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       };
 
       const result = jsonLogicEval.evaluate(
-        { condition_ref: 'positioning:both-actors-facing-each-other' },
+        { condition_ref: 'facing-states:both-actors-facing-each-other' },
         context
       );
 

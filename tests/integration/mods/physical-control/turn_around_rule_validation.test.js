@@ -65,7 +65,7 @@ describe('handle_turn_around rule', () => {
     const facingQuery = handleTurnAroundRule.actions.find(
       (op) =>
         op.type === 'QUERY_COMPONENT' &&
-        op.parameters.component_type === 'positioning:facing_away'
+        op.parameters.component_type === 'facing-states:facing_away'
     );
 
     expect(facingQuery?.parameters.entity_ref).toBe('target');

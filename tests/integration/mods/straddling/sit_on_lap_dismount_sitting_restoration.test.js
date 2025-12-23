@@ -90,7 +90,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       expect(
         updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(true);
-      expect(updatedActor.components['positioning:facing_away']).toBeDefined();
+      expect(updatedActor.components['facing-states:facing_away']).toBeDefined();
 
       // Step 2: Execute dismount_from_straddling
       // Transfer state to dismount fixture
@@ -108,7 +108,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         updatedActor.components['straddling-states:straddling_waist']
       ).toBeUndefined();
       expect(
-        updatedActor.components['positioning:facing_away']
+        updatedActor.components['facing-states:facing_away']
       ).toBeUndefined();
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
 
@@ -190,7 +190,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         updatedActor.components['straddling-states:straddling_waist'].facing_away
       ).toBe(false);
       expect(
-        updatedActor.components['positioning:facing_away']
+        updatedActor.components['facing-states:facing_away']
       ).toBeUndefined();
 
       // Step 2: Execute dismount_from_straddling
@@ -209,7 +209,7 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         updatedActor.components['straddling-states:straddling_waist']
       ).toBeUndefined();
       expect(
-        updatedActor.components['positioning:facing_away']
+        updatedActor.components['facing-states:facing_away']
       ).toBeUndefined();
       expect(updatedActor.components['sitting-states:sitting_on']).toBeUndefined();
 

@@ -122,7 +122,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']
+          actorEntity.components?.['facing-states:facing_away']
             ?.facing_away_from || [];
 
         const validTargets = closeness.reduce((acc, partnerId) => {
@@ -138,7 +138,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            partner.components?.['facing-states:facing_away']?.facing_away_from ||
             [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
@@ -194,10 +194,10 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']
+          actorEntity.components?.['facing-states:facing_away']
             ?.facing_away_from || [];
         const holderFacingAway =
-          holderEntity.components?.['positioning:facing_away']
+          holderEntity.components?.['facing-states:facing_away']
             ?.facing_away_from || [];
 
         const facingEachOther =

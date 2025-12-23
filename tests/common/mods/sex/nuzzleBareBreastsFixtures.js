@@ -90,7 +90,7 @@ export function buildNuzzleBareBreastsScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', { facing_away_from: [] });
+    .withComponent('facing-states:facing_away', { facing_away_from: [] });
 
   if (includeCloseness) {
     actorBuilder.closeToEntity(targetId);
@@ -108,7 +108,7 @@ export function buildNuzzleBareBreastsScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .asActor()
-    .withComponent('positioning:facing_away', { facing_away_from: [] })
+    .withComponent('facing-states:facing_away', { facing_away_from: [] })
     .withBody(torsoId);
 
   if (includeCloseness) {
@@ -190,7 +190,7 @@ export function installBareBreastsScopeOverride(testFixture) {
           return false;
         }
 
-        const facingAway = partner.components?.['positioning:facing_away'];
+        const facingAway = partner.components?.['facing-states:facing_away'];
         if (
           Array.isArray(facingAway?.facing_away_from) &&
           facingAway.facing_away_from.includes(actorId)

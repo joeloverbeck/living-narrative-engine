@@ -8,7 +8,7 @@
     "actor": ["personal-space-states:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:facing_away", "hugging-states:hugging"]
+    "actor": ["facing-states:facing_away", "hugging-states:hugging"]
   },
   "template": "place a hand on {target}'s waist",
   "prerequisites": [],

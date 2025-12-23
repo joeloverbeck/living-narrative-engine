@@ -1,6 +1,6 @@
 // Scope for actors that this entity is facing away from
 // Returns all entities in the actor's facing_away_from array who are also in closeness
-positioning:actors_im_facing_away_from := actor.components.positioning:facing_away.facing_away_from[][{
+facing-states:actors_im_facing_away_from := actor.components.facing-states:facing_away.facing_away_from[][{
   "in": [
     { "var": "entity.id" },
     { "var": "actor.components.personal-space-states:closeness.partners" }

@@ -4,7 +4,7 @@
 sex-breastplay:actors_with_breasts_facing_each_other_covered := actor.components.personal-space-states:closeness.partners[][{ 
   "and": [
     {"hasPartOfType": [".", "breast"]},
-    {"condition_ref": "positioning:entity-not-in-facing-away"},
+    {"condition_ref": "facing-states:entity-not-in-facing-away"},
     {"socketExposure": [".", ["left_chest", "right_chest"], "all", true]}
   ]
 }]

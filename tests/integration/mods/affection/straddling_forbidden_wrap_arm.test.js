@@ -51,7 +51,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
+            actorEntity.components?.['facing-states:facing_away']
               ?.facing_away_from || [];
 
           const validTargets = closeness.reduce((acc, partnerId) => {
@@ -61,7 +61,7 @@ describe('wrap_arm_around_waist forbidden when straddling - Integration Tests', 
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&

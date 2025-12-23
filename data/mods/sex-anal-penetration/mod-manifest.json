@@ -10,11 +10,11 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "sex-states",
+      "id": "facing-states",
       "version": "^1.0.0"
     },
     {
-      "id": "positioning",
+      "id": "sex-states",
       "version": "^1.0.0"
     },
     {

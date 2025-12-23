@@ -493,7 +493,7 @@ export class IntegrationTestBed extends BaseTestBed {
           },
         },
         {
-          id: 'positioning:facing_away',
+          id: 'facing-states:facing_away',
           schema: {
             type: 'object',
             properties: {

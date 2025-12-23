@@ -13,7 +13,7 @@ import {
 import forceBendOverRule from '../../../../../data/mods/physical-control/rules/handle_force_bend_over.rule.json';
 import eventIsActionForceBendOver from '../../../../../data/mods/physical-control/conditions/event-is-action-force-bend-over.condition.json';
 import bendingOverComponent from '../../../../../data/mods/bending-states/components/bending_over.component.json';
-import facingAwayComponent from '../../../../../data/mods/positioning/components/facing_away.component.json';
+import facingAwayComponent from '../../../../../data/mods/facing-states/components/facing_away.component.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import logSuccessOutcomeMacro from '../../../../../data/mods/core/macros/logSuccessOutcomeAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
@@ -137,7 +137,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
         if (componentId === 'bending-states:bending_over') {
           return bendingOverComponent;
         }
-        if (componentId === 'positioning:facing_away') {
+        if (componentId === 'facing-states:facing_away') {
           return facingAwayComponent;
         }
         return null;
@@ -200,7 +200,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
       surface_id: 'surface1',
     });
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('actor1');
 
     expect(bodyDescriptionComposer).toBeDefined();
@@ -264,7 +264,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'Noah' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'personal-space-states:closeness': { partners: ['actor1', 'actor2'] },
-          'positioning:facing_away': {
+          'facing-states:facing_away': {
             facing_away_from: ['actor2'],
           },
         },
@@ -290,7 +290,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
 
     const target = testEnv.entityManager.getEntityInstance('target1');
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toEqual(expect.arrayContaining(['actor1', 'actor2']));
   });
 
@@ -310,7 +310,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
           [NAME_COMPONENT_ID]: { text: 'Noah' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
           'personal-space-states:closeness': { partners: ['actor1'] },
-          'positioning:facing_away': {
+          'facing-states:facing_away': {
             facing_away_from: ['actor1'],
           },
         },
@@ -336,7 +336,7 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
 
     const target = testEnv.entityManager.getEntityInstance('target1');
     const facingAwayFrom =
-      target.components['positioning:facing_away'].facing_away_from;
+      target.components['facing-states:facing_away'].facing_away_from;
 
     expect(facingAwayFrom).toContain('actor1');
     expect(facingAwayFrom.filter((id) => id === 'actor1')).toHaveLength(1);

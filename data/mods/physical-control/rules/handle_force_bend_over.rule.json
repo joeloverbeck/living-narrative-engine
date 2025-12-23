@@ -40,7 +40,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "primary",
-        "component_type": "positioning:facing_away",
+        "component_type": "facing-states:facing_away",
         "result_variable": "primaryFacingState",
         "missing_value": null
       }
@@ -65,7 +65,7 @@
             "type": "MODIFY_ARRAY_FIELD",
             "parameters": {
               "entity_ref": "primary",
-              "component_type": "positioning:facing_away",
+              "component_type": "facing-states:facing_away",
               "field": "facing_away_from",
               "mode": "push_unique",
               "value": "{event.payload.actorId}"
@@ -77,7 +77,7 @@
             "type": "ADD_COMPONENT",
             "parameters": {
               "entity_ref": "primary",
-              "component_type": "positioning:facing_away",
+              "component_type": "facing-states:facing_away",
               "value": {
                 "facing_away_from": ["{event.payload.actorId}"]
               }

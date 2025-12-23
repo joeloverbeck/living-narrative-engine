@@ -77,7 +77,7 @@ function setupExistingFacingAwayScenario() {
   const scenario = setupBehindPositioningScenario();
 
   // Modify target to have existing facing_away component
-  scenario.target.components['positioning:facing_away'] = {
+  scenario.target.components['facing-states:facing_away'] = {
     facing_away_from: ['test:existing'],
   };
 
@@ -253,14 +253,14 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Verify target receives the facing_away component
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
 
     // Verify actor does NOT receive the facing_away component
     const actor = testFixture.entityManager.getEntityInstance('test:player');
-    expect(actor?.components['positioning:facing_away']).toBeUndefined();
+    expect(actor?.components['facing-states:facing_away']).toBeUndefined();
 
     // Verify action success
     ModAssertionHelpers.assertActionSuccess(
@@ -354,15 +354,15 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Target should be facing away from both actors
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player1');
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player2');
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toHaveLength(2);
 
     // Verify both actions succeeded
@@ -380,15 +380,15 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Target should be facing away from both original and new actor
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:existing');
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toHaveLength(2);
 
     // Verify action success
@@ -401,7 +401,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     ModAssertionHelpers.assertComponentAdded(
       testFixture.entityManager,
       'test:npc',
-      'positioning:facing_away',
+      'facing-states:facing_away',
       { facing_away_from: ['test:existing', 'test:player'] }
     );
   });
@@ -424,9 +424,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
 
     // Verify success message would still be generated
@@ -453,9 +453,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
 
     // Verify success message would still be generated
@@ -517,9 +517,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
 
     // Verify success message would still be generated
@@ -576,9 +576,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
-    expect(target?.components['positioning:facing_away']).toBeDefined();
+    expect(target?.components['facing-states:facing_away']).toBeDefined();
     expect(
-      target.components['positioning:facing_away'].facing_away_from
+      target.components['facing-states:facing_away'].facing_away_from
     ).toContain('test:player');
 
     // Verify success message would still be generated

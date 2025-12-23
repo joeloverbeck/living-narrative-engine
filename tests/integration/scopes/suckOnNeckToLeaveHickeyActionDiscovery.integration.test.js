@@ -47,8 +47,8 @@ import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import suckOnNeckToLeaveHickeyAction from '../../../data/mods/kissing/actions/suck_on_neck_to_leave_hickey.action.json';
 
 // Import required conditions
-import bothActorsFacingEachOther from '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json';
-import actorIsBehindEntity from '../../../data/mods/positioning/conditions/actor-is-behind-entity.condition.json';
+import bothActorsFacingEachOther from '../../../data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json';
+import actorIsBehindEntity from '../../../data/mods/facing-states/conditions/actor-is-behind-entity.condition.json';
 
 // Unmock the real singleton to ensure the test and SUT use the same instance
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
@@ -257,7 +257,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'personal-space-states:closeness': { partners: [actorId] },
-            'positioning:facing_away': { facing_away_from: [actorId] },
+            'facing-states:facing_away': { facing_away_from: [actorId] },
           },
         },
         { id: 'room1', components: {} },
@@ -434,7 +434,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             'personal-space-states:closeness': { partners: [actorId, facingTargetId] },
-            'positioning:facing_away': { facing_away_from: [actorId] },
+            'facing-states:facing_away': { facing_away_from: [actorId] },
           },
         },
         { id: 'room1', components: {} },

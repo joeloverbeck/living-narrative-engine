@@ -114,7 +114,7 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
     // Load necessary scope files
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
-      'data/mods/positioning/scopes/actors_in_location_facing.scope',
+      'data/mods/facing-states/scopes/actors_in_location_facing.scope',
       'data/mods/sex-core/scopes/actors_with_penis_facing_each_other.scope',
       'data/mods/caressing/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope',
       'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
@@ -149,10 +149,10 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       'data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       'data/mods/core/conditions/entity-has-actor-component.condition.json',
       'data/mods/core/conditions/actor-mouth-available.condition.json',
-      'data/mods/positioning/conditions/entity-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/entity-not-in-facing-away.condition.json',
-      'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
-      'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
+      'data/mods/facing-states/conditions/entity-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/entity-not-in-facing-away.condition.json',
+      'data/mods/facing-states/conditions/both-actors-facing-each-other.condition.json',
+      'data/mods/facing-states/conditions/actor-is-behind-entity.condition.json',
       'data/mods/deference-states/conditions/entity-kneeling-before-actor.condition.json',
       'data/mods/deference-states/conditions/actor-kneeling-before-entity.condition.json',
     ];

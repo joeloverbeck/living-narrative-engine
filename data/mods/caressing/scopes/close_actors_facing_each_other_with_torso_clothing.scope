@@ -2,7 +2,7 @@
 // Used by clothing adjustment actions that require the target to have adjustable upper body clothing
 caressing:close_actors_facing_each_other_with_torso_clothing := actor.components.personal-space-states:closeness.partners[][{
   "and": [
-    {"condition_ref": "positioning:both-actors-facing-each-other"},
+    {"condition_ref": "facing-states:both-actors-facing-each-other"},
     {"!": {"isSlotExposed": [".", "torso_upper"]}}
   ]
 }]

@@ -113,7 +113,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
 
             // Check if partner is facing away from actor OR lying down
             const facingAway =
-              partner.components?.['positioning:facing_away']
+              partner.components?.['facing-states:facing_away']
                 ?.facing_away_from || [];
             const isLyingDown = partner.components?.['lying-states:lying_on'];
 
@@ -128,7 +128,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       // Make Bob face away from Alice and expose his asshole
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       testFixture.testEnv.entityManager.addComponent(
@@ -168,7 +168,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       // Setup target with exposed asshole facing away
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       testFixture.testEnv.entityManager.addComponent(
@@ -198,7 +198,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       // Make Bob face away from Alice
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       testFixture.testEnv.entityManager.addComponent(
@@ -229,7 +229,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       // Make Bob face away from Alice but without asshole
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       testFixture.testEnv.entityManager.addComponent(
@@ -259,7 +259,7 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       // Make Bob face away from Alice with exposed asshole
       testFixture.testEnv.entityManager.addComponent(
         scenario.target.id,
-        'positioning:facing_away',
+        'facing-states:facing_away',
         { facing_away_from: [scenario.actor.id] }
       );
       testFixture.testEnv.entityManager.addComponent(
