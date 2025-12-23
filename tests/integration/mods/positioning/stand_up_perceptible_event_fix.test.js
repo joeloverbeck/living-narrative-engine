@@ -35,7 +35,7 @@ function setupKneelingStandUpScenario() {
   const actor = new ModEntityBuilder('test:actor1')
     .withName('Alice')
     .atLocation('throne_room')
-    .withComponent('positioning:kneeling_before', { entityId: 'test:king' })
+    .withComponent('deference-states:kneeling_before', { entityId: 'test:king' })
     .asActor()
     .build();
 
@@ -171,7 +171,7 @@ describe('deference:stand_up perceptible event fix', () => {
     ModAssertionHelpers.assertComponentRemoved(
       testEnv.entityManager,
       'test:actor1',
-      'positioning:kneeling_before'
+      'deference-states:kneeling_before'
     );
   });
 

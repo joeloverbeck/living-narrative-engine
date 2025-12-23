@@ -375,7 +375,7 @@ describe('first-aid:rinse_my_wounded_part action definition', () => {
         'bending-states:bending_over',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ])
     );
     expect(rinseAction.forbidden_components.primary).toEqual(

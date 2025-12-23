@@ -233,7 +233,7 @@ describe('handle_break_free_from_restraint rule', () => {
     const fallenAdd = actions.find(
       (op) =>
         op.type === 'ADD_COMPONENT' &&
-        op.parameters.component_type === 'positioning:fallen'
+        op.parameters.component_type === 'recovery-states:fallen'
     );
 
     expect(fallenAdd?.parameters.entity_ref).toBe('target');

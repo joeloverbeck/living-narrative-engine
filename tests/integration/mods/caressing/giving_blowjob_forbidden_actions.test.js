@@ -146,7 +146,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
         actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
         [];
       const actorKneelingBefore =
-        actorEntity.components?.['positioning:kneeling_before']?.entityId;
+        actorEntity.components?.['deference-states:kneeling_before']?.entityId;
 
       return closeness.reduce((acc, partnerId) => {
         const partner = entityManager.getEntityInstance(partnerId);
@@ -165,7 +165,7 @@ describe('caressing actions forbidden when giving blowjob', () => {
           !partnerFacingAway.includes(actorId);
         const actorKneelingBeforePartner = actorKneelingBefore === partnerId;
         const partnerKneelingBeforeActor =
-          partner.components?.['positioning:kneeling_before']?.entityId ===
+          partner.components?.['deference-states:kneeling_before']?.entityId ===
           actorId;
 
         const hairAvailable = hasSubType(partnerId, 'hair');

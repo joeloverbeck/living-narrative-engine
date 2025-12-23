@@ -35,7 +35,7 @@ describe('sitting:sit_down action discovery', () => {
         'sitting-states:sitting_on'
       );
       expect(sitDownAction.forbidden_components.actor).toContain(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
     });
 

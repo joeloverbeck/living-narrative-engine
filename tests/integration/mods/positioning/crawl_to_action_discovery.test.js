@@ -18,13 +18,13 @@ describe('deference:crawl_to - Action Discovery', () => {
 
       // Verify targets
       expect(crawlToAction.targets.primary.scope).toBe(
-        'positioning:entity_actor_is_kneeling_before'
+        'deference-states:entity_actor_is_kneeling_before'
       );
       expect(crawlToAction.targets.primary.placeholder).toBe('target');
 
       // Verify required components
       expect(crawlToAction.required_components.actor).toContain(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
 
       // Verify forbidden components for actor
@@ -52,7 +52,7 @@ describe('deference:crawl_to - Action Discovery', () => {
 
       // Verify forbidden components for primary target
       expect(crawlToAction.forbidden_components.primary).toContain(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(crawlToAction.forbidden_components.primary).toContain(
         'lying-states:lying_on'
@@ -77,9 +77,9 @@ describe('deference:crawl_to - Action Discovery', () => {
 
   describe('Discovery Requirements', () => {
     it('should require actor to be kneeling before someone', () => {
-      // The action requires positioning:kneeling_before component on actor
+      // The action requires deference-states:kneeling_before component on actor
       expect(crawlToAction.required_components.actor).toContain(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
     });
 
@@ -98,9 +98,9 @@ describe('deference:crawl_to - Action Discovery', () => {
     });
 
     it('should prevent crawling to kneeling targets', () => {
-      // The action forbids positioning:kneeling_before component on target
+      // The action forbids deference-states:kneeling_before component on target
       expect(crawlToAction.forbidden_components.primary).toContain(
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
     });
 

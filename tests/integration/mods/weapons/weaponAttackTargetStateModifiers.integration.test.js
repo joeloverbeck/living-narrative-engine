@@ -59,7 +59,7 @@ const WEAPON_ATTACK_MODIFIERS = [
   {
     condition: {
       logic: {
-        '!!': [{ var: 'entity.secondary.components.positioning:fallen' }],
+        '!!': [{ var: 'entity.secondary.components.recovery-states:fallen' }],
       },
     },
     type: 'flat',
@@ -112,7 +112,7 @@ describe('Weapon Attack Target State Modifiers', () => {
   });
 
   describe('Fallen Target Modifier (+15 bonus)', () => {
-    it('should apply +15 flat bonus when target has positioning:fallen component', () => {
+    it('should apply +15 flat bonus when target has recovery-states:fallen component', () => {
       // Arrange - Target is fallen
       setupServices({
         attacker: {
@@ -121,7 +121,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         },
         fallen_target: {
           'core:actor': { name: 'Fallen Target' },
-          'positioning:fallen': {
+          'recovery-states:fallen': {
             activityMetadata: { shouldDescribeInActivity: true },
           },
           'skills:defense_skill': { value: 30 },
@@ -153,7 +153,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         fallen_target: {
           'core:actor': { name: 'Fallen Target' },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
         },
       });
 
@@ -238,7 +238,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         },
         helpless_target: {
           'core:actor': { name: 'Helpless Target' },
-          'positioning:fallen': {
+          'recovery-states:fallen': {
             activityMetadata: { shouldDescribeInActivity: true },
           },
           'physical-control-states:being_restrained': {
@@ -276,7 +276,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         helpless_target: {
           'core:actor': { name: 'Helpless Target' },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
           'physical-control-states:being_restrained': { restraining_entity_id: 'holder' },
         },
       });
@@ -301,7 +301,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         helpless_target: {
           'core:actor': { name: 'Helpless Target' },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
           'physical-control-states:being_restrained': { restraining_entity_id: 'holder' },
         },
       });
@@ -329,7 +329,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         normal_target: {
           'core:actor': { name: 'Normal Target' },
           'skills:defense_skill': { value: 30 },
-          // No positioning:fallen or physical-control-states:being_restrained
+          // No recovery-states:fallen or physical-control-states:being_restrained
         },
       });
 
@@ -429,7 +429,7 @@ describe('Weapon Attack Target State Modifiers', () => {
             attacker: { 'core:actor': { name: 'Attacker' } },
             fallen_target: {
               'core:actor': { name: 'Fallen Target' },
-              'positioning:fallen': {},
+              'recovery-states:fallen': {},
             },
           });
 
@@ -469,7 +469,7 @@ describe('Weapon Attack Target State Modifiers', () => {
             attacker: { 'core:actor': { name: 'Attacker' } },
             helpless_target: {
               'core:actor': { name: 'Helpless Target' },
-              'positioning:fallen': {},
+              'recovery-states:fallen': {},
               'physical-control-states:being_restrained': {
                 restraining_entity_id: 'holder',
               },
@@ -527,7 +527,7 @@ describe('Weapon Attack Target State Modifiers', () => {
       setupServices({
         attacker: {
           'core:actor': { name: 'Fallen Attacker' },
-          'positioning:fallen': {}, // Actor is fallen
+          'recovery-states:fallen': {}, // Actor is fallen
         },
         normal_target: {
           'core:actor': { name: 'Normal Target' },
@@ -551,7 +551,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         fallen_target: {
           'core:actor': { name: 'Fallen Target' },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
         },
       });
 
@@ -570,7 +570,7 @@ describe('Weapon Attack Target State Modifiers', () => {
         attacker: { 'core:actor': { name: 'Attacker' } },
         fallen_target: {
           'core:actor': { name: 'Fallen Target' },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
         },
       });
 

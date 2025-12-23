@@ -9,7 +9,7 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
-import kneelBeforeComponent from '../../../../data/mods/positioning/components/kneeling_before.component.json';
+import kneelBeforeComponent from '../../../../data/mods/deference-states/components/kneeling_before.component.json';
 
 /**
  * Creates standardized kneeling positioning scenario.
@@ -65,7 +65,7 @@ function setupAlreadyKneelingScenario() {
   const scenario = setupKneelingScenario();
 
   // Actor is already kneeling to someone else
-  scenario.actor.components['positioning:kneeling_before'] = {
+  scenario.actor.components['deference-states:kneeling_before'] = {
     entityId: 'test:existing_target',
   };
 
@@ -121,7 +121,7 @@ function setupTargetKneelingScenario() {
   const scenario = setupKneelingScenario('Squire', 'Knight', 'chapel');
 
   // Target (Knight) is kneeling before someone else
-  scenario.target.components['positioning:kneeling_before'] = {
+  scenario.target.components['deference-states:kneeling_before'] = {
     entityId: 'test:high_priest',
   };
 
@@ -230,7 +230,7 @@ function setupMixedPositioningScenario() {
     .build();
 
   // Third Knight is already kneeling
-  thirdKnight.components['positioning:kneeling_before'] = {
+  thirdKnight.components['deference-states:kneeling_before'] = {
     entityId: 'test:king',
   };
 
@@ -295,7 +295,7 @@ describe('deference:kneel_before action integration', () => {
     ModAssertionHelpers.assertComponentAdded(
       testFixture.entityManager,
       'test:actor1',
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       { entityId: 'test:target1' }
     );
 
@@ -351,7 +351,7 @@ describe('deference:kneel_before action integration', () => {
     ModAssertionHelpers.assertComponentAdded(
       testFixture.entityManager,
       'test:actor1',
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       { entityId: 'test:target1' }
     );
 
@@ -374,7 +374,7 @@ describe('deference:kneel_before action integration', () => {
 
     // The ADD_COMPONENT operation would replace existing component
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+    expect(actor.components['deference-states:kneeling_before'].entityId).toBe(
       'test:target1'
     );
   });
@@ -398,7 +398,7 @@ describe('deference:kneel_before action integration', () => {
 
     // Should not have added the component
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:kneeling_before']).toBeUndefined();
+    expect(actor.components['deference-states:kneeling_before']).toBeUndefined();
   });
 
   it('reproduces production error with realistic entity IDs', async () => {
@@ -432,7 +432,7 @@ describe('deference:kneel_before action integration', () => {
     ModAssertionHelpers.assertComponentAdded(
       testFixture.entityManager,
       'p_erotica:iker_aguirre_instance',
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       { entityId: 'p_erotica:amaia_castillo_instance' }
     );
 
@@ -484,7 +484,7 @@ describe('deference:kneel_before action integration', () => {
     ModAssertionHelpers.assertComponentAdded(
       testFixture.entityManager,
       'test:actor1',
-      'positioning:kneeling_before',
+      'deference-states:kneeling_before',
       { entityId: 'test:target1' }
     );
 
@@ -529,7 +529,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
 
@@ -548,7 +548,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
 
@@ -562,7 +562,7 @@ describe('deference:kneel_before action integration', () => {
         const entities = setupTargetKneelingScenario();
         testFixture.reset(Object.values(entities));
 
-        // Target has positioning:kneeling_before which is in forbidden_components.primary
+        // Target has deference-states:kneeling_before which is in forbidden_components.primary
         // New validation behavior: throws ActionValidationError instead of returning {blocked: true}
         await expect(async () => {
           await testFixture.executeAction('test:actor1', 'test:target1');
@@ -571,7 +571,7 @@ describe('deference:kneel_before action integration', () => {
         // Component should NOT be added (action was blocked before execution)
         const actor =
           testFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actor.components['positioning:kneeling_before']).toBeUndefined();
+        expect(actor.components['deference-states:kneeling_before']).toBeUndefined();
       });
     });
 
@@ -592,7 +592,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
 
@@ -624,7 +624,7 @@ describe('deference:kneel_before action integration', () => {
         testFixture.reset(Object.values(entities));
 
         // In real gameplay, action discovery would prevent this
-        // because actor has positioning:kneeling_before
+        // because actor has deference-states:kneeling_before
         // Bypass validation to test rule execution behavior
         await testFixture.executeAction('test:actor1', 'test:target1', {
           skipDiscovery: true,
@@ -633,7 +633,7 @@ describe('deference:kneel_before action integration', () => {
         // The component would be replaced if somehow executed
         const actor =
           testFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+        expect(actor.components['deference-states:kneeling_before'].entityId).toBe(
           'test:target1'
         );
       });
@@ -653,7 +653,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
       });
@@ -680,7 +680,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
       });
@@ -713,7 +713,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:actor1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:target1' }
         );
 
@@ -752,7 +752,7 @@ describe('deference:kneel_before action integration', () => {
         // due to forbidden_components, but rule testing bypasses that layer
         const updatedActor =
           testFixture.entityManager.getEntityInstance('test:actor1');
-        expect(updatedActor.components['positioning:kneeling_before']).toEqual({
+        expect(updatedActor.components['deference-states:kneeling_before']).toEqual({
           entityId: 'test:target1',
         });
         // Actor still retains straddling component as rule doesn't remove it
@@ -776,7 +776,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:kneeler',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:king' }
         );
 
@@ -799,7 +799,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:second_knight',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:third_knight' }
         );
 
@@ -834,7 +834,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:knight1',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:knight2' }
         );
 
@@ -849,7 +849,7 @@ describe('deference:kneel_before action integration', () => {
         ModAssertionHelpers.assertComponentAdded(
           testFixture.entityManager,
           'test:knight2',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           { entityId: 'test:knight1' }
         );
 
@@ -857,10 +857,10 @@ describe('deference:kneel_before action integration', () => {
         const k1 = testFixture.entityManager.getEntityInstance('test:knight1');
         const k2 = testFixture.entityManager.getEntityInstance('test:knight2');
 
-        expect(k1.components['positioning:kneeling_before'].entityId).toBe(
+        expect(k1.components['deference-states:kneeling_before'].entityId).toBe(
           'test:knight2'
         );
-        expect(k2.components['positioning:kneeling_before'].entityId).toBe(
+        expect(k2.components['deference-states:kneeling_before'].entityId).toBe(
           'test:knight1'
         );
       });

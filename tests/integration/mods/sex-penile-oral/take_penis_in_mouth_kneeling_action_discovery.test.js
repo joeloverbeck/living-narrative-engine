@@ -175,7 +175,7 @@ function installKneelingBeforeTargetWithPenisScopeOverride(fixture) {
       const closenessPartners =
         actor?.components?.['personal-space-states:closeness']?.partners;
       const kneelingBefore =
-        actor?.components?.['positioning:kneeling_before']?.entityId;
+        actor?.components?.['deference-states:kneeling_before']?.entityId;
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };

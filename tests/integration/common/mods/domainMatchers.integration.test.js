@@ -72,8 +72,8 @@ describe('Domain Matchers - Integration Tests', () => {
       // Verify entity state
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:target1',
       });
     });
@@ -103,8 +103,8 @@ describe('Domain Matchers - Integration Tests', () => {
 
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:target1',
       });
     });
@@ -159,8 +159,8 @@ describe('Domain Matchers - Integration Tests', () => {
         testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Check component exists and has correct data
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:target1',
       });
     });
@@ -218,7 +218,7 @@ describe('Domain Matchers - Integration Tests', () => {
       // expect(successEvent).toBeDefined();
       // expect(successEvent.payload.message).toBe('Alice kneels before Lord.');
       // const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      // expect(actor.components['positioning:kneeling_before']).toBeDefined();
+      // expect(actor.components['deference-states:kneeling_before']).toBeDefined();
       // expect(actor.components['positioning:standing']).toBeUndefined();
 
       // NEW WAY - clear domain language
@@ -227,7 +227,7 @@ describe('Domain Matchers - Integration Tests', () => {
       );
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');
     });
 
@@ -238,7 +238,7 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // NOTE: Actor already kneeling - cannot kneel before another target
-        .withComponent('positioning:kneeling_before', {
+        .withComponent('deference-states:kneeling_before', {
           entityId: 'test:other',
         })
         .build();
@@ -259,7 +259,7 @@ describe('Domain Matchers - Integration Tests', () => {
       // Verify component wasn't changed
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:other',
       });
     });
@@ -324,9 +324,9 @@ describe('Domain Matchers - Integration Tests', () => {
 
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:target1',
       });
     });
@@ -340,7 +340,7 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // Actor already kneeling - cannot kneel again
-        .withComponent('positioning:kneeling_before', {
+        .withComponent('deference-states:kneeling_before', {
           entityId: 'test:other',
         })
         .build();
@@ -433,7 +433,7 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // Actor already kneeling - action will fail
-        .withComponent('positioning:kneeling_before', {
+        .withComponent('deference-states:kneeling_before', {
           entityId: 'test:other',
         })
         .build();
@@ -483,9 +483,9 @@ describe('Domain Matchers - Integration Tests', () => {
       const updatedActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toBeAt('room1');
-      expect(updatedActor).toHaveComponent('positioning:kneeling_before');
+      expect(updatedActor).toHaveComponent('deference-states:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');
-      expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
+      expect(updatedActor).toHaveComponentData('deference-states:kneeling_before', {
         entityId: 'test:target1',
       });
     });

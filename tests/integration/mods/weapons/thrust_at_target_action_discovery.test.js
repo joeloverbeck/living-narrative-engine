@@ -97,9 +97,9 @@ describe('thrust_at_target action definition', () => {
       );
     });
 
-    it('should forbid actor with positioning:fallen', () => {
+    it('should forbid actor with recovery-states:fallen', () => {
       expect(actionJson.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
     });
   });

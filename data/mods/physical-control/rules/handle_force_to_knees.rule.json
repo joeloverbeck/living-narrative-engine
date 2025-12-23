@@ -33,7 +33,7 @@
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "positioning:kneeling_before",
+        "component_type": "deference-states:kneeling_before",
         "value": {
           "entityId": "{event.payload.actorId}"
         }

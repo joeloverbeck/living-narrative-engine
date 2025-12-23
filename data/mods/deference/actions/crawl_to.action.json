@@ -5,13 +5,13 @@
   "description": "Crawl submissively to the entity you are kneeling before, entering their personal space.",
   "targets": {
     "primary": {
-      "scope": "positioning:entity_actor_is_kneeling_before",
+      "scope": "deference-states:entity_actor_is_kneeling_before",
       "placeholder": "target",
       "description": "The entity you are kneeling before"
     }
   },
   "required_components": {
-    "actor": ["positioning:kneeling_before"]
+    "actor": ["deference-states:kneeling_before"]
   },
   "forbidden_components": {
     "actor": [
@@ -24,10 +24,10 @@
       "personal-space-states:closeness",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ],
     "primary": [
-      "positioning:kneeling_before",
+      "deference-states:kneeling_before",
       "lying-states:lying_on",
       "bending-states:bending_over"
     ]

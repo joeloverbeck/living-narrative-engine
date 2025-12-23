@@ -1160,4 +1160,1084 @@ describe('SummaryPanelView', () => {
       });
     });
   });
+
+  describe('Dependency Depth Section', () => {
+    const defaultRenderOptions = (depthOverrides = {}) => ({
+      loadOrder: [],
+      activeCount: 0,
+      explicitCount: 0,
+      dependencyCount: 0,
+      hotspots: [],
+      healthStatus: {
+        hasCircularDeps: false,
+        missingDeps: [],
+        loadOrderValid: true,
+        warnings: [],
+        errors: [],
+      },
+      depthAnalysis: {
+        maxDepth: 0,
+        deepestChain: [],
+        averageDepth: 0,
+        ...depthOverrides,
+      },
+      hasUnsavedChanges: false,
+      isSaving: false,
+      isLoading: false,
+    });
+
+    it('should display max and average depth', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 5,
+          deepestChain: ['mod-e', 'mod-d', 'mod-c', 'mod-b', 'mod-a'],
+          averageDepth: 2.4,
+        })
+      );
+
+      const depthValues = container.querySelectorAll(
+        '.summary-panel__depth-value'
+      );
+      expect(depthValues[0].textContent).toBe('5');
+      expect(depthValues[1].textContent).toBe('2.4');
+    });
+
+    it('should display deepest chain with correct nodes', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 3,
+          deepestChain: ['leaf', 'middle', 'root'],
+          averageDepth: 2,
+        })
+      );
+
+      const chainNodes = container.querySelectorAll(
+        '.summary-panel__depth-chain-mod'
+      );
+      expect(chainNodes).toHaveLength(3);
+      expect(chainNodes[0].textContent).toBe('leaf');
+      expect(chainNodes[1].textContent).toBe('middle');
+      expect(chainNodes[2].textContent).toBe('root');
+    });
+
+    it('should show empty message when no mods', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 0,
+          deepestChain: [],
+          averageDepth: 0,
+        })
+      );
+
+      // Find the depth section's empty message
+      const sections = container.querySelectorAll('.summary-panel__section');
+      const depthSection = Array.from(sections).find((s) =>
+        s.textContent.includes('Dependency Depth')
+      );
+      const emptyMessage = depthSection?.querySelector('.summary-panel__empty');
+
+      expect(emptyMessage).toBeTruthy();
+      expect(emptyMessage.textContent).toBe('No active mods');
+    });
+
+    it('should start collapsed', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 2,
+          deepestChain: ['a', 'b'],
+          averageDepth: 1.5,
+        })
+      );
+
+      const headers = container.querySelectorAll(
+        '.summary-panel__section-header'
+      );
+      const depthHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Dependency Depth')
+      );
+
+      expect(depthHeader.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should toggle section on header click', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 2,
+          deepestChain: ['a', 'b'],
+          averageDepth: 1.5,
+        })
+      );
+
+      const headers = container.querySelectorAll(
+        '.summary-panel__section-header'
+      );
+      const depthHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Dependency Depth')
+      );
+
+      depthHeader.click();
+
+      expect(depthHeader.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('should have correct BEM class structure', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 2,
+          deepestChain: ['a', 'b'],
+          averageDepth: 1.5,
+        })
+      );
+
+      expect(
+        container.querySelector('.summary-panel__depth-stats')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__depth-stat')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__depth-value')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__depth-label')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__depth-chain')
+      ).toBeTruthy();
+    });
+
+    it('should escape HTML in chain mod IDs', () => {
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 1,
+          deepestChain: ['<script>alert("xss")</script>'],
+          averageDepth: 1,
+        })
+      );
+
+      const chainMod = container.querySelector('.summary-panel__depth-chain-mod');
+      expect(chainMod.innerHTML).not.toContain('<script>');
+      expect(chainMod.textContent).toBe('<script>alert("xss")</script>');
+    });
+
+    it('should hide section when depthAnalysis is null', () => {
+      view.render({
+        loadOrder: [],
+        activeCount: 0,
+        explicitCount: 0,
+        dependencyCount: 0,
+        hotspots: [],
+        healthStatus: {
+          hasCircularDeps: false,
+          missingDeps: [],
+          loadOrderValid: true,
+          warnings: [],
+          errors: [],
+        },
+        depthAnalysis: null,
+        hasUnsavedChanges: false,
+        isSaving: false,
+        isLoading: false,
+      });
+
+      // Find the depth section by aria-label (content is cleared when null)
+      const depthSection = container.querySelector(
+        '[aria-label="Dependency depth analysis"]'
+      );
+      expect(depthSection).toBeTruthy();
+      expect(depthSection.hidden).toBe(true);
+    });
+  });
+
+  describe('Dependency Footprint Section', () => {
+    const defaultRenderOptions = (footprintOverrides = {}) => ({
+      loadOrder: [],
+      activeCount: 0,
+      explicitCount: 0,
+      dependencyCount: 0,
+      hotspots: [],
+      healthStatus: {
+        hasCircularDeps: false,
+        missingDeps: [],
+        loadOrderValid: true,
+        warnings: [],
+        errors: [],
+      },
+      depthAnalysis: {
+        maxDepth: 0,
+        deepestChain: [],
+        averageDepth: 0,
+      },
+      footprintAnalysis: {
+        footprints: [],
+        totalUniqueDeps: 0,
+        sharedDepsCount: 0,
+        overlapPercentage: 0,
+        ...footprintOverrides,
+      },
+      hasUnsavedChanges: false,
+      isSaving: false,
+      isLoading: false,
+    });
+
+    it('should display overlap percentage prominently', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [{ modId: 'mod1', dependencies: ['core'], count: 1 }],
+          totalUniqueDeps: 5,
+          sharedDepsCount: 3,
+          overlapPercentage: 60,
+        })
+      );
+
+      const overlapValue = container.querySelector(
+        '.summary-panel__footprint-overlap-value'
+      );
+      expect(overlapValue.textContent).toBe('60%');
+    });
+
+    it('should display footprint list for each explicit mod', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [
+            { modId: 'large-mod', dependencies: ['a', 'b', 'c', 'd'], count: 4 },
+            { modId: 'small-mod', dependencies: ['x'], count: 1 },
+          ],
+          totalUniqueDeps: 5,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      const footprintItems = container.querySelectorAll(
+        '.summary-panel__footprint-item'
+      );
+      expect(footprintItems).toHaveLength(2);
+
+      const firstMod = footprintItems[0].querySelector(
+        '.summary-panel__footprint-mod'
+      );
+      const firstCount = footprintItems[0].querySelector(
+        '.summary-panel__footprint-count'
+      );
+      expect(firstMod.textContent).toBe('large-mod');
+      expect(firstCount.textContent).toBe('+4 deps');
+    });
+
+    it('should show preview of first 3 deps with ellipsis for more', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [
+            { modId: 'mod1', dependencies: ['a', 'b', 'c', 'd', 'e'], count: 5 },
+          ],
+          totalUniqueDeps: 5,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      const depsPreview = container.querySelector(
+        '.summary-panel__footprint-deps'
+      );
+      expect(depsPreview.textContent).toContain('a, b, c');
+      expect(depsPreview.textContent).toContain('...');
+    });
+
+    it('should show footer with total and shared counts', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [{ modId: 'mod1', dependencies: ['a'], count: 1 }],
+          totalUniqueDeps: 10,
+          sharedDepsCount: 4,
+          overlapPercentage: 40,
+        })
+      );
+
+      const footer = container.querySelector('.summary-panel__footprint-footer');
+      expect(footer.textContent).toContain('Total unique: 10');
+      expect(footer.textContent).toContain('Shared: 4');
+    });
+
+    it('should show empty message when no explicit mods', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [],
+          totalUniqueDeps: 0,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      // Find the footprint section's empty message
+      const sections = container.querySelectorAll('.summary-panel__section');
+      const footprintSection = Array.from(sections).find((s) =>
+        s.textContent.includes('Dependency Footprint')
+      );
+      const emptyMessage = footprintSection?.querySelector(
+        '.summary-panel__empty'
+      );
+
+      expect(emptyMessage).toBeTruthy();
+      expect(emptyMessage.textContent).toBe('No explicit mods');
+    });
+
+    it('should start collapsed', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [{ modId: 'mod1', dependencies: ['a'], count: 1 }],
+          totalUniqueDeps: 1,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      const headers = container.querySelectorAll(
+        '.summary-panel__section-header'
+      );
+      const footprintHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Dependency Footprint')
+      );
+
+      expect(footprintHeader.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should toggle collapse state on click', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [{ modId: 'mod1', dependencies: ['a'], count: 1 }],
+          totalUniqueDeps: 1,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      const headers = container.querySelectorAll(
+        '.summary-panel__section-header'
+      );
+      const footprintHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Dependency Footprint')
+      );
+
+      // Initially collapsed
+      expect(footprintHeader.getAttribute('aria-expanded')).toBe('false');
+
+      // Click to expand
+      footprintHeader.click();
+      expect(footprintHeader.getAttribute('aria-expanded')).toBe('true');
+
+      // Click to collapse
+      footprintHeader.click();
+      expect(footprintHeader.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should have correct BEM class structure', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [{ modId: 'mod1', dependencies: ['a'], count: 1 }],
+          totalUniqueDeps: 1,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      expect(
+        container.querySelector('.summary-panel__footprint-overlap')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__footprint-list')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__footprint-item')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__footprint-footer')
+      ).toBeTruthy();
+    });
+
+    it('should escape HTML in mod IDs', () => {
+      view.render(
+        defaultRenderOptions({
+          footprints: [
+            {
+              modId: '<script>alert("xss")</script>',
+              dependencies: ['a'],
+              count: 1,
+            },
+          ],
+          totalUniqueDeps: 1,
+          sharedDepsCount: 0,
+          overlapPercentage: 0,
+        })
+      );
+
+      const modElement = container.querySelector('.summary-panel__footprint-mod');
+      expect(modElement.innerHTML).not.toContain('<script>');
+      expect(modElement.textContent).toBe('<script>alert("xss")</script>');
+    });
+
+    it('should hide section when footprintAnalysis is null', () => {
+      view.render({
+        loadOrder: [],
+        activeCount: 0,
+        explicitCount: 0,
+        dependencyCount: 0,
+        hotspots: [],
+        healthStatus: {
+          hasCircularDeps: false,
+          missingDeps: [],
+          loadOrderValid: true,
+          warnings: [],
+          errors: [],
+        },
+        depthAnalysis: null,
+        footprintAnalysis: null,
+        hasUnsavedChanges: false,
+        isSaving: false,
+        isLoading: false,
+      });
+
+      // Find the footprint section by aria-label
+      const footprintSection = container.querySelector(
+        '[aria-label="Dependency footprint analysis"]'
+      );
+      expect(footprintSection).toBeTruthy();
+      expect(footprintSection.hidden).toBe(true);
+    });
+  });
+
+  describe('Configuration Profile Section', () => {
+    const defaultRenderOptions = (profileOverrides = {}) => ({
+      loadOrder: [],
+      activeCount: 0,
+      explicitCount: 0,
+      dependencyCount: 0,
+      hotspots: [],
+      healthStatus: {
+        hasCircularDeps: false,
+        missingDeps: [],
+        loadOrderValid: true,
+        warnings: [],
+        errors: [],
+      },
+      depthAnalysis: {
+        maxDepth: 0,
+        deepestChain: [],
+        averageDepth: 0,
+      },
+      footprintAnalysis: {
+        footprints: [],
+        totalUniqueDeps: 0,
+        sharedDepsCount: 0,
+        overlapPercentage: 0,
+      },
+      profileRatio: {
+        foundationCount: 0,
+        optionalCount: 0,
+        totalActive: 0,
+        foundationPercentage: 0,
+        optionalPercentage: 0,
+        foundationMods: [],
+        profile: 'balanced',
+        ...profileOverrides,
+      },
+      hasUnsavedChanges: false,
+      isSaving: false,
+      isLoading: false,
+    });
+
+    it('should display foundation-heavy badge correctly', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 8,
+          optionalCount: 2,
+          totalActive: 10,
+          foundationPercentage: 80,
+          optionalPercentage: 20,
+          profile: 'foundation-heavy',
+        })
+      );
+
+      const badge = container.querySelector('.summary-panel__profile-badge');
+      expect(badge).toBeTruthy();
+      expect(badge.textContent).toBe('Foundation Heavy');
+      expect(
+        badge.classList.contains('summary-panel__profile-badge--foundation-heavy')
+      ).toBe(true);
+    });
+
+    it('should display content-heavy badge correctly', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 2,
+          optionalCount: 8,
+          totalActive: 10,
+          foundationPercentage: 20,
+          optionalPercentage: 80,
+          profile: 'content-heavy',
+        })
+      );
+
+      const badge = container.querySelector('.summary-panel__profile-badge');
+      expect(badge).toBeTruthy();
+      expect(badge.textContent).toBe('Content Heavy');
+      expect(
+        badge.classList.contains('summary-panel__profile-badge--content-heavy')
+      ).toBe(true);
+    });
+
+    it('should display balanced badge correctly', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 5,
+          totalActive: 10,
+          foundationPercentage: 50,
+          optionalPercentage: 50,
+          profile: 'balanced',
+        })
+      );
+
+      const badge = container.querySelector('.summary-panel__profile-badge');
+      expect(badge).toBeTruthy();
+      expect(badge.textContent).toBe('Balanced');
+      expect(
+        badge.classList.contains('summary-panel__profile-badge--balanced')
+      ).toBe(true);
+    });
+
+    it('should render bar visualization with correct widths', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 7,
+          optionalCount: 3,
+          totalActive: 10,
+          foundationPercentage: 70,
+          optionalPercentage: 30,
+          profile: 'foundation-heavy',
+        })
+      );
+
+      const foundationBar = container.querySelector(
+        '.summary-panel__profile-bar--foundation'
+      );
+      const optionalBar = container.querySelector(
+        '.summary-panel__profile-bar--optional'
+      );
+
+      expect(foundationBar).toBeTruthy();
+      expect(foundationBar.style.width).toBe('70%');
+      expect(optionalBar).toBeTruthy();
+      expect(optionalBar.style.width).toBe('30%');
+    });
+
+    it('should have accessible aria-labels on bars', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 6,
+          optionalCount: 4,
+          totalActive: 10,
+          foundationPercentage: 60,
+          optionalPercentage: 40,
+          profile: 'balanced',
+        })
+      );
+
+      const foundationBar = container.querySelector(
+        '.summary-panel__profile-bar--foundation'
+      );
+      const optionalBar = container.querySelector(
+        '.summary-panel__profile-bar--optional'
+      );
+
+      expect(foundationBar.getAttribute('aria-label')).toBe('Foundation: 60%');
+      expect(optionalBar.getAttribute('aria-label')).toBe('Optional: 40%');
+    });
+
+    it('should display legend with counts and percentages', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 7,
+          optionalCount: 3,
+          totalActive: 10,
+          foundationPercentage: 70,
+          optionalPercentage: 30,
+          profile: 'foundation-heavy',
+        })
+      );
+
+      const legend = container.querySelector('.summary-panel__profile-legend');
+      expect(legend).toBeTruthy();
+      expect(legend.textContent).toContain('Foundation: 7 (70%)');
+      expect(legend.textContent).toContain('Optional: 3 (30%)');
+    });
+
+    it('should display total active count', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 8,
+          optionalCount: 4,
+          totalActive: 12,
+          foundationPercentage: 67,
+          optionalPercentage: 33,
+          profile: 'foundation-heavy',
+        })
+      );
+
+      const total = container.querySelector('.summary-panel__profile-total');
+      expect(total).toBeTruthy();
+      expect(total.textContent).toBe('Total Active: 12');
+    });
+
+    it('should show empty message when no active mods', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 0,
+          optionalCount: 0,
+          totalActive: 0,
+          foundationPercentage: 0,
+          optionalPercentage: 0,
+          profile: 'balanced',
+        })
+      );
+
+      const emptyMessage = container.querySelector('.summary-panel__empty');
+      expect(emptyMessage).toBeTruthy();
+      expect(emptyMessage.textContent).toBe('No active mods');
+
+      // Should not have badge, bars, legend, or total
+      expect(container.querySelector('.summary-panel__profile-badge')).toBeFalsy();
+      expect(container.querySelector('.summary-panel__profile-bar-container')).toBeFalsy();
+    });
+
+    it('should handle 100% foundation correctly (0% optional)', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 0,
+          totalActive: 5,
+          foundationPercentage: 100,
+          optionalPercentage: 0,
+          profile: 'foundation-heavy',
+        })
+      );
+
+      const foundationBar = container.querySelector(
+        '.summary-panel__profile-bar--foundation'
+      );
+      const optionalBar = container.querySelector(
+        '.summary-panel__profile-bar--optional'
+      );
+
+      expect(foundationBar.style.width).toBe('100%');
+      expect(optionalBar.style.width).toBe('0%');
+    });
+
+    it('should have correct BEM class structure', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 5,
+          totalActive: 10,
+          foundationPercentage: 50,
+          optionalPercentage: 50,
+          profile: 'balanced',
+        })
+      );
+
+      expect(container.querySelector('.summary-panel__profile-badge')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-bar-container')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-bar')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-legend')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-legend-item')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-legend-color')).toBeTruthy();
+      expect(container.querySelector('.summary-panel__profile-total')).toBeTruthy();
+    });
+
+    it('should start collapsed', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 5,
+          totalActive: 10,
+          foundationPercentage: 50,
+          optionalPercentage: 50,
+          profile: 'balanced',
+        })
+      );
+
+      // Find the profile section by aria-label to ensure we get the right section
+      const profileSection = container.querySelector(
+        '[aria-label="Configuration profile"]'
+      );
+      const header = profileSection.querySelector('.summary-panel__section-header');
+      const content = profileSection.querySelector('.summary-panel__section-content');
+
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(true);
+    });
+
+    it('should toggle on header click', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 5,
+          totalActive: 10,
+          foundationPercentage: 50,
+          optionalPercentage: 50,
+          profile: 'balanced',
+        })
+      );
+
+      // Find the profile section by aria-label
+      const profileSection = container.querySelector(
+        '[aria-label="Configuration profile"]'
+      );
+      const header = profileSection.querySelector('.summary-panel__section-header');
+      const content = profileSection.querySelector('.summary-panel__section-content');
+
+      // Initially collapsed
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(true);
+
+      // Click to expand
+      header.click();
+
+      expect(header.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(false);
+
+      // Click to collapse again
+      header.click();
+
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(true);
+    });
+
+    it('should hide section when profileRatio is null', () => {
+      view.render({
+        loadOrder: [],
+        activeCount: 0,
+        explicitCount: 0,
+        dependencyCount: 0,
+        hotspots: [],
+        healthStatus: {
+          hasCircularDeps: false,
+          missingDeps: [],
+          loadOrderValid: true,
+          warnings: [],
+          errors: [],
+        },
+        depthAnalysis: null,
+        footprintAnalysis: null,
+        profileRatio: null,
+        hasUnsavedChanges: false,
+        isSaving: false,
+        isLoading: false,
+      });
+
+      // Find the profile section by aria-label
+      const profileSection = container.querySelector(
+        '[aria-label="Configuration profile"]'
+      );
+      expect(profileSection).toBeTruthy();
+      expect(profileSection.hidden).toBe(true);
+    });
+
+    it('should handle unknown profile gracefully', () => {
+      view.render(
+        defaultRenderOptions({
+          foundationCount: 5,
+          optionalCount: 5,
+          totalActive: 10,
+          foundationPercentage: 50,
+          optionalPercentage: 50,
+          profile: 'unknown-profile-type',
+        })
+      );
+
+      const badge = container.querySelector('.summary-panel__profile-badge');
+      expect(badge).toBeTruthy();
+      // Should fall back to using the raw profile value
+      expect(badge.textContent).toBe('unknown-profile-type');
+    });
+  });
+
+  describe('Fragility Warnings Section', () => {
+    const renderWithFragility = (fragilityAnalysis) => {
+      view.render({
+        loadOrder: ['core'],
+        activeCount: 1,
+        explicitCount: 1,
+        dependencyCount: 0,
+        hotspots: [],
+        healthStatus: null,
+        depthAnalysis: null,
+        footprintAnalysis: null,
+        profileRatio: null,
+        fragilityAnalysis,
+        hasUnsavedChanges: false,
+        isSaving: false,
+        isLoading: false,
+      });
+    };
+
+    it('should display success message when no fragile deps', () => {
+      renderWithFragility({
+        atRiskMods: [],
+        totalAtRisk: 0,
+        percentageOfDeps: 0,
+      });
+
+      const successMessage = container.querySelector('.summary-panel__success');
+      expect(successMessage).toBeTruthy();
+      expect(successMessage.textContent).toBe('No fragile dependencies detected');
+    });
+
+    it('should display count and percentage of at-risk mods', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+          { modId: 'core', singleDependent: 'anatomy', status: 'core' },
+        ],
+        totalAtRisk: 2,
+        percentageOfDeps: 40,
+      });
+
+      const count = container.querySelector('.summary-panel__fragility-count');
+      const label = container.querySelector('.summary-panel__fragility-label');
+
+      expect(count.textContent).toBe('2');
+      expect(label.textContent).toContain('40%');
+    });
+
+    it('should display at-risk mods with their single dependent', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const items = container.querySelectorAll('.summary-panel__fragility-item');
+      expect(items).toHaveLength(1);
+
+      const modName = items[0].querySelector('.summary-panel__fragility-mod');
+      const dependent = items[0].querySelector(
+        '.summary-panel__fragility-dependent'
+      );
+
+      expect(modName.textContent).toBe('anatomy');
+      expect(dependent.textContent).toContain('clothing');
+    });
+
+    it('should show correct badge for core status', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'core', singleDependent: 'anatomy', status: 'core' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 50,
+      });
+
+      const badge = container.querySelector('.summary-panel__fragility-badge');
+      expect(badge.textContent).toBe('core');
+      expect(
+        badge.classList.contains('summary-panel__fragility-badge--core')
+      ).toBe(true);
+    });
+
+    it('should show correct badge for dependency status', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const badge = container.querySelector('.summary-panel__fragility-badge');
+      expect(badge.textContent).toBe('dep');
+      expect(
+        badge.classList.contains('summary-panel__fragility-badge--dependency')
+      ).toBe(true);
+    });
+
+    it('should include warning icon in header when risks exist', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const headers = container.querySelectorAll('.summary-panel__section-header');
+      const fragilityHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Fragility')
+      );
+
+      expect(fragilityHeader.textContent).toContain('⚠️');
+    });
+
+    it('should not include warning icon when no risks', () => {
+      renderWithFragility({
+        atRiskMods: [],
+        totalAtRisk: 0,
+        percentageOfDeps: 0,
+      });
+
+      const headers = container.querySelectorAll('.summary-panel__section-header');
+      const fragilityHeader = Array.from(headers).find((h) =>
+        h.textContent.includes('Fragility')
+      );
+
+      expect(fragilityHeader.textContent).not.toContain('⚠️');
+    });
+
+    it('should start collapsed', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const fragilitySection = container.querySelector(
+        '[aria-label="Fragility warnings"]'
+      );
+      const header = fragilitySection.querySelector(
+        '.summary-panel__section-header'
+      );
+
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should toggle section on header click', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const fragilitySection = container.querySelector(
+        '[aria-label="Fragility warnings"]'
+      );
+      const header = fragilitySection.querySelector(
+        '.summary-panel__section-header'
+      );
+      const content = fragilitySection.querySelector(
+        '.summary-panel__section-content'
+      );
+
+      // Initially collapsed
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(true);
+
+      // Click to expand
+      header.click();
+
+      expect(header.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(false);
+    });
+
+    it('should display explanation text', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const explanation = container.querySelector(
+        '.summary-panel__fragility-explanation'
+      );
+      expect(explanation).toBeTruthy();
+      expect(explanation.textContent).toContain('only one dependent');
+    });
+
+    it('should hide section when fragilityAnalysis is null', () => {
+      renderWithFragility(null);
+
+      const fragilitySection = container.querySelector(
+        '[aria-label="Fragility warnings"]'
+      );
+      expect(fragilitySection.hidden).toBe(true);
+    });
+
+    it('should have correct BEM class structure', () => {
+      renderWithFragility({
+        atRiskMods: [
+          { modId: 'anatomy', singleDependent: 'clothing', status: 'dependency' },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      expect(
+        container.querySelector('.summary-panel__fragility-stats')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-count')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-list')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-item')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-badge')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-mod')
+      ).toBeTruthy();
+      expect(
+        container.querySelector('.summary-panel__fragility-dependent')
+      ).toBeTruthy();
+    });
+
+    it('should escape HTML in mod IDs to prevent XSS', () => {
+      renderWithFragility({
+        atRiskMods: [
+          {
+            modId: '<script>alert("xss")</script>',
+            singleDependent: '<img onerror="alert(1)">',
+            status: 'dependency',
+          },
+        ],
+        totalAtRisk: 1,
+        percentageOfDeps: 25,
+      });
+
+      const modName = container.querySelector('.summary-panel__fragility-mod');
+      const dependent = container.querySelector(
+        '.summary-panel__fragility-dependent'
+      );
+
+      // Should contain escaped text, not raw HTML
+      expect(modName.textContent).toContain('<script>');
+      expect(dependent.textContent).toContain('<img');
+      // Should not have created actual script or img elements
+      expect(container.querySelector('script')).toBeFalsy();
+      expect(
+        container.querySelector('.summary-panel__fragility-dependent img')
+      ).toBeFalsy();
+    });
+  });
 });

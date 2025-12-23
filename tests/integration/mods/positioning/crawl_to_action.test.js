@@ -36,7 +36,7 @@ function setupCrawlingScenario(
     .build();
 
   // Actor is kneeling before target but not close
-  actor.components['positioning:kneeling_before'] = {
+  actor.components['deference-states:kneeling_before'] = {
     entityId: 'test:target1',
   };
 
@@ -86,10 +86,10 @@ describe('deference:crawl_to - Rule Execution', () => {
 
       // Verify kneeling state preserved
       expect(
-        actorEntity.components['positioning:kneeling_before']
+        actorEntity.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(
-        actorEntity.components['positioning:kneeling_before'].entityId
+        actorEntity.components['deference-states:kneeling_before'].entityId
       ).toBe('test:target1');
     });
 
@@ -134,7 +134,7 @@ describe('deference:crawl_to - Rule Execution', () => {
         .build();
 
       // Alice is kneeling before Bob
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'test:bob',
       };
 
@@ -214,7 +214,7 @@ describe('deference:crawl_to - Rule Execution', () => {
       const actorBefore =
         testFixture.entityManager.getEntityInstance('test:actor1');
       expect(
-        actorBefore.components['positioning:kneeling_before']
+        actorBefore.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(actorBefore.components['personal-space-states:closeness']).toBeUndefined();
 
@@ -224,10 +224,10 @@ describe('deference:crawl_to - Rule Execution', () => {
       const actorAfter =
         testFixture.entityManager.getEntityInstance('test:actor1');
       expect(
-        actorAfter.components['positioning:kneeling_before']
+        actorAfter.components['deference-states:kneeling_before']
       ).toBeDefined();
       expect(
-        actorAfter.components['positioning:kneeling_before'].entityId
+        actorAfter.components['deference-states:kneeling_before'].entityId
       ).toBe('test:target1');
       expect(actorAfter.components['personal-space-states:closeness']).toBeDefined();
       expect(actorAfter.components['personal-space-states:closeness'].partners).toContain(
@@ -291,12 +291,12 @@ describe('deference:crawl_to - Rule Execution', () => {
         .build();
 
       // Alice kneeling before Bob
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'test:bob',
       };
 
       // Carol kneeling before Dave
-      carol.components['positioning:kneeling_before'] = {
+      carol.components['deference-states:kneeling_before'] = {
         entityId: 'test:dave',
       };
 
@@ -340,7 +340,7 @@ describe('deference:crawl_to - Rule Execution', () => {
         .asActor()
         .build();
 
-      alice.components['positioning:kneeling_before'] = {
+      alice.components['deference-states:kneeling_before'] = {
         entityId: 'p_scenario:bob_jones',
       };
 

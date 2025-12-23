@@ -3,7 +3,7 @@
 caressing:close_actors_with_hair_or_entity_kneeling_before_actor := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartSubTypeContaining": [".", "hair", {"matchAtEnd": true}]},
-    {"!": {"var": "actor.components.positioning:kneeling_before"}},
+    {"!": {"var": "actor.components.deference-states:kneeling_before"}},
     {
       "or": [
         {
@@ -14,10 +14,10 @@ caressing:close_actors_with_hair_or_entity_kneeling_before_actor := actor.compon
                 {"condition_ref": "positioning:actor-is-behind-entity"}
               ]
             },
-            {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+            {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
           ]
         },
-        {"condition_ref": "positioning:entity-kneeling-before-actor"}
+        {"condition_ref": "deference-states:entity-kneeling-before-actor"}
       ]
     }
   ]

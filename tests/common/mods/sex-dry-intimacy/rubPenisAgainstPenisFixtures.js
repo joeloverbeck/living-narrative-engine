@@ -271,10 +271,10 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
         }
 
         const partnerKneeling =
-          partner.components?.['positioning:kneeling_before']?.entityId ===
+          partner.components?.['deference-states:kneeling_before']?.entityId ===
           actorId;
         const actorKneeling =
-          actor.components?.['positioning:kneeling_before']?.entityId ===
+          actor.components?.['deference-states:kneeling_before']?.entityId ===
           partnerId;
 
         if (partnerKneeling || actorKneeling) {

@@ -1171,7 +1171,7 @@ describe('ModAssertionHelpers', () => {
 
   describe('assertKneelingPosition', () => {
     it('should validate kneeling position component', () => {
-      mockEntity.components['positioning:kneeling_before'] = {
+      mockEntity.components['deference-states:kneeling_before'] = {
         target: 'target1',
       };
 
@@ -1186,7 +1186,7 @@ describe('ModAssertionHelpers', () => {
     });
 
     it('should validate kneeling without target check', () => {
-      mockEntity.components['positioning:kneeling_before'] = {
+      mockEntity.components['deference-states:kneeling_before'] = {
         target: 'any-target',
       };
 

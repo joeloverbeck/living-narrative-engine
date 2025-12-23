@@ -1,0 +1,261 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_rise_to_surface",
+  "comment": "Handles liquids:rise_to_surface action with chance-based outcomes.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "liquids:event-is-action-rise-to-surface"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get the name of the liquid body (primary target).",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{event.payload.primaryId}"
+        },
+        "result_variable": "liquidBodyName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get the visibility property from the liquid body.",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{event.payload.primaryId}"
+        },
+        "component_type": "liquids:liquid_body",
+        "result_variable": "liquidBodyComponent"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "comment": "Fixed difficulty contest using mobility_skill vs difficulty 50.",
+      "parameters": {
+        "actor_skill_component": "skills:mobility_skill",
+        "actor_skill_default": 0,
+        "difficulty_modifier": 50,
+        "formula": "linear",
+        "result_variable": "surfaceResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Store visibility for use in messages.",
+      "parameters": {
+        "variable_name": "liquidVisibility",
+        "value": "{context.liquidBodyComponent.visibility}"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome (1 of 4).",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.surfaceResult.outcome" },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "comment": "Remove submerged state on critical success.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "liquids-states:submerged"
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} swiftly breaks the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}.",
+              "actor_description": "I swiftly break the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear a sudden splash as someone breaks the surface of a liquid body.",
+                "tactile": "I feel liquid surge as someone bursts to the surface nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} swiftly breaks the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome (2 of 4).",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.surfaceResult.outcome" },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "comment": "Remove submerged state on success.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "liquids-states:submerged"
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} rises to the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}.",
+              "actor_description": "I rise to the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear splashing as someone rises to the surface of a liquid body.",
+                "tactile": "I feel liquid ripple as someone surfaces nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} rises to the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome (3 of 4).",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.surfaceResult.outcome" },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} struggles to break the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}, but barely makes progress.",
+              "actor_description": "I struggle to break the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}, but barely make progress.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear muffled splashing from below the surface of a liquid body.",
+                "tactile": "I feel turbulent liquid movements from someone struggling underwater."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} struggles to break the surface of the {context.liquidVisibility} liquid of {context.liquidBodyName}, but barely makes progress."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome (4 of 4).",
+      "parameters": {
+        "condition": {
+          "==": [
+            { "var": "context.surfaceResult.outcome" },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} flounders helplessly in the {context.liquidVisibility} liquid of {context.liquidBodyName}, struggling to surface, and in the panic, inhales liquid.",
+              "actor_description": "I flounder helplessly in the {context.liquidVisibility} liquid of {context.liquidBodyName}, struggling to surface, and in the panic, inhale liquid.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.primaryId}",
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear frantic, panicked splashing and gurgling from underwater.",
+                "tactile": "I feel chaotic liquid thrashing from someone in distress underwater."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} flounders helplessly in the {context.liquidVisibility} liquid of {context.liquidBodyName}, struggling to surface, and in the panic, inhales liquid."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    }
+  ]
+}

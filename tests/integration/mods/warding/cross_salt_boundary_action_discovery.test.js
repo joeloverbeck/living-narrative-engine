@@ -82,7 +82,7 @@ describe('warding:cross_salt_boundary action discovery', () => {
 
     it('forbids actor to be in positioning states that prevent action', () => {
       expect(crossSaltBoundaryAction.forbidden_components.actor).toContain(
-        'positioning:fallen'
+        'recovery-states:fallen'
       );
       expect(crossSaltBoundaryAction.forbidden_components.actor).toContain(
         'hugging-states:hugging'
@@ -154,9 +154,9 @@ describe('warding:cross_salt_boundary action discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actor has forbidden positioning:fallen component', () => {
+    it('is not available when actor has forbidden recovery-states:fallen component', () => {
       const { actor } = setupScenario({
-        'positioning:fallen': {},
+        'recovery-states:fallen': {},
       });
 
       const availableActions = testFixture.testEnv.getAvailableActions(

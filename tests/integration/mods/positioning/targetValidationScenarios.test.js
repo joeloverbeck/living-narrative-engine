@@ -41,7 +41,7 @@ describe('Positioning Target Validation Scenarios', () => {
         .build();
 
       // Target is kneeling before someone else
-      target.components['positioning:kneeling_before'] = {
+      target.components['deference-states:kneeling_before'] = {
         entityId: 'other_character',
       };
 
@@ -58,7 +58,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -89,7 +89,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorA.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
 
@@ -104,7 +104,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorB.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -137,7 +137,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorA.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
 
@@ -147,7 +147,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorB.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
     });
@@ -172,7 +172,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Target is initially kneeling
       fixture.entityManager.addComponent(
         target.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         {
           entityId: 'someone',
         }
@@ -187,14 +187,14 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
 
       // Target stands up (remove kneeling component)
       fixture.entityManager.removeComponent(
         target.id,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
 
       // Second attempt should succeed
@@ -204,7 +204,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
     });
@@ -244,7 +244,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -282,7 +282,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -325,7 +325,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -360,7 +360,7 @@ describe('Positioning Target Validation Scenarios', () => {
       // Set up complex positioning states
       fixture.entityManager.addComponent(
         servant.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         {
           entityId: lord.id,
         }
@@ -377,7 +377,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           knight.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
 
@@ -391,12 +391,12 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           knight.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
       const knightKneelingData = fixture.entityManager.getComponent(
         knight.id,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(knightKneelingData.entityId).toBe(lord.id); // Still kneeling before lord, not servant
 
@@ -409,7 +409,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           lord.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
     });
@@ -439,7 +439,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorA.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
 
@@ -452,7 +452,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorB.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
 
@@ -460,14 +460,14 @@ describe('Positioning Target Validation Scenarios', () => {
       // Note: The fixture only loads the kneel_before rule, not the stand_up rule
       fixture.entityManager.removeComponent(
         actorA.id,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
 
       // Verify actor A is no longer kneeling
       expect(
         fixture.entityManager.hasComponent(
           actorA.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
 
@@ -477,7 +477,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actorB.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
     });
@@ -515,7 +515,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
 
@@ -539,7 +539,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(false);
 
@@ -556,7 +556,7 @@ describe('Positioning Target Validation Scenarios', () => {
       expect(
         fixture.entityManager.hasComponent(
           actor.id,
-          'positioning:kneeling_before'
+          'deference-states:kneeling_before'
         )
       ).toBe(true);
     });

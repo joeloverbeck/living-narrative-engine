@@ -52,7 +52,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          actor: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
+          actor: ['deference-states:kneeling_before', 'sitting-states:sitting_on'],
         },
       };
 
@@ -120,7 +120,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test {target}',
         targets: 'test:scope',
         forbidden_components: {
-          actor: ['positioning:kneeling_before'],
+          actor: ['deference-states:kneeling_before'],
           target: ['sitting-states:sitting_on'],
         },
       };
@@ -165,7 +165,7 @@ describe('Action Schema Target Forbidden Components', () => {
           },
         },
         forbidden_components: {
-          primary: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
+          primary: ['deference-states:kneeling_before', 'sitting-states:sitting_on'],
         },
       };
 
@@ -196,7 +196,7 @@ describe('Action Schema Target Forbidden Components', () => {
         },
         forbidden_components: {
           actor: ['positioning:running'],
-          primary: ['positioning:kneeling_before'],
+          primary: ['deference-states:kneeling_before'],
           secondary: ['sitting-states:sitting_on'],
           tertiary: ['positioning:laying_down'],
         },
@@ -224,7 +224,7 @@ describe('Action Schema Target Forbidden Components', () => {
           },
         },
         forbidden_components: {
-          primary: ['positioning:kneeling_before'],
+          primary: ['deference-states:kneeling_before'],
           // secondary has no forbidden components
         },
       };
@@ -269,7 +269,7 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          actor: ['positioning:kneeling_before'],
+          actor: ['deference-states:kneeling_before'],
           unknownProperty: ['some:component'],
         },
       };
@@ -345,7 +345,7 @@ describe('Action Schema Target Forbidden Components', () => {
       const validPatterns = [
         'mod:component',
         'core:actor',
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         'mod_name:component_name',
         'mod-name:component-name',
         'MOD123:COMPONENT456',
@@ -422,7 +422,7 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: 'test:scope',
         forbidden_components: {
           target: ['sitting-states:sitting_on'],
-          primary: ['positioning:kneeling_before'],
+          primary: ['deference-states:kneeling_before'],
         },
       };
 
@@ -478,7 +478,7 @@ describe('Action Schema Target Forbidden Components', () => {
           actor: ['core:actor', 'positioning:positioned'],
         },
         forbidden_components: {
-          actor: ['positioning:kneeling_before', 'sitting-states:sitting_on'],
+          actor: ['deference-states:kneeling_before', 'sitting-states:sitting_on'],
           primary: ['positioning:laying_down', 'positioning:running'],
           secondary: ['positioning:invisible', 'positioning:immobile'],
         },

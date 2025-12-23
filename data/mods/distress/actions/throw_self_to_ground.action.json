@@ -7,7 +7,7 @@
   "required_components": {},
   "forbidden_components": {
     "actor": [
-      "positioning:fallen",
+      "recovery-states:fallen",
       "lying-states:lying_on",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",

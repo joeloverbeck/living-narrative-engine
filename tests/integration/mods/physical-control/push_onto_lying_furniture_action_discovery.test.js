@@ -141,11 +141,11 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
         'hugging-states:being_hugged',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ]);
       expect(pushOntoFurnitureAction.forbidden_components.primary).toEqual([
         'lying-states:lying_on',
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
       ]);
     });
   });
@@ -289,7 +289,7 @@ describe('physical-control:push_onto_lying_furniture action discovery', () => {
       setupScenario(testFixture, {
         targetComponents: {
           'lying-states:lying_on': { furniture_id: 'test:bed' },
-          'positioning:kneeling_before': { entity_id: ACTOR_ID },
+          'deference-states:kneeling_before': { entity_id: ACTOR_ID },
         },
       });
 

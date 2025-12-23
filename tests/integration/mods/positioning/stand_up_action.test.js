@@ -50,7 +50,7 @@ describe('deference:stand_up action integration', () => {
     await testFixture.executeAction('test:actor1', 'none');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toNotHaveComponent('positioning:kneeling_before');
+    expect(actor).toNotHaveComponent('deference-states:kneeling_before');
     expect(testFixture.events).toHaveActionSuccess(
       'Alice stands up from their kneeling position.'
     );
@@ -125,7 +125,7 @@ describe('deference:stand_up action integration', () => {
 
     // Should not have removed the kneeling component
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toHaveComponent('positioning:kneeling_before');
+    expect(actor).toHaveComponent('deference-states:kneeling_before');
 
     const kneelingActor = scenario.kneelingActors[0];
     expect(kneelingActor.id).toBe('test:actor1');
@@ -159,7 +159,7 @@ describe('deference:stand_up action integration', () => {
     await testFixture.executeAction('test:actor1', 'none');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toNotHaveComponent('positioning:kneeling_before');
+    expect(actor).toNotHaveComponent('deference-states:kneeling_before');
 
     // Perceptible event should be visible to all in location
     const perceptibleEvent = testFixture.events.find(
@@ -195,7 +195,7 @@ describe('deference:stand_up action integration', () => {
     const actor = testFixture.entityManager.getEntityInstance(
       'p_erotica:iker_aguirre_instance'
     );
-    expect(actor).toNotHaveComponent('positioning:kneeling_before');
+    expect(actor).toNotHaveComponent('deference-states:kneeling_before');
     expect(testFixture.events).toHaveActionSuccess(
       'Iker stands up from their kneeling position.'
     );
@@ -209,7 +209,7 @@ describe('deference:stand_up action integration', () => {
 
     const standUpAction = {
       required_components: {
-        actor: ['positioning:kneeling_before'],
+        actor: ['deference-states:kneeling_before'],
       },
     };
 

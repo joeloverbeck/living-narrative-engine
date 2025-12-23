@@ -29,7 +29,7 @@ describe('Sit Down Action Availability', () => {
         actor: [], // No required components for actor
       },
       forbidden_components: {
-        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'deference-states:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -43,7 +43,7 @@ describe('Sit Down Action Availability', () => {
         // Check if actor has forbidden components for sit_down
         const hasForbiddenComponents =
           actor.components?.['sitting-states:sitting_on'] ||
-          actor.components?.['positioning:kneeling_before'];
+          actor.components?.['deference-states:kneeling_before'];
 
         if (!hasForbiddenComponents) {
           actions.push(sitDownAction);
@@ -193,7 +193,7 @@ describe('Sit Down Action Availability', () => {
         actor: [],
       },
       forbidden_components: {
-        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'deference-states:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -207,7 +207,7 @@ describe('Sit Down Action Availability', () => {
         // Actor is already sitting, so has forbidden component
         const hasForbiddenComponents =
           actor.components?.['sitting-states:sitting_on'] ||
-          actor.components?.['positioning:kneeling_before'];
+          actor.components?.['deference-states:kneeling_before'];
 
         if (!hasForbiddenComponents) {
           actions.push(sitDownAction);
@@ -310,7 +310,7 @@ describe('Sit Down Action Availability', () => {
         actor: [],
       },
       forbidden_components: {
-        actor: ['sitting-states:sitting_on', 'positioning:kneeling_before'],
+        actor: ['sitting-states:sitting_on', 'deference-states:kneeling_before'],
       },
       template: 'sit down on {target}',
       prerequisites: [],
@@ -323,7 +323,7 @@ describe('Sit Down Action Availability', () => {
 
         const hasForbiddenComponents =
           actor.components?.['sitting-states:sitting_on'] ||
-          actor.components?.['positioning:kneeling_before'];
+          actor.components?.['deference-states:kneeling_before'];
 
         if (!hasForbiddenComponents) {
           actions.push(sitDownAction);

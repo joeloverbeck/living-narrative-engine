@@ -19,7 +19,7 @@
       "positioning:biting_neck",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "template": "turn around to face {target}",

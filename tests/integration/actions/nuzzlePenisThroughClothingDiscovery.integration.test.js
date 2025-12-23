@@ -116,7 +116,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
           id: actorId,
           components: {
             'personal-space-states:closeness': { partners: [targetId] },
-            'positioning:kneeling_before': { entityId: targetId },
+            'deference-states:kneeling_before': { entityId: targetId },
           },
         },
         {
@@ -178,7 +178,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
           id: actorId,
           components: {
             'personal-space-states:closeness': { partners: [targetId] },
-            'positioning:kneeling_before': { entityId: targetId },
+            'deference-states:kneeling_before': { entityId: targetId },
           },
         },
         {
@@ -292,7 +292,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
           id: actorId,
           components: {
             'personal-space-states:closeness': { partners: [targetId] },
-            'positioning:kneeling_before': { entityId: targetId },
+            'deference-states:kneeling_before': { entityId: targetId },
           },
         },
         {
@@ -349,7 +349,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
           id: actorId,
           components: {
             'personal-space-states:closeness': { partners: [targetId, otherTargetId] },
-            'positioning:kneeling_before': { entityId: otherTargetId }, // Kneeling before other
+            'deference-states:kneeling_before': { entityId: otherTargetId }, // Kneeling before other
           },
         },
         {
@@ -414,7 +414,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
           id: actorId,
           components: {
             'personal-space-states:closeness': { partners: [target1Id, target2Id] },
-            'positioning:kneeling_before': { entityId: target1Id }, // Only kneeling before target1
+            'deference-states:kneeling_before': { entityId: target1Id }, // Only kneeling before target1
           },
         },
         {

@@ -5,7 +5,7 @@
   "description": "Push yourself back to your feet after having fallen.",
   "targets": "none",
   "required_components": {
-    "actor": ["positioning:fallen"]
+    "actor": ["recovery-states:fallen"]
   },
   "forbidden_components": {
     "actor": ["physical-control-states:being_restrained"]

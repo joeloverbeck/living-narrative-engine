@@ -103,7 +103,7 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       // Create scenario with kneeling actor
       const { actor, target } = testBed.createActorTargetScenario({
         actorComponents: {
-          'positioning:kneeling_before': { entityId: 'target1' },
+          'deference-states:kneeling_before': { entityId: 'target1' },
         },
         targetComponents: {
           'positioning:standing': {},
@@ -112,7 +112,7 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       });
 
       // Verify components
-      expect(actor.components['positioning:kneeling_before']).toEqual({
+      expect(actor.components['deference-states:kneeling_before']).toEqual({
         entityId: 'target1',
       });
       expect(target.components['positioning:standing']).toEqual({});
@@ -294,7 +294,7 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
     it('should enable debugging of action discovery failures', async () => {
       const { actor } = testBed.createActorTargetScenario({
         actorComponents: {
-          'positioning:kneeling_before': { entityId: 'target1' },
+          'deference-states:kneeling_before': { entityId: 'target1' },
         },
       });
 

@@ -1,6 +1,6 @@
 # MODMANSTAENH-000: Mod Manager Statistics Enhancement - Overview
 
-**Status:** Not Started
+**Status:** In Progress (11/14 tickets completed)
 **Priority:** Epic
 **Estimated Effort:** 2-3 weeks total
 **Dependencies:** None
@@ -61,17 +61,17 @@ MODMANSTAENH-001 (Infrastructure)
 |--------|-------|--------|
 | MODMANSTAENH-007 | Dependency Depth Calculation | Completed |
 | MODMANSTAENH-008 | Transitive Footprint Calculation | Completed |
-| MODMANSTAENH-009 | Core vs Optional Ratio Calculation | Not Started |
-| MODMANSTAENH-010 | Dependency Depth UI Section | Not Started |
-| MODMANSTAENH-011 | Transitive Footprint UI Section | Not Started |
-| MODMANSTAENH-012 | Configuration Profile UI Section | Not Started |
+| MODMANSTAENH-009 | Core vs Optional Ratio Calculation | Completed |
+| MODMANSTAENH-010 | Dependency Depth UI Section | Completed |
+| MODMANSTAENH-011 | Transitive Footprint UI Section | Completed |
+| MODMANSTAENH-012 | Configuration Profile UI Section | Completed |
 
 ### Phase 3: Higher Effort
 
 | Ticket | Title | Status |
 |--------|-------|--------|
-| MODMANSTAENH-013 | Orphan Risk Calculation | Not Started |
-| MODMANSTAENH-014 | Orphan Risk UI Section | Not Started |
+| MODMANSTAENH-013 | Orphan Risk Calculation | Completed |
+| MODMANSTAENH-014 | Orphan Risk UI Section | Completed |
 
 ---
 

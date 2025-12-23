@@ -16,16 +16,16 @@
   "forbidden_components": {
     "actor": [
       "positioning:biting_neck",
-      "positioning:kneeling_before",
+      "deference-states:kneeling_before",
       "straddling-states:straddling_waist",
       "hugging-states:hugging",
       "hugging-states:being_hugged",
       "lying-states:lying_on",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ],
-    "primary": ["positioning:kneeling_before", "sitting-states:sitting_on"]
+    "primary": ["deference-states:kneeling_before", "sitting-states:sitting_on"]
   },
   "template": "force {target} to their knees before you",
   "visual": {

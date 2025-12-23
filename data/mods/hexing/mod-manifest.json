@@ -6,6 +6,10 @@
   "description": "Hexing-related actions, such as corrupting gaze.",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },

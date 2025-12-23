@@ -30,7 +30,7 @@ describe('Inline Activity Metadata Pattern', () => {
       fs.readFileSync(
         path.join(
           modsPath,
-          'positioning/components/kneeling_before.component.json'
+          'deference-states/components/kneeling_before.component.json'
         ),
         'utf8'
       )
@@ -44,7 +44,7 @@ describe('Inline Activity Metadata Pattern', () => {
   describe('Schema Loading', () => {
     it('should load the kneeling_before schema with inline metadata', () => {
       expect(kneelingBeforeSchema).toBeDefined();
-      expect(kneelingBeforeSchema.id).toBe('positioning:kneeling_before');
+      expect(kneelingBeforeSchema.id).toBe('deference-states:kneeling_before');
       expect(
         kneelingBeforeSchema.dataSchema.properties.activityMetadata
       ).toBeDefined();

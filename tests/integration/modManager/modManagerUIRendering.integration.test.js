@@ -96,6 +96,34 @@ const mockModStatisticsService = {
     warnings: [],
     errors: [],
   }),
+  getDependencyDepthAnalysis: jest.fn().mockReturnValue({
+    maxDepth: 1,
+    deepestChain: ['core', 'positioning'],
+    averageDepth: 0.7,
+  }),
+  getTransitiveDependencyFootprints: jest.fn().mockReturnValue({
+    footprints: [
+      { modId: 'dredgers', dependencies: ['core'], count: 1 },
+      { modId: 'positioning', dependencies: ['core'], count: 1 },
+    ],
+    totalUniqueDeps: 1,
+    sharedDepsCount: 1,
+    overlapPercentage: 100,
+  }),
+  getCoreOptionalRatio: jest.fn().mockReturnValue({
+    foundationCount: 1,
+    optionalCount: 2,
+    totalActive: 3,
+    foundationPercentage: 33,
+    optionalPercentage: 67,
+    foundationMods: ['core'],
+    profile: 'content-heavy',
+  }),
+  getSingleParentDependencies: jest.fn().mockReturnValue({
+    atRiskMods: [],
+    totalAtRisk: 0,
+    percentageOfDeps: 0,
+  }),
 };
 
 const mockWorldDiscoveryService = {

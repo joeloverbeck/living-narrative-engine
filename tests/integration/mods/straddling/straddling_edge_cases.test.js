@@ -80,7 +80,7 @@ describe('Straddling Waist System - Edge Cases', () => {
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Alice')
         .atLocation('test:room')
-        .withComponent('positioning:kneeling_before', {
+        .withComponent('deference-states:kneeling_before', {
           target_id: 'test:target',
         })
         .withComponent('personal-space-states:closeness', {

@@ -11,8 +11,8 @@ sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_
         {"condition_ref": "positioning:actor-is-behind-entity"}
         ]
       },
-      {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
-      {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+      {"!": {"condition_ref": "deference-states:entity-kneeling-before-actor"}},
+      {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
     ]
   }
 ]

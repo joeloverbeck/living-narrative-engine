@@ -18,7 +18,7 @@
       "bending-states:bending_over",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "sitting-states:sitting_on",
       "liquids-states:in_liquid_body"
     ]

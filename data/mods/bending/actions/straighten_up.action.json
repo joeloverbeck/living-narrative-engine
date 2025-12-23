@@ -11,7 +11,7 @@
     "actor": [
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "template": "straighten up from {target}",

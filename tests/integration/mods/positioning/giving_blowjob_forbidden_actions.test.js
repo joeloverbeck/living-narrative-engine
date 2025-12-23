@@ -105,7 +105,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Add kneeling_before component to actor
-      scenario.actor.components['positioning:kneeling_before'] = {
+      scenario.actor.components['deference-states:kneeling_before'] = {
         target_entity_id: scenario.target.id,
       };
 
@@ -195,7 +195,7 @@ describe('positioning actions forbidden when giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Eve', 'Frank']);
 
       // Add kneeling_before component (required for stand_up)
-      scenario.actor.components['positioning:kneeling_before'] = {
+      scenario.actor.components['deference-states:kneeling_before'] = {
         target_entity_id: scenario.target.id,
       };
 

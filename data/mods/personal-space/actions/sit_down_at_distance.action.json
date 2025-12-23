@@ -22,10 +22,10 @@
   "forbidden_components": {
     "actor": [
       "sitting-states:sitting_on",
-      "positioning:kneeling_before",
+      "deference-states:kneeling_before",
       "bending-states:bending_over",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "template": "sit down on {seat} at a distance from {occupant}",

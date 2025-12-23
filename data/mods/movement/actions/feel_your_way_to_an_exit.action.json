@@ -14,7 +14,7 @@
       "positioning:doing_complex_performance",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ]
   },
   "targets": "none",

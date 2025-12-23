@@ -115,7 +115,7 @@ describe('Sitting scenario helpers - integration', () => {
     const kneelingState = getComponent(
       testFixture,
       kneelingActor.id,
-      'positioning:kneeling_before'
+      'deference-states:kneeling_before'
     );
     expect(kneelingState.entityId).toBe('actor1');
   });

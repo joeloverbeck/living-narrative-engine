@@ -5,6 +5,14 @@
   "version": "1.0.0",
   "dependencies": [
     {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "straddling-states",
       "version": "^1.0.0"
     },

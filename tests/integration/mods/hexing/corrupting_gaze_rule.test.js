@@ -264,7 +264,7 @@ describe('handle_corrupting_gaze rule', () => {
     const addFallen = actions.find(
       (op) =>
         op.type === 'ADD_COMPONENT' &&
-        op.parameters.component_type === 'positioning:fallen'
+        op.parameters.component_type === 'recovery-states:fallen'
     );
     expect(addFallen?.parameters.entity_ref).toBe('actor');
 

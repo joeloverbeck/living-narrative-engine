@@ -299,7 +299,7 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Rule Execution', () => {
       buildPullOwnPenisOutOfMouthScenario();
 
     const primaryEntity = entities.find((e) => e.id === primaryId);
-    primaryEntity.components['positioning:kneeling_before'] = {
+    primaryEntity.components['deference-states:kneeling_before'] = {
       target_id: actorId,
     };
 
@@ -313,10 +313,10 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Rule Execution', () => {
       primaryAfter.components['sex-states:giving_blowjob']
     ).toBeUndefined();
     expect(
-      primaryAfter.components['positioning:kneeling_before']
+      primaryAfter.components['deference-states:kneeling_before']
     ).toBeDefined();
     expect(
-      primaryAfter.components['positioning:kneeling_before'].target_id
+      primaryAfter.components['deference-states:kneeling_before'].target_id
     ).toBe(actorId);
   });
 });

@@ -258,7 +258,7 @@ describe('Movement Lock - Edge Cases', () => {
       // Assert: Kneeling component still added despite no legs
       const kneelingData = testEnv.entityManager.getComponentData(
         actorId,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(kneelingData).toBeDefined();
       expect(kneelingData.entityId).toBe(targetId);
@@ -645,7 +645,7 @@ describe('Movement Lock - Edge Cases', () => {
       );
       const kneeling = testEnv.entityManager.getComponentData(
         actorId,
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
 
       expect(leftLeg.locked).toBe(true);

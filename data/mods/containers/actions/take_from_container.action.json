@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "sitting-states:sitting_on",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "physical-control-states:restraining"
     ]
   },

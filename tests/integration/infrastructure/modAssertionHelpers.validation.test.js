@@ -675,7 +675,7 @@ describe('ModAssertionHelpers - Deep Validation (TSTAIMIG-002)', () => {
       it('should validate kneeling position correctly', () => {
         mockEntityManager.addComponent(
           'test-actor',
-          'positioning:kneeling_before',
+          'deference-states:kneeling_before',
           {
             target: 'test-target',
           }

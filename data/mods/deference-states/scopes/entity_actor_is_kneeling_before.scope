@@ -1,0 +1,6 @@
+deference-states:entity_actor_is_kneeling_before := entities(core:actor)[][{
+  "==": [
+    {"var": "entity.id"},
+    {"var": "actor.components.deference-states:kneeling_before.entityId"}
+  ]
+}]

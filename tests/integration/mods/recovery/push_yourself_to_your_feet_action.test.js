@@ -25,7 +25,7 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
         components: {
           'core:name': { text: options.actorName || 'Alice' },
           'core:position': { locationId: locationId },
-          'positioning:fallen': {},
+          'recovery-states:fallen': {},
         },
       },
     ];
@@ -67,7 +67,7 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
     await testFixture.executeAction('test:actor1', 'none');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toNotHaveComponent('positioning:fallen');
+    expect(actor).toNotHaveComponent('recovery-states:fallen');
     expect(testFixture.events).toHaveActionSuccess(
       'Alice pushes themselves back to their feet.'
     );
@@ -109,7 +109,7 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
     });
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toHaveComponent('positioning:fallen');
+    expect(actor).toHaveComponent('recovery-states:fallen');
 
     expect(testFixture.events).not.toDispatchEvent('core:perceptible_event');
   });
@@ -124,7 +124,7 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
     await testFixture.executeAction('test:actor1', 'none');
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor).toNotHaveComponent('positioning:fallen');
+    expect(actor).toNotHaveComponent('recovery-states:fallen');
 
     const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
@@ -147,7 +147,7 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     testFixture.entityManager.removeComponent(
       'test:actor1',
-      'positioning:fallen'
+      'recovery-states:fallen'
     );
 
     const actionsWithoutComponent =

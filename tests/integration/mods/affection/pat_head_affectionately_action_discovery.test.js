@@ -46,7 +46,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
           actorEntity.components?.['positioning:facing_away']
             ?.facing_away_from ?? [];
         const actorKneelingBefore =
-          actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+          actorEntity.components?.['deference-states:kneeling_before']?.entityId ??
           null;
 
         const validTargets = closeness.reduce((acc, partnerId) => {
@@ -59,7 +59,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
             partner.components?.['positioning:facing_away']?.facing_away_from ??
             [];
           const partnerKneelingBefore =
-            partner.components?.['positioning:kneeling_before']?.entityId ??
+            partner.components?.['deference-states:kneeling_before']?.entityId ??
             null;
 
           const facingEachOther =
@@ -137,7 +137,7 @@ describe('affection:pat_head_affectionately action discovery', () => {
       const { actor, target } = testBed.createActorTargetScenario();
       await testBed.mocks.entityManager.addComponent(
         target.id,
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         { entityId: actor.id }
       );
 

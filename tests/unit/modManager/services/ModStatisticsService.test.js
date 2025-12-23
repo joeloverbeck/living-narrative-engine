@@ -1203,4 +1203,760 @@ describe('ModStatisticsService', () => {
       expect(Array.isArray(result.footprints[0].dependencies)).toBe(true);
     });
   });
+
+  describe('getCoreOptionalRatio', () => {
+    it('should return zeros for empty graph', () => {
+      mockModGraphService.getAllNodes.mockReturnValue(new Map());
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationCount).toBe(0);
+      expect(result.optionalCount).toBe(0);
+      expect(result.totalActive).toBe(0);
+      expect(result.foundationPercentage).toBe(0);
+      expect(result.optionalPercentage).toBe(0);
+      expect(result.foundationMods).toEqual([]);
+    });
+
+    it('should count core and dependency as foundation', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', dependencies: [], status: 'core' }],
+        ['anatomy', { id: 'anatomy', dependencies: ['core'], status: 'dependency' }],
+        ['positioning', { id: 'positioning', dependencies: ['core'], status: 'dependency' }],
+        ['explicit1', { id: 'explicit1', dependencies: [], status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationCount).toBe(3); // core + 2 dependencies
+      expect(result.optionalCount).toBe(1); // 1 explicit
+      expect(result.totalActive).toBe(4);
+    });
+
+    it('should calculate correct percentages', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['dep1', { id: 'dep1', status: 'dependency' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+        ['explicit2', { id: 'explicit2', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationPercentage).toBe(50); // 2/4
+      expect(result.optionalPercentage).toBe(50); // 2/4
+    });
+
+    it('should classify as foundation-heavy when >= 60% foundation', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['dep1', { id: 'dep1', status: 'dependency' }],
+        ['dep2', { id: 'dep2', status: 'dependency' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationPercentage).toBe(75);
+      expect(result.profile).toBe('foundation-heavy');
+    });
+
+    it('should classify as content-heavy when >= 60% optional', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+        ['explicit2', { id: 'explicit2', status: 'explicit' }],
+        ['explicit3', { id: 'explicit3', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.optionalPercentage).toBe(75);
+      expect(result.profile).toBe('content-heavy');
+    });
+
+    it('should classify as balanced when neither >= 60%', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['dep1', { id: 'dep1', status: 'dependency' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+        ['explicit2', { id: 'explicit2', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationPercentage).toBe(50);
+      expect(result.optionalPercentage).toBe(50);
+      expect(result.profile).toBe('balanced');
+    });
+
+    it('should return list of foundation mod IDs', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['anatomy', { id: 'anatomy', status: 'dependency' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationMods).toContain('core');
+      expect(result.foundationMods).toContain('anatomy');
+      expect(result.foundationMods).not.toContain('explicit1');
+    });
+
+    it('should exclude inactive mods from calculation', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['inactive', { id: 'inactive', status: 'inactive' }],
+        ['explicit1', { id: 'explicit1', status: 'explicit' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.totalActive).toBe(2); // core + explicit1
+      expect(result.foundationMods).not.toContain('inactive');
+    });
+
+    it('should cache results until invalidation', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result1 = service.getCoreOptionalRatio();
+      const result2 = service.getCoreOptionalRatio();
+
+      expect(result1).toBe(result2);
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(1);
+
+      service.invalidateCache();
+      service.getCoreOptionalRatio();
+
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(2);
+    });
+
+    it('should mark cache as valid after computation', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      expect(service.isCacheValid()).toBe(false);
+      service.getCoreOptionalRatio();
+      expect(service.isCacheValid()).toBe(true);
+    });
+
+    it('should return 100% foundation when only core mods exist', () => {
+      const nodes = new Map([
+        ['core', { id: 'core', status: 'core' }],
+        ['anatomy', { id: 'anatomy', status: 'dependency' }],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getCoreOptionalRatio();
+
+      expect(result.foundationPercentage).toBe(100);
+      expect(result.optionalPercentage).toBe(0);
+      expect(result.profile).toBe('foundation-heavy');
+    });
+  });
+
+  describe('getSingleParentDependencies', () => {
+    it('should return empty list for empty graph', () => {
+      mockModGraphService.getAllNodes.mockReturnValue(new Map());
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      expect(result.atRiskMods).toEqual([]);
+      expect(result.totalAtRisk).toBe(0);
+      expect(result.percentageOfDeps).toBe(0);
+    });
+
+    it('should identify mod with single dependent as at-risk', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['anatomy'],
+            status: 'core',
+          },
+        ],
+        [
+          'anatomy',
+          {
+            id: 'anatomy',
+            dependencies: ['core'],
+            dependents: ['clothing'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'clothing',
+          {
+            id: 'clothing',
+            dependencies: ['anatomy'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // 'anatomy' is at-risk because only 'clothing' depends on it
+      expect(result.atRiskMods).toHaveLength(2);
+      expect(result.atRiskMods.map((m) => m.modId)).toContain('anatomy');
+      const anatomyEntry = result.atRiskMods.find((m) => m.modId === 'anatomy');
+      expect(anatomyEntry.singleDependent).toBe('clothing');
+    });
+
+    it('should not include mods with multiple dependents', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['anatomy', 'combat'],
+            status: 'core',
+          },
+        ],
+        [
+          'anatomy',
+          {
+            id: 'anatomy',
+            dependencies: ['core'],
+            dependents: ['clothing'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'combat',
+          {
+            id: 'combat',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'clothing',
+          {
+            id: 'clothing',
+            dependencies: ['anatomy'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // 'core' has 2 dependents, should not be at-risk
+      // 'anatomy' has 1 dependent, should be at-risk
+      expect(result.atRiskMods.map((m) => m.modId)).not.toContain('core');
+      expect(result.atRiskMods.map((m) => m.modId)).toContain('anatomy');
+    });
+
+    it('should exclude explicit mods from analysis', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'core',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // explicit1 should not be in at-risk list (it's explicit, not a dependency)
+      expect(result.atRiskMods.map((m) => m.modId)).not.toContain('explicit1');
+      // core is at-risk (only explicit1 depends on it)
+      expect(result.atRiskMods.map((m) => m.modId)).toContain('core');
+    });
+
+    it('should filter out inactive dependents when counting', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['active', 'inactive'],
+            status: 'core',
+          },
+        ],
+        [
+          'active',
+          {
+            id: 'active',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'inactive',
+          {
+            id: 'inactive',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'inactive',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // 'core' has only 1 active dependent (inactive is filtered)
+      expect(result.atRiskMods).toHaveLength(1);
+      expect(result.atRiskMods[0].modId).toBe('core');
+      expect(result.atRiskMods[0].singleDependent).toBe('active');
+    });
+
+    it('should calculate correct percentage of dependencies at risk', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['dep1', 'dep2'],
+            status: 'core',
+          },
+        ],
+        [
+          'dep1',
+          {
+            id: 'dep1',
+            dependencies: ['core'],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'dep2',
+          {
+            id: 'dep2',
+            dependencies: ['core'],
+            dependents: ['explicit1', 'explicit2'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['dep1', 'dep2'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'explicit2',
+          {
+            id: 'explicit2',
+            dependencies: ['dep2'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // 3 dependencies total (core, dep1, dep2)
+      // 1 at-risk (dep1 - only explicit1 depends on it)
+      // core has 2 dependents (dep1, dep2)
+      // dep2 has 2 dependents (explicit1, explicit2)
+      expect(result.totalAtRisk).toBe(1);
+      expect(result.percentageOfDeps).toBe(33); // 1/3 ≈ 33%
+    });
+
+    it('should return 0% when all dependencies have multiple dependents', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['explicit1', 'explicit2'],
+            status: 'core',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+        [
+          'explicit2',
+          {
+            id: 'explicit2',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      expect(result.atRiskMods).toEqual([]);
+      expect(result.percentageOfDeps).toBe(0);
+    });
+
+    it('should include mod status in at-risk entry', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['dep1'],
+            status: 'core',
+          },
+        ],
+        [
+          'dep1',
+          {
+            id: 'dep1',
+            dependencies: ['core'],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['dep1'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      const coreEntry = result.atRiskMods.find((m) => m.modId === 'core');
+      const dep1Entry = result.atRiskMods.find((m) => m.modId === 'dep1');
+
+      expect(coreEntry.status).toBe('core');
+      expect(dep1Entry.status).toBe('dependency');
+    });
+
+    it('should sort at-risk mods by modId', () => {
+      const nodes = new Map([
+        [
+          'zebra',
+          {
+            id: 'zebra',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'alpha',
+          {
+            id: 'alpha',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'middle',
+          {
+            id: 'middle',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'dependency',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['zebra', 'alpha', 'middle'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      expect(result.atRiskMods.map((m) => m.modId)).toEqual([
+        'alpha',
+        'middle',
+        'zebra',
+      ]);
+    });
+
+    it('should cache results until invalidation', () => {
+      const nodes = new Map([
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'core',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result1 = service.getSingleParentDependencies();
+      const result2 = service.getSingleParentDependencies();
+
+      expect(result1).toBe(result2);
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(1);
+
+      service.invalidateCache();
+      service.getSingleParentDependencies();
+
+      expect(mockModGraphService.getAllNodes).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle mods with no dependents', () => {
+      const nodes = new Map([
+        [
+          'orphan',
+          {
+            id: 'orphan',
+            dependencies: [],
+            dependents: [],
+            status: 'dependency',
+          },
+        ],
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'core',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // 'orphan' has 0 dependents, not 1, so not at-risk (it's already orphaned)
+      expect(result.atRiskMods.map((m) => m.modId)).not.toContain('orphan');
+      expect(result.atRiskMods.map((m) => m.modId)).toContain('core');
+    });
+
+    it('should skip inactive mods entirely', () => {
+      const nodes = new Map([
+        [
+          'inactive_dep',
+          {
+            id: 'inactive_dep',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'inactive',
+          },
+        ],
+        [
+          'core',
+          {
+            id: 'core',
+            dependencies: [],
+            dependents: ['explicit1'],
+            status: 'core',
+          },
+        ],
+        [
+          'explicit1',
+          {
+            id: 'explicit1',
+            dependencies: ['core', 'inactive_dep'],
+            dependents: [],
+            status: 'explicit',
+          },
+        ],
+      ]);
+      mockModGraphService.getAllNodes.mockReturnValue(nodes);
+
+      const service = new ModStatisticsService({
+        modGraphService: mockModGraphService,
+        logger: mockLogger,
+      });
+
+      const result = service.getSingleParentDependencies();
+
+      // inactive_dep is not analyzed at all (skipped)
+      expect(result.atRiskMods.map((m) => m.modId)).not.toContain('inactive_dep');
+      // Only core is in the list (1 dependency total, 1 at risk = 100%)
+      expect(result.totalAtRisk).toBe(1);
+      expect(result.percentageOfDeps).toBe(100);
+    });
+  });
 });

@@ -16,7 +16,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       // When action discovery runs for deference:kneel_before:
       // 1. Primary target scope 'personal-space:close_actors' returns nearby actors
       // 2. Target validation checks each potential target for forbidden components
-      // 3. Actors with 'positioning:kneeling_before' component are filtered out
+      // 3. Actors with 'deference-states:kneeling_before' component are filtered out
       // 4. Only valid targets (standing actors) appear in available actions
       //
       // IMPLEMENTATION LOCATION:
@@ -26,7 +26,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       //
       // TEST SCENARIO:
       // - Actor A is close to Actor B and Actor C
-      // - Actor B has positioning:kneeling_before component (forbidden)
+      // - Actor B has deference-states:kneeling_before component (forbidden)
       // - Actor C is standing (valid)
       // - Discovery should return action for C but not B
       expect(true).toBe(true);
@@ -95,7 +95,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
     it('should handle complex positioning combinations', () => {
       // EXPECTED BEHAVIOR:
       // Multiple forbidden states should all be handled:
-      // 1. positioning:kneeling_before - forbidden
+      // 1. deference-states:kneeling_before - forbidden
       // 2. lying-states:lying_on - forbidden
       // 3. bending-states:bending_over - forbidden
       // 4. Any combination of these - forbidden
@@ -165,7 +165,7 @@ describe('Action Discovery with Target Forbidden Components', () => {
       //     "primary": {
       //       "scope": "personal-space:close_actors",
       //       "forbidden_components": [
-      //         "positioning:kneeling_before",
+      //         "deference-states:kneeling_before",
       //         "lying-states:lying_on",
       //         "bending-states:bending_over"
       //       ]

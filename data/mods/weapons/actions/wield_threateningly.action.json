@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": [
       "personal-space-states:closeness",
-      "positioning:fallen",
+      "recovery-states:fallen",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining"
     ]

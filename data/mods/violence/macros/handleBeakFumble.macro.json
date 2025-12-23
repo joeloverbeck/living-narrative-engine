@@ -8,7 +8,7 @@
       "comment": "Fumble: actor falls from overextending",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "positioning:fallen",
+        "component_type": "recovery-states:fallen",
         "value": {}
       }
     },

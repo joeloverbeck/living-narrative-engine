@@ -16,7 +16,7 @@
       "bending-states:bending_over",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "positioning:fallen"
+      "recovery-states:fallen"
     ],
     "primary": ["warding:warded_by_salt"]
   },
@@ -81,7 +81,7 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:fallen" }]
+            "!!": [{ "var": "entity.primary.components.recovery-states:fallen" }]
           }
         },
         "type": "flat",

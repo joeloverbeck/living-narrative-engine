@@ -27,7 +27,7 @@ describe('Action Execution Validation Integration', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      // Missing positioning:kneeling_before component (required by stand_up)
+      // Missing deference-states:kneeling_before component (required by stand_up)
       .build();
 
     testFixture.reset([room, actor]);
@@ -46,7 +46,7 @@ describe('Action Execution Validation Integration', () => {
     }
 
     expect(errorMessage).toContain('missing required component');
-    expect(errorMessage).toContain('positioning:kneeling_before');
+    expect(errorMessage).toContain('deference-states:kneeling_before');
     expect(errorMessage).toContain('💡 Suggestion');
   });
 
@@ -61,7 +61,7 @@ describe('Action Execution Validation Integration', () => {
       .withName('Alice')
       .atLocation('room1')
       .asActor()
-      .withComponent('positioning:kneeling_before', {
+      .withComponent('deference-states:kneeling_before', {
         target_id: 'target1',
       })
       .build();

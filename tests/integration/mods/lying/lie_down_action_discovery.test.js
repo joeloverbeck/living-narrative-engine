@@ -46,12 +46,12 @@ describe('lying:lie_down action discovery', () => {
         'hugging-states:hugging',
         'sitting-states:sitting_on',
         'bending-states:bending_over',
-        'positioning:kneeling_before',
+        'deference-states:kneeling_before',
         'lying-states:lying_on',
         'sex-states:fucking_anally',
         'physical-control-states:being_restrained',
         'physical-control-states:restraining',
-        'positioning:fallen',
+        'recovery-states:fallen',
       ]);
     });
 
@@ -106,7 +106,7 @@ describe('lying:lie_down action discovery', () => {
 
     it('should NOT appear when actor is kneeling', () => {
       // EXPECTED BEHAVIOR:
-      // If Alice has positioning:kneeling_before component:
+      // If Alice has deference-states:kneeling_before component:
       // - Action's forbidden_components.actor check fails
       // - lying:lie_down action should NOT be available
       //

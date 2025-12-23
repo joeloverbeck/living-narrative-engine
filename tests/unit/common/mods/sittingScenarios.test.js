@@ -113,7 +113,7 @@ describe('ModEntityScenarios sitting helpers', () => {
 
     expect(scenario.kneelingActors).toHaveLength(1);
     const kneelingActor = scenario.kneelingActors[0];
-    expect(getComponent(kneelingActor, 'positioning:kneeling_before')).toEqual({
+    expect(getComponent(kneelingActor, 'deference-states:kneeling_before')).toEqual({
       entityId: 'actor1',
     });
     expect(

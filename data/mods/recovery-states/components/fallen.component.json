@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "recovery-states:fallen",
+  "name": "Fallen",
+  "description": "The actor has fallen to the ground in a messy or uncontrolled way (e.g., accident, violence).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation.",
+        "properties": {
+          "shouldDescribeInActivity": { "type": "boolean", "default": true },
+          "template": {
+            "type": "string",
+            "default": "{actor} has fallen to the ground"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 78
+          }
+        }
+      }
+    }
+  }
+}

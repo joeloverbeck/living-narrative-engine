@@ -9,7 +9,8 @@
   "dependencies": [],
   "content": {
     "components": [
-      "in_liquid_body.component.json"
+      "in_liquid_body.component.json",
+      "submerged.component.json"
     ]
   }
 }

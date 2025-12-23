@@ -1,17 +1,17 @@
 /**
- * @file Unit tests for the positioning:kneeling_before component schema validation
+ * @file Unit tests for the deference-states:kneeling_before component schema validation
  * @description Tests that the component schema correctly validates entity IDs in various formats
  */
 
 import { describe, it, expect } from '@jest/globals';
 
-describe('positioning:kneeling_before component schema validation', () => {
+describe('deference-states:kneeling_before component schema validation', () => {
   let componentSchema;
 
   beforeAll(async () => {
     // Import the component schema
     const component = await import(
-      '../../../../data/mods/positioning/components/kneeling_before.component.json',
+      '../../../../data/mods/deference-states/components/kneeling_before.component.json',
       {
         with: { type: 'json' },
       }
@@ -74,7 +74,7 @@ describe('positioning:kneeling_before component schema validation', () => {
     it('should have correct schema structure', () => {
       expect(componentSchema).toHaveProperty(
         'id',
-        'positioning:kneeling_before'
+        'deference-states:kneeling_before'
       );
       expect(componentSchema).toHaveProperty('dataSchema');
       expect(componentSchema.dataSchema).toHaveProperty('required', [

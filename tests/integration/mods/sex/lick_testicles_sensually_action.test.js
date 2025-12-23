@@ -26,7 +26,7 @@ function setupAnatomyComponents() {
     .atLocation('room1')
     .closeToEntity('bob')
     .asActor()
-    .withComponent('positioning:kneeling_before', { targetId: 'bob' })
+    .withComponent('deference-states:kneeling_before', { targetId: 'bob' })
     .build();
 
   // Create target entity with body reference and anatomy
