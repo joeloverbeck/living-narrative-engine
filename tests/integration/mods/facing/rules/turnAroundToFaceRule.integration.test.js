@@ -194,10 +194,10 @@ describe('Turn Around to Face Rule', () => {
       });
 
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).toContain('positioning:actor_faced_everyone');
+      expect(types).toContain('facing:actor_faced_everyone');
 
       const facedEvent = testEnv.events.find(
-        (e) => e.eventType === 'positioning:actor_faced_everyone'
+        (e) => e.eventType === 'facing:actor_faced_everyone'
       );
       expect(facedEvent.payload.actor).toBe('alice');
       expect(facedEvent.payload.faced).toBe('Bob');
@@ -378,7 +378,7 @@ describe('Turn Around to Face Rule', () => {
       });
 
       const facedEvent = testEnv.events.find(
-        (e) => e.eventType === 'positioning:actor_faced_everyone'
+        (e) => e.eventType === 'facing:actor_faced_everyone'
       );
       expect(facedEvent.payload.faced).toBe('Bob');
       // Even though Alice faces everyone, the event includes the specific target
@@ -516,7 +516,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify no actor_faced_everyone event was dispatched
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).not.toContain('positioning:actor_faced_everyone');
+      expect(types).not.toContain('facing:actor_faced_everyone');
     });
   });
 });

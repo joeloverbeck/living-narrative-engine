@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:entity_exited_location",
+  "id": "movement:entity_exited_location",
   "description": "Dispatched when an entity exits a location due to closeness auto-move.",
   "payloadSchema": {
-    "title": "Positioning: Entity Exited Location Payload",
-    "description": "Payload for the positioning:entity_exited_location event.",
+    "title": "Movement: Entity Exited Location Payload",
+    "description": "Payload for the movement:entity_exited_location event.",
     "type": "object",
     "properties": {
       "entityId": {

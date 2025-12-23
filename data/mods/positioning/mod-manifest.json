@@ -25,13 +25,7 @@
       "definitions": [],
       "instances": []
     },
-    "events": [
-      "actor_faced_everyone.event.json",
-      "actor_faced_forward.event.json",
-      "actor_turned_back.event.json",
-      "entity_entered_location.event.json",
-      "entity_exited_location.event.json"
-    ],
+    "events": [],
     "macros": [],
     "scopes": [
       "actor_being_bitten_by_me.scope"

@@ -188,7 +188,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Movement', () => {
       originalCommand: 'system:closeness_auto_move',
     });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      'positioning:entity_exited_location',
+      'movement:entity_exited_location',
       {
         entityId: 'partner1',
         locationId: 'oldLoc',
@@ -196,7 +196,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Movement', () => {
       }
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      'positioning:entity_entered_location',
+      'movement:entity_entered_location',
       {
         entityId: 'partner1',
         locationId: 'dest',
