@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A slender wooden pencil with a graphite core, sharpened to a fine point. The end is worn smooth from use."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "writing:allows_writing": {},
     "core:weight": {
       "weight": 0.02

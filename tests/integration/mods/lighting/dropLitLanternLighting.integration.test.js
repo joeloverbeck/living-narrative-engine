@@ -55,8 +55,8 @@ describe('lighting: drop lit lantern keeps location lit', () => {
     registerDefinition('test:lantern', {
       'core:name': { text: 'Lantern' },
       'lighting:is_lit': {},
-      'items:item': {},
-      'items:portable': {},
+      'items-core:item': {},
+      'items-core:portable': {},
       'core:weight': { weight: 1 },
     });
 

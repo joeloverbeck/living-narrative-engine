@@ -49,8 +49,8 @@ function setupGiveItemScenario(
 
   const item = new ModEntityBuilder('test-item')
     .withName(itemName)
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('core:weight', { weight: 0.05 })
     .build();
 
@@ -271,7 +271,7 @@ describe('item-transfer:give_item success message display', () => {
   });
 
   describe('item_transferred event dispatch', () => {
-    it('should dispatch items:item_transferred event on successful transfer', async () => {
+    it('should dispatch items-core:item_transferred event on successful transfer', async () => {
       // Arrange
       const scenario = setupGiveItemScenario('Alice', 'Bob', 'letter');
       testFixture.reset([
@@ -288,9 +288,9 @@ describe('item-transfer:give_item success message display', () => {
         },
       });
 
-      // Assert: Verify items:item_transferred event was dispatched
+      // Assert: Verify items-core:item_transferred event was dispatched
       const itemTransferredEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:item_transferred'
+        (e) => e.eventType === 'items-core:item_transferred'
       );
 
       expect(itemTransferredEvent).toBeDefined();

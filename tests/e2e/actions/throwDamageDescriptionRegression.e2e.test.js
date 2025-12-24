@@ -200,7 +200,7 @@ const buildScenarioEntities = ({
 
   const thrownItem = new ModEntityBuilder('throwable-item')
     .withName('Containment Vessel')
-    .withComponent('items:portable', {})
+    .withComponent('items-core:portable', {})
     .withComponent('core:weight', { weight: 0.8 })
     .withComponent('damage-types:damage_capabilities', {
       entries: [

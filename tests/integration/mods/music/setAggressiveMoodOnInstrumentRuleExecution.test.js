@@ -50,8 +50,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute_1')
         .withName('battle lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -84,8 +84,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar_1')
         .withName('electric guitar')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -118,8 +118,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('drum_1')
         .withName('war drum')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -150,8 +150,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('flute_1')
         .withName('aggressive flute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -193,8 +193,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute_1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -221,8 +221,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar_1')
         .withName('shredding guitar')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -267,8 +267,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('lute_1')
         .withName('nearby lute')
         .atLocation('room1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -305,8 +305,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute_1')
         .withName('versatile lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -344,8 +344,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar_1')
         .withName('new guitar')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -384,8 +384,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute_1')
         .withName('mood lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -429,8 +429,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('violin_1')
         .withName('aggressive violin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -464,8 +464,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('trumpet_1')
         .withName('war trumpet')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 

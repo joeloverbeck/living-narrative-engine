@@ -321,7 +321,7 @@ describe('DismemberedBodyPartSpawner', () => {
         );
       });
 
-      it('should add items:item component', async () => {
+      it('should add items-core:item component', async () => {
         await handleDismemberment(
           createEvent({
             entityId: 'entity-sarah',
@@ -337,13 +337,13 @@ describe('DismemberedBodyPartSpawner', () => {
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
-              'items:item': {},
+              'items-core:item': {},
             }),
           })
         );
       });
 
-      it('should add items:portable component', async () => {
+      it('should add items-core:portable component', async () => {
         await handleDismemberment(
           createEvent({
             entityId: 'entity-sarah',
@@ -359,7 +359,7 @@ describe('DismemberedBodyPartSpawner', () => {
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
-              'items:portable': {},
+              'items-core:portable': {},
             }),
           })
         );

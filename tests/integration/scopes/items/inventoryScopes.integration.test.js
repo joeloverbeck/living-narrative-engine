@@ -118,19 +118,19 @@ describe('Items - Inventory Scopes Integration', () => {
         {
           id: 'item-1',
           components: {
-            'items:item': {},
+            'items-core:item': {},
           },
         },
         {
           id: 'item-2',
           components: {
-            'items:item': {},
+            'items-core:item': {},
           },
         },
         {
           id: 'item-3',
           components: {
-            'items:item': {},
+            'items-core:item': {},
           },
         },
       ]);
@@ -171,13 +171,13 @@ describe('Items - Inventory Scopes Integration', () => {
         {
           id: 'item-1',
           components: {
-            'items:item': {},
+            'items-core:item': {},
           },
         },
         {
           id: 'item-2',
           components: {
-            'items:item': {},
+            'items-core:item': {},
           },
         },
       ]);

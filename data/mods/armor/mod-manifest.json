@@ -9,11 +9,11 @@
   "author": "Living Narrative Engine",
   "dependencies": [
     {
-      "id": "descriptors",
-      "version": "^1.0.0"
+      "id": "items-core",
+      "version": "1.0.0"
     },
     {
-      "id": "items",
+      "id": "descriptors",
       "version": "^1.0.0"
     },
     {

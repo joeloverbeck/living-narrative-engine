@@ -76,7 +76,7 @@ describe('writing:sign_document action definition', () => {
     expect(signDocumentAction.required_components).toBeDefined();
     expect(signDocumentAction.required_components.primary).toBeDefined();
     expect(signDocumentAction.required_components.primary).toEqual([
-      'items:item',
+      'items-core:item',
       'writing:signable',
     ]);
   });
@@ -84,7 +84,7 @@ describe('writing:sign_document action definition', () => {
   it('should require item and allows_writing components on secondary target', () => {
     expect(signDocumentAction.required_components.secondary).toBeDefined();
     expect(signDocumentAction.required_components.secondary).toEqual([
-      'items:item',
+      'items-core:item',
       'writing:allows_writing',
     ]);
   });
@@ -128,15 +128,15 @@ describe('writing:sign_document action definition', () => {
 
       const contract = new ModEntityBuilder('contract_1')
         .withName('Employment Contract')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const pencil = new ModEntityBuilder('pencil_1')
         .withName('pencil')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -184,15 +184,15 @@ describe('writing:sign_document action definition', () => {
 
       const letter = new ModEntityBuilder('letter_1')
         .withName('Official Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const quill = new ModEntityBuilder('quill_1')
         .withName('quill')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -223,15 +223,15 @@ describe('writing:sign_document action definition', () => {
       const contract = new ModEntityBuilder('contract_2')
         .withName('Employment Contract')
         .atLocation('room3')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const pencil = new ModEntityBuilder('pencil_2')
         .withName('pencil')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -262,8 +262,8 @@ describe('writing:sign_document action definition', () => {
 
       const contract = new ModEntityBuilder('contract_5')
         .withName('Employment Contract')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
@@ -295,15 +295,15 @@ describe('writing:sign_document action definition', () => {
 
       const contract = new ModEntityBuilder('contract_3')
         .withName('Script Contract')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const pencil = new ModEntityBuilder('pencil_3')
         .withName('pencil')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -334,14 +334,14 @@ describe('writing:sign_document action definition', () => {
 
       const sword = new ModEntityBuilder('sword_1')
         .withName('Steel Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const pencil = new ModEntityBuilder('pencil_4')
         .withName('pencil')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -378,36 +378,36 @@ describe('writing:sign_document action definition', () => {
 
       const contract = new ModEntityBuilder('contract_4')
         .withName('Contract')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const letter = new ModEntityBuilder('letter_2')
         .withName('Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const deed = new ModEntityBuilder('deed_1')
         .withName('Deed')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const pencil = new ModEntityBuilder('pencil_5')
         .withName('pencil')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
       const quill = new ModEntityBuilder('quill_2')
         .withName('quill')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 

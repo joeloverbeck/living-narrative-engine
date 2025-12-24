@@ -40,7 +40,7 @@ describe('DEBUG: open_container rule matching (WORKING)', () => {
       .withName('Container')
       .atLocation('room1')
       .withComponent('containers-core:container', { items: [] })
-      .withComponent('items:openable', { isOpen: false })
+      .withComponent('items-core:openable', { isOpen: false })
       .build();
 
     testFixture.reset([room, actor, container]);

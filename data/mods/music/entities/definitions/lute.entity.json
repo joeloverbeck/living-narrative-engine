@@ -9,8 +9,8 @@
     "core:description": {
       "text": "An elegant pear-shaped stringed instrument with a rounded back and a bent neck. Its delicate strings produce warm, resonant tones that evoke times of courtly romance and wandering minstrels."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "music:is_instrument": {},
     "core:weight": {
       "weight": 1.2

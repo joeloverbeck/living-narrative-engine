@@ -30,8 +30,8 @@ describe('first-aid:handle_disinfect_my_wounded_part rule', () => {
 
     const disinfectant = new ModEntityBuilder(DISINFECTANT_ID)
       .withName('Antiseptic Bottle')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('containers-core:liquid_container', buildLiquidContainer())
       .atLocation(ROOM_ID)
       .build();

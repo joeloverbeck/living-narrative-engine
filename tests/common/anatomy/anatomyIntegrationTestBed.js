@@ -1086,6 +1086,18 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 allowedTypes: ['asshole'],
                 nameTpl: '{{type}}',
               },
+              {
+                id: 'lung_left_socket',
+                orientation: 'left',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'lung_right_socket',
+                orientation: 'right',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
             ],
           },
           'core:name': {
@@ -1390,6 +1402,18 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 allowedTypes: ['asshole'],
                 nameTpl: '{{type}}',
               },
+              {
+                id: 'lung_left_socket',
+                orientation: 'left',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'lung_right_socket',
+                orientation: 'right',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
             ],
           },
           'core:name': {
@@ -1487,6 +1511,18 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 allowedTypes: ['ass_cheek'],
                 nameTpl: '{{orientation}} {{type}}',
               },
+              {
+                id: 'lung_left_socket',
+                orientation: 'left',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
+              {
+                id: 'lung_right_socket',
+                orientation: 'right',
+                allowedTypes: ['lung'],
+                nameTpl: '{{orientation}} {{type}}',
+              },
             ],
           },
           'core:name': {
@@ -1527,6 +1563,62 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         components: {
           'anatomy:part': {
             subType: 'pubic_hair',
+          },
+        },
+      },
+      'anatomy:human_lung_left': {
+        id: 'anatomy:human_lung_left',
+        description: 'A human left lung - respiratory organ for oxygen storage',
+        components: {
+          'core:name': {
+            text: 'left lung',
+          },
+          'core:weight': {
+            weight: 0.6,
+          },
+          'anatomy:part': {
+            subType: 'lung',
+            orientation: 'left',
+            hit_probability_weight: 0,
+            health_calculation_weight: 3,
+          },
+          'anatomy:part_health': {
+            currentHealth: 30,
+            maxHealth: 30,
+            state: 'healthy',
+          },
+          'breathing-states:respiratory_organ': {
+            respirationType: 'pulmonary',
+            oxygenCapacity: 10,
+            currentOxygen: 10,
+          },
+        },
+      },
+      'anatomy:human_lung_right': {
+        id: 'anatomy:human_lung_right',
+        description: 'A human right lung - respiratory organ for oxygen storage',
+        components: {
+          'core:name': {
+            text: 'right lung',
+          },
+          'core:weight': {
+            weight: 0.6,
+          },
+          'anatomy:part': {
+            subType: 'lung',
+            orientation: 'right',
+            hit_probability_weight: 0,
+            health_calculation_weight: 3,
+          },
+          'anatomy:part_health': {
+            currentHealth: 30,
+            maxHealth: 30,
+            state: 'healthy',
+          },
+          'breathing-states:respiratory_organ': {
+            respirationType: 'pulmonary',
+            oxygenCapacity: 10,
+            currentOxygen: 10,
           },
         },
       },
@@ -2298,6 +2390,20 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               components: ['anatomy:part'],
             },
           },
+          standard_lung_left: {
+            socket: 'lung_left_socket',
+            requirements: {
+              partType: 'lung',
+              components: ['anatomy:part'],
+            },
+          },
+          standard_lung_right: {
+            socket: 'lung_right_socket',
+            requirements: {
+              partType: 'lung',
+              components: ['anatomy:part'],
+            },
+          },
         },
       },
     });
@@ -2371,6 +2477,12 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           right_foot: {
             $use: 'standard_foot',
             parent: 'right_leg',
+          },
+          left_lung: {
+            $use: 'standard_lung_left',
+          },
+          right_lung: {
+            $use: 'standard_lung_right',
           },
         },
       },

@@ -136,13 +136,13 @@ describe('TargetRequiredComponentsValidator', () => {
       const actionDef = {
         id: 'test:action',
         required_components: {
-          tertiary: ['items:portable'],
+          tertiary: ['items-core:portable'],
         },
       };
       const targetEntities = {
         tertiary: {
           id: 'item1',
-          components: { 'items:portable': { weight: 5 } },
+          components: { 'items-core:portable': { weight: 5 } },
         },
       };
 

@@ -135,10 +135,10 @@ describe('Music mood actions discovery', () => {
           ]);
         });
 
-        it('should require items:item and music:is_instrument components on primary target', () => {
+        it('should require items-core:item and music:is_instrument components on primary target', () => {
           expect(action.required_components.primary).toBeDefined();
           expect(action.required_components.primary).toEqual([
-            'items:item',
+            'items-core:item',
             'music:is_instrument',
           ]);
         });
@@ -178,8 +178,8 @@ describe('Music mood actions discovery', () => {
 
         const instrument = new ModEntityBuilder('lute_1')
           .withName('wooden lute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -236,8 +236,8 @@ describe('Music mood actions discovery', () => {
         const instrument = new ModEntityBuilder('guitar_1')
           .withName('acoustic guitar')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -289,7 +289,7 @@ describe('Music mood actions discovery', () => {
         const instrument = new ModEntityBuilder('grand_piano')
           .withName('grand piano')
           .atLocation('room1')
-          .withComponent('items:item', {})
+          .withComponent('items-core:item', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -344,8 +344,8 @@ describe('Music mood actions discovery', () => {
 
         const instrument = new ModEntityBuilder('lute_1')
           .withName('wooden lute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -426,8 +426,8 @@ describe('Music mood actions discovery', () => {
         const instrument = new ModEntityBuilder('distant_lute')
           .withName('distant lute')
           .atLocation('location_b')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -483,8 +483,8 @@ describe('Music mood actions discovery', () => {
         // Regular item without is_instrument component
         const item = new ModEntityBuilder('ordinary_book')
           .withName('ordinary book')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .build();
 
         testFixture.reset([room, actor, item]);
@@ -539,16 +539,16 @@ describe('Music mood actions discovery', () => {
 
         const flute = new ModEntityBuilder('flute_1')
           .withName('silver flute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
         const violin = new ModEntityBuilder('violin_1')
           .withName('violin')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 

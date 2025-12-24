@@ -65,7 +65,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const room = new ModEntityBuilder('test-location').asRoom('Room').build();
       const item = new ModEntityBuilder('test-item')
         .withName('TestItem')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .build();
 
       testFixture.reset([room, item]);
@@ -121,8 +121,8 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         'p_erotica:yellowed_goodbye_letter_instance'
       )
         .withName('yellowed goodbye letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -179,8 +179,8 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         'p_erotica:yellowed_goodbye_letter_instance'
       )
         .withName('yellowed goodbye letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -232,8 +232,8 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const handEntities = actorBuilder.getHandEntities();
       const item = new ModEntityBuilder('item-1')
         .withName('Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
@@ -286,8 +286,8 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         'p_erotica:yellowed_goodbye_letter_instance'
       )
         .withName('yellowed goodbye letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 

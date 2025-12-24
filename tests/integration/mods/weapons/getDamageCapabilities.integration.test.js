@@ -108,8 +108,8 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
   describe('Real Weapon Entities with Explicit Damage Capabilities', () => {
     test('should return existing damage capabilities from weapon entity', async () => {
       // Create a weapon with explicit damage capabilities (like vespera_rapier)
-      entityManager.addComponent('rapier', 'items:item', {});
-      entityManager.addComponent('rapier', 'items:portable', {});
+      entityManager.addComponent('rapier', 'items-core:item', {});
+      entityManager.addComponent('rapier', 'items-core:portable', {});
       entityManager.addComponent('rapier', 'weapons:weapon', {});
       entityManager.addComponent('rapier', DAMAGE_CAPABILITIES_COMPONENT, {
         entries: [
@@ -195,8 +195,8 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
   describe('Non-Weapon Portable Items with Weight', () => {
     test('should generate improvised blunt damage from heavy item (gold bar)', async () => {
       // Create a gold bar (12.4 kg) - heavy item for improvised weapon
-      entityManager.addComponent('gold_bar', 'items:item', {});
-      entityManager.addComponent('gold_bar', 'items:portable', {});
+      entityManager.addComponent('gold_bar', 'items-core:item', {});
+      entityManager.addComponent('gold_bar', 'items-core:portable', {});
       entityManager.addComponent('gold_bar', WEIGHT_COMPONENT, {
         weight: 12.4,
       });
@@ -228,8 +228,8 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
 
     test('should generate minimal damage from light item (coffee cup)', async () => {
       // Create a light item (< 0.2 kg gives 1 damage)
-      entityManager.addComponent('coffee_cup', 'items:item', {});
-      entityManager.addComponent('coffee_cup', 'items:portable', {});
+      entityManager.addComponent('coffee_cup', 'items-core:item', {});
+      entityManager.addComponent('coffee_cup', 'items-core:portable', {});
       entityManager.addComponent('coffee_cup', WEIGHT_COMPONENT, {
         weight: 0.15,
       });
@@ -256,7 +256,7 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
     });
 
     test('should calculate correct damage at threshold (1kg item)', async () => {
-      entityManager.addComponent('book', 'items:item', {});
+      entityManager.addComponent('book', 'items-core:item', {});
       entityManager.addComponent('book', WEIGHT_COMPONENT, { weight: 1.0 });
 
       const params = {
@@ -279,8 +279,8 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
   describe('Entities Without Weight Component (Weightless Fallback)', () => {
     test('should return fallback entry for entity with no weight or damage capabilities', async () => {
       // Create entity with no weight and no damage capabilities
-      entityManager.addComponent('magic_orb', 'items:item', {});
-      entityManager.addComponent('magic_orb', 'items:portable', {});
+      entityManager.addComponent('magic_orb', 'items-core:item', {});
+      entityManager.addComponent('magic_orb', 'items-core:portable', {});
       // No weight component, no damage capabilities
 
       const params = {
@@ -304,7 +304,7 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
     });
 
     test('should handle entity with weight of 0', async () => {
-      entityManager.addComponent('feather', 'items:item', {});
+      entityManager.addComponent('feather', 'items-core:item', {});
       entityManager.addComponent('feather', WEIGHT_COMPONENT, { weight: 0 });
 
       const params = {
@@ -500,7 +500,7 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
   describe('Real-World Entity Patterns', () => {
     test('should handle practice weapon with low damage', async () => {
       // Similar to rill_practice_stick entity pattern
-      entityManager.addComponent('practice_stick', 'items:item', {});
+      entityManager.addComponent('practice_stick', 'items-core:item', {});
       entityManager.addComponent('practice_stick', 'weapons:weapon', {});
       entityManager.addComponent(
         'practice_stick',

@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A working coil of hemp rope, thick as a man's thumb and stiff with tar that keeps the rot at bay. It smells of pitch and old water, the kind of smell that never fully leaves a dredger's gear. The coil is wound tight and bound with a simple hitch, ready to unroll without tangling when the work demands it. Years of use have made the fibers soft where hands grip most often, but the core holds strong—this is rope for hauling, lashing, and lowering loads down into places where the light doesn't reach."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 5.0
     },

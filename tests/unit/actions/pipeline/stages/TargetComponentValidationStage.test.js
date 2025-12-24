@@ -566,17 +566,17 @@ describe('TargetComponentValidationStage', () => {
 
       const readableItemCandidates = [
         makeCandidate('letter', {
-          'items:item': {},
+          'items-core:item': {},
           'items:readable': {},
         }),
         makeCandidate('photo-1', {
-          'items:item': {},
+          'items-core:item': {},
         }),
         makeCandidate('photo-2', {
-          'items:item': {},
+          'items-core:item': {},
         }),
         makeCandidate('desk', {
-          'items:item': {},
+          'items-core:item': {},
         }),
       ];
 
@@ -589,7 +589,7 @@ describe('TargetComponentValidationStage', () => {
 
       const readItemAction = {
         id: 'items:read_item',
-        required_components: { primary: ['items:item', 'items:readable'] },
+        required_components: { primary: ['items-core:item', 'items:readable'] },
         resolvedTargets: {
           primary: readableItemCandidates,
         },

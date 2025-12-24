@@ -60,8 +60,8 @@ describe('DEBUG: take_from_container rule matching', () => {
       .build();
     const item = new ModEntityBuilder('item1')
       .withName('Item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build();
 

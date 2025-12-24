@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items:item_aimed",
+  "id": "items-core:item_aimed",
   "description": "Dispatched when an actor aims an item at a target. Contains actor, item, target, and timestamp information.",
   "payloadSchema": {
     "type": "object",

@@ -77,8 +77,8 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
 
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -185,8 +185,8 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
 
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -257,8 +257,8 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
 
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -342,8 +342,8 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
 
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [

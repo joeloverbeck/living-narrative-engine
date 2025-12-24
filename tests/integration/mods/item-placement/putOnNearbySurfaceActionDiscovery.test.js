@@ -101,8 +101,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       // Item in actor's inventory
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Seated actor with item in inventory
@@ -160,8 +160,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -265,8 +265,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Actor is STANDING (no sitting_on component)
@@ -319,8 +319,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -371,8 +371,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -427,14 +427,14 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('bread loaf')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Actor with multiple inventory items
@@ -511,8 +511,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Actor with inventory
@@ -572,8 +572,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const existingItem = new ModEntityBuilder('existing-item-1')
         .withName('old book')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const stool = new ModEntityBuilder('stool-1')
@@ -586,8 +586,8 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actorBuilder = new ModEntityBuilder('seated-actor')

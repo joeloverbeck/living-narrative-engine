@@ -32,8 +32,8 @@ function createCompleteScenario() {
 
   const crate = new ModEntityBuilder('crate-1')
     .withName('Wooden Crate')
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('core:weight', { weight: 5.0 })
     .build();
 

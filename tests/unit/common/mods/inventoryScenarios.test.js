@@ -20,8 +20,8 @@ describe('ModEntityScenarios inventory helpers', () => {
     expect(inventory.capacity).toEqual({ maxWeight: 50, maxItems: 10 });
 
     const firstItem = scenario.items[0];
-    expect(getComponent(firstItem, 'items:item')).toEqual({});
-    expect(getComponent(firstItem, 'items:portable')).toEqual({});
+    expect(getComponent(firstItem, 'items-core:item')).toEqual({});
+    expect(getComponent(firstItem, 'items-core:portable')).toEqual({});
     expect(getComponent(firstItem, 'core:weight')).toEqual({ weight: 1 });
   });
 

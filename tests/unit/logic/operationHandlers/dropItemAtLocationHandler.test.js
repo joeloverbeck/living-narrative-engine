@@ -19,8 +19,8 @@ const createEntityManager = () => ({
   getEntityInstance: jest.fn(() => ({
     getComponentTypeIds: jest.fn(() => [
       'core:position',
-      'items:item',
-      'items:portable',
+      'items-core:item',
+      'items-core:portable',
     ]),
   })),
 });
@@ -151,7 +151,7 @@ describe('DropItemAtLocationHandler', () => {
       ],
       true
     );
-    expect(dispatcher.dispatch).toHaveBeenCalledWith('items:item_dropped', {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith('items-core:item_dropped', {
       actorEntity: 'actor-123',
       itemEntity: 'item-999',
       locationId: 'loc-42',
@@ -196,7 +196,7 @@ describe('DropItemAtLocationHandler', () => {
     );
     expect(infoCall?.[1]).toMatchObject({ allComponents: 'N/A' });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      'items:item_dropped',
+      'items-core:item_dropped',
       expect.objectContaining({
         actorEntity: 'actor-123',
         itemEntity: 'item-999',

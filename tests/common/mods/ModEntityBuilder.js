@@ -68,8 +68,8 @@ function normalizeItemDefinition(definition = {}, index = 0, prefix = 'item') {
 function buildItemEntity(definition, locationId) {
   const builder = new ModEntityBuilder(definition.id)
     .withName(definition.name)
-    .withComponent('items:item', definition.itemData)
-    .withComponent('items:portable', definition.portableData)
+    .withComponent('items-core:item', definition.itemData)
+    .withComponent('items-core:portable', definition.portableData)
     .withComponent('core:weight', {
       weight:
         definition.weightData &&
@@ -1729,7 +1729,7 @@ export class ModEntityScenarios {
     const containerBuilder = new ModEntityBuilder(containerId)
       .withName(containerName)
       .atLocation(room.id)
-      .withComponent('items:item', containerOptions.itemData || {})
+      .withComponent('items-core:item', containerOptions.itemData || {})
       .withComponent('containers-core:container', {
         contents: contentIds,
         capacity: normalizedCapacity,
@@ -1737,7 +1737,7 @@ export class ModEntityScenarios {
         requiresKey: resolvedRequiresKey,
         ...(resolvedRequiresKey && keyItemId ? { keyItemId } : {}),
       })
-      .withComponent('items:openable', containerOptions.openableData || {});
+      .withComponent('items-core:openable', containerOptions.openableData || {});
 
     const portableFlag =
       typeof containerOptions.includePortable === 'boolean'
@@ -1747,7 +1747,7 @@ export class ModEntityScenarios {
           : false;
     if (portableFlag) {
       containerBuilder.withComponent(
-        'items:portable',
+        'items-core:portable',
         containerOptions.portableData || {}
       );
     }

@@ -44,8 +44,8 @@ function setupPickUpItemScenario(
     new ModEntityBuilder(item.id)
       .withName(item.id)
       .atLocation(locationId)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: item.weight })
       .build()
   );
@@ -353,8 +353,8 @@ describe('item-handling:pick_up_item action integration', () => {
       // Create the item entity (simulating it being in inventory)
       const letterItem = new ModEntityBuilder('letter-1')
         .withName('letter-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -369,8 +369,8 @@ describe('item-handling:pick_up_item action integration', () => {
       const droppedLetterItem = new ModEntityBuilder('letter-1')
         .withName('letter-1')
         .atLocation('cabin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -413,8 +413,8 @@ describe('item-handling:pick_up_item action integration', () => {
       const item = new ModEntityBuilder('letter-1')
         .withName('Letter')
         .atLocation('saloon1') // This adds core:position component
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -442,8 +442,8 @@ describe('item-handling:pick_up_item action integration', () => {
       const heavyItem = new ModEntityBuilder('gold-bar-1')
         .withName('Gold Bar')
         .atLocation('saloon1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 12.0 }) // Too heavy
         .build();
 
@@ -479,8 +479,8 @@ describe('item-handling:pick_up_item action integration', () => {
       const newItem = new ModEntityBuilder('item-3')
         .withName('Item 3')
         .atLocation('tavern')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.1 })
         .build();
 

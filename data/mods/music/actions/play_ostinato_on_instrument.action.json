@@ -16,7 +16,7 @@
       "music:playing_music",
       "music:performance_mood"
     ],
-    "primary": ["items:item", "music:is_instrument"]
+    "primary": ["items-core:item", "music:is_instrument"]
   },
   "forbidden_components": {
     "actor": ["personal-space-states:closeness", "physical-control-states:being_restrained"]

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "breathing:respiratory_organ",
+  "id": "breathing-states:respiratory_organ",
   "description": "Marks an anatomy part as a respiratory organ capable of storing and processing oxygen.",
   "dataSchema": {
     "type": "object",

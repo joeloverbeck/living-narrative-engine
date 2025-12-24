@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "caressing-states",
+  "version": "1.0.0",
+  "name": "Caressing States",
+  "description": "Scopes and conditions for caressing-related mechanics, separated from actions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    { "id": "facing-states", "version": "^1.0.0" },
+    { "id": "deference-states", "version": "^1.0.0" },
+    { "id": "personal-space-states", "version": "^1.0.0" }
+  ],
+  "content": {
+    "scopes": [
+      "actors_with_ass_cheeks_facing_each_other_or_behind_target.scope"
+    ]
+  }
+}

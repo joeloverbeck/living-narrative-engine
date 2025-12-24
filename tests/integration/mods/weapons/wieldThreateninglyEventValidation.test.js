@@ -43,8 +43,8 @@ describe('wield_threateningly event validation', () => {
 
     const weapon = new ModEntityBuilder('revolver')
       .withName('Revolver')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('weapons:weapon', {})
       .build();
 
@@ -101,8 +101,8 @@ describe('wield_threateningly event validation', () => {
 
     const weapon = new ModEntityBuilder('revolver')
       .withName('Revolver')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('weapons:weapon', {})
       .build();
 
@@ -133,8 +133,8 @@ describe('wield_threateningly event validation', () => {
 
     const weapon = new ModEntityBuilder('revolver')
       .withName('Revolver')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('weapons:weapon', {})
       .build();
 
@@ -174,8 +174,8 @@ describe('wield_threateningly event validation', () => {
 
     const weapon = new ModEntityBuilder('silver-revolver')
       .withName('Silver Revolver')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('weapons:weapon', {})
       .build();
 

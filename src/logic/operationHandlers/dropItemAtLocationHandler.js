@@ -8,7 +8,7 @@
  * 2. Retrieves actor's inventory component and verifies item exists
  * 3. Prepares batch updates: removes item from inventory and sets item position
  * 4. Applies updates atomically using batchAddComponentsOptimized
- * 5. Dispatches items:item_dropped event
+ * 5. Dispatches items-core:item_dropped event
  *
  * Related files:
  * @see data/schemas/operations/dropItemAtLocation.schema.json - Operation schema
@@ -27,7 +27,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_DROPPED_EVENT = 'items:item_dropped';
+const ITEM_DROPPED_EVENT = 'items-core:item_dropped';
 
 /**
  * @typedef {object} DropItemParams
@@ -236,11 +236,11 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       );
       const itemItemMarker = this.#entityManager.getComponentData(
         itemEntity,
-        'items:item'
+        'items-core:item'
       );
       const itemPortableMarker = this.#entityManager.getComponentData(
         itemEntity,
-        'items:portable'
+        'items-core:portable'
       );
 
       log.debug('[DROP_ITEM] POST-DROP VERIFICATION', {

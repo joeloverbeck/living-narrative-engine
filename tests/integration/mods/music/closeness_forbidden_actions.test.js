@@ -98,8 +98,8 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('lute1')
         .withName('silver lute')
         .atLocation('concert_hall')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -151,8 +151,8 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('lute1')
         .withName('silver lute')
         .atLocation('concert_hall')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -192,7 +192,7 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('flute1')
         .withName('wooden flute')
         .atLocation('room1')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -238,7 +238,7 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('drum1')
         .withName('hand drum')
         .atLocation('hall')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -281,7 +281,7 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('guitar1')
         .withName('acoustic guitar')
         .atLocation('studio')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -327,7 +327,7 @@ describe('music actions forbidden when actor is in closeness', () => {
       const instrument = new ModEntityBuilder('trumpet1')
         .withName('brass trumpet')
         .atLocation('arena')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

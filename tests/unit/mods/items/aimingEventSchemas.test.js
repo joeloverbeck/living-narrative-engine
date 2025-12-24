@@ -15,7 +15,7 @@ describe('Items Mod - Aiming Event Schemas', () => {
     });
 
     it('should have correct event ID', () => {
-      expect(eventSchema.id).toBe('items:item_aimed');
+      expect(eventSchema.id).toBe('items-core:item_aimed');
     });
 
     it('should have proper schema reference', () => {

@@ -1,4 +1,4 @@
-music:instrument_actor_is_playing := entities(items:item)[][{"and": [
+music:instrument_actor_is_playing := entities(items-core:item)[][{"and": [
   {"!!": {"var": "entity.components.music:is_instrument"}},
   {"==": [
     {"var": "entity.id"},

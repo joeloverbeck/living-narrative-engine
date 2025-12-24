@@ -46,12 +46,12 @@ function buildScenario({
 
   const key = new ModEntityBuilder(requiredKeyId)
     .withName('Rusty Key')
-    .withComponent('items:item', {})
+    .withComponent('items-core:item', {})
     .build();
 
   const wrongKey = new ModEntityBuilder('items:wrong_key')
     .withName('Wrong Key')
-    .withComponent('items:item', {})
+    .withComponent('items-core:item', {})
     .build();
 
   return {

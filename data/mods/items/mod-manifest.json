@@ -10,6 +10,10 @@
   "gameVersion": "0.0.1",
   "dependencies": [
     {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },
@@ -43,9 +47,6 @@
       "drinkable.component.json",
       "empty.component.json",
       "inventory.component.json",
-      "item.component.json",
-      "openable.component.json",
-      "portable.component.json",
       "readable.component.json"
     ],
     "actions": [
@@ -76,8 +77,7 @@
       "event-is-action-hug-item-for-comfort.condition.json",
       "event-is-action-lower-aim.condition.json",
       "event-is-action-read-item.condition.json",
-      "event-is-action-unwield-item.condition.json",
-      "secondary-has-portable.condition.json"
+      "event-is-action-unwield-item.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
@@ -87,9 +87,6 @@
       "close_actors_with_inventory.scope",
       "disinfectant_liquids_in_inventory.scope",
       "examinable_items.scope",
-      "items_at_actor_location.scope",
-      "items_at_location.scope",
-      "non_portable_items_at_location.scope",
       "wielded_items.scope"
     ],
     "events": [

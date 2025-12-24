@@ -8,8 +8,8 @@
     "core:description": {
       "text": "A heavy iron ring holding a multitude of keys, worn on a cord around the neck. It contains keys that open the majority of locks in Eira Quenreach's estate."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.5
     },

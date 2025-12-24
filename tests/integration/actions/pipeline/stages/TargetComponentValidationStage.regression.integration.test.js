@@ -708,7 +708,7 @@ describe('TargetComponentValidationStage items action regression', () => {
       description: 'Readable letter',
       components: {
         'core:name': { text: 'Faded Letter' },
-        'items:item': {},
+        'items-core:item': {},
         'core:description': { text: 'A faded farewell letter.' },
         'items:readable': { content: 'The final goodbye.' },
       },
@@ -831,7 +831,7 @@ describe('TargetComponentValidationStage items action regression', () => {
         },
       },
       required_components: {
-        primary: ['items:item', 'core:description'],
+        primary: ['items-core:item', 'core:description'],
       },
     };
 
@@ -844,7 +844,7 @@ describe('TargetComponentValidationStage items action regression', () => {
     expect(Array.isArray(candidates)).toBe(true);
     expect(candidates).toHaveLength(1);
     expect(candidates[0].id).toBe('test:letter_instance');
-    expect(candidates[0].entity?.components?.['items:item']).toBeDefined();
+    expect(candidates[0].entity?.components?.['items-core:item']).toBeDefined();
   });
 
   it('retains items:read_item when a readable target meets all requirements', async () => {
@@ -860,7 +860,7 @@ describe('TargetComponentValidationStage items action regression', () => {
         },
       },
       required_components: {
-        primary: ['items:item', 'items:readable'],
+        primary: ['items-core:item', 'items:readable'],
       },
     };
 

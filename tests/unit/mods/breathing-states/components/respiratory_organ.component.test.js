@@ -1,14 +1,14 @@
 /**
- * @file Unit tests for the breathing:respiratory_organ component schema
+ * @file Unit tests for the breathing-states:respiratory_organ component schema
  */
 
 import { describe, it, expect } from '@jest/globals';
-import respiratoryOrganComponent from '../../../../../data/mods/breathing/components/respiratory_organ.component.json';
+import respiratoryOrganComponent from '../../../../../data/mods/breathing-states/components/respiratory_organ.component.json';
 
-describe('breathing:respiratory_organ component', () => {
+describe('breathing-states:respiratory_organ component', () => {
   describe('component definition', () => {
     it('has correct id', () => {
-      expect(respiratoryOrganComponent.id).toBe('breathing:respiratory_organ');
+      expect(respiratoryOrganComponent.id).toBe('breathing-states:respiratory_organ');
     });
 
     it('has appropriate description', () => {

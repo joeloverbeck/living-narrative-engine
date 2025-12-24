@@ -1,16 +1,16 @@
 /**
- * @file Unit tests for items mod marker components
+ * @file Unit tests for items-core mod marker components
  */
 
 import { describe, it, expect } from '@jest/globals';
-import itemComponent from '../../../../../data/mods/items/components/item.component.json';
-import portableComponent from '../../../../../data/mods/items/components/portable.component.json';
-import openableComponent from '../../../../../data/mods/items/components/openable.component.json';
+import itemComponent from '../../../../../data/mods/items-core/components/item.component.json';
+import portableComponent from '../../../../../data/mods/items-core/components/portable.component.json';
+import openableComponent from '../../../../../data/mods/items-core/components/openable.component.json';
 
-describe('Items - Marker Components', () => {
-  describe('items:item component', () => {
+describe('Items Core - Marker Components', () => {
+  describe('items-core:item component', () => {
     it('has correct id', () => {
-      expect(itemComponent.id).toBe('items:item');
+      expect(itemComponent.id).toBe('items-core:item');
     });
 
     it('has appropriate description', () => {
@@ -34,9 +34,9 @@ describe('Items - Marker Components', () => {
     });
   });
 
-  describe('items:portable component', () => {
+  describe('items-core:portable component', () => {
     it('has correct id', () => {
-      expect(portableComponent.id).toBe('items:portable');
+      expect(portableComponent.id).toBe('items-core:portable');
     });
 
     it('has appropriate description', () => {
@@ -60,9 +60,9 @@ describe('Items - Marker Components', () => {
     });
   });
 
-  describe('items:openable component', () => {
+  describe('items-core:openable component', () => {
     it('has correct id', () => {
-      expect(openableComponent.id).toBe('items:openable');
+      expect(openableComponent.id).toBe('items-core:openable');
     });
 
     it('has appropriate description', () => {

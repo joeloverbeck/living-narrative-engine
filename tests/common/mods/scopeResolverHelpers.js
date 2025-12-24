@@ -963,50 +963,50 @@ export class ScopeResolverHelpers {
       ),
 
       // "items at actor's location"
-      'items:items_at_location': this.createLocationMatchResolver(
-        'items:items_at_location',
+      'items-core:items_at_location': this.createLocationMatchResolver(
+        'items-core:items_at_location',
         {
           filterFn: (entityId, source, context, em) => {
             return (
-              em.hasComponent(entityId, 'items:item') &&
-              em.hasComponent(entityId, 'items:portable')
+              em.hasComponent(entityId, 'items-core:item') &&
+              em.hasComponent(entityId, 'items-core:portable')
             );
           },
         }
       ),
 
       // "portable items at location"
-      'items:portable_items_at_location': this.createLocationMatchResolver(
-        'items:portable_items_at_location',
+      'items-core:portable_items_at_location': this.createLocationMatchResolver(
+        'items-core:portable_items_at_location',
         {
           filterFn: (entityId, source, context, em) => {
             return (
-              em.hasComponent(entityId, 'items:item') &&
-              em.hasComponent(entityId, 'items:portable')
+              em.hasComponent(entityId, 'items-core:item') &&
+              em.hasComponent(entityId, 'items-core:portable')
             );
           },
         }
       ),
 
       // "non-portable items at location"
-      'items:non_portable_items_at_location': this.createLocationMatchResolver(
-        'items:non_portable_items_at_location',
+      'items-core:non_portable_items_at_location': this.createLocationMatchResolver(
+        'items-core:non_portable_items_at_location',
         {
           filterFn: (entityId, source, context, em) => {
             return (
-              em.hasComponent(entityId, 'items:item') &&
-              !em.hasComponent(entityId, 'items:portable')
+              em.hasComponent(entityId, 'items-core:item') &&
+              !em.hasComponent(entityId, 'items-core:portable')
             );
           },
         }
       ),
 
       // "items at actor's location" (union of portable and non-portable)
-      'items:items_at_actor_location': this.createLocationMatchResolver(
-        'items:items_at_actor_location',
+      'items-core:items_at_actor_location': this.createLocationMatchResolver(
+        'items-core:items_at_actor_location',
         {
           filterFn: (entityId, source, context, em) => {
-            return em.hasComponent(entityId, 'items:item');
+            return em.hasComponent(entityId, 'items-core:item');
           },
         }
       ),

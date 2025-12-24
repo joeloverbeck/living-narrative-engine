@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:openable",
+  "id": "items-core:openable",
   "description": "Marker component indicating entity can be opened/closed (doors, containers, etc.)",
   "dataSchema": {
     "type": "object",

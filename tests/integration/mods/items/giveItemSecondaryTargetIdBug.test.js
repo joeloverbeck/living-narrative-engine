@@ -58,8 +58,8 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
     const letter = new ModEntityBuilder('test-letter')
       .withName('letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -122,8 +122,8 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
     const item = new ModEntityBuilder('test-item')
       .withName('test item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.1 })
       .build();
 
@@ -177,8 +177,8 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
     const heavyItem = new ModEntityBuilder('heavy-item')
       .withName('heavy item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 10.0 }) // Exceeds target capacity
       .build();
 
@@ -210,7 +210,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
   });
 
   describe('dispatch signature bug fix', () => {
-    it('dispatches items:item_transferred event with correct signature', async () => {
+    it('dispatches items-core:item_transferred event with correct signature', async () => {
       // Arrange: Create test entities
       const room = new ModEntityBuilder('test-room')
         .asRoom('Test Room')
@@ -238,8 +238,8 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
       const item = new ModEntityBuilder('test-item')
         .withName('Test Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
@@ -252,13 +252,13 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         },
       });
 
-      // Assert: Verify items:item_transferred event was dispatched
+      // Assert: Verify items-core:item_transferred event was dispatched
       const itemTransferredEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:item_transferred'
+        (e) => e.eventType === 'items-core:item_transferred'
       );
 
       expect(itemTransferredEvent).toBeDefined();
-      expect(itemTransferredEvent.eventType).toBe('items:item_transferred');
+      expect(itemTransferredEvent.eventType).toBe('items-core:item_transferred');
       expect(itemTransferredEvent.payload).toMatchObject({
         fromEntity: 'test:actor1',
         toEntity: 'test:actor2',
@@ -294,8 +294,8 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
       const letter = new ModEntityBuilder('letter-1')
         .withName('Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.1 })
         .build();
 

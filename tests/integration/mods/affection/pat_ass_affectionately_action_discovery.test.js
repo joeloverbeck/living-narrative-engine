@@ -115,7 +115,7 @@ describe('affection:pat_ass_affectionately action discovery', () => {
       expect(patAssAffectionatelyAction.id).toBe(ACTION_ID);
       expect(patAssAffectionatelyAction.template).toBe("pat {target}'s ass");
       expect(patAssAffectionatelyAction.targets).toBe(
-        'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+        'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target'
       );
     });
 

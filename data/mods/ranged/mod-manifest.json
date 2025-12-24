@@ -8,6 +8,10 @@
   "actionConsiderWhen": "Combat situations requiring ranged attacks, throwing weapons at enemies, or when melee engagement is not possible or desired.",
   "dependencies": [
     {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
       "id": "recovery-states",
       "version": "^1.0.0"
     },

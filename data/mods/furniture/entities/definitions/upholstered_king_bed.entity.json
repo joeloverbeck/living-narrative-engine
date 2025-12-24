@@ -13,7 +13,7 @@
       "imagePath": "portraits/upholstered_king_bed.png",
       "altText": "King-size upholstered platform bed with tall ivory headboard, layered white bedding, and beige throw."
     },
-    "items:item": {},
+    "items-core:item": {},
     "lying:allows_lying_on": {},
     "sitting:allows_sitting": {
       "spots": [null, null, null, null]

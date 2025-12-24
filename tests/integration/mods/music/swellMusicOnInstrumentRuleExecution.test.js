@@ -54,7 +54,7 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('horn1')
         .withName('brass horn')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -102,7 +102,7 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('violin1')
         .withName('violin')
         .atLocation('studio')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -140,8 +140,8 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
         const instrument = new ModEntityBuilder('instrument1')
           .withName('test instrument')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -182,8 +182,8 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -222,7 +222,7 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('cello1')
         .withName('cello')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -265,7 +265,7 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar1')
         .withName('acoustic guitar')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -301,7 +301,7 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('chimes1')
         .withName('chimes')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

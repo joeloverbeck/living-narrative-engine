@@ -45,8 +45,8 @@ describe('clothing:put_on_clothing rule execution', () => {
         layer: 'base',
         equipmentSlots: { primary: 'torso_upper' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 
@@ -114,8 +114,8 @@ describe('clothing:put_on_clothing rule execution', () => {
         layer: 'base',
         equipmentSlots: { primary: 'torso_upper' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 
@@ -125,8 +125,8 @@ describe('clothing:put_on_clothing rule execution', () => {
         layer: 'base',
         equipmentSlots: { primary: 'torso_upper' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 
@@ -183,8 +183,8 @@ describe('clothing:put_on_clothing rule execution', () => {
     const invalidClothing = new ModEntityBuilder('invalid_item')
       .withName('broken wrap')
       // Intentionally omit clothing:wearable to force equip failure
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 

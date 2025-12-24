@@ -31,8 +31,8 @@
       "covers": ["torso_upper"],
       "coveragePriority": "base"
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.18
     }

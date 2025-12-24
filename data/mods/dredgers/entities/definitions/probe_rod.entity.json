@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A straight iron rod, long as a man's arm and thick enough to feel the difference between mud and stone through the handle. The tip is blunted from striking buried surfaces, and the shaft is marked at intervals with filed notches—depth measurements that mean something to the dredger who cut them. You push this down through the silt until it hits something solid, then you mark the spot and push again a handspan away. Do it enough times and you've mapped the outline of whatever's buried below. It's slow work, but it keeps you from digging blind into something that shouldn't be disturbed."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 1.5
     },

@@ -558,10 +558,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 component references exist",
     },
     {
-      "check": "descriptor_coverage",
-      "message": "All slots have descriptor components",
-    },
-    {
       "check": "generated_slot_part_availability",
       "message": "All 4 generated slot(s) from patterns have matching entity definitions",
     },
@@ -591,12 +587,37 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 27 slot socket references valid",
+      "message": "All 29 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
-  "suggestions": [],
+  "suggestions": [
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "left_lung",
+        "type": "slot",
+      },
+      "message": "Slot 'left_lung' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_lung_left' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "right_lung",
+        "type": "slot",
+      },
+      "message": "Slot 'right_lung' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_lung_right' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
   "timestamp": "<redacted>",
   "warnings": [
     {
@@ -666,7 +687,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 27 slot socket references valid",
+      "message": "All 29 slot socket references valid",
     },
   ],
   "recipeId": "tests:human_male_unused_clone",
@@ -768,10 +789,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 component references exist",
     },
     {
-      "check": "descriptor_coverage",
-      "message": "All slots have descriptor components",
-    },
-    {
       "check": "generated_slot_part_availability",
       "message": "All 4 generated slot(s) from patterns have matching entity definitions",
     },
@@ -801,12 +818,37 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
     },
     {
       "check": "socket_slot_compatibility",
-      "message": "All 27 slot socket references valid",
+      "message": "All 29 slot socket references valid",
     },
   ],
   "recipeId": "anatomy:human_male",
   "recipePath": "data/mods/anatomy/recipes/human_male.recipe.json",
-  "suggestions": [],
+  "suggestions": [
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "left_lung",
+        "type": "slot",
+      },
+      "message": "Slot 'left_lung' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_lung_left' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "right_lung",
+        "type": "slot",
+      },
+      "message": "Slot 'right_lung' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'anatomy:human_lung_right' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
   "timestamp": "<redacted>",
   "warnings": [
     {

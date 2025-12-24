@@ -48,7 +48,7 @@ describe('ActionFormattingStage - chance modifier tags for multi-target actions'
       {
         id: 'tool-1',
         components: {
-          'items:item': {},
+          'items-core:item': {},
           'breaching:allows_abrasive_sawing': {},
         },
       },

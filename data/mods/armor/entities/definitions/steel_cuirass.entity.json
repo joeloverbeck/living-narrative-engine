@@ -28,8 +28,8 @@
       "covers": ["torso_upper"],
       "coveragePriority": "armor"
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 8.5
     }

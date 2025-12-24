@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for missing items:item_unwielded event definition fix
+ * @file Integration tests for missing items-core:item_unwielded event definition fix
  * Verifies that the item_unwielded event definition exists and is properly
  * configured to match the UnwieldItemHandler dispatch payload.
  * @see src/logic/operationHandlers/unwieldItemHandler.js
@@ -18,7 +18,7 @@ import path from 'path';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
-describe('Missing Event Definition Fix - items:item_unwielded', () => {
+describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
   const EVENTS_DIR = 'data/mods/items/events';
   const EVENT_SCHEMA_PATH = 'data/schemas/event.schema.json';
 
@@ -65,7 +65,7 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       }).not.toThrow();
 
       // Verify required fields per event.schema.json
-      expect(parsed.id).toBe('items:item_unwielded');
+      expect(parsed.id).toBe('items-core:item_unwielded');
       expect(parsed.description).toBeDefined();
       expect(parsed.payloadSchema).toBeDefined();
       expect(parsed.payloadSchema.type).toBe('object');
@@ -74,7 +74,7 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
     });
   });
 
-  describe('items:item_unwielded Payload Schema Validation', () => {
+  describe('items-core:item_unwielded Payload Schema Validation', () => {
     let itemUnwieldedEvent;
 
     beforeEach(() => {
@@ -267,7 +267,7 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const eventDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       // Must match ITEM_UNWIELDED_EVENT constant from unwieldItemHandler.js:27
-      expect(eventDef.id).toBe('items:item_unwielded');
+      expect(eventDef.id).toBe('items-core:item_unwielded');
     });
   });
 

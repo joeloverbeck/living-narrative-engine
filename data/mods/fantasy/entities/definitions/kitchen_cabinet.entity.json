@@ -8,7 +8,7 @@
     "core:description": {
       "text": "A tall, plain wooden cabinet with round knobs and scuffed doors. Its interior smells faintly of herbs and vinegar; shelves are lined with neatly arranged jars and bottles meant for cooking and quick remedies."
     },
-    "items:item": {},
+    "items-core:item": {},
     "containers-core:container": {
       "contents": [
         "fantasy:jar_of_vinegar_instance"

@@ -100,10 +100,10 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
     // Verify all inventory scopes are registered
     const expectedScopes = [
       'items:actor_inventory_items',
-      'items:items_at_location',
-      'items:portable_items_at_location',
-      'items:non_portable_items_at_location',
-      'items:items_at_actor_location',
+      'items-core:items_at_location',
+      'items-core:portable_items_at_location',
+      'items-core:non_portable_items_at_location',
+      'items-core:items_at_actor_location',
       'items:actors_at_location',
       'containers-core:containers_at_location',
     ];
@@ -119,7 +119,7 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
     ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-      'items:portable_items_at_location',
+      'items-core:portable_items_at_location',
       { actor: { id: 'actor1' } }
     );
 
@@ -206,7 +206,7 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     ).toBe(true);
     expect(
       testFixture.testEnv._registeredResolvers.has(
-        'items:portable_items_at_location'
+        'items-core:portable_items_at_location'
       )
     ).toBe(true);
     expect(

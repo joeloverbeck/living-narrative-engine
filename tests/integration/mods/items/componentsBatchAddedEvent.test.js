@@ -60,8 +60,8 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
     const item = new ModEntityBuilder('item1')
       .withName('Test Item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build();
 
@@ -99,8 +99,8 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
     const item = new ModEntityBuilder('item1')
       .withName('Test Item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build();
 

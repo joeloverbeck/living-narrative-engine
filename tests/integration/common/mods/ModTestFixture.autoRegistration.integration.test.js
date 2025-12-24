@@ -161,8 +161,8 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const sword = new ModEntityBuilder('sword1')
       .withName('Sword')
       .atLocation('room1')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 2 })
       .build();
 

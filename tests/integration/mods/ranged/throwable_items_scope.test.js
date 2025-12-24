@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for ranged:throwable_items scope
- * @description Tests the throwable_items scope that unions wielded items and inventory items filtered by items:portable
+ * @description Tests the throwable_items scope that unions wielded items and inventory items filtered by items-core:portable
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -144,14 +144,14 @@ describe('ranged:throwable_items scope', () => {
           id: 'rock-001',
           components: {
             'core:name': { value: 'Small Rock' },
-            'items:portable': { weight: 1.0 },
+            'items-core:portable': { weight: 1.0 },
           },
         },
         {
           id: 'dagger-001',
           components: {
             'core:name': { value: 'Rusty Dagger' },
-            'items:portable': { weight: 0.5 },
+            'items-core:portable': { weight: 0.5 },
           },
         },
       ]);
@@ -198,7 +198,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'sword-001',
           components: {
             'core:name': { value: 'Iron Sword' },
-            'items:portable': { weight: 3.0 },
+            'items-core:portable': { weight: 3.0 },
           },
         },
       ]);
@@ -244,14 +244,14 @@ describe('ranged:throwable_items scope', () => {
           id: 'sword-001',
           components: {
             'core:name': { value: 'Iron Sword' },
-            'items:portable': { weight: 3.0 },
+            'items-core:portable': { weight: 3.0 },
           },
         },
         {
           id: 'rock-001',
           components: {
             'core:name': { value: 'Small Rock' },
-            'items:portable': { weight: 1.0 },
+            'items-core:portable': { weight: 1.0 },
           },
         },
       ]);
@@ -287,7 +287,7 @@ describe('ranged:throwable_items scope', () => {
   });
 
   describe('filtering behavior', () => {
-    it('should only return items with items:portable component', () => {
+    it('should only return items with items-core:portable component', () => {
       setupRuntimeContext([
         {
           id: 'test:actor',
@@ -302,14 +302,14 @@ describe('ranged:throwable_items scope', () => {
           id: 'rock-001',
           components: {
             'core:name': { value: 'Small Rock' },
-            'items:portable': { weight: 1.0 },
+            'items-core:portable': { weight: 1.0 },
           },
         },
         {
           id: 'immovable-001',
           components: {
             'core:name': { value: 'Heavy Statue' },
-            // No items:portable component - should be filtered out
+            // No items-core:portable component - should be filtered out
           },
         },
       ]);
@@ -347,7 +347,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'immovable-001',
           components: {
             'core:name': { value: 'Heavy Statue' },
-            // No items:portable component
+            // No items-core:portable component
           },
         },
       ]);
@@ -411,7 +411,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'rock-001',
           components: {
             'core:name': { value: 'Small Rock' },
-            'items:portable': { weight: 1.0 },
+            'items-core:portable': { weight: 1.0 },
           },
         },
       ]);
@@ -448,7 +448,7 @@ describe('ranged:throwable_items scope', () => {
           id: 'sword-001',
           components: {
             'core:name': { value: 'Iron Sword' },
-            'items:portable': { weight: 3.0 },
+            'items-core:portable': { weight: 3.0 },
           },
         },
       ]);

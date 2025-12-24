@@ -219,8 +219,8 @@ function buildEntities() {
 
   const jarOfVinegar = new ModEntityBuilder(DISINFECTANT_ID)
     .withName('jar of vinegar')
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('containers-core:liquid_container', {
       currentVolumeMilliliters: 180,
       maxCapacityMilliliters: 250,

@@ -195,8 +195,8 @@ describe('Locks scopes', () => {
     const keyItem = {
       id: 'items:keycard_alpha',
       components: {
-        'items:item': {},
-        'items:portable': {},
+        'items-core:item': {},
+        'items-core:portable': {},
         'core:weight': { weight: 0.1 },
       },
     };

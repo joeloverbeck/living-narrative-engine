@@ -9,11 +9,11 @@
     "core:description": {
       "text": "A crisp white envelope sealed with red wax, bearing the sheriff's name in elegant script."
     },
-    "items:item": {},
+    "items-core:item": {},
     "items:readable": {
       "text": "Sheriff, smugglers move under cover of the new moon. Ride tonight and you may catch them."
     },
-    "items:portable": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.05
     }

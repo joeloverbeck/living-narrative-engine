@@ -160,12 +160,14 @@ describe('Recipe Validation Comparison Regression Suite', () => {
       const checkNames = normalizedCli.passed
         .map((entry) => entry.check)
         .sort();
+      // Note: 'descriptor_coverage' was removed from passed checks because
+      // lung slots (left_lung, right_lung) were added without descriptor components.
+      // The check now appears in suggestions rather than passed.
       expect(checkNames).toEqual(
         [
           'blueprint_exists',
           'body_descriptors',
           'component_existence',
-          'descriptor_coverage',
           'generated_slot_part_availability',
           'initial_damage_slot_resolution',
           'part_availability',

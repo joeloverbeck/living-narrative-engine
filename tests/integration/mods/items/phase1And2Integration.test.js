@@ -82,8 +82,8 @@ describe('Items - Phase 1 and 2 Integration', () => {
     const actor2Hands = actor2Builder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -182,14 +182,14 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .build();
     const gold = new ModEntityBuilder('gold-1')
       .withName('Gold Coin')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.02 })
       .build();
     const silver = new ModEntityBuilder('silver-1')
       .withName('Silver Coin')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.015 })
       .build();
 

@@ -199,8 +199,8 @@ describe('first-aid:rinse_my_wounded_part action definition', () => {
     const waterId = 'items:water_canteen';
     const waterBuilder = new ModEntityBuilder(waterId)
       .withName('Water Canteen')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {});
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {});
 
     if (hasWater) {
       waterBuilder.withComponent(

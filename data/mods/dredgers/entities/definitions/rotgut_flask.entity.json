@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A dented tin flask with tarnished brass hinges and a leather wrap worn smooth by years of nervous handling. The cap is attached by a fine chain, and the metal is etched with old guild markings long since scratched over. It reeks faintly of harsh spirits."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.4
     },

@@ -51,7 +51,7 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('organ1')
         .withName('pipe organ')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -99,7 +99,7 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('bowl1')
         .withName('singing bowl')
         .atLocation('temple')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -136,8 +136,8 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
         const instrument = new ModEntityBuilder('instrument1')
           .withName('test instrument')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -178,8 +178,8 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -218,7 +218,7 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('cello1')
         .withName('cello')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -261,7 +261,7 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('theremin1')
         .withName('theremin')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -297,7 +297,7 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('harp1')
         .withName('celtic harp')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

@@ -57,8 +57,8 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     // Create item
     const item = new ModEntityBuilder('item1')
       .withName('Test Item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .build();
 
     // Create open container at location
@@ -70,7 +70,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([location, actor, ...handEntities, item, chest]);
@@ -138,7 +138,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([location, actor, chest]);
@@ -172,7 +172,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     // Create item
     const item = new ModEntityBuilder('item1')
       .withName('Test Item')
-      .withComponent('items:item', {})
+      .withComponent('items-core:item', {})
       .build();
 
     // Create closed container at location
@@ -184,7 +184,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: false,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([location, actor, item, chest]);
@@ -222,14 +222,14 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     // Create items
     const item1 = new ModEntityBuilder('item1')
       .withName('Item One')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .build();
 
     const item2 = new ModEntityBuilder('item2')
       .withName('Item Two')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .build();
 
     // Create multiple open containers
@@ -241,7 +241,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     const chest2 = new ModEntityBuilder('chest2')
@@ -252,7 +252,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([

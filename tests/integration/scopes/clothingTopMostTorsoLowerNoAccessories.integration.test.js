@@ -54,7 +54,7 @@ const targetTopMostTorsoLowerNoAccessoriesScopeContent = fs.readFileSync(
 const intimacyActorsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/caressing/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope'
+    '../../../data/mods/caressing-states/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope'
   ),
   'utf8'
 );
@@ -206,9 +206,9 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
         targetScopeDefinitions.get(
           'clothing:target_topmost_torso_lower_clothing_no_accessories'
         ),
-      'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target':
+      'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target':
         primaryScopeDefinitions.get(
-          'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+          'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target'
         ),
     });
 

@@ -42,8 +42,8 @@ describe('items:read_item perception type validation', () => {
 
     const readableItem = new ModEntityBuilder('test_letter')
       .withName('Test Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:readable', {
         text: 'This is a test message.',
       })
@@ -115,8 +115,8 @@ describe('items:read_item perception type validation', () => {
 
     const readableItem = new ModEntityBuilder('test_note')
       .withName('Test Note')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:readable', {
         text: 'Important information.',
       })
@@ -159,8 +159,8 @@ describe('items:read_item perception type validation', () => {
 
     const book = new ModEntityBuilder('book')
       .withName('Ancient Book')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:readable', {
         text: 'In the beginning was the Word.',
       })

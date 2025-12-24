@@ -46,8 +46,8 @@ describe('items:hug_item_for_comfort rule execution', () => {
 
     const plushToy = new ModEntityBuilder('plush1')
       .withName('soft teddy bear')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:allows_soothing_hug', {})
       .build();
 
@@ -103,8 +103,8 @@ describe('items:hug_item_for_comfort rule execution', () => {
 
     const comfortPillow = new ModEntityBuilder('pillow1')
       .withName('memory foam pillow')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:allows_soothing_hug', {})
       .build();
 
@@ -131,8 +131,8 @@ describe('items:hug_item_for_comfort rule execution', () => {
     const locationPlush = new ModEntityBuilder('location_plush')
       .withName('large plush elephant')
       .atLocation('bedroom')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:allows_soothing_hug', {})
       .build();
 
@@ -170,8 +170,8 @@ describe('items:hug_item_for_comfort rule execution', () => {
 
     const stuffedAnimal = new ModEntityBuilder('stuffed1')
       .withName('fuzzy bunny')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:allows_soothing_hug', {})
       .build();
 

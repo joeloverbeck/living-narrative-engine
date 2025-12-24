@@ -22,7 +22,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const ITEM_TRANSFERRED_EVENT = 'items:item_transferred';
+const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

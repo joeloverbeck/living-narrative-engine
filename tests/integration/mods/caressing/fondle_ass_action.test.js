@@ -41,7 +41,7 @@ describe('caressing:fondle_ass action integration', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+          'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {

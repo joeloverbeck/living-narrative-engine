@@ -61,8 +61,8 @@ function setupPutOnSurfaceScenario({
   const inventoryItemEntities = actorInventory.map((itemId) =>
     new ModEntityBuilder(itemId)
       .withName(itemId.replace('-1', '').replace('-', ' '))
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build()
   );
@@ -92,7 +92,7 @@ function setupPutOnSurfaceScenario({
       capacity: { maxWeight: containerMaxWeight, maxItems: containerMaxItems },
       isOpen,
     })
-    .withComponent('items:openable', {})
+    .withComponent('items-core:openable', {})
     .withComponent('furniture:on_furniture', { furnitureId: nearbyFurnitureId })
     .build();
 
@@ -100,8 +100,8 @@ function setupPutOnSurfaceScenario({
   const containerItemEntities = containerContents.map((itemId) =>
     new ModEntityBuilder(itemId)
       .withName(itemId.replace('-1', '').replace('-', ' '))
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build()
   );
@@ -637,15 +637,15 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('Apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('Bread')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
@@ -691,7 +691,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
           capacity: { maxWeight: 20, maxItems: 10 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .withComponent('furniture:on_furniture', { furnitureId: 'shared-table' })
         .build();
 
@@ -767,7 +767,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
 
       // Verify all components intact
-      expect(container.components['items:openable']).toBeDefined();
+      expect(container.components['items-core:openable']).toBeDefined();
       expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
       expect(container.components['furniture:on_furniture']).toBeDefined();

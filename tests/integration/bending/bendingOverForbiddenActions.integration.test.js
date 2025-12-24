@@ -131,8 +131,8 @@ describe('Bending Over - Forbidden Actions Bug', () => {
 
       const item = new ModEntityBuilder('test:item')
         .withName('Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -183,8 +183,8 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const item = new ModEntityBuilder('test:item')
         .withName('Coin')
         .atLocation('test:room')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.01 })
         .build();
 
@@ -339,7 +339,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
 
       const jacket = new ModEntityBuilder('test:jacket')
         .withName('Jacket')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('clothing:clothing', {
           slot: 'torso_upper',
           coverage: { torso_upper: 1.0 },
@@ -391,7 +391,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
 
       const shirt = new ModEntityBuilder('test:shirt')
         .withName('Shirt')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('clothing:clothing', {
           slot: 'torso_upper',
           coverage: { torso_upper: 1.0 },

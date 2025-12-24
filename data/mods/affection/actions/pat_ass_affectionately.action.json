@@ -3,7 +3,7 @@
   "id": "affection:pat_ass_affectionately",
   "name": "Pat ass affectionately",
   "description": "Give the target's ass a gentle affectionate pat.",
-  "targets": "caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+  "targets": "caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["personal-space-states:closeness"]
   },

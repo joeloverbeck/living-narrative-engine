@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:secondary-has-portable",
-  "description": "Checks if the secondary target has the items:portable component",
-  "logic": {
-    "!!": [{ "var": "secondaryTarget.components.items:portable" }]
-  }
-}

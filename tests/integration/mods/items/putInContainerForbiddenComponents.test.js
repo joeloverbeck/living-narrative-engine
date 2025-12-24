@@ -73,8 +73,8 @@ describe('containers:put_in_container - Forbidden components validation', () => 
       // Create item in actor's inventory
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Create open container at location
@@ -86,7 +86,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       testFixture.reset([location, actor, item, chest]);
@@ -120,8 +120,8 @@ describe('containers:put_in_container - Forbidden components validation', () => 
       // Create item in actor's inventory
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Create open container at location
@@ -133,7 +133,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       testFixture.reset([location, actor, ...handEntities, item, chest]);
@@ -168,8 +168,8 @@ describe('containers:put_in_container - Forbidden components validation', () => 
       // Create item in actor's inventory
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Create open container at location
@@ -181,7 +181,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       testFixture.reset([location, actor, item, chest]);

@@ -258,8 +258,8 @@ describe('Weapon Damage Capabilities Validation - Integration', () => {
       const requiredComponents = [
         'core:name',
         'core:description',
-        'items:item',
-        'items:portable',
+        'items-core:item',
+        'items-core:portable',
         'weapons:weapon',
         'core:weight',
         'descriptors:color_basic',

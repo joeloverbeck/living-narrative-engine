@@ -65,7 +65,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 3: DISPATCH_EVENT
       expect(aimItemRule.actions[2].type).toBe('DISPATCH_EVENT');
       expect(aimItemRule.actions[2].parameters.eventType).toBe(
-        'items:item_aimed'
+        'items-core:item_aimed'
       );
 
       // Operation 4: END_TURN
@@ -213,12 +213,12 @@ describe('Aim Item Rules Validation', () => {
     });
 
     it('both rules should dispatch events related to aiming', () => {
-      // handle_aim_item dispatches items:item_aimed
+      // handle_aim_item dispatches items-core:item_aimed
       const aimDispatchOp = aimItemRule.actions.find(
         (op) => op.type === 'DISPATCH_EVENT'
       );
       expect(aimDispatchOp).toBeDefined();
-      expect(aimDispatchOp.parameters.eventType).toBe('items:item_aimed');
+      expect(aimDispatchOp.parameters.eventType).toBe('items-core:item_aimed');
 
       // handle_lower_aim dispatches items:aim_lowered
       const lowerDispatchOp = lowerAimRule.actions.find(

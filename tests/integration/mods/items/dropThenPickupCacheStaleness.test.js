@@ -88,8 +88,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .build();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -140,8 +140,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .build();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -172,8 +172,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const droppedItem = testFixture.entityManager.getEntityInstance('letter-1');
     expect(droppedItem.components['core:position']).toBeDefined();
     expect(droppedItem.components['core:position'].locationId).toBe('saloon1');
-    expect(droppedItem.components['items:item']).toBeDefined();
-    expect(droppedItem.components['items:portable']).toBeDefined();
+    expect(droppedItem.components['items-core:item']).toBeDefined();
+    expect(droppedItem.components['items-core:portable']).toBeDefined();
 
     // Discover actions again
     // With cache invalidation, the cache is automatically cleared when components are added
@@ -215,8 +215,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .build();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -232,8 +232,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const droppedItem = testFixture.entityManager.getEntityInstance('letter-1');
     expect(droppedItem.components['core:position']).toBeDefined();
     expect(droppedItem.components['core:position'].locationId).toBe('saloon1');
-    expect(droppedItem.components['items:item']).toBeDefined();
-    expect(droppedItem.components['items:portable']).toBeDefined();
+    expect(droppedItem.components['items-core:item']).toBeDefined();
+    expect(droppedItem.components['items-core:portable']).toBeDefined();
     expect(droppedItem.components['core:weight']).toBeDefined();
 
     // Action discovery succeeds because cache was automatically invalidated
@@ -269,8 +269,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .build();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -320,14 +320,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .build();
     const letter = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
     const gun = new ModEntityBuilder('gun-1')
       .withName('Gun')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1.2 })
       .build();
 

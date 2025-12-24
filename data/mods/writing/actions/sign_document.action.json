@@ -16,8 +16,8 @@
     }
   },
   "required_components": {
-    "primary": ["items:item", "writing:signable"],
-    "secondary": ["items:item", "writing:allows_writing"]
+    "primary": ["items-core:item", "writing:signable"],
+    "secondary": ["items-core:item", "writing:allows_writing"]
   },
   "forbidden_components": {
     "actor": [

@@ -30,8 +30,8 @@ describe('first-aid:handle_rinse_wounded_part rule', () => {
 
     const waterSource = new ModEntityBuilder(WATER_SOURCE_ID)
       .withName('Water Canteen')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('containers-core:liquid_container', buildLiquidContainer())
       .atLocation(ROOM_ID)
       .build();

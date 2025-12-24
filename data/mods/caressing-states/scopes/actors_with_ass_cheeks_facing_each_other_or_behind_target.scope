@@ -1,6 +1,6 @@
 // Scope for actors in closeness who have ass cheeks, are either facing each other OR actor is behind the target, and don't have incompatible kneeling positions
 // Used by actions that require ass anatomy, can work from either face-to-face or behind positions, and need compatible vertical positioning
-caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
+caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.components.personal-space-states:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "ass_cheek"]},
     {

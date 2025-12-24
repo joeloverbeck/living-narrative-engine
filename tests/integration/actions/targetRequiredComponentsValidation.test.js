@@ -86,7 +86,7 @@ describe('Target Required Components Validation - Integration', () => {
     const item1Def = new EntityDefinition('test:item1', {
       description: 'Portable item',
       components: {
-        'items:portable': { weight: 5 },
+        'items-core:portable': { weight: 5 },
       },
     });
 
@@ -100,7 +100,7 @@ describe('Target Required Components Validation - Integration', () => {
     const tertiaryDef = new EntityDefinition('test:tertiary', {
       description: 'Tertiary target',
       components: {
-        'items:portable': { weight: 3 },
+        'items-core:portable': { weight: 3 },
       },
     });
 
@@ -254,7 +254,7 @@ describe('Target Required Components Validation - Integration', () => {
         },
         required_components: {
           primary: ['sitting-states:sitting_on'],
-          secondary: ['items:portable'],
+          secondary: ['items-core:portable'],
         },
       };
 
@@ -282,7 +282,7 @@ describe('Target Required Components Validation - Integration', () => {
         },
         required_components: {
           primary: ['sitting-states:sitting_on'],
-          secondary: ['items:portable'],
+          secondary: ['items-core:portable'],
         },
       };
 
@@ -297,7 +297,7 @@ describe('Target Required Components Validation - Integration', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain('items:portable');
+      expect(result.reason).toContain('items-core:portable');
       expect(result.reason).toContain('secondary');
     });
   });
@@ -619,8 +619,8 @@ describe('Target Required Components Validation - Integration', () => {
         id: 'test:three_target_action',
         required_components: {
           primary: ['sitting-states:sitting_on'],
-          secondary: ['items:portable'],
-          tertiary: ['items:portable'],
+          secondary: ['items-core:portable'],
+          tertiary: ['items-core:portable'],
         },
       };
 

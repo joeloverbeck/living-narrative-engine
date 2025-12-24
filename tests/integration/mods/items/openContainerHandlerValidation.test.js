@@ -31,7 +31,7 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
     // Create mock entity manager that captures batch calls
     mockEntityManager = {
       getComponentData: jest.fn((entityId, componentType) => {
-        if (entityId === 'container1' && componentType === 'items:openable') {
+        if (entityId === 'container1' && componentType === 'items-core:openable') {
           return {};
         }
         if (entityId === 'container1' && componentType === 'containers-core:container') {

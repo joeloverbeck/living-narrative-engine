@@ -23,7 +23,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'items:item_picked_up';
+const ITEM_PICKED_UP_EVENT = 'items-core:item_picked_up';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

@@ -28,9 +28,9 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch items:item_aimed event",
+      "comment": "Dispatch items-core:item_aimed event",
       "parameters": {
-        "eventType": "items:item_aimed",
+        "eventType": "items-core:item_aimed",
         "payload": {
           "actorEntity": "{event.payload.actorId}",
           "itemEntity": "{event.payload.secondaryId}",

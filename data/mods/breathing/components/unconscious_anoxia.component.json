@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "breathing:unconscious_anoxia",
+  "description": "Unconscious state specifically from oxygen deprivation. Distinct from other unconscious states.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "turnsUnconscious": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 0,
+        "description": "Turns spent unconscious from anoxia"
+      },
+      "brainDamageStarted": {
+        "type": "boolean",
+        "default": false,
+        "description": "Whether brain damage has begun"
+      },
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation.",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this component should be included in activity descriptions."
+          },
+          "template": {
+            "type": "string",
+            "default": "{actor} has lost consciousness from lack of oxygen",
+            "description": "Template string for activity description."
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 95,
+            "description": "Display priority for activity ordering. Higher values appear first."
+          }
+        }
+      }
+    },
+    "required": ["turnsUnconscious"]
+  }
+}

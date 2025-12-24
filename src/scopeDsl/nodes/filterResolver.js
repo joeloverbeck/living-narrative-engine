@@ -271,10 +271,10 @@ export default function createFilterResolver({
                 passedFilter: evalResult,
                 evaluationContext: {
                   hasItemMarker:
-                    itemEntity?.componentTypeIds?.includes('items:item') ||
+                    itemEntity?.componentTypeIds?.includes('items-core:item') ||
                     false,
                   hasPortableMarker:
-                    itemEntity?.componentTypeIds?.includes('items:portable') ||
+                    itemEntity?.componentTypeIds?.includes('items-core:portable') ||
                     false,
                   entityLocationId:
                     evalCtx.entity?.components?.['core:position']?.locationId,

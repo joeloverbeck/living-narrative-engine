@@ -130,7 +130,7 @@ describe('OpenContainerHandler', () => {
       });
       expect(entityManager.getComponentData).toHaveBeenCalledWith(
         'container-456',
-        'items:openable'
+        'items-core:openable'
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Container is not openable',
@@ -179,7 +179,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         1,
         'container-456',
-        'items:openable'
+        'items-core:openable'
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
@@ -286,7 +286,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         1,
         'container-456',
-        'items:openable'
+        'items-core:openable'
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
@@ -357,7 +357,7 @@ describe('OpenContainerHandler', () => {
 
       expect(entityManager.getComponentData).toHaveBeenCalledWith(
         'container-456',
-        'items:openable'
+        'items-core:openable'
       );
       expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [

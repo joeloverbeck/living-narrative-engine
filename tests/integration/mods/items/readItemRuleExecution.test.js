@@ -47,8 +47,8 @@ function setupReadItemScenario(
   const itemEntities = items.map((item) => {
     const builder = new ModEntityBuilder(item.id)
       .withName(item.id)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:readable', { text: item.text });
 
     if (!item.inInventory) {
@@ -231,8 +231,8 @@ describe('items:read_item action integration', () => {
 
       const readableItem = new ModEntityBuilder('sealed-letter')
         .withName('sealed-letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Darius, meet me at midnight behind the chapel.',
         })
@@ -280,8 +280,8 @@ describe('items:read_item action integration', () => {
 
       const nonReadableItem = new ModEntityBuilder('blank-book')
         .withName('blank-book')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, nonReadableItem]);

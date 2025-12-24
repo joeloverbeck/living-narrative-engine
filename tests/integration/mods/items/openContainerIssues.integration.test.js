@@ -50,7 +50,7 @@ describe('Open Container Issues - Integration', () => {
         capacity: { maxWeight: 50, maxItems: 5 },
         isOpen: false, // Starts closed
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([room, actor, container]);
@@ -160,7 +160,7 @@ describe('Open Container Issues - Integration', () => {
           capacity: { maxWeight: 50, maxItems: 5 },
           isOpen: false, // Closed
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       // Create open container
@@ -173,7 +173,7 @@ describe('Open Container Issues - Integration', () => {
           capacity: { maxWeight: 30, maxItems: 3 },
           isOpen: true, // Open
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       // Reset with all entities

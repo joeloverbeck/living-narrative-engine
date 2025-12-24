@@ -8,7 +8,7 @@
  * 2. Retrieves actor's inventory component and verifies capacity
  * 3. Removes position component from item (making it locationless)
  * 4. Adds item to actor's inventory array
- * 5. Dispatches items:item_picked_up event
+ * 5. Dispatches items-core:item_picked_up event
  *
  * Related files:
  * @see data/schemas/operations/pickUpItemFromLocation.schema.json - Operation schema
@@ -27,7 +27,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'items:item_picked_up';
+const ITEM_PICKED_UP_EVENT = 'items-core:item_picked_up';
 
 /**
  * @typedef {object} PickUpItemParams

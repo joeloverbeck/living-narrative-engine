@@ -76,8 +76,8 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
       // Create weapon with damage capabilities
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -144,8 +144,8 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
 
       const weapon = new ModEntityBuilder('axe')
         .withName('Battle Axe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -212,8 +212,8 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
 
       const greatsword = new ModEntityBuilder('greatsword')
         .withName('Greatsword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [
@@ -282,8 +282,8 @@ describe('APPLY_DAMAGE entity_ref resolution in swing_at_target', () => {
 
       const weapon = new ModEntityBuilder('test-weapon')
         .withName('Test Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [{ name: 'slashing', amount: 10, effects: {} }],

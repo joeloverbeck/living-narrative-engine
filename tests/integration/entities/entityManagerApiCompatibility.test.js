@@ -89,7 +89,7 @@ describe('Entity Manager API Compatibility', () => {
       adapter.addEntity({
         id: 'item-1',
         components: {
-          'items:portable': {},
+          'items-core:portable': {},
           'core:position': { locationId: 'room2' },
         },
       });

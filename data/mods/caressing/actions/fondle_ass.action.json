@@ -5,7 +5,7 @@
   "description": "Gently fondle the target's ass over their clothing.",
   "targets": {
     "primary": {
-      "scope": "caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+      "scope": "caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target",
       "placeholder": "primary",
       "description": "Person whose ass to fondle"
     },

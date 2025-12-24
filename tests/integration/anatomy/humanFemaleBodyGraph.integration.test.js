@@ -46,6 +46,8 @@ import blueprintSlot from '../../../data/mods/anatomy/entities/definitions/bluep
 import humanHeart from '../../../data/mods/anatomy/entities/definitions/human_heart.entity.json';
 import humanBrain from '../../../data/mods/anatomy/entities/definitions/human_brain.entity.json';
 import humanSpine from '../../../data/mods/anatomy/entities/definitions/human_spine.entity.json';
+import humanLungLeft from '../../../data/mods/anatomy/entities/definitions/human_lung_left.entity.json';
+import humanLungRight from '../../../data/mods/anatomy/entities/definitions/human_lung_right.entity.json';
 
 // Import core components needed for anatomy
 import nameComponent from '../../../data/mods/core/components/name.component.json';
@@ -127,6 +129,8 @@ describe('Human Female Body Graph Integration Test', () => {
       'anatomy:human_heart': humanHeart,
       'anatomy:human_brain': humanBrain,
       'anatomy:human_spine': humanSpine,
+      'anatomy:human_lung_left': humanLungLeft,
+      'anatomy:human_lung_right': humanLungRight,
       'test:human_female': testHumanFemale,
     });
 

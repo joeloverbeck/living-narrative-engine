@@ -106,15 +106,15 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('bread loaf')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Create seated actor with grabbing hands
@@ -181,8 +181,8 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -230,8 +230,8 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Actor is STANDING (no sitting_on component)
@@ -285,8 +285,8 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -338,8 +338,8 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const actor = new ModEntityBuilder('seated-actor')
@@ -464,15 +464,15 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('bread loaf')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Create seated actor with grabbing hands
@@ -540,8 +540,8 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const apple = new ModEntityBuilder('apple-1')
         .withName('red apple')
         .atLocation('kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       // Create seated actor with grabbing hands
