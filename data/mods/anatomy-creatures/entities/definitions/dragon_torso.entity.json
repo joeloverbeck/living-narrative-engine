@@ -60,6 +60,18 @@
           "id": "tail",
           "allowedTypes": ["dragon_tail"],
           "nameTpl": "tail"
+        },
+        {
+          "id": "lung_left_socket",
+          "orientation": "left",
+          "allowedTypes": ["lung"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "lung_right_socket",
+          "orientation": "right",
+          "allowedTypes": ["lung"],
+          "nameTpl": "{{orientation}} {{type}}"
         }
       ]
     },

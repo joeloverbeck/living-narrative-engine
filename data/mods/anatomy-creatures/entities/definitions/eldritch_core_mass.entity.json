@@ -274,6 +274,11 @@
           "id": "vocal_sac_3",
           "allowedTypes": ["eldritch_vocal_sac"],
           "nameTpl": "vocal sac 3"
+        },
+        {
+          "id": "respiratory_mass_socket",
+          "allowedTypes": ["respiratory_mass"],
+          "nameTpl": "respiratory mass"
         }
       ]
     },

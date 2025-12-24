@@ -1,13 +1,12 @@
 /**
  * @jest-environment node
- * @file Integration tests for items:wielded_items scope
+ * @file Integration tests for item-handling:wielded_items scope
  * @description Tests the scope that returns entity IDs of items currently being wielded
  *
  * The scope:
  * - Accesses actor's item-handling-states:wielding component
  * - Returns wielded_item_ids array via [] iterator
- * @see data/mods/items/scopes/wielded_items.scope
- * @see tickets/UNWITEACT-001-create-scope-file.md
+ * @see data/mods/item-handling/scopes/wielded_items.scope
  */
 
 import { describe, test, expect, beforeEach } from '@jest/globals';
@@ -16,7 +15,7 @@ import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 
-describe('items:wielded_items scope', () => {
+describe('item-handling:wielded_items scope', () => {
   let scopeEngine;
   let scopeRegistry;
   let mockLogger;
@@ -65,14 +64,14 @@ describe('items:wielded_items scope', () => {
 
     const wieldedItemsScope = readFileSync(
       new URL(
-        '../../../../data/mods/items/scopes/wielded_items.scope',
+        '../../../../data/mods/item-handling/scopes/wielded_items.scope',
         import.meta.url
       ),
       'utf8'
     ).trim();
 
     const scopeDefinitions = {
-      'items:wielded_items': wieldedItemsScope,
+      'item-handling:wielded_items': wieldedItemsScope,
     };
 
     const parsedScopes = {};
@@ -117,7 +116,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -143,7 +142,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -169,7 +168,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -193,7 +192,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -217,7 +216,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -248,7 +247,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -275,7 +274,7 @@ describe('items:wielded_items scope', () => {
         actor,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:wielded_items');
+      const scopeDef = scopeRegistry.getScope('item-handling:wielded_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 

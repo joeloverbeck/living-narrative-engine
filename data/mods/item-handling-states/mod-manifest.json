@@ -10,6 +10,7 @@
   "content": {
     "components": ["wielding.component.json"],
     "conditions": ["entity-is-not-wielding.condition.json"],
-    "scopes": ["actors_in_location_not_wielding.scope"]
+    "scopes": ["actors_in_location_not_wielding.scope"],
+    "events": ["item_unwielded.event.json"]
   }
 }

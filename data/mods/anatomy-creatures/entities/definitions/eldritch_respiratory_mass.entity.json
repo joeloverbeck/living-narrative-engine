@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:eldritch_respiratory_mass",
+  "description": "An amorphous respiratory organ that can extract oxygen from any medium",
+  "components": {
+    "core:name": {
+      "text": "respiratory mass"
+    },
+    "core:weight": {
+      "weight": 5.0
+    },
+    "anatomy:part": {
+      "subType": "respiratory_mass",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 60,
+      "maxHealth": 60,
+      "state": "healthy"
+    },
+    "breathing-states:respiratory_organ": {
+      "respirationType": "unusual",
+      "oxygenCapacity": 30,
+      "currentOxygen": 30
+    }
+  }
+}

@@ -15,7 +15,7 @@ jest.mock('../../../../src/utils/grabbingUtils.js', () => ({
 }));
 
 const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
-const ITEM_UNWIELDED_EVENT = 'items-core:item_unwielded';
+const ITEM_UNWIELDED_EVENT = 'item-handling-states:item_unwielded';
 
 const makeLogger = () => ({
   debug: jest.fn(),

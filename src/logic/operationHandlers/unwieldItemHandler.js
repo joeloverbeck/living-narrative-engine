@@ -27,7 +27,7 @@ import { unlockAppendagesHoldingItem } from '../../utils/grabbingUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
-const ITEM_UNWIELDED_EVENT = 'items-core:item_unwielded';
+const ITEM_UNWIELDED_EVENT = 'item-handling-states:item_unwielded';
 
 /**
  * @typedef {object} UnwieldItemParams

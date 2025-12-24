@@ -1,1 +1,0 @@
-items:wielded_items := actor.components.item-handling-states:wielding.wielded_item_ids[]

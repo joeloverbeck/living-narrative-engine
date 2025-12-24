@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:reptilian_lung_left",
+  "description": "A massive reptilian left lung - oversized for large creatures like dragons",
+  "components": {
+    "core:name": {
+      "text": "left lung"
+    },
+    "core:weight": {
+      "weight": 2.5
+    },
+    "anatomy:part": {
+      "subType": "lung",
+      "orientation": "left",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
+    "breathing-states:respiratory_organ": {
+      "respirationType": "pulmonary",
+      "oxygenCapacity": 20,
+      "currentOxygen": 20
+    }
+  }
+}

@@ -58,19 +58,23 @@
     "actions": [
       "drop_item.action.json",
       "drop_wielded_item.action.json",
-      "pick_up_item.action.json"
+      "pick_up_item.action.json",
+      "unwield_item.action.json"
     ],
     "scopes": [
-      "non_wielded_inventory_items.scope"
+      "non_wielded_inventory_items.scope",
+      "wielded_items.scope"
     ],
     "conditions": [
       "event-is-action-drop-item.condition.json",
       "event-is-action-drop-wielded-item.condition.json",
-      "event-is-action-pick-up-item.condition.json"
+      "event-is-action-pick-up-item.condition.json",
+      "event-is-action-unwield-item.condition.json"
     ],
     "rules": [
       "handle_drop_item.rule.json",
-      "handle_pick_up_item.rule.json"
+      "handle_pick_up_item.rule.json",
+      "handle_unwield_item.rule.json"
     ]
   }
 }

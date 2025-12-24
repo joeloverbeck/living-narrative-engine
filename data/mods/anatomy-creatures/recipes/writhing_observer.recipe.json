@@ -240,6 +240,10 @@
           "luminosity": "faint-glow"
         }
       }
+    },
+    "respiratory_mass": {
+      "partType": "respiratory_mass",
+      "preferId": "anatomy-creatures:eldritch_respiratory_mass"
     }
   },
   "patterns": [
