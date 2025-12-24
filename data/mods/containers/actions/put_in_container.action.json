@@ -5,7 +5,7 @@
   "description": "Store an item from your inventory inside an open container",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["items:inventory"]
+    "actor": ["inventory:inventory"]
   },
   "forbidden_components": {
     "actor": [

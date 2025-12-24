@@ -170,7 +170,7 @@ describe('Music mood actions discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['lute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -336,7 +336,7 @@ describe('Music mood actions discovery', () => {
           .withName('Non-Musician Diana')
           .atLocation('room1')
           .asActor()
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['lute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -373,7 +373,7 @@ describe('Music mood actions discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: [],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -474,7 +474,7 @@ describe('Music mood actions discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['ordinary_book'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -531,7 +531,7 @@ describe('Music mood actions discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['flute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })

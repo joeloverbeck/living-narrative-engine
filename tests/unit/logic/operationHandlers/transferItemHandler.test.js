@@ -21,7 +21,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
 
 // Test Doubles

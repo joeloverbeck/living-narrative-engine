@@ -57,7 +57,7 @@ describe('item-handling:drop_item action integration', () => {
       const actor = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actor).toHaveComponentData('items:inventory', {
+      expect(actor).toHaveComponentData('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
@@ -101,7 +101,7 @@ describe('item-handling:drop_item action integration', () => {
       const actor = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actor).toHaveComponentData('items:inventory', {
+      expect(actor).toHaveComponentData('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
@@ -131,7 +131,7 @@ describe('item-handling:drop_item action integration', () => {
       let actor = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actor).toHaveComponentData('items:inventory', {
+      expect(actor).toHaveComponentData('inventory:inventory', {
         items: [secondItem.id, thirdItem.id],
       });
 
@@ -144,7 +144,7 @@ describe('item-handling:drop_item action integration', () => {
 
       await testFixture.executeAction(scenario.actor.id, secondItem.id);
       actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
-      expect(actor).toHaveComponentData('items:inventory', {
+      expect(actor).toHaveComponentData('inventory:inventory', {
         items: [thirdItem.id],
       });
 
@@ -155,7 +155,7 @@ describe('item-handling:drop_item action integration', () => {
 
       await testFixture.executeAction(scenario.actor.id, thirdItem.id);
       actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
-      expect(actor).toHaveComponentData('items:inventory', {
+      expect(actor).toHaveComponentData('inventory:inventory', {
         items: [],
       });
 
@@ -272,7 +272,7 @@ describe('item-handling:drop_item action integration', () => {
       const actor = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actor).toHaveComponentData('items:inventory', { items: [] });
+      expect(actor).toHaveComponentData('inventory:inventory', { items: [] });
     });
   });
 
@@ -294,7 +294,7 @@ describe('item-handling:drop_item action integration', () => {
         .withName('Fighter')
         .asActor()
         .withComponent('core:position', { locationId: 'tavern' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-sword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -317,7 +317,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify item was removed from inventory
       const actorAfter =
         testFixture.entityManager.getEntityInstance('test-actor');
-      expect(actorAfter).toHaveComponentData('items:inventory', { items: [] });
+      expect(actorAfter).toHaveComponentData('inventory:inventory', { items: [] });
 
       // Verify wielding component was removed (since it was the only wielded item)
       const wieldingComponent = testFixture.entityManager.getComponentData(
@@ -353,7 +353,7 @@ describe('item-handling:drop_item action integration', () => {
         .withName('Dual Wielder')
         .asActor()
         .withComponent('core:position', { locationId: 'arena' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword', 'dagger'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -377,7 +377,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify sword removed from inventory, but dagger remains
       const actorAfter =
         testFixture.entityManager.getEntityInstance('dual-wielder');
-      expect(actorAfter).toHaveComponentData('items:inventory', {
+      expect(actorAfter).toHaveComponentData('inventory:inventory', {
         items: ['dagger'],
       });
 
@@ -415,7 +415,7 @@ describe('item-handling:drop_item action integration', () => {
         .withName('Adventurer')
         .asActor()
         .withComponent('core:position', { locationId: 'camp' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['wielded-sword', 'potion'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -440,7 +440,7 @@ describe('item-handling:drop_item action integration', () => {
       // Verify potion removed from inventory, but sword remains
       const actorAfter =
         testFixture.entityManager.getEntityInstance('adventurer');
-      expect(actorAfter).toHaveComponentData('items:inventory', {
+      expect(actorAfter).toHaveComponentData('inventory:inventory', {
         items: ['wielded-sword'],
       });
 
@@ -476,7 +476,7 @@ describe('item-handling:drop_item action integration', () => {
       const actorAfter = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      expect(actorAfter).toHaveComponentData('items:inventory', { items: [] });
+      expect(actorAfter).toHaveComponentData('inventory:inventory', { items: [] });
     });
 
     it('should create position component with correct locationId', async () => {

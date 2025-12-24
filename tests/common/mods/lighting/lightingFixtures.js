@@ -52,7 +52,7 @@ export const createActorWithLightSource = (
     .withName(options.name || 'Actor')
     .asActor()
     .atLocation(options.locationId || 'lighting_room')
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: [lightSourceId],
       capacity: options.capacity || DEFAULT_CAPACITY,
     });

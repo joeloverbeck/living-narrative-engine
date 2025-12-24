@@ -53,7 +53,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Item']);
 
       // Add inventory to actor
-      scenario.actor.components['items:inventory'] = {
+      scenario.actor.components['inventory:inventory'] = {
         items: [],
         capacity: { maxWeight: 10, maxItems: 10 },
       };
@@ -93,7 +93,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Item']);
 
       // Add inventory to actor
-      scenario.actor.components['items:inventory'] = {
+      scenario.actor.components['inventory:inventory'] = {
         items: [],
         capacity: { maxWeight: 10, maxItems: 10 },
       };
@@ -142,7 +142,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Item']);
 
       // Add inventory to actor
-      scenario.actor.components['items:inventory'] = {
+      scenario.actor.components['inventory:inventory'] = {
         items: [],
         capacity: { maxWeight: 10, maxItems: 10 },
       };
@@ -182,7 +182,7 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Item']);
 
       // Add inventory to actor
-      scenario.actor.components['items:inventory'] = {
+      scenario.actor.components['inventory:inventory'] = {
         items: [],
         capacity: { maxWeight: 10, maxItems: 10 },
       };

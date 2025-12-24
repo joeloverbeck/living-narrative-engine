@@ -6,7 +6,7 @@
   "template": "disinfect my {woundedBodyPart} with {disinfectant}",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["skills:medicine_skill", "items:inventory"]
+    "actor": ["skills:medicine_skill", "inventory:inventory"]
   },
   "forbidden_components": {
     "actor": [

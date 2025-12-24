@@ -51,7 +51,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Fighter')
         .asActor()
         .withComponent('core:position', { locationId: 'tavern' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['wielded-sword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -74,7 +74,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
 
       // Verify item was removed from inventory
       const actorAfter = testFixture.entityManager.getEntityInstance('fighter');
-      expect(actorAfter).toHaveComponentData('items:inventory', { items: [] });
+      expect(actorAfter).toHaveComponentData('inventory:inventory', { items: [] });
 
       // Verify wielding component was removed (it was the only wielded item)
       const wieldingComponent = testFixture.entityManager.getComponentData(
@@ -109,7 +109,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Warrior')
         .asActor()
         .withComponent('core:position', { locationId: 'arena' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['greatsword'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -169,7 +169,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Dual Wielder')
         .asActor()
         .withComponent('core:position', { locationId: 'arena' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword', 'dagger'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -193,7 +193,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       // Verify sword removed from inventory, but dagger remains
       const actorAfter =
         testFixture.entityManager.getEntityInstance('dual-wielder');
-      expect(actorAfter).toHaveComponentData('items:inventory', {
+      expect(actorAfter).toHaveComponentData('inventory:inventory', {
         items: ['dagger'],
       });
 
@@ -227,7 +227,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Gunslinger')
         .asActor()
         .withComponent('core:position', { locationId: 'saloon' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['pistol'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -269,7 +269,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Hunter')
         .asActor()
         .withComponent('core:position', { locationId: 'cabin' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['rifle'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -313,7 +313,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
         .withName('Blacksmith')
         .asActor()
         .withComponent('core:position', { locationId: 'forge' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['axe'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

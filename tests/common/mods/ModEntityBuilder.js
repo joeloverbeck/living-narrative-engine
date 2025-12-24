@@ -160,7 +160,7 @@ function buildInventoryActor(actorOptions, roomId, itemIds, capacity) {
     capacity || DEFAULT_INVENTORY_CAPACITY
   );
 
-  builder.withComponent('items:inventory', {
+  builder.withComponent('inventory:inventory', {
     items: finalItems,
     capacity: finalCapacity,
   });

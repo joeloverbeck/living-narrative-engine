@@ -63,7 +63,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Alice')
         .atLocation('treasure-vault')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['brass-key-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -139,10 +139,10 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       // Verify item taken successfully
       const actorAfterTake =
         takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfterTake.components['items:inventory'].items).toContain(
+      expect(actorAfterTake.components['inventory:inventory'].items).toContain(
         'diamond-1'
       );
-      expect(actorAfterTake.components['items:inventory'].items).toContain(
+      expect(actorAfterTake.components['inventory:inventory'].items).toContain(
         'brass-key-1'
       ); // Still has key
 
@@ -187,10 +187,10 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
 
       const actorAfterPut =
         putFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfterPut.components['items:inventory'].items).not.toContain(
+      expect(actorAfterPut.components['inventory:inventory'].items).not.toContain(
         'diamond-1'
       );
-      expect(actorAfterPut.components['items:inventory'].items).toContain(
+      expect(actorAfterPut.components['inventory:inventory'].items).toContain(
         'brass-key-1'
       );
 
@@ -230,7 +230,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Bob')
         .atLocation('dungeon')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -264,7 +264,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       // Verify take failed - item remains in container
       const actorAfter =
         takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain(
+      expect(actorAfter.components['inventory:inventory'].items).not.toContain(
         'treasure-1'
       );
 
@@ -285,7 +285,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Charlie')
         .atLocation('storage-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -350,7 +350,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
 
       let actorState =
         takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorState.components['items:inventory'].items).toContain(
+      expect(actorState.components['inventory:inventory'].items).toContain(
         'potion-1'
       );
 
@@ -360,7 +360,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       });
 
       actorState = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorState.components['items:inventory'].items).toContain(
+      expect(actorState.components['inventory:inventory'].items).toContain(
         'potion-2'
       );
 
@@ -370,7 +370,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       });
 
       actorState = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorState.components['items:inventory'].items).toEqual([
+      expect(actorState.components['inventory:inventory'].items).toEqual([
         'potion-1',
         'potion-2',
         'potion-3',
@@ -391,7 +391,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Diana')
         .atLocation('library')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -465,7 +465,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Eve')
         .atLocation('shop')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -499,7 +499,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       // Verify take failed
       const actorAfter =
         takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain(
+      expect(actorAfter.components['inventory:inventory'].items).not.toContain(
         'apple-1'
       );
 
@@ -519,7 +519,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
         .withName('Frank')
         .atLocation('warehouse')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

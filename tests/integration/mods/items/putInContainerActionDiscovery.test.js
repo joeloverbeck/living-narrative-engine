@@ -49,7 +49,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', { items: ['item1'] })
+      .withComponent('inventory:inventory', { items: ['item1'] })
       .withGrabbingHands(2);
     const actor = actorBuilder.build();
     const handEntities = actorBuilder.getHandEntities();
@@ -126,7 +126,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', { items: [] })
+      .withComponent('inventory:inventory', { items: [] })
       .build();
 
     // Create open container at location
@@ -166,7 +166,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', { items: ['item1'] })
+      .withComponent('inventory:inventory', { items: ['item1'] })
       .build();
 
     // Create item
@@ -212,7 +212,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['item1', 'item2'],
       })
       .withGrabbingHands(2);

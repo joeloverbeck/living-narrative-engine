@@ -150,7 +150,7 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
       .atLocation('room1')
       .asActor()
       .withGrabbingHands(1)
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       });

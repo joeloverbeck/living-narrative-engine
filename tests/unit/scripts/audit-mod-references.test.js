@@ -30,7 +30,7 @@ describe('audit-mod-references reporting helpers', () => {
     sampleResults.items.push({
       file: 'src/items/demo.js',
       line: 44,
-      snippet: "entity.hasComponent('items:inventory')",
+      snippet: "entity.hasComponent('inventory:inventory')",
       severity: 'High',
       approach: 'Plugin',
     });

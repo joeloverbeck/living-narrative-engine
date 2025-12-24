@@ -270,7 +270,7 @@ class EquipClothingHandler extends ComponentOperationHandler {
     const removedFromItemsInventory = await this.#stripFromInventoryComponent(
       entityId,
       itemId,
-      'items:inventory',
+      'inventory:inventory',
       logger
     );
     const removedFromCoreInventory = await this.#stripFromInventoryComponent(
@@ -295,7 +295,7 @@ class EquipClothingHandler extends ComponentOperationHandler {
   async #placeDisplacedItem(entityId, itemId, destination, logger) {
     if (destination === 'inventory') {
       const added =
-        (await this.#addToInventory(entityId, itemId, 'items:inventory', logger)) ||
+        (await this.#addToInventory(entityId, itemId, 'inventory:inventory', logger)) ||
         (await this.#addToInventory(entityId, itemId, 'core:inventory', logger));
 
       if (added) {

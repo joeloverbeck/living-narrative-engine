@@ -38,7 +38,7 @@ function setupOpenContainerScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: actorInventory,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -375,7 +375,7 @@ describe('containers:open_container action integration', () => {
         .withName('Larry')
         .atLocation('marketplace')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -385,7 +385,7 @@ describe('containers:open_container action integration', () => {
         .withName('Mary')
         .atLocation('marketplace')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

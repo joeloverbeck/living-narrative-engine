@@ -51,7 +51,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -62,7 +62,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -90,7 +90,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
 
     let actor1After =
       dropFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor1After.components['items:inventory'].items).not.toContain(
+    expect(actor1After.components['inventory:inventory'].items).not.toContain(
       'letter-1'
     );
 
@@ -113,7 +113,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
 
     let actor2After =
       pickupFixture.entityManager.getEntityInstance('test:actor2');
-    expect(actor2After.components['items:inventory'].items).toContain(
+    expect(actor2After.components['inventory:inventory'].items).toContain(
       'letter-1'
     );
 
@@ -129,7 +129,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Charlie')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1', 'gun-1', 'key-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -170,8 +170,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
     // Verify third item still in inventory
     const actorAfter =
       dropFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actorAfter.components['items:inventory'].items).toContain('key-1');
-    expect(actorAfter.components['items:inventory'].items).toHaveLength(1);
+    expect(actorAfter.components['inventory:inventory'].items).toContain('key-1');
+    expect(actorAfter.components['inventory:inventory'].items).toHaveLength(1);
   });
 
   it('should create perception events for both drop and pickup', async () => {
@@ -180,7 +180,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withName('Diana')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

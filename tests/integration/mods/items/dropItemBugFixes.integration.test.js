@@ -109,7 +109,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -140,7 +140,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const actorAfter = testFixture.entityManager.getEntityInstance(
         'p_erotica:jon_urena_daydream_instance'
       );
-      expect(actorAfter.components['items:inventory'].items).not.toContain(
+      expect(actorAfter.components['inventory:inventory'].items).not.toContain(
         'p_erotica:yellowed_goodbye_letter_instance'
       );
 
@@ -167,7 +167,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -223,7 +223,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('Actor')
         .atLocation('location-1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -274,7 +274,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['p_erotica:yellowed_goodbye_letter_instance'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -305,7 +305,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const actorAfter = testFixture.entityManager.getEntityInstance(
         'p_erotica:jon_urena_daydream_instance'
       );
-      expect(actorAfter.components['items:inventory'].items).not.toContain(
+      expect(actorAfter.components['inventory:inventory'].items).not.toContain(
         'p_erotica:yellowed_goodbye_letter_instance'
       );
 

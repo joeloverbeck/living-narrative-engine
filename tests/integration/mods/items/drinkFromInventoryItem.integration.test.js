@@ -28,7 +28,7 @@ describe('Drink From - Inventory Items Integration', () => {
       ]);
 
       // Add bottle to actor's inventory
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -81,7 +81,7 @@ describe('Drink From - Inventory Items Integration', () => {
         'Nearly Empty Bottle',
       ]);
 
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -128,7 +128,7 @@ describe('Drink From - Inventory Items Integration', () => {
         maxHydration: 100,
       });
 
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -178,7 +178,7 @@ describe('Drink From - Inventory Items Integration', () => {
       });
 
       // Bottle in inventory - NO position component
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });

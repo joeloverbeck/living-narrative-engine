@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "patrol:eldritch_dimension_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": [],
       "capacity": {
         "maxWeight": 50.0,

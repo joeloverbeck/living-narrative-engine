@@ -147,7 +147,7 @@ describe('containers:put_in_container prerequisites', () => {
         'items:actor_inventory_items'
       );
       expect(putInContainerAction.required_components.actor).toContain(
-        'items:inventory'
+        'inventory:inventory'
       );
     });
   });

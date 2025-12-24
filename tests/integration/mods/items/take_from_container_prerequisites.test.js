@@ -140,7 +140,7 @@ describe('containers:take_from_container prerequisites', () => {
         'take {secondary.name} from {primary.name}'
       );
       expect(takeFromContainerAction.required_components.actor).toContain(
-        'items:inventory'
+        'inventory:inventory'
       );
       expect(takeFromContainerAction.forbidden_components.actor).toContain(
         'sitting-states:sitting_on'

@@ -165,7 +165,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } }, // Will be populated by createEntity
+        { componentId: 'inventory:inventory', data: { items: [] } }, // Will be populated by createEntity
       ],
     });
 
@@ -181,7 +181,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
     });
 
     // Add hacksaw to inventory
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).toContainAction(ACTION_ID);
@@ -226,7 +226,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -241,7 +241,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
       ],
     });
 
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).toContainAction(ACTION_ID);
@@ -272,7 +272,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -305,7 +305,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -316,7 +316,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
       ],
     });
 
-    await fixture.modifyComponent(actorId, 'items:inventory', {
+    await fixture.modifyComponent(actorId, 'inventory:inventory', {
       items: [swordId],
     });
 
@@ -350,7 +350,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -362,7 +362,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -394,7 +394,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -406,7 +406,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -438,7 +438,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -450,7 +450,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -483,7 +483,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -495,7 +495,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -528,7 +528,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -540,7 +540,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -573,7 +573,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -585,7 +585,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).not.toContainAction(ACTION_ID);
@@ -618,7 +618,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -630,7 +630,7 @@ describe('breaching:saw_through_barred_blocker_stage_three Action Discovery', ()
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
     });
-    await fixture.modifyComponent(actorId, 'items:inventory', { items: [hacksawId] });
+    await fixture.modifyComponent(actorId, 'inventory:inventory', { items: [hacksawId] });
 
     const actions = await fixture.discoverActions(actorId);
     expect(actions).toContainAction(ACTION_ID);

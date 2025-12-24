@@ -148,7 +148,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
           const inventory = fixture.testEnv.entityManager.getComponentData(
             actorId,
-            'items:inventory'
+            'inventory:inventory'
           );
           const itemIds = inventory?.items || [];
 
@@ -219,7 +219,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
       .atLocation(ROOM_ID)
       .withLocationComponent(ROOM_ID)
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['items:antiseptic_bottle'],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
@@ -445,7 +445,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
       'items:disinfectant_liquids_in_inventory'
     );
     expect(disinfectAction.required_components.actor).toEqual(
-      expect.arrayContaining(['skills:medicine_skill', 'items:inventory'])
+      expect.arrayContaining(['skills:medicine_skill', 'inventory:inventory'])
     );
     expect(disinfectAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([

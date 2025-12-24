@@ -9,7 +9,7 @@
       },
       {
         "!!": {
-          "var": "actor.components.items:inventory.items"
+          "var": "actor.components.inventory:inventory.items"
         }
       },
       {
@@ -31,7 +31,7 @@
             ]
           },
           {
-            "var": "actor.components.items:inventory.items"
+            "var": "actor.components.inventory:inventory.items"
           }
         ]
       }

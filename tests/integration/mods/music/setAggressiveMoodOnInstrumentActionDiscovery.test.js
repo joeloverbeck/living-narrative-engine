@@ -100,7 +100,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['lute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -132,7 +132,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['guitar_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -245,7 +245,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .withName('Non-Musician')
           .atLocation('room1')
           .asActor()
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['lute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -279,7 +279,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: [],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -304,7 +304,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: [],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -413,7 +413,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['book_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -444,7 +444,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['random_item'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -488,7 +488,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['flute_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })
@@ -529,7 +529,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('music:is_musician', {})
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['trumpet_1'],
             capacity: { maxWeight: 50, maxItems: 10 },
           })

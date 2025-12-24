@@ -34,7 +34,7 @@ function setupPickUpItemScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: existingInventory,
       capacity: actorCapacity,
     })
@@ -80,7 +80,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
       // Assert: Verify item added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('letter-1');
+      expect(actor.components['inventory:inventory'].items).toContain('letter-1');
 
       // Assert: Verify item no longer has position component
       const item = testFixture.entityManager.getEntityInstance('letter-1');
@@ -109,10 +109,10 @@ describe('item-handling:pick_up_item action integration', () => {
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Verify item added
-      expect(actor.components['items:inventory'].items).toContain('revolver-1');
+      expect(actor.components['inventory:inventory'].items).toContain('revolver-1');
 
       // Verify capacity preserved
-      expect(actor.components['items:inventory'].capacity).toEqual({
+      expect(actor.components['inventory:inventory'].capacity).toEqual({
         maxWeight: 50,
         maxItems: 10,
       });
@@ -138,11 +138,11 @@ describe('item-handling:pick_up_item action integration', () => {
       await testFixture.executeAction('test:actor1', 'rope-1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain(
+      expect(actor.components['inventory:inventory'].items).toContain(
         'horseshoe-1'
       );
-      expect(actor.components['items:inventory'].items).toContain('rope-1');
-      expect(actor.components['items:inventory'].items).toHaveLength(2);
+      expect(actor.components['inventory:inventory'].items).toContain('rope-1');
+      expect(actor.components['inventory:inventory'].items).toHaveLength(2);
     });
 
     it('adds to existing inventory', async () => {
@@ -159,14 +159,14 @@ describe('item-handling:pick_up_item action integration', () => {
       await testFixture.executeAction('test:actor1', 'gold-bar-1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toHaveLength(3);
-      expect(actor.components['items:inventory'].items).toContain(
+      expect(actor.components['inventory:inventory'].items).toHaveLength(3);
+      expect(actor.components['inventory:inventory'].items).toContain(
         'existing-item-1'
       );
-      expect(actor.components['items:inventory'].items).toContain(
+      expect(actor.components['inventory:inventory'].items).toContain(
         'existing-item-2'
       );
-      expect(actor.components['items:inventory'].items).toContain('gold-bar-1');
+      expect(actor.components['inventory:inventory'].items).toContain('gold-bar-1');
     });
   });
 
@@ -185,7 +185,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'heavy-rock-1'
       );
 
@@ -218,10 +218,10 @@ describe('item-handling:pick_up_item action integration', () => {
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'one-more-item'
       );
-      expect(actor.components['items:inventory'].items).toHaveLength(10);
+      expect(actor.components['inventory:inventory'].items).toHaveLength(10);
     });
   });
 
@@ -362,7 +362,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
       // First, the item is in inventory (already set up)
       let actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('letter-1');
+      expect(actor.components['inventory:inventory'].items).toContain('letter-1');
 
       // Drop it (would need drop_item action, but we can simulate)
       // For this test, we'll manually set up the "dropped" state
@@ -378,7 +378,7 @@ describe('item-handling:pick_up_item action integration', () => {
         .withName('Grace')
         .atLocation('cabin')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -390,7 +390,7 @@ describe('item-handling:pick_up_item action integration', () => {
       await testFixture.executeAction('test:actor1', 'letter-1');
 
       actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('letter-1');
+      expect(actor.components['inventory:inventory'].items).toContain('letter-1');
 
       const item = testFixture.entityManager.getEntityInstance('letter-1');
       expect(item.components['core:position']).toBeUndefined();
@@ -405,7 +405,7 @@ describe('item-handling:pick_up_item action integration', () => {
         .withName('Alice')
         .atLocation('saloon1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -434,7 +434,7 @@ describe('item-handling:pick_up_item action integration', () => {
         .withName('Bob')
         .atLocation('saloon1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 1, maxItems: 10 }, // Very low weight capacity
         })
@@ -471,7 +471,7 @@ describe('item-handling:pick_up_item action integration', () => {
         .withName('Charlie')
         .atLocation('tavern')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item-1', 'item-2'],
           capacity: { maxWeight: 50, maxItems: 2 }, // At max items
         })
@@ -498,7 +498,7 @@ describe('item-handling:pick_up_item action integration', () => {
       // Verify item not added to inventory
       const actorAfter =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain(
+      expect(actorAfter.components['inventory:inventory'].items).not.toContain(
         'item-3'
       );
     });

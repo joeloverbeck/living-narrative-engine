@@ -71,7 +71,7 @@ function setupPutOnSurfaceScenario({
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: actorInventory,
       capacity: { maxWeight: 100, maxItems: 20 },
     })
@@ -162,7 +162,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Assert: Verify item removed from actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'apple-1'
       );
 
@@ -239,7 +239,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify inventory now empty
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual([]);
+      expect(actor.components['inventory:inventory'].items).toEqual([]);
 
       // Verify item in container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
@@ -287,7 +287,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify inventory has only one item left
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual(['emerald-1']);
+      expect(actor.components['inventory:inventory'].items).toEqual(['emerald-1']);
     });
 
     it('adds item to container with existing contents', async () => {
@@ -358,7 +358,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify item still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('sword-1');
+      expect(actor.components['inventory:inventory'].items).toContain('sword-1');
 
       // Verify turn ended with failure
       const turnEndedEvent = testFixture.events.find(
@@ -430,7 +430,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify item still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('book-1');
+      expect(actor.components['inventory:inventory'].items).toContain('book-1');
     });
 
     it('prevents putting item not in inventory', async () => {
@@ -460,7 +460,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify original item still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('diary-1');
+      expect(actor.components['inventory:inventory'].items).toContain('diary-1');
     });
   });
 
@@ -653,7 +653,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
         .withName('Nancy')
         .atLocation('inn')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -670,7 +670,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
         .withName('Oscar')
         .atLocation('inn')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['bread-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -715,7 +715,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
       });
       const actor1After =
         testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor1After.components['items:inventory'].items).not.toContain(
+      expect(actor1After.components['inventory:inventory'].items).not.toContain(
         'apple-1'
       );
 
@@ -727,7 +727,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
       });
       const actor2After =
         testFixture.entityManager.getEntityInstance('actor-2');
-      expect(actor2After.components['items:inventory'].items).not.toContain(
+      expect(actor2After.components['inventory:inventory'].items).not.toContain(
         'bread-1'
       );
 

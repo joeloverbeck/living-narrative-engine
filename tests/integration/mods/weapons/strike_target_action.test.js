@@ -39,7 +39,7 @@ describe('strike_target action', () => {
         .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['practice-stick'],
         })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['practice-stick'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -72,7 +72,7 @@ describe('strike_target action', () => {
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
         .withComponent('item-handling-states:wielding', { wielded_item_ids: ['club'] })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['club'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -107,7 +107,7 @@ describe('strike_target action', () => {
         .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['heavy-mace'],
         })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['heavy-mace'],
           capacity: { maxWeight: 20, maxItems: 5 },
         })
@@ -149,7 +149,7 @@ describe('strike_target action', () => {
         .withComponent('item-handling-states:wielding', {
           wielded_item_ids: ['spiked-mace'],
         })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['spiked-mace'],
           capacity: { maxWeight: 20, maxItems: 5 },
         })

@@ -188,7 +188,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -209,7 +209,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
       ],
     });
 
-    await fixture.modifyComponent(actorId, 'items:inventory', {
+    await fixture.modifyComponent(actorId, 'inventory:inventory', {
       items: [toolOne, toolTwo],
     });
 
@@ -264,7 +264,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
       ],
     });
 
@@ -277,7 +277,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
       ],
     });
 
-    await fixture.modifyComponent(actorId, 'items:inventory', {
+    await fixture.modifyComponent(actorId, 'inventory:inventory', {
       items: [toolId],
     });
 
@@ -339,7 +339,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
         { componentId: 'core:actor', data: {} },
         { componentId: 'core:position', data: { locationId } },
         { componentId: 'skills:craft_skill', data: { value: 60 } },
-        { componentId: 'items:inventory', data: { items: [] } },
+        { componentId: 'inventory:inventory', data: { items: [] } },
         {
           componentId: 'item-handling-states:wielding',
           data: { wielded_item_ids: [] },
@@ -356,7 +356,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
       ],
     });
 
-    await fixture.modifyComponent(actorId, 'items:inventory', {
+    await fixture.modifyComponent(actorId, 'inventory:inventory', {
       items: [toolId],
     });
     await fixture.modifyComponent(actorId, 'item-handling-states:wielding', {
@@ -379,7 +379,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     const actorAfter = fixture.entityManager.getEntityInstance(actorId);
     const inventoryAfter = fixture.entityManager.getComponentData(
       actorId,
-      'items:inventory'
+      'inventory:inventory'
     );
     const toolAfter = fixture.entityManager.getEntityInstance(toolId);
 

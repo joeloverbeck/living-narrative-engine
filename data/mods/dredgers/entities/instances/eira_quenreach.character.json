@@ -6,7 +6,7 @@
       "core:position": {
         "locationId": "dredgers:concordance_salon_instance"
       },
-      "items:inventory": {
+      "inventory:inventory": {
         "items": [
         ],
         "capacity": {

@@ -23,7 +23,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
 
 /**

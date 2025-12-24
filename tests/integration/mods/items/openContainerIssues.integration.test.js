@@ -36,7 +36,7 @@ describe('Open Container Issues - Integration', () => {
       .withName('Test Actor')
       .atLocation(locationId)
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 100, maxItems: 10 },
       })
@@ -145,7 +145,7 @@ describe('Open Container Issues - Integration', () => {
         .withName('Test Actor')
         .atLocation(locationId)
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 100, maxItems: 10 },
         })

@@ -81,7 +81,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
 
           const { entityManager } = testEnv;
           const inventory =
-            entityManager.getComponentData(actorId, 'items:inventory')?.items ||
+            entityManager.getComponentData(actorId, 'inventory:inventory')?.items ||
             [];
 
           const anchors = new Set();
@@ -153,7 +153,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
       .withLocationComponent('room1')
       .asActor()
       .withComponent('skills:warding_skill', { value: 40 })
-      .withComponent('items:inventory', { items: [anchor.id], capacity: 3 });
+      .withComponent('inventory:inventory', { items: [anchor.id], capacity: 3 });
 
     const actor = actorBuilder.build();
 
@@ -235,7 +235,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
         .withComponent('warding:is_spiritual_anchor', {})
         .build();
 
-      actor.withComponent('items:inventory', {
+      actor.withComponent('inventory:inventory', {
         items: [anchor.id],
         capacity: 3,
       });
@@ -284,7 +284,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
         .withComponent('items-core:item', {})
         .build();
 
-      actor.withComponent('items:inventory', {
+      actor.withComponent('inventory:inventory', {
         items: [mundaneItem.id],
         capacity: 3,
       });

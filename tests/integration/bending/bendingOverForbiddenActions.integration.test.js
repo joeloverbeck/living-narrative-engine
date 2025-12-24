@@ -141,7 +141,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .atLocation('test:room')
         .asActor()
         .withComponent('bending-states:bending_over', { surface_id: 'test:table' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test:item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -151,7 +151,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .withName('Bob')
         .atLocation('test:room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -193,7 +193,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .atLocation('test:room')
         .asActor()
         .withComponent('bending-states:bending_over', { surface_id: 'test:table' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

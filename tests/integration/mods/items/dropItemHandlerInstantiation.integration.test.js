@@ -22,7 +22,7 @@ function createCompleteScenario() {
     .withName('Worker')
     .atLocation('room-1')
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: ['crate-1'],
       capacity: { maxWeight: 100, maxItems: 20 },
     })
@@ -109,7 +109,7 @@ describe('DropItemAtLocationHandler instantiation', () => {
 
       // Verify item was dropped
       const actor = testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'crate-1'
       );
 

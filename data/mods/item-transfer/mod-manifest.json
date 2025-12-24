@@ -28,6 +28,10 @@
     {
       "id": "bending-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "inventory",
+      "version": "^1.0.0"
     }
   ],
   "content": {

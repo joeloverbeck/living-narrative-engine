@@ -61,7 +61,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item1'],
           capacity: { maxWeight: 10, maxItems: 10 },
         })
@@ -109,7 +109,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item1'],
           capacity: { maxWeight: 10, maxItems: 10 },
         })
@@ -158,7 +158,7 @@ describe('containers:put_in_container - Forbidden components validation', () => 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item1'],
           capacity: { maxWeight: 10, maxItems: 10 },
         })

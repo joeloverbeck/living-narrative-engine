@@ -10,7 +10,7 @@ const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const VITAL_ORGAN_COMPONENT_ID = 'anatomy:vital_organ';
 const BLEEDING_COMPONENT_ID = 'anatomy:bleeding';
 const DISMEMBERED_COMPONENT_ID = 'anatomy:dismembered';
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const NAME_COMPONENT_ID = 'core:name';
 const CONSPICUOUS_COMPONENT_ID = 'core:conspicuous';
 

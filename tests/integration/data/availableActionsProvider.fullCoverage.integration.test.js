@@ -325,7 +325,7 @@ describe('AvailableActionsProvider integration coverage', () => {
     expect(orchestrator.callHistory).toHaveLength(3);
 
     await eventBus.dispatch(COMPONENTS_BATCH_ADDED_ID, {
-      componentTypeIds: ['items:inventory', 'stats:health'],
+      componentTypeIds: ['inventory:inventory', 'stats:health'],
     });
     await provider.get(actor, nextContext, logger);
     expect(orchestrator.callHistory).toHaveLength(4);

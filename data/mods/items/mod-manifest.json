@@ -14,6 +14,10 @@
       "version": "1.0.0"
     },
     {
+      "id": "inventory",
+      "version": "^1.0.0"
+    },
+    {
       "id": "physical-control-states",
       "version": "^1.0.0"
     },
@@ -46,7 +50,6 @@
       "can_apply_lipstick.component.json",
       "drinkable.component.json",
       "empty.component.json",
-      "inventory.component.json",
       "readable.component.json"
     ],
     "actions": [
@@ -92,9 +95,6 @@
     "events": [
       "aim_lowered.event.json",
       "item_aimed.event.json",
-      "item_dropped.event.json",
-      "item_picked_up.event.json",
-      "item_transferred.event.json",
       "item_unwielded.event.json",
       "liquid_consumed.event.json",
       "liquid_consumed_entirely.event.json"

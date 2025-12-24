@@ -10,10 +10,6 @@
       "version": "1.0.0"
     },
     {
-      "id": "items",
-      "version": "^1.0.0"
-    },
-    {
       "id": "descriptors",
       "version": "^1.0.0"
     },
@@ -27,6 +23,10 @@
     },
     {
       "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "inventory",
       "version": "^1.0.0"
     }
   ],

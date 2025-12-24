@@ -93,7 +93,7 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test_item_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -141,7 +141,7 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -193,7 +193,7 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('Lonely')
         .atLocation('empty_location')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -217,7 +217,7 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('Charlie')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['incomplete_item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -247,7 +247,7 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('Diana')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['item1', 'item2'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

@@ -88,7 +88,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Test Actor')
         .atLocation('verification-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['owned-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -274,7 +274,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Charlie')
         .atLocation('study')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -284,7 +284,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Diana')
         .atLocation('study')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -404,7 +404,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const actor2AfterPut =
         fixtures.put.entityManager.getEntityInstance('actor-2');
-      expect(actor2AfterPut.components['items:inventory'].items).not.toContain(
+      expect(actor2AfterPut.components['inventory:inventory'].items).not.toContain(
         'book-1'
       );
 
@@ -425,7 +425,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Merchant')
         .atLocation('marketplace')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['silver-key'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -435,7 +435,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withName('Customer')
         .atLocation('marketplace')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -486,7 +486,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       let customerState =
         fixtures.give.entityManager.getEntityInstance('customer');
-      expect(customerState.components['items:inventory'].items).toContain(
+      expect(customerState.components['inventory:inventory'].items).toContain(
         'silver-key'
       );
 
@@ -541,10 +541,10 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       });
 
       customerState = fixtures.take.entityManager.getEntityInstance('customer');
-      expect(customerState.components['items:inventory'].items).toContain(
+      expect(customerState.components['inventory:inventory'].items).toContain(
         'rare-item'
       );
-      expect(customerState.components['items:inventory'].items).toContain(
+      expect(customerState.components['inventory:inventory'].items).toContain(
         'silver-key'
       );
 
@@ -563,16 +563,16 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const finalMerchant =
         fixtures.give.entityManager.getEntityInstance('merchant');
-      expect(finalMerchant.components['items:inventory'].items).toContain(
+      expect(finalMerchant.components['inventory:inventory'].items).toContain(
         'silver-key'
       );
 
       const finalCustomer =
         fixtures.give.entityManager.getEntityInstance('customer');
-      expect(finalCustomer.components['items:inventory'].items).toContain(
+      expect(finalCustomer.components['inventory:inventory'].items).toContain(
         'rare-item'
       );
-      expect(finalCustomer.components['items:inventory'].items).not.toContain(
+      expect(finalCustomer.components['inventory:inventory'].items).not.toContain(
         'silver-key'
       );
     });

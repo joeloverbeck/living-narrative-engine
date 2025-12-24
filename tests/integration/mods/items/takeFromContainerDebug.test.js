@@ -44,7 +44,7 @@ describe('DEBUG: take_from_container rule matching', () => {
       .withName('Actor')
       .atLocation('room1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -180,7 +180,7 @@ describe('DEBUG: take_from_container rule matching', () => {
     );
     console.log(
       'Actor inventory:',
-      actorAfter.components['items:inventory'].items
+      actorAfter.components['inventory:inventory'].items
     );
 
     // Check if rule executed (should have more than just attempt_action)
@@ -194,6 +194,6 @@ describe('DEBUG: take_from_container rule matching', () => {
 
     // The test will PASS if the item was moved (rule executed successfully)
     expect(containerAfter.components['containers-core:container'].contents).toEqual([]);
-    expect(actorAfter.components['items:inventory'].items).toContain('item1');
+    expect(actorAfter.components['inventory:inventory'].items).toContain('item1');
   });
 });

@@ -189,7 +189,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         3,
         'actor-123',
-        'items:inventory'
+        'inventory:inventory'
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Actor does not have required key',
@@ -216,7 +216,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         3,
         'actor-123',
-        'items:inventory'
+        'inventory:inventory'
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Actor does not have required key',

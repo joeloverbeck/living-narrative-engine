@@ -295,7 +295,7 @@ describe('AvailableActionsProvider additional branches', () => {
 
     batchChangeHandler({
       payload: {
-        componentTypeIds: ['npc:emotion', 'items:inventory'],
+        componentTypeIds: ['npc:emotion', 'inventory:inventory'],
       },
     });
 

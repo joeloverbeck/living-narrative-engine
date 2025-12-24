@@ -58,7 +58,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       'sitting-states:sitting_on'
     );
     expect(takeFromNearbySurfaceAction.required_components.actor).toContain(
-      'items:inventory'
+      'inventory:inventory'
     );
   });
 
@@ -122,7 +122,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -189,7 +189,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -239,7 +239,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Bob')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -293,7 +293,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -346,7 +346,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -398,7 +398,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -480,7 +480,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -549,7 +549,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
         .withName('Alice')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

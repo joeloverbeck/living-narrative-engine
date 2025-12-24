@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:aldous_kitchen_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": ["fantasy:threadscar_melissa_longsword_instance"],
       "capacity": {
         "maxWeight": 50.0,

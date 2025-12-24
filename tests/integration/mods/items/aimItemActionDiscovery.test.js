@@ -57,7 +57,7 @@ describe('items:aim_item action definition', () => {
   it('should require actor to have inventory', () => {
     expect(aimItemAction.required_components).toBeDefined();
     expect(aimItemAction.required_components.actor).toEqual([
-      'items:inventory',
+      'inventory:inventory',
     ]);
   });
 });

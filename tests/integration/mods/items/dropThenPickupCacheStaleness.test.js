@@ -78,7 +78,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -130,7 +130,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -205,7 +205,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -259,7 +259,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -310,7 +310,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1', 'gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

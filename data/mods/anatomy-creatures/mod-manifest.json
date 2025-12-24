@@ -12,11 +12,15 @@
       "version": "^1.0.0"
     },
     {
-      "id": "descriptors",
+      "id": "breathing-states",
       "version": "^1.0.0"
     },
     {
       "id": "damage-types",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
       "version": "^1.0.0"
     }
   ],
@@ -144,6 +148,8 @@
         "feline_eye_amber_slit.entity.json",
         "feline_eye_gold_slit.entity.json",
         "feline_eye_ice_blue_slit.entity.json",
+        "feline_lung_left.entity.json",
+        "feline_lung_right.entity.json",
         "horse_tail.entity.json",
         "hyena_ear.entity.json",
         "hyena_eye.entity.json",

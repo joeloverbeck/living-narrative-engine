@@ -197,7 +197,7 @@ describe('observation:examine_item_in_location action definition', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test_item_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

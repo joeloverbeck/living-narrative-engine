@@ -33,7 +33,7 @@ function setupDrinkingScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: [containerId],
       capacity: { maxWeight: 50, maxItems: 10 },
     })

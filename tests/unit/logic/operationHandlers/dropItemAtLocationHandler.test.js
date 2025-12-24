@@ -87,11 +87,11 @@ describe('DropItemAtLocationHandler', () => {
     expect(result).toEqual({ success: false, error: 'no_inventory' });
     expect(entityManager.getComponentData).toHaveBeenCalledWith(
       'actor-123',
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(logger.warn).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: [DROP_ITEM] No inventory component on actor',
-      { actorEntity: 'actor-123', componentType: 'items:inventory' }
+      { actorEntity: 'actor-123', componentType: 'inventory:inventory' }
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -131,13 +131,13 @@ describe('DropItemAtLocationHandler', () => {
     expect(result).toEqual({ success: true });
     expect(entityManager.getComponentData).toHaveBeenCalledWith(
       'actor-123',
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
       [
         {
           instanceId: 'actor-123',
-          componentTypeId: 'items:inventory',
+          componentTypeId: 'inventory:inventory',
           componentData: {
             items: ['item-123'],
             capacity: 10,
@@ -172,7 +172,7 @@ describe('DropItemAtLocationHandler', () => {
 
     entityManager.getComponentData.mockImplementation(
       (entityId, componentId) => {
-        if (entityId === 'actor-123' && componentId === 'items:inventory') {
+        if (entityId === 'actor-123' && componentId === 'inventory:inventory') {
           return { items: ['item-999'], capacity: 3 };
         }
         return null;

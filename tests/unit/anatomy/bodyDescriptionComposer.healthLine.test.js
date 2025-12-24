@@ -67,12 +67,12 @@ describe('BodyDescriptionComposer - Health Line', () => {
     return {
       id: 'entity-1',
       hasComponent: (componentId) =>
-        componentId === 'anatomy:body' || componentId === 'items:inventory',
+        componentId === 'anatomy:body' || componentId === 'inventory:inventory',
       getComponentData: (componentId) => {
         if (componentId === 'anatomy:body') {
           return { body: { root: 'root' } };
         }
-        if (componentId === 'items:inventory') {
+        if (componentId === 'inventory:inventory') {
           return { items: ['item-1'] };
         }
         return null;

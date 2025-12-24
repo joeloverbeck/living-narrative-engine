@@ -956,7 +956,7 @@ export class ScopeResolverHelpers {
       'items:actor_inventory_items': this.createComponentLookupResolver(
         'items:actor_inventory_items',
         {
-          componentType: 'items:inventory',
+          componentType: 'inventory:inventory',
           sourceField: 'items',
           contextSource: 'actor',
         }

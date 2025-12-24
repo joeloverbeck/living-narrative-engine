@@ -27,7 +27,7 @@ function createDropScenario() {
     .withName('TestActor')
     .atLocation('location-1')
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: ['item-1'],
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -122,7 +122,7 @@ describe('drop_item action handler instantiation and execution', () => {
 
       // Verify item was dropped from inventory
       const actor = testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor.components['items:inventory'].items).not.toContain('item-1');
+      expect(actor.components['inventory:inventory'].items).not.toContain('item-1');
 
       // Verify item has position at location
       const item = testFixture.entityManager.getEntityInstance('item-1');

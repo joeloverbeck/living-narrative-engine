@@ -40,7 +40,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -73,7 +73,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -104,7 +104,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -137,7 +137,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -170,7 +170,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('John Smith')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -208,7 +208,7 @@ describe('quickly_wield_weapon action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['existing-sword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })

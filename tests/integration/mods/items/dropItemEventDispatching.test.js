@@ -42,7 +42,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Alice')
         .atLocation('test-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -86,7 +86,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Bob')
         .atLocation('saloon')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['golden-watch'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -132,7 +132,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Charlie')
         .atLocation('tavern')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['letter'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -179,7 +179,7 @@ describe('Drop Item - Event Dispatching', () => {
         .withName('Diana')
         .atLocation('kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['spoon'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

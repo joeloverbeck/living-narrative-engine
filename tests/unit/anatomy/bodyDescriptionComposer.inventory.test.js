@@ -42,11 +42,11 @@ describe('BodyDescriptionComposer - Inventory', () => {
     const actor = {
       id: 'actor1',
       hasComponent: jest.fn().mockImplementation((id) => {
-        return id === 'items:inventory' || id === 'anatomy:body';
+        return id === 'inventory:inventory' || id === 'anatomy:body';
       }),
       getComponentData: jest.fn().mockImplementation((id) => {
         if (id === 'anatomy:body') return { body: { root: 'torso' } };
-        if (id === 'items:inventory') {
+        if (id === 'inventory:inventory') {
           return { items: ['item1', 'item2'] };
         }
         return null;
@@ -85,11 +85,11 @@ describe('BodyDescriptionComposer - Inventory', () => {
     const actor = {
       id: 'actor1',
       hasComponent: jest.fn().mockImplementation((id) => {
-        return id === 'items:inventory' || id === 'anatomy:body';
+        return id === 'inventory:inventory' || id === 'anatomy:body';
       }),
       getComponentData: jest.fn().mockImplementation((id) => {
         if (id === 'anatomy:body') return { body: { root: 'torso' } };
-        if (id === 'items:inventory') {
+        if (id === 'inventory:inventory') {
           return { items: ['item2'] };
         }
         return null;

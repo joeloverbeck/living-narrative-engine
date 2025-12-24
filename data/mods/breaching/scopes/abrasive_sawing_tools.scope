@@ -1,6 +1,6 @@
 // Scope: breaching:abrasive_sawing_tools
 // Description: Finds inventory items that can be used for abrasive sawing (e.g., hacksaws)
 
-breaching:abrasive_sawing_tools := actor.components.items:inventory.items[][{
+breaching:abrasive_sawing_tools := actor.components.inventory:inventory.items[][{
   "!!": { "var": "entity.components.breaching:allows_abrasive_sawing" }
 }]

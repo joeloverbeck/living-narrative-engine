@@ -282,9 +282,9 @@ describe('first-aid:treat_wounded_part action definition', () => {
     expect(treatAction.required_components.actor).toEqual(
       expect.arrayContaining(['skills:medicine_skill'])
     );
-    // No items:inventory requirement (unlike disinfect)
+    // No inventory:inventory requirement (unlike disinfect)
     expect(treatAction.required_components.actor).not.toContain(
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(treatAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([

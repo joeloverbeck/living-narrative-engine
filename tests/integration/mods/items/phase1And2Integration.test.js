@@ -63,7 +63,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -73,7 +73,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -96,7 +96,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
 
     let actor2AfterGive =
       giveFixture.entityManager.getEntityInstance('test:actor2');
-    expect(actor2AfterGive.components['items:inventory'].items).toContain(
+    expect(actor2AfterGive.components['inventory:inventory'].items).toContain(
       'letter-1'
     );
 
@@ -136,7 +136,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
 
     let actor1AfterPickup =
       pickupFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor1AfterPickup.components['items:inventory'].items).toContain(
+    expect(actor1AfterPickup.components['inventory:inventory'].items).toContain(
       'letter-1'
     );
 
@@ -155,7 +155,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Alice')
       .atLocation('marketplace')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['gold-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -166,7 +166,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Bob')
       .atLocation('marketplace')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['silver-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -175,7 +175,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       .withName('Charlie')
       .atLocation('marketplace')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -265,12 +265,12 @@ describe('Items - Phase 1 and 2 Integration', () => {
     const actor3Final =
       pickupFixture.entityManager.getEntityInstance('test:actor3');
 
-    expect(actor1Final.components['items:inventory'].items).toEqual([]);
-    expect(actor2Final.components['items:inventory'].items).toEqual([]);
-    expect(actor3Final.components['items:inventory'].items).toContain(
+    expect(actor1Final.components['inventory:inventory'].items).toEqual([]);
+    expect(actor2Final.components['inventory:inventory'].items).toEqual([]);
+    expect(actor3Final.components['inventory:inventory'].items).toContain(
       'silver-1'
     );
-    expect(actor3Final.components['items:inventory'].items).toContain('gold-1');
-    expect(actor3Final.components['items:inventory'].items).toHaveLength(2);
+    expect(actor3Final.components['inventory:inventory'].items).toContain('gold-1');
+    expect(actor3Final.components['inventory:inventory'].items).toHaveLength(2);
   });
 });

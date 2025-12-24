@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:aldous_kitchen_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": [
         "fantasy:coop_key_instance",
         "fantasy:containment_vessel_instance"

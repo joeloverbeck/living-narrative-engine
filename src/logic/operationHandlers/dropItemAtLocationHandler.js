@@ -25,7 +25,7 @@ import {
 } from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
 const ITEM_DROPPED_EVENT = 'items-core:item_dropped';
 

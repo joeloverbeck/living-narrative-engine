@@ -101,7 +101,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'actor-1',
         components: {
           'core:actor': { name: 'Medic' },
-          'items:inventory': {
+          'inventory:inventory': {
             items: [
               'items:antiseptic_bottle',
               'items:saline_vial',
@@ -176,7 +176,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'actor-2',
         components: {
           'core:actor': { name: 'Helper' },
-          'items:inventory': {
+          'inventory:inventory': {
             items: ['items:plain_water', 'items:empty_jar'],
             capacity: { maxWeight: 50, maxItems: 10 },
           },

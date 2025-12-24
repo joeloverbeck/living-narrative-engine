@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:inventory",
+  "id": "inventory:inventory",
   "description": "Collection of items an entity is carrying",
   "dataSchema": {
     "type": "object",

@@ -1,4 +1,4 @@
-locks:keys_for_blocker := actor.components.items:inventory.items[{"==": [
+locks:keys_for_blocker := actor.components.inventory:inventory.items[{"==": [
   {"or": [
     {"var": "entity.id"},
     {"var": "entity"},

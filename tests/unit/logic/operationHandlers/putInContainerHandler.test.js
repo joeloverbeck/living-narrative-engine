@@ -78,7 +78,7 @@ describe('PutInContainerHandler', () => {
         [
           expect.objectContaining({
             instanceId: 'actor1',
-            componentTypeId: 'items:inventory',
+            componentTypeId: 'inventory:inventory',
             componentData: expect.objectContaining({
               items: ['item2'],
             }),

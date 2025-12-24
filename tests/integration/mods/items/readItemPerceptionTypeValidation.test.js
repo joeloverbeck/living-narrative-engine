@@ -34,7 +34,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Test Actor')
       .atLocation('test_room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test_letter'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -107,7 +107,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Test Actor')
       .atLocation('test_room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test_note'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -151,7 +151,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Reader')
       .atLocation('library')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['book'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

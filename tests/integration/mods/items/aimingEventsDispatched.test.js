@@ -46,7 +46,7 @@ describe('Items Mod - Aiming Events', () => {
     });
 
     // Add required components for aiming
-    aimFixture.entityManager.addComponent(actor.id, 'items:inventory', {
+    aimFixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
       items: [pistolId],
       maxWeightKg: 50,
     });
@@ -105,7 +105,7 @@ describe('Items Mod - Aiming Events', () => {
     });
 
     // Add required components
-    lowerAimFixture.entityManager.addComponent(actor.id, 'items:inventory', {
+    lowerAimFixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
       items: [pistolId],
       maxWeightKg: 50,
     });

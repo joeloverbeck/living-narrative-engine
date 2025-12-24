@@ -30,7 +30,7 @@ function buildScenario({
     .withName('Riley')
     .asActor()
     .atLocation(roomId)
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: actorInventory,
       capacity: { maxWeight: 10, maxItems: 5 },
     })

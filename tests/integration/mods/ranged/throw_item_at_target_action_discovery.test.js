@@ -256,7 +256,7 @@ describe('throwable_items scope definition', () => {
     expect(scopeContent).toContain('wielded_item_ids');
 
     // Should reference inventory component
-    expect(scopeContent).toContain('items:inventory');
+    expect(scopeContent).toContain('inventory:inventory');
 
     // Should filter by portable component
     expect(scopeContent).toContain('items-core:portable');

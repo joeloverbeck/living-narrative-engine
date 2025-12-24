@@ -38,7 +38,7 @@ function setupReadItemScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: inventoryItems,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -127,7 +127,7 @@ describe('items:read_item action integration', () => {
 
       const actorAfter =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).toContain(
+      expect(actorAfter.components['inventory:inventory'].items).toContain(
         'journal-entry-1'
       );
     });
@@ -219,7 +219,7 @@ describe('items:read_item action integration', () => {
         .withName('Darius')
         .atLocation('archives')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sealed-letter'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -272,7 +272,7 @@ describe('items:read_item action integration', () => {
         .withName('Elias')
         .atLocation('study')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['blank-book'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

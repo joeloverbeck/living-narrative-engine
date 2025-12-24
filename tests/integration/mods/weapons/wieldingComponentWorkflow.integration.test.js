@@ -38,7 +38,7 @@ describe('Wielding Component Workflow', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -70,7 +70,7 @@ describe('Wielding Component Workflow', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -102,7 +102,7 @@ describe('Wielding Component Workflow', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id', 'dagger-id'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
@@ -150,7 +150,7 @@ describe('Wielding Component Workflow', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -190,7 +190,7 @@ describe('Wielding Component Workflow', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })

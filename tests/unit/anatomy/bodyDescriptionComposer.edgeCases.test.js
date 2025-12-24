@@ -1263,14 +1263,14 @@ describe('BodyDescriptionComposer - Edge Cases Coverage', () => {
         id: 'test-entity',
         hasComponent: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) return true;
-          if (id === 'items:inventory') return true;
+          if (id === 'inventory:inventory') return true;
           return false;
         }),
         getComponentData: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) {
             return { body: { root: 'root-part' } };
           }
-          if (id === 'items:inventory') {
+          if (id === 'inventory:inventory') {
             return { items: [] }; // Empty items - line 914
           }
           return null;
@@ -1300,14 +1300,14 @@ describe('BodyDescriptionComposer - Edge Cases Coverage', () => {
         id: 'test-entity',
         hasComponent: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) return true;
-          if (id === 'items:inventory') return true;
+          if (id === 'inventory:inventory') return true;
           return false;
         }),
         getComponentData: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) {
             return { body: { root: 'root-part' } };
           }
-          if (id === 'items:inventory') {
+          if (id === 'inventory:inventory') {
             return { items: ['item-1'] };
           }
           return null;
@@ -1333,14 +1333,14 @@ describe('BodyDescriptionComposer - Edge Cases Coverage', () => {
         id: 'test-entity',
         hasComponent: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) return true;
-          if (id === 'items:inventory') return true;
+          if (id === 'inventory:inventory') return true;
           return false;
         }),
         getComponentData: jest.fn().mockImplementation((id) => {
           if (id === ANATOMY_BODY_COMPONENT_ID) {
             return { body: { root: 'root-part' } };
           }
-          if (id === 'items:inventory') {
+          if (id === 'inventory:inventory') {
             // Throw error - lines 939-943
             throw new Error('Inventory read failed');
           }

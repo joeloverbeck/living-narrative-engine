@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:aldous_kitchen_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": [
         "fantasy:notice_possessed_chickens_instance",
         "fantasy:vespera_hybrid_lute_viol_instance",

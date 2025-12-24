@@ -95,7 +95,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Alice')
         .atLocation('saloon1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -105,7 +105,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Bob')
         .atLocation('saloon1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -132,12 +132,12 @@ describe('item-transfer:give_item action definition', () => {
   });
 
   describe('Target inventory requirement tests', () => {
-    it('should require items:inventory component on primary target', () => {
-      // Verify the action schema has required_components.primary with items:inventory
+    it('should require inventory:inventory component on primary target', () => {
+      // Verify the action schema has required_components.primary with inventory:inventory
       expect(giveItemAction.required_components).toBeDefined();
       expect(giveItemAction.required_components.primary).toBeDefined();
       expect(giveItemAction.required_components.primary).toContain(
-        'items:inventory'
+        'inventory:inventory'
       );
     });
 
@@ -159,7 +159,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -173,7 +173,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        // NO items:inventory component - recipient cannot receive items
+        // NO inventory:inventory component - recipient cannot receive items
         .build();
 
       // Create an item in the actor's inventory
@@ -216,7 +216,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -230,7 +230,7 @@ describe('item-transfer:give_item action definition', () => {
         .withName('Bob')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

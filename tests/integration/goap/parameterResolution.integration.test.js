@@ -79,7 +79,7 @@ describe('ParameterResolutionService - Real Entity Components', () => {
       x: 5,
       y: 10,
     });
-    entityManager.addComponent(actorId, 'items:inventory', {
+    entityManager.addComponent(actorId, 'inventory:inventory', {
       slots: [
         { itemId: 'sword_1', slot: 0 },
         { itemId: 'potion_3', slot: 1 },
@@ -121,7 +121,7 @@ describe('ParameterResolutionService - Real Entity Components', () => {
   it('should resolve nested inventory data', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
     const result = service.resolve(
-      'actor.components.items:inventory.slots',
+      'actor.components.inventory:inventory.slots',
       context,
       {
         validateEntity: false,
@@ -585,14 +585,14 @@ describe('ParameterResolutionService - Error Message Clarity', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
 
     expect(() => {
-      service.resolve('actor.components.items:inventory', context);
+      service.resolve('actor.components.inventory:inventory', context);
     }).toThrow(ParameterResolutionError);
     try {
-      service.resolve('actor.components.items:inventory', context);
+      service.resolve('actor.components.inventory:inventory', context);
     } catch (err) {
-      expect(err.failedStep).toBe('items:inventory');
+      expect(err.failedStep).toBe('inventory:inventory');
       expect(err.availableKeys).toContain('core:health');
-      expect(err.availableKeys).not.toContain('items:inventory');
+      expect(err.availableKeys).not.toContain('inventory:inventory');
     }
   });
 });

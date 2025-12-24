@@ -318,7 +318,7 @@ describe('damage propagation multi-target chains e2e', () => {
       .asActor()
       .withComponent('core:position', { locationId: ROOM_ID })
       .withComponent('skills:melee_skill', { level: 95 })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['prop-chain-blade'],
         capacity: 3,
       })

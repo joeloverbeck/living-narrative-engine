@@ -147,7 +147,7 @@ describe('Locks conditions', () => {
       components: {
         'core:actor': {},
         'core:position': { locationId: 'room1' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: inventoryItems,
           capacity: { maxWeight: 10, maxItems: 5 },
         },
