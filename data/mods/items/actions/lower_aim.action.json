@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "items:lower_aim",
   "name": "Lower Aim",
-  "description": "Stop aiming an item. Removes the items:aimed_at component from the item, ending the aimed state.",
+  "description": "Stop aiming an item. Removes the aiming:aimed_at component from the item, ending the aimed state.",
   "generateCombinations": true,
   "required_components": {
     "actor": ["inventory:inventory"]
@@ -11,7 +11,7 @@
     "primary": {
       "scope": "items:aimed_items_in_inventory",
       "placeholder": "item",
-      "description": "Item currently being aimed (has items:aimed_at component)"
+      "description": "Item currently being aimed (has aiming:aimed_at component)"
     }
   },
   "template": "lower {item}",

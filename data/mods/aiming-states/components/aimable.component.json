@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:aimable",
+  "id": "aiming:aimable",
   "description": "Marker component indicating an item can be aimed at targets. Applies to weapons, flashlights, cameras, and similar directional items. Items with this component can be used with aim_item and lower_aim actions.",
   "dataSchema": {
     "type": "object",

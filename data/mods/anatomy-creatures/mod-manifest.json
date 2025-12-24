@@ -70,6 +70,9 @@
     ],
     "entities": {
       "definitions": [
+        "amphibian_lung_left.entity.json",
+        "amphibian_lung_right.entity.json",
+        "amphibian_skin_respiration.entity.json",
         "badger_ear.entity.json",
         "badger_folk_male_torso.entity.json",
         "badger_hand_demolition_scarred.entity.json",

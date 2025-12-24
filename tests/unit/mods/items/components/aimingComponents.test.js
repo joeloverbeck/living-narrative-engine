@@ -1,33 +1,33 @@
 import { describe, it, expect } from '@jest/globals';
 
-describe('Items Mod - Aiming Components', () => {
-  describe('items:aimable component', () => {
+describe('Aiming States Mod - Aiming Components', () => {
+  describe('aiming:aimable component', () => {
     it('should be a valid marker component with empty schema', () => {
-      const aimable = require('../../../../../data/mods/items/components/aimable.component.json');
-      expect(aimable.id).toBe('items:aimable');
+      const aimable = require('../../../../../data/mods/aiming-states/components/aimable.component.json');
+      expect(aimable.id).toBe('aiming:aimable');
       expect(aimable.dataSchema.properties).toEqual({});
       expect(aimable.dataSchema.additionalProperties).toBe(false);
     });
 
     it('should have correct schema reference', () => {
-      const aimable = require('../../../../../data/mods/items/components/aimable.component.json');
+      const aimable = require('../../../../../data/mods/aiming-states/components/aimable.component.json');
       expect(aimable.$schema).toBe(
         'schema://living-narrative-engine/component.schema.json'
       );
     });
 
     it('should have descriptive documentation', () => {
-      const aimable = require('../../../../../data/mods/items/components/aimable.component.json');
+      const aimable = require('../../../../../data/mods/aiming-states/components/aimable.component.json');
       expect(aimable.description).toBeDefined();
       expect(aimable.description).toContain('aimed');
       expect(aimable.description.length).toBeGreaterThan(50);
     });
   });
 
-  describe('items:aimed_at component', () => {
+  describe('aiming:aimed_at component', () => {
     it('should have required fields for state tracking', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
-      expect(aimedAt.id).toBe('items:aimed_at');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
+      expect(aimedAt.id).toBe('aiming:aimed_at');
       expect(aimedAt.dataSchema.required).toEqual(['targetId', 'aimedBy']);
       expect(aimedAt.dataSchema.properties.targetId.$ref).toBe(
         'schema://living-narrative-engine/common.schema.json#/definitions/namespacedId'
@@ -39,14 +39,14 @@ describe('Items Mod - Aiming Components', () => {
     });
 
     it('should have correct schema reference', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       expect(aimedAt.$schema).toBe(
         'schema://living-narrative-engine/component.schema.json'
       );
     });
 
     it('should have activityMetadata with correct structure', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       const activityMetadata = aimedAt.dataSchema.properties.activityMetadata;
 
       expect(activityMetadata.type).toBe('object');
@@ -59,7 +59,7 @@ describe('Items Mod - Aiming Components', () => {
     });
 
     it('should have correct activityMetadata defaults', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       const activityMetadata =
         aimedAt.dataSchema.properties.activityMetadata.properties;
 
@@ -72,7 +72,7 @@ describe('Items Mod - Aiming Components', () => {
     });
 
     it('should have priority field with valid constraints', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       const priority =
         aimedAt.dataSchema.properties.activityMetadata.properties.priority;
 
@@ -82,19 +82,19 @@ describe('Items Mod - Aiming Components', () => {
     });
 
     it('should have descriptive documentation', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       expect(aimedAt.description).toBeDefined();
       expect(aimedAt.description).toContain('aimed');
       expect(aimedAt.description.length).toBeGreaterThan(50);
     });
 
     it('should disallow additional properties', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       expect(aimedAt.dataSchema.additionalProperties).toBe(false);
     });
 
     it('should have proper field descriptions', () => {
-      const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
+      const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
       const props = aimedAt.dataSchema.properties;
 
       expect(props.targetId.description).toBeDefined();

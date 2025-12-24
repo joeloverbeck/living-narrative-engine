@@ -59,7 +59,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 2: ADD_COMPONENT
       expect(aimItemRule.actions[1].type).toBe('ADD_COMPONENT');
       expect(aimItemRule.actions[1].parameters.component_type).toBe(
-        'items:aimed_at'
+        'aiming:aimed_at'
       );
 
       // Operation 3: DISPATCH_EVENT
@@ -117,7 +117,7 @@ describe('Aim Item Rules Validation', () => {
       expect(firstAction).toBeDefined();
       expect(firstAction.type).toBe('QUERY_COMPONENT');
       expect(firstAction.parameters).toBeDefined();
-      expect(firstAction.parameters.component_type).toBe('items:aimed_at');
+      expect(firstAction.parameters.component_type).toBe('aiming:aimed_at');
       expect(firstAction.parameters.result_variable).toBe('aimedAtData');
     });
 
@@ -127,7 +127,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 1: QUERY_COMPONENT
       expect(lowerAimRule.actions[0].type).toBe('QUERY_COMPONENT');
       expect(lowerAimRule.actions[0].parameters.component_type).toBe(
-        'items:aimed_at'
+        'aiming:aimed_at'
       );
 
       // Operation 2: GET_TIMESTAMP
@@ -136,7 +136,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 3: REMOVE_COMPONENT
       expect(lowerAimRule.actions[2].type).toBe('REMOVE_COMPONENT');
       expect(lowerAimRule.actions[2].parameters.component_type).toBe(
-        'items:aimed_at'
+        'aiming:aimed_at'
       );
 
       // Operation 4: DISPATCH_EVENT

@@ -84,6 +84,19 @@
     "brain": {
       "$use": "standard_brain",
       "parent": "head"
+    },
+    "left_lung": {
+      "$use": "standard_lung_left"
+    },
+    "right_lung": {
+      "$use": "standard_lung_right"
+    },
+    "skin_respiration": {
+      "socket": "skin_respiration_socket",
+      "requirements": {
+        "partType": "skin_respiration",
+        "components": ["anatomy:part"]
+      }
     }
   },
   "clothingSlotMappings": {

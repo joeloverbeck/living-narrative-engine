@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:amphibian_skin_respiration",
+  "description": "Amphibian cutaneous respiration - allows oxygen absorption through skin in both air and water",
+  "components": {
+    "core:name": {
+      "text": "skin respiration"
+    },
+    "core:weight": {
+      "weight": 0
+    },
+    "anatomy:part": {
+      "subType": "skin_respiration",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0
+    },
+    "breathing-states:respiratory_organ": {
+      "respirationType": "cutaneous",
+      "oxygenCapacity": 4,
+      "currentOxygen": 4,
+      "environmentCompatibility": ["air", "water"]
+    }
+  }
+}

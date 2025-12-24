@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_lower_aim",
-  "comment": "Handles the lower_aim action by removing items:aimed_at component and dispatching aim_lowered event",
+  "comment": "Handles the lower_aim action by removing aiming:aimed_at component and dispatching aim_lowered event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-lower-aim"
@@ -9,10 +9,10 @@
   "actions": [
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Retrieve items:aimed_at data before removing it",
+      "comment": "Retrieve aiming:aimed_at data before removing it",
       "parameters": {
         "entity_ref": "{event.payload.targetId}",
-        "component_type": "items:aimed_at",
+        "component_type": "aiming:aimed_at",
         "result_variable": "aimedAtData"
       }
     },
@@ -25,10 +25,10 @@
     },
     {
       "type": "REMOVE_COMPONENT",
-      "comment": "Remove items:aimed_at from item (primary target)",
+      "comment": "Remove aiming:aimed_at from item (primary target)",
       "parameters": {
         "entity_ref": "{event.payload.targetId}",
-        "component_type": "items:aimed_at"
+        "component_type": "aiming:aimed_at"
       }
     },
     {
