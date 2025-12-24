@@ -8,7 +8,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [],
   "content": {
-    "components": [],
+    "components": [
+      "hypoxic.component.json",
+      "respiratory_organ.component.json"
+    ],
     "entities": {
       "definitions": [],
       "instances": []

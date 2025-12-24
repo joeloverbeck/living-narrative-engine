@@ -5,8 +5,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../common/mods/scopeResolverHelpers.js';
 import handleScootCloserRule from '../../data/mods/personal-space/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
 import eventIsActionScootCloser from '../../data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };
+import scootCloserAction from '../../data/mods/personal-space/actions/scoot_closer.action.json' assert { type: 'json' };
 
 describe('Debug canScootCloser in scope', () => {
   let testFixture;
@@ -18,6 +20,11 @@ describe('Debug canScootCloser in scope', () => {
       handleScootCloserRule,
       eventIsActionScootCloser
     );
+
+    if (testFixture.testEnv) {
+      ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+      testFixture.testEnv.actionIndex.buildIndex([scootCloserAction]);
+    }
   });
 
   afterEach(() => {

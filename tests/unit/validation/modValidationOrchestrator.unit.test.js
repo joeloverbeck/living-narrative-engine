@@ -385,10 +385,10 @@ describe('ModValidationOrchestrator', () => {
 
   it('discovers mod ids when none are supplied', async () => {
     const dirEntries = [
-      { name: 'alpha', isDirectory: () => true },
-      { name: 'examples', isDirectory: () => true },
-      { name: 'beta', isDirectory: () => true },
-      { name: 'readme.md', isDirectory: () => false },
+      { name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false },
+      { name: 'examples', isDirectory: () => true, isSymbolicLink: () => false },
+      { name: 'beta', isDirectory: () => true, isSymbolicLink: () => false },
+      { name: 'readme.md', isDirectory: () => false, isSymbolicLink: () => false },
     ];
 
     mockedFs.readdir.mockResolvedValue(dirEntries);
@@ -427,8 +427,148 @@ describe('ModValidationOrchestrator', () => {
     );
   });
 
+  describe('symlink discovery', () => {
+    it('discovers symlinked mod directories alongside regular directories', async () => {
+      const dirEntries = [
+        { name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false },
+        {
+          name: 'p_erotica',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+        { name: 'readme.md', isDirectory: () => false, isSymbolicLink: () => false },
+      ];
+
+      mockedFs.readdir.mockResolvedValue(dirEntries);
+      mockedFs.access.mockImplementation(async (targetPath) => {
+        if (targetPath.includes('alpha') || targetPath.includes('p_erotica')) {
+          return undefined;
+        }
+        throw new Error('missing manifest');
+      });
+
+      const { orchestrator, deps } = createOrchestrator();
+      deps.modManifestLoader.loadRequestedManifests.mockImplementation(
+        async (ids) => {
+          expect(ids).toEqual(expect.arrayContaining(['alpha', 'p_erotica']));
+          expect(ids).toHaveLength(2);
+          return createManifestsMap(ids);
+        }
+      );
+
+      deps.modCrossReferenceValidator.validateAllModReferences.mockResolvedValue(
+        new Map()
+      );
+
+      const result = await orchestrator.validateEcosystem();
+      expect(result.isValid).toBe(true);
+    });
+
+    it('discovers symlinked mod directories when only symlinks exist', async () => {
+      const dirEntries = [
+        {
+          name: 'p_erotica_duchess',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+        {
+          name: 'p_erotica_irun',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+      ];
+
+      mockedFs.readdir.mockResolvedValue(dirEntries);
+      mockedFs.access.mockResolvedValue();
+
+      const { orchestrator, deps } = createOrchestrator();
+      deps.modManifestLoader.loadRequestedManifests.mockImplementation(
+        async (ids) => {
+          expect(ids).toEqual(
+            expect.arrayContaining(['p_erotica_duchess', 'p_erotica_irun'])
+          );
+          expect(ids).toHaveLength(2);
+          return createManifestsMap(ids);
+        }
+      );
+
+      deps.modCrossReferenceValidator.validateAllModReferences.mockResolvedValue(
+        new Map()
+      );
+
+      const result = await orchestrator.validateEcosystem();
+      expect(result.isValid).toBe(true);
+    });
+
+    it('excludes symlinked directories in the excluded list', async () => {
+      const dirEntries = [
+        { name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false },
+        {
+          name: 'examples',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+      ];
+
+      mockedFs.readdir.mockResolvedValue(dirEntries);
+      mockedFs.access.mockResolvedValue();
+
+      const { orchestrator, deps } = createOrchestrator();
+      deps.modManifestLoader.loadRequestedManifests.mockImplementation(
+        async (ids) => {
+          expect(ids).toEqual(['alpha']);
+          return createManifestsMap(ids);
+        }
+      );
+
+      deps.modCrossReferenceValidator.validateAllModReferences.mockResolvedValue(
+        new Map()
+      );
+
+      const result = await orchestrator.validateEcosystem();
+      expect(result.isValid).toBe(true);
+      expect(deps.logger.debug).toHaveBeenCalledWith(
+        'Skipping excluded directory: examples'
+      );
+    });
+
+    it('skips symlinked directories without manifests', async () => {
+      const dirEntries = [
+        { name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false },
+        {
+          name: 'p_broken_symlink',
+          isDirectory: () => false,
+          isSymbolicLink: () => true,
+        },
+      ];
+
+      mockedFs.readdir.mockResolvedValue(dirEntries);
+      mockedFs.access.mockImplementation(async (targetPath) => {
+        if (targetPath.includes('alpha')) {
+          return undefined;
+        }
+        throw new Error('missing manifest');
+      });
+
+      const { orchestrator, deps } = createOrchestrator();
+      deps.modManifestLoader.loadRequestedManifests.mockImplementation(
+        async (ids) => {
+          expect(ids).toEqual(['alpha']);
+          return createManifestsMap(ids);
+        }
+      );
+
+      deps.modCrossReferenceValidator.validateAllModReferences.mockResolvedValue(
+        new Map()
+      );
+
+      const result = await orchestrator.validateEcosystem();
+      expect(result.isValid).toBe(true);
+    });
+  });
+
   it('validates individual mods successfully', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -459,7 +599,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('throws when attempting to validate an unknown mod', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -472,7 +612,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('stops early when dependency validation fails and context is excluded', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -499,7 +639,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('adds warnings when mod cross-reference validation reports issues', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -520,7 +660,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('records errors when mod cross-reference validation fails', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -543,9 +683,9 @@ describe('ModValidationOrchestrator', () => {
 
   it('injects declared dependencies when validating an individual mod', async () => {
     const dirEntries = [
-      { name: 'alpha', isDirectory: () => true },
-      { name: 'beta', isDirectory: () => true },
-      { name: 'gamma', isDirectory: () => true },
+      { name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false },
+      { name: 'beta', isDirectory: () => true, isSymbolicLink: () => false },
+      { name: 'gamma', isDirectory: () => true, isSymbolicLink: () => false },
     ];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
@@ -573,7 +713,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('handles dependency validation errors with complex dependency manifests', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 
@@ -599,7 +739,7 @@ describe('ModValidationOrchestrator', () => {
   });
 
   it('respects the skipCrossReferences flag during mod validation', async () => {
-    const dirEntries = [{ name: 'alpha', isDirectory: () => true }];
+    const dirEntries = [{ name: 'alpha', isDirectory: () => true, isSymbolicLink: () => false }];
     mockedFs.readdir.mockResolvedValue(dirEntries);
     mockedFs.access.mockResolvedValue();
 

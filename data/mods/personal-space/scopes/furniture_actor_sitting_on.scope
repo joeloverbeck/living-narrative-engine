@@ -1,6 +1,0 @@
-personal-space:furniture_actor_sitting_on := entities(sitting:allows_sitting)[][{
-  "==": [
-    {"var": "entity.id"},
-    {"var": "actor.components.sitting-states:sitting_on.furniture_id"}
-  ]
-}]

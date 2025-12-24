@@ -311,6 +311,7 @@ export class ScopeResolverHelpers {
         ),
 
       // "closest leftmost occupant" (for scoot_closer action)
+      // NOTE: Also registered under sitting-states: namespace for cross-mod compatibility
       'personal-space:closest_leftmost_occupant':
         this.createArrayFilterResolver(
           'personal-space:closest_leftmost_occupant',
@@ -346,7 +347,48 @@ export class ScopeResolverHelpers {
           }
         ),
 
+      // "closest leftmost occupant" under sitting-states namespace (migrated from personal-space)
+      'sitting-states:closest_leftmost_occupant':
+        this.createArrayFilterResolver(
+          'sitting-states:closest_leftmost_occupant',
+          {
+            getArray: (actor, context, em) => {
+              const sitting = em.getComponentData(
+                actor.id,
+                'sitting-states:sitting_on'
+              );
+              if (!sitting) return [];
+
+              const furniture = em.getComponentData(
+                sitting.furniture_id,
+                'sitting:allows_sitting'
+              );
+              if (!furniture?.spots) return [];
+
+              const actorSpotIndex = sitting.spot_index;
+
+              // Check if immediate spot to left is empty (requirement for scooting)
+              if (actorSpotIndex === 0) return []; // Leftmost position
+              if (furniture.spots[actorSpotIndex - 1] !== null) return []; // Spot to left occupied
+
+              // Find closest occupied spot to the left (beyond the empty spot)
+              for (let i = actorSpotIndex - 2; i >= 0; i--) {
+                const occupantId = furniture.spots[i];
+                if (occupantId && occupantId !== actor.id) {
+                  return [occupantId];
+                }
+              }
+
+              return [];
+            },
+            filterFn: (entityId, actor) => {
+              return entityId && entityId !== actor.id;
+            },
+          }
+        ),
+
       // "closest rightmost occupant" (for scoot_closer_right action)
+      // NOTE: Also registered under sitting-states: namespace for cross-mod compatibility
       'personal-space:closest_rightmost_occupant':
         this.createArrayFilterResolver(
           'personal-space:closest_rightmost_occupant',
@@ -383,6 +425,61 @@ export class ScopeResolverHelpers {
                 return [];
               }
 
+              for (let i = actorSpotIndex + 2; i < spots.length; i++) {
+                const occupantId = spots[i];
+                if (occupantId && occupantId !== actor.id) {
+                  return [occupantId];
+                }
+              }
+
+              return [];
+            },
+            filterFn: (entityId, actor) => {
+              return entityId && entityId !== actor.id;
+            },
+          }
+        ),
+
+      // "closest rightmost occupant" under sitting-states namespace (migrated from personal-space)
+      'sitting-states:closest_rightmost_occupant':
+        this.createArrayFilterResolver(
+          'sitting-states:closest_rightmost_occupant',
+          {
+            getArray: (actor, context, em) => {
+              const sitting = em.getComponentData(
+                actor.id,
+                'sitting-states:sitting_on'
+              );
+              if (!sitting) {
+                return [];
+              }
+
+              const furniture = em.getComponentData(
+                sitting.furniture_id,
+                'sitting:allows_sitting'
+              );
+              if (!furniture?.spots) {
+                return [];
+              }
+
+              const spots = furniture.spots;
+              const actorSpotIndex = sitting.spot_index;
+
+              if (typeof actorSpotIndex !== 'number') {
+                return [];
+              }
+
+              // Check if at rightmost position
+              if (actorSpotIndex + 1 >= spots.length) {
+                return [];
+              }
+
+              // Check if immediate spot to right is empty (requirement for scooting)
+              if (spots[actorSpotIndex + 1] !== null) {
+                return [];
+              }
+
+              // Find closest occupied spot to the right (beyond the empty spot)
               for (let i = actorSpotIndex + 2; i < spots.length; i++) {
                 const occupantId = spots[i];
                 if (occupantId && occupantId !== actor.id) {

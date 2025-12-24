@@ -7,8 +7,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import handleScootCloserRightRule from '../../../../data/mods/personal-space/rules/handle_scoot_closer_right.rule.json' assert { type: 'json' };
 import eventIsActionScootCloserRight from '../../../../data/mods/personal-space/conditions/event-is-action-scoot-closer-right.condition.json' assert { type: 'json' };
+import scootCloserRightAction from '../../../../data/mods/personal-space/actions/scoot_closer_right.action.json' assert { type: 'json' };
 
 describe('scoot_closer_right action discovery - Marla scenario reproduction', () => {
   let testFixture;
@@ -20,6 +22,11 @@ describe('scoot_closer_right action discovery - Marla scenario reproduction', ()
       handleScootCloserRightRule,
       eventIsActionScootCloserRight
     );
+
+    if (testFixture.testEnv) {
+      ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+      testFixture.testEnv.actionIndex.buildIndex([scootCloserRightAction]);
+    }
   });
 
   afterEach(() => {
