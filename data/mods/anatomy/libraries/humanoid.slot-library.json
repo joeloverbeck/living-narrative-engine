@@ -131,6 +131,20 @@
         "partType": "brain",
         "components": ["anatomy:part", "anatomy:vital_organ"]
       }
+    },
+    "standard_lung_left": {
+      "socket": "lung_left_socket",
+      "requirements": {
+        "partType": "lung",
+        "components": ["anatomy:part"]
+      }
+    },
+    "standard_lung_right": {
+      "socket": "lung_right_socket",
+      "requirements": {
+        "partType": "lung",
+        "components": ["anatomy:part"]
+      }
     }
   },
   "clothingDefinitions": {

@@ -144,7 +144,7 @@ describe('containers:take_from_container action definition', () => {
       const container = new ModEntityBuilder('chest1')
         .withName('wooden chest')
         .atLocation('storage')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('containers-core:container', {
           contents: ['sword1'],
           capacity: { maxWeight: 50, maxItems: 10 },
@@ -155,8 +155,8 @@ describe('containers:take_from_container action definition', () => {
 
       const sword = new ModEntityBuilder('sword1')
         .withName('iron sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, container, sword]);
@@ -199,7 +199,7 @@ describe('containers:take_from_container action definition', () => {
       const container = new ModEntityBuilder('chest2')
         .withName('wooden chest')
         .atLocation('storage')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('containers-core:container', {
           contents: ['potion1'],
           capacity: { maxWeight: 50, maxItems: 10 },
@@ -210,8 +210,8 @@ describe('containers:take_from_container action definition', () => {
 
       const potion = new ModEntityBuilder('potion1')
         .withName('health potion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, container, potion, handEntity]);
@@ -233,7 +233,7 @@ describe('containers:take_from_container action definition', () => {
       const armchair = new ModEntityBuilder('armchair1')
         .withName('armchair')
         .atLocation('library')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('positioning:sittable', {
           spots: [{ entityId: 'reader1', facing: 'forward' }],
         })
@@ -256,7 +256,7 @@ describe('containers:take_from_container action definition', () => {
       const bookcase = new ModEntityBuilder('bookcase1')
         .withName('bookcase')
         .atLocation('library')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('containers-core:container', {
           contents: ['book1'],
           capacity: { maxWeight: 100, maxItems: 50 },
@@ -267,8 +267,8 @@ describe('containers:take_from_container action definition', () => {
 
       const book = new ModEntityBuilder('book1')
         .withName('ancient tome')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, armchair, actor, bookcase, book]);

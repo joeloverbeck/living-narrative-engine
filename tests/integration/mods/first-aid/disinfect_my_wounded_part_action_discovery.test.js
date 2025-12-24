@@ -58,8 +58,8 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
       .withName('Antiseptic Bottle')
       .atLocation(ROOM_ID)
       .withLocationComponent(ROOM_ID)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent(
         'containers-core:liquid_container',
         buildLiquidContainer(
@@ -209,8 +209,8 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
             equipmentSlots: { primary: 'legs' },
             allowedLayers: ['base', 'outer'],
           })
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .build()
       );
     }

@@ -244,7 +244,7 @@ describe('ModTestFixture - Error Hints', () => {
       // Mock action definition with inventory scope
       testFixture._actionDefinition = {
         id: 'item-handling:pick_up_item',
-        targets: 'items:items_at_location',
+        targets: 'items-core:items_at_location',
       };
 
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);

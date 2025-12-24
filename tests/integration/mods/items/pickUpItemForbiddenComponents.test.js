@@ -68,8 +68,8 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
         .atLocation(room.id)
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Actor in same room
@@ -103,8 +103,8 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
         .atLocation(room.id)
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Actor in same room (no being_fucked_vaginally component)
@@ -157,8 +157,8 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
         .atLocation(room.id)
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Actor in same room
@@ -192,8 +192,8 @@ describe('item-handling:pick_up_item - Forbidden components validation', () => {
       const item = new ModEntityBuilder('item1')
         .withName('Test Item')
         .atLocation(room.id)
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 1.0 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 1.0 })
         .build();
 
       // Actor in same room (no sitting_on component)

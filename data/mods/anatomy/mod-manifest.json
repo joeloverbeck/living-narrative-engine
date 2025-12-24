@@ -9,6 +9,10 @@
     {
       "id": "descriptors",
       "version": "^1.0.0"
+    },
+    {
+      "id": "breathing-states",
+      "version": "^1.0.0"
     }
   ],
   "gameVersion": ">=0.0.1",
@@ -112,6 +116,8 @@
         "human_leg_slim.entity.json",
         "human_leg_soft_lissom.entity.json",
         "human_leg_thick_hairy.entity.json",
+        "human_lung_left.entity.json",
+        "human_lung_right.entity.json",
         "human_male_torso.entity.json",
         "human_male_torso_hulking_hairy.entity.json",
         "human_male_torso_muscular.entity.json",

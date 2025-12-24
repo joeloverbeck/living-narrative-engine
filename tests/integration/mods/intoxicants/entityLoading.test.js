@@ -25,8 +25,8 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.id).toBe('intoxicants:jug_of_ale');
       expect(entityDef.components['core:name']).toBeDefined();
       expect(entityDef.components['core:description']).toBeDefined();
-      expect(entityDef.components['items:item']).toBeDefined();
-      expect(entityDef.components['items:portable']).toBeDefined();
+      expect(entityDef.components['items-core:item']).toBeDefined();
+      expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
@@ -62,8 +62,8 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.id).toBe('intoxicants:jug_of_cider');
       expect(entityDef.components['core:name']).toBeDefined();
       expect(entityDef.components['core:description']).toBeDefined();
-      expect(entityDef.components['items:item']).toBeDefined();
-      expect(entityDef.components['items:portable']).toBeDefined();
+      expect(entityDef.components['items-core:item']).toBeDefined();
+      expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
@@ -81,8 +81,8 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.id).toBe('intoxicants:jug_of_mead');
       expect(entityDef.components['core:name']).toBeDefined();
       expect(entityDef.components['core:description']).toBeDefined();
-      expect(entityDef.components['items:item']).toBeDefined();
-      expect(entityDef.components['items:portable']).toBeDefined();
+      expect(entityDef.components['items-core:item']).toBeDefined();
+      expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();

@@ -33,8 +33,8 @@
       "covers": ["left_arm_clothing", "right_arm_clothing"],
       "coveragePriority": "armor"
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 1.0
     }

@@ -50,8 +50,8 @@ describe('Fantasy Weapon Grabbing Requirements - Integration Validation', () => 
     });
 
     it('should retain item components', () => {
-      expect(rapierData.components['items:item']).toBeDefined();
-      expect(rapierData.components['items:portable']).toBeDefined();
+      expect(rapierData.components['items-core:item']).toBeDefined();
+      expect(rapierData.components['items-core:portable']).toBeDefined();
     });
   });
 
@@ -73,8 +73,8 @@ describe('Fantasy Weapon Grabbing Requirements - Integration Validation', () => 
     });
 
     it('should retain item components', () => {
-      expect(mainGaucheData.components['items:item']).toBeDefined();
-      expect(mainGaucheData.components['items:portable']).toBeDefined();
+      expect(mainGaucheData.components['items-core:item']).toBeDefined();
+      expect(mainGaucheData.components['items-core:portable']).toBeDefined();
     });
   });
 
@@ -96,8 +96,8 @@ describe('Fantasy Weapon Grabbing Requirements - Integration Validation', () => 
     });
 
     it('should retain item components', () => {
-      expect(longswordData.components['items:item']).toBeDefined();
-      expect(longswordData.components['items:portable']).toBeDefined();
+      expect(longswordData.components['items-core:item']).toBeDefined();
+      expect(longswordData.components['items-core:portable']).toBeDefined();
     });
   });
 

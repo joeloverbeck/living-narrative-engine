@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "breathing-states",
+  "version": "1.0.0",
+  "name": "Breathing States",
+  "description": "Component definitions for respiratory organs and breathing states. Provides foundation for breathing mechanics without behavioral dependencies.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "respiratory_organ.component.json"
+    ]
+  }
+}

@@ -49,8 +49,8 @@ describe('Wielding Edge Cases', () => {
 
       const dagger = new ModEntityBuilder('dagger-id')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -84,8 +84,8 @@ describe('Wielding Edge Cases', () => {
 
       const weapon = new ModEntityBuilder('weapons:silver_revolver')
         .withName('Silver Revolver')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -122,15 +122,15 @@ describe('Wielding Edge Cases', () => {
 
       const revolver = new ModEntityBuilder('weapons:silver_revolver')
         .withName('Silver Revolver')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const dagger = new ModEntityBuilder('dagger-1')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -169,8 +169,8 @@ describe('Wielding Edge Cases', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -218,8 +218,8 @@ describe('Wielding Edge Cases', () => {
       const weapons = weaponIds.map((id, index) =>
         new ModEntityBuilder(id)
           .withName(`Weapon ${index + 1}`)
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('weapons:weapon', {})
           .build()
       );
@@ -257,8 +257,8 @@ describe('Wielding Edge Cases', () => {
 
       const existingWeapon = new ModEntityBuilder('existing-weapon')
         .withName('Existing Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -295,8 +295,8 @@ describe('Wielding Edge Cases', () => {
 
       const weapon = new ModEntityBuilder('weapon_with_underscore')
         .withName('Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -328,8 +328,8 @@ describe('Wielding Edge Cases', () => {
 
       const weapon = new ModEntityBuilder('weapon-with-hyphen')
         .withName('Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 

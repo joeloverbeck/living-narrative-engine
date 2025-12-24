@@ -8,7 +8,7 @@
     "core:description": {
       "text": "A smudged notice with what appears to be chicken scratch marks across one corner and a few suspicious feathers stuck to it."
     },
-    "items:item": {},
+    "items-core:item": {},
     "core:weight": {
       "weight": 0.01
     },

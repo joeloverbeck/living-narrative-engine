@@ -1,0 +1,8 @@
+items-core:items_at_location := entities(core:position)[][{"and": [
+  {"!!": {"var": "entity.components.items-core:item"}},
+  {"!!": {"var": "entity.components.items-core:portable"}},
+  {"==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]}
+]}]

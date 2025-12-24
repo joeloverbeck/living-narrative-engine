@@ -46,7 +46,7 @@ function buildScenario({
 
   const key = new ModEntityBuilder(requiredKeyId)
     .withName('Rusty Key')
-    .withComponent('items:item', {})
+    .withComponent('items-core:item', {})
     .build();
 
   return {

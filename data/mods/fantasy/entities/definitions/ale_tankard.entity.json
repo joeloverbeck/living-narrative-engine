@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A sturdy wooden tankard filled with amber ale, its foam-capped surface catching the tavern's firelight. The brew smells of malted barley and hops with earthy undertones."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.6
     },

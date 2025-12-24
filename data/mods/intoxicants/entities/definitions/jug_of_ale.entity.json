@@ -8,8 +8,8 @@
     "core:description": {
       "text": "A heavy clay jug glazed with earthy browns, stoppered with a cork and sealed with wax. Inside sloshes a generous measure of amber ale, its yeasty aroma escaping through the seal. The rustic vessel is cool to the touch and beaded with condensation."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 1.2
     },

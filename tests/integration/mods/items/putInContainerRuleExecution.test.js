@@ -56,15 +56,15 @@ function setupPutInContainerScenario(
       capacity: { maxWeight, maxItems },
       isOpen,
     })
-    .withComponent('items:openable', {})
+    .withComponent('items-core:openable', {})
     .build();
 
   // Create actual item entities for items in actor inventory
   const itemEntities = actorInventory.map((itemId) =>
     new ModEntityBuilder(itemId)
       .withName(itemId)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build()
   );
@@ -208,20 +208,20 @@ describe('containers:put_in_container action integration', () => {
 
     const heavyItem = new ModEntityBuilder('heavy-item')
       .withName('Heavy Item')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 50 })
       .build();
 
     const existing1 = new ModEntityBuilder('existing1')
       .withName('Existing 1')
-      .withComponent('items:item', {})
+      .withComponent('items-core:item', {})
       .withComponent('core:weight', { weight: 40 })
       .build();
 
     const existing2 = new ModEntityBuilder('existing2')
       .withName('Existing 2')
-      .withComponent('items:item', {})
+      .withComponent('items-core:item', {})
       .withComponent('core:weight', { weight: 30 })
       .build();
 
@@ -233,7 +233,7 @@ describe('containers:put_in_container action integration', () => {
         capacity: { maxItems: 10, maxWeight: 100 },
         isOpen: true,
       })
-      .withComponent('items:openable', {})
+      .withComponent('items-core:openable', {})
       .build();
 
     testFixture.reset([
@@ -580,7 +580,7 @@ describe('containers:put_in_container action integration', () => {
         testFixture.entityManager.getEntityInstance('merchant-chest');
 
       // Verify all components intact
-      expect(container.components['items:openable']).toBeDefined();
+      expect(container.components['items-core:openable']).toBeDefined();
       expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
 
@@ -621,20 +621,20 @@ describe('containers:put_in_container action integration', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('Apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('Bread')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 

@@ -43,7 +43,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         flavorText: 'Smooth whiskey with a smoky finish.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component from bottle (simulating it being picked up into inventory)
       // Items in inventory shouldn't have position components
@@ -102,7 +102,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         flavorText: 'The last drops of whiskey.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component
       fixture.entityManager.removeComponent(bottle.id, 'core:position');
@@ -146,7 +146,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         flavorText: 'A full bottle of premium whiskey.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component
       fixture.entityManager.removeComponent(bottle.id, 'core:position');
@@ -194,7 +194,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         flavorText: '',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:empty', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component
       fixture.entityManager.removeComponent(bottle.id, 'core:position');

@@ -6,6 +6,10 @@
   "description": "Actions, tools and components for breaching.",
   "dependencies": [
     {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
       "id": "items",
       "version": "^1.0.0"
     },

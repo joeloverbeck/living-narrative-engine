@@ -690,8 +690,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set([bendingOver.surface_id]) };
         }
 
-        // Handle the items:items_at_location scope
-        if (scopeName === 'items:items_at_location') {
+        // Handle the items-core:items_at_location scope
+        if (scopeName === 'items-core:items_at_location') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -702,7 +702,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with items:item, items:portable, and core:position at same location
+          // Find all entities with items-core:item, items-core:portable, and core:position at same location
           const allEntityIds = entityManager.getEntityIds();
           const allEntities = allEntityIds.map((id) => {
             const instance = entityManager.getEntityInstance(id);
@@ -710,8 +710,8 @@ export function createBaseRuleEnvironment({
           });
 
           const itemsAtLocation = allEntities.filter((entity) => {
-            const hasItemComponent = entity.components?.['items:item'];
-            const hasPortableComponent = entity.components?.['items:portable'];
+            const hasItemComponent = entity.components?.['items-core:item'];
+            const hasPortableComponent = entity.components?.['items-core:portable'];
             const entityPosition = entity.components?.['core:position'];
 
             if (!hasItemComponent || !hasPortableComponent || !entityPosition) {
@@ -726,8 +726,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(itemIds) };
         }
 
-        // Handle the items:non_portable_items_at_location scope
-        if (scopeName === 'items:non_portable_items_at_location') {
+        // Handle the items-core:non_portable_items_at_location scope
+        if (scopeName === 'items-core:non_portable_items_at_location') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -738,7 +738,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with items:item (but NOT items:portable) at same location
+          // Find all entities with items-core:item (but NOT items-core:portable) at same location
           const allEntityIds = entityManager.getEntityIds();
           const allEntities = allEntityIds.map((id) => {
             const instance = entityManager.getEntityInstance(id);
@@ -746,16 +746,16 @@ export function createBaseRuleEnvironment({
           });
 
           const nonPortableItemsAtLocation = allEntities.filter((entity) => {
-            const hasItemComponent = entity.components?.['items:item'];
-            const hasPortableComponent = entity.components?.['items:portable'];
+            const hasItemComponent = entity.components?.['items-core:item'];
+            const hasPortableComponent = entity.components?.['items-core:portable'];
             const entityPosition = entity.components?.['core:position'];
 
-            // Must have items:item component
+            // Must have items-core:item component
             if (!hasItemComponent || !entityPosition) {
               return false;
             }
 
-            // Must NOT have items:portable component
+            // Must NOT have items-core:portable component
             if (hasPortableComponent) {
               return false;
             }
@@ -860,7 +860,7 @@ export function createBaseRuleEnvironment({
 
           // Get items at location
           const locationResult = simpleScopeResolver.resolveSync(
-            'items:items_at_location',
+            'items-core:items_at_location',
             context
           );
           const locationItems = locationResult.success

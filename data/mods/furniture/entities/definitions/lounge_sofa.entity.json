@@ -9,7 +9,7 @@
     "core:description": {
       "text": "A tailored, sand-colored sofa stretches along the wall with three deep seat cushions, slim arms, and two matching throw pillows. Its plush upholstery has a warm tone, and its low silhouette keeps sightlines clear."
     },
-    "items:item": {},
+    "items-core:item": {},
     "sitting:allows_sitting": {
       "spots": [null, null, null]
     },

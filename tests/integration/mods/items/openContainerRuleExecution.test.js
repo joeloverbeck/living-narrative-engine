@@ -59,7 +59,7 @@ function setupOpenContainerScenario(
     .withName('Treasure Chest')
     .atLocation(locationId)
     .withComponent('containers-core:container', containerData)
-    .withComponent('items:openable', {})
+    .withComponent('items-core:openable', {})
     .build();
 
   return { room, actor, container };
@@ -227,7 +227,7 @@ describe('containers:open_container action integration', () => {
           requiresKey: true,
           keyItemId: 'silver-key',
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       testFixture.reset([room, actorWithoutInventory, lockedContainer]);
@@ -399,7 +399,7 @@ describe('containers:open_container action integration', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const container2 = new ModEntityBuilder('crate-2')
@@ -410,7 +410,7 @@ describe('containers:open_container action integration', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       testFixture.reset([room, actor1, actor2, container1, container2]);
@@ -480,7 +480,7 @@ describe('containers:open_container action integration', () => {
         testFixture.entityManager.getEntityInstance('display-case');
 
       // Verify all components intact
-      expect(container.components['items:openable']).toBeDefined();
+      expect(container.components['items-core:openable']).toBeDefined();
       expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
 

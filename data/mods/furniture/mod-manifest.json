@@ -8,8 +8,8 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "items",
-      "version": "^1.0.0"
+      "id": "items-core",
+      "version": "1.0.0"
     },
     {
       "id": "sitting",

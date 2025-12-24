@@ -8,7 +8,7 @@
     "core:description": {
       "text": "A water-stained notice with tear marks, though it's unclear if they're from crying or well water."
     },
-    "items:item": {},
+    "items-core:item": {},
     "core:weight": {
       "weight": 0.01
     },

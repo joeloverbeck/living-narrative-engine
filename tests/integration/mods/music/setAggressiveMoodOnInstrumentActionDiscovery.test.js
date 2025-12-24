@@ -65,10 +65,10 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
       ]);
     });
 
-    it('should require items:item and music:is_instrument components on primary target', () => {
+    it('should require items-core:item and music:is_instrument components on primary target', () => {
       expect(setAggressiveMoodAction.required_components.primary).toBeDefined();
       expect(setAggressiveMoodAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'music:is_instrument',
       ]);
     });
@@ -108,8 +108,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('lute_1')
           .withName('battle lute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -140,8 +140,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('guitar_1')
           .withName('electric guitar')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -181,8 +181,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
         const instrument = new ModEntityBuilder('drum_1')
           .withName('war drum')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -210,8 +210,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
         const instrument = new ModEntityBuilder('violin_1')
           .withName('aggressive violin')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -253,8 +253,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('lute_1')
           .withName('unused lute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -347,8 +347,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
         const instrument = new ModEntityBuilder('distant_lute')
           .withName('faraway lute')
           .atLocation('location_b')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -377,8 +377,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
         const instrument = new ModEntityBuilder('distant_guitar')
           .withName('faraway guitar')
           .atLocation('location_b')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -421,8 +421,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const nonInstrument = new ModEntityBuilder('book_1')
           .withName('book about music')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .build();
 
         testFixture.reset([room, actor, nonInstrument]);
@@ -452,8 +452,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const nonInstrument = new ModEntityBuilder('random_item')
           .withName('random item')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .build();
 
         testFixture.reset([room, actor, nonInstrument]);
@@ -496,16 +496,16 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const flute = new ModEntityBuilder('flute_1')
           .withName('silver flute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
         const violin = new ModEntityBuilder('violin_1')
           .withName('violin')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -537,16 +537,16 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const trumpet = new ModEntityBuilder('trumpet_1')
           .withName('trumpet')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
         const drum = new ModEntityBuilder('drum_1')
           .withName('drum')
           .atLocation('room1')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 

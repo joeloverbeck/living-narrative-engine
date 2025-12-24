@@ -6,11 +6,21 @@
   "description": "Provides anatomy-driven oxygen tracking, hypoxia progression, and asphyxiation mechanics for drowning and strangulation scenarios.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "breathing-states",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
+    "libraries": ["respiratory.slot-library.json"],
     "components": [
       "hypoxic.component.json",
-      "respiratory_organ.component.json"
+      "unconscious_anoxia.component.json"
     ],
     "entities": {
       "definitions": [],

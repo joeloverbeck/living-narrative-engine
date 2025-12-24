@@ -56,10 +56,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
       ]);
     });
 
-    it('should require items:item and music:is_instrument components on primary target', () => {
+    it('should require items-core:item and music:is_instrument components on primary target', () => {
       expect(playFlourishAction.required_components.primary).toBeDefined();
       expect(playFlourishAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'music:is_instrument',
       ]);
     });
@@ -106,8 +106,8 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('flute1')
           .withName('silver flute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -156,8 +156,8 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('harp1')
           .withName('wooden harp')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -195,7 +195,7 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -228,7 +228,7 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -261,7 +261,7 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

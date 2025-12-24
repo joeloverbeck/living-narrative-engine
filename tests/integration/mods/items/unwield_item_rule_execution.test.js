@@ -35,8 +35,8 @@ describe('unwield_item rule execution', () => {
     it('should execute successfully when actor unwields weapon', async () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Test Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -67,8 +67,8 @@ describe('unwield_item rule execution', () => {
     it('should dispatch perceptible_event with correct message format', async () => {
       const weapon = new ModEntityBuilder('silver-blade')
         .withName('Silver Blade')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -101,8 +101,8 @@ describe('unwield_item rule execution', () => {
     it('should remove wielding component when last item is unwielded', async () => {
       const weapon = new ModEntityBuilder('test-weapon')
         .withName('Test Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -134,15 +134,15 @@ describe('unwield_item rule execution', () => {
     it('should keep wielding component when other items remain wielded', async () => {
       const weapon1 = new ModEntityBuilder('dagger')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const weapon2 = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -178,8 +178,8 @@ describe('unwield_item rule execution', () => {
     it('should unlock appendages based on item grabbing requirements', async () => {
       const weapon = new ModEntityBuilder('longsword')
         .withName('Longsword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('anatomy:requires_grabbing', { handsRequired: 2 })
         .build();
@@ -213,8 +213,8 @@ describe('unwield_item rule execution', () => {
       // Weapon without anatomy:requires_grabbing component
       const weapon = new ModEntityBuilder('simple-knife')
         .withName('Simple Knife')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         // NO anatomy:requires_grabbing - should default to 1
         .build();
@@ -249,16 +249,16 @@ describe('unwield_item rule execution', () => {
       // Item in inventory but NOT wielded
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Test Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       // Different weapon that IS wielded
       const otherWeapon = new ModEntityBuilder('test-dagger')
         .withName('Test Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -301,8 +301,8 @@ describe('unwield_item rule execution', () => {
       // Item in inventory
       const weapon = new ModEntityBuilder('test-weapon')
         .withName('Test Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -339,8 +339,8 @@ describe('unwield_item rule execution', () => {
     it('should trigger description regeneration after unwielding', async () => {
       const weapon = new ModEntityBuilder('test-weapon')
         .withName('Test Weapon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 

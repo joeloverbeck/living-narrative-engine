@@ -45,8 +45,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
 
       const weapon = new ModEntityBuilder('dagger')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('anatomy:requires_grabbing', { handsRequired: 1 })
         .build();
@@ -83,8 +83,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
 
       const weapon = new ModEntityBuilder('greatsword')
         .withName('Greatsword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('anatomy:requires_grabbing', { handsRequired: 2 })
         .build();
@@ -122,8 +122,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // Weapon WITHOUT anatomy:requires_grabbing component
       const weapon = new ModEntityBuilder('revolver')
         .withName('Revolver')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         // NOTE: No anatomy:requires_grabbing component - should default to 1
         .build();
@@ -160,8 +160,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
 
       const weapon = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('anatomy:requires_grabbing', { handsRequired: 1 })
         .build();

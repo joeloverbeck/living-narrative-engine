@@ -13,6 +13,6 @@
       "imagePath": "portraits/rustic_wooden_table.png",
       "altText": "A sturdy wooden table with thick plain legs and a worn surface"
     },
-    "items:item": {}
+    "items-core:item": {}
   }
 }

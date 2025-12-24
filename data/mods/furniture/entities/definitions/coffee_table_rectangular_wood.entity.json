@@ -13,6 +13,6 @@
       "imagePath": "portraits/coffee_table_rectangular_wood.png",
       "altText": "A rectangular wooden coffee table"
     },
-    "items:item": {}
+    "items-core:item": {}
   }
 }

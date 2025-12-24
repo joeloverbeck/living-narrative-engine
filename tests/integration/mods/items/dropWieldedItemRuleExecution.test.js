@@ -37,8 +37,8 @@ describe('item-handling:drop_wielded_item action integration', () => {
     it('successfully drops a wielded item', async () => {
       const sword = new ModEntityBuilder('wielded-sword')
         .withName('Iron Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -83,7 +83,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       );
       expect(wieldingComponent).toBeNull();
 
-      expect(testFixture.events).toDispatchEvent('items:item_dropped');
+      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess(
         'Fighter drops Iron Sword.'
@@ -94,8 +94,8 @@ describe('item-handling:drop_wielded_item action integration', () => {
       // This is the KEY test case - drop_wielded_item should work even without free appendage
       const greatsword = new ModEntityBuilder('greatsword')
         .withName('Greatsword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', { twoHanded: true })
         .build();
 
@@ -138,7 +138,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       });
 
       // Verify success
-      expect(testFixture.events).toDispatchEvent('items:item_dropped');
+      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess(
         'Warrior drops Greatsword.'
@@ -148,15 +148,15 @@ describe('item-handling:drop_wielded_item action integration', () => {
     it('drops one wielded item when dual wielding', async () => {
       const sword = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const dagger = new ModEntityBuilder('dagger')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -213,8 +213,8 @@ describe('item-handling:drop_wielded_item action integration', () => {
     it('creates perception log entry when wielded item dropped', async () => {
       const weapon = new ModEntityBuilder('pistol')
         .withName('Pistol')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -255,8 +255,8 @@ describe('item-handling:drop_wielded_item action integration', () => {
     it('includes correct description in perception log', async () => {
       const weapon = new ModEntityBuilder('rifle')
         .withName('Hunting Rifle')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -299,8 +299,8 @@ describe('item-handling:drop_wielded_item action integration', () => {
     it('should dispatch item_dropped event with correct payload', async () => {
       const weapon = new ModEntityBuilder('axe')
         .withName('Battle Axe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -326,10 +326,10 @@ describe('item-handling:drop_wielded_item action integration', () => {
 
       await testFixture.executeAction('blacksmith', 'axe');
 
-      expect(testFixture.events).toDispatchEvent('items:item_dropped');
+      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
 
       const itemDroppedEvent = testFixture.events.find(
-        (event) => event.eventType === 'items:item_dropped'
+        (event) => event.eventType === 'items-core:item_dropped'
       );
 
       expect(itemDroppedEvent?.payload.actorEntity).toBe('blacksmith');

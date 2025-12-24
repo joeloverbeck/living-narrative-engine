@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.slot-library.schema.json",
+  "id": "breathing:respiratory_slots",
+  "description": "Standard respiratory organ slot definitions for breathing mechanics",
+  "slotDefinitions": {
+    "standard_lung": {
+      "socket": "lung_socket",
+      "requirements": {
+        "partType": "lung",
+        "components": ["anatomy:part", "breathing-states:respiratory_organ"]
+      }
+    }
+  }
+}

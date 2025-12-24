@@ -44,8 +44,8 @@ describe('clothing:put_on_clothing action discovery', () => {
         layer: 'base',
         equipmentSlots: { primary: 'torso_upper' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 
@@ -55,8 +55,8 @@ describe('clothing:put_on_clothing action discovery', () => {
         layer: 'base',
         equipmentSlots: { primary: 'torso_upper' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 
@@ -94,8 +94,8 @@ describe('clothing:put_on_clothing action discovery', () => {
         layer: 'base',
         equipmentSlots: { primary: 'head' },
       })
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1 })
       .build();
 

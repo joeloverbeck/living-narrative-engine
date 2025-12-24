@@ -41,8 +41,8 @@ function setupDrinkingScenario(
 
   const container = new ModEntityBuilder(containerId)
     .withName('waterskin')
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('containers-core:liquid_container', {
       currentVolume: 500, // 500ml of liquid
       maxVolume: 1000, // 1L capacity

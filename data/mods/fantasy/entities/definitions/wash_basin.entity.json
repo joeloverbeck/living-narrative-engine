@@ -8,7 +8,7 @@
         "core:description": {
             "text": "A shallow, sturdy wash basin with a thick rim and a few honest chips from hard use. It holds a pool of clear water meant for rinsing blood and grit—cool to the touch, with a faint film of soap-scum and silt that catches the light when the basin is disturbed."
         },
-        "items:item": {},
+        "items-core:item": {},
         "core:weight": {
             "weight": 0.5
         },

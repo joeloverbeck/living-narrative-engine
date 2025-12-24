@@ -55,8 +55,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('silver lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -89,7 +89,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('piano1')
         .withName('grand piano')
         .atLocation('studio')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -121,8 +121,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('violin1')
         .withName('violin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -159,8 +159,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('silver lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -201,7 +201,7 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('piano1')
         .withName('grand piano')
         .atLocation('studio')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -227,8 +227,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('harp1')
         .withName('harp')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -262,8 +262,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('drum1')
         .withName('war drum')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -296,8 +296,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('harp1')
         .withName('golden harp')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -333,8 +333,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('drum1')
         .withName('war drum')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -371,8 +371,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('violin1')
         .withName('violin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 

@@ -66,7 +66,7 @@ describe('items:apply_lipstick action definition', () => {
       'items:inventory',
     ]);
     expect(applyLipstickAction.required_components.primary).toEqual([
-      'items:item',
+      'items-core:item',
       'items:can_apply_lipstick',
     ]);
     expect(Array.isArray(applyLipstickAction.prerequisites)).toBe(true);
@@ -89,8 +89,8 @@ describe('items:apply_lipstick action definition', () => {
 
       const lipstick = new ModEntityBuilder('lipstick1')
         .withName('red lipstick')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:can_apply_lipstick', {})
         .build();
 
@@ -118,8 +118,8 @@ describe('items:apply_lipstick action definition', () => {
       const lipstick = new ModEntityBuilder('lipstick_unreachable')
         .withName('red lipstick')
         .atLocation('studio')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:can_apply_lipstick', {})
         .build();
 
@@ -150,8 +150,8 @@ describe('items:apply_lipstick action definition', () => {
 
       const plainBalm = new ModEntityBuilder('plain-balm')
         .withName('plain balm')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, plainBalm]);

@@ -45,13 +45,13 @@ describe('throw_item_at_target action definition', () => {
       expect(actionJson.required_components.actor).toEqual([]);
     });
 
-    it('should require primary target to have items:portable component', () => {
+    it('should require primary target to have items-core:portable component', () => {
       expect(actionJson.required_components.primary).toContain(
-        'items:portable'
+        'items-core:portable'
       );
     });
 
-    it('should only require items:portable on primary (no weapon requirement)', () => {
+    it('should only require items-core:portable on primary (no weapon requirement)', () => {
       expect(actionJson.required_components.primary).toHaveLength(1);
       expect(actionJson.required_components.primary).not.toContain(
         'weapons:weapon'
@@ -259,7 +259,7 @@ describe('throwable_items scope definition', () => {
     expect(scopeContent).toContain('items:inventory');
 
     // Should filter by portable component
-    expect(scopeContent).toContain('items:portable');
+    expect(scopeContent).toContain('items-core:portable');
 
     // Should use union operator
     expect(scopeContent).toMatch(/\|/);

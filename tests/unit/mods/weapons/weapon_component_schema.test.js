@@ -19,7 +19,7 @@ import weaponComponent from '../../../../data/mods/weapons/components/weapon.com
  *
  * This suite validates that the weapons:weapon marker component definition
  * conforms to the primary component schema and follows the marker component pattern
- * established by items:item and items:portable.
+ * established by items-core:item and items-core:portable.
  */
 describe('weapons:weapon Component Definition', () => {
   /** @type {import('ajv').ValidateFunction} */
@@ -69,7 +69,7 @@ describe('weapons:weapon Component Definition', () => {
       expect(weaponComponent.dataSchema.additionalProperties).toBe(false);
     });
 
-    test('should follow the same pattern as items:item marker component', () => {
+    test('should follow the same pattern as items-core:item marker component', () => {
       // Marker components should have empty properties and disallow additional properties
       const hasEmptyProperties =
         Object.keys(weaponComponent.dataSchema.properties || {}).length === 0;
@@ -104,8 +104,8 @@ describe('weapons:weapon Component Definition', () => {
 
     test('description should mention required companion components', () => {
       const description = weaponComponent.description;
-      expect(description).toContain('items:item');
-      expect(description).toContain('items:portable');
+      expect(description).toContain('items-core:item');
+      expect(description).toContain('items-core:portable');
       expect(description).toContain('anatomy:requires_grabbing');
     });
   });

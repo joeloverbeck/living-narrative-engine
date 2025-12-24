@@ -31,8 +31,8 @@ function setupExamineOwnedItemScenario(
 
   const itemEntity = new ModEntityBuilder(item.id)
     .withName(item.id)
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('core:description', { text: item.description })
     .build();
 
@@ -198,9 +198,9 @@ describe('observation:examine_owned_item rule execution', () => {
       expect(eventTypes).toContain('core:turn_ended');
 
       // Should NOT have any item state change events
-      expect(eventTypes).not.toContain('items:item_picked_up');
-      expect(eventTypes).not.toContain('items:item_dropped');
-      expect(eventTypes).not.toContain('items:item_transferred');
+      expect(eventTypes).not.toContain('items-core:item_picked_up');
+      expect(eventTypes).not.toContain('items-core:item_dropped');
+      expect(eventTypes).not.toContain('items-core:item_transferred');
 
       expectSuccessfulTurnEnd(testFixture.events);
     });
@@ -252,15 +252,15 @@ describe('observation:examine_owned_item rule execution', () => {
 
       const map = new ModEntityBuilder('map-1')
         .withName('map-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:description', { text: 'A treasure map.' })
         .build();
 
       const compass = new ModEntityBuilder('compass-1')
         .withName('compass-1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:description', { text: 'A brass compass.' })
         .build();
 

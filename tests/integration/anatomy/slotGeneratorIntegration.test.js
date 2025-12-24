@@ -101,7 +101,7 @@ describe('SlotGenerator Integration', () => {
           socket: 'grip_left',
           requirements: {
             partType: 'weapon',
-            components: ['items:item'],
+            components: ['items-core:item'],
           },
           optional: true,
         },

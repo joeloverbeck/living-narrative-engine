@@ -45,19 +45,23 @@ describe('Furniture Mod Dependencies - Integration', () => {
       expect(Array.isArray(furnitureManifest.dependencies)).toBe(true);
     });
 
-    it('should declare items mod as dependency when entities use items:item component', () => {
-      // Find all entities that use items:item component
-      const entitiesUsingItemsComponent = furnitureEntities.filter((entity) => {
-        const components = entity.data.components || {};
-        return Object.keys(components).some((key) => key.startsWith('items:'));
-      });
+    it('should declare items-core mod as dependency when entities use items-core:item component', () => {
+      // Find all entities that use items-core:item component
+      const entitiesUsingItemsCoreComponent = furnitureEntities.filter(
+        (entity) => {
+          const components = entity.data.components || {};
+          return Object.keys(components).some((key) =>
+            key.startsWith('items-core:')
+          );
+        }
+      );
 
-      // Verify entities using items: components exist (documents the requirement)
-      expect(entitiesUsingItemsComponent.length).toBeGreaterThan(0);
+      // Verify entities using items-core: components exist (documents the requirement)
+      expect(entitiesUsingItemsCoreComponent.length).toBeGreaterThan(0);
 
-      // items must be a dependency
+      // items-core must be a dependency
       const dependencyIds = furnitureManifest.dependencies.map((d) => d.id);
-      expect(dependencyIds).toContain('items');
+      expect(dependencyIds).toContain('items-core');
     });
 
     it('should list all required mod dependencies for components used', () => {
@@ -91,23 +95,23 @@ describe('Furniture Mod Dependencies - Integration', () => {
   });
 
   describe('Items Component Usage', () => {
-    it('should identify entities using items:item component and have items dependency', () => {
-      const entitiesWithItemsComponent = furnitureEntities
+    it('should identify entities using items-core:item component and have items-core dependency', () => {
+      const entitiesWithItemsCoreComponent = furnitureEntities
         .filter((entity) => {
           const components = entity.data.components || {};
-          return 'items:item' in components;
+          return 'items-core:item' in components;
         })
         .map((e) => e.filename);
 
-      // This test documents which entities need items:item
-      // The list should be non-empty (requirement for items dependency)
-      expect(entitiesWithItemsComponent.length).toBeGreaterThan(0);
+      // This test documents which entities need items-core:item
+      // The list should be non-empty (requirement for items-core dependency)
+      expect(entitiesWithItemsCoreComponent.length).toBeGreaterThan(0);
 
-      // Verify items dependency is declared
-      const hasItemsDependency = furnitureManifest.dependencies.some(
-        (d) => d.id === 'items'
+      // Verify items-core dependency is declared
+      const hasItemsCoreDependency = furnitureManifest.dependencies.some(
+        (d) => d.id === 'items-core'
       );
-      expect(hasItemsDependency).toBe(true);
+      expect(hasItemsCoreDependency).toBe(true);
     });
   });
 });

@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A sleek tube of richly pigmented red lipstick, ready to brighten any smile."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "items:can_apply_lipstick": {},
     "core:weight": {
       "weight": 0.1

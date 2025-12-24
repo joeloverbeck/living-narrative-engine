@@ -49,7 +49,7 @@ describe('quickly_wield_weapon action', () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Iron Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -82,7 +82,7 @@ describe('quickly_wield_weapon action', () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Iron Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -113,7 +113,7 @@ describe('quickly_wield_weapon action', () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Iron Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -146,7 +146,7 @@ describe('quickly_wield_weapon action', () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Iron Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -179,7 +179,7 @@ describe('quickly_wield_weapon action', () => {
       const weapon = new ModEntityBuilder('silver-sword')
         .withName('Silver Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -219,15 +219,15 @@ describe('quickly_wield_weapon action', () => {
 
       const existingSword = new ModEntityBuilder('existing-sword')
         .withName('Existing Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const newWeapon = new ModEntityBuilder('new-sword')
         .withName('New Sword')
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:portable', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 

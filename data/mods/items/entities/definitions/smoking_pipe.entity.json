@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A straight-stemmed wooden pipe with a shallow bowl that shows the dark sheen of long use. The rim is neatly charred, the stem burnished smooth where fingers rest, and the whole piece smells faintly of sweet leaf smoke and beeswax polish."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.2
     },

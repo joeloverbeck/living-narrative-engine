@@ -127,7 +127,7 @@ describe('observation:examine_item_in_location lighting prerequisite', () => {
         'examine {target} in location'
       );
       expect(examineItemInLocationAction.targets.primary.scope).toBe(
-        'items:items_at_actor_location'
+        'items-core:items_at_actor_location'
       );
     });
 

@@ -45,7 +45,7 @@ export const createPortableItemFixture = (overrides = {}) => ({
   id: overrides.id || 'rock-001',
   components: {
     'core:name': { value: overrides.name || 'Small Rock' },
-    'items:portable': { weight: overrides.weight ?? 1.0 },
+    'items-core:portable': { weight: overrides.weight ?? 1.0 },
     ...overrides.components,
   },
 });
@@ -59,7 +59,7 @@ export const createWeaponFixture = (overrides = {}) => ({
   id: overrides.id || 'dagger-001',
   components: {
     'core:name': { value: overrides.name || 'Rusty Dagger' },
-    'items:portable': { weight: overrides.weight ?? 0.5 },
+    'items-core:portable': { weight: overrides.weight ?? 0.5 },
     'damage-types:damage_capabilities': {
       damages: overrides.damages || [{ type: 'piercing', amount: 5 }],
     },

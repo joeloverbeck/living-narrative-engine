@@ -172,7 +172,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
       id: 'test-hacksaw',
       name: 'Rusty Hacksaw',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
@@ -232,7 +232,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
       id: 'test-hacksaw-corroded',
       name: 'Hacksaw',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
@@ -306,7 +306,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
 
     const swordId = fixture.createEntity({
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } },
       ],
     });
@@ -351,7 +351,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
     // Tool
     const hacksawId = fixture.createEntity({
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
@@ -394,7 +394,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
     // Tool
     const hacksawId = fixture.createEntity({
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
@@ -439,7 +439,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
     // Tool
     const hacksawId = fixture.createEntity({
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],
@@ -484,7 +484,7 @@ describe('breaching:saw_through_barred_blocker Action Discovery', () => {
     // Tool
     const hacksawId = fixture.createEntity({
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } }
       ],

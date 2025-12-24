@@ -403,7 +403,7 @@ describe('PickRandomEntityHandler', () => {
       // e3 lacks required, e4 passes all filters
       mockEntityManager.hasComponent.mockImplementation((id, type) => {
         if (type === 'core:actor') return id === 'e2';
-        if (type === 'items:portable') return id === 'e4';
+        if (type === 'items-core:portable') return id === 'e4';
         return false;
       });
 
@@ -411,7 +411,7 @@ describe('PickRandomEntityHandler', () => {
         {
           location_id: locationId,
           exclude_entities: ['e1'],
-          require_components: ['items:portable'],
+          require_components: ['items-core:portable'],
           exclude_components: ['core:actor'],
           result_variable: 'result',
         },

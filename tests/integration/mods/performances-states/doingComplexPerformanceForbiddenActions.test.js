@@ -172,7 +172,7 @@ describe('actions forbidden when doing complex performance', () => {
         // Create a clothing item
         const shirt = new ModEntityBuilder('shirt1')
           .withName('shirt')
-          .withComponent('items:item', {})
+          .withComponent('items-core:item', {})
           .withComponent('clothing:clothing', {
             slot: 'torso_upper',
             layer: 1,
@@ -230,8 +230,8 @@ describe('actions forbidden when doing complex performance', () => {
 
         const book = new ModEntityBuilder('book1')
           .withName('book')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', { weight: 5 })
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', { weight: 5 })
           .withComponent('core:description', {
             short: 'a leather-bound book',
             long: 'A hefty tome bound in worn leather.',
@@ -261,7 +261,7 @@ describe('actions forbidden when doing complex performance', () => {
         const vase = new ModEntityBuilder('vase1')
           .withName('vase')
           .atLocation('room1')
-          .withComponent('items:item', {})
+          .withComponent('items-core:item', {})
           .withComponent('core:description', {
             short: 'a ceramic vase',
             long: 'An ornate ceramic vase with floral patterns.',

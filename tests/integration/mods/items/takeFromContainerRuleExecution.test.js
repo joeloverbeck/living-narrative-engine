@@ -54,15 +54,15 @@ function setupTakeFromContainerScenario(
       capacity: { maxWeight: 100, maxItems: 20 },
       isOpen,
     })
-    .withComponent('items:openable', {})
+    .withComponent('items-core:openable', {})
     .build();
 
   // Create actual item entities for each item in the container
   const itemEntities = containerContents.map((itemId) =>
     new ModEntityBuilder(itemId)
       .withName(itemId)
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.5 })
       .build()
   );
@@ -509,7 +509,7 @@ describe('containers:take_from_container action integration', () => {
         testFixture.entityManager.getEntityInstance('merchant-chest');
 
       // Verify all components intact
-      expect(container.components['items:openable']).toBeDefined();
+      expect(container.components['items-core:openable']).toBeDefined();
       expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
 
@@ -550,20 +550,20 @@ describe('containers:take_from_container action integration', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('Apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const bread = new ModEntityBuilder('bread-1')
         .withName('Bread')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 

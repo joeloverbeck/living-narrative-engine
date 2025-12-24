@@ -86,22 +86,22 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
         .withName('jug of cider')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 2 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 2 })
         .build();
 
       const jugMead = new ModEntityBuilder('fantasy:jug_of_mead_instance')
         .withName('jug of mead')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 2 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 2 })
         .build();
 
       // Pipe in Bertram's inventory (this is what he can put on the table)
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       // Bertram seated on stool with pipe in inventory
@@ -254,8 +254,8 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       // Bertram is STANDING (no sitting_on component)
@@ -316,8 +316,8 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       const bertram = new ModEntityBuilder(
@@ -381,8 +381,8 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       const bertram = new ModEntityBuilder(
@@ -446,14 +446,14 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       // Multiple items in inventory
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       const coin = new ModEntityBuilder('fantasy:gold_coin_instance')
         .withName('gold coin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.1 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.1 })
         .build();
 
       // Bertram with multiple items in inventory
@@ -540,8 +540,8 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       // Bertram on stool 2
@@ -622,8 +622,8 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
         .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', { weight: 0.5 })
         .build();
 
       const bertram = new ModEntityBuilder(

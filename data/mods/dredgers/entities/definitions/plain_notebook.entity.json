@@ -8,7 +8,7 @@
       "core:description": {
         "text": "A plain notebook with dog-eared corners and hints of water-damage on the pages."
       },
-      "items:item": {},
+      "items-core:item": {},
       "core:weight": {
         "weight": 0.01
       },

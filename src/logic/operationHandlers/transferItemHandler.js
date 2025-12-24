@@ -24,7 +24,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const ITEM_TRANSFERRED_EVENT = 'items:item_transferred';
+const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
 
 /**
  * @typedef {object} TransferItemParams

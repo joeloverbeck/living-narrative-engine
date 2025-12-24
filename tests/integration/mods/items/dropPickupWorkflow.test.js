@@ -71,8 +71,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
     const actor2Hands = actor2Builder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -138,20 +138,20 @@ describe('Items - Drop and Pick Up Workflow', () => {
     const handEntities = actorBuilder.getHandEntities();
     const letter = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
     const gun = new ModEntityBuilder('gun-1')
       .withName('Gun')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1.2 })
       .build();
     const key = new ModEntityBuilder('key-1')
       .withName('Key')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.02 })
       .build();
 
@@ -189,8 +189,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
     const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 

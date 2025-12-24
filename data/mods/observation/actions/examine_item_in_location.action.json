@@ -5,13 +5,13 @@
   "description": "Inspect an item at your current location to learn its details",
   "targets": {
     "primary": {
-      "scope": "items:items_at_actor_location",
+      "scope": "items-core:items_at_actor_location",
       "placeholder": "target",
       "description": "Item at location to examine"
     }
   },
   "required_components": {
-    "primary": ["items:item", "core:description"]
+    "primary": ["items-core:item", "core:description"]
   },
   "forbidden_components": {
     "actor": [

@@ -44,8 +44,8 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
       })),
       getEntityInstance: jest.fn((entityId) => ({
         getComponentTypeIds: () => [
-          'items:item',
-          'items:portable',
+          'items-core:item',
+          'items-core:portable',
           'core:position',
         ],
       })),
@@ -97,7 +97,7 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
 
     // First parameter should be the event name STRING
     expect(typeof call.firstArg).toBe('string');
-    expect(call.firstArg).toBe('items:item_dropped');
+    expect(call.firstArg).toBe('items-core:item_dropped');
 
     // Second parameter should be the payload OBJECT
     expect(typeof call.secondArg).toBe('object');
@@ -108,7 +108,7 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
     });
 
     // FAILURE CASE: If this test fails, it means dispatch was called like:
-    // dispatch({type: 'items:item_dropped', payload: {...}})
+    // dispatch({type: 'items-core:item_dropped', payload: {...}})
     // which results in firstArg being an object, not a string
     expect(call.firstArg).not.toHaveProperty('type');
     expect(call.firstArg).not.toHaveProperty('payload');
@@ -149,6 +149,6 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
 
     // When converted to string for logging, event name should not be "[object Object]"
     expect(String(call.firstArg)).not.toBe('[object Object]');
-    expect(String(call.firstArg)).toBe('items:item_dropped');
+    expect(String(call.firstArg)).toBe('items-core:item_dropped');
   });
 });

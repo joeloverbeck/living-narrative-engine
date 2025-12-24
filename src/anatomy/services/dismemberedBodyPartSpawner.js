@@ -12,8 +12,8 @@ import {
 
 // --- Component ID Constants ---
 const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
-const ITEMS_ITEM_COMPONENT_ID = 'items:item';
-const ITEMS_PORTABLE_COMPONENT_ID = 'items:portable';
+const ITEMS_ITEM_COMPONENT_ID = 'items-core:item';
+const ITEMS_PORTABLE_COMPONENT_ID = 'items-core:portable';
 const WEIGHT_COMPONENT_ID = 'core:weight';
 
 // --- Event ID Constants ---

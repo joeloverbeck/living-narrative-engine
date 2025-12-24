@@ -41,87 +41,135 @@
       "sockets": [
         {
           "id": "neck",
-          "allowedTypes": ["head", "neck"],
+          "allowedTypes": [
+            "head",
+            "neck"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "left_shoulder",
           "orientation": "left",
-          "allowedTypes": ["arm"],
+          "allowedTypes": [
+            "arm"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_shoulder",
           "orientation": "right",
-          "allowedTypes": ["arm"],
+          "allowedTypes": [
+            "arm"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "left_hip",
           "orientation": "left",
-          "allowedTypes": ["leg"],
+          "allowedTypes": [
+            "leg"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_hip",
           "orientation": "right",
-          "allowedTypes": ["leg"],
+          "allowedTypes": [
+            "leg"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "left_chest",
           "orientation": "left",
-          "allowedTypes": ["breast"],
+          "allowedTypes": [
+            "breast"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_chest",
           "orientation": "right",
-          "allowedTypes": ["breast"],
+          "allowedTypes": [
+            "breast"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "pubic_hair",
-          "allowedTypes": ["pubic_hair"],
+          "allowedTypes": [
+            "pubic_hair"
+          ],
           "nameTpl": "pubic hair"
         },
         {
           "id": "vagina",
-          "allowedTypes": ["vagina"],
+          "allowedTypes": [
+            "vagina"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "asshole",
-          "allowedTypes": ["asshole"],
+          "allowedTypes": [
+            "asshole"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "left_ass",
           "orientation": "left",
-          "allowedTypes": ["ass_cheek"],
+          "allowedTypes": [
+            "ass_cheek"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_ass",
           "orientation": "right",
-          "allowedTypes": ["ass_cheek"],
+          "allowedTypes": [
+            "ass_cheek"
+          ],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "heart_socket",
-          "allowedTypes": ["heart"],
+          "allowedTypes": [
+            "heart"
+          ],
           "nameTpl": "{{type}}"
         },
         {
           "id": "spine_socket",
-          "allowedTypes": ["spine"],
+          "allowedTypes": [
+            "spine"
+          ],
           "nameTpl": "{{type}}"
+        },
+        {
+          "id": "lung_left_socket",
+          "orientation": "left",
+          "allowedTypes": [
+            "lung"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "lung_right_socket",
+          "orientation": "right",
+          "allowedTypes": [
+            "lung"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
         }
       ]
     },
     "anatomy:visibility_rules": {
       "clothingSlotId": "torso_upper",
-      "nonBlockingLayers": ["underwear", "accessories"]
+      "nonBlockingLayers": [
+        "underwear",
+        "accessories"
+      ]
     },
     "core:name": {
       "text": "torso"

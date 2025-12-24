@@ -41,14 +41,14 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
 
       const targetInstrument = new ModEntityBuilder('target_lute')
         .withName('target lute')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
       const otherInstrument = new ModEntityBuilder('other_lute')
         .withName('other lute')
         .atLocation('room1')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -91,7 +91,7 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
       const instrument = new ModEntityBuilder('distant_lute')
         .withName('distant lute')
         .atLocation('room_b')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -227,7 +227,7 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
 
       const instrument = new ModEntityBuilder('specific_id_12345')
         .withName('specifically identified instrument')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

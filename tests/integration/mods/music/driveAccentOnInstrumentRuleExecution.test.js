@@ -54,7 +54,7 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar1')
         .withName('electric guitar')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -104,7 +104,7 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('organ1')
         .withName('grand organ')
         .atLocation('hall')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -141,8 +141,8 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
         const instrument = new ModEntityBuilder('instrument1')
           .withName('test instrument')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -183,8 +183,8 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('instrument1')
         .withName('instrument')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -223,7 +223,7 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('drums1')
         .withName('drums')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -266,7 +266,7 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('cello1')
         .withName('cello')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -302,7 +302,7 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('trumpet1')
         .withName('trumpet')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

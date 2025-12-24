@@ -8,7 +8,7 @@
     "core:description": {
       "text": "A wrinkled notice written in surprisingly neat handwriting, though the paper has suspicious stains around the edges."
     },
-    "items:item": {},
+    "items-core:item": {},
     "core:weight": {
       "weight": 0.01
     },

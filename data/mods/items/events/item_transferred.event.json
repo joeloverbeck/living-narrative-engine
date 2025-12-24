@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "items:item_transferred",
+  "id": "items-core:item_transferred",
   "description": "Fired when an item is successfully transferred from one entity's inventory to another's.",
   "payloadSchema": {
     "title": "Items: Item Transferred Payload",
-    "description": "Payload for the items:item_transferred event.",
+    "description": "Payload for the items-core:item_transferred event.",
     "type": "object",
     "properties": {
       "fromEntity": {

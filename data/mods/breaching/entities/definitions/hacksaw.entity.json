@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A hacksaw with a frame of bent iron and a blade that's been changed more times than anyone's counted. The teeth are fine and sharp, meant for the slow work that bolt cutters can't manage—thicker bars at awkward angles, brackets welded into corners, anything that needs a clean cut rather than a violent one. The handle is wrapped in old leather that's gone dark with sweat and grime. It's patient work, using a hacksaw in the tunnels, but sometimes patience is what keeps a passage from collapsing when you force things."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.8
     },

@@ -43,7 +43,7 @@ describe('Drink From - Inventory Items Integration', () => {
         flavorText: 'Smooth whiskey with a smoky finish.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component from bottle (simulating it being picked up into inventory)
       // Items in inventory shouldn't have position components
@@ -95,7 +95,7 @@ describe('Drink From - Inventory Items Integration', () => {
         flavorText: 'Barely a drop of water.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component (in inventory)
       fixture.entityManager.removeComponent(bottle.id, 'core:position');
@@ -142,7 +142,7 @@ describe('Drink From - Inventory Items Integration', () => {
         flavorText: 'Fresh water.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component (in inventory)
       fixture.entityManager.removeComponent(bottle.id, 'core:position');
@@ -192,7 +192,7 @@ describe('Drink From - Inventory Items Integration', () => {
         flavorText: 'Rich red wine.',
       });
       fixture.entityManager.addComponent(bottle.id, 'items:drinkable', {});
-      fixture.entityManager.addComponent(bottle.id, 'items:portable', {});
+      fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component (in inventory)
       fixture.entityManager.removeComponent(bottle.id, 'core:position');

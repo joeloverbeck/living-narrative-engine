@@ -1921,8 +1921,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
       ],
       inventory: [
         'items:actor_inventory_items',
-        'items:items_at_location',
-        'items:portable_items_at_location',
+        'items-core:items_at_location',
+        'items-core:portable_items_at_location',
         'items:actors_at_location',
         'containers-core:containers_at_location',
       ],

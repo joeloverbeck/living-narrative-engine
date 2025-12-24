@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:item",
+  "id": "items-core:item",
   "description": "Marker component identifying an entity as an item. Entities with this component are recognized by item-related systems.",
   "dataSchema": {
     "type": "object",

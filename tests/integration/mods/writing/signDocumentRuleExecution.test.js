@@ -42,8 +42,8 @@ function setupSignDocumentScenario(
 
   const documentBuilder = new ModEntityBuilder('contract-1')
     .withName('Employment Contract')
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('writing:signable', {});
 
   // Only add position if document is NOT in inventory
@@ -55,8 +55,8 @@ function setupSignDocumentScenario(
 
   const pencil = new ModEntityBuilder('pencil-1')
     .withName('pencil')
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('writing:allows_writing', {})
     .build();
 
@@ -162,15 +162,15 @@ describe('writing:sign_document action integration', () => {
 
       const letter = new ModEntityBuilder('letter-1')
         .withName('Official Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:signable', {})
         .build();
 
       const quill = new ModEntityBuilder('quill-1')
         .withName('quill')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('writing:allows_writing', {})
         .build();
 
@@ -282,10 +282,10 @@ describe('writing:sign_document action integration', () => {
       expect(eventTypes).toContain('core:turn_ended');
 
       // Should NOT have any item state change events
-      expect(eventTypes).not.toContain('items:item_picked_up');
-      expect(eventTypes).not.toContain('items:item_dropped');
-      expect(eventTypes).not.toContain('items:item_transferred');
-      expect(eventTypes).not.toContain('items:item_modified');
+      expect(eventTypes).not.toContain('items-core:item_picked_up');
+      expect(eventTypes).not.toContain('items-core:item_dropped');
+      expect(eventTypes).not.toContain('items-core:item_transferred');
+      expect(eventTypes).not.toContain('items-core:item_modified');
 
       expectSuccessfulTurnEnd(testFixture.events);
     });

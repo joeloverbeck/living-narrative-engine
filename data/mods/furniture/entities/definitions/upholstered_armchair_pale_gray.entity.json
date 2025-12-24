@@ -16,6 +16,6 @@
     "sitting:allows_sitting": {
       "spots": [null]
     },
-    "items:item": {}
+    "items-core:item": {}
   }
 }

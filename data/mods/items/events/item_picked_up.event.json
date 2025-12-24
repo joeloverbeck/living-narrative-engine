@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items:item_picked_up",
+  "id": "items-core:item_picked_up",
   "description": "Dispatched when an item is picked up from a location",
   "payloadSchema": {
     "type": "object",

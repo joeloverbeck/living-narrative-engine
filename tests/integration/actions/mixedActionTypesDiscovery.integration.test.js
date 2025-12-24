@@ -55,8 +55,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const coinId = 'test:coin';
     const coin = new ModEntityBuilder(coinId)
       .withName('gold coin')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.01 })
       .withComponent('core:description', {
         text: 'A shiny gold coin',
@@ -66,8 +66,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const letterId = 'test:letter';
     const letter = new ModEntityBuilder(letterId)
       .withName('sealed letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.02 })
       .withComponent('core:description', {
         text: 'A letter sealed with wax',
@@ -108,8 +108,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const gemId = 'test:gem';
     const gem = new ModEntityBuilder(gemId)
       .withName('ruby gem')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.1 })
       .withComponent('core:description', {
         text: 'A deep red ruby gem',
@@ -119,8 +119,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const scrollId = 'test:scroll';
     const scroll = new ModEntityBuilder(scrollId)
       .withName('ancient scroll')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .withComponent('core:description', {
         text: 'An ancient scroll with mystical writing',
@@ -131,7 +131,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const chest = new ModEntityBuilder(containerId)
       .withName('wooden chest')
       .atLocation('room1')
-      .withComponent('items:item', {})
+      .withComponent('items-core:item', {})
       .withComponent('containers-core:container', {
         contents: [gemId, scrollId],
         capacity: { maxWeight: 100, maxItems: 20 },
@@ -144,7 +144,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const closedBox = new ModEntityBuilder(closedBoxId)
       .withName('metal box')
       .atLocation('room1')
-      .withComponent('items:item', {})
+      .withComponent('items-core:item', {})
       .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxWeight: 50, maxItems: 10 },
@@ -157,8 +157,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const book = new ModEntityBuilder(bookId)
       .withName('leather journal')
       .atLocation('room1')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:description', {
         text: 'A weathered leather-bound journal',
       })
@@ -169,8 +169,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
     const lamp = new ModEntityBuilder(lampId)
       .withName('brass lamp')
       .atLocation('room1')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:description', {
         text: 'An ornate brass oil lamp',
       })

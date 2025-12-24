@@ -46,8 +46,8 @@ describe('items:apply_lipstick rule execution', () => {
 
     const lipstick = new ModEntityBuilder('lipstick1')
       .withName('red lipstick')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('items:can_apply_lipstick', {})
       .build();
 

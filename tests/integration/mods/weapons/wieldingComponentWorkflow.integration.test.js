@@ -46,8 +46,8 @@ describe('Wielding Component Workflow', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -78,8 +78,8 @@ describe('Wielding Component Workflow', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -113,15 +113,15 @@ describe('Wielding Component Workflow', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const dagger = new ModEntityBuilder('dagger-id')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -161,8 +161,8 @@ describe('Wielding Component Workflow', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -198,8 +198,8 @@ describe('Wielding Component Workflow', () => {
 
       const sword = new ModEntityBuilder('sword-id')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 

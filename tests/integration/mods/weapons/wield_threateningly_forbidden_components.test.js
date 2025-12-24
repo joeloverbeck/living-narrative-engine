@@ -62,8 +62,8 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
       // Create a weapon in inventory
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Test Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 

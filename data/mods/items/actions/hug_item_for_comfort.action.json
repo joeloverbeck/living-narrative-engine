@@ -12,7 +12,7 @@
     }
   },
   "required_components": {
-    "primary": ["items:item", "items:allows_soothing_hug"]
+    "primary": ["items-core:item", "items:allows_soothing_hug"]
   },
   "prerequisites": [],
   "template": "hug {item} to soothe yourself",

@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A classic acoustic guitar with a polished wooden body and six steel strings. Its hollow resonating chamber produces bright, versatile tones suitable for everything from gentle fingerpicking to energetic strumming."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "music:is_instrument": {},
     "core:weight": {
       "weight": 2.0

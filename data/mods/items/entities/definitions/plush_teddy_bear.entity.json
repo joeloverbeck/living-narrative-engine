@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A well-loved stuffed teddy bear with soft brown fur and button eyes. Its plush body is perfect for comforting hugs."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "items:allows_soothing_hug": {},
     "core:weight": {
       "weight": 0.3

@@ -466,7 +466,7 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
       mockTestEnv._registeredResolvers.has('items:actor_inventory_items')
     ).toBe(true);
     expect(
-      mockTestEnv._registeredResolvers.has('items:portable_items_at_location')
+      mockTestEnv._registeredResolvers.has('items-core:portable_items_at_location')
     ).toBe(true);
   });
 
@@ -541,7 +541,7 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
       mockTestEnv._registeredResolvers.has('positioning:sitting_actors')
     ).toBe(true);
     expect(
-      mockTestEnv._registeredResolvers.has('items:portable_items_at_location')
+      mockTestEnv._registeredResolvers.has('items-core:portable_items_at_location')
     ).toBe(true);
   });
 });

@@ -59,7 +59,7 @@ describe('items:read_item action definition', () => {
   it('should require item and readable components on primary target', () => {
     expect(readItemAction.required_components).toBeDefined();
     expect(readItemAction.required_components.primary).toEqual([
-      'items:item',
+      'items-core:item',
       'items:readable',
     ]);
   });
@@ -91,8 +91,8 @@ describe('items:read_item action definition', () => {
 
       const readableItem = new ModEntityBuilder('readable_item_inventory')
         .withName('Journal Page')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Day 12: Supplies are running low.',
         })
@@ -129,8 +129,8 @@ describe('items:read_item action definition', () => {
 
       const readableItem = new ModEntityBuilder('readable_item_reference')
         .withName('Encoded Tablet')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Tablet Entry: Rotate the sigil thrice to unlock the vault.',
         })
@@ -166,8 +166,8 @@ describe('items:read_item action definition', () => {
 
       const readableItem = new ModEntityBuilder('readable_item_mixed')
         .withName('Annotated Blueprint')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Margin notes detail secret maintenance tunnels beneath the manor.',
         })
@@ -175,8 +175,8 @@ describe('items:read_item action definition', () => {
 
       const nonReadableItem = new ModEntityBuilder('non_readable_item_mixed')
         .withName('Solid Brass Gear')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('A heavy gear with grease-stained teeth.')
         .build();
 
@@ -204,8 +204,8 @@ describe('items:read_item action definition', () => {
       const readableItem = new ModEntityBuilder('readable_item_location')
         .withName('Pinned Notice')
         .atLocation('library')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'All visitors must sign the guest book.',
         })
@@ -263,8 +263,8 @@ describe('items:read_item action definition', () => {
 
       const nonReadableItem = new ModEntityBuilder('non_readable_item')
         .withName('Metal Ingot')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('A heavy block of refined metal.')
         .build();
 
@@ -293,8 +293,8 @@ describe('items:read_item action definition', () => {
       const readableItem = new ModEntityBuilder('distant_readable_item')
         .withName('Sealed Ledger')
         .atLocation('room_b')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Ledger Entry 4B: Shipment delayed by storms.',
         })
@@ -331,8 +331,8 @@ describe('items:read_item action definition', () => {
 
       const readableItemOne = new ModEntityBuilder('readable_item_one')
         .withName('Annotated Diary Page')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Entry #17: The code is hidden beneath the lantern.',
         })
@@ -340,8 +340,8 @@ describe('items:read_item action definition', () => {
 
       const readableItemTwo = new ModEntityBuilder('readable_item_two')
         .withName('Encoded Telegram')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:readable', {
           text: 'Signal received. Proceed at dawn.',
         })
@@ -349,8 +349,8 @@ describe('items:read_item action definition', () => {
 
       const nonReadableItem = new ModEntityBuilder('non_readable_item_one')
         .withName('Polished River Stone')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('Smoothed by time and water, cool to the touch.')
         .build();
 

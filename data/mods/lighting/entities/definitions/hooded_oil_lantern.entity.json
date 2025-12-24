@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A squat brass lantern built for the tunnels, its hood angled forward like a brow to throw light low across water and rubble. The reservoir sits heavy at the bottom, keeping it steady when hung, and the glass is caged in brass ribs that have taken their share of knocks without shattering. A belt hook curls from the back, worn smooth where it's been clipped and unclipped a thousand times—dredgers hang these forward on their belts, letting the beam rake ahead of their boots. The brass has gone dull from oil-smoke and damp air, but the wick trims clean and the seal holds."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "lighting:is_light_source": {
       "fuelType": "oil"
     },

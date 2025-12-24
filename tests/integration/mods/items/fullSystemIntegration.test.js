@@ -98,8 +98,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const ownedItem = new ModEntityBuilder('owned-item')
         .withName('Owned Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .withComponent('items:readable', { content: 'Test content' })
         .withComponent('core:description', {
@@ -110,16 +110,16 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       const locationItem = new ModEntityBuilder('floor-item')
         .withName('Floor Item')
         .atLocation('verification-room')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const container = new ModEntityBuilder('test-chest')
         .withName('Test Chest')
         .atLocation('verification-room')
-        .withComponent('items:item', {})
-        .withComponent('items:openable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:openable', {})
         .withComponent('containers-core:container', {
           contents: ['chest-item'],
           capacity: { maxWeight: 20, maxItems: 5 },
@@ -129,8 +129,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const chestItem = new ModEntityBuilder('chest-item')
         .withName('Chest Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.3 })
         .build();
 
@@ -146,7 +146,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       ]);
       await fixtures.drop.executeAction('test-actor', 'owned-item');
       expect(
-        fixtures.drop.events.some((e) => e.eventType === 'items:item_dropped')
+        fixtures.drop.events.some((e) => e.eventType === 'items-core:item_dropped')
       ).toBe(true);
 
       // Test pick_up_item
@@ -172,7 +172,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       await fixtures.pickup.executeAction('test-actor', 'owned-item');
       expect(
         fixtures.pickup.events.some(
-          (e) => e.eventType === 'items:item_picked_up'
+          (e) => e.eventType === 'items-core:item_picked_up'
         )
       ).toBe(true);
 
@@ -298,13 +298,13 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
           capacity: { maxWeight: 20, maxItems: 5 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const book = new ModEntityBuilder('book-1')
         .withName('Ancient Tome')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 2.0 })
         .withComponent('core:description', {
           text: 'An ancient tome filled with mysterious knowledge.',
@@ -338,8 +338,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       // Verify book entity still has all its components
       currentBook = fixtures.take.entityManager.getEntityInstance('book-1');
-      expect(currentBook.components['items:item']).toBeDefined();
-      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items-core:item']).toBeDefined();
+      expect(currentBook.components['items-core:portable']).toBeDefined();
       expect(currentBook.components['core:weight']).toBeDefined();
       expect(currentBook.components['core:weight'].weight).toBe(2.0);
 
@@ -359,8 +359,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       // Verify book entity integrity maintained
       currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
-      expect(currentBook.components['items:item']).toBeDefined();
-      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items-core:item']).toBeDefined();
+      expect(currentBook.components['items-core:portable']).toBeDefined();
       expect(currentBook.components['core:weight'].weight).toBe(2.0);
 
       // Phase 4: Actor 2 returns the book to the drawer
@@ -409,8 +409,8 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       );
 
       currentBook = fixtures.put.entityManager.getEntityInstance('book-1');
-      expect(currentBook.components['items:item']).toBeDefined();
-      expect(currentBook.components['items:portable']).toBeDefined();
+      expect(currentBook.components['items-core:item']).toBeDefined();
+      expect(currentBook.components['items-core:portable']).toBeDefined();
       expect(currentBook.components['core:weight'].weight).toBe(2.0);
     });
   });
@@ -451,20 +451,20 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
           requiresKey: true,
           keyItemId: 'silver-key',
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const rareItem = new ModEntityBuilder('rare-item')
         .withName('Rare Item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       const key = new ModEntityBuilder('silver-key')
         .withName('Silver Key')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.1 })
         .build();
 

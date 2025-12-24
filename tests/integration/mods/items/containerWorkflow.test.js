@@ -79,20 +79,20 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           requiresKey: true,
           keyItemId: 'brass-key-1',
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const diamond = new ModEntityBuilder('diamond-1')
         .withName('Diamond')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.5 })
         .build();
 
       const goldBar = new ModEntityBuilder('gold-bar-1')
         .withName('Gold Bar')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 2.0 })
         .build();
 
@@ -244,13 +244,13 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const treasure = new ModEntityBuilder('treasure-1')
         .withName('Treasure')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
@@ -299,27 +299,27 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const potion1 = new ModEntityBuilder('potion-1')
         .withName('Health Potion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       const potion2 = new ModEntityBuilder('potion-2')
         .withName('Mana Potion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.3 })
         .build();
 
       const potion3 = new ModEntityBuilder('potion-3')
         .withName('Stamina Potion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.3 })
         .build();
 
@@ -405,13 +405,13 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           capacity: { maxWeight: 10, maxItems: 5 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const letter = new ModEntityBuilder('letter-1')
         .withName('Secret Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.05 })
         .build();
 
@@ -479,13 +479,13 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           capacity: { maxWeight: 10, maxItems: 5 },
           isOpen: false,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       const apple = new ModEntityBuilder('apple-1')
         .withName('Apple')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.2 })
         .build();
 
@@ -533,7 +533,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
         })
-        .withComponent('items:openable', {})
+        .withComponent('items-core:openable', {})
         .build();
 
       openFixture.reset([room, actor, openCrate]);

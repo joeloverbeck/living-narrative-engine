@@ -32,7 +32,7 @@ describe('Items - Drop Item Component Preservation', () => {
     }
   });
 
-  it('should preserve items:item marker component when dropped', async () => {
+  it('should preserve items-core:item marker component when dropped', async () => {
     // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
     const actorBuilder = new ModEntityBuilder('test:actor1')
@@ -48,8 +48,8 @@ describe('Items - Drop Item Component Preservation', () => {
     const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -58,12 +58,12 @@ describe('Items - Drop Item Component Preservation', () => {
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'letter-1');
 
-    // Verify: Item should retain items:item marker component
+    // Verify: Item should retain items-core:item marker component
     const droppedItem = testFixture.entityManager.getEntityInstance('letter-1');
-    expect(droppedItem.components['items:item']).toBeDefined();
+    expect(droppedItem.components['items-core:item']).toBeDefined();
   });
 
-  it('should preserve items:portable marker component when dropped', async () => {
+  it('should preserve items-core:portable marker component when dropped', async () => {
     // Setup: Actor with item in inventory (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
     const actorBuilder = new ModEntityBuilder('test:actor1')
@@ -79,8 +79,8 @@ describe('Items - Drop Item Component Preservation', () => {
     const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('gun-1')
       .withName('Gun')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1.2 })
       .build();
 
@@ -89,9 +89,9 @@ describe('Items - Drop Item Component Preservation', () => {
     // Execute drop action
     await testFixture.executeAction('test:actor1', 'gun-1');
 
-    // Verify: Item should retain items:portable marker component
+    // Verify: Item should retain items-core:portable marker component
     const droppedItem = testFixture.entityManager.getEntityInstance('gun-1');
-    expect(droppedItem.components['items:portable']).toBeDefined();
+    expect(droppedItem.components['items-core:portable']).toBeDefined();
   });
 
   it('should preserve core:weight component when dropped', async () => {
@@ -110,8 +110,8 @@ describe('Items - Drop Item Component Preservation', () => {
     const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('key-1')
       .withName('Key')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.02 })
       .build();
 
@@ -142,8 +142,8 @@ describe('Items - Drop Item Component Preservation', () => {
     const handEntities = actorBuilder.getHandEntities();
     const item = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
@@ -160,8 +160,8 @@ describe('Items - Drop Item Component Preservation', () => {
     expect(droppedItem.components['core:position'].locationId).toBe('saloon1');
 
     // Marker components should be preserved
-    expect(droppedItem.components['items:item']).toBeDefined();
-    expect(droppedItem.components['items:portable']).toBeDefined();
+    expect(droppedItem.components['items-core:item']).toBeDefined();
+    expect(droppedItem.components['items-core:portable']).toBeDefined();
 
     // Weight component should be preserved
     expect(droppedItem.components['core:weight']).toBeDefined();
@@ -187,14 +187,14 @@ describe('Items - Drop Item Component Preservation', () => {
     const handEntities = actorBuilder.getHandEntities();
     const letter = new ModEntityBuilder('letter-1')
       .withName('Letter')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 0.05 })
       .build();
     const gun = new ModEntityBuilder('gun-1')
       .withName('Gun')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', {})
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', {})
       .withComponent('core:weight', { weight: 1.2 })
       .build();
 
@@ -210,14 +210,14 @@ describe('Items - Drop Item Component Preservation', () => {
     const droppedGun = testFixture.entityManager.getEntityInstance('gun-1');
 
     // Letter components
-    expect(droppedLetter.components['items:item']).toBeDefined();
-    expect(droppedLetter.components['items:portable']).toBeDefined();
+    expect(droppedLetter.components['items-core:item']).toBeDefined();
+    expect(droppedLetter.components['items-core:portable']).toBeDefined();
     expect(droppedLetter.components['core:weight']).toBeDefined();
     expect(droppedLetter.components['core:position']).toBeDefined();
 
     // Gun components
-    expect(droppedGun.components['items:item']).toBeDefined();
-    expect(droppedGun.components['items:portable']).toBeDefined();
+    expect(droppedGun.components['items-core:item']).toBeDefined();
+    expect(droppedGun.components['items-core:portable']).toBeDefined();
     expect(droppedGun.components['core:weight']).toBeDefined();
     expect(droppedGun.components['core:position']).toBeDefined();
   });

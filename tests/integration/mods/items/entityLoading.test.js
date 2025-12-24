@@ -26,8 +26,8 @@ describe('Items - Entity Loading', () => {
     expect(entityDef.id).toBe('items:letter_to_sheriff');
     expect(entityDef.components['core:name']).toBeDefined();
     expect(entityDef.components['core:description']).toBeDefined();
-    expect(entityDef.components['items:item']).toBeDefined();
-    expect(entityDef.components['items:portable']).toBeDefined();
+    expect(entityDef.components['items-core:item']).toBeDefined();
+    expect(entityDef.components['items-core:portable']).toBeDefined();
     expect(entityDef.components['core:weight']).toBeDefined();
 
     // Verify component data

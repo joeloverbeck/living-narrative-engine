@@ -8,8 +8,8 @@
     "core:description": {
       "text": "A stout clay jug with a rounded belly and narrow neck, sealed with a wooden stopper. The contents glint golden through the slightly translucent glaze when held to the light. A faint scent of apples and fermentation wafts from beneath the seal."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 1.2
     },

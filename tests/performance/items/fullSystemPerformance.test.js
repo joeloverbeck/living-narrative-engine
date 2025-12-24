@@ -52,8 +52,8 @@ describe('Items System - Performance', () => {
           const itemId = `item-${i}-${j}`;
           const item = new ModEntityBuilder(itemId)
             .withName(`Item ${i}-${j}`)
-            .withComponent('items:item', {})
-            .withComponent('items:portable', {})
+            .withComponent('items-core:item', {})
+            .withComponent('items-core:portable', {})
             .withComponent('core:weight', { weight: 0.5 })
             .build();
           entities.push(item);
@@ -68,8 +68,8 @@ describe('Items System - Performance', () => {
         const container = new ModEntityBuilder(`container-${i}`)
           .withName(`Container ${i}`)
           .atLocation('marketplace')
-          .withComponent('items:item', {})
-          .withComponent('items:openable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:openable', {})
           .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 50, maxItems: 15 },
@@ -83,8 +83,8 @@ describe('Items System - Performance', () => {
           const itemId = `container-item-${i}-${j}`;
           const item = new ModEntityBuilder(itemId)
             .withName(`Container Item ${i}-${j}`)
-            .withComponent('items:item', {})
-            .withComponent('items:portable', {})
+            .withComponent('items-core:item', {})
+            .withComponent('items-core:portable', {})
             .withComponent('core:weight', { weight: 0.3 })
             .build();
           entities.push(item);
@@ -151,8 +151,8 @@ describe('Items System - Performance', () => {
             const itemId = `item-${i}-${j}`;
             const item = new ModEntityBuilder(itemId)
               .withName(`Item ${i}-${j}`)
-              .withComponent('items:item', {})
-              .withComponent('items:portable', {})
+              .withComponent('items-core:item', {})
+              .withComponent('items-core:portable', {})
               .withComponent('core:weight', { weight: 0.5 })
               .build();
             entities.push(item);
@@ -219,15 +219,15 @@ describe('Items System - Performance', () => {
       // Items in worker's inventory
       const workerItem1 = new ModEntityBuilder('worker-item-1')
         .withName('Worker Item 1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
       const workerItem2 = new ModEntityBuilder('worker-item-2')
         .withName('Worker Item 2')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
@@ -245,8 +245,8 @@ describe('Items System - Performance', () => {
         const container = new ModEntityBuilder(`crate-${i}`)
           .withName(`Crate ${i}`)
           .atLocation('warehouse')
-          .withComponent('items:item', {})
-          .withComponent('items:openable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:openable', {})
           .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 30, maxItems: 10 },
@@ -259,8 +259,8 @@ describe('Items System - Performance', () => {
           const itemId = `box-${i}-${j}`;
           const item = new ModEntityBuilder(itemId)
             .withName(`Box ${i}-${j}`)
-            .withComponent('items:item', {})
-            .withComponent('items:portable', {})
+            .withComponent('items-core:item', {})
+            .withComponent('items-core:portable', {})
             .withComponent('core:weight', { weight: 1.0 })
             .build();
           entities.push(item);
@@ -310,8 +310,8 @@ describe('Items System - Performance', () => {
         const item = new ModEntityBuilder(`package-${i}`)
           .withName(`Package ${i}`)
           .atLocation('storage-room')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('core:weight', { weight: 2.0 })
           .build();
         entities.push(item);
@@ -363,8 +363,8 @@ describe('Items System - Performance', () => {
           const itemId = `goods-${i}-${j}`;
           const item = new ModEntityBuilder(itemId)
             .withName(`Goods ${i}-${j}`)
-            .withComponent('items:item', {})
-            .withComponent('items:portable', {})
+            .withComponent('items-core:item', {})
+            .withComponent('items-core:portable', {})
             .withComponent('core:weight', { weight: 0.8 })
             .build();
           entities.push(item);
@@ -376,8 +376,8 @@ describe('Items System - Performance', () => {
         const container = new ModEntityBuilder(`stall-${i}`)
           .withName(`Market Stall ${i}`)
           .atLocation('bazaar')
-          .withComponent('items:item', {})
-          .withComponent('items:openable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:openable', {})
           .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 60, maxItems: 20 },
@@ -390,8 +390,8 @@ describe('Items System - Performance', () => {
           const itemId = `display-${i}-${j}`;
           const item = new ModEntityBuilder(itemId)
             .withName(`Display Item ${i}-${j}`)
-            .withComponent('items:item', {})
-            .withComponent('items:portable', {})
+            .withComponent('items-core:item', {})
+            .withComponent('items-core:portable', {})
             .withComponent('core:weight', { weight: 0.5 })
             .build();
           entities.push(item);

@@ -67,10 +67,10 @@ describe('weapons:weapon Component - Integration', () => {
     });
 
     it('should follow the same pattern as other marker components', () => {
-      // Load items:item for comparison
+      // Load items-core:item for comparison
       const itemsItemPath = path.resolve(
         process.cwd(),
-        'data/mods/items/components/item.component.json'
+        'data/mods/items-core/components/item.component.json'
       );
       const itemsItem = JSON.parse(fs.readFileSync(itemsItemPath, 'utf8'));
 
@@ -123,8 +123,8 @@ describe('weapons:weapon Component - Integration', () => {
       const description = weaponComponent.description;
 
       // Weapons should be used with these core item components
-      expect(description).toContain('items:item');
-      expect(description).toContain('items:portable');
+      expect(description).toContain('items-core:item');
+      expect(description).toContain('items-core:portable');
       expect(description).toContain('anatomy:requires_grabbing');
     });
 
@@ -149,7 +149,7 @@ describe('weapons:weapon Component - Integration', () => {
     it('should use same schema reference as items components', () => {
       const itemsPortablePath = path.resolve(
         process.cwd(),
-        'data/mods/items/components/portable.component.json'
+        'data/mods/items-core/components/portable.component.json'
       );
       const itemsPortable = JSON.parse(
         fs.readFileSync(itemsPortablePath, 'utf8')
@@ -161,7 +161,7 @@ describe('weapons:weapon Component - Integration', () => {
     it('should have description format similar to items marker components', () => {
       const itemsItemPath = path.resolve(
         process.cwd(),
-        'data/mods/items/components/item.component.json'
+        'data/mods/items-core/components/item.component.json'
       );
       const itemsItem = JSON.parse(fs.readFileSync(itemsItemPath, 'utf8'));
 

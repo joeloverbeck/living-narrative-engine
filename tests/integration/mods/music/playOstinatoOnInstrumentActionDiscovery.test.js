@@ -57,10 +57,10 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
       ]);
     });
 
-    it('should require items:item and music:is_instrument components on primary target', () => {
+    it('should require items-core:item and music:is_instrument components on primary target', () => {
       expect(playOstinatoAction.required_components.primary).toBeDefined();
       expect(playOstinatoAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'music:is_instrument',
       ]);
     });
@@ -114,8 +114,8 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('lute1')
           .withName('silver lute')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -157,8 +157,8 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
 
         const instrument = new ModEntityBuilder('violin1')
           .withName('violin')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -193,8 +193,8 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -225,7 +225,7 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
         .atLocation('room1')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -255,8 +255,8 @@ describe('music:play_ostinato_on_instrument - Action Discovery', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 

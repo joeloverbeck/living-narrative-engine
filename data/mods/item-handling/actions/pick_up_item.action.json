@@ -5,7 +5,7 @@
   "description": "Pick up an item from the current location",
   "targets": {
     "primary": {
-      "scope": "items:items_at_location",
+      "scope": "items-core:items_at_location",
       "placeholder": "item",
       "description": "Item to pick up"
     }

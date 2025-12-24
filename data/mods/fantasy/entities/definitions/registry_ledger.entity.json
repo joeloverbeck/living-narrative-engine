@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A massive leather-bound ledger with copper-plated corners and spine reinforcements. The pages are yellowed with age, filled with meticulous handwriting in faded brown ink. Numerous colored bookmarks protrude from the edges, marking sections of particular bureaucratic importance. The cover bears the embossed seal of the Mudbrook Aid Registry, worn smooth by centuries of handling."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 2.5
     },

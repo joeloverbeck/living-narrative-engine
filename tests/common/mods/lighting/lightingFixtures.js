@@ -10,8 +10,8 @@ const DEFAULT_CAPACITY = { maxWeight: 50, maxItems: 10 };
 function buildLightSource(id, name, fuelType, options = {}) {
   const builder = new ModEntityBuilder(id)
     .withName(name)
-    .withComponent('items:item', {})
-    .withComponent('items:portable', {})
+    .withComponent('items-core:item', {})
+    .withComponent('items-core:portable', {})
     .withComponent('core:weight', { weight: options.weight ?? 0.5 })
     .withComponent('lighting:is_light_source', { fuelType });
 

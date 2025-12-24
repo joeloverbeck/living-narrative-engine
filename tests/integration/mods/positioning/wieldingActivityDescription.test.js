@@ -43,8 +43,8 @@ function registerWieldingComponents(testBed) {
         required: ['wielded_item_ids'],
       },
     },
-    'items:item': {
-      id: 'items:item',
+    'items-core:item': {
+      id: 'items-core:item',
       dataSchema: { type: 'object', properties: {} },
     },
     'weapons:weapon': {
@@ -106,7 +106,7 @@ async function createWeapon(testBed, { id, name }) {
     }
   );
   testBed.entityManager.addComponent(entity.id, 'core:name', { text: name });
-  testBed.entityManager.addComponent(entity.id, 'items:item', {});
+  testBed.entityManager.addComponent(entity.id, 'items-core:item', {});
   testBed.entityManager.addComponent(entity.id, 'weapons:weapon', {});
   return entity;
 }

@@ -666,7 +666,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       // Food item - no weapons:weapon component
       const apple = createEntityInstance('apple-1', {
-        'items:item': { name: 'Apple' },
+        'items-core:item': { name: 'Apple' },
         'items:consumable': { nutrition: 5 },
       });
 

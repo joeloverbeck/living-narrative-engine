@@ -143,7 +143,7 @@ export function buildLickGlansLyingCloseScenario(options = {}) {
 
   const primaryClothing = coverPrimaryPenis
     ? new ModEntityBuilder(primaryClothingId)
-        .withComponent('items:item', {
+        .withComponent('items-core:item', {
           name: 'Underwear',
           volume: 1,
           weight: 1,

@@ -29,8 +29,8 @@
     "descriptors:texture": {
       "texture": "sweat-dark"
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.15
     }

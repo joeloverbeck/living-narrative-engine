@@ -59,7 +59,7 @@ describe('observation:examine_owned_item action definition', () => {
       expect(examineOwnedItemAction.required_components).toBeDefined();
       expect(examineOwnedItemAction.required_components.primary).toBeDefined();
       expect(examineOwnedItemAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'core:description',
       ]);
     });
@@ -102,8 +102,8 @@ describe('observation:examine_owned_item action definition', () => {
       const item = new ModEntityBuilder('test_item_1')
         .withName('ancient scroll')
         .withDescription('A yellowed parchment with faded text')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -151,8 +151,8 @@ describe('observation:examine_owned_item action definition', () => {
         .withName('rusty key')
         .withDescription('An old key covered in rust')
         .atLocation('room1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -225,8 +225,8 @@ describe('observation:examine_owned_item action definition', () => {
 
       const item = new ModEntityBuilder('incomplete_item')
         .withName('nameless object')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -256,15 +256,15 @@ describe('observation:examine_owned_item action definition', () => {
       const item1 = new ModEntityBuilder('item1')
         .withName('pocket watch')
         .withDescription('A golden pocket watch')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const item2 = new ModEntityBuilder('item2')
         .withName('compass')
         .withDescription('A brass compass')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item1, item2]);

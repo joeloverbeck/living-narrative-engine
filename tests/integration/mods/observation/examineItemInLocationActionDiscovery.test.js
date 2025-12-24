@@ -54,7 +54,7 @@ describe('observation:examine_item_in_location action definition', () => {
       expect(examineItemInLocationAction.targets).toBeDefined();
       expect(examineItemInLocationAction.targets.primary).toBeDefined();
       expect(examineItemInLocationAction.targets.primary.scope).toBe(
-        'items:items_at_actor_location'
+        'items-core:items_at_actor_location'
       );
       expect(examineItemInLocationAction.targets.primary.placeholder).toBe(
         'target'
@@ -70,7 +70,7 @@ describe('observation:examine_item_in_location action definition', () => {
         examineItemInLocationAction.required_components.primary
       ).toBeDefined();
       expect(examineItemInLocationAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'core:description',
       ]);
     });
@@ -114,8 +114,8 @@ describe('observation:examine_item_in_location action definition', () => {
         .withName('rusty key')
         .withDescription('An old key covered in rust')
         .atLocation('room1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -138,7 +138,7 @@ describe('observation:examine_item_in_location action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:items_at_actor_location',
+        'items-core:items_at_actor_location',
         scopeContext
       );
 
@@ -159,7 +159,7 @@ describe('observation:examine_item_in_location action definition', () => {
         .withName('oak wardrobe')
         .withDescription('A massive oak wardrobe')
         .atLocation('room1')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -182,7 +182,7 @@ describe('observation:examine_item_in_location action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:items_at_actor_location',
+        'items-core:items_at_actor_location',
         scopeContext
       );
 
@@ -206,8 +206,8 @@ describe('observation:examine_item_in_location action definition', () => {
       const item = new ModEntityBuilder('test_item_1')
         .withName('ancient scroll')
         .withDescription('A yellowed parchment with faded text')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -256,8 +256,8 @@ describe('observation:examine_item_in_location action definition', () => {
       const item = new ModEntityBuilder('incomplete_item')
         .withName('nameless object')
         .atLocation('room1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([room, actor, item]);
@@ -285,8 +285,8 @@ describe('observation:examine_item_in_location action definition', () => {
         .withName('far away object')
         .withDescription('Too far to examine')
         .atLocation('location_b')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       testFixture.reset([roomA, roomB, actor, item]);
@@ -313,15 +313,15 @@ describe('observation:examine_item_in_location action definition', () => {
         .withName('floor lamp')
         .withDescription('A tall standing lamp')
         .atLocation('room1')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const nonPortableItem = new ModEntityBuilder('non_portable_item')
         .withName('stone statue')
         .withDescription('An ancient carved statue')
         .atLocation('room1')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .build();
 
       testFixture.reset([room, actor, portableItem, nonPortableItem]);
@@ -344,7 +344,7 @@ describe('observation:examine_item_in_location action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:items_at_actor_location',
+        'items-core:items_at_actor_location',
         scopeContext
       );
 

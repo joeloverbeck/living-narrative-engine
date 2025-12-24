@@ -46,7 +46,7 @@ describe('IEntityManager Interface Compliance', () => {
     it('should return consistent data from both entities getter and getEntities method', () => {
       const testEntities = [
         { id: 'actor-1', components: { 'core:actor': {} } },
-        { id: 'item-1', components: { 'items:item': {} } },
+        { id: 'item-1', components: { 'items-core:item': {} } },
       ];
       const manager = new SimpleEntityManager(testEntities);
 

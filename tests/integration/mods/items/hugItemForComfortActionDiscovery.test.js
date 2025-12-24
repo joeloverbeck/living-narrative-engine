@@ -64,7 +64,7 @@ describe('items:hug_item_for_comfort action definition', () => {
     it('should require item and allows_soothing_hug components on primary target', () => {
       expect(hugItemForComfortAction.required_components).toBeDefined();
       expect(hugItemForComfortAction.required_components.primary).toEqual([
-        'items:item',
+        'items-core:item',
         'items:allows_soothing_hug',
       ]);
     });
@@ -91,8 +91,8 @@ describe('items:hug_item_for_comfort action definition', () => {
 
       const plushToy = new ModEntityBuilder('plush_toy_inventory')
         .withName('Fluffy Bear')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
@@ -120,8 +120,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       const comfortPillow = new ModEntityBuilder('comfort_pillow_location')
         .withName('Soft Pillow')
         .atLocation('library')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
@@ -156,8 +156,8 @@ describe('items:hug_item_for_comfort action definition', () => {
 
       const stuffedAnimal = new ModEntityBuilder('stuffed_animal_reference')
         .withName('Bunny Companion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
@@ -188,15 +188,15 @@ describe('items:hug_item_for_comfort action definition', () => {
 
       const comfortItem = new ModEntityBuilder('comfort_item_mixed')
         .withName('Cozy Cushion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
       const nonComfortItem = new ModEntityBuilder('non_comfort_item_mixed')
         .withName('Metal Wrench')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('A heavy metal tool.')
         .build();
 
@@ -254,8 +254,8 @@ describe('items:hug_item_for_comfort action definition', () => {
 
       const nonComfortItem = new ModEntityBuilder('non_comfort_item')
         .withName('Hammer')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('A sturdy hammer for construction.')
         .build();
 
@@ -284,8 +284,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       const distantComfortItem = new ModEntityBuilder('distant_comfort_item')
         .withName('Distant Teddy')
         .atLocation('room_b')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
@@ -320,22 +320,22 @@ describe('items:hug_item_for_comfort action definition', () => {
 
       const comfortItemOne = new ModEntityBuilder('comfort_item_one')
         .withName('Plush Dragon')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
       const comfortItemTwo = new ModEntityBuilder('comfort_item_two')
         .withName('Memory Pillow')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('items:allows_soothing_hug', {})
         .build();
 
       const nonComfortItem = new ModEntityBuilder('non_comfort_item_one')
         .withName('Sharp Scissors')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withDescription('Metal scissors with sharp blades.')
         .build();
 

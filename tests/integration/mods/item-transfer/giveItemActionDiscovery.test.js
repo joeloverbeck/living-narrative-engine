@@ -179,8 +179,8 @@ describe('item-transfer:give_item action definition', () => {
       // Create an item in the actor's inventory
       const item = new ModEntityBuilder('test-item')
         .withName('test item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.1 })
         .build();
 
@@ -239,8 +239,8 @@ describe('item-transfer:give_item action definition', () => {
       // Create an item in the actor's inventory
       const item = new ModEntityBuilder('test-item')
         .withName('test item')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 0.1 })
         .build();
 

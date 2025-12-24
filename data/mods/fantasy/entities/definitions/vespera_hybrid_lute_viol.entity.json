@@ -10,8 +10,8 @@
     "core:description": {
       "text": "A masterfully crafted hybrid instrument that marries the teardrop-shaped body of a lute with the deeper, more resonant construction of a viol. The weathered wood shows the patina of years, its surface marked by the gentle wear of countless performances. The strings—a blend of gut and wire—catch the light as they stretch over a carefully carved bridge. Despite its worn appearance, every detail speaks to meticulous care: the frets are perfectly set, the pegs turn smoothly, and the soundboard vibrates with a rich, complex voice that shifts between the bright clarity of a lute and the warm, singing depth of a viol. The neck bears the subtle impressions of familiar fingerings, and the body resonates with an almost living warmth when held. This is an instrument that has been played, loved, and preserved through dedication—a companion rather than a possession."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "music:is_instrument": {},
     "core:weight": {
       "weight": 1.6

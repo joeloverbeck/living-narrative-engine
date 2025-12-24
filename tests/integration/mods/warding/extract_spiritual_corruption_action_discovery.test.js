@@ -86,7 +86,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
 
           const anchors = new Set();
           for (const itemId of inventory) {
-            const isItem = entityManager.getComponentData(itemId, 'items:item');
+            const isItem = entityManager.getComponentData(itemId, 'items-core:item');
             const isAnchor = entityManager.getComponentData(
               itemId,
               'warding:is_spiritual_anchor'
@@ -140,8 +140,8 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
       .withName('Containment Vessel')
       .atLocation('room1')
       .withLocationComponent('room1')
-      .withComponent('items:item', {})
-      .withComponent('items:portable', { weight: 0.8 })
+      .withComponent('items-core:item', {})
+      .withComponent('items-core:portable', { weight: 0.8 })
       .withComponent('warding:is_spiritual_anchor', {});
 
     const anchor = anchorBuilder.build();
@@ -231,7 +231,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
 
       const anchor = new ModEntityBuilder('test:anchor')
         .withName('Containment Vessel')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('warding:is_spiritual_anchor', {})
         .build();
 
@@ -281,7 +281,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
       // Non-anchor item present in inventory, should not satisfy secondary scope
       const mundaneItem = new ModEntityBuilder('test:mundane_item')
         .withName('Mundane Object')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .build();
 
       actor.withComponent('items:inventory', {

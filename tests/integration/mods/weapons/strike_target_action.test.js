@@ -47,8 +47,8 @@ describe('strike_target action', () => {
 
       const weapon = new ModEntityBuilder('practice-stick')
         .withName('Practice Stick')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [{ name: 'blunt', amount: 5 }],
@@ -80,8 +80,8 @@ describe('strike_target action', () => {
 
       const weapon = new ModEntityBuilder('club')
         .withName('Club')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [{ name: 'blunt', amount: 8 }],
@@ -115,8 +115,8 @@ describe('strike_target action', () => {
 
       const weapon = new ModEntityBuilder('heavy-mace')
         .withName('Heavy Mace')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [{ name: 'blunt', amount: 12 }],
@@ -157,8 +157,8 @@ describe('strike_target action', () => {
 
       const spikedMace = new ModEntityBuilder('spiked-mace')
         .withName('Spiked Mace')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
           entries: [

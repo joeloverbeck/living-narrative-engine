@@ -70,12 +70,12 @@ describe('item-handling:drop_item action integration', () => {
         locationId: scenario.room.id,
       });
 
-      expect(testFixture.events).toDispatchEvent('items:item_dropped');
+      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess('Alice drops letter-1.');
 
       const itemDroppedEvent = testFixture.events.find(
-        (event) => event.eventType === 'items:item_dropped'
+        (event) => event.eventType === 'items-core:item_dropped'
       );
       expect(itemDroppedEvent?.payload.actorEntity).toBe(scenario.actor.id);
       expect(itemDroppedEvent?.payload.itemEntity).toBe(scenario.item.id);
@@ -280,8 +280,8 @@ describe('item-handling:drop_item action integration', () => {
     it('should unwield item before dropping when item is wielded', async () => {
       const weapon = new ModEntityBuilder('test-sword')
         .withName('Test Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -332,15 +332,15 @@ describe('item-handling:drop_item action integration', () => {
     it('should handle dropping wielded item when actor has multiple wielded items', async () => {
       const sword = new ModEntityBuilder('sword')
         .withName('Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const dagger = new ModEntityBuilder('dagger')
         .withName('Dagger')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
@@ -395,15 +395,15 @@ describe('item-handling:drop_item action integration', () => {
     it('should handle dropping non-wielded item when actor has wielded items (idempotent)', async () => {
       const wielded = new ModEntityBuilder('wielded-sword')
         .withName('Wielded Sword')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('weapons:weapon', {})
         .build();
 
       const notWielded = new ModEntityBuilder('potion')
         .withName('Healing Potion')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .build();
 
       const room = new ModEntityBuilder('camp')

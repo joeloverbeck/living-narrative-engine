@@ -10,8 +10,8 @@
     "core:description": {
       "text": "A longsword that has survived forty-two years of professional violence through discipline and maintenance. The blade bears countless nicks and pit marks from decades of sharpening and use, the steel showing its age honestly. The edge is razor-sharp—not through replacement, but through systematic, methodical care. The leather-wrapped grip is dark with sweat and oil, molded to specific hand positions from years of the same holds. The crossguard is slightly bent, possibly from that incident fifteen years ago. No decorations. No engravings. No aesthetic pretense. This is a tool, maintained with the same rigid discipline that has kept its owner alive for four decades. The weight distribution is practical rather than elegant—designed for real combat, not performance. In a veteran's hands, this worn blade is more dangerous than a dozen pristine showpieces."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "weapons:weapon": {},
     "damage-types:damage_capabilities": {
       "entries": [

@@ -34,7 +34,7 @@ describe('item-handling:pick_up_item action definition', () => {
     expect(pickUpItemAction.targets).toBeDefined();
     expect(pickUpItemAction.targets.primary).toBeDefined();
     expect(pickUpItemAction.targets.primary.scope).toBe(
-      'items:items_at_location'
+      'items-core:items_at_location'
     );
     expect(pickUpItemAction.targets.primary.placeholder).toBe('item');
     expect(pickUpItemAction.targets.primary.description).toBe(

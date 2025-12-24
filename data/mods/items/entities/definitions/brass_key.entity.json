@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A small brass key with an ornate handle. It looks like it might fit a chest lock."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.1
     }

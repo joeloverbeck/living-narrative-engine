@@ -14,7 +14,7 @@ const ENTITY_INSTANCE = {
   components: {
     'core:position': { locationId: 'loc-actor' },
   },
-  componentTypeIds: ['items:item'],
+  componentTypeIds: ['items-core:item'],
 };
 
 /**

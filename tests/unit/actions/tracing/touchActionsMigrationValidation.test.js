@@ -27,7 +27,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     fondle_ass: {
       primary: {
         scope:
-          'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target',
+          'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target',
         placeholder: 'primary',
         description: 'Person whose ass to fondle',
       },
@@ -125,7 +125,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
             minLength
           );
           expect(content.targets.primary.scope).toMatch(
-            /^caressing:actors_with_.*_facing_each_other_or_behind_target$/
+            /^caressing-states:actors_with_.*_facing_each_other_or_behind_target$/
           );
         } else {
           // Other actions use string format
@@ -259,7 +259,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
       // Validate primary target
       expect(content.targets.primary.scope).toBe(
-        'caressing:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+        'caressing-states:actors_with_ass_cheeks_facing_each_other_or_behind_target'
       );
       expect(content.targets.primary.placeholder).toBe('primary');
       expect(content.targets.primary.description).toBe(

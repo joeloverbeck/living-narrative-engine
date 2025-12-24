@@ -8,8 +8,8 @@
     "core:description": {
       "text": "A stout glass jar with a wax-sealed lid, half-filled with clear vinegar. The tangy scent stings the nose and promises to bite harder on an open wound."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 0.5
     },

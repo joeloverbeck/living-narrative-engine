@@ -13,7 +13,7 @@
   },
   "required_components": {
     "actor": [],
-    "primary": ["items:portable"]
+    "primary": ["items-core:portable"]
   },
   "forbidden_components": {
     "actor": [

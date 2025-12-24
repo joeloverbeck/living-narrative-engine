@@ -39,8 +39,8 @@ describe('Items Mod - Aiming Events', () => {
       id: 'weapons:pistol',
       name: 'Pistol',
       components: {
-        'items:item': {},
-        'items:portable': {},
+        'items-core:item': {},
+        'items-core:portable': {},
         'items:aimable': {},
       },
     });
@@ -70,7 +70,7 @@ describe('Items Mod - Aiming Events', () => {
 
     // Verify event was dispatched with correct payload
     const itemAimedEvents = aimFixture.events.filter(
-      (e) => e.eventType === 'items:item_aimed'
+      (e) => e.eventType === 'items-core:item_aimed'
     );
     expect(itemAimedEvents).toHaveLength(1);
     expect(itemAimedEvents[0].payload).toMatchObject({
@@ -94,8 +94,8 @@ describe('Items Mod - Aiming Events', () => {
       id: 'weapons:pistol',
       name: 'Pistol',
       components: {
-        'items:item': {},
-        'items:portable': {},
+        'items-core:item': {},
+        'items-core:portable': {},
         'items:aimable': {},
         'items:aimed_at': {
           targetId: target.id,

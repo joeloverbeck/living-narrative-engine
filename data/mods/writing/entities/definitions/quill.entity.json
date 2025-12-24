@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A large goose feather trimmed into a writing quill. Its tip has been carefully cut at an angle and shows traces of dried ink."
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "writing:allows_writing": {},
     "core:weight": {
       "weight": 0.01

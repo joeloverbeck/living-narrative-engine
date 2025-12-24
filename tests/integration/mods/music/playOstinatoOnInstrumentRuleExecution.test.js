@@ -54,7 +54,7 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('drums1')
         .withName('war drums')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -102,7 +102,7 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
       const instrument = new ModEntityBuilder('lute1')
         .withName('silver lute')
         .atLocation('studio')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -141,8 +141,8 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
         const instrument = new ModEntityBuilder('instrument1')
           .withName('test instrument')
-          .withComponent('items:item', {})
-          .withComponent('items:portable', {})
+          .withComponent('items-core:item', {})
+          .withComponent('items-core:portable', {})
           .withComponent('music:is_instrument', {})
           .build();
 
@@ -185,8 +185,8 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('lute1')
         .withName('lute')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
+        .withComponent('items-core:item', {})
+        .withComponent('items-core:portable', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -225,7 +225,7 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('piano1')
         .withName('piano')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -268,7 +268,7 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('guitar1')
         .withName('electric guitar')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 
@@ -304,7 +304,7 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
       const instrument = new ModEntityBuilder('flute1')
         .withName('wooden flute')
-        .withComponent('items:item', {})
+        .withComponent('items-core:item', {})
         .withComponent('music:is_instrument', {})
         .build();
 

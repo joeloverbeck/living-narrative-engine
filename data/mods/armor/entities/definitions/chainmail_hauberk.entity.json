@@ -34,8 +34,8 @@
       ],
       "coveragePriority": "armor"
     },
-    "items:item": {},
-    "items:portable": {},
+    "items-core:item": {},
+    "items-core:portable": {},
     "core:weight": {
       "weight": 12.0
     }

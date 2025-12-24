@@ -9,7 +9,7 @@
  * 2. Retrieves actor's wielding component and verifies item is wielded
  * 3. Unlocks grabbing appendages holding the item
  * 4. Updates or removes wielding component
- * 5. Dispatches items:item_unwielded event
+ * 5. Dispatches items-core:item_unwielded event
  *
  * Related files:
  * @see data/schemas/operations/unwieldItem.schema.json - Operation schema
@@ -27,7 +27,7 @@ import { unlockAppendagesHoldingItem } from '../../utils/grabbingUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
-const ITEM_UNWIELDED_EVENT = 'items:item_unwielded';
+const ITEM_UNWIELDED_EVENT = 'items-core:item_unwielded';
 
 /**
  * @typedef {object} UnwieldItemParams

@@ -15,7 +15,7 @@ jest.mock('../../../../src/utils/grabbingUtils.js', () => ({
 }));
 
 const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
-const ITEM_UNWIELDED_EVENT = 'items:item_unwielded';
+const ITEM_UNWIELDED_EVENT = 'items-core:item_unwielded';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -331,7 +331,7 @@ describe('UnwieldItemHandler', () => {
   });
 
   describe('Event Dispatch', () => {
-    test('should dispatch items:item_unwielded on successful unwield', async () => {
+    test('should dispatch items-core:item_unwielded on successful unwield', async () => {
       const params = { actorEntity: 'actor-001', itemEntity: 'item-001' };
       mockEntityManager.getComponentData.mockReturnValue({
         wielded_item_ids: ['item-001'],

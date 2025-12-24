@@ -9,8 +9,8 @@
     "core:description": {
       "text": "A heavy oak chest bound with brass corners and a large lock. It looks like it could hold valuable items."
     },
-    "items:item": {},
-    "items:openable": {},
+    "items-core:item": {},
+    "items-core:openable": {},
     "containers-core:container": {
       "contents": [],
       "capacity": {

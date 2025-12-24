@@ -195,7 +195,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     const toolOne = fixture.createEntity({
       id: 'tool-one',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } },
       ],
@@ -203,7 +203,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     const toolTwo = fixture.createEntity({
       id: 'tool-two',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } },
       ],
@@ -271,7 +271,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     const toolId = fixture.createEntity({
       id: 'tool-progress',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } },
       ],
@@ -350,7 +350,7 @@ describe('breaching:saw_through_barred_blocker edge cases', () => {
     const toolId = fixture.createEntity({
       id: 'tool-fumble',
       components: [
-        { componentId: 'items:item', data: {} },
+        { componentId: 'items-core:item', data: {} },
         { componentId: 'breaching:allows_abrasive_sawing', data: {} },
         { componentId: 'items:owned_by', data: { entityId: actorId } },
       ],
