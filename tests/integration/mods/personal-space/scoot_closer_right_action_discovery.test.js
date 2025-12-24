@@ -69,7 +69,7 @@ describe('scoot_closer_right action discovery - Integration Tests', () => {
 
       expect(scootAction).toBeDefined();
       expect(scootAction.targets?.secondary?.scope).toBe(
-        'personal-space:closest_rightmost_occupant'
+        'sitting-states:closest_rightmost_occupant'
       );
     });
   });

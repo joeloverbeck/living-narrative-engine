@@ -1,0 +1,62 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "breathing:respiratory_organ",
+  "description": "Marks an anatomy part as a respiratory organ capable of storing and processing oxygen.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "respirationType": {
+        "type": "string",
+        "enum": ["pulmonary", "cutaneous", "branchial", "tracheal", "unusual"],
+        "description": "Type of respiration: pulmonary (lungs), cutaneous (skin), branchial (gills), tracheal (insects), unusual (eldritch)"
+      },
+      "oxygenCapacity": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Maximum oxygen units this organ can store"
+      },
+      "currentOxygen": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Current oxygen units stored"
+      },
+      "depletionRate": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 1,
+        "description": "Oxygen units depleted per turn when not breathing"
+      },
+      "restorationRate": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 10,
+        "description": "Oxygen units restored per turn when breathing normally"
+      },
+      "environmentCompatibility": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["air", "water", "any"]
+        },
+        "default": ["air"],
+        "description": "Environments where this organ can extract oxygen"
+      }
+    },
+    "required": ["respirationType", "oxygenCapacity", "currentOxygen"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}",
+      "minimum": "{PropertyLabel} must be at least {{limit}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

@@ -582,7 +582,8 @@ class ModValidationOrchestrator {
 
       const modIds = [];
       for (const entry of entries) {
-        if (entry.isDirectory()) {
+        // Include both directories and symlinks to directories
+        if (entry.isDirectory() || entry.isSymbolicLink()) {
           // Skip excluded directories
           if (excludedDirs.includes(entry.name)) {
             this.#logger.debug(`Skipping excluded directory: ${entry.name}`);

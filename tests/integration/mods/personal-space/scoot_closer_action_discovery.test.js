@@ -33,8 +33,8 @@ describe('scoot_closer action discovery - Integration Tests', () => {
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
       console.log(`🔍 Resolving scope: ${scopeName}`);
 
-      // Custom resolver for furniture_actor_sitting_on
-      if (scopeName === 'personal-space:furniture_actor_sitting_on') {
+      // Custom resolver for furniture_im_sitting_on (migrated from personal-space to sitting)
+      if (scopeName === 'sitting:furniture_im_sitting_on') {
         console.log(`  📌 Context actor ID: ${context?.actor?.id}`);
         const actorId = context?.actor?.id;
         if (!actorId) {
@@ -57,8 +57,8 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         return { success: true, value: result };
       }
 
-      // Custom resolver for closest_leftmost_occupant
-      if (scopeName === 'personal-space:closest_leftmost_occupant') {
+      // Custom resolver for closest_leftmost_occupant (migrated from personal-space to sitting-states)
+      if (scopeName === 'sitting-states:closest_leftmost_occupant') {
         console.log(
           `  📌 Context actor ID: ${context?.actor?.id}, target ID: ${context?.target?.id}`
         );
@@ -224,11 +224,11 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       expect(scootAction.targets).toBeDefined();
       expect(scootAction.targets.primary).toBeDefined();
       expect(scootAction.targets.primary.scope).toBe(
-        'personal-space:furniture_actor_sitting_on'
+        'sitting:furniture_im_sitting_on'
       );
       expect(scootAction.targets.secondary).toBeDefined();
       expect(scootAction.targets.secondary.scope).toBe(
-        'personal-space:closest_leftmost_occupant'
+        'sitting-states:closest_leftmost_occupant'
       );
       expect(scootAction.targets.secondary.contextFrom).toBe('primary');
     });
@@ -280,11 +280,11 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       expect(scootAction.targets).toBeDefined();
       expect(scootAction.targets.primary).toBeDefined();
       expect(scootAction.targets.primary.scope).toBe(
-        'personal-space:furniture_actor_sitting_on'
+        'sitting:furniture_im_sitting_on'
       );
       expect(scootAction.targets.secondary).toBeDefined();
       expect(scootAction.targets.secondary.scope).toBe(
-        'personal-space:closest_leftmost_occupant'
+        'sitting-states:closest_leftmost_occupant'
       );
       expect(scootAction.targets.secondary.contextFrom).toBe('primary');
     });

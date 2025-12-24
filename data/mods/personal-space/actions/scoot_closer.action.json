@@ -5,12 +5,12 @@
   "description": "Move one seat closer to an adjacent occupant on the same furniture",
   "targets": {
     "primary": {
-      "scope": "personal-space:furniture_actor_sitting_on",
+      "scope": "sitting:furniture_im_sitting_on",
       "placeholder": "seat",
       "description": "Furniture where the actor is currently sitting"
     },
     "secondary": {
-      "scope": "personal-space:closest_leftmost_occupant",
+      "scope": "sitting-states:closest_leftmost_occupant",
       "placeholder": "occupant",
       "contextFrom": "primary",
       "description": "The closest occupant to the actor's left"

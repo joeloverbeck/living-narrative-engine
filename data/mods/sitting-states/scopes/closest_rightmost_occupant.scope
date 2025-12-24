@@ -1,6 +1,6 @@
 // Scope returns the actor who is the closest occupant to the right of the acting actor
 // Uses the custom isClosestRightOccupant operator to filter actors
 // Receives furniture entity from primary target via contextFrom
-personal-space:closest_rightmost_occupant := entities(core:actor)[{
+sitting-states:closest_rightmost_occupant := entities(core:actor)[{
   "isClosestRightOccupant": ["entity", "target", "actor"]
 }]

@@ -10,6 +10,10 @@
   "content": {
     "components": [
       "sitting_on.component.json"
+    ],
+    "scopes": [
+      "closest_leftmost_occupant.scope",
+      "closest_rightmost_occupant.scope"
     ]
   }
 }
