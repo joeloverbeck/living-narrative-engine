@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items:aim_lowered",
+  "id": "aiming:aim_lowered",
   "description": "Dispatched when an actor stops aiming an item. The previousTargetEntity is optional (may be omitted if target was destroyed).",
   "payloadSchema": {
     "type": "object",

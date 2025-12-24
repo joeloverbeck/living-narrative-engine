@@ -1,20 +1,20 @@
 /**
- * @file Integration tests for aiming event dispatching in items mod
+ * @file Integration tests for aiming event dispatching in aiming mod
  * Tests that item_aimed and aim_lowered events are properly dispatched with correct payloads
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
-describe('Items Mod - Aiming Events', () => {
+describe('Aiming Mod - Aiming Events', () => {
   let aimFixture;
   let lowerAimFixture;
 
   beforeEach(async () => {
-    aimFixture = await ModTestFixture.forAction('items', 'items:aim_item');
+    aimFixture = await ModTestFixture.forAction('aiming', 'aiming:aim_item');
     lowerAimFixture = await ModTestFixture.forAction(
-      'items',
-      'items:lower_aim'
+      'aiming',
+      'aiming:lower_aim'
     );
   });
 
@@ -70,7 +70,7 @@ describe('Items Mod - Aiming Events', () => {
 
     // Verify event was dispatched with correct payload
     const itemAimedEvents = aimFixture.events.filter(
-      (e) => e.eventType === 'items-core:item_aimed'
+      (e) => e.eventType === 'aiming:item_aimed'
     );
     expect(itemAimedEvents).toHaveLength(1);
     expect(itemAimedEvents[0].payload).toMatchObject({
@@ -124,7 +124,7 @@ describe('Items Mod - Aiming Events', () => {
 
     // Verify event was dispatched with correct payload
     const aimLoweredEvents = lowerAimFixture.events.filter(
-      (e) => e.eventType === 'items:aim_lowered'
+      (e) => e.eventType === 'aiming:aim_lowered'
     );
     expect(aimLoweredEvents).toHaveLength(1);
     expect(aimLoweredEvents[0].payload).toMatchObject({

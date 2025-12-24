@@ -1,6 +1,7 @@
 {
   "mods": [
     "core",
+    "aiming",
     "dredgers",
     "companionship",
     "containers",

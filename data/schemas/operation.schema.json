@@ -57,6 +57,9 @@
           "$ref": "./operations/removeComponent.schema.json"
         },
         {
+          "$ref": "./operations/depleteOxygen.schema.json"
+        },
+        {
           "$ref": "./operations/dispatchEvent.schema.json"
         },
         {

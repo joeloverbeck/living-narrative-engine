@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:aim_item",
+  "id": "aiming:aim_item",
   "name": "Aim Item",
   "description": "Aim an aimable item at a target entity. The item must have aiming:aimable component and be in actor's inventory.",
   "generateCombinations": true,
@@ -9,12 +9,12 @@
   },
   "targets": {
     "primary": {
-      "scope": "items:aimable_targets",
+      "scope": "aiming:aimable_targets",
       "placeholder": "target",
       "description": "Entity to aim at"
     },
     "secondary": {
-      "scope": "items:aimable_items_in_inventory",
+      "scope": "aiming:aimable_items_in_inventory",
       "placeholder": "item",
       "description": "Aimable item to use (weapon, flashlight, camera, etc.)"
     }

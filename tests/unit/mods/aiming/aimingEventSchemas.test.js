@@ -2,20 +2,20 @@ import { describe, it, expect } from '@jest/globals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-describe('Items Mod - Aiming Event Schemas', () => {
+describe('Aiming Mod - Aiming Event Schemas', () => {
   describe('item_aimed event schema', () => {
     let eventSchema;
 
     beforeAll(() => {
       const schemaPath = join(
         process.cwd(),
-        'data/mods/items/events/item_aimed.event.json'
+        'data/mods/aiming/events/item_aimed.event.json'
       );
       eventSchema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
     });
 
     it('should have correct event ID', () => {
-      expect(eventSchema.id).toBe('items-core:item_aimed');
+      expect(eventSchema.id).toBe('aiming:item_aimed');
     });
 
     it('should have proper schema reference', () => {
@@ -73,13 +73,13 @@ describe('Items Mod - Aiming Event Schemas', () => {
     beforeAll(() => {
       const schemaPath = join(
         process.cwd(),
-        'data/mods/items/events/aim_lowered.event.json'
+        'data/mods/aiming/events/aim_lowered.event.json'
       );
       eventSchema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
     });
 
     it('should have correct event ID', () => {
-      expect(eventSchema.id).toBe('items:aim_lowered');
+      expect(eventSchema.id).toBe('aiming:aim_lowered');
     });
 
     it('should have proper schema reference', () => {

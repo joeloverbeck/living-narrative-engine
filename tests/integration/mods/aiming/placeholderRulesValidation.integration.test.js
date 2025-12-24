@@ -16,11 +16,11 @@ describe('Aim Item Rules Validation', () => {
   const rulePaths = {
     aimItem: path.join(
       process.cwd(),
-      'data/mods/items/rules/handle_aim_item.rule.json'
+      'data/mods/aiming/rules/handle_aim_item.rule.json'
     ),
     lowerAim: path.join(
       process.cwd(),
-      'data/mods/items/rules/handle_lower_aim.rule.json'
+      'data/mods/aiming/rules/handle_lower_aim.rule.json'
     ),
   };
 
@@ -65,7 +65,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 3: DISPATCH_EVENT
       expect(aimItemRule.actions[2].type).toBe('DISPATCH_EVENT');
       expect(aimItemRule.actions[2].parameters.eventType).toBe(
-        'items-core:item_aimed'
+        'aiming:item_aimed'
       );
 
       // Operation 4: END_TURN
@@ -142,7 +142,7 @@ describe('Aim Item Rules Validation', () => {
       // Operation 4: DISPATCH_EVENT
       expect(lowerAimRule.actions[3].type).toBe('DISPATCH_EVENT');
       expect(lowerAimRule.actions[3].parameters.eventType).toBe(
-        'items:aim_lowered'
+        'aiming:aim_lowered'
       );
 
       // Operation 5: END_TURN
@@ -213,19 +213,19 @@ describe('Aim Item Rules Validation', () => {
     });
 
     it('both rules should dispatch events related to aiming', () => {
-      // handle_aim_item dispatches items-core:item_aimed
+      // handle_aim_item dispatches aiming:item_aimed
       const aimDispatchOp = aimItemRule.actions.find(
         (op) => op.type === 'DISPATCH_EVENT'
       );
       expect(aimDispatchOp).toBeDefined();
-      expect(aimDispatchOp.parameters.eventType).toBe('items-core:item_aimed');
+      expect(aimDispatchOp.parameters.eventType).toBe('aiming:item_aimed');
 
-      // handle_lower_aim dispatches items:aim_lowered
+      // handle_lower_aim dispatches aiming:aim_lowered
       const lowerDispatchOp = lowerAimRule.actions.find(
         (op) => op.type === 'DISPATCH_EVENT'
       );
       expect(lowerDispatchOp).toBeDefined();
-      expect(lowerDispatchOp.parameters.eventType).toBe('items:aim_lowered');
+      expect(lowerDispatchOp.parameters.eventType).toBe('aiming:aim_lowered');
     });
   });
 });

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for aiming scopes in the items mod.
+ * @file Integration tests for aiming scopes in the aiming mod.
  * @description Verifies that the three aiming scopes are correctly defined
  * and referenced by the aim_item action.
  */
@@ -8,8 +8,8 @@ import { describe, it, expect } from '@jest/globals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-describe('Items Mod - Aiming Scopes', () => {
-  const scopesDir = 'data/mods/items/scopes';
+describe('Aiming Mod - Aiming Scopes', () => {
+  const scopesDir = 'data/mods/aiming/scopes';
 
   describe('Scope file existence', () => {
     it('should have aimable_items_in_inventory.scope file', () => {
@@ -34,7 +34,7 @@ describe('Items Mod - Aiming Scopes', () => {
       const content = readFileSync(scopePath, 'utf-8');
 
       // Verify scope ID format
-      expect(content).toContain('items:aimable_items_in_inventory :=');
+      expect(content).toContain('aiming:aimable_items_in_inventory :=');
 
       // Verify uses correct component existence check (!! not has)
       expect(content).toContain('{"!!":');
@@ -49,7 +49,7 @@ describe('Items Mod - Aiming Scopes', () => {
       const content = readFileSync(scopePath, 'utf-8');
 
       // Verify scope ID format
-      expect(content).toContain('items:aimed_items_in_inventory :=');
+      expect(content).toContain('aiming:aimed_items_in_inventory :=');
 
       // Verify uses correct component existence check (!! not has)
       expect(content).toContain('{"!!":');
@@ -64,7 +64,7 @@ describe('Items Mod - Aiming Scopes', () => {
       const content = readFileSync(scopePath, 'utf-8');
 
       // Verify scope ID format
-      expect(content).toContain('items:aimable_targets :=');
+      expect(content).toContain('aiming:aimable_targets :=');
 
       // Verify uses entities query
       expect(content).toContain('entities(core:actor)');
@@ -82,23 +82,23 @@ describe('Items Mod - Aiming Scopes', () => {
   describe('Action integration', () => {
     it('aim_item action references the aimable_items_in_inventory scope', async () => {
       const aimItemAction = await import(
-        '../../../../data/mods/items/actions/aim_item.action.json',
+        '../../../../data/mods/aiming/actions/aim_item.action.json',
         { assert: { type: 'json' } }
       );
 
       expect(aimItemAction.default.targets.secondary.scope).toBe(
-        'items:aimable_items_in_inventory'
+        'aiming:aimable_items_in_inventory'
       );
     });
 
     it('aim_item action references the aimable_targets scope', async () => {
       const aimItemAction = await import(
-        '../../../../data/mods/items/actions/aim_item.action.json',
+        '../../../../data/mods/aiming/actions/aim_item.action.json',
         { assert: { type: 'json' } }
       );
 
       expect(aimItemAction.default.targets.primary.scope).toBe(
-        'items:aimable_targets'
+        'aiming:aimable_targets'
       );
     });
   });

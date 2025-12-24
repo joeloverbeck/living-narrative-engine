@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "aiming",
+  "version": "1.0.0",
+  "name": "Aiming",
+  "description": "Actions for aiming items at targets.",
+  "actionPurpose": "Aim items like weapons at targets, or lower your aim.",
+  "actionConsiderWhen": "You want to aim a weapon, flashlight, camera, or other aimable item at an entity, or lower an item you're currently aiming.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "aiming-states",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inventory",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items-core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "aim_item.action.json",
+      "lower_aim.action.json"
+    ],
+    "rules": [
+      "handle_aim_item.rule.json",
+      "handle_lower_aim.rule.json"
+    ],
+    "events": [
+      "item_aimed.event.json",
+      "aim_lowered.event.json"
+    ],
+    "conditions": [
+      "event-is-action-aim-item.condition.json",
+      "event-is-action-lower-aim.condition.json"
+    ],
+    "scopes": [
+      "aimable_items_in_inventory.scope",
+      "aimed_items_in_inventory.scope",
+      "aimable_targets.scope"
+    ],
+    "entities": {
+      "definitions": [
+        "revolver.entity.json"
+      ]
+    }
+  }
+}
