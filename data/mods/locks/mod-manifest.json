@@ -20,15 +20,15 @@
       "version": "1.0.0"
     },
     {
-      "id": "items",
-      "version": "1.0.0"
-    },
-    {
       "id": "mechanisms",
       "version": "1.0.0"
     },
     {
       "id": "lying-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "inventory",
       "version": "^1.0.0"
     }
   ],

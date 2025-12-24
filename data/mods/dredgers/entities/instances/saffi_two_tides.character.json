@@ -6,7 +6,7 @@
         "core:position": {
             "locationId": "dredgers:service_stair_instance"
         },
-        "items:inventory": {
+        "inventory:inventory": {
             "items": [
                 "dredgers:hooded_oil_lantern_instance_2"
             ],

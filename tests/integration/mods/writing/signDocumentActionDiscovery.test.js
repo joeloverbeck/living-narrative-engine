@@ -120,7 +120,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['contract_1', 'pencil_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -176,7 +176,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Bob')
         .atLocation('room2')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['letter_1', 'quill_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -214,7 +214,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Charlie')
         .atLocation('room3')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['pencil_2'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -254,7 +254,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Grace')
         .atLocation('room7')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['contract_5'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -286,7 +286,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Diana')
         .atLocation('room4')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['contract_3', 'pencil_3'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -326,7 +326,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Eve')
         .atLocation('room5')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword_1', 'pencil_4'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -364,7 +364,7 @@ describe('writing:sign_document action definition', () => {
         .withName('Frank')
         .atLocation('room6')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [
             'contract_4',
             'letter_2',

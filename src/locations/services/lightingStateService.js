@@ -91,7 +91,7 @@ class LightingStateService {
 
       const inventory = this.#entityManager.getComponentData(
         entityId,
-        'items:inventory'
+        'inventory:inventory'
       );
       const items = Array.isArray(inventory?.items) ? inventory.items : [];
       for (const itemId of items) {

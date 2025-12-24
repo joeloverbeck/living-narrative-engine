@@ -36,7 +36,7 @@ describe('wield_threateningly action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['revolver'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -65,7 +65,7 @@ describe('wield_threateningly action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['revolver'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -94,7 +94,7 @@ describe('wield_threateningly action', () => {
         .withName('John Smith')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['silver-revolver'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })

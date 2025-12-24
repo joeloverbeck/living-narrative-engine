@@ -43,7 +43,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -101,7 +101,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -139,7 +139,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
       .withName('TestActor')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

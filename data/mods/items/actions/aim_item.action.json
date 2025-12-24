@@ -5,7 +5,7 @@
   "description": "Aim an aimable item at a target entity. The item must have items:aimable component and be in actor's inventory.",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["items:inventory"]
+    "actor": ["inventory:inventory"]
   },
   "targets": {
     "primary": {

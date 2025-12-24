@@ -134,7 +134,7 @@ const createCombatants = ({
     .asActor()
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:melee_skill', { level: 90 })
-    .withComponent('items:inventory', { items: [weaponId], capacity: 5 })
+    .withComponent('inventory:inventory', { items: [weaponId], capacity: 5 })
     .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
     .build();
 

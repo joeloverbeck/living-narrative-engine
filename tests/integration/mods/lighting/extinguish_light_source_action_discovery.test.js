@@ -86,7 +86,7 @@ describe('lighting:extinguish_light_source action discovery', () => {
       .withName('Sky')
       .atLocation(room.id)
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -141,7 +141,7 @@ describe('lighting:extinguish_light_source action discovery', () => {
       .withName('Quinn')
       .atLocation(room.id)
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

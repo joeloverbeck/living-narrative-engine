@@ -1,5 +1,5 @@
 // Items in the actor's inventory whose liquid contents are tagged disinfectant and still have volume left
-items:disinfectant_liquids_in_inventory := actor.components.items:inventory.items[][{"and": [
+items:disinfectant_liquids_in_inventory := actor.components.inventory:inventory.items[][{"and": [
   {"!!": {"var": "entity.components.containers-core:liquid_container"}},
   {"in": ["disinfectant", {"var": "entity.components.containers-core:liquid_container.tags"}]},
   {"<": [0, {"var": "entity.components.containers-core:liquid_container.currentVolumeMilliliters"}]}

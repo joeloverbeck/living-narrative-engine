@@ -109,7 +109,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Test Actor' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: ['item-1', 'item-2', 'item-3'],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
@@ -162,7 +162,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Test Actor' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [{ itemId: 'item-1' }, { itemId: 'item-2' }],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
@@ -207,7 +207,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor1',
           components: {
             'core:actor': { name: 'Test Actor' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
@@ -274,7 +274,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor2',
           components: {
             'core:actor': { name: 'Actor 2' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
@@ -284,7 +284,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor3',
           components: {
             'core:actor': { name: 'Actor 3' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [],
               capacity: { maxWeight: 30, maxItems: 5 },
             },
@@ -334,7 +334,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor2',
           components: {
             'core:actor': { name: 'Actor 2' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
@@ -344,7 +344,7 @@ describe('Items - Inventory Scopes Integration', () => {
           id: 'test:actor3',
           components: {
             'core:actor': { name: 'Actor 3' },
-            'items:inventory': {
+            'inventory:inventory': {
               items: [],
               capacity: { maxWeight: 50, maxItems: 10 },
             },

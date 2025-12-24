@@ -29,7 +29,7 @@ describe('clothing:put_on_clothing action discovery', () => {
           torso_upper: { base: 'vest_1' },
         },
       })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['shirt_1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -79,7 +79,7 @@ describe('clothing:put_on_clothing action discovery', () => {
       .asActor()
       .withGrabbingHands(2)
       .withComponent('clothing:equipment', { equipped: {} })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['hat_1'],
         capacity: { maxWeight: 5, maxItems: 5 },
       })

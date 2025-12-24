@@ -60,10 +60,10 @@ describe('item-transfer:give_item action integration', () => {
       expect(testFixture.events).toHaveActionSuccess(
         'Alice gives letter-1 to Bob.'
       );
-      expect(updatedGiver.components['items:inventory'].items).toEqual(
+      expect(updatedGiver.components['inventory:inventory'].items).toEqual(
         scenario.giverItems.map((item) => item.id)
       );
-      expect(updatedReceiver.components['items:inventory'].items).toEqual([
+      expect(updatedReceiver.components['inventory:inventory'].items).toEqual([
         ...scenario.receiverItems.map((item) => item.id),
         scenario.transferItem.id,
       ]);
@@ -108,18 +108,18 @@ describe('item-transfer:give_item action integration', () => {
       expect(testFixture.events).toHaveActionSuccess(
         'Sarah gives revolver-1 to James.'
       );
-      expect(updatedGiver.components['items:inventory'].items).toEqual(
+      expect(updatedGiver.components['inventory:inventory'].items).toEqual(
         scenario.giverItems.map((item) => item.id)
       );
-      expect(updatedReceiver.components['items:inventory'].items).toEqual([
+      expect(updatedReceiver.components['inventory:inventory'].items).toEqual([
         ...scenario.receiverItems.map((item) => item.id),
         scenario.transferItem.id,
       ]);
-      expect(updatedGiver.components['items:inventory'].capacity).toEqual({
+      expect(updatedGiver.components['inventory:inventory'].capacity).toEqual({
         maxWeight: 50,
         maxItems: 10,
       });
-      expect(updatedReceiver.components['items:inventory'].capacity).toEqual({
+      expect(updatedReceiver.components['inventory:inventory'].capacity).toEqual({
         maxWeight: 30,
         maxItems: 5,
       });
@@ -170,10 +170,10 @@ describe('item-transfer:give_item action integration', () => {
         scenario.receiver.id
       );
 
-      expect(updatedGiver.components['items:inventory'].items).toContain(
+      expect(updatedGiver.components['inventory:inventory'].items).toContain(
         scenario.transferItem.id
       );
-      expect(updatedReceiver.components['items:inventory'].items).toEqual(
+      expect(updatedReceiver.components['inventory:inventory'].items).toEqual(
         scenario.receiverItems.map((item) => item.id)
       );
     });
@@ -213,7 +213,7 @@ describe('item-transfer:give_item action integration', () => {
       const updatedGiver = testFixture.entityManager.getEntityInstance(
         scenario.giver.id
       );
-      expect(updatedGiver.components['items:inventory'].items).toContain(
+      expect(updatedGiver.components['inventory:inventory'].items).toContain(
         scenario.transferItem.id
       );
     });

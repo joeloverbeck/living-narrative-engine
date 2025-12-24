@@ -34,7 +34,7 @@ function setupSignDocumentScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: inventoryItems,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -142,8 +142,8 @@ describe('writing:sign_document action integration', () => {
 
       // Assert: Verify document and pencil still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('contract-1');
-      expect(actor.components['items:inventory'].items).toContain('pencil-1');
+      expect(actor.components['inventory:inventory'].items).toContain('contract-1');
+      expect(actor.components['inventory:inventory'].items).toContain('pencil-1');
     });
 
     it('works with any signable item and writing utensil', async () => {
@@ -154,7 +154,7 @@ describe('writing:sign_document action integration', () => {
         .withName('Bob')
         .atLocation('library1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['letter-1', 'quill-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -337,7 +337,7 @@ describe('writing:sign_document action integration', () => {
       const actorBefore =
         testFixture.entityManager.getEntityInstance('test:actor1');
       const inventoryBefore = [
-        ...actorBefore.components['items:inventory'].items,
+        ...actorBefore.components['inventory:inventory'].items,
       ];
 
       await testFixture.executeAction('test:actor1', 'contract-1', {
@@ -349,7 +349,7 @@ describe('writing:sign_document action integration', () => {
         testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Inventory should be unchanged
-      expect(actorAfter.components['items:inventory'].items).toEqual(
+      expect(actorAfter.components['inventory:inventory'].items).toEqual(
         inventoryBefore
       );
 

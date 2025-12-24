@@ -44,7 +44,7 @@ describe('unwield_item rule execution', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-sword'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -76,7 +76,7 @@ describe('unwield_item rule execution', () => {
         .withName('John Smith')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['silver-blade'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -110,7 +110,7 @@ describe('unwield_item rule execution', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -150,7 +150,7 @@ describe('unwield_item rule execution', () => {
         .withName('Dual Wielder')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['dagger', 'sword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
@@ -188,7 +188,7 @@ describe('unwield_item rule execution', () => {
         .withName('Warrior')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['longsword'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
@@ -223,7 +223,7 @@ describe('unwield_item rule execution', () => {
         .withName('Item Holder')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['simple-knife'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -266,7 +266,7 @@ describe('unwield_item rule execution', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-sword', 'test-dagger'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
@@ -312,7 +312,7 @@ describe('unwield_item rule execution', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -348,7 +348,7 @@ describe('unwield_item rule execution', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })

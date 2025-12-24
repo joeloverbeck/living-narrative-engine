@@ -38,7 +38,7 @@ describe('lighting:extinguish_light_source rule execution', () => {
       .withName('Avery')
       .asActor()
       .atLocation(locationId)
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [lightSource.id],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -105,7 +105,7 @@ describe('lighting:extinguish_light_source rule execution', () => {
       .withName('Rowan')
       .asActor()
       .atLocation(locationId)
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [lightSource.id, otherLight.id],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

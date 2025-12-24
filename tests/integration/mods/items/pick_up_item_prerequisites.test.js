@@ -138,7 +138,7 @@ describe('item-handling:pick_up_item prerequisites', () => {
       expect(pickUpItemAction.id).toBe('item-handling:pick_up_item');
       expect(pickUpItemAction.template).toBe('pick up {item}');
       expect(pickUpItemAction.required_components.actor).toContain(
-        'items:inventory'
+        'inventory:inventory'
       );
       expect(pickUpItemAction.forbidden_components.actor).toContain(
         'bending-states:bending_over'

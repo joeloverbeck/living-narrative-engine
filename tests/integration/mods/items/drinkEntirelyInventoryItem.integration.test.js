@@ -28,7 +28,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       ]);
 
       // Add bottle to actor's inventory
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -87,7 +87,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       ]);
 
       // Add bottle to actor's inventory
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -130,7 +130,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       ]);
 
       // Add bottle to actor's inventory
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });
@@ -179,7 +179,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       ]);
 
       // Add empty bottle to inventory
-      fixture.entityManager.addComponent(actor.id, 'items:inventory', {
+      fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [bottle.id],
         maxWeightKg: 50,
       });

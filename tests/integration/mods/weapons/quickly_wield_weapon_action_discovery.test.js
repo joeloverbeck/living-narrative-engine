@@ -34,7 +34,7 @@ describe('quickly_wield_weapon action definition', () => {
   describe('Required Components', () => {
     it('should require actor to have inventory component', () => {
       expect(actionJson.required_components).toBeDefined();
-      expect(actionJson.required_components.actor).toEqual(['items:inventory']);
+      expect(actionJson.required_components.actor).toEqual(['inventory:inventory']);
     });
   });
 

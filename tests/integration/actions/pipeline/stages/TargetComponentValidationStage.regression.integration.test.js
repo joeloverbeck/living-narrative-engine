@@ -697,7 +697,7 @@ describe('TargetComponentValidationStage items action regression', () => {
         'core:name': { text: 'Pipeline Actor' },
         'core:actor': { type: 'test' },
         'core:position': { locationId: 'test:room' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['test:letter_instance', 'test:photo_instance'],
           capacity: { maxWeight: 10, maxItems: 5 },
         },

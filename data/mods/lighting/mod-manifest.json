@@ -14,11 +14,11 @@
       "version": "1.0.0"
     },
     {
-      "id": "items",
+      "id": "descriptors",
       "version": "^1.0.0"
     },
     {
-      "id": "descriptors",
+      "id": "inventory",
       "version": "^1.0.0"
     }
   ],

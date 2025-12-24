@@ -186,7 +186,7 @@ function createProductionScopeResolver(testEnv) {
       }
       const inventory = testEnv.entityManager.getComponentData(
         actorId,
-        'items:inventory'
+        'inventory:inventory'
       );
       const items = inventory?.items || [];
       const matches = items.filter((itemId) => {
@@ -237,7 +237,7 @@ function buildEntities() {
     .withName('Threadscar Melissa')
     .asActor()
     .withComponent('skills:medicine_skill', { value: 57 })
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: [DISINFECTANT_ID],
       capacity: { maxWeight: 50, maxItems: 20 },
     })

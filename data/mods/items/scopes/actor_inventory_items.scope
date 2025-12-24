@@ -1,1 +1,1 @@
-items:actor_inventory_items := actor.components.items:inventory.items[][{"!": {"var": "itemId"}}] | actor.components.items:inventory.items[].itemId
+items:actor_inventory_items := actor.components.inventory:inventory.items[][{"!": {"var": "itemId"}}] | actor.components.inventory:inventory.items[].itemId

@@ -210,7 +210,7 @@ describe('ParameterResolutionService - Property Path Navigation', () => {
         components: {
           'core:health': { value: 50, max: 100 },
           'core:position': { room: 'room_12', x: 10, y: 20 },
-          'items:inventory': {
+          'inventory:inventory': {
             slots: [
               { id: 'apple_7', slot: 0 },
               { id: 'sword_3', slot: 1 },
@@ -256,7 +256,7 @@ describe('ParameterResolutionService - Property Path Navigation', () => {
 
   it('should handle complex nested structures', () => {
     const result = service.resolve(
-      'actor.components.items:inventory.slots',
+      'actor.components.inventory:inventory.slots',
       context,
       {
         validateEntity: false,

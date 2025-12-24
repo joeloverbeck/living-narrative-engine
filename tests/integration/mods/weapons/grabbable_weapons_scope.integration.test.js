@@ -178,7 +178,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -217,7 +217,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['longsword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -258,7 +258,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -297,7 +297,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -338,7 +338,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['dagger-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -377,7 +377,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['ring-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -417,7 +417,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
       // Actor without anatomy:body
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Bodiless Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -461,7 +461,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Four-Armed Warrior' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['longsword-1', 'sword-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
         },
@@ -504,7 +504,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('warrior-1', {
         'core:actor': { name: 'Warrior' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['shortsword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -541,7 +541,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('warrior-1', {
         'core:actor': { name: 'Warrior' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['greatsword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -578,7 +578,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('warrior-1', {
         'core:actor': { name: 'Warrior' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['greatsword-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -623,7 +623,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('warrior-1', {
         'core:actor': { name: 'Warrior' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1', 'dagger-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },
@@ -672,7 +672,7 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['sword-1', 'apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         },

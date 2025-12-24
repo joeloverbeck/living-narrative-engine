@@ -79,7 +79,7 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       instanceId: 'saffi',
       componentOverrides: {
         'core:position': { locationId: 'room1' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['lantern1'],
           capacity: { maxWeight: 10, maxItems: 5 },
         },
@@ -136,7 +136,7 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       entityManager.getComponentData('lantern1', 'core:position')
     ).toEqual({ locationId: 'room1' });
     expect(
-      entityManager.getComponentData('saffi', 'items:inventory').items
+      entityManager.getComponentData('saffi', 'inventory:inventory').items
     ).not.toContain('lantern1');
 
     const entitiesInRoom = entityManagerAdapter.getEntitiesInLocation('room1');

@@ -57,13 +57,13 @@ describe('Items - Data Components', () => {
     });
   });
 
-  describe('items:inventory', () => {
+  describe('inventory:inventory', () => {
     it('should validate valid inventory data', () => {
       const data = {
         items: ['item-1', 'item-2'],
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(true);
     });
 
@@ -72,7 +72,7 @@ describe('Items - Data Components', () => {
         items: ['item-1', 'item-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -81,7 +81,7 @@ describe('Items - Data Components', () => {
         items: [],
         capacity: { maxWeight: 50 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -90,7 +90,7 @@ describe('Items - Data Components', () => {
         items: ['invalid@id'],
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -99,7 +99,7 @@ describe('Items - Data Components', () => {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(true);
     });
 
@@ -108,7 +108,7 @@ describe('Items - Data Components', () => {
         items: ['item_1', 'item-2', 'ABC123'],
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(true);
     });
 
@@ -116,7 +116,7 @@ describe('Items - Data Components', () => {
       const data = {
         capacity: { maxWeight: 50, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -124,7 +124,7 @@ describe('Items - Data Components', () => {
       const data = {
         items: ['item-1'],
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -133,7 +133,7 @@ describe('Items - Data Components', () => {
         items: ['item-1'],
         capacity: { maxWeight: -10, maxItems: 10 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -142,7 +142,7 @@ describe('Items - Data Components', () => {
         items: ['item-1'],
         capacity: { maxWeight: 50, maxItems: 0 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
 
@@ -151,7 +151,7 @@ describe('Items - Data Components', () => {
         items: ['item-1'],
         capacity: { maxWeight: 50, maxItems: 1 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(true);
     });
 
@@ -161,7 +161,7 @@ describe('Items - Data Components', () => {
         capacity: { maxWeight: 50, maxItems: 10 },
         extraProperty: 'not allowed',
       };
-      const result = testBed.validateAgainstSchema(data, 'items:inventory');
+      const result = testBed.validateAgainstSchema(data, 'inventory:inventory');
       expect(result.isValid).toBe(false);
     });
   });

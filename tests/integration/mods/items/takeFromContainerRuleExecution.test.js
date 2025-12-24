@@ -40,7 +40,7 @@ function setupTakeFromContainerScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: actorInventory,
       capacity: { maxWeight, maxItems },
     })
@@ -125,7 +125,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Assert: Verify item added to actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('gold-bar-1');
+      expect(actor.components['inventory:inventory'].items).toContain('gold-bar-1');
 
       const successEvent = testFixture.events.find(
         (e) => e.eventType === 'core:display_successful_action_result'
@@ -199,7 +199,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify item in actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toEqual(['coin-1']);
+      expect(actor.components['inventory:inventory'].items).toEqual(['coin-1']);
     });
 
     it('successfully takes multiple items sequentially', async () => {
@@ -223,7 +223,7 @@ describe('containers:take_from_container action integration', () => {
         },
       });
       let actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('diamond-1');
+      expect(actor.components['inventory:inventory'].items).toContain('diamond-1');
 
       // Take second item
       await testFixture.executeAction('test:actor1', 'trunk-1', {
@@ -232,7 +232,7 @@ describe('containers:take_from_container action integration', () => {
         },
       });
       actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('ruby-1');
+      expect(actor.components['inventory:inventory'].items).toContain('ruby-1');
 
       // Verify container has only one item left
       const container = testFixture.entityManager.getEntityInstance('trunk-1');
@@ -274,7 +274,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'sword-1'
       );
 
@@ -311,7 +311,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify successful take
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('potion-1');
+      expect(actor.components['inventory:inventory'].items).toContain('potion-1');
     });
   });
 
@@ -346,7 +346,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify item NOT in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain('book-1');
+      expect(actor.components['inventory:inventory'].items).not.toContain('book-1');
     });
 
     it('prevents taking item not in container', async () => {
@@ -377,7 +377,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify item NOT in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'nonexistent-item'
       );
     });
@@ -526,7 +526,7 @@ describe('containers:take_from_container action integration', () => {
         .withName('Mary')
         .atLocation('town-square')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -536,7 +536,7 @@ describe('containers:take_from_container action integration', () => {
         .withName('Nancy')
         .atLocation('town-square')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -577,7 +577,7 @@ describe('containers:take_from_container action integration', () => {
       });
       const actor1After =
         testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor1After.components['items:inventory'].items).toContain(
+      expect(actor1After.components['inventory:inventory'].items).toContain(
         'apple-1'
       );
 
@@ -589,7 +589,7 @@ describe('containers:take_from_container action integration', () => {
       });
       const actor2After =
         testFixture.entityManager.getEntityInstance('actor-2');
-      expect(actor2After.components['items:inventory'].items).toContain(
+      expect(actor2After.components['inventory:inventory'].items).toContain(
         'bread-1'
       );
 
@@ -623,7 +623,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify item still exists as entity (just changed location)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('artifact-1');
+      expect(actor.components['inventory:inventory'].items).toContain('artifact-1');
 
       const container =
         testFixture.entityManager.getEntityInstance('display-case');
@@ -664,7 +664,7 @@ describe('containers:take_from_container action integration', () => {
 
       // Verify successful take
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('key-1');
+      expect(actor.components['inventory:inventory'].items).toContain('key-1');
     });
   });
 });

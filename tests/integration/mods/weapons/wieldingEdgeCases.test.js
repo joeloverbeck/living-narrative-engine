@@ -38,7 +38,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['dagger-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -76,7 +76,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['weapons:silver_revolver'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -111,7 +111,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['weapons:silver_revolver', 'dagger-1'],
           capacity: { maxWeight: 20, maxItems: 10 },
         })
@@ -158,7 +158,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['sword-id'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -206,7 +206,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: weaponIds,
           capacity: { maxWeight: 100, maxItems: 20 },
         })
@@ -246,7 +246,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['existing-weapon'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -287,7 +287,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['weapon_with_underscore'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -320,7 +320,7 @@ describe('Wielding Edge Cases', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['weapon-with-hyphen'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })

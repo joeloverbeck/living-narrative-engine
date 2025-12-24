@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:aldous_kitchen_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": ["fantasy:rill_practice_stick_instance"],
       "capacity": {
         "maxWeight": 50.0,

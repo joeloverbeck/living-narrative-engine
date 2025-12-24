@@ -2,4 +2,4 @@
 // Description: Returns all portable items that can be thrown - both wielded items AND non-wielded inventory items
 // Pattern: Union of wielded items and inventory items, filtered by items-core:portable component
 
-ranged:throwable_items := actor.components.item-handling-states:wielding.wielded_item_ids[][{"has_component": [".", "items-core:portable"]}] | actor.components.items:inventory.items[][{"has_component": [".", "items-core:portable"]}]
+ranged:throwable_items := actor.components.item-handling-states:wielding.wielded_item_ids[][{"has_component": [".", "items-core:portable"]}] | actor.components.inventory:inventory.items[][{"has_component": [".", "items-core:portable"]}]

@@ -5,7 +5,7 @@
   "description": "Stop aiming an item. Removes the items:aimed_at component from the item, ending the aimed state.",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["items:inventory"]
+    "actor": ["inventory:inventory"]
   },
   "targets": {
     "primary": {

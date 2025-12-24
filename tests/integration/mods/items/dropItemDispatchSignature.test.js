@@ -29,7 +29,7 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
     // Create mock entity manager
     mockEntityManager = {
       getComponentData: jest.fn((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'items:inventory') {
+        if (entityId === 'actor1' && componentType === 'inventory:inventory') {
           return {
             items: ['item1', 'item2'],
             capacity: { maxWeight: 50, maxItems: 10 },

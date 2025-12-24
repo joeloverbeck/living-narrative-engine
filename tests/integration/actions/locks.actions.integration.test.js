@@ -103,7 +103,7 @@ function buildEntityManager({ isLocked, actorHasKey }) {
     components: {
       'core:actor': {},
       'core:position': { locationId: location.id },
-      'items:inventory': {
+      'inventory:inventory': {
         items: actorHasKey ? ['items:test_key'] : [],
         capacity: { maxWeight: 10, maxItems: 5 },
       },
@@ -184,10 +184,10 @@ describe('locks connection actions', () => {
     expect(unlockAction.generateCombinations).toBe(true);
 
     expect(lockAction.required_components.actor).toEqual(
-      expect.arrayContaining(['items:inventory', 'core:position'])
+      expect.arrayContaining(['inventory:inventory', 'core:position'])
     );
     expect(unlockAction.required_components.actor).toEqual(
-      expect.arrayContaining(['items:inventory', 'core:position'])
+      expect.arrayContaining(['inventory:inventory', 'core:position'])
     );
 
     expect(lockAction.targets.primary.scope).toBe(

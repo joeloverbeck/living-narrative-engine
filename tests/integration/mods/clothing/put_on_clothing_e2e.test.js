@@ -30,7 +30,7 @@ describe('clothing:put_on_clothing end-to-end', () => {
       .withComponent('clothing:equipment', {
         equipped: { torso_upper: { base: 'travel_cloak' } },
       })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -96,7 +96,7 @@ describe('clothing:put_on_clothing end-to-end', () => {
 
     const inventory = testFixture.entityManager.getComponentData(
       actor.id,
-      'items:inventory'
+      'inventory:inventory'
     );
     const updatedInventory = {
       ...inventory,
@@ -104,7 +104,7 @@ describe('clothing:put_on_clothing end-to-end', () => {
     };
     await testFixture.entityManager.addComponent(
       actor.id,
-      'items:inventory',
+      'inventory:inventory',
       updatedInventory
     );
 
@@ -124,7 +124,7 @@ describe('clothing:put_on_clothing end-to-end', () => {
 
     const finalInventory = testFixture.entityManager.getComponentData(
       actor.id,
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(finalInventory.items).not.toContain(clothing.id);
 

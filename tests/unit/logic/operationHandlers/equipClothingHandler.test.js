@@ -33,20 +33,20 @@ describe('EquipClothingHandler', () => {
     mockEntityManager = {
       hasComponent: jest.fn((entityId, componentId) => {
         if (componentId === 'clothing:equipment') return true;
-        if (componentId === 'items:inventory') return true;
+        if (componentId === 'inventory:inventory') return true;
         if (componentId === 'core:inventory') return false;
         if (componentId === 'core:position') return true;
         return false;
       }),
       getComponentData: jest.fn((_, componentId) => {
         if (componentId === 'clothing:equipment') return equipmentState;
-        if (componentId === 'items:inventory') return inventoryState;
+        if (componentId === 'inventory:inventory') return inventoryState;
         if (componentId === 'core:position')
           return { locationId: 'room_001' };
         return undefined;
       }),
       addComponent: jest.fn((_, componentId, data) => {
-        if (componentId === 'items:inventory') {
+        if (componentId === 'inventory:inventory') {
           inventoryState = data;
         }
         if (componentId === 'clothing:equipment') {
@@ -121,7 +121,7 @@ describe('EquipClothingHandler', () => {
     // Item was removed from inventory and displaced conflict was added back
     const inventory = mockEntityManager.getComponentData(
       'actor-1',
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(inventory.items).toContain('cape1');
     expect(inventory.items).not.toContain('coat1');
@@ -167,7 +167,7 @@ describe('EquipClothingHandler', () => {
   it('returns false when clothing:equipment is missing', async () => {
     mockEntityManager.hasComponent = jest.fn((entityId, componentId) => {
       if (componentId === 'clothing:equipment') return false;
-      if (componentId === 'items:inventory') return true;
+      if (componentId === 'inventory:inventory') return true;
       if (componentId === 'core:inventory') return false;
       if (componentId === 'core:position') return true;
       return false;
@@ -191,7 +191,7 @@ describe('EquipClothingHandler', () => {
   it('places displaced items on the ground when destination is ground and inventory is absent', async () => {
     mockEntityManager.hasComponent = jest.fn((entityId, componentId) => {
       if (componentId === 'clothing:equipment') return true;
-      if (componentId === 'items:inventory') return false;
+      if (componentId === 'inventory:inventory') return false;
       if (componentId === 'core:inventory') return false;
       if (componentId === 'core:position') return true;
       return false;
@@ -273,7 +273,7 @@ describe('EquipClothingHandler', () => {
     expect(mockEntityManager.getComponentData('actor-1', 'clothing:equipment')).toEqual({
       equipped: { torso: { outer: 'cape1' } },
     });
-    expect(mockEntityManager.getComponentData('actor-1', 'items:inventory')).toEqual({
+    expect(mockEntityManager.getComponentData('actor-1', 'inventory:inventory')).toEqual({
       items: ['coat1', 'apple'],
     });
   });

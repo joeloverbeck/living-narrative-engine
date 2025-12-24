@@ -81,7 +81,7 @@ const createCombatants = ({ weaponBuilder, weaponId, attackSkill = 80 }) => {
     .asActor()
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:melee_skill', { level: attackSkill })
-    .withComponent('items:inventory', { items: [weaponId], capacity: 5 })
+    .withComponent('inventory:inventory', { items: [weaponId], capacity: 5 })
     .withComponent('item-handling-states:wielding', { wielded_item_ids: [weaponId] })
     .build();
 

@@ -349,7 +349,7 @@ describe('Breaching Mod Scopes', () => {
 
       const actor = createEntityInstance('actor-1', {
         'core:actor': { name: 'Test Actor' },
-        'items:inventory': {
+        'inventory:inventory': {
           items: ['tools:hacksaw', 'tools:hammer']
         }
       });

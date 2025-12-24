@@ -30,7 +30,7 @@ describe('clothing:put_on_clothing rule execution', () => {
       .asActor()
       .withGrabbingHands(2)
       .withComponent('clothing:equipment', { equipped: {} })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['shirt1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -68,7 +68,7 @@ describe('clothing:put_on_clothing rule execution', () => {
 
     const inventory = testFixture.entityManager.getComponentData(
       actor.id,
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(inventory.items).not.toContain(clothing.id);
 
@@ -99,7 +99,7 @@ describe('clothing:put_on_clothing rule execution', () => {
           torso_upper: { base: 'base_tunic' },
         },
       })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['fresh_shirt'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -153,7 +153,7 @@ describe('clothing:put_on_clothing rule execution', () => {
 
     const inventory = testFixture.entityManager.getComponentData(
       actor.id,
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(inventory.items).toContain(displacedClothing.id);
     expect(inventory.items).not.toContain(newClothing.id);
@@ -171,7 +171,7 @@ describe('clothing:put_on_clothing rule execution', () => {
       .asActor()
       .withGrabbingHands(2)
       .withComponent('clothing:equipment', { equipped: {} })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['invalid_item'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -213,7 +213,7 @@ describe('clothing:put_on_clothing rule execution', () => {
 
     const inventory = testFixture.entityManager.getComponentData(
       actor.id,
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(inventory.items).toContain(invalidClothing.id);
 

@@ -111,7 +111,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -190,7 +190,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [], // EMPTY
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -265,7 +265,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -326,7 +326,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -391,7 +391,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -463,7 +463,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance', 'fantasy:gold_coin_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -551,7 +551,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
@@ -632,7 +632,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('Bertram the Muddy')
         .atLocation('fantasy:aldous_hallway') // Hallway - different from table
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['fantasy:smoking_pipe_instance'],
           capacity: { maxWeight: 30, maxItems: 10 },
         })

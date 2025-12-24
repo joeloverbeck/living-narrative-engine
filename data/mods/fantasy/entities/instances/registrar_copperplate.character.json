@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": ["fantasy:registry_ledger_instance"],
       "capacity": {
         "maxWeight": 50.0,

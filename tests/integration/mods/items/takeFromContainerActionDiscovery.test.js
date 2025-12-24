@@ -84,7 +84,7 @@ describe('containers:take_from_container action definition', () => {
   it('should require actor to have inventory component', () => {
     expect(takeFromContainerAction.required_components).toBeDefined();
     expect(takeFromContainerAction.required_components.actor).toEqual([
-      'items:inventory',
+      'inventory:inventory',
     ]);
   });
 
@@ -187,7 +187,7 @@ describe('containers:take_from_container action definition', () => {
         .withName('Alice')
         .atLocation('storage')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 20, maxItems: 5 },
         })
@@ -243,7 +243,7 @@ describe('containers:take_from_container action definition', () => {
         .withName('Reader')
         .atLocation('library')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 20, maxItems: 5 },
         })

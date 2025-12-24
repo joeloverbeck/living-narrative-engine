@@ -83,7 +83,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('personal-space-states:closeness', {
         targetId: recipientActorId,
       })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [coinId, letterId],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
@@ -98,7 +98,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('personal-space-states:closeness', {
         targetId: actorId,
       })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

@@ -83,7 +83,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Alex')
         .atLocation('bedroom')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['plush_toy_inventory'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -144,7 +144,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Jamie')
         .atLocation('nursery')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [
             {
               itemId: 'stuffed_animal_reference',
@@ -180,7 +180,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Casey')
         .atLocation('room_mixed')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['comfort_item_mixed', 'non_comfort_item_mixed'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -221,7 +221,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Taylor')
         .atLocation('empty_room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -246,7 +246,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Jordan')
         .atLocation('workshop')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['non_comfort_item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -308,7 +308,7 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withName('Comfort Seeker')
         .atLocation('mixed_room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [
             'comfort_item_one',
             'comfort_item_two',

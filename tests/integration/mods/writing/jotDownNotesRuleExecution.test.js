@@ -34,7 +34,7 @@ function setupJotDownNotesScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: inventoryItems,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -157,8 +157,8 @@ describe('writing:jot_down_notes action integration', () => {
 
       // Assert: Verify notebook and pencil still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('notebook-1');
-      expect(actor.components['items:inventory'].items).toContain('pencil-1');
+      expect(actor.components['inventory:inventory'].items).toContain('notebook-1');
+      expect(actor.components['inventory:inventory'].items).toContain('pencil-1');
     });
 
     it('works with any readable item and writing utensil', async () => {
@@ -169,7 +169,7 @@ describe('writing:jot_down_notes action integration', () => {
         .withName('Bob')
         .atLocation('library1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['book-1', 'quill-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -352,7 +352,7 @@ describe('writing:jot_down_notes action integration', () => {
       const actorBefore =
         testFixture.entityManager.getEntityInstance('test:actor1');
       const inventoryBefore = [
-        ...actorBefore.components['items:inventory'].items,
+        ...actorBefore.components['inventory:inventory'].items,
       ];
 
       await testFixture.executeAction('test:actor1', 'notebook-1', {
@@ -364,7 +364,7 @@ describe('writing:jot_down_notes action integration', () => {
         testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Inventory should be unchanged
-      expect(actorAfter.components['items:inventory'].items).toEqual(
+      expect(actorAfter.components['inventory:inventory'].items).toEqual(
         inventoryBefore
       );
 

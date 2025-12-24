@@ -26,7 +26,7 @@ function createMockValidator() {
       validationCalls.push({ schemaId, data });
 
       // Pass validation for known component schemas
-      if (schemaId === 'core:position' || schemaId === 'items:inventory') {
+      if (schemaId === 'core:position' || schemaId === 'inventory:inventory') {
         return { isValid: true };
       }
 
@@ -187,7 +187,7 @@ describe('ComponentMutationService - Batch Operations', () => {
     it('should handle validation errors with correct component type in error message', async () => {
       // Arrange: Force validation failure for a known component type
       mockValidator.validate.mockImplementation((schemaId) => {
-        if (schemaId === 'items:inventory') {
+        if (schemaId === 'inventory:inventory') {
           return {
             isValid: false,
             errors: [
@@ -204,7 +204,7 @@ describe('ComponentMutationService - Batch Operations', () => {
       const batchSpec = [
         {
           instanceId: 'test:actor1',
-          componentTypeId: 'items:inventory',
+          componentTypeId: 'inventory:inventory',
           componentData: {}, // Invalid - missing required fields
         },
       ];
@@ -218,13 +218,13 @@ describe('ComponentMutationService - Batch Operations', () => {
       // Assert: Error should reference componentTypeId, not instanceId
       expect(result.errors).toHaveLength(1);
       expect(mockValidator.validate).toHaveBeenCalledWith(
-        'items:inventory',
+        'inventory:inventory',
         {}
       );
 
       // Error message should include correct component type AND entity ID for context
       const errorMessage = result.errors[0].error.message;
-      expect(errorMessage).toContain('items:inventory');
+      expect(errorMessage).toContain('inventory:inventory');
       expect(errorMessage).toContain('test:actor1'); // Entity ID included for debugging context
     });
   });

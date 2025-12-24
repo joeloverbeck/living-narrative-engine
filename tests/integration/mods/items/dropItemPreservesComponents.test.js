@@ -39,7 +39,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withName('Alice')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -70,7 +70,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withName('Bob')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -101,7 +101,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withName('Charlie')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['key-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -133,7 +133,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withName('Diana')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -178,7 +178,7 @@ describe('Items - Drop Item Component Preservation', () => {
       .withName('Eve')
       .atLocation('saloon1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['letter-1', 'gun-1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

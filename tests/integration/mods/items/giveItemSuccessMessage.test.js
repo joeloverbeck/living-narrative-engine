@@ -31,7 +31,7 @@ function setupGiveItemScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: ['test-item'],
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -41,7 +41,7 @@ function setupGiveItemScenario(
     .withName(targetName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: [],
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -355,7 +355,7 @@ describe('item-transfer:give_item success message display', () => {
       // Assert: Verify transfer succeeded
       const targetEntity =
         testFixture.entityManager.getEntityInstance('test:actor2');
-      expect(targetEntity.components['items:inventory'].items).toContain(
+      expect(targetEntity.components['inventory:inventory'].items).toContain(
         'test-item'
       );
 

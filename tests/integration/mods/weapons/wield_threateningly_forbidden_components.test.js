@@ -49,7 +49,7 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
         .withName('Alice')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-sword'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })

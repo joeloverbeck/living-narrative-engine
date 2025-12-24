@@ -28,10 +28,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "items",
-      "version": "1.0.0"
-    },
-    {
       "id": "skills",
       "version": "1.0.0"
     },
@@ -45,6 +41,10 @@
     },
     {
       "id": "item-handling-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "inventory",
       "version": "^1.0.0"
     }
   ],

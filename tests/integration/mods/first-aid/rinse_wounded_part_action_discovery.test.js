@@ -151,7 +151,7 @@ describe('first-aid:rinse_wounded_part action definition', () => {
           // Check inventory
           const inventory = fixture.testEnv.entityManager.getComponentData(
             actorId,
-            'items:inventory'
+            'inventory:inventory'
           );
           const itemIds = inventory?.items || [];
 
@@ -266,7 +266,7 @@ describe('first-aid:rinse_wounded_part action definition', () => {
       .asActor();
 
     if (hasInventory) {
-      medicBuilder.withComponent('items:inventory', {
+      medicBuilder.withComponent('inventory:inventory', {
         items: waterInInventory ? ['items:water_canteen'] : [],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
@@ -416,8 +416,8 @@ describe('first-aid:rinse_wounded_part action definition', () => {
     expect(rinseAction.required_components.actor).toEqual(
       expect.arrayContaining(['skills:medicine_skill'])
     );
-    // Note: does NOT require items:inventory unlike disinfect
-    expect(rinseAction.required_components.actor).not.toContain('items:inventory');
+    // Note: does NOT require inventory:inventory unlike disinfect
+    expect(rinseAction.required_components.actor).not.toContain('inventory:inventory');
     expect(rinseAction.forbidden_components.actor).toEqual(
       expect.arrayContaining([
         'hugging-states:hugging',

@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:feline_lung_left",
+  "description": "A feline left lung - respiratory organ for oxygen storage with slightly smaller capacity than human",
+  "components": {
+    "core:name": {
+      "text": "left lung"
+    },
+    "core:weight": {
+      "weight": 0.5
+    },
+    "anatomy:part": {
+      "subType": "lung",
+      "orientation": "left",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
+    "breathing-states:respiratory_organ": {
+      "respirationType": "pulmonary",
+      "oxygenCapacity": 8,
+      "currentOxygen": 8
+    }
+  }
+}

@@ -31,7 +31,7 @@ describe('DEBUG: open_container rule matching (WORKING)', () => {
       .withName('Actor')
       .atLocation('room1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

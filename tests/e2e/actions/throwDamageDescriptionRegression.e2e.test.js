@@ -217,7 +217,7 @@ const buildScenarioEntities = ({
     .asActor()
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('skills:ranged_skill', { value: 80 })
-    .withComponent('items:inventory', { items: [thrownItem.id], capacity: 5 })
+    .withComponent('inventory:inventory', { items: [thrownItem.id], capacity: 5 })
     .build();
 
   const room = new ModEntityBuilder(ROOM_ID)

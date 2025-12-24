@@ -147,7 +147,7 @@ describe('item-transfer:give_item prerequisites', () => {
         'items:actor_inventory_items'
       );
       expect(giveItemAction.required_components.actor).toContain(
-        'items:inventory'
+        'inventory:inventory'
       );
       expect(giveItemAction.forbidden_components.actor).toContain(
         'bending-states:bending_over'

@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:aldous_kitchen_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": ["fantasy:smoking_pipe_instance"],
       "capacity": {
         "maxWeight": 30.0,

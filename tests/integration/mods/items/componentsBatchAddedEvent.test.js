@@ -52,7 +52,7 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['item1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -91,7 +91,7 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
       .withName('Test Actor')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['item1'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

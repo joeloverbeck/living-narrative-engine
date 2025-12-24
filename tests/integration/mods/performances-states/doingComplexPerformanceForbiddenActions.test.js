@@ -220,7 +220,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withName('Performer')
           .atLocation('room1')
           .asActor()
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: ['book1'],
             max_weight: 100,
             current_weight: 5,

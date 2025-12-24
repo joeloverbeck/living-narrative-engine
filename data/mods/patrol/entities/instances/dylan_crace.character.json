@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "patrol:perimeter_of_rip_in_reality_instance"
     },
-    "items:inventory": {
+    "inventory:inventory": {
       "items": ["patrol:coffee_cup_instance"],
       "capacity": {
         "maxWeight": 50.0,

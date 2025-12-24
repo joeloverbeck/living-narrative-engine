@@ -42,7 +42,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['lute_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -76,7 +76,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['guitar_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -110,7 +110,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['drum_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -142,7 +142,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['flute_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -185,7 +185,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['lute_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -213,7 +213,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['guitar_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -297,7 +297,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .asActor()
         .withComponent('music:is_musician', {})
         .withComponent('music:performance_mood', { mood: 'cheerful' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['lute_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -336,7 +336,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .asActor()
         .withComponent('music:is_musician', {})
         .withComponent('music:playing_music', { playing_on: 'old_instrument' })
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['guitar_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -376,7 +376,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['lute_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -421,7 +421,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('concert_hall')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['violin_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -456,7 +456,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('music:is_musician', {})
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['trumpet_1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

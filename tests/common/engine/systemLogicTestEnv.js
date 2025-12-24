@@ -818,7 +818,7 @@ export function createBaseRuleEnvironment({
 
           // Get actor's inventory
           const actor = entityManager.getEntityInstance(actorId);
-          const inventory = actor?.components?.['items:inventory'];
+          const inventory = actor?.components?.['inventory:inventory'];
           if (!inventory || !Array.isArray(inventory.items)) {
             return { success: true, value: new Set() };
           }

@@ -41,7 +41,7 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
       .asActor()
       .atLocation(ROOM_ID)
       .withComponent('skills:medicine_skill', { value: 40 })
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [DISINFECTANT_ID],
         capacity: { maxWeight: 50, maxItems: 10 },
       })

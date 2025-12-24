@@ -6,7 +6,7 @@
         "core:position": {
             "locationId": "dredgers:service_stair_instance"
         },
-        "items:inventory": {
+        "inventory:inventory": {
             "items": ["dredgers:keyring_instance"],
             "capacity": {
                 "maxWeight": 50.0,

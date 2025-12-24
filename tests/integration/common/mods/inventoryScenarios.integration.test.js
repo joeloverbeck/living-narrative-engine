@@ -27,7 +27,7 @@ describe('Inventory scenario helpers - integration', () => {
     await fixture.executeAction('picker', 'pickup_target');
 
     const actor = fixture.entityManager.getEntityInstance('picker');
-    expect(actor.components['items:inventory'].items).toContain(
+    expect(actor.components['inventory:inventory'].items).toContain(
       'pickup_target'
     );
     const item = fixture.entityManager.getEntityInstance('pickup_target');
@@ -49,7 +49,7 @@ describe('Inventory scenario helpers - integration', () => {
     await fixture.executeAction('dropper', 'drop_target');
 
     const actor = fixture.entityManager.getEntityInstance('dropper');
-    expect(actor.components['items:inventory'].items).not.toContain(
+    expect(actor.components['inventory:inventory'].items).not.toContain(
       'drop_target'
     );
 
@@ -73,8 +73,8 @@ describe('Inventory scenario helpers - integration', () => {
 
     const giver = fixture.entityManager.getEntityInstance('giver');
     const receiver = fixture.entityManager.getEntityInstance('receiver');
-    expect(giver.components['items:inventory'].items).not.toContain('gift');
-    expect(receiver.components['items:inventory'].items).toContain('gift');
+    expect(giver.components['inventory:inventory'].items).not.toContain('gift');
+    expect(receiver.components['inventory:inventory'].items).toContain('gift');
     expect(scenario.transferItem.id).toBe('gift');
   });
 
@@ -132,7 +132,7 @@ describe('Inventory scenario helpers - integration', () => {
     );
 
     const actor = fixture.entityManager.getEntityInstance('storer');
-    expect(actor.components['items:inventory'].items).not.toContain(
+    expect(actor.components['inventory:inventory'].items).not.toContain(
       'supply_crate'
     );
     expect(scenario.heldItem.id).toBe('supply_crate');
@@ -159,7 +159,7 @@ describe('Inventory scenario helpers - integration', () => {
       'extra_supply'
     );
     const actor = fixture.entityManager.getEntityInstance('overloader');
-    expect(actor.components['items:inventory'].items).toContain('extra_supply');
+    expect(actor.components['inventory:inventory'].items).toContain('extra_supply');
     const successEvent = fixture.events.find(
       (event) => event.eventType === 'containers:item_put_in_container'
     );

@@ -21,7 +21,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const POSITION_COMPONENT_ID = 'core:position';
 const ITEM_PICKED_UP_EVENT = 'items-core:item_picked_up';
 

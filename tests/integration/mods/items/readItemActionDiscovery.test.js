@@ -83,7 +83,7 @@ describe('items:read_item action definition', () => {
         .withName('Reader')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['readable_item_inventory'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -117,7 +117,7 @@ describe('items:read_item action definition', () => {
         .withName('Archivist')
         .atLocation('room2')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [
             {
               itemId: 'readable_item_reference',
@@ -158,7 +158,7 @@ describe('items:read_item action definition', () => {
         .withName('Collector')
         .atLocation('room_mixed')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['readable_item_mixed', 'non_readable_item_mixed'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -230,7 +230,7 @@ describe('items:read_item action definition', () => {
         .withName('Wanderer')
         .atLocation('empty_room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -255,7 +255,7 @@ describe('items:read_item action definition', () => {
         .withName('Artisan')
         .atLocation('room1')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['non_readable_item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -319,7 +319,7 @@ describe('items:read_item action definition', () => {
         .withName('Focused Reader')
         .atLocation('mixed_room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [
             'readable_item_one',
             'readable_item_two',
@@ -378,7 +378,7 @@ describe('items:read_item action definition', () => {
         async discoverActions(currentActor) {
           const inventory = entityManager.getComponentData(
             currentActor.id,
-            'items:inventory'
+            'inventory:inventory'
           );
 
           const candidateIds = Array.isArray(inventory?.items)

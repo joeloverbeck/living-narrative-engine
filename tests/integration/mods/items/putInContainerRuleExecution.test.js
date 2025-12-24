@@ -41,7 +41,7 @@ function setupPutInContainerScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: actorInventory,
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -107,8 +107,8 @@ describe('containers:put_in_container action integration', () => {
 
     // Assert: Verify item was moved from inventory to container
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['items:inventory'].items).not.toContain('item1');
-    expect(actor.components['items:inventory'].items).toHaveLength(0);
+    expect(actor.components['inventory:inventory'].items).not.toContain('item1');
+    expect(actor.components['inventory:inventory'].items).toHaveLength(0);
 
     const container = testFixture.entityManager.getEntityInstance('chest-1');
     expect(container.components['containers-core:container'].contents).toContain('item1');
@@ -167,7 +167,7 @@ describe('containers:put_in_container action integration', () => {
 
     // Assert: Verify item was NOT moved
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['items:inventory'].items).toContain('new-item');
+    expect(actor.components['inventory:inventory'].items).toContain('new-item');
 
     const container = testFixture.entityManager.getEntityInstance('small-box');
     expect(container.components['containers-core:container'].contents).not.toContain(
@@ -200,7 +200,7 @@ describe('containers:put_in_container action integration', () => {
       .withName('Charlie')
       .atLocation('location1')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['heavy-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -255,7 +255,7 @@ describe('containers:put_in_container action integration', () => {
     // Assert: Verify item was NOT moved
     const actorAfter =
       testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actorAfter.components['items:inventory'].items).toContain(
+    expect(actorAfter.components['inventory:inventory'].items).toContain(
       'heavy-item'
     );
 
@@ -357,7 +357,7 @@ describe('containers:put_in_container action integration', () => {
 
     // Assert: Verify all items were moved
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['items:inventory'].items).toHaveLength(0);
+    expect(actor.components['inventory:inventory'].items).toHaveLength(0);
 
     const container = testFixture.entityManager.getEntityInstance('toolbox-1');
     expect(container.components['containers-core:container'].contents).toHaveLength(3);
@@ -597,7 +597,7 @@ describe('containers:put_in_container action integration', () => {
         .withName('Ivan')
         .atLocation('town-square')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['apple-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -607,7 +607,7 @@ describe('containers:put_in_container action integration', () => {
         .withName('Jack')
         .atLocation('town-square')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['bread-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -648,7 +648,7 @@ describe('containers:put_in_container action integration', () => {
       });
       const actor1After =
         testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor1After.components['items:inventory'].items).not.toContain(
+      expect(actor1After.components['inventory:inventory'].items).not.toContain(
         'apple-1'
       );
 
@@ -660,7 +660,7 @@ describe('containers:put_in_container action integration', () => {
       });
       const actor2After =
         testFixture.entityManager.getEntityInstance('actor-2');
-      expect(actor2After.components['items:inventory'].items).not.toContain(
+      expect(actor2After.components['inventory:inventory'].items).not.toContain(
         'bread-1'
       );
 
@@ -701,7 +701,7 @@ describe('containers:put_in_container action integration', () => {
 
       // Verify item still exists as entity (just changed location)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain(
+      expect(actor.components['inventory:inventory'].items).not.toContain(
         'artifact-1'
       );
 

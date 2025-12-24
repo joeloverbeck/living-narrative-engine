@@ -34,7 +34,7 @@ describe('unwield_item action definition', () => {
   describe('Required Components', () => {
     it('should require actor to have inventory component', () => {
       expect(actionJson.required_components).toBeDefined();
-      expect(actionJson.required_components.actor).toContain('items:inventory');
+      expect(actionJson.required_components.actor).toContain('inventory:inventory');
     });
 
     it('should require actor to have wielding component', () => {

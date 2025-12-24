@@ -40,7 +40,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Alice')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test-letter'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -50,7 +50,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Bob')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -88,10 +88,10 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
     const targetAfter =
       testFixture.entityManager.getEntityInstance('test:actor2');
 
-    expect(actorAfter.components['items:inventory'].items).not.toContain(
+    expect(actorAfter.components['inventory:inventory'].items).not.toContain(
       'test-letter'
     );
-    expect(targetAfter.components['items:inventory'].items).toContain(
+    expect(targetAfter.components['inventory:inventory'].items).toContain(
       'test-letter'
     );
   });
@@ -104,7 +104,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Alice')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['test-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -114,7 +114,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Bob')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -159,7 +159,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Alice')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['heavy-item'],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
@@ -169,7 +169,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
       .withName('Bob')
       .atLocation('test-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: [],
         capacity: { maxWeight: 5, maxItems: 10 }, // Too small for heavy item
       })
@@ -204,7 +204,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
     // Verify item didn't move
     const actorAfter =
       testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actorAfter.components['items:inventory'].items).toContain(
+    expect(actorAfter.components['inventory:inventory'].items).toContain(
       'heavy-item'
     );
   });
@@ -220,7 +220,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Alice')
         .atLocation('test-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['test-item'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -230,7 +230,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Bob')
         .atLocation('test-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -276,7 +276,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Charlie')
         .atLocation('test-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['letter-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
@@ -286,7 +286,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         .withName('Diana')
         .atLocation('test-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

@@ -116,7 +116,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'items:inventory',
+          component_type: 'inventory:inventory',
           array_field: 'items',
           result_variable: 'result',
         },
@@ -125,7 +125,7 @@ describe('PickRandomArrayElementHandler', () => {
 
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'actor2',
-        'items:inventory'
+        'inventory:inventory'
       );
     });
 
@@ -317,7 +317,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'items:inventory',
+          component_type: 'inventory:inventory',
           array_field: 'items.weapons',
           result_variable: 'result',
         },
@@ -370,7 +370,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'items:inventory',
+          component_type: 'inventory:inventory',
           result_variable: 'result',
         },
         context
@@ -837,7 +837,7 @@ describe('PickRandomArrayElementHandler', () => {
       await handler.execute(
         {
           entity_ref: 'actor',
-          component_type: 'items:inventory',
+          component_type: 'inventory:inventory',
           array_field: 'items',
           result_variable: 'result',
         },

@@ -12,7 +12,7 @@
     }
   },
   "required_components": {
-    "actor": ["items:inventory"],
+    "actor": ["inventory:inventory"],
     "primary": ["items-core:item", "items:can_apply_lipstick"]
   },
   "prerequisites": [],

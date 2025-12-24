@@ -898,13 +898,13 @@ export class BodyDescriptionComposer {
     if (
       !bodyEntity ||
       typeof bodyEntity.getComponentData !== 'function' ||
-      !bodyEntity.hasComponent('items:inventory')
+      !bodyEntity.hasComponent('inventory:inventory')
     ) {
       return '';
     }
 
     try {
-      const inventoryData = bodyEntity.getComponentData('items:inventory');
+      const inventoryData = bodyEntity.getComponentData('inventory:inventory');
       if (
         !inventoryData ||
         !inventoryData.items ||

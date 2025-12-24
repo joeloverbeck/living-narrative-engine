@@ -40,7 +40,7 @@ describe('Items System - Performance', () => {
           .withName(`Actor ${i}`)
           .atLocation('marketplace')
           .asActor()
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: [],
             capacity: { maxWeight: 100, maxItems: 30 },
           })
@@ -59,7 +59,7 @@ describe('Items System - Performance', () => {
           entities.push(item);
 
           // Add item to actor's inventory
-          actor.components['items:inventory'].items.push(itemId);
+          actor.components['inventory:inventory'].items.push(itemId);
         }
       }
 
@@ -139,7 +139,7 @@ describe('Items System - Performance', () => {
             .withName(`Actor ${i}`)
             .atLocation('test-location')
             .asActor()
-            .withComponent('items:inventory', {
+            .withComponent('inventory:inventory', {
               items: [],
               capacity: { maxWeight: 50, maxItems: 20 },
             })
@@ -156,7 +156,7 @@ describe('Items System - Performance', () => {
               .withComponent('core:weight', { weight: 0.5 })
               .build();
             entities.push(item);
-            actor.components['items:inventory'].items.push(itemId);
+            actor.components['inventory:inventory'].items.push(itemId);
           }
         }
 
@@ -198,7 +198,7 @@ describe('Items System - Performance', () => {
         .atLocation('warehouse')
         .asActor()
         .withGrabbingHands(2)
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['worker-item-1', 'worker-item-2'],
           capacity: { maxWeight: 200, maxItems: 50 },
         });
@@ -210,7 +210,7 @@ describe('Items System - Performance', () => {
         .withName('Recipient Worker')
         .atLocation('warehouse')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 100, maxItems: 20 },
         })
@@ -297,7 +297,7 @@ describe('Items System - Performance', () => {
         .withName('Storage Clerk')
         .atLocation('storage-room')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: [],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -352,7 +352,7 @@ describe('Items System - Performance', () => {
           .withName(`Merchant ${i}`)
           .atLocation('bazaar')
           .asActor()
-          .withComponent('items:inventory', {
+          .withComponent('inventory:inventory', {
             items: [],
             capacity: { maxWeight: 80, maxItems: 25 },
           })
@@ -368,7 +368,7 @@ describe('Items System - Performance', () => {
             .withComponent('core:weight', { weight: 0.8 })
             .build();
           entities.push(item);
-          actor.components['items:inventory'].items.push(itemId);
+          actor.components['inventory:inventory'].items.push(itemId);
         }
       }
 

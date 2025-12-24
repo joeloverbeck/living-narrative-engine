@@ -23,7 +23,7 @@ function setupExamineOwnedItemScenario(
     .withName(actorName)
     .atLocation(locationId)
     .asActor()
-    .withComponent('items:inventory', {
+    .withComponent('inventory:inventory', {
       items: [item.id],
       capacity: { maxWeight: 50, maxItems: 10 },
     })
@@ -115,7 +115,7 @@ describe('observation:examine_owned_item rule execution', () => {
 
       // Assert: Verify item state unchanged (still in inventory)
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('letter-1');
+      expect(actor.components['inventory:inventory'].items).toContain('letter-1');
     });
 
     it('handles examination with detailed multi-sentence description', async () => {
@@ -218,7 +218,7 @@ describe('observation:examine_owned_item rule execution', () => {
       const actorBefore =
         testFixture.entityManager.getEntityInstance('test:actor1');
       const inventoryBefore = [
-        ...actorBefore.components['items:inventory'].items,
+        ...actorBefore.components['inventory:inventory'].items,
       ];
 
       await testFixture.executeAction('test:actor1', 'key-1');
@@ -228,7 +228,7 @@ describe('observation:examine_owned_item rule execution', () => {
         testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Inventory should be unchanged
-      expect(actorAfter.components['items:inventory'].items).toEqual(
+      expect(actorAfter.components['inventory:inventory'].items).toEqual(
         inventoryBefore
       );
 
@@ -244,7 +244,7 @@ describe('observation:examine_owned_item rule execution', () => {
         .withName('Henry')
         .atLocation('study')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['map-1', 'compass-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })

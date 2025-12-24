@@ -15,7 +15,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     expect(scenario.room.id).toBe('room_inventory');
     expect(scenario.items).toHaveLength(2);
 
-    const inventory = getComponent(scenario.actor, 'items:inventory');
+    const inventory = getComponent(scenario.actor, 'inventory:inventory');
     expect(inventory.items).toEqual(['item_primary', 'item_secondary']);
     expect(inventory.capacity).toEqual({ maxWeight: 50, maxItems: 10 });
 
@@ -42,7 +42,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     );
 
     expect(scenario.actor.id).toBe('actor_ground');
-    const actorInventory = getComponent(scenario.actor, 'items:inventory');
+    const actorInventory = getComponent(scenario.actor, 'inventory:inventory');
     expect(actorInventory.items).toContain('satchel');
     expect(scenario.actorInventoryItems[0].id).toBe('satchel');
   });
@@ -75,10 +75,10 @@ describe('ModEntityScenarios inventory helpers', () => {
       receiverItems: [{ id: 'wallet', name: 'Wallet', weight: 0.2 }],
     });
 
-    const giverInventory = getComponent(scenario.giver, 'items:inventory');
+    const giverInventory = getComponent(scenario.giver, 'inventory:inventory');
     const receiverInventory = getComponent(
       scenario.receiver,
-      'items:inventory'
+      'inventory:inventory'
     );
 
     expect(giverInventory.items).toContain('artifact');
@@ -94,7 +94,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     });
 
     expect(scenario.item.id).toBe('to_drop');
-    const inventory = getComponent(scenario.actor, 'items:inventory');
+    const inventory = getComponent(scenario.actor, 'inventory:inventory');
     expect(inventory.items).toEqual(['to_drop', 'extra']);
   });
 
@@ -111,7 +111,7 @@ describe('ModEntityScenarios inventory helpers', () => {
       'room_inventory'
     );
 
-    const inventory = getComponent(scenario.actor, 'items:inventory');
+    const inventory = getComponent(scenario.actor, 'inventory:inventory');
     expect(inventory.items).toContain('existing');
     expect(inventory.items.length).toBe(inventory.capacity.maxItems);
   });
@@ -147,7 +147,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     const containerData = getComponent(scenario.container, 'containers-core:container');
     expect(containerData.isOpen).toBe(true);
     expect(containerData.contents.length).toBe(containerData.capacity.maxItems);
-    const inventory = getComponent(scenario.actor, 'items:inventory');
+    const inventory = getComponent(scenario.actor, 'inventory:inventory');
     expect(inventory.items).toContain('supply');
   });
 });

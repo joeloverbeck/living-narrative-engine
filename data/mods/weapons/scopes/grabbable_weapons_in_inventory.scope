@@ -1,1 +1,1 @@
-weapons:grabbable_weapons_in_inventory := actor.components.items:inventory.items[][{"and": [{"!!": {"var": "entity.components.weapons:weapon"}}, {"canActorGrabItem": ["actor", "entity"]}, {"not": {"isItemBeingGrabbed": ["actor", "entity"]}}]}]
+weapons:grabbable_weapons_in_inventory := actor.components.inventory:inventory.items[][{"and": [{"!!": {"var": "entity.components.weapons:weapon"}}, {"canActorGrabItem": ["actor", "entity"]}, {"not": {"isItemBeingGrabbed": ["actor", "entity"]}}]}]

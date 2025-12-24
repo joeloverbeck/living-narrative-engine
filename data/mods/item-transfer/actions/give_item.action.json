@@ -5,8 +5,8 @@
   "description": "Give an item from your inventory to another actor",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["items:inventory"],
-    "primary": ["items:inventory"]
+    "actor": ["inventory:inventory"],
+    "primary": ["inventory:inventory"]
   },
   "forbidden_components": {
     "actor": [

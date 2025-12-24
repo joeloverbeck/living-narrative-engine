@@ -22,7 +22,7 @@ import * as contextVariableUtils from '../../../../src/utils/contextVariableUtil
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const INVENTORY_COMPONENT_ID = 'items:inventory';
+const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 const WEIGHT_COMPONENT_ID = 'core:weight';
 
 // Test Doubles

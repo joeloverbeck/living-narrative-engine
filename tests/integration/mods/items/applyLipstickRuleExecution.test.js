@@ -38,7 +38,7 @@ describe('items:apply_lipstick rule execution', () => {
       .withName('Elena')
       .atLocation('dressing-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['lipstick1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -82,7 +82,7 @@ describe('items:apply_lipstick rule execution', () => {
 
     const actorInventory = testFixture.entityManager.getComponentData(
       'actor_lipstick_user',
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(actorInventory?.items).toContain('lipstick1');
 

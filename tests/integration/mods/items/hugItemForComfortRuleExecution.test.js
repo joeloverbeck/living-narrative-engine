@@ -38,7 +38,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
       .withName('Sam')
       .atLocation('comfort-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['plush1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -95,7 +95,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
       .withName('Riley')
       .atLocation('living-room')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['pillow1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
@@ -114,7 +114,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
 
     const actorInventory = testFixture.entityManager.getComponentData(
       'actor_keeper',
-      'items:inventory'
+      'inventory:inventory'
     );
     expect(actorInventory?.items).toContain('pillow1');
   });
@@ -162,7 +162,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
       .withName('Jordan')
       .atLocation('study')
       .asActor()
-      .withComponent('items:inventory', {
+      .withComponent('inventory:inventory', {
         items: ['stuffed1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })

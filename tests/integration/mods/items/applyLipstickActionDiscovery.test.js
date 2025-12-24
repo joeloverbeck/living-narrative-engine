@@ -63,7 +63,7 @@ describe('items:apply_lipstick action definition', () => {
   it('should enforce actor inventory and lipstick marker requirements', () => {
     expect(applyLipstickAction.required_components).toBeDefined();
     expect(applyLipstickAction.required_components.actor).toEqual([
-      'items:inventory',
+      'inventory:inventory',
     ]);
     expect(applyLipstickAction.required_components.primary).toEqual([
       'items-core:item',
@@ -81,7 +81,7 @@ describe('items:apply_lipstick action definition', () => {
         .withName('Sera')
         .atLocation('boudoir')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['lipstick1'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
@@ -142,7 +142,7 @@ describe('items:apply_lipstick action definition', () => {
         .withName('Rowan')
         .atLocation('vanity')
         .asActor()
-        .withComponent('items:inventory', {
+        .withComponent('inventory:inventory', {
           items: ['plain-balm'],
           capacity: { maxWeight: 10, maxItems: 5 },
         })
