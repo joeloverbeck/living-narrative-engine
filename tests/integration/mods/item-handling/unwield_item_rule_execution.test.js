@@ -8,17 +8,17 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
-import unwieldItemRule from '../../../../data/mods/items/rules/handle_unwield_item.rule.json' assert { type: 'json' };
-import eventIsActionUnwieldItem from '../../../../data/mods/items/conditions/event-is-action-unwield-item.condition.json' assert { type: 'json' };
+import unwieldItemRule from '../../../../data/mods/item-handling/rules/handle_unwield_item.rule.json' assert { type: 'json' };
+import eventIsActionUnwieldItem from '../../../../data/mods/item-handling/conditions/event-is-action-unwield-item.condition.json' assert { type: 'json' };
 
-const ACTION_ID = 'items:unwield_item';
+const ACTION_ID = 'item-handling:unwield_item';
 
 describe('unwield_item rule execution', () => {
   let fixture;
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       ACTION_ID,
       unwieldItemRule,
       eventIsActionUnwieldItem

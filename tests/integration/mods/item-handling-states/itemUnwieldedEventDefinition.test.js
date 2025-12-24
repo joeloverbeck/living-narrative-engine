@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for missing items-core:item_unwielded event definition fix
+ * @file Integration tests for item-handling-states:item_unwielded event definition
  * Verifies that the item_unwielded event definition exists and is properly
  * configured to match the UnwieldItemHandler dispatch payload.
  * @see src/logic/operationHandlers/unwieldItemHandler.js
@@ -18,8 +18,8 @@ import path from 'path';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
-describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
-  const EVENTS_DIR = 'data/mods/items/events';
+describe('Event Definition - item-handling-states:item_unwielded', () => {
+  const EVENTS_DIR = 'data/mods/item-handling-states/events';
   const EVENT_SCHEMA_PATH = 'data/schemas/event.schema.json';
 
   let schemaValidator;
@@ -48,7 +48,7 @@ describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
   });
 
   describe('Event Definition File Existence', () => {
-    it('should have item_unwielded.event.json file in items events', () => {
+    it('should have item_unwielded.event.json file in item-handling-states events', () => {
       const filePath = path.resolve(EVENTS_DIR, 'item_unwielded.event.json');
       expect(fs.existsSync(filePath)).toBe(true);
     });
@@ -65,7 +65,7 @@ describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
       }).not.toThrow();
 
       // Verify required fields per event.schema.json
-      expect(parsed.id).toBe('items-core:item_unwielded');
+      expect(parsed.id).toBe('item-handling-states:item_unwielded');
       expect(parsed.description).toBeDefined();
       expect(parsed.payloadSchema).toBeDefined();
       expect(parsed.payloadSchema.type).toBe('object');
@@ -74,7 +74,7 @@ describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
     });
   });
 
-  describe('items-core:item_unwielded Payload Schema Validation', () => {
+  describe('item-handling-states:item_unwielded Payload Schema Validation', () => {
     let itemUnwieldedEvent;
 
     beforeEach(() => {
@@ -245,7 +245,7 @@ describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
       const props = eventDef.payloadSchema.properties;
       const required = eventDef.payloadSchema.required;
 
-      // Verify all fields dispatched by unwieldItemHandler.js:188-192 are defined
+      // Verify all fields dispatched by unwieldItemHandler.js are defined
       expect(props.actorEntity).toBeDefined();
       expect(props.itemEntity).toBeDefined();
       expect(props.remainingWieldedItems).toBeDefined();
@@ -266,14 +266,14 @@ describe('Missing Event Definition Fix - items-core:item_unwielded', () => {
       const filePath = path.resolve(EVENTS_DIR, 'item_unwielded.event.json');
       const eventDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-      // Must match ITEM_UNWIELDED_EVENT constant from unwieldItemHandler.js:27
-      expect(eventDef.id).toBe('items-core:item_unwielded');
+      // Must match ITEM_UNWIELDED_EVENT constant from unwieldItemHandler.js
+      expect(eventDef.id).toBe('item-handling-states:item_unwielded');
     });
   });
 
   describe('Mod Manifest Registration', () => {
     it('should have item_unwielded.event.json registered in mod-manifest.json', () => {
-      const manifestPath = path.resolve('data/mods/items/mod-manifest.json');
+      const manifestPath = path.resolve('data/mods/item-handling-states/mod-manifest.json');
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
       expect(manifest.content.events).toContain('item_unwielded.event.json');

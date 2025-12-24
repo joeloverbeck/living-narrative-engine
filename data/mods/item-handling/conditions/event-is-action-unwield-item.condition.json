@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-unwield-item",
+  "id": "item-handling:event-is-action-unwield-item",
   "description": "True if the event is the unwield_item action",
   "logic": {
     "==": [
       {
         "var": "event.payload.actionId"
       },
-      "items:unwield_item"
+      "item-handling:unwield_item"
     ]
   }
 }

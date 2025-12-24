@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items-core:item_unwielded",
+  "id": "item-handling-states:item_unwielded",
   "description": "Dispatched when an item is unwielded by an actor",
   "payloadSchema": {
     "type": "object",
