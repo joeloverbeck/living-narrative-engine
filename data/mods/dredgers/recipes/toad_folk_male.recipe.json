@@ -50,6 +50,18 @@
     "brain": {
       "partType": "brain",
       "preferId": "anatomy:human_brain"
+    },
+    "left_lung": {
+      "partType": "lung",
+      "preferId": "anatomy-creatures:amphibian_lung_left"
+    },
+    "right_lung": {
+      "partType": "lung",
+      "preferId": "anatomy-creatures:amphibian_lung_right"
+    },
+    "skin_respiration": {
+      "partType": "skin_respiration",
+      "preferId": "anatomy-creatures:amphibian_skin_respiration"
     }
   },
   "patterns": [

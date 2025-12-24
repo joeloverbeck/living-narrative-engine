@@ -44,8 +44,6 @@
   ],
   "content": {
     "components": [
-      "aimable.component.json",
-      "aimed_at.component.json",
       "allows_soothing_hug.component.json",
       "can_apply_lipstick.component.json",
       "drinkable.component.json",

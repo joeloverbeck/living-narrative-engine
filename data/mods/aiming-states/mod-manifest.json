@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "aiming-states",
+  "version": "1.0.0",
+  "name": "Aiming States",
+  "description": "State components for aiming mechanics. Separated to avoid circular dependencies.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "aimable.component.json",
+      "aimed_at.component.json"
+    ]
+  }
+}

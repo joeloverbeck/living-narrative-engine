@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:amphibian_lung_left",
+  "description": "An amphibian left lung - respiratory organ with smaller capacity suited for semi-aquatic creatures",
+  "components": {
+    "core:name": {
+      "text": "left lung"
+    },
+    "core:weight": {
+      "weight": 0.4
+    },
+    "anatomy:part": {
+      "subType": "lung",
+      "orientation": "left",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
+    "breathing-states:respiratory_organ": {
+      "respirationType": "pulmonary",
+      "oxygenCapacity": 6,
+      "currentOxygen": 6,
+      "environmentCompatibility": ["air"]
+    }
+  }
+}
