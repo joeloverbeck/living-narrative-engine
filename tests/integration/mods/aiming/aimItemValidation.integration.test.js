@@ -13,17 +13,17 @@ import { describe, it, expect } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-describe('Items Mod - Aim Item Validation', () => {
+describe('Aiming Mod - Aim Item Validation', () => {
   describe('Condition Files Structure', () => {
     it('should have logic property instead of condition property', async () => {
       // Arrange
       const aimItemPath = path.resolve(
         process.cwd(),
-        'data/mods/items/conditions/event-is-action-aim-item.condition.json'
+        'data/mods/aiming/conditions/event-is-action-aim-item.condition.json'
       );
       const lowerAimPath = path.resolve(
         process.cwd(),
-        'data/mods/items/conditions/event-is-action-lower-aim.condition.json'
+        'data/mods/aiming/conditions/event-is-action-lower-aim.condition.json'
       );
 
       const aimItemData = JSON.parse(await fs.readFile(aimItemPath, 'utf-8'));
@@ -46,11 +46,11 @@ describe('Items Mod - Aim Item Validation', () => {
       // Arrange
       const aimItemPath = path.resolve(
         process.cwd(),
-        'data/mods/items/rules/handle_aim_item.rule.json'
+        'data/mods/aiming/rules/handle_aim_item.rule.json'
       );
       const lowerAimPath = path.resolve(
         process.cwd(),
-        'data/mods/items/rules/handle_lower_aim.rule.json'
+        'data/mods/aiming/rules/handle_lower_aim.rule.json'
       );
 
       const aimItemData = JSON.parse(await fs.readFile(aimItemPath, 'utf-8'));
@@ -72,12 +72,12 @@ describe('Items Mod - Aim Item Validation', () => {
       expect(aimItemData).toHaveProperty('condition');
       expect(aimItemData.condition).toHaveProperty('condition_ref');
       expect(aimItemData.condition.condition_ref).toBe(
-        'items:event-is-action-aim-item'
+        'aiming:event-is-action-aim-item'
       );
       expect(lowerAimData).toHaveProperty('condition');
       expect(lowerAimData.condition).toHaveProperty('condition_ref');
       expect(lowerAimData.condition.condition_ref).toBe(
-        'items:event-is-action-lower-aim'
+        'aiming:event-is-action-lower-aim'
       );
     });
   });

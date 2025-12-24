@@ -4,7 +4,7 @@
   "comment": "Handles the lower_aim action by removing aiming:aimed_at component and dispatching aim_lowered event",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-lower-aim"
+    "condition_ref": "aiming:event-is-action-lower-aim"
   },
   "actions": [
     {
@@ -33,9 +33,9 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch items:aim_lowered event with previous target info",
+      "comment": "Dispatch aiming:aim_lowered event with previous target info",
       "parameters": {
-        "eventType": "items:aim_lowered",
+        "eventType": "aiming:aim_lowered",
         "payload": {
           "actorEntity": "{event.payload.actorId}",
           "itemEntity": "{event.payload.targetId}",

@@ -1,4 +1,4 @@
-items:aimable_targets := entities(core:actor)[{"and": [
+aiming:aimable_targets := entities(core:actor)[{"and": [
   {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]},
   {"==": [
     {"var": "entity.components.core:position.locationId"},

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/depleteOxygen.schema.json",
+  "title": "DEPLETE_OXYGEN Operation",
+  "description": "Depletes oxygen from an entity's respiratory organs. Used by drowning/asphyxiation mechanics.",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "properties": {
+        "type": { "const": "DEPLETE_OXYGEN" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DEPLETE_OXYGEN operation.",
+      "properties": {
+        "entityId": {
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Reference to the entity whose respiratory organs will have oxygen depleted."
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Amount of oxygen to deplete. If omitted, uses the respiratory organ's depletionRate."
+        }
+      },
+      "required": ["entityId"],
+      "additionalProperties": false
+    }
+  }
+}

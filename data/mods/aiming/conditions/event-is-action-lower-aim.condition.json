@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-lower-aim",
+  "id": "aiming:event-is-action-lower-aim",
   "description": "True when event is attempting the lower_aim action",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "items:lower_aim"]
+    "==": [{ "var": "event.payload.actionId" }, "aiming:lower_aim"]
   }
 }

@@ -47,44 +47,33 @@
       "readable.component.json"
     ],
     "actions": [
-      "aim_item.action.json",
       "apply_lipstick.action.json",
       "drink_entirely.action.json",
       "drink_from.action.json",
       "hug_item_for_comfort.action.json",
-      "lower_aim.action.json",
       "read_item.action.json"
     ],
     "rules": [
-      "handle_aim_item.rule.json",
       "handle_apply_lipstick.rule.json",
       "handle_drink_entirely.rule.json",
       "handle_drink_from.rule.json",
       "handle_hug_item_for_comfort.rule.json",
-      "handle_lower_aim.rule.json",
       "handle_read_item.rule.json"
     ],
     "conditions": [
-      "event-is-action-aim-item.condition.json",
       "event-is-action-apply-lipstick.condition.json",
       "event-is-action-drink-entirely.condition.json",
       "event-is-action-drink-from.condition.json",
       "event-is-action-hug-item-for-comfort.condition.json",
-      "event-is-action-lower-aim.condition.json",
       "event-is-action-read-item.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
-      "aimable_items_in_inventory.scope",
-      "aimable_targets.scope",
-      "aimed_items_in_inventory.scope",
       "close_actors_with_inventory.scope",
       "disinfectant_liquids_in_inventory.scope",
       "examinable_items.scope"
     ],
     "events": [
-      "aim_lowered.event.json",
-      "item_aimed.event.json",
       "liquid_consumed.event.json",
       "liquid_consumed_entirely.event.json"
     ],
@@ -97,7 +86,6 @@
         "letter_to_sheriff.entity.json",
         "plush_teddy_bear.entity.json",
         "red_lipstick.entity.json",
-        "revolver.entity.json",
         "smoking_pipe.entity.json",
         "treasure_chest.entity.json"
       ],

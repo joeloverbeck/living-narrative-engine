@@ -4,7 +4,7 @@
   "comment": "Handles the aim_item action by adding aiming:aimed_at component to the item and dispatching item_aimed event",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-aim-item"
+    "condition_ref": "aiming:event-is-action-aim-item"
   },
   "actions": [
     {
@@ -28,9 +28,9 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch items-core:item_aimed event",
+      "comment": "Dispatch aiming:item_aimed event",
       "parameters": {
-        "eventType": "items-core:item_aimed",
+        "eventType": "aiming:item_aimed",
         "payload": {
           "actorEntity": "{event.payload.actorId}",
           "itemEntity": "{event.payload.secondaryId}",

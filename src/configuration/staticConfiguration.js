@@ -18,6 +18,7 @@ const OPERATION_SCHEMA_FILES = [
   'breakClosenessWithTarget.schema.json',
   'breakFollowRelation.schema.json',
   'checkFollowCycle.schema.json',
+  'depleteOxygen.schema.json',
   'dispatchEvent.schema.json',
   'dispatchPerceptibleEvent.schema.json',
   'dispatchSpeech.schema.json',

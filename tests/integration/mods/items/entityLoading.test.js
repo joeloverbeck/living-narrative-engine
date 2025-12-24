@@ -35,18 +35,6 @@ describe('Items - Entity Loading', () => {
     expect(weight.weight).toBe(0.05);
   });
 
-  it('should load revolver entity with correct properties', () => {
-    const entityPath = path.resolve(
-      process.cwd(),
-      'data/mods/items/entities/definitions/revolver.entity.json'
-    );
-    const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
-
-    expect(entityDef.id).toBe('items:revolver');
-    const weight = entityDef.components['core:weight'];
-    expect(weight.weight).toBe(1.2);
-  });
-
   it('should load antiseptic bottle with disinfectant liquid tagging', () => {
     const entityPath = path.resolve(
       process.cwd(),
@@ -84,7 +72,6 @@ describe('Items - Entity Loading', () => {
     const entityFiles = [
       'antiseptic_bottle.entity.json',
       'letter_to_sheriff.entity.json',
-      'revolver.entity.json',
       'gold_bar.entity.json',
     ];
 
