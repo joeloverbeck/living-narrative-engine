@@ -58,7 +58,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:pick_up_item',
       pickUpItemRule,
       eventIsActionPickUpItem

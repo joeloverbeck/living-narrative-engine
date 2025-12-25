@@ -98,6 +98,10 @@
     {
       "id": "inventory",
       "version": "^1.0.0"
+    },
+    {
+      "id": "drinking",
+      "version": "^1.0.0"
     }
   ],
   "content": {

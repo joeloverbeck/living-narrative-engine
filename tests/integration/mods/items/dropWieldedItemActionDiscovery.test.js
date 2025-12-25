@@ -17,7 +17,7 @@ describe('item-handling:drop_wielded_item action definition', () => {
   beforeEach(async () => {
     // drop_wielded_item shares the handle_drop_item rule with drop_item action
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_wielded_item',
       dropItemRule,
       eventIsActionDropWieldedItem

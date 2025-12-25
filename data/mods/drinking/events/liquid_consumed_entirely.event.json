@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "drinking:liquid_consumed_entirely",
+  "description": "Dispatched when an actor drinks entirely from a liquid container (complete consumption)",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "Actor who consumed the liquid"
+      },
+      "containerEntity": {
+        "type": "string",
+        "description": "Container from which liquid was consumed"
+      },
+      "volumeConsumed": {
+        "type": "number",
+        "description": "Amount of liquid consumed in milliliters (entire contents)"
+      }
+    },
+    "required": ["actorEntity", "containerEntity", "volumeConsumed"]
+  }
+}

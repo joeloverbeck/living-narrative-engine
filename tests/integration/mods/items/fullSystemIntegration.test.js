@@ -27,7 +27,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
   beforeEach(async () => {
     const dropFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
@@ -46,7 +46,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       ),
       drop: dropFixture,
       pickup: await ModTestFixture.forAction(
-        'items',
+        'item-handling',
         'item-handling:pick_up_item',
         pickUpItemRule,
         eventIsActionPickUpItem

@@ -28,7 +28,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items-core:item']).toBeDefined();
       expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
-      expect(entityDef.components['items:drinkable']).toBeDefined();
+      expect(entityDef.components['drinking:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
 
@@ -65,7 +65,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items-core:item']).toBeDefined();
       expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
-      expect(entityDef.components['items:drinkable']).toBeDefined();
+      expect(entityDef.components['drinking:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
   });
@@ -84,7 +84,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items-core:item']).toBeDefined();
       expect(entityDef.components['items-core:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
-      expect(entityDef.components['items:drinkable']).toBeDefined();
+      expect(entityDef.components['drinking:drinkable']).toBeDefined();
       expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
 
@@ -144,7 +144,7 @@ describe('Intoxicants - Entity Loading', () => {
 
       const depIds = manifest.dependencies.map((dep) => dep.id);
       expect(depIds).toContain('containers-core');
-      expect(depIds).toContain('items');
+      expect(depIds).toContain('drinking');
     });
   });
 });

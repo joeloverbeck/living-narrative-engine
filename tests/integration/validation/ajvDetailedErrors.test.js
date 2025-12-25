@@ -17,11 +17,11 @@ const currentDirPath = dirname(currentFilePath);
 // Load rule files
 const drinkFromRulePath = join(
   currentDirPath,
-  '../../../data/mods/items/rules/handle_drink_from.rule.json'
+  '../../../data/mods/drinking/rules/handle_drink_from.rule.json'
 );
 const drinkEntirelyRulePath = join(
   currentDirPath,
-  '../../../data/mods/items/rules/handle_drink_entirely.rule.json'
+  '../../../data/mods/drinking/rules/handle_drink_entirely.rule.json'
 );
 
 describe('AJV Detailed Error Analysis for Drinking Rules', () => {

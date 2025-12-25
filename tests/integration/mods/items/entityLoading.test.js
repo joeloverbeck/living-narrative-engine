@@ -35,20 +35,6 @@ describe('Items - Entity Loading', () => {
     expect(weight.weight).toBe(0.05);
   });
 
-  it('should load antiseptic bottle with disinfectant liquid tagging', () => {
-    const entityPath = path.resolve(
-      process.cwd(),
-      'data/mods/items/entities/definitions/antiseptic_bottle.entity.json'
-    );
-    const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
-
-    expect(entityDef.id).toBe('items:antiseptic_bottle');
-    const container = entityDef.components['containers-core:liquid_container'];
-    expect(container).toBeDefined();
-    expect(container.currentVolumeMilliliters).toBeGreaterThan(0);
-    expect(container.tags).toContain('disinfectant');
-  });
-
   it('should load gold bar as heavy item', () => {
     const entityPath = path.resolve(
       process.cwd(),
@@ -70,7 +56,6 @@ describe('Items - Entity Loading', () => {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
     const entityFiles = [
-      'antiseptic_bottle.entity.json',
       'letter_to_sheriff.entity.json',
       'gold_bar.entity.json',
     ];

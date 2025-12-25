@@ -71,7 +71,7 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should accept "items" alias for inventory category', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'items',
+        'item-handling',
         'item-handling:pick_up_item',
         null,
         null,
@@ -92,7 +92,7 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should accept "inventory" category', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'items',
+        'item-handling',
         'item-handling:pick_up_item',
         null,
         null,
@@ -181,7 +181,7 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should accept "items" as valid alias', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'items',
+        'item-handling',
         'item-handling:pick_up_item',
         null,
         null,
@@ -283,7 +283,7 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should override default when scopeCategories is explicitly provided', async () => {
       // Act
       const fixture = await ModTestFixture.forAction(
-        'items',
+        'item-handling',
         'item-handling:pick_up_item',
         null,
         null,

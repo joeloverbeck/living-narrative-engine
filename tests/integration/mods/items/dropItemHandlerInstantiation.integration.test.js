@@ -46,7 +46,7 @@ describe('DropItemAtLocationHandler instantiation', () => {
   beforeEach(async () => {
     // Create full fixture with rule
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem

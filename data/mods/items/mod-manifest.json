@@ -18,14 +18,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "physical-control-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "anatomy",
-      "version": "1.0.0"
-    },
-    {
       "id": "containers-core",
       "version": "1.0.0"
     },
@@ -42,46 +34,32 @@
     "components": [
       "allows_soothing_hug.component.json",
       "can_apply_lipstick.component.json",
-      "drinkable.component.json",
-      "empty.component.json",
       "readable.component.json"
     ],
     "actions": [
       "apply_lipstick.action.json",
-      "drink_entirely.action.json",
-      "drink_from.action.json",
       "hug_item_for_comfort.action.json",
       "read_item.action.json"
     ],
     "rules": [
       "handle_apply_lipstick.rule.json",
-      "handle_drink_entirely.rule.json",
-      "handle_drink_from.rule.json",
       "handle_hug_item_for_comfort.rule.json",
       "handle_read_item.rule.json"
     ],
     "conditions": [
       "event-is-action-apply-lipstick.condition.json",
-      "event-is-action-drink-entirely.condition.json",
-      "event-is-action-drink-from.condition.json",
       "event-is-action-hug-item-for-comfort.condition.json",
       "event-is-action-read-item.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
       "close_actors_with_inventory.scope",
-      "disinfectant_liquids_in_inventory.scope",
       "examinable_items.scope"
     ],
-    "events": [
-      "liquid_consumed.event.json",
-      "liquid_consumed_entirely.event.json"
-    ],
+    "events": [],
     "entities": {
       "definitions": [
-        "antiseptic_bottle.entity.json",
         "brass_key.entity.json",
-        "coffee_cup.entity.json",
         "gold_bar.entity.json",
         "letter_to_sheriff.entity.json",
         "plush_teddy_bear.entity.json",

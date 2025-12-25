@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "drinking:drink_entirely",
+  "name": "Drink Entirely",
+  "description": "Consume all remaining liquid from a drinkable container, emptying it completely.",
+  "targets": {
+    "primary": {
+      "scope": "items:examinable_items",
+      "placeholder": "primary",
+      "description": "Drinkable container to empty completely"
+    }
+  },
+  "required_components": {
+    "primary": ["drinking:drinkable", "containers-core:liquid_container"]
+  },
+  "forbidden_components": {
+    "actor": ["physical-control-states:being_restrained", "physical-control-states:restraining"],
+    "primary": ["drinking:empty"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to drink."
+    }
+  ],
+  "template": "drink entirety of {primary}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
+}

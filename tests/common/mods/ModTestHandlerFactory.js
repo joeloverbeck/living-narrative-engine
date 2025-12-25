@@ -1101,6 +1101,7 @@ export class ModTestHandlerFactory {
     const categoryMappings = {
       positioning: this.createHandlersWithPerceptionLogging.bind(this),
       items: this.createHandlersWithItemsSupport.bind(this),
+      'item-handling': this.createHandlersWithItemsSupport.bind(this),
       exercise: this.createStandardHandlers.bind(this),
       violence: this.createHandlersWithPerceptionLogging.bind(this),
       'physical-control': this.createHandlersWithPerceptionLogging.bind(this),

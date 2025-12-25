@@ -1,0 +1,69 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "drinking",
+  "version": "1.0.0",
+  "name": "Drinking",
+  "description": "Actions for consuming liquids from containers.",
+  "actionPurpose": "Drink liquids from containers to consume beverages, potions, or other liquid substances.",
+  "actionConsiderWhen": "Thirsty, wanting to consume a beverage, needing to use a potion, or drinking socially.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inventory",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    },
+    {
+      "id": "containers-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "physical-control-states",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "drinkable.component.json",
+      "empty.component.json"
+    ],
+    "actions": [
+      "drink_from.action.json",
+      "drink_entirely.action.json"
+    ],
+    "rules": [
+      "handle_drink_from.rule.json",
+      "handle_drink_entirely.rule.json"
+    ],
+    "events": [
+      "liquid_consumed.event.json",
+      "liquid_consumed_entirely.event.json"
+    ],
+    "conditions": [
+      "event-is-action-drink-from.condition.json",
+      "event-is-action-drink-entirely.condition.json"
+    ],
+    "scopes": [
+      "disinfectant_liquids_in_inventory.scope"
+    ],
+    "entities": {
+      "definitions": [
+        "antiseptic_bottle.entity.json",
+        "coffee_cup.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}

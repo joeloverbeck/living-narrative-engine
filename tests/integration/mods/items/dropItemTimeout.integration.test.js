@@ -52,7 +52,7 @@ describe('drop_item action handler instantiation and execution', () => {
     // Create fixture WITH the rule to test real-world execution
     // The original bug: handler failed to instantiate during DI container bootstrap
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem

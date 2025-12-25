@@ -139,7 +139,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
           return { success: true, value: result };
         },
-        'items:disinfectant_liquids_in_inventory': (context) => {
+        'drinking:disinfectant_liquids_in_inventory': (context) => {
           const actorId =
             context.actor?.id || context.actorEntity?.id || context.id;
           if (!actorId) {
@@ -442,7 +442,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
     );
     expect(disinfectAction.targets.secondary.contextFrom).toBe('primary');
     expect(disinfectAction.targets.tertiary.scope).toBe(
-      'items:disinfectant_liquids_in_inventory'
+      'drinking:disinfectant_liquids_in_inventory'
     );
     expect(disinfectAction.required_components.actor).toEqual(
       expect.arrayContaining(['skills:medicine_skill', 'inventory:inventory'])
@@ -491,7 +491,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
     const disinfectants =
       fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:disinfectant_liquids_in_inventory',
+        'drinking:disinfectant_liquids_in_inventory',
         {
           actor: medicContext,
           actorEntity: medicContext,
@@ -533,7 +533,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
     const disinfectants =
       fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:disinfectant_liquids_in_inventory',
+        'drinking:disinfectant_liquids_in_inventory',
         { actor: medicContext, actorEntity: medicContext }
       ) || {};
     expect(Array.from(disinfectants.value || [])).not.toContain(

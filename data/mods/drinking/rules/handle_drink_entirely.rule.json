@@ -1,0 +1,90 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_drink_entirely",
+  "comment": "Handles drink_entirely action with perspective-aware perception (actor gets first-person with flavor, observers get third-person)",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "drinking:event-is-action-drink-entirely"
+  },
+  "actions": [
+    {
+      "type": "DRINK_ENTIRELY",
+      "comment": "Consume all liquid from container",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "containerEntity": "{event.payload.targetId}",
+        "result_variable": "drinkResult"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get container name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "containerName"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare observer message (third-person, no flavor)",
+      "parameters": {
+        "variable_name": "observerMessage",
+        "value": "{context.actorName} drinks entirely from {context.containerName}, emptying it."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Drink entirely action with perspective-aware descriptions - actor gets first-person with flavor",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.observerMessage}",
+        "actor_description": "I drink entirely from {context.containerName}, draining it completely. {context.drinkResult.flavorText}",
+        "perception_type": "consumption.consume",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear someone drinking nearby, finishing a beverage."
+        },
+        "contextual_data": {
+          "volumeConsumed": "{context.drinkResult.volumeConsumed}",
+          "flavorText": "{context.drinkResult.flavorText}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.observerMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful drink",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

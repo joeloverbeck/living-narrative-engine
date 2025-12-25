@@ -9,7 +9,7 @@
  * 3. Checks container is not already empty
  * 4. Consumes all remaining volume (currentVolumeMilliliters)
  * 5. Sets volume to zero, adds empty component, removes drinkable component
- * 6. Dispatches items:liquid_consumed_entirely event
+ * 6. Dispatches drinking:liquid_consumed_entirely event
  *
  * Related files:
  * @see data/schemas/operations/drinkEntirely.schema.json - Operation schema
@@ -26,10 +26,10 @@ import { safeDispatchError } from '../../utils/staticErrorDispatcher.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
 const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'items:drinkable';
-const EMPTY_COMPONENT_ID = 'items:empty';
+const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
+const EMPTY_COMPONENT_ID = 'drinking:empty';
 const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_ENTIRELY_EVENT = 'items:liquid_consumed_entirely';
+const LIQUID_CONSUMED_ENTIRELY_EVENT = 'drinking:liquid_consumed_entirely';
 
 /**
  * @typedef {object} DrinkEntirelyParams

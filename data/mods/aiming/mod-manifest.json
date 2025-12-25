@@ -10,10 +10,6 @@
   "gameVersion": "0.0.1",
   "dependencies": [
     {
-      "id": "aiming-states",
-      "version": "1.0.0"
-    },
-    {
       "id": "inventory",
       "version": "^1.0.0"
     },
