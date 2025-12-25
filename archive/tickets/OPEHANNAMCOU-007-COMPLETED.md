@@ -2,7 +2,7 @@
 
 ## Summary
 
-Add centralized constants for container-related and inventory-related component IDs to the existing `componentIds.js` file. These are cross-mod components used by the drinking handlers.
+Add missing centralized constants for container-related and inventory-related component IDs to the existing `componentIds.js` file. `LIQUID_CONTAINER_COMPONENT_ID` is already defined, so this ticket covers the remaining cross-mod components used alongside the drinking handlers.
 
 ## Files to Touch
 
@@ -17,11 +17,10 @@ Add centralized constants for container-related and inventory-related component 
 
 ## Changes
 
-Add the following exports to `src/constants/componentIds.js`:
+Add the following exports to `src/constants/componentIds.js` (excluding the already-present `LIQUID_CONTAINER_COMPONENT_ID`):
 
 ```javascript
 // Container system components
-export const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
 export const CONTAINER_COMPONENT_ID = 'containers-core:container';
 export const OPENABLE_COMPONENT_ID = 'items-core:openable';
 
@@ -39,7 +38,7 @@ export const WEIGHT_COMPONENT_ID = 'core:weight';
 
 ### Invariants
 
-- Existing exports unchanged
+- Existing exports unchanged (including `LIQUID_CONTAINER_COMPONENT_ID`)
 - New constants follow naming convention `*_COMPONENT_ID`
 - Values match mod definitions:
   - `containers-core:liquid_container` from containers-core mod
@@ -59,3 +58,11 @@ Phase 1: Constants Foundation (can be done in parallel with OPEHANNAMCOU-001 and
 ## Notes
 
 These components are used across multiple handlers and mods. Centralizing them prevents the namespace mismatch problem that occurred with `items:drinkable` vs `drinking:drinkable`.
+
+## Status
+
+Completed.
+
+## Outcome
+
+Added missing container/inventory component ID constants to `src/constants/componentIds.js`; confirmed `LIQUID_CONTAINER_COMPONENT_ID` already existed so it was not duplicated. No handler or test changes were required.

@@ -70,6 +70,8 @@ import EquipClothingHandler from '../../../src/logic/operationHandlers/equipClot
 import ModifyPartHealthHandler from '../../../src/logic/operationHandlers/modifyPartHealthHandler.js';
 import PickRandomArrayElementHandler from '../../../src/logic/operationHandlers/pickRandomArrayElementHandler.js';
 import AutoMoveFollowersHandler from '../../../src/logic/operationHandlers/autoMoveFollowersHandler.js';
+import DepleteOxygenHandler from '../../../src/logic/operationHandlers/depleteOxygenHandler.js';
+import RestoreOxygenHandler from '../../../src/logic/operationHandlers/restoreOxygenHandler.js';
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
@@ -1646,6 +1648,18 @@ export class ModTestHandlerFactory {
         gameDataRepository,
       }),
       MODIFY_PART_HEALTH: new ModifyPartHealthHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        jsonLogicService: jsonLogicEvaluationService,
+      }),
+      DEPLETE_OXYGEN: new DepleteOxygenHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        jsonLogicService: jsonLogicEvaluationService,
+      }),
+      RESTORE_OXYGEN: new RestoreOxygenHandler({
         logger,
         entityManager,
         safeEventDispatcher: safeDispatcher,

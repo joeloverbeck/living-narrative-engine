@@ -16,16 +16,19 @@ import {
 } from '@jest/globals';
 
 import DrinkEntirelyHandler from '../../../../src/logic/operationHandlers/drinkEntirelyHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  LIQUID_CONSUMED_ENTIRELY_EVENT_ID,
+} from '../../../../src/constants/eventIds.js';
+import {
+  POSITION_COMPONENT_ID,
+  DRINKABLE_COMPONENT_ID,
+  EMPTY_COMPONENT_ID,
+  LIQUID_CONTAINER_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
-const EMPTY_COMPONENT_ID = 'drinking:empty';
-const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_ENTIRELY_EVENT = 'drinking:liquid_consumed_entirely';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -174,7 +177,7 @@ describe('DrinkEntirelyHandler', () => {
 
       // Verify event dispatched
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        LIQUID_CONSUMED_ENTIRELY_EVENT,
+        LIQUID_CONSUMED_ENTIRELY_EVENT_ID,
         {
           actorEntity: 'actor1',
           containerEntity: 'bottle1',

@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "breathing:brain_damage_started",
+  "description": "Dispatched when oxygen deprivation begins causing brain damage.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the actor suffering brain damage"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when brain damage started"
+      }
+    },
+    "required": ["entityId", "timestamp"],
+    "additionalProperties": false
+  }
+}

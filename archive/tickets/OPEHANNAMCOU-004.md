@@ -2,19 +2,20 @@
 
 ## Summary
 
-Refactor `drinkEntirelyHandler.js` to import component and event IDs from centralized constants files instead of declaring them inline.
+Refactor `drinkEntirelyHandler.js` and its unit test to import component and event IDs from centralized constants files instead of declaring them inline, per the handler namespace coupling spec.
 
 ## Files to Touch
 
 - `src/logic/operationHandlers/drinkEntirelyHandler.js`
+- `tests/unit/logic/operationHandlers/drinkEntirelyHandler.test.js`
 
 ## Out of Scope
 
-- DO NOT modify any test files
 - DO NOT modify the handler's `execute()` logic beyond constant references
 - DO NOT change the handler's API/interface
 - DO NOT modify other handlers
 - DO NOT add new features or change behavior
+- DO NOT change any test assertions other than updating imports/constant usage
 
 ## Changes
 
@@ -38,6 +39,7 @@ import { LIQUID_CONSUMED_ENTIRELY_EVENT_ID } from '../../constants/eventIds.js';
    - `const LIQUID_CONSUMED_ENTIRELY_EVENT = '...'` → remove, use `LIQUID_CONSUMED_ENTIRELY_EVENT_ID`
 
 3. Update all usages of `LIQUID_CONSUMED_ENTIRELY_EVENT` to use `LIQUID_CONSUMED_ENTIRELY_EVENT_ID`
+4. Update `drinkEntirelyHandler.test.js` to import the same constants from `src/constants/componentIds.js` and `src/constants/eventIds.js`, removing inline constant definitions
 
 ## Acceptance Criteria
 
@@ -50,8 +52,8 @@ import { LIQUID_CONSUMED_ENTIRELY_EVENT_ID } from '../../constants/eventIds.js';
 ### Invariants
 
 - Handler behavior unchanged (same inputs produce same outputs)
-- No inline `const *_COMPONENT_ID = '...'` declarations remain in handler
-- No inline `const *_EVENT = '...'` declarations remain in handler
+- No inline `const *_COMPONENT_ID = '...'` declarations remain in handler or its unit test
+- No inline `const *_EVENT = '...'` declarations remain in handler or its unit test
 - Handler API (`execute()` signature) unchanged
 - All component/event ID strings match exactly what was previously hardcoded
 
@@ -64,3 +66,12 @@ import { LIQUID_CONSUMED_ENTIRELY_EVENT_ID } from '../../constants/eventIds.js';
 ## Implementation Order
 
 Phase 2: Handler Updates (depends on Phase 1 completion)
+
+## Status
+
+- Completed
+
+## Outcome
+
+- Updated `drinkEntirelyHandler.js` to import component/event IDs from centralized constants.
+- Updated the drink-entirely unit test to use shared constants instead of inline strings.

@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "breathing:handle_anoxic_damage",
+  "comment": "Stub rule dispatching event for HypoxiaTickSystem to apply brain damage.",
+  "event_type": "core:turn_ended",
+  "condition": {
+    "has_component": [
+      { "var": "event.payload.entityId" },
+      "breathing:unconscious_anoxia"
+    ]
+  },
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "breathing:brain_damage_started",
+        "payload": {
+          "entityId": "{event.payload.entityId}",
+          "timestamp": "{context.timestamp}"
+        }
+      }
+    }
+  ]
+}
