@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "aiming:aimed_at",
+  "id": "aiming-states:aimed_at",
   "description": "State component tracking what an aimable item is currently aimed at. Present only when item is actively aimed. Removed when aim is lowered.",
   "dataSchema": {
     "type": "object",

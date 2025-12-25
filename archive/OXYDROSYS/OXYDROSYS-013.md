@@ -1,16 +1,19 @@
 # OXYDROSYS-013: Create RESTORE_OXYGEN operation schema
 
+## Status: COMPLETED
+
 ## Description
 
 Define the JSON schema for the RESTORE_OXYGEN operation.
 
 ## Files to Create
 
-- `data/schemas/operations/restore-oxygen.schema.json`
+- `data/schemas/operations/restoreOxygen.schema.json`
 
 ## Files to Modify
 
 - `data/schemas/operation.schema.json` - Add `$ref` to anyOf array
+- `src/configuration/staticConfiguration.js` - Register new operation schema in `OPERATION_SCHEMA_FILES`
 
 ## Out of Scope
 
@@ -30,4 +33,10 @@ Define the JSON schema for the RESTORE_OXYGEN operation.
 
 ## Invariants
 
-- Alphabetical ordering in operation.schema.json
+- Preserve existing ordering in `data/schemas/operation.schema.json`; keep oxygen operations adjacent.
+
+## Outcome
+
+- Created `data/schemas/operations/restoreOxygen.schema.json` and added it to `data/schemas/operation.schema.json`.
+- Registered the new schema in `src/configuration/staticConfiguration.js` so schema loading/validation picks it up.
+- Adjusted the ticket to match existing schema naming conventions (camelCase file name) and the non-alphabetical operation ordering.

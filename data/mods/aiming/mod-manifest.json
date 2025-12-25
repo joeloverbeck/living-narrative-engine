@@ -16,6 +16,10 @@
     {
       "id": "items-core",
       "version": "^1.0.0"
+    },
+    {
+      "id": "aiming-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -28,8 +32,8 @@
       "handle_lower_aim.rule.json"
     ],
     "events": [
-      "item_aimed.event.json",
-      "aim_lowered.event.json"
+      "aim_lowered.event.json",
+      "item_aimed.event.json"
     ],
     "conditions": [
       "event-is-action-aim-item.condition.json",
@@ -37,8 +41,8 @@
     ],
     "scopes": [
       "aimable_items_in_inventory.scope",
-      "aimed_items_in_inventory.scope",
-      "aimable_targets.scope"
+      "aimable_targets.scope",
+      "aimed_items_in_inventory.scope"
     ],
     "entities": {
       "definitions": [

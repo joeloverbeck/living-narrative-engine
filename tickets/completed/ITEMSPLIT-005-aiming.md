@@ -15,7 +15,7 @@ Create the `aiming` mod containing actions for aiming items at targets. This mod
 
 | Original Assumption | Actual State | Resolution |
 |---------------------|--------------|------------|
-| Revolver entity has `aiming:aimable` component | Revolver **lacks** this component entirely | ADD component during migration |
+| Revolver entity has `aiming-states:aimable` component | Revolver **lacks** this component entirely | ADD component during migration |
 | `personal-space` dependency needed | Scopes only use `entities(core:actor)` - no personal-space refs | REMOVE from dependencies |
 | Event namespaces consistent | **Inconsistent**: `items-core:item_aimed` vs `items:aim_lowered` | Standardize both to `aiming:` namespace |
 
@@ -82,7 +82,7 @@ Create the `aiming` mod containing actions for aiming items at targets. This mod
 |-------------|-------------|
 | `data/mods/items/entities/definitions/revolver.entity.json` | `data/mods/aiming/entities/definitions/` |
 
-> **IMPORTANT**: Revolver entity must have `aiming:aimable` component ADDED (currently missing from source entity).
+> **IMPORTANT**: Revolver entity must have `aiming-states:aimable` component ADDED (currently missing from source entity).
 
 ## Namespace Changes
 
@@ -218,11 +218,11 @@ Successfully created the `aiming` mod by extracting aiming-related functionality
 - **2 events**: `item_aimed`, `aim_lowered` with namespace fix (standardized from inconsistent `items-core:`/`items:` to `aiming:`)
 - **2 conditions**: `event-is-action-aim-item`, `event-is-action-lower-aim`
 - **3 scopes**: `aimable_items_in_inventory`, `aimed_items_in_inventory`, `aimable_targets`
-- **1 entity**: `revolver` with `aiming:aimable` component ADDED (was missing from source)
+- **1 entity**: `revolver` with `aiming-states:aimable` component ADDED (was missing from source)
 
 ### Discrepancies Resolved
 
-1. **Revolver missing component**: Added `aiming:aimable` component to revolver entity
+1. **Revolver missing component**: Added `aiming-states:aimable` component to revolver entity
 2. **Event namespace inconsistency**: Fixed `items-core:item_aimed` and `items:aim_lowered` → both now `aiming:`
 3. **Dependency correction**: Added `items-core` dependency (revolver uses `items-core:item` and `items-core:portable`)
 

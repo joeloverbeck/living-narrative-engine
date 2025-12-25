@@ -1,8 +1,16 @@
 # OXYDROSYS-014: Implement RestoreOxygenHandler
 
+## Status: COMPLETED
+
 ## Description
 
 Implement the JavaScript handler for the RESTORE_OXYGEN operation.
+
+## Notes/Assumptions
+
+- Operation schema for RESTORE_OXYGEN already exists (OXYDROSYS-013); no schema work needed here.
+- Respiratory organ component uses the `breathing-states:respiratory_organ` namespace (match DepleteOxygenHandler).
+- When `restoreFull` is false/omitted, use per-organ `restorationRate` if `amount` is not provided (mirrors DepleteOxygenHandler's depletionRate behavior).
 
 ## Files to Create
 
@@ -37,3 +45,9 @@ Implement the JavaScript handler for the RESTORE_OXYGEN operation.
 
 - Follows DepleteOxygenHandler patterns
 - Alphabetical ordering in registration files
+
+## Outcome
+
+- Implemented RestoreOxygenHandler with validation, entity resolution, and restoration logic (full restore or amount/restorationRate).
+- Added unit tests for restore behavior and edge cases; DI registrations and pre-validation whitelist updated.
+- No schema changes were needed because RESTORE_OXYGEN schema already existed from OXYDROSYS-013.

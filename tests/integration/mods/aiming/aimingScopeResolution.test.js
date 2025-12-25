@@ -41,7 +41,7 @@ describe('Aiming Mod - Aiming Scopes', () => {
       expect(content).not.toContain('{"has":');
 
       // Verify uses entity.components for property access
-      expect(content).toContain('entity.components.aiming:aimable');
+      expect(content).toContain('entity.components.aiming-states:aimable');
     });
 
     it('aimed_items_in_inventory uses correct syntax', () => {
@@ -56,7 +56,7 @@ describe('Aiming Mod - Aiming Scopes', () => {
       expect(content).not.toContain('{"has":');
 
       // Verify uses entity.components for property access
-      expect(content).toContain('entity.components.aiming:aimed_at');
+      expect(content).toContain('entity.components.aiming-states:aimed_at');
     });
 
     it('aimable_targets uses correct syntax', () => {

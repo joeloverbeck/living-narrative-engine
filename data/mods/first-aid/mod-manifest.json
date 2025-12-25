@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "items-core",
+      "version": "^1.0.0"
+    },
+    {
       "id": "recovery-states",
       "version": "^1.0.0"
     },
@@ -31,10 +35,6 @@
     },
     {
       "id": "anatomy",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "items",
       "version": "^1.0.0"
     },
     {
@@ -81,6 +81,7 @@
     ],
     "scopes": [
       "bleeding_actor_body_parts.scope",
+      "disinfectant_liquids_in_inventory.scope",
       "treatable_actor_body_parts.scope",
       "treatable_target_body_parts.scope",
       "water_at_location.scope",
@@ -97,7 +98,7 @@
     "lookups": [],
     "statusEffects": [],
     "entities": {
-      "definitions": [],
+      "definitions": ["antiseptic_bottle.entity.json"],
       "instances": []
     }
   }

@@ -41,7 +41,7 @@ describe('Aiming Mod - Aiming Events', () => {
       components: {
         'items-core:item': {},
         'items-core:portable': {},
-        'aiming:aimable': {},
+        'aiming-states:aimable': {},
       },
     });
 
@@ -62,7 +62,7 @@ describe('Aiming Mod - Aiming Events', () => {
     // Verify aimed_at component was added to the item
     const aimedAtComponent = aimFixture.entityManager.getComponent(
       pistolId,
-      'aiming:aimed_at'
+      'aiming-states:aimed_at'
     );
     expect(aimedAtComponent).toBeDefined();
     expect(aimedAtComponent.targetId).toBe(target.id);
@@ -96,8 +96,8 @@ describe('Aiming Mod - Aiming Events', () => {
       components: {
         'items-core:item': {},
         'items-core:portable': {},
-        'aiming:aimable': {},
-        'aiming:aimed_at': {
+        'aiming-states:aimable': {},
+        'aiming-states:aimed_at': {
           targetId: target.id,
           aimedBy: actor.id,
         },
@@ -118,7 +118,7 @@ describe('Aiming Mod - Aiming Events', () => {
     // Verify aimed_at component was removed from the item
     const aimedAtComponent = lowerAimFixture.entityManager.getComponent(
       pistolId,
-      'aiming:aimed_at'
+      'aiming-states:aimed_at'
     );
     expect(aimedAtComponent).toBeNull();
 

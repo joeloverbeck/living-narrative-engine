@@ -25,7 +25,7 @@ describe('aiming:lower_aim action definition', () => {
     expect(lowerAimAction.id).toBe('aiming:lower_aim');
     expect(lowerAimAction.name).toBe('Lower Aim');
     expect(lowerAimAction.description).toBe(
-      'Stop aiming an item. Removes the aiming:aimed_at component from the item, ending the aimed state.'
+      'Stop aiming an item. Removes the aiming-states:aimed_at component from the item, ending the aimed state.'
     );
     expect(lowerAimAction.template).toBe('lower {item}');
   });
@@ -38,7 +38,7 @@ describe('aiming:lower_aim action definition', () => {
     );
     expect(lowerAimAction.targets.primary.placeholder).toBe('item');
     expect(lowerAimAction.targets.primary.description).toBe(
-      'Item currently being aimed (has aiming:aimed_at component)'
+      'Item currently being aimed (has aiming-states:aimed_at component)'
     );
   });
 

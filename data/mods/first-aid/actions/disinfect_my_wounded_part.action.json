@@ -27,7 +27,7 @@
       "description": "Your wounded body part to disinfect"
     },
     "secondary": {
-      "scope": "drinking:disinfectant_liquids_in_inventory",
+      "scope": "first-aid:disinfectant_liquids_in_inventory",
       "placeholder": "disinfectant",
       "description": "Disinfectant liquid container to use"
     }

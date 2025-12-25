@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "aiming:aim_item",
   "name": "Aim Item",
-  "description": "Aim an aimable item at a target entity. The item must have aiming:aimable component and be in actor's inventory.",
+  "description": "Aim an aimable item at a target entity. The item must have aiming-states:aimable component and be in actor's inventory.",
   "generateCombinations": true,
   "required_components": {
     "actor": ["inventory:inventory"]

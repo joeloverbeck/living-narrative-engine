@@ -42,15 +42,15 @@ Create the `aiming-states` mod containing state components for aiming mechanics.
 
 | Source File | Destination | Old ID | New ID |
 |-------------|-------------|--------|--------|
-| `data/mods/items/components/aimable.component.json` | `data/mods/aiming-states/components/` | `items:aimable` | `aiming:aimable` |
-| `data/mods/items/components/aimed_at.component.json` | `data/mods/aiming-states/components/` | `items:aimed_at` | `aiming:aimed_at` |
+| `data/mods/items/components/aimable.component.json` | `data/mods/aiming-states/components/` | `items:aimable` | `aiming-states:aimable` |
+| `data/mods/items/components/aimed_at.component.json` | `data/mods/aiming-states/components/` | `items:aimed_at` | `aiming-states:aimed_at` |
 
 ## Namespace Changes
 
 | Old ID | New ID |
 |--------|--------|
-| `items:aimable` | `aiming:aimable` |
-| `items:aimed_at` | `aiming:aimed_at` |
+| `items:aimable` | `aiming-states:aimable` |
+| `items:aimed_at` | `aiming-states:aimed_at` |
 
 ## External References to Update
 
@@ -87,8 +87,8 @@ Create the `aiming-states` mod containing state components for aiming mechanics.
 2. [x] Create `mod-manifest.json`
 
 3. [x] Copy and update component files (2 files)
-   - Update `id` from `items:aimable` to `aiming:aimable`
-   - Update `id` from `items:aimed_at` to `aiming:aimed_at`
+   - Update `id` from `items:aimable` to `aiming-states:aimable`
+   - Update `id` from `items:aimed_at` to `aiming-states:aimed_at`
 
 4. [x] ~~Update `data/game.json`~~ - NOT NEEDED (mod loaded as dependency)
 
@@ -111,8 +111,8 @@ Create the `aiming-states` mod containing state components for aiming mechanics.
 - [x] `npm run test:unit` passes
 - [x] `npm run test:integration` passes
 - [x] No circular dependencies
-- [x] All `items:aimable` references updated to `aiming:aimable`
-- [x] All `items:aimed_at` references updated to `aiming:aimed_at`
+- [x] All `items:aimable` references updated to `aiming-states:aimable`
+- [x] All `items:aimed_at` references updated to `aiming-states:aimed_at`
 - [x] Mod loads correctly in game
 
 ## Blocked By
@@ -136,8 +136,8 @@ Create the `aiming-states` mod containing state components for aiming mechanics.
 
 2. **Files created**:
    - `data/mods/aiming-states/mod-manifest.json`
-   - `data/mods/aiming-states/components/aimable.component.json` (`aiming:aimable`)
-   - `data/mods/aiming-states/components/aimed_at.component.json` (`aiming:aimed_at`)
+   - `data/mods/aiming-states/components/aimable.component.json` (`aiming-states:aimable`)
+   - `data/mods/aiming-states/components/aimed_at.component.json` (`aiming-states:aimed_at`)
 
 3. **Files updated** (namespace migration `items:` → `aiming:`):
    - `data/mods/items/scopes/aimable_items_in_inventory.scope`

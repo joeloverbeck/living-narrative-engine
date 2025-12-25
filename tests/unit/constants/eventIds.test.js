@@ -20,6 +20,8 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ATTEMPT_ACTION_ID: 'core:attempt_action',
   ENTITY_SPOKE_ID: 'core:entity_spoke',
   ENTITY_THOUGHT_ID: 'core:entity_thought',
+  LIQUID_CONSUMED_EVENT_ID: 'drinking:liquid_consumed',
+  LIQUID_CONSUMED_ENTIRELY_EVENT_ID: 'drinking:liquid_consumed_entirely',
   DISPLAY_SPEECH_ID: 'core:display_speech',
   DISPLAY_THOUGHT_ID: 'core:display_thought',
   PORTRAIT_CLICKED: 'core:portrait_clicked',

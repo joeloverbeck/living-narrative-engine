@@ -4,6 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
+import path from 'path';
+import { promises as fs } from 'fs';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGenerationService.js';
 import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.js';
@@ -17,6 +19,7 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
   beforeEach(async () => {
     testBed = new AnatomyIntegrationTestBed();
     await testBed.loadAnatomyModData();
+    await loadCatFolkRecipeData(testBed);
     anatomyService = new AnatomyGenerationService({
       entityManager: testBed.entityManager,
       dataRegistry: testBed.registry,
@@ -69,6 +72,68 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
     }
 
     return { left: leftLungId, right: rightLungId };
+  }
+
+  /**
+   * Loads cat folk anatomy assets from disk for real-world regression coverage.
+   * @param {AnatomyIntegrationTestBed} activeTestBed
+   */
+  async function loadCatFolkRecipeData(activeTestBed) {
+    const entityPaths = [
+      'data/mods/anatomy-creatures/entities/definitions/cat_girl_torso.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/cat_girl_torso_working_strength.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/feline_lung_left.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/feline_lung_right.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/cat_ear_mottled_brown_gray.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/cat_tail_mottled_brown_gray.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/feline_eye_gold_slit.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/cat_folk_teeth.entity.json',
+      'data/mods/anatomy-creatures/entities/definitions/cat_folk_nose.entity.json',
+      'data/mods/anatomy/entities/definitions/human_breast.entity.json',
+      'data/mods/anatomy/entities/definitions/humanoid_hand_diver.entity.json',
+      'data/mods/anatomy/entities/definitions/humanoid_arm_muscular.entity.json',
+      'data/mods/anatomy/entities/definitions/human_asshole.entity.json',
+      'data/mods/anatomy/entities/definitions/human_ass_cheek_firm_athletic_shelf.entity.json',
+      'data/mods/anatomy/entities/definitions/human_heart.entity.json',
+      'data/mods/anatomy/entities/definitions/human_spine.entity.json',
+      'data/mods/anatomy/entities/definitions/human_brain.entity.json',
+      'data/mods/anatomy/entities/definitions/humanoid_head.entity.json',
+    ];
+
+    const entityDefinitions = {};
+    for (const filePath of entityPaths) {
+      const data = await readJson(filePath);
+      entityDefinitions[data.id] = data;
+    }
+
+    const blueprint = await readJson(
+      'data/mods/anatomy-creatures/blueprints/cat_girl.blueprint.json'
+    );
+    const blueprintPart = await readJson(
+      'data/mods/anatomy-creatures/parts/feline_core.part.json'
+    );
+    const recipe = await readJson(
+      'data/mods/dredgers/recipes/cat_folk_female_standard.recipe.json'
+    );
+    const slotLibrary = await readJson(
+      'data/mods/anatomy/libraries/humanoid.slot-library.json'
+    );
+
+    activeTestBed.loadEntityDefinitions(entityDefinitions);
+    activeTestBed.loadSlotLibraries({ [slotLibrary.id]: slotLibrary });
+    activeTestBed.loadBlueprintParts({ [blueprintPart.id]: blueprintPart });
+    activeTestBed.loadBlueprints({ [blueprint.id]: blueprint });
+    activeTestBed.loadRecipes({ [recipe.recipeId]: recipe });
+  }
+
+  /**
+   * @param {string} relativePath
+   * @returns {Promise<object>}
+   */
+  async function readJson(relativePath) {
+    const absolutePath = path.resolve(process.cwd(), relativePath);
+    const contents = await fs.readFile(absolutePath, 'utf-8');
+    return JSON.parse(contents);
   }
 
   describe('Human Male Anatomy', () => {
@@ -142,6 +207,18 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
 
       expect(bodyComponent.body).toBeDefined();
       expect(bodyComponent.body.parts).toBeDefined();
+
+      const lungIds = getLungPartIds(bodyComponent);
+      expect(lungIds.left).toBeDefined();
+      expect(lungIds.right).toBeDefined();
+    });
+  });
+
+  describe('Cat Folk Anatomy', () => {
+    it('should generate anatomy with lungs for working-strength torso', async () => {
+      const { bodyComponent } = await createActorWithAnatomy(
+        'dredgers:cat_folk_female_standard'
+      );
 
       const lungIds = getLungPartIds(bodyComponent);
       expect(lungIds.left).toBeDefined();

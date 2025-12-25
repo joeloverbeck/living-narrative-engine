@@ -139,7 +139,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
           return { success: true, value: result };
         },
-        'drinking:disinfectant_liquids_in_inventory': (context) => {
+        'first-aid:disinfectant_liquids_in_inventory': (context) => {
           const actorId =
             context.actor?.id || context.actorEntity?.id || context.id;
           if (!actorId) {
@@ -197,7 +197,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
   } = {}) => {
     const room = ModEntityScenarios.createRoom(ROOM_ID, 'Treatment Room');
 
-    const disinfectantId = 'items:antiseptic_bottle';
+    const disinfectantId = 'first-aid:antiseptic_bottle';
     const disinfectant = new ModEntityBuilder(disinfectantId)
       .withName('Antiseptic Bottle')
       .atLocation(ROOM_ID)
@@ -220,7 +220,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
       .withLocationComponent(ROOM_ID)
       .asActor()
       .withComponent('inventory:inventory', {
-        items: ['items:antiseptic_bottle'],
+        items: ['first-aid:antiseptic_bottle'],
         capacity: { maxWeight: 50, maxItems: 10 },
       });
 
@@ -291,7 +291,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
     if (alreadyDisinfected && !woundOnArm) {
       patientTorsoBuilder.withComponent('first-aid:disinfected', {
         appliedById: 'actor1',
-        sourceItemId: 'items:antiseptic_bottle',
+        sourceItemId: 'first-aid:antiseptic_bottle',
       });
     }
 
@@ -442,7 +442,7 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
     );
     expect(disinfectAction.targets.secondary.contextFrom).toBe('primary');
     expect(disinfectAction.targets.tertiary.scope).toBe(
-      'drinking:disinfectant_liquids_in_inventory'
+      'first-aid:disinfectant_liquids_in_inventory'
     );
     expect(disinfectAction.required_components.actor).toEqual(
       expect.arrayContaining(['skills:medicine_skill', 'inventory:inventory'])
@@ -491,14 +491,14 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
     const disinfectants =
       fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'drinking:disinfectant_liquids_in_inventory',
+        'first-aid:disinfectant_liquids_in_inventory',
         {
           actor: medicContext,
           actorEntity: medicContext,
         }
       ) || {};
     expect(Array.from(disinfectants.value || [])).toContain(
-      'items:antiseptic_bottle'
+      'first-aid:antiseptic_bottle'
     );
 
     const candidates = fixture.testEnv.actionIndex.getCandidateActions({
@@ -533,11 +533,11 @@ describe('first-aid:disinfect_wounded_part action definition', () => {
 
     const disinfectants =
       fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'drinking:disinfectant_liquids_in_inventory',
+        'first-aid:disinfectant_liquids_in_inventory',
         { actor: medicContext, actorEntity: medicContext }
       ) || {};
     expect(Array.from(disinfectants.value || [])).not.toContain(
-      'items:antiseptic_bottle'
+      'first-aid:antiseptic_bottle'
     );
 
     const availableActions = fixture.testEnv.getAvailableActions('actor1');

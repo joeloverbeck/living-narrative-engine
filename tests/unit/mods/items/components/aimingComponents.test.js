@@ -1,10 +1,10 @@
 import { describe, it, expect } from '@jest/globals';
 
 describe('Aiming States Mod - Aiming Components', () => {
-  describe('aiming:aimable component', () => {
+  describe('aiming-states:aimable component', () => {
     it('should be a valid marker component with empty schema', () => {
       const aimable = require('../../../../../data/mods/aiming-states/components/aimable.component.json');
-      expect(aimable.id).toBe('aiming:aimable');
+      expect(aimable.id).toBe('aiming-states:aimable');
       expect(aimable.dataSchema.properties).toEqual({});
       expect(aimable.dataSchema.additionalProperties).toBe(false);
     });
@@ -24,10 +24,10 @@ describe('Aiming States Mod - Aiming Components', () => {
     });
   });
 
-  describe('aiming:aimed_at component', () => {
+  describe('aiming-states:aimed_at component', () => {
     it('should have required fields for state tracking', () => {
       const aimedAt = require('../../../../../data/mods/aiming-states/components/aimed_at.component.json');
-      expect(aimedAt.id).toBe('aiming:aimed_at');
+      expect(aimedAt.id).toBe('aiming-states:aimed_at');
       expect(aimedAt.dataSchema.required).toEqual(['targetId', 'aimedBy']);
       expect(aimedAt.dataSchema.properties.targetId.$ref).toBe(
         'schema://living-narrative-engine/common.schema.json#/definitions/namespacedId'

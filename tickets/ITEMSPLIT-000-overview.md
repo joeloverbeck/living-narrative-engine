@@ -20,7 +20,7 @@ This violates the project's modular design where each mod has a single, focused 
 
 ## User Decisions
 
-- **Namespaces**: Update to new mod namespaces (e.g., `items:aimable` → `aiming:aimable`)
+- **Namespaces**: Update to new mod namespaces (e.g., `items:aimable` → `aiming-states:aimable`)
 - **Entities**: Keep with behavior mods (e.g., revolver with aiming mod)
 - **States mods**: Create companion `-states` mods for aiming and wielding
 - **Approach**: Incremental - one mod at a time
@@ -36,7 +36,7 @@ This violates the project's modular design where each mod has a single, focused 
 ### Phase 2: State Mods (before their action mods)
 | Ticket | Mod | Purpose |
 |--------|-----|---------|
-| ITEMSPLIT-003 | `aiming-states` | `aiming:aimable`, `aiming:aimed_at` components |
+| ITEMSPLIT-003 | `aiming-states` | `aiming-states:aimable`, `aiming-states:aimed_at` components |
 | ITEMSPLIT-004 | `wielding-states` | Wielding state components |
 
 ### Phase 3: Feature Mods (any order after Phase 2)
