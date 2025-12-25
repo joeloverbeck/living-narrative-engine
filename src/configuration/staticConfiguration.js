@@ -68,6 +68,7 @@ const OPERATION_SCHEMA_FILES = [
   'resolveDirection.schema.json',
   'resolveHitLocation.schema.json',
   'resolveOutcome.schema.json',
+  'restoreOxygen.schema.json',
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
   'takeFromContainer.schema.json',

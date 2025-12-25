@@ -14,10 +14,6 @@
       "version": "1.0.0"
     },
     {
-      "id": "inventory",
-      "version": "1.0.0"
-    },
-    {
       "id": "anatomy",
       "version": "1.0.0"
     },
@@ -40,27 +36,24 @@
       "empty.component.json"
     ],
     "actions": [
-      "drink_from.action.json",
-      "drink_entirely.action.json"
+      "drink_entirely.action.json",
+      "drink_from.action.json"
     ],
     "rules": [
-      "handle_drink_from.rule.json",
-      "handle_drink_entirely.rule.json"
+      "handle_drink_entirely.rule.json",
+      "handle_drink_from.rule.json"
     ],
     "events": [
       "liquid_consumed.event.json",
       "liquid_consumed_entirely.event.json"
     ],
     "conditions": [
-      "event-is-action-drink-from.condition.json",
-      "event-is-action-drink-entirely.condition.json"
+      "event-is-action-drink-entirely.condition.json",
+      "event-is-action-drink-from.condition.json"
     ],
-    "scopes": [
-      "disinfectant_liquids_in_inventory.scope"
-    ],
+    "scopes": [],
     "entities": {
       "definitions": [
-        "antiseptic_bottle.entity.json",
         "coffee_cup.entity.json"
       ],
       "instances": []

@@ -25,7 +25,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
     );
     await ScopeResolverHelpers.registerCustomScope(
       fixture.testEnv,
-      'drinking',
+      'first-aid',
       'disinfectant_liquids_in_inventory',
       { loadConditions: false }
     );
@@ -53,7 +53,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
   } = {}) => {
     const room = ModEntityScenarios.createRoom(ROOM_ID, 'Treatment Room');
 
-    const disinfectantId = 'drinking:antiseptic_bottle';
+    const disinfectantId = 'first-aid:antiseptic_bottle';
     const disinfectant = new ModEntityBuilder(disinfectantId)
       .withName('Antiseptic Bottle')
       .atLocation(ROOM_ID)
@@ -259,7 +259,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
       'first-aid:wounded_actor_body_parts'
     );
     expect(disinfectAction.targets.secondary.scope).toBe(
-      'drinking:disinfectant_liquids_in_inventory'
+      'first-aid:disinfectant_liquids_in_inventory'
     );
     expect(disinfectAction.required_components.actor).toEqual(
       expect.arrayContaining(['skills:medicine_skill', 'inventory:inventory'])
@@ -299,14 +299,14 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
 
     const disinfectants =
       fixture.testEnv.unifiedScopeResolver.resolveSync(
-        'drinking:disinfectant_liquids_in_inventory',
+        'first-aid:disinfectant_liquids_in_inventory',
         {
           actor: actorContext,
           actorEntity: actorContext,
         }
       ) || {};
     expect(Array.from(disinfectants.value || [])).toContain(
-      'drinking:antiseptic_bottle'
+      'first-aid:antiseptic_bottle'
     );
 
     const candidates = fixture.testEnv.actionIndex.getCandidateActions({

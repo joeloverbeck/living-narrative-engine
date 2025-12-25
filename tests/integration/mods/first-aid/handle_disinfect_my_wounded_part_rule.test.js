@@ -10,7 +10,7 @@ import disinfectCondition from '../../../../data/mods/first-aid/conditions/event
 const ACTION_ID = 'first-aid:disinfect_my_wounded_part';
 const ROOM_ID = 'room1';
 const WOUNDED_PART_ID = 'actor-torso';
-const DISINFECTANT_ID = 'items:antiseptic_bottle';
+const DISINFECTANT_ID = 'first-aid:antiseptic_bottle';
 
 const buildLiquidContainer = (overrides = {}) => ({
   currentVolumeMilliliters: 25,

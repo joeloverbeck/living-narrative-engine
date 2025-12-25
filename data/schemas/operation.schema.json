@@ -60,6 +60,9 @@
           "$ref": "./operations/depleteOxygen.schema.json"
         },
         {
+          "$ref": "./operations/restoreOxygen.schema.json"
+        },
+        {
           "$ref": "./operations/dispatchEvent.schema.json"
         },
         {

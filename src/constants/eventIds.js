@@ -19,6 +19,11 @@ export const ATTEMPT_ACTION_ID = 'core:attempt_action';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
 export const ENTITY_THOUGHT_ID = 'core:entity_thought';
 
+// Drinking system event IDs
+export const LIQUID_CONSUMED_EVENT_ID = 'drinking:liquid_consumed';
+export const LIQUID_CONSUMED_ENTIRELY_EVENT_ID =
+  'drinking:liquid_consumed_entirely';
+
 /**
  * @typedef {object} DisplaySpeechPayload
  * @property {string} entityId The ID of the entity that spoke. Used to fetch the portrait.

@@ -1,6 +1,6 @@
 /**
  * @jest-environment node
- * @file Integration tests for drinking:disinfectant_liquids_in_inventory scope
+ * @file Integration tests for first-aid:disinfectant_liquids_in_inventory scope
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -12,7 +12,7 @@ import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
-describe('drinking:disinfectant_liquids_in_inventory scope', () => {
+describe('first-aid:disinfectant_liquids_in_inventory scope', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
@@ -68,7 +68,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
 
     const scopeDefinition = readFileSync(
       new URL(
-        '../../../../data/mods/drinking/scopes/disinfectant_liquids_in_inventory.scope',
+        '../../../../data/mods/first-aid/scopes/disinfectant_liquids_in_inventory.scope',
         import.meta.url
       ),
       'utf8'
@@ -77,10 +77,10 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
     const expr = scopeDefinition.split(':=')[1].trim();
 
     const parsedScopes = {
-      'drinking:disinfectant_liquids_in_inventory': {
+      'first-aid:disinfectant_liquids_in_inventory': {
         expr,
         definition: scopeDefinition,
-        modId: 'drinking',
+        modId: 'first-aid',
         ast: parseDslExpression(expr),
       },
     };
@@ -92,7 +92,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
       logger,
     });
 
-    scopeAst = parsedScopes['drinking:disinfectant_liquids_in_inventory'].ast;
+    scopeAst = parsedScopes['first-aid:disinfectant_liquids_in_inventory'].ast;
   });
 
   it('returns tagged liquid containers with volume remaining', () => {
@@ -103,16 +103,16 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
           'core:actor': { name: 'Medic' },
           'inventory:inventory': {
             items: [
-              'drinking:antiseptic_bottle',
-              'drinking:saline_vial',
-              'drinking:empty_disinfectant',
+              'first-aid:antiseptic_bottle',
+              'first-aid:saline_vial',
+              'first-aid:empty_disinfectant',
             ],
             capacity: { maxWeight: 50, maxItems: 10 },
           },
         },
       },
       {
-        id: 'drinking:antiseptic_bottle',
+        id: 'first-aid:antiseptic_bottle',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({
@@ -122,7 +122,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
         },
       },
       {
-        id: 'drinking:saline_vial',
+        id: 'first-aid:saline_vial',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({
@@ -131,7 +131,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
         },
       },
       {
-        id: 'drinking:empty_disinfectant',
+        id: 'first-aid:empty_disinfectant',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({
@@ -141,7 +141,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
         },
       },
       {
-        id: 'drinking:off_inventory_disinfectant',
+        id: 'first-aid:off_inventory_disinfectant',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({
@@ -163,10 +163,10 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
     const result = scopeEngine.resolve(scopeAst, actor, runtimeCtx);
     const normalized = normalizeScopeResults(result);
 
-    expect(normalized).toContain('drinking:antiseptic_bottle');
-    expect(normalized).not.toContain('drinking:saline_vial');
-    expect(normalized).not.toContain('drinking:empty_disinfectant');
-    expect(normalized).not.toContain('drinking:off_inventory_disinfectant');
+    expect(normalized).toContain('first-aid:antiseptic_bottle');
+    expect(normalized).not.toContain('first-aid:saline_vial');
+    expect(normalized).not.toContain('first-aid:empty_disinfectant');
+    expect(normalized).not.toContain('first-aid:off_inventory_disinfectant');
     expect(normalized).toHaveLength(1);
   });
 
@@ -177,13 +177,13 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
         components: {
           'core:actor': { name: 'Helper' },
           'inventory:inventory': {
-            items: ['drinking:plain_water', 'drinking:empty_jar'],
+            items: ['first-aid:plain_water', 'first-aid:empty_jar'],
             capacity: { maxWeight: 50, maxItems: 10 },
           },
         },
       },
       {
-        id: 'drinking:plain_water',
+        id: 'first-aid:plain_water',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({
@@ -193,7 +193,7 @@ describe('drinking:disinfectant_liquids_in_inventory scope', () => {
         },
       },
       {
-        id: 'drinking:empty_jar',
+        id: 'first-aid:empty_jar',
         components: {
           'items-core:item': {},
           'containers-core:liquid_container': buildLiquidContainer({

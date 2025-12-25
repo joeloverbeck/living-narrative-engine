@@ -181,6 +181,7 @@ const handlerModuleDefinitions = [
   ['DrinkFromHandler', `${handlerBasePath}/drinkFromHandler.js`],
   ['DrinkEntirelyHandler', `${handlerBasePath}/drinkEntirelyHandler.js`],
   ['DepleteOxygenHandler', `${handlerBasePath}/depleteOxygenHandler.js`],
+  ['RestoreOxygenHandler', `${handlerBasePath}/restoreOxygenHandler.js`],
   ['ForEachHandler', `${handlerBasePath}/forEachHandler.js`],
   ['IfHandler', `${handlerBasePath}/ifHandler.js`],
 ];
@@ -1027,6 +1028,16 @@ beforeAll(async () => {
     {
       token: tokens.DepleteOxygenHandler,
       handlerName: 'DepleteOxygenHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        { property: 'jsonLogicService', token: JsonLogicEvaluationServiceToken },
+      ],
+    },
+    {
+      token: tokens.RestoreOxygenHandler,
+      handlerName: 'RestoreOxygenHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

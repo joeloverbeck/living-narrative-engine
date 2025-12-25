@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "drinking:antiseptic_bottle",
+  "id": "first-aid:antiseptic_bottle",
   "components": {
     "core:name": {
       "text": "antiseptic bottle"

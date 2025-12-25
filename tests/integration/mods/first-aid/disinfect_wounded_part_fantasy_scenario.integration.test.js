@@ -36,9 +36,9 @@ const scopePaths = {
     process.cwd(),
     'data/mods/first-aid/scopes/wounded_target_body_parts.scope'
   ),
-  'drinking:disinfectant_liquids_in_inventory': resolve(
+  'first-aid:disinfectant_liquids_in_inventory': resolve(
     process.cwd(),
-    'data/mods/drinking/scopes/disinfectant_liquids_in_inventory.scope'
+    'data/mods/first-aid/scopes/disinfectant_liquids_in_inventory.scope'
   ),
 };
 
@@ -80,8 +80,8 @@ function createProductionScopeResolver(testEnv) {
     'first-aid:wounded_target_body_parts': loadScopeDefinition(
       'first-aid:wounded_target_body_parts'
     ),
-    'drinking:disinfectant_liquids_in_inventory': loadScopeDefinition(
-      'drinking:disinfectant_liquids_in_inventory'
+    'first-aid:disinfectant_liquids_in_inventory': loadScopeDefinition(
+      'first-aid:disinfectant_liquids_in_inventory'
     ),
   });
 
@@ -179,7 +179,7 @@ function createProductionScopeResolver(testEnv) {
 
       return { success: true, value: new Set(wounded) };
     }
-    if (scopeName === 'drinking:disinfectant_liquids_in_inventory') {
+    if (scopeName === 'first-aid:disinfectant_liquids_in_inventory') {
       const actorId = context?.actor?.id;
       if (!actorId) {
         return { success: true, value: new Set() };
@@ -326,7 +326,7 @@ describe('fantasy: Aldous kitchen disinfect scenario (production scopes)', () =>
     expect(Array.from(wounded.value)).toContain(WOUNDED_PART_ID);
 
     const disinfectants = fixture.testEnv.unifiedScopeResolver.resolveSync(
-      'drinking:disinfectant_liquids_in_inventory',
+      'first-aid:disinfectant_liquids_in_inventory',
       baseContext
     );
     expect(disinfectants.success).toBe(true);

@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_aim_item",
-  "comment": "Handles the aim_item action by adding aiming:aimed_at component to the item and dispatching item_aimed event",
+  "comment": "Handles the aim_item action by adding aiming-states:aimed_at component to the item and dispatching item_aimed event",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "aiming:event-is-action-aim-item"
@@ -16,10 +16,10 @@
     },
     {
       "type": "ADD_COMPONENT",
-      "comment": "Add aiming:aimed_at to the item (secondary target)",
+      "comment": "Add aiming-states:aimed_at to the item (secondary target)",
       "parameters": {
         "entity_ref": "{event.payload.secondaryId}",
-        "component_type": "aiming:aimed_at",
+        "component_type": "aiming-states:aimed_at",
         "value": {
           "targetId": "{event.payload.targetId}",
           "aimedBy": "{event.payload.actorId}"
