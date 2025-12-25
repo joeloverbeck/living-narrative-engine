@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "breathing:hypoxia_started",
+  "description": "Dispatched when an entity enters a hypoxic state.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the hypoxic actor"
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["mild", "moderate", "severe"],
+        "description": "Hypoxia severity when the state begins"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when hypoxia started"
+      }
+    },
+    "required": ["entityId", "severity", "timestamp"],
+    "additionalProperties": false
+  }
+}

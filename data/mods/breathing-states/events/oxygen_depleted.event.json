@@ -1,0 +1,66 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "breathing-states:oxygen_depleted",
+  "description": "Dispatched when oxygen reaches zero across all respiratory organs.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID whose oxygen is depleted"
+      },
+      "organCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of respiratory organs evaluated"
+      },
+      "depletionResults": {
+        "type": "array",
+        "description": "Per-organ depletion details for this tick",
+        "items": {
+          "type": "object",
+          "properties": {
+            "organEntityId": {
+              "type": "string",
+              "description": "Entity ID of the respiratory organ"
+            },
+            "previousOxygen": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Oxygen before depletion"
+            },
+            "newOxygen": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Oxygen after depletion"
+            },
+            "depleteAmount": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Amount depleted for this organ"
+            },
+            "oxygenCapacity": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Max oxygen capacity for this organ"
+            }
+          },
+          "required": [
+            "organEntityId",
+            "previousOxygen",
+            "newOxygen",
+            "depleteAmount",
+            "oxygenCapacity"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when oxygen was depleted"
+      }
+    },
+    "required": ["entityId", "organCount", "depletionResults", "timestamp"],
+    "additionalProperties": false
+  }
+}

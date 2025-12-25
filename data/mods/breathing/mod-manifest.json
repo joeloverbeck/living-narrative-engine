@@ -14,6 +14,10 @@
     {
       "id": "breathing-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "liquids-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -26,7 +30,17 @@
       "definitions": [],
       "instances": []
     },
-    "rules": [],
-    "events": []
+    "rules": [
+      "handle_oxygen_depletion.rule.json",
+      "handle_oxygen_restoration.rule.json",
+      "handle_hypoxia_progression.rule.json",
+      "handle_anoxic_damage.rule.json"
+    ],
+    "events": [
+      "hypoxia_started.event.json",
+      "hypoxia_stopped.event.json",
+      "anoxic_unconsciousness_started.event.json",
+      "brain_damage_started.event.json"
+    ]
   }
 }

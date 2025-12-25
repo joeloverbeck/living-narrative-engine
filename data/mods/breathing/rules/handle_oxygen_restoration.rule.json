@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "breathing:handle_oxygen_restoration",
+  "comment": "Restore oxygen and clear hypoxia/anoxia when an actor ends a turn able to breathe.",
+  "event_type": "core:turn_ended",
+  "condition": {
+    "not": {
+      "has_component": [
+        { "var": "event.payload.entityId" },
+        "liquids-states:submerged"
+      ]
+    }
+  },
+  "actions": [
+    {
+      "type": "RESTORE_OXYGEN",
+      "parameters": {
+        "entityId": "{event.payload.entityId}",
+        "restoreFull": true
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "component_type": "breathing:hypoxic"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "component_type": "breathing:unconscious_anoxia"
+      }
+    }
+  ]
+}

@@ -24,12 +24,13 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/staticErrorDispatcher.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
-
-const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
-const EMPTY_COMPONENT_ID = 'drinking:empty';
-const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_ENTIRELY_EVENT = 'drinking:liquid_consumed_entirely';
+import {
+  POSITION_COMPONENT_ID,
+  DRINKABLE_COMPONENT_ID,
+  EMPTY_COMPONENT_ID,
+  LIQUID_CONTAINER_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { LIQUID_CONSUMED_ENTIRELY_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} DrinkEntirelyParams
@@ -243,7 +244,7 @@ class DrinkEntirelyHandler extends BaseOperationHandler {
       });
 
       // Dispatch consumption event
-      this.#dispatcher.dispatch(LIQUID_CONSUMED_ENTIRELY_EVENT, {
+      this.#dispatcher.dispatch(LIQUID_CONSUMED_ENTIRELY_EVENT_ID, {
         actorEntity,
         containerEntity,
         volumeConsumed,

@@ -16,16 +16,19 @@ import {
 } from '@jest/globals';
 
 import DrinkFromHandler from '../../../../src/logic/operationHandlers/drinkFromHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  LIQUID_CONSUMED_EVENT_ID,
+} from '../../../../src/constants/eventIds.js';
+import {
+  DRINKABLE_COMPONENT_ID,
+  EMPTY_COMPONENT_ID,
+  LIQUID_CONTAINER_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
-const EMPTY_COMPONENT_ID = 'drinking:empty';
-const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_EVENT = 'drinking:liquid_consumed';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -148,11 +151,14 @@ describe('DrinkFromHandler', () => {
         true
       );
 
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(LIQUID_CONSUMED_EVENT, {
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        LIQUID_CONSUMED_EVENT_ID,
+        {
         actorEntity: 'actor1',
         containerEntity: 'bottle1',
         volumeConsumed: 200,
-      });
+        }
+      );
     });
 
     test('empties container when remaining volume equals serving size', async () => {

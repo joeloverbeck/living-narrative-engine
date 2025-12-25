@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "breathing:handle_hypoxia_progression",
+  "comment": "Stub rule dispatching event for HypoxiaTickSystem to process severity escalation.",
+  "event_type": "core:turn_ended",
+  "condition": {
+    "has_component": [
+      { "var": "event.payload.entityId" },
+      "breathing:hypoxic"
+    ]
+  },
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "breathing:hypoxia_started",
+        "payload": {
+          "entityId": "{event.payload.entityId}",
+          "severity": "mild",
+          "timestamp": "{context.timestamp}"
+        }
+      }
+    }
+  ]
+}

@@ -46,3 +46,16 @@ export const APPARENT_AGE_COMPONENT_ID = 'core:apparent_age';
 export const ANATOMY_BODY_COMPONENT_ID = 'anatomy:body';
 export const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
 export const ANATOMY_SOCKETS_COMPONENT_ID = 'anatomy:sockets';
+
+// Container components
+export const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
+export const CONTAINER_COMPONENT_ID = 'containers-core:container';
+export const OPENABLE_COMPONENT_ID = 'items-core:openable';
+
+// Drinking system components
+export const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
+export const EMPTY_COMPONENT_ID = 'drinking:empty';
+
+// Inventory components
+export const INVENTORY_COMPONENT_ID = 'inventory:inventory';
+export const WEIGHT_COMPONENT_ID = 'core:weight';
