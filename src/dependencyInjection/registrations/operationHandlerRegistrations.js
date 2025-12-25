@@ -101,6 +101,7 @@ import PutInContainerHandler from '../../logic/operationHandlers/putInContainerH
 import ValidateContainerCapacityHandler from '../../logic/operationHandlers/validateContainerCapacityHandler.js';
 import DrinkFromHandler from '../../logic/operationHandlers/drinkFromHandler.js';
 import DrinkEntirelyHandler from '../../logic/operationHandlers/drinkEntirelyHandler.js';
+import DepleteOxygenHandler from '../../logic/operationHandlers/depleteOxygenHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -874,6 +875,17 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DepleteOxygenHandler,
+      DepleteOxygenHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
         }),
     ],
   ];

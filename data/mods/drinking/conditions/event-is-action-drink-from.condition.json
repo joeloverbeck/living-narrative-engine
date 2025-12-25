@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "drinking:event-is-action-drink-from",
+  "description": "True when event is attempting the drink_from action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "drinking:drink_from"]
+  }
+}

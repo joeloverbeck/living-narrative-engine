@@ -33,7 +33,7 @@
       "contextFrom": "primary"
     },
     "tertiary": {
-      "scope": "items:disinfectant_liquids_in_inventory",
+      "scope": "drinking:disinfectant_liquids_in_inventory",
       "placeholder": "disinfectant",
       "description": "Disinfectant liquid container to use"
     }

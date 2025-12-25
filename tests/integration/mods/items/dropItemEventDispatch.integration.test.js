@@ -20,7 +20,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem

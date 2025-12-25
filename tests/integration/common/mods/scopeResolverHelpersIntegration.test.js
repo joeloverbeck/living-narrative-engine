@@ -81,7 +81,7 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:pick_up_item',
       null,
       null

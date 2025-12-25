@@ -27,7 +27,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       eventIsActionGiveItem
     );
     dropFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
@@ -37,7 +37,7 @@ describe('Items - Phase 1 and 2 Integration', () => {
       'item-handling:event-is-action-drop-wielded-item',
     ]);
     pickupFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:pick_up_item',
       pickUpItemRule,
       eventIsActionPickUpItem

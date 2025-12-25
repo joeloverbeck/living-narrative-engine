@@ -22,10 +22,10 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
 const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'items:drinkable';
-const EMPTY_COMPONENT_ID = 'items:empty';
+const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
+const EMPTY_COMPONENT_ID = 'drinking:empty';
 const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_EVENT = 'items:liquid_consumed';
+const LIQUID_CONSUMED_EVENT = 'drinking:liquid_consumed';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

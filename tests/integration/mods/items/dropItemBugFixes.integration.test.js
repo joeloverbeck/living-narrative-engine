@@ -21,7 +21,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
+      'item-handling',
       'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem

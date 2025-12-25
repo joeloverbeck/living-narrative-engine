@@ -266,6 +266,7 @@ export function registerInterpreters(container) {
     );
     registry.register('DRINK_FROM', bind(tokens.DrinkFromHandler));
     registry.register('DRINK_ENTIRELY', bind(tokens.DrinkEntirelyHandler));
+    registry.register('DEPLETE_OXYGEN', bind(tokens.DepleteOxygenHandler));
 
     return registry;
   });

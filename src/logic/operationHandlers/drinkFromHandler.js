@@ -9,7 +9,7 @@
  * 3. Checks container is not empty and has sufficient volume for serving size
  * 4. Reduces current volume by serving size, updating liquid_container component
  * 5. If volume reaches zero, adds empty component and removes drinkable component
- * 6. Dispatches items:liquid_consumed event
+ * 6. Dispatches drinking:liquid_consumed event
  *
  * Related files:
  * @see data/schemas/operations/drinkFrom.schema.json - Operation schema
@@ -26,10 +26,10 @@ import { safeDispatchError } from '../../utils/staticErrorDispatcher.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
 const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
-const DRINKABLE_COMPONENT_ID = 'items:drinkable';
-const EMPTY_COMPONENT_ID = 'items:empty';
+const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
+const EMPTY_COMPONENT_ID = 'drinking:empty';
 const POSITION_COMPONENT_ID = 'core:position';
-const LIQUID_CONSUMED_EVENT = 'items:liquid_consumed';
+const LIQUID_CONSUMED_EVENT = 'drinking:liquid_consumed';
 
 /**
  * @typedef {object} DrinkFromParams

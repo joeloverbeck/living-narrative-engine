@@ -24,8 +24,8 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
   beforeEach(async () => {
     // Create fixture - uses real mod system with event loading
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'item-handling:drop_item',
+      'item-handling',
+      'drop_item',
       dropItemRule,
       eventIsActionDropItem
     );

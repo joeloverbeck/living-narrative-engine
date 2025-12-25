@@ -534,7 +534,7 @@ describe('ModTestHandlerFactory - Completeness', () => {
 
     it('should pull item handlers when item operations are present', () => {
       const factory =
-        ModTestHandlerFactory.getHandlerFactoryForCategory('items');
+        ModTestHandlerFactory.getHandlerFactoryForCategory('item-handling');
       const handlers = factory(
         mockEntityManager,
         mockEventBus,

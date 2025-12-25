@@ -18,8 +18,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
   beforeEach(async () => {
     // Note: For workflow tests with multiple actions, we create separate fixtures
     dropFixture = await ModTestFixture.forAction(
-      'items',
-      'item-handling:drop_item',
+      'item-handling',
+      'drop_item',
       dropItemRule,
       eventIsActionDropItem
     );
@@ -28,8 +28,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
       'item-handling:event-is-action-drop-wielded-item',
     ]);
     pickupFixture = await ModTestFixture.forAction(
-      'items',
-      'item-handling:pick_up_item',
+      'item-handling',
+      'pick_up_item',
       pickUpItemRule,
       eventIsActionPickUpItem
     );
