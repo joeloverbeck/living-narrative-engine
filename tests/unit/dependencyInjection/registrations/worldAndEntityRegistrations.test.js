@@ -64,6 +64,7 @@ import EquipmentDescriptionService from '../../../../src/clothing/services/equip
 import { ClothingInstantiationService } from '../../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingAccessibilityService } from '../../../../src/clothing/services/clothingAccessibilityService.js';
 import { AnatomyInitializationService } from '../../../../src/anatomy/anatomyInitializationService.js';
+import HypoxiaTickSystem from '../../../../src/breathing/services/hypoxiaTickSystem.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
@@ -75,6 +76,7 @@ describe('registerWorldAndEntity', () => {
   let mockSchemaValidator;
   let mockSpatialIndexManager;
   let mockSafeEventDispatcher;
+  let mockValidatedEventDispatcher;
   let mockEventDispatchService;
   let registerSpy;
 
@@ -92,6 +94,9 @@ describe('registerWorldAndEntity', () => {
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
     };
+    mockValidatedEventDispatcher = {
+      subscribe: jest.fn(() => jest.fn()),
+    };
     mockEventDispatchService = {
       dispatchEvent: jest.fn(),
     };
@@ -107,6 +112,10 @@ describe('registerWorldAndEntity', () => {
     container.register(
       tokens.ISafeEventDispatcher,
       () => mockSafeEventDispatcher
+    );
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      () => mockValidatedEventDispatcher
     );
     container.register(
       tokens.EventDispatchService,
@@ -552,6 +561,12 @@ describe('registerWorldAndEntity', () => {
     {
       token: tokens.ClothingInstantiationServiceV2,
       Class: ClothingInstantiationService,
+      lifecycle: 'singletonFactory',
+      deps: undefined,
+    },
+    {
+      token: tokens.HypoxiaTickSystem,
+      Class: HypoxiaTickSystem,
       lifecycle: 'singletonFactory',
       deps: undefined,
     },

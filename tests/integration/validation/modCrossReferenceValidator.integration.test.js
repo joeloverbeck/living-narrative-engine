@@ -641,4 +641,217 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(referencedMods).toContain('personal-space-states');
     });
   });
+
+  describe('Core Mod Implicit Dependency', () => {
+    it('should allow references to core mod without explicit dependency', async () => {
+      // Create a mod that references core:actor without declaring core as dependency
+      const modPath = path.join(tempDir, 'test-mod');
+      await fs.mkdir(modPath, { recursive: true });
+
+      // Action file referencing core components
+      const actionData = {
+        id: 'test-action',
+        required_components: {
+          actor: ['core:actor', 'core:location'], // References to core mod
+        },
+        targets: 'core:actors_in_location', // Another core reference
+      };
+
+      await fs.writeFile(
+        path.join(modPath, 'test.action.json'),
+        JSON.stringify(actionData, null, 2)
+      );
+
+      // Set up manifestsMap WITHOUT core in dependencies
+      // Core should be implicitly available to all mods
+      const manifestsMap = new Map();
+      manifestsMap.set('test-mod', {
+        id: 'test-mod',
+        version: '1.0.0',
+        dependencies: [], // No dependencies declared at all
+      });
+      manifestsMap.set('core', {
+        id: 'core',
+        version: '1.0.0',
+        dependencies: [],
+      });
+
+      const report = await validator.validateModReferences(
+        modPath,
+        manifestsMap
+      );
+
+      // Core mod should be implicitly available - no violations for core references
+      // The validator treats 'core' as a special case that doesn't require explicit dependency
+      const coreViolations = report.violations.filter(
+        (v) => v.referencedMod === 'core'
+      );
+
+      // Document current behavior: core references should NOT generate violations
+      // because core is implicitly available to all mods
+      expect(coreViolations).toHaveLength(0);
+      expect(report.missingDependencies).not.toContain('core');
+    });
+
+    it('should still detect missing dependencies for non-core mods', async () => {
+      // Ensure that the implicit core handling doesn't break non-core detection
+      const modPath = path.join(tempDir, 'test-mod');
+      await fs.mkdir(modPath, { recursive: true });
+
+      const actionData = {
+        id: 'test-action',
+        required_components: {
+          actor: ['core:actor', 'personal-space-states:closeness'], // Mix of core and non-core
+        },
+      };
+
+      await fs.writeFile(
+        path.join(modPath, 'test.action.json'),
+        JSON.stringify(actionData, null, 2)
+      );
+
+      const manifestsMap = new Map();
+      manifestsMap.set('test-mod', {
+        id: 'test-mod',
+        version: '1.0.0',
+        dependencies: [], // No dependencies
+      });
+      manifestsMap.set('core', { id: 'core' });
+      manifestsMap.set('personal-space-states', { id: 'personal-space-states' });
+
+      const report = await validator.validateModReferences(
+        modPath,
+        manifestsMap
+      );
+
+      // Core should NOT generate violations
+      const coreViolations = report.violations.filter(
+        (v) => v.referencedMod === 'core'
+      );
+      expect(coreViolations).toHaveLength(0);
+
+      // personal-space-states SHOULD generate violations (not implicitly available)
+      const pssViolations = report.violations.filter(
+        (v) => v.referencedMod === 'personal-space-states'
+      );
+      expect(pssViolations.length).toBeGreaterThan(0);
+      expect(report.missingDependencies).toContain('personal-space-states');
+    });
+  });
+
+  describe('Transitive Dependencies', () => {
+    it('should document current behavior for transitive dependency references', async () => {
+      // Scenario: mod_a depends on mod_b, mod_b depends on mod_c
+      // Question: Can mod_a reference mod_c components directly?
+
+      // Create mod_a that references mod_c (which it doesn't directly depend on)
+      const modAPath = path.join(tempDir, 'mod_a');
+      await fs.mkdir(modAPath, { recursive: true });
+
+      const actionData = {
+        id: 'test-action',
+        required_components: {
+          actor: ['mod_c:some_component'], // Reference to mod_c (transitive dependency)
+        },
+      };
+
+      await fs.writeFile(
+        path.join(modAPath, 'test.action.json'),
+        JSON.stringify(actionData, null, 2)
+      );
+
+      // Set up the transitive chain: mod_a → mod_b → mod_c
+      const manifestsMap = new Map();
+      manifestsMap.set('mod_a', {
+        id: 'mod_a',
+        version: '1.0.0',
+        dependencies: [{ id: 'mod_b', version: '^1.0.0' }], // Only declares mod_b
+      });
+      manifestsMap.set('mod_b', {
+        id: 'mod_b',
+        version: '1.0.0',
+        dependencies: [{ id: 'mod_c', version: '^1.0.0' }], // mod_b depends on mod_c
+      });
+      manifestsMap.set('mod_c', {
+        id: 'mod_c',
+        version: '1.0.0',
+        dependencies: [],
+      });
+
+      const report = await validator.validateModReferences(
+        modAPath,
+        manifestsMap
+      );
+
+      // DOCUMENT CURRENT BEHAVIOR:
+      // The validator currently treats transitive dependencies as REQUIRING explicit declaration
+      // This means mod_a must explicitly declare mod_c as a dependency to reference its components
+      // This is the conservative approach that ensures dependency graphs are explicit
+      expect(report.hasViolations).toBe(true);
+
+      const modCViolations = report.violations.filter(
+        (v) => v.referencedMod === 'mod_c'
+      );
+      expect(modCViolations.length).toBeGreaterThan(0);
+      expect(report.missingDependencies).toContain('mod_c');
+
+      // Verify the violation message is helpful
+      modCViolations.forEach((violation) => {
+        expect(violation.suggestedFix).toContain('Add "mod_c" to dependencies');
+      });
+    });
+
+    it('should allow direct dependency references even when transitive chain exists', async () => {
+      // Verify that when mod_a explicitly declares mod_c, no violations occur
+      // even if mod_c is also a transitive dependency through mod_b
+
+      const modAPath = path.join(tempDir, 'mod_a');
+      await fs.mkdir(modAPath, { recursive: true });
+
+      const actionData = {
+        id: 'test-action',
+        required_components: {
+          actor: ['mod_c:some_component'],
+        },
+      };
+
+      await fs.writeFile(
+        path.join(modAPath, 'test.action.json'),
+        JSON.stringify(actionData, null, 2)
+      );
+
+      // mod_a explicitly declares BOTH mod_b AND mod_c
+      const manifestsMap = new Map();
+      manifestsMap.set('mod_a', {
+        id: 'mod_a',
+        version: '1.0.0',
+        dependencies: [
+          { id: 'mod_b', version: '^1.0.0' },
+          { id: 'mod_c', version: '^1.0.0' }, // Explicit dependency on mod_c
+        ],
+      });
+      manifestsMap.set('mod_b', {
+        id: 'mod_b',
+        version: '1.0.0',
+        dependencies: [{ id: 'mod_c', version: '^1.0.0' }],
+      });
+      manifestsMap.set('mod_c', {
+        id: 'mod_c',
+        version: '1.0.0',
+        dependencies: [],
+      });
+
+      const report = await validator.validateModReferences(
+        modAPath,
+        manifestsMap
+      );
+
+      // With explicit dependency on mod_c, there should be no violations for mod_c
+      const modCViolations = report.violations.filter(
+        (v) => v.referencedMod === 'mod_c'
+      );
+      expect(modCViolations).toHaveLength(0);
+      expect(report.missingDependencies).not.toContain('mod_c');
+    });
+  });
 });

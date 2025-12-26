@@ -87,6 +87,7 @@ import DamageResolutionService from '../../logic/services/damageResolutionServic
 import SeededDamageApplier from '../../logic/services/SeededDamageApplier.js';
 import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
+import HypoxiaTickSystem from '../../breathing/services/hypoxiaTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
 import InjuryAggregationService from '../../anatomy/services/injuryAggregationService.js';
 import InjuryNarrativeFormatterService from '../../anatomy/services/injuryNarrativeFormatterService.js';
@@ -937,6 +938,21 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.BurningTickSystem
+    )}.`
+  );
+
+  // Register HypoxiaTickSystem
+  registrar.singletonFactory(tokens.HypoxiaTickSystem, (c) => {
+    return new HypoxiaTickSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.HypoxiaTickSystem
     )}.`
   );
 

@@ -616,6 +616,18 @@ describe('Damage Capability Entry Schema', () => {
     });
   });
 
+  describe('Anoxic damage type (oxygen deprivation)', () => {
+    test('should accept anoxic damage with bypass flags', () => {
+      const entry = {
+        name: 'anoxic',
+        amount: 5,
+        flags: ['bypasses_armor', 'internal_only'],
+      };
+
+      expect(validate(entry)).toBe(true);
+    });
+  });
+
   describe('Multi-effect weapon examples', () => {
     test('should accept flaming sword configuration', () => {
       const entry = {
