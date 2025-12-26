@@ -459,7 +459,8 @@ describe('traitsGenerationPrompt integration', () => {
           response.names = response.names.slice(0, 2);
           return response;
         },
-        message: 'TraitsGenerationPrompt: Names array must contain 3-5 items',
+        message:
+          'TraitsGenerationPrompt: Names array is below minimum (got 2 items, minimum is 3)',
       },
       {
         label: 'uses a primitive for a name entry',
@@ -503,7 +504,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: physicalDescription must be 100-700 characters',
+          'TraitsGenerationPrompt: physicalDescription is below minimum (got 9 characters, minimum is 100)',
       },
       {
         label: 'is missing the personality array',
@@ -521,7 +522,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Personality array must contain 3-8 items',
+          'TraitsGenerationPrompt: Personality array is below minimum (got 2 items, minimum is 3)',
       },
       {
         label: 'uses a primitive for a personality entry',
@@ -569,7 +570,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Strengths array must contain 2-6 items',
+          'TraitsGenerationPrompt: Strengths array is below minimum (got 1 items, minimum is 2)',
       },
       {
         label: 'includes an empty strength entry',
@@ -596,7 +597,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items',
+          'TraitsGenerationPrompt: Weaknesses array is below minimum (got 1 items, minimum is 2)',
       },
       {
         label: 'includes an empty weakness entry',
@@ -621,7 +622,8 @@ describe('traitsGenerationPrompt integration', () => {
           response.likes = response.likes.slice(0, 2);
           return response;
         },
-        message: 'TraitsGenerationPrompt: Likes array must contain 3-8 items',
+        message:
+          'TraitsGenerationPrompt: Likes array is below minimum (got 2 items, minimum is 3)',
       },
       {
         label: 'includes an empty like entry',
@@ -647,7 +649,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Dislikes array must contain 3-8 items',
+          'TraitsGenerationPrompt: Dislikes array is below minimum (got 2 items, minimum is 3)',
       },
       {
         label: 'includes an empty dislike entry',
@@ -672,7 +674,8 @@ describe('traitsGenerationPrompt integration', () => {
           response.fears = [];
           return response;
         },
-        message: 'TraitsGenerationPrompt: Fears array must contain 1-2 items',
+        message:
+          'TraitsGenerationPrompt: Fears array is below minimum (got 0 items, minimum is 1)',
       },
       {
         label: 'includes an empty fear entry',
@@ -706,7 +709,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items',
+          'TraitsGenerationPrompt: Short-term goals array is below minimum (got 0 items, minimum is 1)',
       },
       {
         label: 'includes an empty short-term goal entry',
@@ -740,7 +743,8 @@ describe('traitsGenerationPrompt integration', () => {
           response.notes = ['Only'];
           return response;
         },
-        message: 'TraitsGenerationPrompt: Notes array must contain 2-6 items',
+        message:
+          'TraitsGenerationPrompt: Notes array is below minimum (got 1 items, minimum is 2)',
       },
       {
         label: 'includes an empty note entry',
@@ -766,7 +770,7 @@ describe('traitsGenerationPrompt integration', () => {
           return response;
         },
         message:
-          'TraitsGenerationPrompt: Profile must be at least 200 characters',
+          'TraitsGenerationPrompt: Profile is below minimum (got 9 characters, minimum is 200)',
       },
       {
         label: 'is missing the secrets array',
@@ -782,7 +786,8 @@ describe('traitsGenerationPrompt integration', () => {
           response.secrets = [];
           return response;
         },
-        message: 'TraitsGenerationPrompt: Secrets array must contain 1-2 items',
+        message:
+          'TraitsGenerationPrompt: Secrets array is below minimum (got 0 items, minimum is 1)',
       },
       {
         label: 'includes an empty secret entry',

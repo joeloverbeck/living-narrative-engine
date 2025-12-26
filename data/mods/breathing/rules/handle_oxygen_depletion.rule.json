@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "breathing:handle_oxygen_depletion",
+  "rule_id": "handle_oxygen_depletion",
   "comment": "Deplete oxygen when an actor ends a turn submerged.",
   "event_type": "core:turn_ended",
   "condition": {

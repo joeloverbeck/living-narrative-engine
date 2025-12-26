@@ -345,7 +345,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Names must be an array with 3-5 items'
+          'Names array is below minimum (got 0 items, minimum is 3)'
         );
       });
 
@@ -421,7 +421,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Physical description is too short (min 100 characters)'
+          'Physical description is below minimum (got 5 characters, minimum is 100)'
         );
       });
 
@@ -433,7 +433,7 @@ describe('Trait Model', () => {
         });
         const result = trait.validate();
         expect(result.warnings).toContain(
-          'Physical description is very long (max recommended 700 characters)'
+          'Physical description exceeds recommended maximum (got 701 characters, maximum is 700)'
         );
       });
     });
@@ -444,7 +444,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Personality must be an array with 3-8 items'
+          'Personality array is below minimum (got 0 items, minimum is 3)'
         );
       });
 
@@ -515,7 +515,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Strengths must be an array with 2-6 items'
+          'Strengths array is below minimum (got 1 items, minimum is 2)'
         );
       });
 
@@ -540,7 +540,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Weaknesses must be an array with 2-6 items'
+          'Weaknesses array is below minimum (got 0 items, minimum is 2)'
         );
       });
 
@@ -566,7 +566,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Likes must be an array with 3-8 items'
+          'Likes array is below minimum (got 2 items, minimum is 3)'
         );
       });
 
@@ -592,7 +592,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Dislikes must be an array with 3-8 items'
+          'Dislikes array is below minimum (got 0 items, minimum is 3)'
         );
       });
 
@@ -618,7 +618,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Fears must be an array with 1-2 items'
+          'Fears array is below minimum (got 0 items, minimum is 1)'
         );
       });
 
@@ -630,7 +630,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Fears must be an array with 1-2 items'
+          'Fears array exceeds maximum (got 3 items, maximum is 2)'
         );
       });
 
@@ -668,7 +668,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Goals.shortTerm must be an array with 1-3 items'
+          'Goals.shortTerm array is below minimum (got 0 items, minimum is 1)'
         );
       });
 
@@ -709,7 +709,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Notes must be an array with 2-6 items'
+          'Notes array is below minimum (got 1 items, minimum is 2)'
         );
       });
 
@@ -744,7 +744,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Profile is too short (min 200 characters)'
+          'Profile is below minimum (got 5 characters, minimum is 200)'
         );
       });
 
@@ -764,7 +764,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Secrets must be an array with 1-2 items'
+          'Secrets array is below minimum (got 0 items, minimum is 1)'
         );
       });
 
@@ -776,7 +776,7 @@ describe('Trait Model', () => {
         const result = trait.validate();
         expect(result.valid).toBe(false);
         expect(result.errors).toContain(
-          'Secrets must be an array with 1-2 items'
+          'Secrets array exceeds maximum (got 3 items, maximum is 2)'
         );
       });
 

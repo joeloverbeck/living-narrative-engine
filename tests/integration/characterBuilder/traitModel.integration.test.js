@@ -198,9 +198,10 @@ describe('Trait model integration', () => {
   });
 
   it('captures targeted validation issues and surfaces guidance warnings', () => {
+    const longDescription = 'Intricate description '.repeat(40);
     const trait = new Trait(
       buildValidTraitData({
-        physicalDescription: 'Intricate description '.repeat(40),
+        physicalDescription: longDescription,
         names: [
           { name: '   ', justification: 'Placeholder needs refinement' },
           { name: 'Waypoint Advocate', justification: '   ' },
@@ -238,7 +239,7 @@ describe('Trait model integration', () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.warnings).toEqual([
-      'Physical description is very long (max recommended 700 characters)',
+      `Physical description exceeds recommended maximum (got ${longDescription.trim().length} characters, maximum is 700)`,
     ]);
     expect(validation.errors).toEqual(
       expect.arrayContaining([
@@ -280,19 +281,19 @@ describe('Trait model integration', () => {
     expect(validation.valid).toBe(false);
     expect(validation.errors).toEqual(
       expect.arrayContaining([
-        'Names must be an array with 3-5 items',
-        'Physical description is too short (min 100 characters)',
-        'Personality must be an array with 3-8 items',
-        'Strengths must be an array with 2-6 items',
-        'Weaknesses must be an array with 2-6 items',
-        'Likes must be an array with 3-8 items',
-        'Dislikes must be an array with 3-8 items',
-        'Fears must be an array with 1-2 items',
-        'Goals.shortTerm must be an array with 1-3 items',
+        'Names array is below minimum (got 1 items, minimum is 3)',
+        'Physical description is below minimum (got 9 characters, minimum is 100)',
+        'Personality array is below minimum (got 1 items, minimum is 3)',
+        'Strengths array is below minimum (got 1 items, minimum is 2)',
+        'Weaknesses array is below minimum (got 1 items, minimum is 2)',
+        'Likes array is below minimum (got 1 items, minimum is 3)',
+        'Dislikes array is below minimum (got 1 items, minimum is 3)',
+        'Fears array is below minimum (got 0 items, minimum is 1)',
+        'Goals.shortTerm array is below minimum (got 0 items, minimum is 1)',
         'Goals.longTerm is required and must be a non-empty string',
-        'Notes must be an array with 2-6 items',
-        'Profile is too short (min 200 characters)',
-        'Secrets must be an array with 1-2 items',
+        'Notes array is below minimum (got 1 items, minimum is 2)',
+        'Profile is below minimum (got 9 characters, minimum is 200)',
+        'Secrets array is below minimum (got 0 items, minimum is 1)',
       ])
     );
   });

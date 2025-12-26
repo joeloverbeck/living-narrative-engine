@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "breathing:handle_hypoxia_progression",
+  "rule_id": "handle_hypoxia_progression",
   "comment": "Stub rule dispatching event for HypoxiaTickSystem to process severity escalation.",
   "event_type": "core:turn_ended",
   "condition": {

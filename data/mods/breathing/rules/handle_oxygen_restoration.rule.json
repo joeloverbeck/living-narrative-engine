@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "breathing:handle_oxygen_restoration",
+  "rule_id": "handle_oxygen_restoration",
   "comment": "Restore oxygen and clear hypoxia/anoxia when an actor ends a turn able to breathe.",
   "event_type": "core:turn_ended",
   "condition": {

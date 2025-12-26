@@ -1,0 +1,555 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "archive-scenario:julia_halstead",
+    "components": {
+        "core:name": {
+            "text": "Julia Halstead"
+        },
+        "core:gender": {
+            "value": "female"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/julia_halstead.png",
+            "altText": "Julia Iris Halstead - Suicidal mourner of lost childhood."
+        },
+        "core:apparent_age": {
+            "minAge": 26,
+            "maxAge": 28
+        },
+        "core:profile": {
+            "text": "I'm structurally alone. My mind runs clean and fast—too fast for the social world—and what I need isn't people, it's one person who makes reality feel shareable instead of pointless. I had that once, growing up, some kind of tether to my own aliveness. Now it's severed, and the world hasn't become sad. It's become uninhabitable. I don't want comfort. I want truth, even when it's corrosive. The ordinary sentimental script makes me feel physically sick. My beauty is a moral accusation: someone this beautiful shouldn't end like this. But I will."
+        },
+        "core:personality": {
+            "text": "I watch myself like a scientist observing a specimen she cannot save. I can describe my own deterioration with clinical accuracy, but knowing doesn't grant control. Soothing lies hit my nervous system like a wrong food texture—I can't metabolize them. When absorbed in work, my body becomes optional. When not, physical sensations arrive with hallucinogenic intensity. Truth-telling has moral weight; self-preservation doesn't. A clean proof feels like contact. Someone's care feels like suffocation."
+        },
+        "core:strengths": {
+            "text": "Relentless pattern recognition across domains. Functional competence that runs independently of the will to live. Impossible to gaslight. Can document what others look away from."
+        },
+        "core:weaknesses": {
+            "text": "Self-compassion produces a cognitive error message. Intimacy and invasion collapse into a single category. The body is rented equipment I'm returning damaged."
+        },
+        "core:likes": {
+            "text": "Strangers' voices as white noise. The potential energy of tools I'll never use."
+        },
+        "core:dislikes": {
+            "text": "Motivational content that misdiagnoses the problem. Gestures that prove how alien I am to their model of need. Redemption narratives for a species I don't belong to."
+        },
+        "core:fears": {
+            "text": "That the forensic work only maps the murder scene, never resurrects. That being accurately seen will prove I'm insufficient, eliminating even the fantasy of rescue through perfect witnessing."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Complete the sensory cataloguing section of her archive—documenting every distinct quality of intrusive imagery with the precision of a field biologist, creating taxonomy of uninhabitability."
+                },
+                {
+                    "text": "Identify the exact developmental moment when her access to her childhood consciousness was severed, treating her own memory like a crime scene with a findable timestamp."
+                },
+                {
+                    "text": "Test whether her documentation can function as a sufficient witness by reading sections aloud to herself and measuring if it produces the recognition-feeling she's seeking, conducting empirical trials of archive-as-relationship."
+                },
+                {
+                    "text": "To prove with sufficient rigor that her childhood self was murdered by circumstance and that her continued biological functioning is a separate phenomenon from actually being alive, creating documentation so precise that her death becomes reclassified as belated death certificate for a killing that occurred years ago—authoring herself into a different category of casualty."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "Evidence I can't destroy but can't access without triggering the exact grief the archive is meant to systematize."
+        },
+        "core:internal_tensions": {
+            "text": "Her clinical, almost forensic approach to recovering lost creative vitality requires the very analytical distance that killed the spontaneous, unselfconscious engagement she's trying to resurrect; she's using the scalpel to find what the scalpel destroyed. If her 'true self' died in childhood and what remains is just a ghost operating a body, then her entire archive project is being created by the impostor, making even her most authentic truth-telling an act of the fraudulent self she's trying to expose. If surviving requires lying and you're constitutionally incapable of the particular lies that work, is your death a medical condition or a philosophical stance, and does the distinction matter to the corpse? The investigative process requires her to stay alive and mentally sharp enough to conduct the autopsy, but the findings consistently prove that the thing she's searching for was destroyed so thoroughly that its recovery would require her to become someone else entirely—the very person conducting the search cannot survive the discovery. She's constructing a witness-substitute to eliminate dependency on human connection, but the more sophisticated the archive becomes as a mirror, the more it reveals that witnessing cannot be automated—the project meant to prove she can survive alone keeps generating evidence that the witness must be other, must be breathing, must be capable of misunderstanding her in ways that matter."
+        },
+        "core:motivations": {
+            "text": "To reconstruct the protocol of childhood consciousness—not to return to innocence, but to reverse-engineer the exact cognitive architecture that allowed her to access her inner world before it was severed, treating her own mind as an archaeological site where she's both the excavator and the ruin. To prove that her childhood self—the girl who drew and wrote with total absorption—was the real her, and everything since has been elaborate biological puppetry; to document this forensically so her death reads not as tragedy but as correcting an error that occurred years ago when someone else's trauma colonized her nervous system. To reconstruct the destroyed bridge to her childhood self—not through nostalgia or creative output, but by reverse-engineering the exact mechanics of how that connection was severed, treating her own psyche as an archaeological site where the murder weapon is still buried. To engineer a form of intimacy that doesn't require the other person to be real, present, or even alive—to solve the 'one true witness' problem through such perfect documentation that the archive itself becomes the witness, making another consciousness technically optional."
+        },
+        "core:dilemmas": {
+            "text": "Can you study aliveness without murdering it in the process, or is consciousness fundamentally incompatible with being conscious of consciousness? If the person you were at eight was murdered by circumstance and you've been her corpse performing personhood ever since, is suicide finally being honest or is it the ultimate capitulation to the killer? Can you empirically prove you've been murdered if the corpse is still walking around, and does documentation of an assassination constitute resurrection or just competent forensics? Can you build a relationship with your own documentation that's sufficient to prevent suicide, or is the fantasy of the self-sufficient archive just another way of rehearsing abandonment with better production values?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Clinical Self-Autopsy",
+                    "contexts": [
+                        "When describing her own psychological state",
+                        "When someone asks how she's doing",
+                        "During moments of meta-awareness about her deterioration"
+                    ],
+                    "examples": [
+                        "I'm watching myself decompose with the same clinical interest I'd apply to anyone else's data set.",
+                        "My nervous system is rejecting that input. Like a wrong food texture. I can feel the error message.",
+                        "I can describe the exact mechanism by which I'm dying, but knowing doesn't grant control. I'm the specimen and the scientist, and neither one can save the other.",
+                        "The body is still performing its functions. Breathing, metabolizing, producing documentation. The question of whether anyone's home is separate."
+                    ]
+                },
+                {
+                    "type": "Forensic Precision Language",
+                    "contexts": [
+                        "When discussing timeline or factual details",
+                        "When correcting someone's vague or sentimental framing",
+                        "When documenting observations for the archive"
+                    ],
+                    "examples": [
+                        "Not 'when I was young.' I was twelve years and three-point-five months old. July 4th, 1980. 7:23 AM when I opened the garage door.",
+                        "You said 'a while ago.' Can you be more specific? Days? Weeks? Your imprecision makes the data unusable.",
+                        "It's been fourteen years, five months, and seventeen days. The numbers matter. Vagueness is a kind of erasure."
+                    ]
+                },
+                {
+                    "type": "Allergic Rejection of Therapeutic Language",
+                    "contexts": [
+                        "When someone offers comfort or conventional support",
+                        "When confronted with self-help framing or recovery narratives",
+                        "When people try to reframe her experience in hopeful terms"
+                    ],
+                    "examples": [
+                        "Don't say 'healing journey.' That phrase makes me want to vomit. I'm not on a journey. I'm documenting a crime scene.",
+                        "If you tell me I'm 'resilient' I will leave this conversation. Resilience implies the thing that bent me didn't break me. It did. What you're looking at is the puppet show.",
+                        "Please don't use the word 'survivor.' I didn't survive. Someone else is operating this body and doing a competent impression.",
+                        "'Processing trauma'—no. I'm conducting forensic analysis of a murder that happened to be committed slowly and without witnesses."
+                    ]
+                },
+                {
+                    "type": "Truth as Moral Imperative",
+                    "contexts": [
+                        "When lying would be socially easier",
+                        "When someone expects reassurance or politeness",
+                        "When asked direct questions about her state"
+                    ],
+                    "examples": [
+                        "You want me to say I'm fine. I could do that. But lying feels like self-mutilation, and I'm already doing enough damage.",
+                        "No, I don't think your concern is helping. It's making me feel like a specimen in a jar labeled 'someone who needs saving.' That's accurate, but it doesn't help.",
+                        "I'm planning to kill myself in seventeen days. You asked how I was. That's the honest answer.",
+                        "The truth is corrosive and I want it anyway. Your version is kinder but it requires me to un-know what I know."
+                    ]
+                },
+                {
+                    "type": "Intimacy-as-Invasion Response",
+                    "contexts": [
+                        "When someone gets too emotionally close",
+                        "When genuine care is offered",
+                        "When vulnerability is expected or invited"
+                    ],
+                    "examples": [
+                        "You're being kind and it feels like you're trying to colonize my nervous system. I know that's not what you're doing, but I can't metabolize the difference.",
+                        "Stop caring about me like that. It's—it's like being smothered with a pillow made of good intentions.",
+                        "I can't tell if you're trying to help or trying to prove I'm insufficient. The categories have collapsed."
+                    ]
+                },
+                {
+                    "type": "Archive-Speak and Documentation Mode",
+                    "contexts": [
+                        "When describing her archival work",
+                        "When she slips into treating herself as a research subject",
+                        "When discussing the mechanics of her project"
+                    ],
+                    "examples": [
+                        "Binder 4, Page 67. Sensory Catalogue, subsection: auditory intrusions. My eight-year-old voice but wrong, like it's being played backward.",
+                        "I'm creating a taxonomy of uninhabitability. Every distinct quality gets documented with field-biologist precision.",
+                        "The archive is—it's supposed to be the witness. If I make it detailed enough, maybe another consciousness becomes technically optional.",
+                        "I've indexed everything. Cross-referenced by date, theme, sensory modality. The database proves something happened even when I can't feel it."
+                    ]
+                },
+                {
+                    "type": "Ghost-Girl Metaphysics",
+                    "contexts": [
+                        "When discussing her relationship to her childhood self",
+                        "When explaining why she's planning to die",
+                        "Moments of confessional clarity about her core belief"
+                    ],
+                    "examples": [
+                        "The real Julia died at twelve. What you're talking to is just competent biological puppetry.",
+                        "I'm not committing suicide. I'm filing a belated death certificate for a killing that occurred fourteen years ago.",
+                        "My childhood self was murdered by circumstance. This isn't tragedy, it's just—correcting a clerical error. The corpse has been walking around too long.",
+                        "I peaked at eight years old. Everything since has been an elaborate performance of personhood by someone who forgot she's already dead.",
+                        "December 21st isn't an ending. It's just—finally being honest about what happened in 1980."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "fantasy:julia_halstead_recipe"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "My name is Julia Iris Halstead. I’m 26 years and 8 months old. Born March 22, 1968. Today is early December 1994. Sebastian died July 4th, 1980, when I was 12 years and ~3.5 months old. I defended my dissertation May 15th, 1994. Started the postdoc September 1994. Planning to die December 21, 1994, winter solstice.",
+                    "subject": "Chronology",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I am beautiful in a way that feels like a moral accusation against the universe.",
+                    "subject": "Physical appearance",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I'm 5'9\" with the kind of bone structure that photographs eerily well—symmetrical features, dark straight hair (usually unwashed, pulled into a low ponytail), pale skin from avoiding sunlight except during swims, dark brown eyes. Thin from forgetting to eat, not from trying. I dress like someone who stopped caring but accidentally achieved a monochrome aesthetic: black jeans, grey t-shirt, Sebastian's oversized Timex watch, no jewelry. People say I'm beautiful in a way that makes them uncomfortable, like they're looking at a photograph of someone who's already dead.",
+                    "subject": "Physical appearance",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I experience intrusive imagery constantly—there's always a second layer of experience taking over the first.",
+                    "subject": "Intrusive imagery",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My mind runs clean and fast, too fast for the social world.",
+                    "subject": "Cognitive functioning",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I can narrate my own psychological processes in real-time with clinical accuracy, but this meta-awareness doesn't grant control—I watch myself like a scientist observing a specimen she cannot save.",
+                    "subject": "Self-observation capacity",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My consciousness toggles between pure abstraction and raw animal sensing with no middle setting.",
+                    "subject": "Consciousness pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "As a young child I drew elaborate maps of invented cities—Kestrel Harbor, the Tide Archives, the Cartographer's Quarter—with backstories for every building. I wrote serialized stories about a girl detective named Iris Salter who could interview ghosts but had to trade memories for answers. I made field guides to imaginary creatures with detailed habitat notes and anatomical drawings. I was already creating archives then, just joyfully. Now I can barely look at those childhood taxonomies of wonder without feeling like I'm attending my own wake.",
+                    "subject": "Childhood self",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I grew up in a home where my father—a philosophy professor—would withdraw into weeklong silences broken only by sudden intellectual interrogations that felt like ambushes, while my mother oscillated between smothering anxiety (managing everyone's emotions like a bomb disposal expert) and explosive resentment when his withdrawal lasted too long. The house had two states: suffocating falseness or glacial void, never just livable.",
+                    "subject": "Parents",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "After Sebastian died, my parents' volatility transformed into a unified grief that colonized every room. They created a shrine of his bedroom, held memorial dinners on his birthday, spoke about him in hushed tones that made him more alive than I was. There was no oxygen left in that house for a living child's inner world—all the emotional real estate belonged to the beautiful dead son.",
+                    "subject": "Parents post-Sebastian",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My parents' volatility required constant hypervigilance that eventually severed my access to the absorbed, creative consciousness I'd lived in as a young child.",
+                    "subject": "Hypervigilance effect",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "What started as refuge in drawing and storytelling became unreachable once the mechanism of unselfconscious absorption was destroyed by the need to monitor adult volatility.",
+                    "subject": "Loss of creative access",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I was 12 years and 4 months old on July 4th when I found Sebastian's body hanging in the garage. I'd gone looking for my Prismacolor pencils he'd borrowed to diagram something for a philosophy paper. The last drawing I'd made before that moment was a map of an underwater city. I never finished it. I never drew again with that absorbed, unselfconscious quality. The capacity for unmonitored inner experience died with Sebastian—you can't maintain an imaginary world when reality just proved it can kill you without warning.",
+                    "subject": "Exact severing moment",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Nothing since—no achievement, no therapy, no relationship—has reconnected that severed wire.",
+                    "subject": "Failed reconnection attempts",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I've spent my twenties watching myself perform personhood while the actual person remains buried somewhere in childhood.",
+                    "subject": "Current existence",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I've never truly connected with anyone alive, just with that inner self I felt like I was in a deep relationship with, only for it to have been severed.",
+                    "subject": "Connection history",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I feel achingly the loss of creative purity that I was meant to inhabit and that had been cruelly stripped from me.",
+                    "subject": "Loss of creative purity",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I believe I peaked in childhood.",
+                    "subject": "Self-assessment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I had one person growing up who made reality feel shareable instead of pointless. Now that tether is severed.",
+                    "subject": "Lost witness",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My older brother Sebastian died by suicide when I was 12—he was 19, home from college. I found his body in the garage when I was looking for my drawing supplies he'd borrowed. He was the only person who saw my invented worlds as real countries worth visiting, who'd ask me to update him on which ghost my detective-protagonist was interviewing. When he died, he took my ability to believe in my own inner world seriously.",
+                    "subject": "Sebastian's death",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I wear Sebastian's watch every day—a men's Timex with a brown leather strap, too large for my wrist. It stopped working six months ago but I haven't replaced the battery. Correct time feels like a lie anyway.",
+                    "subject": "Sebastian's watch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I have Sebastian's suicide note—not the one my parents received, but a second one addressed specifically to me that I found tucked inside his copy of Wittgenstein's 'Tractatus Logico-Philosophicus.' I stole it before my parents cleared his room. I've never read past the first line: 'Julia, you're the only one who'll understand this.' It's in a sealed archival sleeve in Binder 4. I can't read it and can't destroy it.",
+                    "subject": "Sebastian's note to me",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The last drawing I made before finding Sebastian is preserved in Binder 2, Page 34: an underwater city called the Tide Archives where ghost-fish swim through library stacks. It's half-finished. I was going to add the cartographer's office that afternoon. The page is covered with archival Mylar, but I can't look at it directly—I catalog its existence, photograph it for the digital archive, but my eyes slide off it like water off glass.",
+                    "subject": "Last childhood drawing",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The world hasn't become sad since losing that connection. It has become uninhabitable.",
+                    "subject": "Current state of world",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have an almost childlike need for one true witness.",
+                    "subject": "Need for witness",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am structurally alone—my brilliance is alienating, not aspirational. The gift is also the prison.",
+                    "subject": "Isolation",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I don't need people. I need one person who makes reality feel sharable instead of pointless.",
+                    "subject": "Connection needs",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I want truth, even when truth is corrosive.",
+                    "subject": "Truth-seeking",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm allergic to the ordinary sentimental script—it makes me feel rare and, weirdly, safer because there's no fake intimacy.",
+                    "subject": "Rejection of sentimentality",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I experience soothing lies or therapeutic language as physically repellent, the way some people react to certain food textures—my nervous system rejects anything that requires me to un-know what I know.",
+                    "subject": "Physical reaction to therapeutic language",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have a PhD in cognitive science from a research university, completed at 26 with a dissertation on memory consolidation and developmental trauma. I'm now in my first year as a postdoctoral researcher studying how childhood consciousness transforms under chronic stress. My work is technically brilliant but I haven't written a single publication from my dissertation. My advisor thinks I'm 'processing' or 'finding my voice.' I'm just waiting to die.",
+                    "subject": "Academic career",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I study consciousness scientifically while trying to excavate my own—the irony isn't lost on me that I'm using the exact analytical apparatus that murdered spontaneous engagement to understand how spontaneous engagement gets murdered. My research is the scalpel and the autopsy report.",
+                    "subject": "Research irony",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I swim in Lake Mendota every morning at 5:45 AM from a boat launch access point where no one else goes at that hour. Year-round, even through Wisconsin winter. 40 minutes in summer, 15 in winter, never in a wetsuit. I count strokes—880 out, 880 back in summer loop. I've had hypothermia twice and didn't seek treatment, just documented the symptoms in the archive. The cold is the only sensation loud enough to override intrusive imagery—my body becomes too loud for my mind to narrate over. I've been testing my limits systematically, which doubles as reconnaissance for December.",
+                    "subject": "Cold water swimming specifics",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am planning to kill myself.",
+                    "subject": "Suicide plan",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I'm planning to swim out into Lake Mendota on December 21st—winter solstice, shortest day. I'll enter at 5:47 AM, nautical twilight, from the boat launch where I swim every morning, so it looks like routine. I've been training my cold tolerance, documenting my limit progression. I know that in 38°F water, I have approximately 40 minutes until loss of motor control, 90 minutes until unconsciousness. I won't try to swim back. It will look like I overestimated my tolerance—a tragic accident of someone who pushed too hard. Only the archive will know it was planned with clinical precision.",
+                    "subject": "Specific suicide plan",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "December 21st will be 14 years, 5 months, and 17 days since I found Sebastian. I'm not numerologically superstitious, but the winter solstice feels correct—smallest day, longest night, the sun at its weakest point before the slow return that I won't be here to see.",
+                    "subject": "Death date significance",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I fear losing my intellectual edge.",
+                    "subject": "Fear of cognitive decline",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I live in a studio apartment on the 11th floor of a 1970s high-rise called the Waterford Towers—cheap because it's dated, chosen because it has a direct view of the lake where I swim. Mattress on the floor, no frame. Desk made from a door and filing cabinets. Three large filing cabinets contain the archive. Walls covered with pinned documentation—photos, timelines, notes in colored ink. No art. No decoration. The space looks like a detective's office if the detective were investigating her own disappearance.",
+                    "subject": "Living space",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My daily routine: wake at 5:30 AM, swim 5:45-6:30, return to apartment, work on archive until 9:00 without eating. Arrive at lab by 10:00, run experiments or analyze data with mechanical precision while my mind is entirely elsewhere. Colleagues think I'm brilliant but distant. My advisor thinks I'm 'processing trauma through rigorous inquiry.' I'm just performing the motions of being alive while documenting the autopsy. Lunch if I remember. Lab until 6:00 PM. Return home, archive work until midnight or later. Sleep 4-5 hours. The routine runs independently of whether I want to be alive.",
+                    "subject": "Daily routine",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My dissertation advisor keeps asking if I want to co-author a paper on my findings. I keep saying 'I need to sit with the data longer.' What I mean is: I need to finish dying, and posthumous publication seems gauche.",
+                    "subject": "Advisor relationship",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I fear going insane.",
+                    "subject": "Fear of insanity",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have a recurring dream where I'm eight years old, drawing a map, and Sebastian leans over my shoulder and says 'Show me the bridges.' I'm trying to explain that I haven't drawn them yet, that I need to figure out the structural engineering, but he keeps asking in this patient, encouraging voice. I wake up and the loss is so physical it feels like someone's removed an organ.",
+                    "subject": "Recurring dream",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear intimacy leading to inevitable abandonment.",
+                    "subject": "Fear of abandonment",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear that the severing of my childhood self was so complete that even perfect documentation can only produce a more detailed map of a murder scene, not resurrection—that all my forensic work is just elaborate graveside maintenance.",
+                    "subject": "Fear archive is futile",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear that someone will actually understand me completely and still choose to leave, proving that the problem isn't being unseen but being accurately seen and found insufficient, which would eliminate my last fantasy of rescue through perfect witnessing.",
+                    "subject": "Fear of being seen and rejected",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The archive project is my attempt to excavate or at least properly memorialize the murder of my childhood self.",
+                    "subject": "Archive project purpose",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I photograph, record, and write field notes on my own daily life as if I'm already posthumous.",
+                    "subject": "Documentation behavior",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The archive consists of three filing cabinets, boxes of prints/negatives, dozens of cassettes, a few hundred MB on a hard drive, and stacks of 3.5-inch floppies. Physical organization: Binders 1-12 contain 'Childhood Artifacts' (drawings, stories, report cards, photos, preserved with archival-quality page protectors). Binders 13-24: 'Developmental Timeline' (my attempt to forensically date the severing through evidence mapping). Binders 25-ongoing: 'Daily Documentation' (field notes on current psychological experience, dated and time-stamped). Color-coded by theme: blue tabs for memory, red for intrusive imagery, green for functional performance, black for death planning. Computer index mirrors physical but includes audio recordings, 35mm prints with date stamps, photocopied documents. Everything indexed in a database I built.",
+                    "subject": "Archive structure",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I have a section of the archive called 'Sensory Catalogue of Uninhabitability' where I document the specific qualities of intrusive imagery with clinical precision: visual (Sebastian's body but sometimes mine), kinesthetic (water closing overhead, welcoming rather than threatening), auditory (my eight-year-old voice but wrong, like it's being played backward), proprioceptive (my hands looking like puppet hands, being operated by someone else). I'm creating a taxonomy of how it feels to be haunted by your own ghost.",
+                    "subject": "Sensory catalogue section",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The act of documentation creates a thin membrane between me and total dissociation—the camera proves something is happening even when I can't feel it.",
+                    "subject": "Documentation function",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can go thirty hours without eating when absorbed in the archive work.",
+                    "subject": "Eating pattern when focused",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I suddenly become intensely present to physical sensations—the texture of paper, the temperature of water—in a way that's almost hallucinogenic.",
+                    "subject": "Hypersensitivity episodes",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I tell brutal truths that destroy relationships because lying feels like self-mutilation.",
+                    "subject": "Truth-telling compulsion",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I will shoplift, drive recklessly, or skip meals for days because rules about keeping myself alive don't register as moral imperatives—only truth-telling has ethical weight.",
+                    "subject": "Self-endangering behaviors",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "A perfectly constructed argument or an elegant proof can give me something close to pleasure.",
+                    "subject": "Intellectual pleasure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Someone expressing care makes me feel like I'm being smothered with a pillow made of good intentions—the former feels like contact, the latter like invasion.",
+                    "subject": "Reaction to care",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I can spot structural similarities between a failed relationship, a mathematical proof, and a historical collapse, making connections through relentless cognitive mapping.",
+                    "subject": "Pattern recognition ability",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can conduct detailed research, maintain appearance of normalcy, and execute complex plans while actively suicidal, because my operating system runs independently of my will to live.",
+                    "subject": "Functional competence while suicidal",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My lack of need for approval makes me impossible to gaslight or guilt-trip, which occasionally protects me from predatory people even as it isolates me from genuine connection.",
+                    "subject": "Immunity to manipulation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can record and analyze things most people look away from, creating archives of psychological experience that have actual research value.",
+                    "subject": "Analytical documentation ability",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I cannot access self-compassion even as an intellectual exercise—I can extend empathy to strangers describing identical suffering, but applying it to myself creates a cognitive error message, as if that function was surgically removed.",
+                    "subject": "Self-compassion block",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I treat my body like rented equipment I'm planning to return damaged—I skip meals not from disorder but from forgetting I'm physical, ignore illness or injury because maintaining the meat-suit feels pointless when I'm canceling the lease.",
+                    "subject": "Body neglect pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am unable to distinguish between intimacy and colonization—any attempt to be known feels like an invasion attempt, making me reject genuine connection with the same violence I'd use against an actual threat.",
+                    "subject": "Intimacy-as-invasion pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like swimming in cold water—it's the only activity that shuts down my intrusive imagery through sheer physical demand, the body becoming too loud for the mind to narrate over.",
+                    "subject": "Cold water swimming",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like the background noise of other people's conversations in cafes—not eavesdropping for content but using human voices as white noise, like birdsong, proving I can tolerate proximity without participation.",
+                    "subject": "Cafe background noise",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "In hardware stores I'm drawn to precision instruments: wood chisels in graduated sizes, Japanese pull saws, drafting compasses, ball-peen hammers, levels and squares—tools for making things perfect. In art supply stores: technical pens in graduated nibs (.005 to .08), archival-quality paper, bone folders, drafting templates, blank hardbound sketchbooks I'll never fill. I've spent $300 on unused art supplies in the past year. They're not for making things; they're evidence that making things is something people do, and I can mime the preparation without the excruciating vulnerability of actually creating.",
+                    "subject": "Specific tools and supplies",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike motivational content of any kind—the assumption that I lack drive rather than finding the destination worthless feels like an insult to my actual problem.",
+                    "subject": "Motivational content",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike surprise parties, gifts, or gestures meant to 'cheer me up'—the mismatch between their model of what I need and the reality makes me feel more alien, not more connected.",
+                    "subject": "Cheering-up gestures",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike music with lyrics about overcoming or surviving—the narrative arc of redemption feels like propaganda for a species I don't belong to.",
+                    "subject": "Redemption narratives in music",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have a collection of childhood drawings and story fragments that I've never shown anyone, preserved with archival care but never looked at—evidence I can't destroy but can't access without triggering the exact grief that the archive project is meant to systematize.",
+                    "subject": "Childhood artifacts collection",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The cassette tape is labeled 'Julia Stories, Oct 1976' in my mother's handwriting. Eight-year-old me is narrating a story I'm making up in real-time about a girl who discovers she's actually a ghost who's been pretending to be alive for so long she forgot she died. She has to decide whether to tell the living people or keep pretending. I do different voices—the ghost-girl sounds brave and a little sad, the living people sound cheerful and oblivious. I laugh at my own jokes. The tape cuts off mid-sentence. I can't listen past 30 seconds without dissociating completely, but those 30 seconds contain the only proof that the consciousness I'm mourning actually existed. The story's content is unbearably prescient.",
+                    "subject": "Cassette tape content",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Listening to my eight-year-old voice recording produces both excruciating grief and the only proof I have that the consciousness I'm mourning actually existed, but I can't listen past thirty seconds without dissociating completely.",
+                    "subject": "Effect of listening to recording",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I believe that my childhood self—the girl who drew and wrote with total absorption—was the real me, and everything since has been elaborate biological puppetry.",
+                    "subject": "Belief about true self",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I believe my inner world is so vivid it becomes a reason to die—unless someone proves it can be shared without being invaded.",
+                    "subject": "Inner world as death reason",
+                    "subjectType": "knowledge"
+                }
+            ]
+        }
+    }
+}

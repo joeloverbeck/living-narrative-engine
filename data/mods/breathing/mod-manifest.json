@@ -21,7 +21,9 @@
     }
   ],
   "content": {
-    "libraries": ["respiratory.slot-library.json"],
+    "libraries": [
+      "respiratory.slot-library.json"
+    ],
     "components": [
       "hypoxic.component.json",
       "unconscious_anoxia.component.json"
@@ -31,16 +33,16 @@
       "instances": []
     },
     "rules": [
-      "handle_oxygen_depletion.rule.json",
-      "handle_oxygen_restoration.rule.json",
+      "handle_anoxic_damage.rule.json",
       "handle_hypoxia_progression.rule.json",
-      "handle_anoxic_damage.rule.json"
+      "handle_oxygen_depletion.rule.json",
+      "handle_oxygen_restoration.rule.json"
     ],
     "events": [
-      "hypoxia_started.event.json",
-      "hypoxia_stopped.event.json",
       "anoxic_unconsciousness_started.event.json",
-      "brain_damage_started.event.json"
+      "brain_damage_started.event.json",
+      "hypoxia_started.event.json",
+      "hypoxia_stopped.event.json"
     ]
   }
 }
