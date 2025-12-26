@@ -203,12 +203,16 @@ export class Trait {
     const warnings = [];
 
     // Validate names
-    if (
-      !Array.isArray(this.names) ||
-      this.names.length < 3 ||
-      this.names.length > 5
-    ) {
-      errors.push('Names must be an array with 3-5 items');
+    if (!Array.isArray(this.names)) {
+      errors.push('Names must be an array');
+    } else if (this.names.length < 3) {
+      errors.push(
+        `Names array is below minimum (got ${this.names.length} items, minimum is 3)`
+      );
+    } else if (this.names.length > 5) {
+      errors.push(
+        `Names array exceeds maximum (got ${this.names.length} items, maximum is 5)`
+      );
     } else {
       this.names.forEach((nameItem, index) => {
         if (!nameItem || typeof nameItem !== 'object') {
@@ -245,20 +249,26 @@ export class Trait {
     ) {
       errors.push('Physical description is required and must be a string');
     } else if (this.physicalDescription.length < 100) {
-      errors.push('Physical description is too short (min 100 characters)');
+      errors.push(
+        `Physical description is below minimum (got ${this.physicalDescription.length} characters, minimum is 100)`
+      );
     } else if (this.physicalDescription.length > 700) {
       warnings.push(
-        'Physical description is very long (max recommended 700 characters)'
+        `Physical description exceeds recommended maximum (got ${this.physicalDescription.length} characters, maximum is 700)`
       );
     }
 
     // Validate personality
-    if (
-      !Array.isArray(this.personality) ||
-      this.personality.length < 3 ||
-      this.personality.length > 8
-    ) {
-      errors.push('Personality must be an array with 3-8 items');
+    if (!Array.isArray(this.personality)) {
+      errors.push('Personality must be an array');
+    } else if (this.personality.length < 3) {
+      errors.push(
+        `Personality array is below minimum (got ${this.personality.length} items, minimum is 3)`
+      );
+    } else if (this.personality.length > 8) {
+      errors.push(
+        `Personality array exceeds maximum (got ${this.personality.length} items, maximum is 8)`
+      );
     } else {
       this.personality.forEach((personalityItem, index) => {
         if (!personalityItem || typeof personalityItem !== 'object') {
@@ -289,12 +299,16 @@ export class Trait {
     }
 
     // Validate strengths
-    if (
-      !Array.isArray(this.strengths) ||
-      this.strengths.length < 2 ||
-      this.strengths.length > 6
-    ) {
-      errors.push('Strengths must be an array with 2-6 items');
+    if (!Array.isArray(this.strengths)) {
+      errors.push('Strengths must be an array');
+    } else if (this.strengths.length < 2) {
+      errors.push(
+        `Strengths array is below minimum (got ${this.strengths.length} items, minimum is 2)`
+      );
+    } else if (this.strengths.length > 6) {
+      errors.push(
+        `Strengths array exceeds maximum (got ${this.strengths.length} items, maximum is 6)`
+      );
     } else {
       this.strengths.forEach((strength, index) => {
         if (
@@ -308,12 +322,16 @@ export class Trait {
     }
 
     // Validate weaknesses
-    if (
-      !Array.isArray(this.weaknesses) ||
-      this.weaknesses.length < 2 ||
-      this.weaknesses.length > 6
-    ) {
-      errors.push('Weaknesses must be an array with 2-6 items');
+    if (!Array.isArray(this.weaknesses)) {
+      errors.push('Weaknesses must be an array');
+    } else if (this.weaknesses.length < 2) {
+      errors.push(
+        `Weaknesses array is below minimum (got ${this.weaknesses.length} items, minimum is 2)`
+      );
+    } else if (this.weaknesses.length > 6) {
+      errors.push(
+        `Weaknesses array exceeds maximum (got ${this.weaknesses.length} items, maximum is 6)`
+      );
     } else {
       this.weaknesses.forEach((weakness, index) => {
         if (
@@ -327,12 +345,16 @@ export class Trait {
     }
 
     // Validate likes
-    if (
-      !Array.isArray(this.likes) ||
-      this.likes.length < 3 ||
-      this.likes.length > 8
-    ) {
-      errors.push('Likes must be an array with 3-8 items');
+    if (!Array.isArray(this.likes)) {
+      errors.push('Likes must be an array');
+    } else if (this.likes.length < 3) {
+      errors.push(
+        `Likes array is below minimum (got ${this.likes.length} items, minimum is 3)`
+      );
+    } else if (this.likes.length > 8) {
+      errors.push(
+        `Likes array exceeds maximum (got ${this.likes.length} items, maximum is 8)`
+      );
     } else {
       this.likes.forEach((like, index) => {
         if (!like || typeof like !== 'string' || like.trim() === '') {
@@ -342,12 +364,16 @@ export class Trait {
     }
 
     // Validate dislikes
-    if (
-      !Array.isArray(this.dislikes) ||
-      this.dislikes.length < 3 ||
-      this.dislikes.length > 8
-    ) {
-      errors.push('Dislikes must be an array with 3-8 items');
+    if (!Array.isArray(this.dislikes)) {
+      errors.push('Dislikes must be an array');
+    } else if (this.dislikes.length < 3) {
+      errors.push(
+        `Dislikes array is below minimum (got ${this.dislikes.length} items, minimum is 3)`
+      );
+    } else if (this.dislikes.length > 8) {
+      errors.push(
+        `Dislikes array exceeds maximum (got ${this.dislikes.length} items, maximum is 8)`
+      );
     } else {
       this.dislikes.forEach((dislike, index) => {
         if (!dislike || typeof dislike !== 'string' || dislike.trim() === '') {
@@ -357,12 +383,16 @@ export class Trait {
     }
 
     // Validate fears
-    if (
-      !Array.isArray(this.fears) ||
-      this.fears.length < 1 ||
-      this.fears.length > 2
-    ) {
-      errors.push('Fears must be an array with 1-2 items');
+    if (!Array.isArray(this.fears)) {
+      errors.push('Fears must be an array');
+    } else if (this.fears.length < 1) {
+      errors.push(
+        `Fears array is below minimum (got ${this.fears.length} items, minimum is 1)`
+      );
+    } else if (this.fears.length > 2) {
+      errors.push(
+        `Fears array exceeds maximum (got ${this.fears.length} items, maximum is 2)`
+      );
     } else {
       this.fears.forEach((fear, index) => {
         if (!fear || typeof fear !== 'string' || fear.trim() === '') {
@@ -381,12 +411,16 @@ export class Trait {
         'Goals must be an object with shortTerm and longTerm properties'
       );
     } else {
-      if (
-        !Array.isArray(this.goals.shortTerm) ||
-        this.goals.shortTerm.length < 1 ||
-        this.goals.shortTerm.length > 3
-      ) {
-        errors.push('Goals.shortTerm must be an array with 1-3 items');
+      if (!Array.isArray(this.goals.shortTerm)) {
+        errors.push('Goals.shortTerm must be an array');
+      } else if (this.goals.shortTerm.length < 1) {
+        errors.push(
+          `Goals.shortTerm array is below minimum (got ${this.goals.shortTerm.length} items, minimum is 1)`
+        );
+      } else if (this.goals.shortTerm.length > 3) {
+        errors.push(
+          `Goals.shortTerm array exceeds maximum (got ${this.goals.shortTerm.length} items, maximum is 3)`
+        );
       } else {
         this.goals.shortTerm.forEach((goal, index) => {
           if (!goal || typeof goal !== 'string' || goal.trim() === '') {
@@ -407,12 +441,16 @@ export class Trait {
     }
 
     // Validate notes
-    if (
-      !Array.isArray(this.notes) ||
-      this.notes.length < 2 ||
-      this.notes.length > 6
-    ) {
-      errors.push('Notes must be an array with 2-6 items');
+    if (!Array.isArray(this.notes)) {
+      errors.push('Notes must be an array');
+    } else if (this.notes.length < 2) {
+      errors.push(
+        `Notes array is below minimum (got ${this.notes.length} items, minimum is 2)`
+      );
+    } else if (this.notes.length > 6) {
+      errors.push(
+        `Notes array exceeds maximum (got ${this.notes.length} items, maximum is 6)`
+      );
     } else {
       this.notes.forEach((note, index) => {
         if (!note || typeof note !== 'string' || note.trim() === '') {
@@ -425,16 +463,22 @@ export class Trait {
     if (!this.profile || typeof this.profile !== 'string') {
       errors.push('Profile is required and must be a string');
     } else if (this.profile.length < 200) {
-      errors.push('Profile is too short (min 200 characters)');
+      errors.push(
+        `Profile is below minimum (got ${this.profile.length} characters, minimum is 200)`
+      );
     }
 
     // Validate secrets
-    if (
-      !Array.isArray(this.secrets) ||
-      this.secrets.length < 1 ||
-      this.secrets.length > 2
-    ) {
-      errors.push('Secrets must be an array with 1-2 items');
+    if (!Array.isArray(this.secrets)) {
+      errors.push('Secrets must be an array');
+    } else if (this.secrets.length < 1) {
+      errors.push(
+        `Secrets array is below minimum (got ${this.secrets.length} items, minimum is 1)`
+      );
+    } else if (this.secrets.length > 2) {
+      errors.push(
+        `Secrets array exceeds maximum (got ${this.secrets.length} items, maximum is 2)`
+      );
     } else {
       this.secrets.forEach((secret, index) => {
         if (!secret || typeof secret !== 'string' || secret.trim() === '') {

@@ -416,9 +416,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.names.length < 3 || response.names.length > 5) {
+  const namesLen = response.names.length;
+  if (namesLen < 3) {
     throw new Error(
-      'TraitsGenerationPrompt: Names array must contain 3-5 items'
+      `TraitsGenerationPrompt: Names array is below minimum (got ${namesLen} items, minimum is 3)`
+    );
+  }
+  if (namesLen > 5) {
+    throw new Error(
+      `TraitsGenerationPrompt: Names array exceeds maximum (got ${namesLen} items, maximum is 5)`
     );
   }
 
@@ -458,12 +464,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (
-    response.physicalDescription.length < 100 ||
-    response.physicalDescription.length > 700
-  ) {
+  const physDescLen = response.physicalDescription.length;
+  if (physDescLen < 100) {
     throw new Error(
-      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
+      `TraitsGenerationPrompt: physicalDescription is below minimum (got ${physDescLen} characters, minimum is 100)`
+    );
+  }
+  if (physDescLen > 700) {
+    throw new Error(
+      `TraitsGenerationPrompt: physicalDescription exceeds maximum (got ${physDescLen} characters, maximum is 700)`
     );
   }
 
@@ -474,9 +483,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.personality.length < 3 || response.personality.length > 8) {
+  const personalityLen = response.personality.length;
+  if (personalityLen < 3) {
     throw new Error(
-      'TraitsGenerationPrompt: Personality array must contain 3-8 items'
+      `TraitsGenerationPrompt: Personality array is below minimum (got ${personalityLen} items, minimum is 3)`
+    );
+  }
+  if (personalityLen > 8) {
+    throw new Error(
+      `TraitsGenerationPrompt: Personality array exceeds maximum (got ${personalityLen} items, maximum is 8)`
     );
   }
 
@@ -513,9 +528,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.strengths.length < 2 || response.strengths.length > 6) {
+  const strengthsLen = response.strengths.length;
+  if (strengthsLen < 2) {
     throw new Error(
-      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
+      `TraitsGenerationPrompt: Strengths array is below minimum (got ${strengthsLen} items, minimum is 2)`
+    );
+  }
+  if (strengthsLen > 6) {
+    throw new Error(
+      `TraitsGenerationPrompt: Strengths array exceeds maximum (got ${strengthsLen} items, maximum is 6)`
     );
   }
 
@@ -538,9 +559,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.weaknesses.length < 2 || response.weaknesses.length > 6) {
+  const weaknessesLen = response.weaknesses.length;
+  if (weaknessesLen < 2) {
     throw new Error(
-      'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items'
+      `TraitsGenerationPrompt: Weaknesses array is below minimum (got ${weaknessesLen} items, minimum is 2)`
+    );
+  }
+  if (weaknessesLen > 6) {
+    throw new Error(
+      `TraitsGenerationPrompt: Weaknesses array exceeds maximum (got ${weaknessesLen} items, maximum is 6)`
     );
   }
 
@@ -563,9 +590,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.likes.length < 3 || response.likes.length > 8) {
+  const likesLen = response.likes.length;
+  if (likesLen < 3) {
     throw new Error(
-      'TraitsGenerationPrompt: Likes array must contain 3-8 items'
+      `TraitsGenerationPrompt: Likes array is below minimum (got ${likesLen} items, minimum is 3)`
+    );
+  }
+  if (likesLen > 8) {
+    throw new Error(
+      `TraitsGenerationPrompt: Likes array exceeds maximum (got ${likesLen} items, maximum is 8)`
     );
   }
 
@@ -584,9 +617,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.dislikes.length < 3 || response.dislikes.length > 8) {
+  const dislikesLen = response.dislikes.length;
+  if (dislikesLen < 3) {
     throw new Error(
-      'TraitsGenerationPrompt: Dislikes array must contain 3-8 items'
+      `TraitsGenerationPrompt: Dislikes array is below minimum (got ${dislikesLen} items, minimum is 3)`
+    );
+  }
+  if (dislikesLen > 8) {
+    throw new Error(
+      `TraitsGenerationPrompt: Dislikes array exceeds maximum (got ${dislikesLen} items, maximum is 8)`
     );
   }
 
@@ -609,9 +648,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.fears.length < 1 || response.fears.length > 2) {
+  const fearsLen = response.fears.length;
+  if (fearsLen < 1) {
     throw new Error(
-      'TraitsGenerationPrompt: Fears array must contain 1-2 items'
+      `TraitsGenerationPrompt: Fears array is below minimum (got ${fearsLen} items, minimum is 1)`
+    );
+  }
+  if (fearsLen > 2) {
+    throw new Error(
+      `TraitsGenerationPrompt: Fears array exceeds maximum (got ${fearsLen} items, maximum is 2)`
     );
   }
 
@@ -636,12 +681,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (
-    response.goals.shortTerm.length < 1 ||
-    response.goals.shortTerm.length > 3
-  ) {
+  const shortTermLen = response.goals.shortTerm.length;
+  if (shortTermLen < 1) {
     throw new Error(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
+      `TraitsGenerationPrompt: Short-term goals array is below minimum (got ${shortTermLen} items, minimum is 1)`
+    );
+  }
+  if (shortTermLen > 3) {
+    throw new Error(
+      `TraitsGenerationPrompt: Short-term goals array exceeds maximum (got ${shortTermLen} items, maximum is 3)`
     );
   }
 
@@ -670,9 +718,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.notes.length < 2 || response.notes.length > 6) {
+  const notesLen = response.notes.length;
+  if (notesLen < 2) {
     throw new Error(
-      'TraitsGenerationPrompt: Notes array must contain 2-6 items'
+      `TraitsGenerationPrompt: Notes array is below minimum (got ${notesLen} items, minimum is 2)`
+    );
+  }
+  if (notesLen > 6) {
+    throw new Error(
+      `TraitsGenerationPrompt: Notes array exceeds maximum (got ${notesLen} items, maximum is 6)`
     );
   }
 
@@ -691,9 +745,10 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.profile.length < 200) {
+  const profileLen = response.profile.length;
+  if (profileLen < 200) {
     throw new Error(
-      'TraitsGenerationPrompt: Profile must be at least 200 characters'
+      `TraitsGenerationPrompt: Profile is below minimum (got ${profileLen} characters, minimum is 200)`
     );
   }
 
@@ -704,9 +759,15 @@ export function validateTraitsGenerationResponse(response) {
     );
   }
 
-  if (response.secrets.length < 1 || response.secrets.length > 2) {
+  const secretsLen = response.secrets.length;
+  if (secretsLen < 1) {
     throw new Error(
-      'TraitsGenerationPrompt: Secrets array must contain 1-2 items'
+      `TraitsGenerationPrompt: Secrets array is below minimum (got ${secretsLen} items, minimum is 1)`
+    );
+  }
+  if (secretsLen > 2) {
+    throw new Error(
+      `TraitsGenerationPrompt: Secrets array exceeds maximum (got ${secretsLen} items, maximum is 2)`
     );
   }
 

@@ -1,0 +1,14 @@
+{
+  "id": "archive-scenario",
+  "version": "1.0.0",
+  "name": "archive-scenario",
+  "dependencies": [],
+  "content": {
+    "entities": {
+      "definitions": [
+        "audrey_salgado.character.json"
+      ],
+      "instances": []
+    }
+  }
+}

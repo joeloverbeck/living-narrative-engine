@@ -495,19 +495,26 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain names array');
   });
 
-  it('should validate names array length', () => {
+  it('should validate names array length - below minimum', () => {
     const response = createValidResponse();
     response.names = [{ name: 'Test', justification: 'Test' }]; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Names array must contain 3-5 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Names array is below minimum (got 1 items, minimum is 3)'
+    );
+  });
 
+  it('should validate names array length - above maximum', () => {
+    const response = createValidResponse();
     response.names = Array(6).fill({ name: 'Test', justification: 'Test' }); // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Names array must contain 3-5 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Names array exceeds maximum (got 6 items, maximum is 5)'
+    );
   });
 
   it('should validate name entries are objects', () => {
@@ -530,22 +537,25 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
-  it('should validate physical description', () => {
+  it('should validate physical description - below minimum', () => {
     const response = createValidResponse();
-    response.physicalDescription = 'Too short'; // Less than 100 chars
+    response.physicalDescription = 'Too short'; // Less than 100 chars (9 characters)
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
+      'TraitsGenerationPrompt: physicalDescription is below minimum (got 9 characters, minimum is 100)'
     );
+  });
 
+  it('should validate physical description - above maximum', () => {
+    const response = createValidResponse();
     response.physicalDescription = 'A'.repeat(701); // More than 700 chars
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: physicalDescription must be 100-700 characters'
+      'TraitsGenerationPrompt: physicalDescription exceeds maximum (got 701 characters, maximum is 700)'
     );
   });
 
@@ -560,14 +570,14 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
-  it('should validate personality array', () => {
+  it('should validate personality array - below minimum', () => {
     const response = createValidResponse();
     response.personality = [{ trait: 'Test', explanation: 'Test' }]; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Personality array must contain 3-8 items'
+      'TraitsGenerationPrompt: Personality array is below minimum (got 1 items, minimum is 3)'
     );
   });
 
@@ -618,16 +628,19 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
-  it('should validate strengths array', () => {
+  it('should validate strengths array - below minimum', () => {
     const response = createValidResponse();
     response.strengths = ['One']; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
+      'TraitsGenerationPrompt: Strengths array is below minimum (got 1 items, minimum is 2)'
     );
+  });
 
+  it('should validate strengths array - above maximum', () => {
+    const response = createValidResponse();
     response.strengths = [
       'One',
       'Two',
@@ -641,7 +654,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
+      'TraitsGenerationPrompt: Strengths array exceeds maximum (got 7 items, maximum is 6)'
     );
   });
 
@@ -654,14 +667,14 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain strengths array');
   });
 
-  it('should validate weaknesses array', () => {
+  it('should validate weaknesses array - below minimum', () => {
     const response = createValidResponse();
     response.weaknesses = ['One']; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items'
+      'TraitsGenerationPrompt: Weaknesses array is below minimum (got 1 items, minimum is 2)'
     );
   });
 
@@ -676,13 +689,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     );
   });
 
-  it('should validate likes array', () => {
+  it('should validate likes array - below minimum', () => {
     const response = createValidResponse();
     response.likes = ['One', 'Two']; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Likes array must contain 3-8 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Likes array is below minimum (got 2 items, minimum is 3)'
+    );
   });
 
   it('should require likes array', () => {
@@ -694,13 +709,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain likes array');
   });
 
-  it('should validate dislikes array', () => {
+  it('should validate dislikes array - below minimum', () => {
     const response = createValidResponse();
     response.dislikes = ['One', 'Two']; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Dislikes array must contain 3-8 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Dislikes array is below minimum (got 2 items, minimum is 3)'
+    );
   });
 
   it('should require dislikes array', () => {
@@ -712,19 +729,26 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain dislikes array');
   });
 
-  it('should validate fears array', () => {
+  it('should validate fears array - below minimum', () => {
     const response = createValidResponse();
     response.fears = []; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Fears array must contain 1-2 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Fears array is below minimum (got 0 items, minimum is 1)'
+    );
+  });
 
+  it('should validate fears array - above maximum', () => {
+    const response = createValidResponse();
     response.fears = ['One', 'Two', 'Three']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Fears array must contain 1-2 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Fears array exceeds maximum (got 3 items, maximum is 2)'
+    );
   });
 
   it('should require fears array', () => {
@@ -754,22 +778,25 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Goals must contain shortTerm array');
   });
 
-  it('should validate goals shortTerm array', () => {
+  it('should validate goals shortTerm array - below minimum', () => {
     const response = createValidResponse();
     response.goals.shortTerm = []; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
+      'TraitsGenerationPrompt: Short-term goals array is below minimum (got 0 items, minimum is 1)'
     );
+  });
 
+  it('should validate goals shortTerm array - above maximum', () => {
+    const response = createValidResponse();
     response.goals.shortTerm = ['One', 'Two', 'Three', 'Four']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items'
+      'TraitsGenerationPrompt: Short-term goals array exceeds maximum (got 4 items, maximum is 3)'
     );
   });
 
@@ -793,19 +820,26 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain notes array');
   });
 
-  it('should validate notes array', () => {
+  it('should validate notes array - below minimum', () => {
     const response = createValidResponse();
     response.notes = ['One']; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-6 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Notes array is below minimum (got 1 items, minimum is 2)'
+    );
+  });
 
+  it('should validate notes array - above maximum', () => {
+    const response = createValidResponse();
     response.notes = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Notes array must contain 2-6 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Notes array exceeds maximum (got 7 items, maximum is 6)'
+    );
   });
 
   it('should require profile string', () => {
@@ -817,14 +851,14 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).toThrow('TraitsGenerationPrompt: Response must contain profile string');
   });
 
-  it('should validate profile string length', () => {
+  it('should validate profile string length - below minimum', () => {
     const response = createValidResponse();
-    response.profile = 'Too short'; // Less than 200 chars
+    response.profile = 'Too short'; // Less than 200 chars (9 characters)
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: Profile must be at least 200 characters'
+      'TraitsGenerationPrompt: Profile is below minimum (got 9 characters, minimum is 200)'
     );
   });
 
@@ -837,19 +871,26 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
     }).not.toThrow();
   });
 
-  it('should validate secrets array', () => {
+  it('should validate secrets array - below minimum', () => {
     const response = createValidResponse();
     response.secrets = []; // Too few
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Secrets array must contain 1-2 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Secrets array is below minimum (got 0 items, minimum is 1)'
+    );
+  });
 
+  it('should validate secrets array - above maximum', () => {
+    const response = createValidResponse();
     response.secrets = ['One', 'Two', 'Three']; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Secrets array must contain 1-2 items');
+    }).toThrow(
+      'TraitsGenerationPrompt: Secrets array exceeds maximum (got 3 items, maximum is 2)'
+    );
   });
 
   it('should require secrets array', () => {

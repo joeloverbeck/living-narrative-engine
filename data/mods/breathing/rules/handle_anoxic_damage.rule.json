@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "breathing:handle_anoxic_damage",
+  "rule_id": "handle_anoxic_damage",
   "comment": "Stub rule dispatching event for HypoxiaTickSystem to apply brain damage.",
   "event_type": "core:turn_ended",
   "condition": {
