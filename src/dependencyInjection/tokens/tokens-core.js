@@ -88,6 +88,7 @@ export const coreTokens = freeze({
   DismemberedBodyPartSpawner: 'DismemberedBodyPartSpawner',
   BleedingTickSystem: 'BleedingTickSystem',
   BurningTickSystem: 'BurningTickSystem',
+  HypoxiaTickSystem: 'HypoxiaTickSystem',
   PoisonTickSystem: 'PoisonTickSystem',
   InjuryAggregationService: 'InjuryAggregationService',
   InjuryNarrativeFormatterService: 'InjuryNarrativeFormatterService',
