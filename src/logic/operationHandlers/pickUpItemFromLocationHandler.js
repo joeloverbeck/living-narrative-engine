@@ -8,7 +8,7 @@
  * 2. Retrieves actor's inventory component and verifies capacity
  * 3. Removes position component from item (making it locationless)
  * 4. Adds item to actor's inventory array
- * 5. Dispatches items-core:item_picked_up event
+ * 5. Dispatches inventory:item_picked_up event
  *
  * Related files:
  * @see data/schemas/operations/pickUpItemFromLocation.schema.json - Operation schema
@@ -24,10 +24,11 @@ import {
   validateStringParam,
 } from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'items-core:item_picked_up';
+import {
+  INVENTORY_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { ITEM_PICKED_UP_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} PickUpItemParams
@@ -155,7 +156,7 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
       this.#entityManager.removeComponent(itemEntity, POSITION_COMPONENT_ID);
 
       // Dispatch success event using the event bus signature of (eventId, payload)
-      this.#dispatcher.dispatch(ITEM_PICKED_UP_EVENT, {
+      this.#dispatcher.dispatch(ITEM_PICKED_UP_EVENT_ID, {
         actorEntity,
         itemEntity,
       });

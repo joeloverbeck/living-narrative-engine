@@ -59,3 +59,7 @@ export const EMPTY_COMPONENT_ID = 'drinking:empty';
 // Inventory components
 export const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 export const WEIGHT_COMPONENT_ID = 'core:weight';
+
+// Items components
+export const ITEM_COMPONENT_ID = 'items-core:item';
+export const PORTABLE_COMPONENT_ID = 'items-core:portable';

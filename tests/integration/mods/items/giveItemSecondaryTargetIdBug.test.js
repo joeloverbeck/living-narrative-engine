@@ -210,7 +210,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
   });
 
   describe('dispatch signature bug fix', () => {
-    it('dispatches items-core:item_transferred event with correct signature', async () => {
+    it('dispatches inventory:item_transferred event with correct signature', async () => {
       // Arrange: Create test entities
       const room = new ModEntityBuilder('test-room')
         .asRoom('Test Room')
@@ -252,13 +252,13 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
         },
       });
 
-      // Assert: Verify items-core:item_transferred event was dispatched
+      // Assert: Verify inventory:item_transferred event was dispatched
       const itemTransferredEvent = testFixture.events.find(
-        (e) => e.eventType === 'items-core:item_transferred'
+        (e) => e.eventType === 'inventory:item_transferred'
       );
 
       expect(itemTransferredEvent).toBeDefined();
-      expect(itemTransferredEvent.eventType).toBe('items-core:item_transferred');
+      expect(itemTransferredEvent.eventType).toBe('inventory:item_transferred');
       expect(itemTransferredEvent.payload).toMatchObject({
         fromEntity: 'test:actor1',
         toEntity: 'test:actor2',

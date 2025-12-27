@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "items-core:item_dropped",
+  "id": "inventory:item_dropped",
   "description": "Dispatched when an item is dropped at a location",
   "payloadSchema": {
     "type": "object",

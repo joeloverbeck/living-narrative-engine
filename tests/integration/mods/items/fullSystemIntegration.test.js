@@ -146,7 +146,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       ]);
       await fixtures.drop.executeAction('test-actor', 'owned-item');
       expect(
-        fixtures.drop.events.some((e) => e.eventType === 'items-core:item_dropped')
+        fixtures.drop.events.some((e) => e.eventType === 'inventory:item_dropped')
       ).toBe(true);
 
       // Test pick_up_item
@@ -172,7 +172,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       await fixtures.pickup.executeAction('test-actor', 'owned-item');
       expect(
         fixtures.pickup.events.some(
-          (e) => e.eventType === 'items-core:item_picked_up'
+          (e) => e.eventType === 'inventory:item_picked_up'
         )
       ).toBe(true);
 

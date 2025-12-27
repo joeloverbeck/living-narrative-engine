@@ -35,7 +35,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
     testFixture.cleanup();
   });
 
-  it('should dispatch items-core:item_dropped event with correct payload structure', async () => {
+  it('should dispatch inventory:item_dropped event with correct payload structure', async () => {
     // Arrange: Create scenario with actor holding an item (with grabbing hands for prerequisite)
     const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
@@ -63,9 +63,9 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
     // Act: Execute drop item action
     await testFixture.executeAction('test:actor1', 'test-item');
 
-    // Assert: Verify items-core:item_dropped event was dispatched
+    // Assert: Verify inventory:item_dropped event was dispatched
     const itemDroppedEvent = testFixture.events.find(
-      (e) => e.eventType === 'items-core:item_dropped'
+      (e) => e.eventType === 'inventory:item_dropped'
     );
 
     // With the buggy code, this event would not exist because:
@@ -161,7 +161,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
 
     // Assert: Verify the event was successfully dispatched and validated
     const itemDroppedEvent = testFixture.events.find(
-      (e) => e.eventType === 'items-core:item_dropped'
+      (e) => e.eventType === 'inventory:item_dropped'
     );
 
     expect(itemDroppedEvent).toBeDefined();

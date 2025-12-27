@@ -1,6 +1,13 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 import DropItemAtLocationHandler from '../../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  ITEM_DROPPED_EVENT_ID,
+} from '../../../../src/constants/eventIds.js';
+import {
+  INVENTORY_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 const createLogger = () => ({
   info: jest.fn(),
@@ -18,7 +25,7 @@ const createEntityManager = () => ({
   batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
   getEntityInstance: jest.fn(() => ({
     getComponentTypeIds: jest.fn(() => [
-      'core:position',
+      POSITION_COMPONENT_ID,
       'items-core:item',
       'items-core:portable',
     ]),
@@ -87,11 +94,11 @@ describe('DropItemAtLocationHandler', () => {
     expect(result).toEqual({ success: false, error: 'no_inventory' });
     expect(entityManager.getComponentData).toHaveBeenCalledWith(
       'actor-123',
-      'inventory:inventory'
+      INVENTORY_COMPONENT_ID
     );
     expect(logger.warn).toHaveBeenCalledWith(
       'DropItemAtLocationHandler: [DROP_ITEM] No inventory component on actor',
-      { actorEntity: 'actor-123', componentType: 'inventory:inventory' }
+      { actorEntity: 'actor-123', componentType: INVENTORY_COMPONENT_ID }
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(entityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
@@ -131,13 +138,13 @@ describe('DropItemAtLocationHandler', () => {
     expect(result).toEqual({ success: true });
     expect(entityManager.getComponentData).toHaveBeenCalledWith(
       'actor-123',
-      'inventory:inventory'
+      INVENTORY_COMPONENT_ID
     );
     expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
       [
         {
           instanceId: 'actor-123',
-          componentTypeId: 'inventory:inventory',
+          componentTypeId: INVENTORY_COMPONENT_ID,
           componentData: {
             items: ['item-123'],
             capacity: 10,
@@ -145,13 +152,13 @@ describe('DropItemAtLocationHandler', () => {
         },
         {
           instanceId: 'item-999',
-          componentTypeId: 'core:position',
+          componentTypeId: POSITION_COMPONENT_ID,
           componentData: { locationId: 'loc-42' },
         },
       ],
       true
     );
-    expect(dispatcher.dispatch).toHaveBeenCalledWith('items-core:item_dropped', {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_DROPPED_EVENT_ID, {
       actorEntity: 'actor-123',
       itemEntity: 'item-999',
       locationId: 'loc-42',
@@ -172,7 +179,7 @@ describe('DropItemAtLocationHandler', () => {
 
     entityManager.getComponentData.mockImplementation(
       (entityId, componentId) => {
-        if (entityId === 'actor-123' && componentId === 'inventory:inventory') {
+        if (entityId === 'actor-123' && componentId === INVENTORY_COMPONENT_ID) {
           return { items: ['item-999'], capacity: 3 };
         }
         return null;
@@ -196,7 +203,7 @@ describe('DropItemAtLocationHandler', () => {
     );
     expect(infoCall?.[1]).toMatchObject({ allComponents: 'N/A' });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      'items-core:item_dropped',
+      ITEM_DROPPED_EVENT_ID,
       expect.objectContaining({
         actorEntity: 'actor-123',
         itemEntity: 'item-999',

@@ -8,7 +8,7 @@
  * 2. Retrieves actor's inventory component and verifies item exists
  * 3. Prepares batch updates: removes item from inventory and sets item position
  * 4. Applies updates atomically using batchAddComponentsOptimized
- * 5. Dispatches items-core:item_dropped event
+ * 5. Dispatches inventory:item_dropped event
  *
  * Related files:
  * @see data/schemas/operations/dropItemAtLocation.schema.json - Operation schema
@@ -24,10 +24,13 @@ import {
   validateStringParam,
 } from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_DROPPED_EVENT = 'items-core:item_dropped';
+import {
+  INVENTORY_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+  ITEM_COMPONENT_ID,
+  PORTABLE_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { ITEM_DROPPED_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} DropItemParams
@@ -236,11 +239,11 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       );
       const itemItemMarker = this.#entityManager.getComponentData(
         itemEntity,
-        'items-core:item'
+        ITEM_COMPONENT_ID
       );
       const itemPortableMarker = this.#entityManager.getComponentData(
         itemEntity,
-        'items-core:portable'
+        PORTABLE_COMPONENT_ID
       );
 
       log.debug('[DROP_ITEM] POST-DROP VERIFICATION', {
@@ -257,10 +260,10 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
 
       // Dispatch success event using the event bus signature of (eventId, payload)
       log.debug('[DROP_ITEM] Dispatching item_dropped event', {
-        eventType: ITEM_DROPPED_EVENT,
+        eventType: ITEM_DROPPED_EVENT_ID,
         payload: { actorEntity, itemEntity, locationId },
       });
-      this.#dispatcher.dispatch(ITEM_DROPPED_EVENT, {
+      this.#dispatcher.dispatch(ITEM_DROPPED_EVENT_ID, {
         actorEntity,
         itemEntity,
         locationId,

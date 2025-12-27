@@ -115,13 +115,50 @@
       "required": ["thresholdFraction"],
       "additionalProperties": false
     },
+    "hypoxiaSeverityEntry": {
+      "type": "object",
+      "properties": {
+        "actionPenalty": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["actionPenalty"],
+      "additionalProperties": false
+    },
+    "hypoxiaDefaults": {
+      "type": "object",
+      "properties": {
+        "turnsToModerate": { "type": "integer", "minimum": 1 },
+        "turnsToSevere": { "type": "integer", "minimum": 1 },
+        "turnsToUnconscious": { "type": "integer", "minimum": 1 },
+        "severity": {
+          "type": "object",
+          "properties": {
+            "mild": { "$ref": "#/definitions/hypoxiaSeverityEntry" },
+            "moderate": { "$ref": "#/definitions/hypoxiaSeverityEntry" },
+            "severe": { "$ref": "#/definitions/hypoxiaSeverityEntry" }
+          },
+          "required": ["mild", "moderate", "severe"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["turnsToUnconscious", "severity"],
+      "additionalProperties": false
+    },
+    "anoxicUnconsciousnessDefaults": {
+      "type": "object",
+      "properties": {
+        "turnsToBrainDamage": { "type": "integer", "minimum": 1 },
+        "brainDamagePerTurn": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["turnsToBrainDamage", "brainDamagePerTurn"],
+      "additionalProperties": false
+    },
     "statusEffect": {
       "type": "object",
       "properties": {
         "id": { "type": "string", "pattern": "^[a-zA-Z0-9_:-]+$" },
         "effectType": {
           "type": "string",
-          "enum": ["bleed", "burn", "poison", "fracture", "dismember"]
+          "enum": ["bleed", "burn", "poison", "fracture", "dismember", "hypoxia", "anoxic_unconsciousness"]
         },
         "componentId": { "type": "string", "minLength": 1 },
         "startedEventId": { "type": "string", "minLength": 1 },
@@ -164,6 +201,20 @@
           "if": { "properties": { "effectType": { "const": "dismember" } } },
           "then": {
             "properties": { "defaults": { "$ref": "#/definitions/dismemberDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "hypoxia" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/hypoxiaDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "anoxic_unconsciousness" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/anoxicUnconsciousnessDefaults" } },
             "required": ["defaults"]
           }
         }

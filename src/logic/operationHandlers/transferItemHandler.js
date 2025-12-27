@@ -22,9 +22,8 @@
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
+import { INVENTORY_COMPONENT_ID } from '../../constants/componentIds.js';
+import { ITEM_TRANSFERRED_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} TransferItemParams
@@ -175,7 +174,7 @@ class TransferItemHandler extends BaseOperationHandler {
       await this.#entityManager.batchAddComponentsOptimized(updates, true);
 
       // Dispatch success event
-      this.#dispatcher.dispatch(ITEM_TRANSFERRED_EVENT, {
+      this.#dispatcher.dispatch(ITEM_TRANSFERRED_EVENT_ID, {
         fromEntity,
         toEntity,
         itemEntity,

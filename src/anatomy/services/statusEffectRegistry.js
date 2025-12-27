@@ -30,9 +30,8 @@ class StatusEffectRegistry extends BaseService {
     }
 
     const entries = this.#dataRegistry.getAll('statusEffects');
-    const latest = entries[entries.length - 1];
 
-    if (!latest) {
+    if (!entries || entries.length === 0) {
       this.#logger.warn(
         'StatusEffectRegistry: No status-effect registry entries found in data registry.'
       );
@@ -40,20 +39,30 @@ class StatusEffectRegistry extends BaseService {
       return;
     }
 
+    // Aggregate effects from ALL registries, not just the last one.
+    // Later entries override earlier ones if they have the same effect ID.
     const effects = new Map();
-    if (Array.isArray(latest.effects)) {
-      for (const effect of latest.effects) {
-        if (effect?.id) {
-          effects.set(effect.id, effect);
+    const applyOrderSet = new Set();
+
+    for (const registry of entries) {
+      if (Array.isArray(registry.effects)) {
+        for (const effect of registry.effects) {
+          if (effect?.id) {
+            effects.set(effect.id, effect);
+          }
+        }
+      }
+      // Merge applyOrder arrays, preserving order and avoiding duplicates
+      if (Array.isArray(registry.applyOrder)) {
+        for (const effectId of registry.applyOrder) {
+          applyOrderSet.add(effectId);
         }
       }
     }
 
     this.#cache = {
       effects,
-      applyOrder: Array.isArray(latest.applyOrder)
-        ? [...latest.applyOrder]
-        : [],
+      applyOrder: Array.from(applyOrderSet),
     };
   }
 

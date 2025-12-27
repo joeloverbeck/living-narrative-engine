@@ -164,7 +164,7 @@ describe('drop_item action handler instantiation and execution', () => {
         (e) => e.eventType === 'core:attempt_action'
       );
       const itemDropped = testFixture.events.find(
-        (e) => e.eventType === 'items-core:item_dropped'
+        (e) => e.eventType === 'inventory:item_dropped'
       );
       const turnEnded = testFixture.events.find(
         (e) => e.eventType === 'core:turn_ended'

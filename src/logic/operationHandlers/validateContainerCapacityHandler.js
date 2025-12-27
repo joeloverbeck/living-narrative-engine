@@ -23,9 +23,10 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const CONTAINER_COMPONENT_ID = 'containers-core:container';
-const WEIGHT_COMPONENT_ID = 'core:weight';
+import {
+  CONTAINER_COMPONENT_ID,
+  WEIGHT_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 /**
  * @typedef {object} ValidateContainerCapacityParams

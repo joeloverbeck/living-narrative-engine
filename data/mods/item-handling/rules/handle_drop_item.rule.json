@@ -111,7 +111,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Notify that an item was dropped",
       "parameters": {
-        "eventType": "items-core:item_dropped",
+        "eventType": "inventory:item_dropped",
         "payload": {
           "actorEntity": "{event.payload.actorId}",
           "itemEntity": "{event.payload.targetId}",

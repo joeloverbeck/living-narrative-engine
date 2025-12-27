@@ -70,12 +70,12 @@ describe('item-handling:drop_item action integration', () => {
         locationId: scenario.room.id,
       });
 
-      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
+      expect(testFixture.events).toDispatchEvent('inventory:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess('Alice drops letter-1.');
 
       const itemDroppedEvent = testFixture.events.find(
-        (event) => event.eventType === 'items-core:item_dropped'
+        (event) => event.eventType === 'inventory:item_dropped'
       );
       expect(itemDroppedEvent?.payload.actorEntity).toBe(scenario.actor.id);
       expect(itemDroppedEvent?.payload.itemEntity).toBe(scenario.item.id);

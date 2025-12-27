@@ -17,13 +17,14 @@ import {
 
 import PickUpItemFromLocationHandler from '../../../../src/logic/operationHandlers/pickUpItemFromLocationHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  INVENTORY_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { ITEM_PICKED_UP_EVENT_ID } from '../../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const POSITION_COMPONENT_ID = 'core:position';
-const ITEM_PICKED_UP_EVENT = 'items-core:item_picked_up';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -158,7 +159,7 @@ describe('PickUpItemFromLocationHandler', () => {
 
       await handler.execute({ actorEntity, itemEntity }, ctx);
 
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_PICKED_UP_EVENT, {
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_PICKED_UP_EVENT_ID, {
         actorEntity,
         itemEntity,
       });
@@ -301,7 +302,7 @@ describe('PickUpItemFromLocationHandler', () => {
 
       // Should only dispatch system error, not item_picked_up event
       const pickupEventCalls = dispatcher.dispatch.mock.calls.filter(
-        (call) => call[0] === ITEM_PICKED_UP_EVENT
+        (call) => call[0] === ITEM_PICKED_UP_EVENT_ID
       );
       expect(pickupEventCalls).toHaveLength(0);
     });

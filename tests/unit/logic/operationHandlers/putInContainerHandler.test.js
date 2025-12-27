@@ -9,6 +9,11 @@ import {
 import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 import * as safeDispatchErrorUtils from '../../../../src/utils/safeDispatchErrorUtils.js';
 import PutInContainerHandler from '../../../../src/logic/operationHandlers/putInContainerHandler.js';
+import { ITEM_PUT_IN_CONTAINER_EVENT_ID } from '../../../../src/constants/eventIds.js';
+import {
+  INVENTORY_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 describe('PutInContainerHandler', () => {
   let handler;
@@ -78,14 +83,14 @@ describe('PutInContainerHandler', () => {
         [
           expect.objectContaining({
             instanceId: 'actor1',
-            componentTypeId: 'inventory:inventory',
+            componentTypeId: INVENTORY_COMPONENT_ID,
             componentData: expect.objectContaining({
               items: ['item2'],
             }),
           }),
           expect.objectContaining({
             instanceId: 'container1',
-            componentTypeId: 'containers-core:container',
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: expect.objectContaining({
               isOpen: true,
               contents: ['existingItem', 'item1'],
@@ -97,7 +102,7 @@ describe('PutInContainerHandler', () => {
 
       // Verify event was dispatched
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'containers:item_put_in_container',
+        ITEM_PUT_IN_CONTAINER_EVENT_ID,
         expect.objectContaining({
           actorEntity: 'actor1',
           containerEntity: 'container1',
