@@ -1,6 +1,14 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 import OpenContainerHandler from '../../../../src/logic/operationHandlers/openContainerHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  CONTAINER_OPENED_EVENT_ID,
+} from '../../../../src/constants/eventIds.js';
+import {
+  OPENABLE_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+  INVENTORY_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 const createLogger = () => ({
   info: jest.fn(),
@@ -130,7 +138,7 @@ describe('OpenContainerHandler', () => {
       });
       expect(entityManager.getComponentData).toHaveBeenCalledWith(
         'container-456',
-        'items-core:openable'
+        OPENABLE_COMPONENT_ID
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Container is not openable',
@@ -179,17 +187,17 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         1,
         'container-456',
-        'items-core:openable'
+        OPENABLE_COMPONENT_ID
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
         'container-456',
-        'containers-core:container'
+        CONTAINER_COMPONENT_ID
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         3,
         'actor-123',
-        'inventory:inventory'
+        INVENTORY_COMPONENT_ID
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Actor does not have required key',
@@ -216,7 +224,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         3,
         'actor-123',
-        'inventory:inventory'
+        INVENTORY_COMPONENT_ID
       );
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Actor does not have required key',
@@ -245,7 +253,7 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'containers-core:container',
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
               isOpen: true,
               requiresKey: true,
@@ -257,7 +265,7 @@ describe('OpenContainerHandler', () => {
         true
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'containers:container_opened',
+        CONTAINER_OPENED_EVENT_ID,
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -286,18 +294,18 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         1,
         'container-456',
-        'items-core:openable'
+        OPENABLE_COMPONENT_ID
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
         'container-456',
-        'containers-core:container'
+        CONTAINER_COMPONENT_ID
       );
       expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'containers-core:container',
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: {
               isOpen: true,
               contents: ['gold_bar', 'revolver'],
@@ -308,7 +316,7 @@ describe('OpenContainerHandler', () => {
         true
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'containers:container_opened',
+        CONTAINER_OPENED_EVENT_ID,
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -334,7 +342,7 @@ describe('OpenContainerHandler', () => {
 
       expect(result).toEqual({ success: true, contents: [] });
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'containers:container_opened',
+        CONTAINER_OPENED_EVENT_ID,
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -357,13 +365,13 @@ describe('OpenContainerHandler', () => {
 
       expect(entityManager.getComponentData).toHaveBeenCalledWith(
         'container-456',
-        'items-core:openable'
+        OPENABLE_COMPONENT_ID
       );
       expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'containers-core:container',
+            componentTypeId: CONTAINER_COMPONENT_ID,
             componentData: { isOpen: true, contents: ['item-1'] },
           },
         ],

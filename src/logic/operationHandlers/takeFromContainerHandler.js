@@ -22,10 +22,11 @@
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const CONTAINER_COMPONENT_ID = 'containers-core:container';
-const ITEM_TAKEN_EVENT = 'containers:item_taken_from_container';
+import {
+  INVENTORY_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { ITEM_TAKEN_FROM_CONTAINER_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} TakeFromContainerParams
@@ -196,7 +197,7 @@ class TakeFromContainerHandler extends BaseOperationHandler {
 
       await this.#entityManager.batchAddComponentsOptimized(updates, true);
 
-      this.#dispatcher.dispatch(ITEM_TAKEN_EVENT, {
+      this.#dispatcher.dispatch(ITEM_TAKEN_FROM_CONTAINER_EVENT_ID, {
         actorEntity,
         containerEntity,
         itemEntity,

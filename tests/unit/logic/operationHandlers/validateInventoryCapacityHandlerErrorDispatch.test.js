@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ValidateInventoryCapacityHandler from '../../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', () => {
   let handler;
@@ -71,7 +72,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert: Find system error event
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();
@@ -111,7 +112,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert: Find system error event
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();
@@ -145,7 +146,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert: Find system error event
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();
@@ -175,7 +176,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert: Find system error event
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();
@@ -208,7 +209,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();
@@ -239,7 +240,7 @@ describe('ValidateInventoryCapacityHandler - Error Dispatch Schema Validation', 
 
       // Assert
       const systemErrorEvent = dispatchedEvents.find(
-        (e) => e.eventType === 'core:system_error_occurred'
+        (e) => e.eventType === SYSTEM_ERROR_OCCURRED_ID
       );
 
       expect(systemErrorEvent).toBeDefined();

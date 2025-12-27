@@ -83,7 +83,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       );
       expect(wieldingComponent).toBeNull();
 
-      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
+      expect(testFixture.events).toDispatchEvent('inventory:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess(
         'Fighter drops Iron Sword.'
@@ -138,7 +138,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       });
 
       // Verify success
-      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
+      expect(testFixture.events).toDispatchEvent('inventory:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toHaveActionSuccess(
         'Warrior drops Greatsword.'
@@ -326,10 +326,10 @@ describe('item-handling:drop_wielded_item action integration', () => {
 
       await testFixture.executeAction('blacksmith', 'axe');
 
-      expect(testFixture.events).toDispatchEvent('items-core:item_dropped');
+      expect(testFixture.events).toDispatchEvent('inventory:item_dropped');
 
       const itemDroppedEvent = testFixture.events.find(
-        (event) => event.eventType === 'items-core:item_dropped'
+        (event) => event.eventType === 'inventory:item_dropped'
       );
 
       expect(itemDroppedEvent?.payload.actorEntity).toBe('blacksmith');

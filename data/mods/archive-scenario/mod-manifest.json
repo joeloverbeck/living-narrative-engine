@@ -2,13 +2,21 @@
   "id": "archive-scenario",
   "version": "1.0.0",
   "name": "archive-scenario",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "entities": {
       "definitions": [
-        "audrey_salgado.character.json"
+        "julia_halstead.character.json"
       ],
       "instances": []
-    }
+    },
+    "recipes": [
+      "julia_halstead.recipe.json"
+    ]
   }
 }

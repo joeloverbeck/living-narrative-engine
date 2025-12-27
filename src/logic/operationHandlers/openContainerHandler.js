@@ -25,11 +25,12 @@ import {
 } from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const CONTAINER_OPENED_EVENT = 'containers:container_opened';
-const OPENABLE_COMPONENT_ID = 'items-core:openable';
-const CONTAINER_COMPONENT_ID = 'containers-core:container';
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
+import {
+  OPENABLE_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+  INVENTORY_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { CONTAINER_OPENED_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} OpenContainerParams
@@ -281,7 +282,7 @@ class OpenContainerHandler extends BaseOperationHandler {
         true
       );
 
-      this.#dispatcher.dispatch(CONTAINER_OPENED_EVENT, {
+      this.#dispatcher.dispatch(CONTAINER_OPENED_EVENT_ID, {
         actorEntity,
         containerEntity,
         contents,

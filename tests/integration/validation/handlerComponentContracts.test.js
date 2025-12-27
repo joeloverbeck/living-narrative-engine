@@ -100,6 +100,45 @@ async function listModDirectories() {
   return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 }
 
+async function readModManifest(modDir) {
+  const manifestCandidates = ['mod-manifest.json', 'mod.manifest.json'];
+  for (const filename of manifestCandidates) {
+    try {
+      const manifestPath = path.join(modDir, filename);
+      const content = await fs.readFile(manifestPath, 'utf8');
+      return JSON.parse(content);
+    } catch {
+      // Try the next candidate.
+    }
+  }
+  return null;
+}
+
+async function buildEventIdToModIdMap(availableMods) {
+  const map = new Map();
+  for (const modId of availableMods) {
+    const modDir = path.join(process.cwd(), 'data', 'mods', modId);
+    const manifest = await readModManifest(modDir);
+    const events = manifest?.content?.events;
+    if (!Array.isArray(events) || events.length === 0) {
+      continue;
+    }
+    for (const eventFile of events) {
+      const eventPath = path.join(modDir, 'events', eventFile);
+      try {
+        const content = await fs.readFile(eventPath, 'utf8');
+        const eventDefinition = JSON.parse(content);
+        if (eventDefinition?.id && !map.has(eventDefinition.id)) {
+          map.set(eventDefinition.id, modId);
+        }
+      } catch {
+        // Ignore missing/invalid event files and continue.
+      }
+    }
+  }
+  return map;
+}
+
 function collectModIds(values, availableMods) {
   const modIds = new Set();
   for (const value of values) {
@@ -141,9 +180,17 @@ describe('Handler Component Contracts', () => {
     const eventValues = Object.values(eventIds).filter(
       (value) => typeof value === 'string' && !EXCLUDED_EVENT_IDS.has(value)
     );
+    const eventIdToModId = await buildEventIdToModIdMap(availableMods);
     const modsToLoad = [
       ...collectModIds(componentValues, availableMods),
-      ...collectModIds(eventValues, availableMods),
+      ...eventValues.flatMap((value) => {
+        const mappedModId = eventIdToModId.get(value);
+        if (mappedModId) {
+          return [mappedModId];
+        }
+        const [modId] = value.split(':');
+        return availableMods.has(modId) ? [modId] : [];
+      }),
     ];
     const uniqueMods = Array.from(new Set(modsToLoad)).sort();
 

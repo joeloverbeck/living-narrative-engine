@@ -16,13 +16,14 @@ import {
 } from '@jest/globals';
 
 import TransferItemHandler from '../../../../src/logic/operationHandlers/transferItemHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  ITEM_TRANSFERRED_EVENT_ID,
+} from '../../../../src/constants/eventIds.js';
+import { INVENTORY_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const ITEM_TRANSFERRED_EVENT = 'items-core:item_transferred';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -157,7 +158,7 @@ describe('TransferItemHandler', () => {
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TRANSFERRED_EVENT, {
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TRANSFERRED_EVENT_ID, {
         fromEntity: 'actor1',
         toEntity: 'actor2',
         itemEntity: 'item2',
@@ -426,7 +427,7 @@ describe('TransferItemHandler', () => {
         INVENTORY_COMPONENT_ID
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_TRANSFERRED_EVENT,
+        ITEM_TRANSFERRED_EVENT_ID,
         expect.objectContaining({
           fromEntity: 'actor1',
           toEntity: 'actor2',

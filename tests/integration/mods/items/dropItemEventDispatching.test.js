@@ -34,7 +34,7 @@ describe('Drop Item - Event Dispatching', () => {
   });
 
   describe('Event Name Validation', () => {
-    it('should dispatch items-core:item_dropped event (not ITEM_DROPPED)', async () => {
+    it('should dispatch inventory:item_dropped event (not ITEM_DROPPED)', async () => {
       // Arrange: Create test scenario with actor and item (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('test-room')
         .asRoom('Test Room')
@@ -64,10 +64,10 @@ describe('Drop Item - Event Dispatching', () => {
       // Act: Execute drop action
       await testFixture.executeAction('test:actor1', 'test-item');
 
-      // Assert: Verify namespaced event was dispatched (items-core:item_dropped)
+      // Assert: Verify namespaced event was dispatched (inventory:item_dropped)
       // This test will FAIL if handler dispatches 'ITEM_DROPPED' instead
       const itemDroppedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items-core:item_dropped'
+        (e) => e.eventType === 'inventory:item_dropped'
       );
 
       expect(itemDroppedEvent).toBeDefined();
@@ -80,7 +80,7 @@ describe('Drop Item - Event Dispatching', () => {
       expect(wrongEventName).toBeUndefined();
     });
 
-    it('should include correct payload structure in items-core:item_dropped event', async () => {
+    it('should include correct payload structure in inventory:item_dropped event', async () => {
       // Arrange (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('saloon').asRoom('Saloon').build();
 
@@ -110,7 +110,7 @@ describe('Drop Item - Event Dispatching', () => {
 
       // Assert: Verify payload structure matches event schema
       const itemDroppedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items-core:item_dropped'
+        (e) => e.eventType === 'inventory:item_dropped'
       );
 
       expect(itemDroppedEvent).toBeDefined();
@@ -157,7 +157,7 @@ describe('Drop Item - Event Dispatching', () => {
       // Assert: Check that event was successfully dispatched without validation errors
       // If event name or payload is wrong, ValidatedEventDispatcher would log errors
       const itemDroppedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items-core:item_dropped'
+        (e) => e.eventType === 'inventory:item_dropped'
       );
 
       expect(itemDroppedEvent).toBeDefined();
@@ -166,14 +166,14 @@ describe('Drop Item - Event Dispatching', () => {
       const validationErrors = testFixture.events.filter(
         (e) =>
           e.eventType === 'core:system_error_occurred' &&
-          e.payload?.message?.includes('items-core:item_dropped')
+          e.payload?.message?.includes('inventory:item_dropped')
       );
       expect(validationErrors).toHaveLength(0);
     });
   });
 
   describe('Event Timing and Order', () => {
-    it('should dispatch items-core:item_dropped before turn_ended', async () => {
+    it('should dispatch inventory:item_dropped before turn_ended', async () => {
       // Arrange (with grabbing hands for prerequisite)
       const room = new ModEntityBuilder('kitchen').asRoom('Kitchen').build();
 
@@ -203,7 +203,7 @@ describe('Drop Item - Event Dispatching', () => {
 
       // Assert: Verify event order
       const itemDroppedIndex = testFixture.events.findIndex(
-        (e) => e.eventType === 'items-core:item_dropped'
+        (e) => e.eventType === 'inventory:item_dropped'
       );
       const turnEndedIndex = testFixture.events.findIndex(
         (e) => e.eventType === 'core:turn_ended'

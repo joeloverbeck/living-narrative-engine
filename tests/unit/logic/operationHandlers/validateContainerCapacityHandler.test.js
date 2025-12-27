@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ValidateContainerCapacityHandler from '../../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 describe('ValidateContainerCapacityHandler', () => {
   let handler;
@@ -331,7 +331,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       // Verify error event was dispatched
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:system_error_occurred',
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('result_variable is required'),
           details: expect.objectContaining({

@@ -1,0 +1,83 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "archive-scenario:julia_halstead_recipe",
+  "blueprintId": "anatomy:human_female",
+  "bodyDescriptors": {
+    "height": "tall",
+    "skinColor": "pale, avoids sunlight",
+    "build": "slim",
+    "composition": "underweight",
+    "hairDensity": "light",
+    "smell": "chlorine from lake swimming, faint sweat"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_female_torso_slim"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head_beautiful"
+    },
+    "hair": {
+      "partType": "hair",
+      "preferId": "anatomy:human_hair_black_medium_ponytail"
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy:humanoid_nose"
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "left_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    },
+    "right_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_slim"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_long_lean"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy:human_hand"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["left_ear", "right_ear"],
+      "partType": "ear",
+      "preferId": "anatomy:humanoid_ear"
+    },
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_brown"
+    }
+  ]
+}

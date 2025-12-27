@@ -24,6 +24,16 @@ export const LIQUID_CONSUMED_EVENT_ID = 'drinking:liquid_consumed';
 export const LIQUID_CONSUMED_ENTIRELY_EVENT_ID =
   'drinking:liquid_consumed_entirely';
 
+// Inventory/Container system event IDs
+export const ITEM_DROPPED_EVENT_ID = 'inventory:item_dropped';
+export const ITEM_PICKED_UP_EVENT_ID = 'inventory:item_picked_up';
+export const ITEM_TRANSFERRED_EVENT_ID = 'inventory:item_transferred';
+export const ITEM_PUT_IN_CONTAINER_EVENT_ID =
+  'containers:item_put_in_container';
+export const ITEM_TAKEN_FROM_CONTAINER_EVENT_ID =
+  'containers:item_taken_from_container';
+export const CONTAINER_OPENED_EVENT_ID = 'containers:container_opened';
+
 /**
  * @typedef {object} DisplaySpeechPayload
  * @property {string} entityId The ID of the entity that spoke. Used to fetch the portrait.

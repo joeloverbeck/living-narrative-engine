@@ -23,10 +23,11 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const CONTAINER_COMPONENT_ID = 'containers-core:container';
-const ITEM_PUT_EVENT = 'containers:item_put_in_container';
+import {
+  INVENTORY_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { ITEM_PUT_IN_CONTAINER_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} PutInContainerParams
@@ -265,7 +266,7 @@ class PutInContainerHandler extends BaseOperationHandler {
 
       await this.#entityManager.batchAddComponentsOptimized(updates, true);
 
-      this.#dispatcher.dispatch(ITEM_PUT_EVENT, {
+      this.#dispatcher.dispatch(ITEM_PUT_IN_CONTAINER_EVENT_ID, {
         actorEntity,
         containerEntity,
         itemEntity,

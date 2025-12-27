@@ -17,13 +17,14 @@ import {
 
 import TakeFromContainerHandler from '../../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  INVENTORY_COMPONENT_ID,
+  CONTAINER_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { ITEM_TAKEN_FROM_CONTAINER_EVENT_ID } from '../../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const CONTAINER_COMPONENT_ID = 'containers-core:container';
-const ITEM_TAKEN_EVENT = 'containers:item_taken_from_container';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -158,7 +159,7 @@ describe('TakeFromContainerHandler', () => {
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TAKEN_EVENT, {
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TAKEN_FROM_CONTAINER_EVENT_ID, {
         actorEntity: 'actor1',
         containerEntity: 'chest1',
         itemEntity: 'item2',
@@ -448,7 +449,7 @@ describe('TakeFromContainerHandler', () => {
         INVENTORY_COMPONENT_ID
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_TAKEN_EVENT,
+        ITEM_TAKEN_FROM_CONTAINER_EVENT_ID,
         expect.objectContaining({
           actorEntity: 'actor1',
           containerEntity: 'chest1',

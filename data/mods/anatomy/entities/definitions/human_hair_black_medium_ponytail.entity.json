@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_black_medium_ponytail",
+  "description": "Medium-length black hair in a ponytail",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair",
+      "hit_probability_weight": 0.25,
+      "health_calculation_weight": 0.1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "hair"
+    },
+    "core:weight": {
+      "weight": 0.1
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:hair_style": {
+      "style": "ponytail"
+    },
+    "descriptors:length_hair": {
+      "length": "medium"
+    }
+  }
+}

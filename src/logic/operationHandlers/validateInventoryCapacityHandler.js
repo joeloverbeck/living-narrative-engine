@@ -23,9 +23,10 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const INVENTORY_COMPONENT_ID = 'inventory:inventory';
-const WEIGHT_COMPONENT_ID = 'core:weight';
+import {
+  INVENTORY_COMPONENT_ID,
+  WEIGHT_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 /**
  * @typedef {object} ValidateInventoryCapacityParams

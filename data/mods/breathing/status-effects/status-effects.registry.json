@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/status-effect.registry.schema.json",
+  "id": "breathing:status_effects",
+  "description": "Status effects for the breathing/respiration system.",
+  "applyOrder": ["hypoxic", "unconscious_anoxia"],
+  "effects": [
+    {
+      "id": "hypoxic",
+      "effectType": "hypoxia",
+      "componentId": "breathing:hypoxic",
+      "startedEventId": "breathing:hypoxia_started",
+      "stoppedEventId": "breathing:hypoxia_stopped",
+      "priority": 5,
+      "defaults": {
+        "turnsToModerate": 3,
+        "turnsToSevere": 5,
+        "turnsToUnconscious": 7,
+        "severity": {
+          "mild": { "actionPenalty": 0 },
+          "moderate": { "actionPenalty": 2 },
+          "severe": { "actionPenalty": 4 }
+        }
+      }
+    },
+    {
+      "id": "unconscious_anoxia",
+      "effectType": "anoxic_unconsciousness",
+      "componentId": "breathing:unconscious_anoxia",
+      "startedEventId": "breathing:anoxic_unconsciousness_started",
+      "priority": 6,
+      "defaults": {
+        "turnsToBrainDamage": 2,
+        "brainDamagePerTurn": 5
+      }
+    }
+  ]
+}

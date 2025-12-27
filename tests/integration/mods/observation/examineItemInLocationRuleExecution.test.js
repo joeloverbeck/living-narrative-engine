@@ -238,9 +238,9 @@ describe('observation:examine_item_in_location rule execution', () => {
       expect(eventTypes).toContain('core:turn_ended');
 
       // Should NOT have any item state change events
-      expect(eventTypes).not.toContain('items-core:item_picked_up');
-      expect(eventTypes).not.toContain('items-core:item_dropped');
-      expect(eventTypes).not.toContain('items-core:item_transferred');
+      expect(eventTypes).not.toContain('inventory:item_picked_up');
+      expect(eventTypes).not.toContain('inventory:item_dropped');
+      expect(eventTypes).not.toContain('inventory:item_transferred');
 
       expectSuccessfulTurnEnd(testFixture.events);
     });

@@ -43,6 +43,9 @@
       "brain_damage_started.event.json",
       "hypoxia_started.event.json",
       "hypoxia_stopped.event.json"
+    ],
+    "statusEffects": [
+      "status-effects.registry.json"
     ]
   }
 }
