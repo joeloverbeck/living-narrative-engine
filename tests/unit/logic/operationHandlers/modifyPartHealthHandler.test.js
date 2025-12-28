@@ -17,6 +17,11 @@ import {
 
 import ModifyPartHealthHandler from '../../../../src/logic/operationHandlers/modifyPartHealthHandler.js';
 import { calculateStateFromPercentage } from '../../../../src/anatomy/registries/healthStateRegistry.js';
+import {
+  ANATOMY_PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { PART_HEALTH_CHANGED_EVENT_ID } from '../../../../src/constants/eventIds.js';
 
 jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
   const original = jest.requireActual(
@@ -32,10 +37,6 @@ jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
-const PART_COMPONENT_ID = 'anatomy:part';
-const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -149,7 +150,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -170,7 +171,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -182,7 +183,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 90,
           state: 'healthy',
@@ -199,7 +200,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -211,7 +212,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 70,
           state: 'scratched',
@@ -228,7 +229,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -240,7 +241,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 50,
           state: 'wounded',
@@ -257,7 +258,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -269,7 +270,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 15,
           state: 'critical',
@@ -286,7 +287,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -298,7 +299,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 0,
           state: 'destroyed',
@@ -335,7 +336,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -346,7 +347,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 70,
         })
@@ -362,7 +363,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -373,7 +374,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 50,
         })
@@ -389,7 +390,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -401,7 +402,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 100,
         })
@@ -417,7 +418,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -429,7 +430,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 0,
         })
@@ -465,7 +466,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -477,7 +478,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 100, // clamped to maxHealth
         })
@@ -493,7 +494,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -504,7 +505,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 140, // not clamped
         })
@@ -520,7 +521,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -531,7 +532,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: -40, // not clamped
         })
@@ -567,7 +568,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -579,7 +580,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 90,
           state: 'healthy',
@@ -597,7 +598,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -609,7 +610,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 60,
           state: 'wounded',
@@ -647,7 +648,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -657,7 +658,7 @@ describe('ModifyPartHealthHandler', () => {
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.any(Object)
       );
     });
@@ -676,13 +677,13 @@ describe('ModifyPartHealthHandler', () => {
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
         return (
-          componentId === PART_HEALTH_COMPONENT_ID ||
-          componentId === PART_COMPONENT_ID
+          componentId === ANATOMY_PART_HEALTH_COMPONENT_ID ||
+          componentId === ANATOMY_PART_COMPONENT_ID
         );
       });
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return healthComponent;
-        if (componentId === PART_COMPONENT_ID) return partComponent;
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+        if (componentId === ANATOMY_PART_COMPONENT_ID) return partComponent;
         return null;
       });
 
@@ -693,7 +694,7 @@ describe('ModifyPartHealthHandler', () => {
 
       // 60% health is 'wounded' (41-60% threshold)
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.objectContaining({
           partEntityId: 'part1',
           ownerEntityId: 'character1',
@@ -719,7 +720,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -729,7 +730,7 @@ describe('ModifyPartHealthHandler', () => {
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.objectContaining({
           healthPercentage: 25, // 50/200 * 100 = 25%
         })
@@ -745,7 +746,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -755,7 +756,7 @@ describe('ModifyPartHealthHandler', () => {
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.objectContaining({
           partType: 'unknown',
           ownerEntityId: null,
@@ -792,7 +793,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -803,7 +804,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.hasComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -816,7 +817,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
       jsonLogicService.evaluate.mockReturnValue('resolved_part_id');
@@ -832,7 +833,7 @@ describe('ModifyPartHealthHandler', () => {
       );
       expect(em.hasComponent).toHaveBeenCalledWith(
         'resolved_part_id',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -845,7 +846,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
       jsonLogicService.evaluate.mockReturnValue({ id: 'part_from_logic' });
@@ -857,7 +858,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.hasComponent).toHaveBeenCalledWith(
         'part_from_logic',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -870,7 +871,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
       jsonLogicService.evaluate.mockReturnValue({ entityId: 'part_entity' });
@@ -882,7 +883,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.hasComponent).toHaveBeenCalledWith(
         'part_entity',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
   });
@@ -915,7 +916,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -926,7 +927,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 55,
         })
@@ -942,7 +943,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
       jsonLogicService.evaluate.mockReturnValue(-30);
@@ -958,7 +959,7 @@ describe('ModifyPartHealthHandler', () => {
       );
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 50,
         })
@@ -995,7 +996,7 @@ describe('ModifyPartHealthHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining(PART_HEALTH_COMPONENT_ID),
+          message: expect.stringContaining(ANATOMY_PART_HEALTH_COMPONENT_ID),
         })
       );
       expect(em.addComponent).not.toHaveBeenCalled();
@@ -1098,7 +1099,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1210,7 +1211,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1221,7 +1222,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 81,
           state: 'healthy',
@@ -1239,7 +1240,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1251,7 +1252,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 81,
           state: 'healthy', // 81% is still healthy
@@ -1268,7 +1269,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1280,7 +1281,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 80,
           state: 'scratched', // 80% is scratched (below 81%)
@@ -1297,7 +1298,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1309,7 +1310,7 @@ describe('ModifyPartHealthHandler', () => {
       // Should trim the whitespace
       expect(em.hasComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -1322,7 +1323,7 @@ describe('ModifyPartHealthHandler', () => {
       };
 
       em.hasComponent.mockImplementation((entityId, componentId) => {
-        return componentId === PART_HEALTH_COMPONENT_ID;
+        return componentId === ANATOMY_PART_HEALTH_COMPONENT_ID;
       });
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1333,7 +1334,7 @@ describe('ModifyPartHealthHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           turnsInState: 1, // 0 + 1 when state unchanged
         })

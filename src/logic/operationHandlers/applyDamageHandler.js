@@ -25,9 +25,10 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
 import DamageResolutionService from '../services/damageResolutionService.js';
-
-const PART_COMPONENT_ID = 'anatomy:part';
-const BODY_COMPONENT_ID = 'anatomy:body';
+import {
+  ANATOMY_BODY_COMPONENT_ID,
+  ANATOMY_PART_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default} */ #entityManager;
@@ -365,7 +366,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
   }
 
   #selectRandomPart(entityId, logger, rng = Math.random) {
-    if (!this.#entityManager.hasComponent(entityId, BODY_COMPONENT_ID)) {
+    if (!this.#entityManager.hasComponent(entityId, ANATOMY_BODY_COMPONENT_ID)) {
       logger.warn(
         `APPLY_DAMAGE: Entity ${entityId} has no anatomy:body component.`
       );
@@ -374,7 +375,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     const bodyComponent = this.#entityManager.getComponentData(
       entityId,
-      BODY_COMPONENT_ID
+      ANATOMY_BODY_COMPONENT_ID
     );
 
     try {
@@ -388,7 +389,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
         id: partId,
         component: this.#entityManager.getComponentData(
           partId,
-          PART_COMPONENT_ID
+          ANATOMY_PART_COMPONENT_ID
         ),
       }));
 

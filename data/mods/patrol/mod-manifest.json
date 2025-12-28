@@ -40,6 +40,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "reading",
+      "version": "^1.0.0"
+    },
+    {
       "id": "accessories",
       "version": "^1.0.0"
     },

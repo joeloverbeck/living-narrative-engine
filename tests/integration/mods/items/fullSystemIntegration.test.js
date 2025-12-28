@@ -101,7 +101,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
         .withComponent('core:weight', { weight: 1.0 })
-        .withComponent('items:readable', { content: 'Test content' })
+        .withComponent('reading:readable', { content: 'Test content' })
         .withComponent('core:description', {
           text: 'A test item for verification.',
         })

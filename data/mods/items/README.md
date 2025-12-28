@@ -51,11 +51,11 @@ The items mod provides a modular ECS-based system for item management with:
 }
 ```
 
-**items:readable** - Text content for reading
+**reading:readable** (from `reading` mod) - Text content for reading
 
 ```json
 {
-  "items:readable": {
+  "reading:readable": {
     "content": "The letter reads: 'Meet me at the old mill at midnight...'"
   }
 }
@@ -127,7 +127,7 @@ The items mod provides a modular ECS-based system for item management with:
     },
     "items:item": {},
     "items:portable": {},
-    "items:readable": {
+    "reading:readable": {
       "content": "The letter reads: 'Meet me at the old mill at midnight. Come alone. -J'"
     },
     "core:weight": {
@@ -197,8 +197,8 @@ The items mod provides a modular ECS-based system for item management with:
    - Multi-target: Actor → Item
    - Note: This is a free action that doesn't consume a turn
 
-5. **read_item**: Read readable item content (free action)
-   - Requires: Item has `items:readable` component
+5. **reading:read_item** (from `reading` mod): Read readable item content (free action)
+   - Requires: Item has `reading:readable` component
    - Multi-target: Actor → Item
    - Note: This is a free action that doesn't consume a turn
 
@@ -254,7 +254,7 @@ The items system uses the following operation handlers:
 - `VALIDATE_INVENTORY_CAPACITY`: Check weight/count limits
 - `VALIDATE_CONTAINER_CAPACITY`: Check container capacity
 
-Note: `examine_item` and `read_item` are free actions that don't require operation handlers.
+Note: `examine_item` and `reading:read_item` are free actions that don't require operation handlers.
 
 ## Testing
 

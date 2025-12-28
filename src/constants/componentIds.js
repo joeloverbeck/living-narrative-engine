@@ -45,6 +45,7 @@ export const APPARENT_AGE_COMPONENT_ID = 'core:apparent_age';
 // Anatomy components
 export const ANATOMY_BODY_COMPONENT_ID = 'anatomy:body';
 export const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
+export const ANATOMY_PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 export const ANATOMY_SOCKETS_COMPONENT_ID = 'anatomy:sockets';
 
 // Container components
@@ -63,3 +64,6 @@ export const WEIGHT_COMPONENT_ID = 'core:weight';
 // Items components
 export const ITEM_COMPONENT_ID = 'items-core:item';
 export const PORTABLE_COMPONENT_ID = 'items-core:portable';
+
+// Breathing system components
+export const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';

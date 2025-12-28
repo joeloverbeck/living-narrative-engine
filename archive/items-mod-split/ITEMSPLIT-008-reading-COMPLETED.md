@@ -2,7 +2,9 @@
 
 ## Summary
 
-Create the `reading` mod containing actions for reading text from items like letters and books. This is a simple, self-contained mod with the `read_item` action.
+Create the `reading` mod containing actions for reading text from items like letters and books. This mod owns the `read_item` action and `readable` component, but currently still relies on `items` scopes for target discovery.
+
+Status: Completed
 
 ## Prerequisites
 
@@ -19,7 +21,7 @@ Create the `reading` mod containing actions for reading text from items like let
   "version": "1.0.0",
   "name": "Reading",
   "description": "Actions for reading text from items",
-  "dependencies": ["items-core"]
+  "dependencies": ["items-core", "items"]
 }
 ```
 
@@ -61,6 +63,7 @@ Create the `reading` mod containing actions for reading text from items like let
 |--------|--------|
 | `items:readable` | `reading:readable` |
 | `items:read_item` | `reading:read_item` |
+| `items:event-is-action-read-item` | `reading:event-is-action-read-item` |
 
 ## External References to Update
 
@@ -72,8 +75,9 @@ grep -r "items:read_item" data/mods/ tests/
 ```
 
 **Likely locations:**
-1. Entity definitions for readable items (books, letters, notes)
-2. Tests for reading functionality
+1. Entity definitions in other mods (fantasy/dredgers/patrol, etc.)
+2. Writing mod action `writing:jot_down_notes` (uses readable component)
+3. Tests in `tests/integration/mods/items/` and action pipeline coverage tests
 
 ## Test Updates
 
@@ -83,7 +87,10 @@ Check for tests that:
 - Test reading action discovery and execution
 
 Likely locations:
-- `tests/integration/mods/items/` (reading tests)
+- `tests/integration/mods/items/` (reading tests to re-point to `reading`)
+- `tests/integration/actions/pipeline/stages/TargetComponentValidationStage.*`
+- `tests/unit/actions/pipeline/stages/TargetComponentValidationStage.test.js`
+- `tests/integration/mods/writing/` (readable component use)
 
 ## Migration Steps
 
@@ -111,7 +118,7 @@ Likely locations:
 7. [ ] Copy entity file (1 file)
    - Update component references
 
-8. [ ] Update `data/game.json` to include `reading` after `items-core`
+8. [ ] Skip `data/game.json` updates (it does not list items mods in current repo state)
 
 9. [ ] Find and update all external references
 
@@ -145,5 +152,11 @@ None
 
 ## Notes
 
-- This is a simple, self-contained mod with minimal dependencies
+- This mod depends on `items` for `items:examinable_items`/`items:actor_inventory_items` scopes; revisit if scopes move to `items-core`.
 - Future expansions could add more readable item types (books, scrolls, etc.)
+
+## Outcome
+
+- Moved `read_item` action, readable component, read rule/condition, and the letter entity into `data/mods/reading/` with updated namespaces.
+- Updated external references (mods + tests) to `reading:*` IDs and added `reading` dependencies where readable content is used.
+- Skipped `data/game.json` updates since items mods are not listed there in current repo state.

@@ -16,12 +16,13 @@ import {
 } from '@jest/globals';
 
 import RestoreOxygenHandler from '../../../../src/logic/operationHandlers/restoreOxygenHandler.js';
+import {
+  RESPIRATORY_ORGAN_COMPONENT_ID,
+  ANATOMY_PART_COMPONENT_ID as PART_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';
-const PART_COMPONENT_ID = 'anatomy:part';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

@@ -77,7 +77,7 @@ describe('writing:jot_down_notes action definition', () => {
     expect(jotDownNotesAction.required_components.primary).toBeDefined();
     expect(jotDownNotesAction.required_components.primary).toEqual([
       'items-core:item',
-      'items:readable',
+      'reading:readable',
     ]);
   });
 
@@ -136,7 +136,7 @@ describe('writing:jot_down_notes action definition', () => {
         .withName('Field Notebook')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Patrol observation notes.',
         })
         .build();
@@ -194,7 +194,7 @@ describe('writing:jot_down_notes action definition', () => {
         .withName('Old Journal')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Journal entries.',
         })
         .build();
@@ -235,7 +235,7 @@ describe('writing:jot_down_notes action definition', () => {
         .atLocation('room3')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Notes on the table.',
         })
         .build();
@@ -276,7 +276,7 @@ describe('writing:jot_down_notes action definition', () => {
         .withName('Field Notebook')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Some notes.',
         })
         .build();
@@ -311,7 +311,7 @@ describe('writing:jot_down_notes action definition', () => {
         .withName('Script Notes')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Performance script.',
         })
         .build();
@@ -390,21 +390,21 @@ describe('writing:jot_down_notes action definition', () => {
         .withName('Notebook')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', { text: 'Notes.' })
+        .withComponent('reading:readable', { text: 'Notes.' })
         .build();
 
       const journal = new ModEntityBuilder('journal_1')
         .withName('Journal')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', { text: 'Journal entries.' })
+        .withComponent('reading:readable', { text: 'Journal entries.' })
         .build();
 
       const diary = new ModEntityBuilder('diary_1')
         .withName('Diary')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', { text: 'Personal diary.' })
+        .withComponent('reading:readable', { text: 'Personal diary.' })
         .build();
 
       const pencil = new ModEntityBuilder('pencil_5')

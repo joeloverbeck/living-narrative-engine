@@ -418,14 +418,14 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     });
 
     const readableTarget = {
-      id: 'items:readable-letter',
+      id: 'reading:readable-letter',
       displayName: 'Readable Letter',
       entity: {
-        id: 'items:readable-letter',
+        id: 'reading:readable-letter',
         components: {
-          'items:readable': { text: 'A farewell written in hurried script.' },
+          'reading:readable': { text: 'A farewell written in hurried script.' },
         },
-        hasComponent: (componentId) => componentId === 'items:readable',
+        hasComponent: (componentId) => componentId === 'reading:readable',
       },
     };
 
@@ -440,9 +440,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     };
 
     const actionDef = {
-      id: 'items:read_item',
+      id: 'reading:read_item',
       required_components: {
-        primary: ['items:readable'],
+        primary: ['reading:readable'],
       },
       resolvedTargets: {
         primary: [readableTarget, nonReadableTarget],
@@ -465,7 +465,7 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
         targetContexts: [
           {
             type: 'entity',
-            entityId: 'items:readable-letter',
+            entityId: 'reading:readable-letter',
             placeholder: 'item',
           },
           {
@@ -492,12 +492,12 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     const [filteredAction] = result.data.actionsWithTargets;
     expect(filteredAction.resolvedTargets.primary).toHaveLength(1);
     expect(filteredAction.resolvedTargets.primary[0].id).toBe(
-      'items:readable-letter'
+      'reading:readable-letter'
     );
     expect(filteredAction.targetContexts).toEqual([
       {
         type: 'entity',
-        entityId: 'items:readable-letter',
+        entityId: 'reading:readable-letter',
         placeholder: 'item',
       },
     ]);
@@ -510,12 +510,12 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(componentValidator.calls).toHaveLength(1);
     expect(componentValidator.calls[0].targetEntities.primary).toHaveLength(1);
     expect(componentValidator.calls[0].targetEntities.primary[0].id).toBe(
-      'items:readable-letter'
+      'reading:readable-letter'
     );
     expect(requiredValidator.calls).toHaveLength(1);
     expect(requiredValidator.calls[0].targetEntities.primary).toHaveLength(1);
     expect(requiredValidator.calls[0].targetEntities.primary[0].id).toBe(
-      'items:readable-letter'
+      'reading:readable-letter'
     );
   });
 

@@ -4,7 +4,7 @@
   "comment": "Handles the read_item action with perspective-aware perception (actor gets first-person with content, observers get third-person)",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-read-item"
+    "condition_ref": "reading:event-is-action-read-item"
   },
   "actions": [
     {
@@ -37,7 +37,7 @@
       "comment": "Retrieve readable text from the item",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "items:readable",
+        "component_type": "reading:readable",
         "result_variable": "itemReadable",
         "missing_value": null
       }

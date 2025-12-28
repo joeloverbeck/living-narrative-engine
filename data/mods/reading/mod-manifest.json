@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "reading",
+  "version": "1.0.0",
+  "name": "Reading",
+  "description": "Actions for reading text from items",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": ["read_item.action.json"],
+    "components": ["readable.component.json"],
+    "conditions": ["event-is-action-read-item.condition.json"],
+    "rules": ["handle_read_item.rule.json"],
+    "events": [],
+    "scopes": [],
+    "entities": {
+      "definitions": ["letter_to_sheriff.entity.json"],
+      "instances": []
+    }
+  }
+}

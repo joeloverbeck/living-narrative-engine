@@ -2,7 +2,12 @@
 
 ## Description
 
-Create the strangling-states mod with the being_strangled component.
+Create the strangling-states mod with a minimal being_strangled marker component.
+
+## Assumptions (Updated)
+
+- There is no `positioning` mod in this repo; the marker will live under the `strangling-states` namespace.
+- No existing mod depends on `strangling-states` yet, so the mod is added directly to `data/game.json` to ensure it loads.
 
 ## Files to Create
 
@@ -21,7 +26,7 @@ Create the strangling-states mod with the being_strangled component.
 ## Acceptance Criteria
 
 1. **Mod structure**: Follows *-states mod pattern (like liquids-states)
-2. **Component valid**: being_strangled passes schema validation
+2. **Component valid**: `strangling-states:being_strangled` passes schema validation
 3. **Activity metadata**: Template `"{actor} is being strangled"`, priority 85
 4. **Dependencies**: core only (minimal)
 
@@ -34,3 +39,13 @@ Create the strangling-states mod with the being_strangled component.
 
 - Follows liquids-states pattern exactly
 - Minimal mod (just marker component)
+
+## Status
+
+- [ ] In Progress
+- [x] Completed
+
+## Outcome
+
+- Created the strangling-states mod and being_strangled marker component.
+- Added the mod to `data/game.json` for loading until a parent mod depends on it.

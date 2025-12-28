@@ -3,7 +3,7 @@ import { createTestBed } from '../../../common/testBed.js';
 import path from 'path';
 import fs from 'fs';
 
-describe('Items - Entity Loading', () => {
+describe('Reading/Items - Entity Loading', () => {
   let testBed;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('Items - Entity Loading', () => {
     // Load the entity definition file directly
     const entityPath = path.resolve(
       process.cwd(),
-      'data/mods/items/entities/definitions/letter_to_sheriff.entity.json'
+      'data/mods/reading/entities/definitions/letter_to_sheriff.entity.json'
     );
     const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
 
@@ -48,24 +48,41 @@ describe('Items - Entity Loading', () => {
     expect(weight.weight).toBeGreaterThan(10); // Heavy item threshold
   });
 
-  it('should validate all entity files exist and are listed in manifest', () => {
+  it('should validate reading entities are listed in manifest', () => {
+    const manifestPath = path.resolve(
+      process.cwd(),
+      'data/mods/reading/mod-manifest.json'
+    );
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+    const entityFiles = ['letter_to_sheriff.entity.json'];
+
+    entityFiles.forEach((filename) => {
+      expect(manifest.content.entities.definitions).toContain(filename);
+    });
+
+    entityFiles.forEach((filename) => {
+      const entityPath = path.resolve(
+        process.cwd(),
+        `data/mods/reading/entities/definitions/${filename}`
+      );
+      expect(fs.existsSync(entityPath)).toBe(true);
+    });
+  });
+
+  it('should validate items entities are listed in manifest', () => {
     const manifestPath = path.resolve(
       process.cwd(),
       'data/mods/items/mod-manifest.json'
     );
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
-    const entityFiles = [
-      'letter_to_sheriff.entity.json',
-      'gold_bar.entity.json',
-    ];
+    const entityFiles = ['gold_bar.entity.json'];
 
-    // Verify all entities are listed in manifest
     entityFiles.forEach((filename) => {
       expect(manifest.content.entities.definitions).toContain(filename);
     });
 
-    // Verify all entity files exist
     entityFiles.forEach((filename) => {
       const entityPath = path.resolve(
         process.cwd(),

@@ -6,12 +6,7 @@
   "description": "Inventory component for carrying items and item transfer events",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "items-core",
-      "version": "^1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "inventory.component.json"

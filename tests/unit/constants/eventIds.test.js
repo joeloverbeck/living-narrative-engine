@@ -57,6 +57,9 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ACTION_EXECUTION_COMPLETED: 'core:action_execution_completed',
   ACTION_EXECUTION_FAILED: 'core:action_execution_failed',
   ACTION_VALIDATION_FAILED: 'core:action_validation_failed',
+  PART_HEALTH_CHANGED_EVENT_ID: 'anatomy:part_health_changed',
+  PART_STATE_CHANGED_EVENT_ID: 'anatomy:part_state_changed',
+  OXYGEN_DEPLETED_EVENT_ID: 'breathing-states:oxygen_depleted',
 });
 
 describe('eventIds constants', () => {
