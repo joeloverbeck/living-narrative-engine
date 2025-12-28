@@ -346,3 +346,10 @@ export const ACTION_EXECUTION_FAILED = 'core:action_execution_failed';
  * @type {string}
  */
 export const ACTION_VALIDATION_FAILED = 'core:action_validation_failed';
+
+// Anatomy system event IDs
+export const PART_HEALTH_CHANGED_EVENT_ID = 'anatomy:part_health_changed';
+export const PART_STATE_CHANGED_EVENT_ID = 'anatomy:part_state_changed';
+
+// Breathing system event IDs
+export const OXYGEN_DEPLETED_EVENT_ID = 'breathing-states:oxygen_depleted';

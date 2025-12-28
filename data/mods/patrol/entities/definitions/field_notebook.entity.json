@@ -14,7 +14,7 @@
     "core:weight": {
       "weight": 0.3
     },
-    "items:readable": {
+    "reading:readable": {
       "text": "-- Field Notebook --\nUnauthorized personal documentation system. Paper trail, not digital. Can't delete paper.\n\n=== PATROL OBSERVATIONS ===\n\nEntry 1 - Sector 3 Patrol (14:20)\nTemperature: 18°C. EM noise: nominal. Visual clarity: good.\nPerimeter check complete. All automated systems green.\n\nEntry 2 - Sector 7 Anomaly (15:47)\nVisual flicker observed. Duration: 3 seconds.\nAir pressure drop detected. Recording coordinates.\n\nEntry 3 - The Rip (16:12)\nIt's there again. Same location. Expanding?\nCommand won't listen. Need to document everything.\nEdges shimmer like heat distortion but temperature is normal.\nSound: low frequency hum, barely perceptible.\n\nEntry 4 - Partner Observation (17:03)\nPartner dismisses concerns. Following protocol.\nBut protocol doesn't account for reality fractures.\n\nEntry 5 - Equipment Check (18:30)\nAll sensors calibrated. This is real.\nThe rip in reality grows 2cm per day.\nSomeone needs to know.\n\n=== END ENTRIES ===\n\nNote: Keep this notebook secure. Official channels compromised or willfully ignorant."
     }
   }

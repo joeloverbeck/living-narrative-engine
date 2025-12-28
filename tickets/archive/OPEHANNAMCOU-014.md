@@ -45,3 +45,33 @@ Replace inline component/event ID constants in anatomy/health handlers with impo
 ## Dependencies
 
 - `specs/operation-handler-namespace-coupling.md` (reference for constant sourcing rules).
+
+## Outcome
+
+**Status**: ✅ Completed
+
+### Changes Made
+
+1. **Added new shared constants**:
+   - `ANATOMY_PART_HEALTH_COMPONENT_ID` to `src/constants/componentIds.js`
+   - `PART_HEALTH_CHANGED_EVENT_ID` and `PART_STATE_CHANGED_EVENT_ID` to `src/constants/eventIds.js`
+
+2. **Updated handlers to use shared constants**:
+   - `applyDamageHandler.js`: Replaced inline `BODY_COMPONENT_ID`, `PART_COMPONENT_ID` with imports from `componentIds.js`
+   - `modifyPartHealthHandler.js`: Replaced inline `PART_HEALTH_COMPONENT_ID`, `PART_COMPONENT_ID`, `PART_HEALTH_CHANGED_EVENT` with imports
+   - `updatePartHealthStateHandler.js`: Replaced inline `PART_HEALTH_COMPONENT_ID`, `PART_COMPONENT_ID`, `PART_STATE_CHANGED_EVENT` with imports
+
+3. **Updated unit tests**:
+   - All three handler test files now import constants from `componentIds.js` and `eventIds.js`
+   - Test-only mock event IDs (`DAMAGE_APPLIED_EVENT`, `PART_DESTROYED_EVENT`) remain inline as they're not production constants
+
+4. **Removed legacy allowlist entries**:
+   - Removed 8 entries from `LEGACY_INLINE_CONSTANTS` in `hardcodedConstantsStaticAnalysis.test.js`
+
+### Tests Verified
+
+All acceptance criteria tests pass:
+- `applyDamageHandler.test.js`: 186 tests passed
+- `modifyPartHealthHandler.test.js`: Included in above
+- `updatePartHealthStateHandler.test.js`: Included in above
+- `hardcodedConstantsStaticAnalysis.test.js`: 2 tests passed

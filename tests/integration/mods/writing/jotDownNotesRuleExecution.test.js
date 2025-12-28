@@ -44,7 +44,7 @@ function setupJotDownNotesScenario(
     .withName('Field Notebook')
     .withComponent('items-core:item', {})
     .withComponent('items-core:portable', {})
-    .withComponent('items:readable', {
+    .withComponent('reading:readable', {
       text: 'Previously written notes about patrol observations.',
     });
 
@@ -111,7 +111,7 @@ describe('writing:jot_down_notes action integration', () => {
       const notebookBefore =
         testFixture.entityManager.getEntityInstance('notebook-1');
       const readableContentBefore =
-        notebookBefore.components['items:readable'].text;
+        notebookBefore.components['reading:readable'].text;
 
       // Act: Jot down notes in notebook using pencil
       await testFixture.executeAction('test:actor1', 'notebook-1', {
@@ -151,7 +151,7 @@ describe('writing:jot_down_notes action integration', () => {
       // Assert: Verify notebook content unchanged (static content)
       const notebookAfter =
         testFixture.entityManager.getEntityInstance('notebook-1');
-      expect(notebookAfter.components['items:readable'].text).toBe(
+      expect(notebookAfter.components['reading:readable'].text).toBe(
         readableContentBefore
       );
 
@@ -179,7 +179,7 @@ describe('writing:jot_down_notes action integration', () => {
         .withName('Old Journal')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', { text: 'Old journal entries.' })
+        .withComponent('reading:readable', { text: 'Old journal entries.' })
         .build();
 
       const quill = new ModEntityBuilder('quill-1')
@@ -320,7 +320,7 @@ describe('writing:jot_down_notes action integration', () => {
       const notebookBefore =
         testFixture.entityManager.getEntityInstance('notebook-1');
       const readableContentBefore = JSON.parse(
-        JSON.stringify(notebookBefore.components['items:readable'])
+        JSON.stringify(notebookBefore.components['reading:readable'])
       );
 
       await testFixture.executeAction('test:actor1', 'notebook-1', {
@@ -332,7 +332,7 @@ describe('writing:jot_down_notes action integration', () => {
         testFixture.entityManager.getEntityInstance('notebook-1');
 
       // Content should be unchanged
-      expect(notebookAfter.components['items:readable']).toEqual(
+      expect(notebookAfter.components['reading:readable']).toEqual(
         readableContentBefore
       );
 
@@ -417,7 +417,7 @@ describe('writing:jot_down_notes action integration', () => {
       // Content should still be unchanged
       const notebookAfter =
         testFixture.entityManager.getEntityInstance('notebook-1');
-      expect(notebookAfter.components['items:readable'].text).toBe(
+      expect(notebookAfter.components['reading:readable'].text).toBe(
         'Previously written notes about patrol observations.'
       );
     });

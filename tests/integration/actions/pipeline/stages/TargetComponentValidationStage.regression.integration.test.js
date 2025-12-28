@@ -710,7 +710,7 @@ describe('TargetComponentValidationStage items action regression', () => {
         'core:name': { text: 'Faded Letter' },
         'items-core:item': {},
         'core:description': { text: 'A faded farewell letter.' },
-        'items:readable': { content: 'The final goodbye.' },
+        'reading:readable': { content: 'The final goodbye.' },
       },
     });
 
@@ -847,9 +847,9 @@ describe('TargetComponentValidationStage items action regression', () => {
     expect(candidates[0].entity?.components?.['items-core:item']).toBeDefined();
   });
 
-  it('retains items:read_item when a readable target meets all requirements', async () => {
+  it('retains reading:read_item when a readable target meets all requirements', async () => {
     const readAction = {
-      id: 'items:read_item',
+      id: 'reading:read_item',
       name: 'Read Item',
       template: 'read {item}',
       targets: {
@@ -860,7 +860,7 @@ describe('TargetComponentValidationStage items action regression', () => {
         },
       },
       required_components: {
-        primary: ['items-core:item', 'items:readable'],
+        primary: ['items-core:item', 'reading:readable'],
       },
     };
 
@@ -868,11 +868,11 @@ describe('TargetComponentValidationStage items action regression', () => {
 
     expect(actions).toHaveLength(1);
     const [actionEntry] = actions;
-    expect(actionEntry.actionDef.id).toBe('items:read_item');
+    expect(actionEntry.actionDef.id).toBe('reading:read_item');
     const candidates = actionEntry.resolvedTargets.primary;
     expect(Array.isArray(candidates)).toBe(true);
     expect(candidates).toHaveLength(1);
     expect(candidates[0].id).toBe('test:letter_instance');
-    expect(candidates[0].entity?.components?.['items:readable']).toBeDefined();
+    expect(candidates[0].entity?.components?.['reading:readable']).toBeDefined();
   });
 });

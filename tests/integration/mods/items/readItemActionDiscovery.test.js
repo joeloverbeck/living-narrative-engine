@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:read_item action definition.
+ * @file Integration tests for the reading:read_item action definition.
  * @description Tests that the read_item action is properly defined and discoverable only for readable items.
  */
 
@@ -11,14 +11,14 @@ import {
 } from '../../../common/mods/ModEntityBuilder.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
-import readItemAction from '../../../../data/mods/items/actions/read_item.action.json' assert { type: 'json' };
+import readItemAction from '../../../../data/mods/reading/actions/read_item.action.json' assert { type: 'json' };
 
-describe('items:read_item action definition', () => {
+describe('reading:read_item action definition', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:read_item');
+    testFixture = await ModTestFixture.forAction('reading', 'reading:read_item');
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -38,7 +38,7 @@ describe('items:read_item action definition', () => {
 
   it('should have correct action structure', () => {
     expect(readItemAction).toBeDefined();
-    expect(readItemAction.id).toBe('items:read_item');
+    expect(readItemAction.id).toBe('reading:read_item');
     expect(readItemAction.name).toBe('Read Item');
     expect(readItemAction.description).toBe(
       "Read an item's readable text to learn its contents."
@@ -60,7 +60,7 @@ describe('items:read_item action definition', () => {
     expect(readItemAction.required_components).toBeDefined();
     expect(readItemAction.required_components.primary).toEqual([
       'items-core:item',
-      'items:readable',
+      'reading:readable',
     ]);
   });
 
@@ -93,7 +93,7 @@ describe('items:read_item action definition', () => {
         .withName('Journal Page')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Day 12: Supplies are running low.',
         })
         .build();
@@ -104,7 +104,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBeGreaterThan(0);
@@ -131,7 +131,7 @@ describe('items:read_item action definition', () => {
         .withName('Encoded Tablet')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Tablet Entry: Rotate the sigil thrice to unlock the vault.',
         })
         .build();
@@ -142,7 +142,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor2');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBeGreaterThan(0);
@@ -168,7 +168,7 @@ describe('items:read_item action definition', () => {
         .withName('Annotated Blueprint')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Margin notes detail secret maintenance tunnels beneath the manor.',
         })
         .build();
@@ -186,7 +186,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor_mixed');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBeGreaterThan(0);
@@ -206,7 +206,7 @@ describe('items:read_item action definition', () => {
         .atLocation('library')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'All visitors must sign the guest book.',
         })
         .build();
@@ -217,7 +217,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBeGreaterThan(0);
@@ -242,7 +242,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBe(0);
@@ -274,7 +274,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBe(0);
@@ -295,7 +295,7 @@ describe('items:read_item action definition', () => {
         .atLocation('room_b')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Ledger Entry 4B: Shipment delayed by storms.',
         })
         .build();
@@ -306,7 +306,7 @@ describe('items:read_item action definition', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
-        (action) => action.id === 'items:read_item'
+        (action) => action.id === 'reading:read_item'
       );
 
       expect(readActions.length).toBe(0);
@@ -333,7 +333,7 @@ describe('items:read_item action definition', () => {
         .withName('Annotated Diary Page')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Entry #17: The code is hidden beneath the lantern.',
         })
         .build();
@@ -342,7 +342,7 @@ describe('items:read_item action definition', () => {
         .withName('Encoded Telegram')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Signal received. Proceed at dawn.',
         })
         .build();
@@ -435,7 +435,7 @@ describe('items:read_item action definition', () => {
       const result = await discoveryService.getValidActions(actorEntity, {});
 
       const readCommands = result.actions
-        .filter((action) => action.id === 'items:read_item')
+        .filter((action) => action.id === 'reading:read_item')
         .map((action) => action.command)
         .sort();
 

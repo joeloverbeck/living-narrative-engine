@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:read_item",
+  "id": "reading:read_item",
   "name": "Read Item",
   "description": "Read an item's readable text to learn its contents.",
   "targets": {
@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "primary": ["items-core:item", "items:readable"]
+    "primary": ["items-core:item", "reading:readable"]
   },
   "prerequisites": [
     {

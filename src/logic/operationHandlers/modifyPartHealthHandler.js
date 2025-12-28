@@ -31,10 +31,11 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
-const PART_COMPONENT_ID = 'anatomy:part';
-const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
+import {
+  ANATOMY_PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { PART_HEALTH_CHANGED_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} ModifyPartHealthParams
@@ -156,10 +157,10 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
    * @private
    */
   #getPartType(entityId) {
-    if (this.#entityManager.hasComponent(entityId, PART_COMPONENT_ID)) {
+    if (this.#entityManager.hasComponent(entityId, ANATOMY_PART_COMPONENT_ID)) {
       const partComponent = this.#entityManager.getComponentData(
         entityId,
-        PART_COMPONENT_ID
+        ANATOMY_PART_COMPONENT_ID
       );
       return partComponent?.subType || 'unknown';
     }
@@ -174,10 +175,10 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
    * @private
    */
   #getOwnerEntityId(entityId) {
-    if (this.#entityManager.hasComponent(entityId, PART_COMPONENT_ID)) {
+    if (this.#entityManager.hasComponent(entityId, ANATOMY_PART_COMPONENT_ID)) {
       const partComponent = this.#entityManager.getComponentData(
         entityId,
-        PART_COMPONENT_ID
+        ANATOMY_PART_COMPONENT_ID
       );
       return partComponent?.ownerEntityId || null;
     }
@@ -258,12 +259,12 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
       if (
         !this.#entityManager.hasComponent(
           partEntityId,
-          PART_HEALTH_COMPONENT_ID
+          ANATOMY_PART_HEALTH_COMPONENT_ID
         )
       ) {
         safeDispatchError(
           this.#dispatcher,
-          `MODIFY_PART_HEALTH: Entity does not have ${PART_HEALTH_COMPONENT_ID} component`,
+          `MODIFY_PART_HEALTH: Entity does not have ${ANATOMY_PART_HEALTH_COMPONENT_ID} component`,
           { partEntityId },
           log
         );
@@ -273,7 +274,7 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
       // Get current health data
       const healthComponent = this.#entityManager.getComponentData(
         partEntityId,
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
 
       const previousHealth = healthComponent.currentHealth;
@@ -298,7 +299,7 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
       // Update component
       await this.#entityManager.addComponent(
         partEntityId,
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         {
           currentHealth: newHealth,
           maxHealth,
@@ -312,7 +313,7 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
       const ownerEntityId = this.#getOwnerEntityId(partEntityId);
 
       // Dispatch health changed event
-      this.#dispatcher.dispatch(PART_HEALTH_CHANGED_EVENT, {
+      this.#dispatcher.dispatch(PART_HEALTH_CHANGED_EVENT_ID, {
         partEntityId,
         ownerEntityId,
         partType,

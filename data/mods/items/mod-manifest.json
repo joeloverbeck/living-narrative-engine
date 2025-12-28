@@ -33,23 +33,19 @@
   "content": {
     "components": [
       "allows_soothing_hug.component.json",
-      "can_apply_lipstick.component.json",
-      "readable.component.json"
+      "can_apply_lipstick.component.json"
     ],
     "actions": [
       "apply_lipstick.action.json",
-      "hug_item_for_comfort.action.json",
-      "read_item.action.json"
+      "hug_item_for_comfort.action.json"
     ],
     "rules": [
       "handle_apply_lipstick.rule.json",
-      "handle_hug_item_for_comfort.rule.json",
-      "handle_read_item.rule.json"
+      "handle_hug_item_for_comfort.rule.json"
     ],
     "conditions": [
       "event-is-action-apply-lipstick.condition.json",
-      "event-is-action-hug-item-for-comfort.condition.json",
-      "event-is-action-read-item.condition.json"
+      "event-is-action-hug-item-for-comfort.condition.json"
     ],
     "scopes": [
       "actor_inventory_items.scope",
@@ -61,7 +57,6 @@
       "definitions": [
         "brass_key.entity.json",
         "gold_bar.entity.json",
-        "letter_to_sheriff.entity.json",
         "plush_teddy_bear.entity.json",
         "red_lipstick.entity.json",
         "smoking_pipe.entity.json",

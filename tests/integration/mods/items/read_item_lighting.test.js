@@ -1,10 +1,10 @@
 /**
  * @jest-environment node
- * @file Integration tests for items:read_item action lighting prerequisite
+ * @file Integration tests for reading:read_item action lighting prerequisite
  * @description Tests that the read_item action correctly requires the actor's location to be lit
  *
  * Tests the prerequisite using the isActorLocationLit custom JSON Logic operator.
- * @see data/mods/items/actions/read_item.action.json
+ * @see data/mods/reading/actions/read_item.action.json
  * @see src/logic/operators/isActorLocationLitOperator.js
  */
 
@@ -13,9 +13,9 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
-import readItemAction from '../../../../data/mods/items/actions/read_item.action.json';
+import readItemAction from '../../../../data/mods/reading/actions/read_item.action.json';
 
-describe('items:read_item lighting prerequisite', () => {
+describe('reading:read_item lighting prerequisite', () => {
   let prerequisiteService;
   let jsonLogicService;
   let customOperators;
@@ -118,7 +118,7 @@ describe('items:read_item lighting prerequisite', () => {
     });
 
     test('should preserve other action properties', () => {
-      expect(readItemAction.id).toBe('items:read_item');
+      expect(readItemAction.id).toBe('reading:read_item');
       expect(readItemAction.template).toBe('read {item}');
       expect(readItemAction.targets.primary.scope).toBe('items:examinable_items');
     });

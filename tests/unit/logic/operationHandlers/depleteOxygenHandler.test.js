@@ -16,13 +16,14 @@ import {
 } from '@jest/globals';
 
 import DepleteOxygenHandler from '../../../../src/logic/operationHandlers/depleteOxygenHandler.js';
+import {
+  RESPIRATORY_ORGAN_COMPONENT_ID,
+  ANATOMY_PART_COMPONENT_ID as PART_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { OXYGEN_DEPLETED_EVENT_ID as OXYGEN_DEPLETED_EVENT } from '../../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';
-const PART_COMPONENT_ID = 'anatomy:part';
-const OXYGEN_DEPLETED_EVENT = 'breathing-states:oxygen_depleted';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;

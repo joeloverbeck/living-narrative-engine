@@ -16,7 +16,7 @@
     }
   },
   "required_components": {
-    "primary": ["items-core:item", "items:readable"],
+    "primary": ["items-core:item", "reading:readable"],
     "secondary": ["items-core:item", "writing:allows_writing"]
   },
   "forbidden_components": {

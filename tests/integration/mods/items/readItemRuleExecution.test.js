@@ -1,13 +1,13 @@
 /**
- * @file Integration tests for the items:read_item action and rule.
+ * @file Integration tests for the reading:read_item action and rule.
  * @description Verifies rule execution for reading readable items and related side effects.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import readItemRule from '../../../../data/mods/items/rules/handle_read_item.rule.json' assert { type: 'json' };
-import eventIsActionReadItem from '../../../../data/mods/items/conditions/event-is-action-read-item.condition.json' assert { type: 'json' };
+import readItemRule from '../../../../data/mods/reading/rules/handle_read_item.rule.json' assert { type: 'json' };
+import eventIsActionReadItem from '../../../../data/mods/reading/conditions/event-is-action-read-item.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standard read item scenario with configurable items.
@@ -49,7 +49,7 @@ function setupReadItemScenario(
       .withName(item.id)
       .withComponent('items-core:item', {})
       .withComponent('items-core:portable', {})
-      .withComponent('items:readable', { text: item.text });
+      .withComponent('reading:readable', { text: item.text });
 
     if (!item.inInventory) {
       builder.atLocation(locationId);
@@ -61,13 +61,13 @@ function setupReadItemScenario(
   return { room, actor, items: itemEntities };
 }
 
-describe('items:read_item action integration', () => {
+describe('reading:read_item action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:read_item',
+      'reading',
+      'reading:read_item',
       readItemRule,
       eventIsActionReadItem
     );
@@ -233,7 +233,7 @@ describe('items:read_item action integration', () => {
         .withName('sealed-letter')
         .withComponent('items-core:item', {})
         .withComponent('items-core:portable', {})
-        .withComponent('items:readable', {
+        .withComponent('reading:readable', {
           text: 'Darius, meet me at midnight behind the chapel.',
         })
         .build();

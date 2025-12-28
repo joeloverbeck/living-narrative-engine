@@ -20,6 +20,11 @@ import {
   calculateStateFromPercentage,
   isDeterioration,
 } from '../../../../src/anatomy/registries/healthStateRegistry.js';
+import {
+  ANATOMY_PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { PART_STATE_CHANGED_EVENT_ID } from '../../../../src/constants/eventIds.js';
 
 jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
   const original = jest.requireActual(
@@ -36,10 +41,6 @@ jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
-
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
-const PART_COMPONENT_ID = 'anatomy:part';
-const PART_STATE_CHANGED_EVENT = 'anatomy:part_state_changed';
 
 // Test Doubles
 /** @type {jest.Mocked<ILogger>} */ let log;
@@ -134,7 +135,7 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
         return null;
       });
 
@@ -153,8 +154,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -174,7 +175,7 @@ describe('UpdatePartHealthStateHandler', () => {
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           previousState: 'scratched',
           newState: 'healthy',
@@ -191,8 +192,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'leg', ownerEntityId: 'char1' };
         return null;
       });
@@ -222,8 +223,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -252,8 +253,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'torso', ownerEntityId: 'char1' };
         return null;
       });
@@ -281,8 +282,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'head', ownerEntityId: 'char1' };
         return null;
       });
@@ -310,8 +311,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -339,8 +340,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'leg', ownerEntityId: 'char1' };
         return null;
       });
@@ -368,8 +369,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'hand', ownerEntityId: 'char1' };
         return null;
       });
@@ -397,8 +398,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'leg', ownerEntityId: 'char1' };
         return null;
       });
@@ -426,8 +427,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'hand', ownerEntityId: 'char1' };
         return null;
       });
@@ -455,8 +456,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -504,8 +505,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -526,7 +527,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       // Should NOT dispatch event when state unchanged
       expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.anything()
       );
     });
@@ -540,8 +541,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -562,7 +563,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       // Should dispatch event when state changed
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           previousState: 'healthy',
           newState: 'wounded',
@@ -580,8 +581,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -609,8 +610,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'leg', ownerEntityId: 'char1' };
         return null;
       });
@@ -618,7 +619,7 @@ describe('UpdatePartHealthStateHandler', () => {
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           previousState: 'injured',
           newState: 'critical',
@@ -636,8 +637,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -645,7 +646,7 @@ describe('UpdatePartHealthStateHandler', () => {
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           previousState: 'scratched',
           newState: 'healthy',
@@ -663,8 +664,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -672,7 +673,7 @@ describe('UpdatePartHealthStateHandler', () => {
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           partEntityId: 'part1',
           ownerEntityId: 'char1',
@@ -696,8 +697,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -705,7 +706,7 @@ describe('UpdatePartHealthStateHandler', () => {
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.anything()
       );
       expect(log.debug).toHaveBeenCalledWith(
@@ -744,15 +745,15 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID) return null; // No part component
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID) return null; // No part component
         return null;
       });
 
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           ownerEntityId: null,
           partType: 'unknown',
@@ -769,8 +770,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { ownerEntityId: 'char1' }; // No subType
         return null;
       });
@@ -778,7 +779,7 @@ describe('UpdatePartHealthStateHandler', () => {
       await handler.execute({ part_entity_ref: 'part1' }, executionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_STATE_CHANGED_EVENT,
+        PART_STATE_CHANGED_EVENT_ID,
         expect.objectContaining({
           ownerEntityId: 'char1',
           partType: 'unknown',
@@ -814,8 +815,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -824,7 +825,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -837,8 +838,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'leg', ownerEntityId: 'char1' };
         return null;
       });
@@ -850,7 +851,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -863,8 +864,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'head', ownerEntityId: 'char1' };
         return null;
       });
@@ -876,7 +877,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
 
@@ -889,8 +890,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -899,7 +900,7 @@ describe('UpdatePartHealthStateHandler', () => {
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
     });
   });
@@ -1004,8 +1005,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'arm', ownerEntityId: 'char1' };
         return null;
       });
@@ -1056,8 +1057,8 @@ describe('UpdatePartHealthStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-        if (componentId === PART_COMPONENT_ID)
+        if (componentId === ANATOMY_PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'torso', ownerEntityId: 'char1' };
         return null;
       });

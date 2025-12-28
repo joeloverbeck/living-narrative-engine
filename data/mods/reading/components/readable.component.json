@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:readable",
+  "id": "reading:readable",
   "description": "Defines readable content for items that can be read by actors.",
   "dataSchema": {
     "type": "object",

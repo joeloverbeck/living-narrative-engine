@@ -17,7 +17,13 @@ import {
 
 import ApplyDamageHandler from '../../../../src/logic/operationHandlers/applyDamageHandler.js';
 import { calculateStateFromPercentage } from '../../../../src/anatomy/registries/healthStateRegistry.js';
-import { POSITION_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
+import {
+  POSITION_COMPONENT_ID,
+  ANATOMY_BODY_COMPONENT_ID,
+  ANATOMY_PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { PART_HEALTH_CHANGED_EVENT_ID } from '../../../../src/constants/eventIds.js';
 
 jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
   const original = jest.requireActual(
@@ -34,11 +40,8 @@ jest.mock('../../../../src/anatomy/registries/healthStateRegistry.js', () => {
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
-const PART_COMPONENT_ID = 'anatomy:part';
-const BODY_COMPONENT_ID = 'anatomy:body';
+// Test-only event IDs (not used by production code, only for mock verification)
 const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
-const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
 const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 
 // Test Doubles
@@ -259,14 +262,14 @@ describe('ApplyDamageHandler', () => {
 
         const components = {
           parent: {
-            [PART_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: {
                 child: { probability: 1, damage_fraction: 0.5 },
               },
             },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 100,
               maxHealth: 100,
               state: 'healthy',
@@ -274,8 +277,8 @@ describe('ApplyDamageHandler', () => {
             },
           },
           child: {
-            [PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 40,
               maxHealth: 40,
               state: 'healthy',
@@ -307,12 +310,12 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'parent',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 80 })
         );
         expect(em.addComponent).toHaveBeenCalledWith(
           'child',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 30 })
         );
         expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -331,14 +334,14 @@ describe('ApplyDamageHandler', () => {
 
         const components = {
           parent: {
-            [PART_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: {
                 child: { probability: 0, damage_fraction: 0.5 },
               },
             },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 50,
               maxHealth: 50,
               state: 'healthy',
@@ -346,8 +349,8 @@ describe('ApplyDamageHandler', () => {
             },
           },
           child: {
-            [PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 30,
               maxHealth: 30,
               state: 'healthy',
@@ -370,12 +373,12 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'parent',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 35 })
         );
         expect(em.addComponent).not.toHaveBeenCalledWith(
           'child',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.anything()
         );
       });
@@ -398,12 +401,12 @@ describe('ApplyDamageHandler', () => {
 
         const components = {
           parent: {
-            [PART_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: propagationRules,
             },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 80,
               maxHealth: 80,
               state: 'healthy',
@@ -441,12 +444,12 @@ describe('ApplyDamageHandler', () => {
 
         const components = {
           parent: {
-            [PART_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: {},
             },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 100,
               maxHealth: 100,
               state: 'healthy',
@@ -454,7 +457,7 @@ describe('ApplyDamageHandler', () => {
             },
           },
           child1: {
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 50,
               maxHealth: 50,
               state: 'healthy',
@@ -462,7 +465,7 @@ describe('ApplyDamageHandler', () => {
             },
           },
           child2: {
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 30,
               maxHealth: 30,
               state: 'healthy',
@@ -500,12 +503,12 @@ describe('ApplyDamageHandler', () => {
         // Both children should receive damage
         expect(em.addComponent).toHaveBeenCalledWith(
           'child1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 40 })
         );
         expect(em.addComponent).toHaveBeenCalledWith(
           'child2',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 25 })
         );
       });
@@ -527,7 +530,7 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -546,7 +549,7 @@ describe('ApplyDamageHandler', () => {
       // 80% health is 'scratched' (61-80% threshold)
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 80,
           state: 'scratched',
@@ -554,7 +557,7 @@ describe('ApplyDamageHandler', () => {
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.objectContaining({
           partEntityId: 'part1',
           newHealth: 80,
@@ -578,7 +581,7 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -587,7 +590,7 @@ describe('ApplyDamageHandler', () => {
       // 40% health is 'injured' (21-40% threshold)
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 40,
           state: 'injured',
@@ -604,18 +607,18 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID)
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID)
           return { bodyId: 'body1' };
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
-        if (id === 'part1' && comp === PART_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
           return { hit_probability_weight: 10 };
         return null;
       });
@@ -641,15 +644,15 @@ describe('ApplyDamageHandler', () => {
 
       const components = {
         entity1: {
-          [BODY_COMPONENT_ID]: { bodyId: 'body1' },
+          [ANATOMY_BODY_COMPONENT_ID]: { bodyId: 'body1' },
         },
         part1: {
-          [PART_COMPONENT_ID]: {
+          [ANATOMY_PART_COMPONENT_ID]: {
             subType: 'torso',
             ownerEntityId: 'entity1',
             hit_probability_weight: 1,
           },
-          [PART_HEALTH_COMPONENT_ID]: {
+          [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 100,
             maxHealth: 100,
             state: 'healthy',
@@ -657,12 +660,12 @@ describe('ApplyDamageHandler', () => {
           },
         },
         part2: {
-          [PART_COMPONENT_ID]: {
+          [ANATOMY_PART_COMPONENT_ID]: {
             subType: 'arm',
             ownerEntityId: 'entity1',
             hit_probability_weight: 1,
           },
-          [PART_HEALTH_COMPONENT_ID]: {
+          [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 100,
             maxHealth: 100,
             state: 'healthy',
@@ -704,19 +707,19 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID)
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID)
           return { bodyId: 'body1' };
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
         // Return anatomy:part WITHOUT hit_probability_weight - mimics real entity definitions
-        if (id === 'part1' && comp === PART_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'torso' };
         return null;
       });
@@ -742,26 +745,26 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
-        if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === 'part2' && comp === PART_COMPONENT_ID) return true;
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
+        if (id === 'part2' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === 'part2' && comp === ANATOMY_PART_COMPONENT_ID) return true;
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (id === 'entity1' && comp === BODY_COMPONENT_ID)
+        if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID)
           return { bodyId: 'body1' };
         // part1 has explicit 0 weight - should be excluded
-        if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
-        if (id === 'part1' && comp === PART_COMPONENT_ID)
+        if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'head', hit_probability_weight: 0 };
         // part2 has undefined weight - should default to 1.0 and be selected
-        if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === 'part2' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
-        if (id === 'part2' && comp === PART_COMPONENT_ID)
+        if (id === 'part2' && comp === ANATOMY_PART_COMPONENT_ID)
           return { subType: 'torso' };
         return null;
       });
@@ -795,7 +798,7 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -803,7 +806,7 @@ describe('ApplyDamageHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 0,
           state: 'destroyed',
@@ -835,7 +838,7 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -843,7 +846,7 @@ describe('ApplyDamageHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledWith(
         'part1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({
           currentHealth: 0,
         })
@@ -888,7 +891,7 @@ describe('ApplyDamageHandler', () => {
       });
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue({
         currentHealth: 100,
@@ -920,7 +923,7 @@ describe('ApplyDamageHandler', () => {
       jsonLogicService.evaluate.mockReturnValue({ id: 'resolvedEntityObject' });
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue({
         currentHealth: 100,
@@ -996,7 +999,7 @@ describe('ApplyDamageHandler', () => {
       jsonLogicService.evaluate.mockReturnValue('resolvedEntity');
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue({
         currentHealth: 100,
@@ -1014,7 +1017,7 @@ describe('ApplyDamageHandler', () => {
       );
     });
 
-    test('handles missing PART_COMPONENT_ID (defaults extra event data)', async () => {
+    test('handles missing ANATOMY_PART_COMPONENT_ID (defaults extra event data)', async () => {
       const params = {
         entity_ref: 'entity1',
         part_ref: 'part1',
@@ -1024,7 +1027,7 @@ describe('ApplyDamageHandler', () => {
 
       // PART_HEALTH exists, but PART_COMPONENT does not
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue({
         currentHealth: 100,
@@ -1034,9 +1037,9 @@ describe('ApplyDamageHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      // Check that PART_HEALTH_CHANGED_EVENT was dispatched with default values
+      // Check that PART_HEALTH_CHANGED_EVENT_ID was dispatched with default values
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        PART_HEALTH_CHANGED_EVENT,
+        PART_HEALTH_CHANGED_EVENT_ID,
         expect.objectContaining({
           partType: 'unknown',
           ownerEntityId: null,
@@ -1044,7 +1047,7 @@ describe('ApplyDamageHandler', () => {
       );
     });
 
-    test('skips health update but continues propagation if PART_HEALTH_COMPONENT_ID is missing', async () => {
+    test('skips health update but continues propagation if ANATOMY_PART_HEALTH_COMPONENT_ID is missing', async () => {
       const params = {
         entity_ref: 'entity1',
         part_ref: 'hair',
@@ -1058,21 +1061,21 @@ describe('ApplyDamageHandler', () => {
 
       // Mock PART_COMPONENT to have propagation rules, but no health component
       em.hasComponent.mockImplementation((id, comp) => {
-        if (comp === PART_COMPONENT_ID && id === 'hair') return true;
+        if (comp === ANATOMY_PART_COMPONENT_ID && id === 'hair') return true;
         // Child part has health
-        if (comp === PART_HEALTH_COMPONENT_ID && id === 'scalp') return true;
+        if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID && id === 'scalp') return true;
 
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (comp === PART_COMPONENT_ID && id === 'hair') {
+        if (comp === ANATOMY_PART_COMPONENT_ID && id === 'hair') {
           return {
             damage_propagation: propagationRules,
           };
         }
         // Child part has health
-        if (comp === PART_HEALTH_COMPONENT_ID && id === 'scalp') {
+        if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID && id === 'scalp') {
           return { currentHealth: 50, maxHealth: 50, state: 'healthy' };
         }
         return null;
@@ -1096,14 +1099,14 @@ describe('ApplyDamageHandler', () => {
       // Should not update 'hair' health
       expect(em.addComponent).not.toHaveBeenCalledWith(
         'hair',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.anything()
       );
 
       // Should propagate to 'scalp' (this calls execute recursively)
       expect(em.addComponent).toHaveBeenCalledWith(
         'scalp',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.anything()
       );
     });
@@ -1149,7 +1152,7 @@ describe('ApplyDamageHandler', () => {
         damage_type: 'd',
       };
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
 
       // Test Wounded (41-60%)
@@ -1163,7 +1166,7 @@ describe('ApplyDamageHandler', () => {
       // 60% health is in the wounded range (41-60%)
       expect(em.addComponent).toHaveBeenCalledWith(
         'p',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({ state: 'wounded' })
       );
 
@@ -1179,7 +1182,7 @@ describe('ApplyDamageHandler', () => {
       await handler.execute(params, executionContext);
       expect(em.addComponent).toHaveBeenCalledWith(
         'p',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.objectContaining({ state: 'critical' })
       );
     });
@@ -1200,7 +1203,7 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation(
-        (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+        (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
       );
       em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1259,7 +1262,7 @@ describe('ApplyDamageHandler', () => {
       // (probability handling is tested in the service tests)
       const components = {
         parent: {
-          [PART_COMPONENT_ID]: {
+          [ANATOMY_PART_COMPONENT_ID]: {
             subType: 'torso',
             ownerEntityId: 'entity1',
             damage_propagation: {
@@ -1268,21 +1271,21 @@ describe('ApplyDamageHandler', () => {
               child3: { probability: -0.5, damage_fraction: 1 },
             },
           },
-          [PART_HEALTH_COMPONENT_ID]: {
+          [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 100,
             maxHealth: 100,
             state: 'healthy',
           },
         },
         child1: {
-          [PART_HEALTH_COMPONENT_ID]: {
+          [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 10,
             maxHealth: 10,
             state: 'healthy',
           },
         },
         child2: {
-          [PART_HEALTH_COMPONENT_ID]: {
+          [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
             currentHealth: 10,
             maxHealth: 10,
             state: 'healthy',
@@ -1312,12 +1315,12 @@ describe('ApplyDamageHandler', () => {
       // child1 and child2 should be hit (service decided they should propagate)
       expect(em.addComponent).toHaveBeenCalledWith(
         'child1',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.anything()
       );
       expect(em.addComponent).toHaveBeenCalledWith(
         'child2',
-        PART_HEALTH_COMPONENT_ID,
+        ANATOMY_PART_HEALTH_COMPONENT_ID,
         expect.anything()
       );
     });
@@ -1344,13 +1347,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1380,7 +1383,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1412,13 +1415,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1465,13 +1468,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1520,13 +1523,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1559,7 +1562,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1577,7 +1580,7 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({
             currentHealth: 75,
           })
@@ -1611,13 +1614,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1667,7 +1670,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1675,7 +1678,7 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 70 })
         );
 
@@ -1710,7 +1713,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1719,7 +1722,7 @@ describe('ApplyDamageHandler', () => {
         // Should still work
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({
             currentHealth: 80,
           })
@@ -1748,7 +1751,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1756,7 +1759,7 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 30 })
         );
 
@@ -1785,7 +1788,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1838,7 +1841,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -1851,7 +1854,7 @@ describe('ApplyDamageHandler', () => {
 
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({
             currentHealth: 85,
           })
@@ -1946,13 +1949,13 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (comp === PART_COMPONENT_ID && id === 'part1') return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1') return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === PART_HEALTH_COMPONENT_ID) return healthComponent;
-          if (comp === PART_COMPONENT_ID && id === 'part1')
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return healthComponent;
+          if (comp === ANATOMY_PART_COMPONENT_ID && id === 'part1')
             return partComponent;
           return null;
         });
@@ -1994,14 +1997,14 @@ describe('ApplyDamageHandler', () => {
 
         const components = {
           parent: {
-            [PART_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: {
               subType: 'torso',
               ownerEntityId: 'entity1',
               damage_propagation: {
                 child: { probability: 1, damage_fraction: 0.5 },
               },
             },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 100,
               maxHealth: 100,
               state: 'healthy',
@@ -2009,8 +2012,8 @@ describe('ApplyDamageHandler', () => {
             },
           },
           child: {
-            [PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
-            [PART_HEALTH_COMPONENT_ID]: {
+            [ANATOMY_PART_COMPONENT_ID]: { subType: 'heart', ownerEntityId: 'entity1' },
+            [ANATOMY_PART_HEALTH_COMPONENT_ID]: {
               currentHealth: 40,
               maxHealth: 40,
               state: 'healthy',
@@ -2042,14 +2045,14 @@ describe('ApplyDamageHandler', () => {
         // Parent damage applied
         expect(em.addComponent).toHaveBeenCalledWith(
           'parent',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 80 })
         );
 
         // Child damage applied (via propagation)
         expect(em.addComponent).toHaveBeenCalledWith(
           'child',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({ currentHealth: 30 })
         );
       });
@@ -2075,7 +2078,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2112,7 +2115,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2129,7 +2132,7 @@ describe('ApplyDamageHandler', () => {
         );
         expect(em.addComponent).toHaveBeenCalledWith(
           'part1',
-          PART_HEALTH_COMPONENT_ID,
+          ANATOMY_PART_HEALTH_COMPONENT_ID,
           expect.objectContaining({
             currentHealth: 75,
           })
@@ -2155,7 +2158,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2189,7 +2192,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2223,7 +2226,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2259,7 +2262,7 @@ describe('ApplyDamageHandler', () => {
         jsonLogicService.evaluate.mockReturnValue(['piercing', 'slashing']);
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2297,7 +2300,7 @@ describe('ApplyDamageHandler', () => {
         });
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2337,7 +2340,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2373,7 +2376,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2403,7 +2406,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2442,7 +2445,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -2475,13 +2478,13 @@ describe('ApplyDamageHandler', () => {
         executionContext.hitLocationCache = { entity1: 'cached-part' };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === 'hinted-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'hinted-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return true;
-          if (id === 'hinted-part' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'hinted-part' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'hinted-part' && comp === PART_HEALTH_COMPONENT_ID) {
+          if (id === 'hinted-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) {
             return {
               currentHealth: 10,
               maxHealth: 10,
@@ -2489,7 +2492,7 @@ describe('ApplyDamageHandler', () => {
               turnsInState: 0,
             };
           }
-          if (id === 'hinted-part' && comp === PART_COMPONENT_ID) {
+          if (id === 'hinted-part' && comp === ANATOMY_PART_COMPONENT_ID) {
             return { subType: 'arm', ownerEntityId: 'entity1' };
           }
           return null;
@@ -2521,18 +2524,18 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
-          if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (id === 'part2' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
+          if (id === 'part2' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part2' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
 
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'entity1' && comp === BODY_COMPONENT_ID)
+          if (id === 'entity1' && comp === ANATOMY_BODY_COMPONENT_ID)
             return { bodyId: 'body1' };
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) {
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) {
             return {
               currentHealth: 10,
               maxHealth: 10,
@@ -2540,7 +2543,7 @@ describe('ApplyDamageHandler', () => {
               turnsInState: 0,
             };
           }
-          if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) {
+          if (id === 'part2' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) {
             return {
               currentHealth: 10,
               maxHealth: 10,
@@ -2548,9 +2551,9 @@ describe('ApplyDamageHandler', () => {
               turnsInState: 0,
             };
           }
-          if (id === 'part1' && comp === PART_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'torso', hit_probability_weight: 1 };
-          if (id === 'part2' && comp === PART_COMPONENT_ID)
+          if (id === 'part2' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'arm', hit_probability_weight: 1 };
           return null;
         });
@@ -2603,15 +2606,15 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === actualEntityId && comp === BODY_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          if (id === actualEntityId && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'part1' && comp === PART_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'torso', ownerEntityId: actualEntityId };
           return null;
         });
@@ -2662,16 +2665,16 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === actualEntityId && comp === BODY_COMPONENT_ID) return true;
-          if (id === 'blade-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === actualEntityId && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (id === 'blade-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return true;
-          if (id === 'blade-part' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'blade-part' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'blade-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'blade-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'blade-part' && comp === PART_COMPONENT_ID)
+          if (id === 'blade-part' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'blade', ownerEntityId: actualEntityId };
           return null;
         });
@@ -2715,16 +2718,16 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === actorEntityId && comp === BODY_COMPONENT_ID) return true;
-          if (id === 'hand-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === actorEntityId && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (id === 'hand-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return true;
-          if (id === 'hand-part' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'hand-part' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'hand-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'hand-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'hand-part' && comp === PART_COMPONENT_ID)
+          if (id === 'hand-part' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'hand', ownerEntityId: actorEntityId };
           return null;
         });
@@ -2756,15 +2759,15 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === directEntityId && comp === BODY_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          if (id === directEntityId && comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'part1' && comp === PART_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'torso', ownerEntityId: directEntityId };
           return null;
         });
@@ -2813,17 +2816,17 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === tertiaryEntityId && comp === BODY_COMPONENT_ID)
+          if (id === tertiaryEntityId && comp === ANATOMY_BODY_COMPONENT_ID)
             return true;
-          if (id === 'arm-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'arm-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return true;
-          if (id === 'arm-part' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'arm-part' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'arm-part' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'arm-part' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'arm-part' && comp === PART_COMPONENT_ID)
+          if (id === 'arm-part' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'arm', ownerEntityId: tertiaryEntityId };
           return null;
         });
@@ -2901,16 +2904,16 @@ describe('ApplyDamageHandler', () => {
         jsonLogicService.evaluate.mockReturnValue(resolvedEntityId);
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (id === resolvedEntityId && comp === BODY_COMPONENT_ID)
+          if (id === resolvedEntityId && comp === ANATOMY_BODY_COMPONENT_ID)
             return true;
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
-          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
             return healthComponent;
-          if (id === 'part1' && comp === PART_COMPONENT_ID)
+          if (id === 'part1' && comp === ANATOMY_PART_COMPONENT_ID)
             return { subType: 'torso', ownerEntityId: resolvedEntityId };
           return null;
         });
@@ -2971,15 +2974,15 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation((id, comp) => {
-        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === partId && comp === PART_COMPONENT_ID) return true;
+        if (id === partId && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === partId && comp === ANATOMY_PART_COMPONENT_ID) return true;
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (id === partId && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === partId && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return healthComponent;
-        if (id === partId && comp === PART_COMPONENT_ID) return partComponent;
+        if (id === partId && comp === ANATOMY_PART_COMPONENT_ID) return partComponent;
         if (id === ownerEntityId && comp === 'core:position') {
           return withLocation ? { locationId } : null;
         }
@@ -3119,15 +3122,15 @@ describe('ApplyDamageHandler', () => {
       };
 
       em.hasComponent.mockImplementation((id, comp) => {
-        if (id === partId && comp === PART_HEALTH_COMPONENT_ID) return true;
-        if (id === partId && comp === PART_COMPONENT_ID) return true;
+        if (id === partId && comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
+        if (id === partId && comp === ANATOMY_PART_COMPONENT_ID) return true;
         return false;
       });
 
       em.getComponentData.mockImplementation((id, comp) => {
-        if (id === partId && comp === PART_HEALTH_COMPONENT_ID)
+        if (id === partId && comp === ANATOMY_PART_HEALTH_COMPONENT_ID)
           return healthComponent;
-        if (id === partId && comp === PART_COMPONENT_ID) return partComponent;
+        if (id === partId && comp === ANATOMY_PART_COMPONENT_ID) return partComponent;
         // Target entity has NO location
         if (id === ownerEntityId && comp === 'core:position') return null;
         // Actor entity HAS location - this is the fallback
@@ -3301,7 +3304,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3371,12 +3374,12 @@ describe('ApplyDamageHandler', () => {
         });
         // Mock body component for fallback selection
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === BODY_COMPONENT_ID) return true;
-          if (comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (comp === ANATOMY_BODY_COMPONENT_ID) return true;
+          if (comp === ANATOMY_PART_HEALTH_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === BODY_COMPONENT_ID) return { graph: {} };
+          if (comp === ANATOMY_BODY_COMPONENT_ID) return { graph: {} };
           return healthComponent;
         });
         bodyGraphService.getAllParts.mockReturnValue(['fallback-part']);
@@ -3399,7 +3402,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3470,7 +3473,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3523,7 +3526,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3558,7 +3561,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3630,7 +3633,7 @@ describe('ApplyDamageHandler', () => {
 
       beforeEach(() => {
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
       });
@@ -3660,11 +3663,11 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation((id, comp) => {
-          if (comp === BODY_COMPONENT_ID) return true;
+          if (comp === ANATOMY_BODY_COMPONENT_ID) return true;
           return false;
         });
         em.getComponentData.mockImplementation((id, comp) => {
-          if (comp === BODY_COMPONENT_ID) return { graph: {} };
+          if (comp === ANATOMY_BODY_COMPONENT_ID) return { graph: {} };
           return null;
         });
         bodyGraphService.getAllParts.mockImplementation(() => {
@@ -3701,7 +3704,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
         jsonLogicService.evaluate.mockImplementation(() => {
@@ -3735,7 +3738,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
         jsonLogicService.evaluate.mockReturnValue('');
@@ -3767,7 +3770,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
 
@@ -3796,7 +3799,7 @@ describe('ApplyDamageHandler', () => {
         };
 
         em.hasComponent.mockImplementation(
-          (id, comp) => comp === PART_HEALTH_COMPONENT_ID
+          (id, comp) => comp === ANATOMY_PART_HEALTH_COMPONENT_ID
         );
         em.getComponentData.mockReturnValue(healthComponent);
         jsonLogicService.evaluate.mockReturnValue('not-a-number');

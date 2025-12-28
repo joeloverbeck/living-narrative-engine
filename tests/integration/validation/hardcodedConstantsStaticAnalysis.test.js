@@ -8,23 +8,10 @@ import path from 'path';
 const LEGACY_INLINE_CONSTANTS = new Set([
   'src/logic/operationHandlers/addPerceptionLogEntryHandler.js:39:SENSORIAL_LINKS_COMPONENT_ID',
   'src/logic/operationHandlers/addPerceptionLogEntryHandler.js:40:LOCATION_NAME_COMPONENT_ID',
-  'src/logic/operationHandlers/applyDamageHandler.js:29:PART_COMPONENT_ID',
-  'src/logic/operationHandlers/applyDamageHandler.js:30:BODY_COMPONENT_ID',
   'src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js:37:POSITION_COMPONENT_ID',
   'src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js:38:CLOSENESS_COMPONENT_ID',
-  'src/logic/operationHandlers/depleteOxygenHandler.js:33:RESPIRATORY_ORGAN_COMPONENT_ID',
-  'src/logic/operationHandlers/depleteOxygenHandler.js:34:PART_COMPONENT_ID',
-  'src/logic/operationHandlers/depleteOxygenHandler.js:35:OXYGEN_DEPLETED_EVENT',
-  'src/logic/operationHandlers/modifyPartHealthHandler.js:35:PART_HEALTH_COMPONENT_ID',
-  'src/logic/operationHandlers/modifyPartHealthHandler.js:36:PART_COMPONENT_ID',
-  'src/logic/operationHandlers/modifyPartHealthHandler.js:37:PART_HEALTH_CHANGED_EVENT',
-  'src/logic/operationHandlers/restoreOxygenHandler.js:31:RESPIRATORY_ORGAN_COMPONENT_ID',
-  'src/logic/operationHandlers/restoreOxygenHandler.js:32:PART_COMPONENT_ID',
   'src/logic/operationHandlers/unwieldItemHandler.js:29:WIELDING_COMPONENT_ID',
   'src/logic/operationHandlers/unwieldItemHandler.js:30:ITEM_UNWIELDED_EVENT',
-  'src/logic/operationHandlers/updatePartHealthStateHandler.js:42:PART_HEALTH_COMPONENT_ID',
-  'src/logic/operationHandlers/updatePartHealthStateHandler.js:43:PART_COMPONENT_ID',
-  'src/logic/operationHandlers/updatePartHealthStateHandler.js:44:PART_STATE_CHANGED_EVENT',
 ]);
 
 const HANDLERS_DIR = 'src/logic/operationHandlers';

@@ -38,10 +38,11 @@ import {
   calculateStateFromPercentage,
   isDeterioration,
 } from '../../anatomy/registries/healthStateRegistry.js';
-
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
-const PART_COMPONENT_ID = 'anatomy:part';
-const PART_STATE_CHANGED_EVENT = 'anatomy:part_state_changed';
+import {
+  ANATOMY_PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { PART_STATE_CHANGED_EVENT_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} UpdatePartHealthStateParams
@@ -136,13 +137,13 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
       // Get part_health component
       const partHealth = this.#entityManager.getComponentData(
         partEntityId,
-        PART_HEALTH_COMPONENT_ID
+        ANATOMY_PART_HEALTH_COMPONENT_ID
       );
 
       if (!partHealth) {
         safeDispatchError(
           this.#dispatcher,
-          `UPDATE_PART_HEALTH_STATE: Entity does not have ${PART_HEALTH_COMPONENT_ID} component`,
+          `UPDATE_PART_HEALTH_STATE: Entity does not have ${ANATOMY_PART_HEALTH_COMPONENT_ID} component`,
           { partEntityId },
           log
         );
@@ -167,7 +168,7 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
         [
           {
             instanceId: partEntityId,
-            componentTypeId: PART_HEALTH_COMPONENT_ID,
+            componentTypeId: ANATOMY_PART_HEALTH_COMPONENT_ID,
             componentData: {
               currentHealth,
               maxHealth,
@@ -184,12 +185,12 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
         // Get owner info from anatomy:part component if available
         const partComponent = this.#entityManager.getComponentData(
           partEntityId,
-          PART_COMPONENT_ID
+          ANATOMY_PART_COMPONENT_ID
         );
         const ownerEntityId = partComponent?.ownerEntityId || null;
         const partType = partComponent?.subType || 'unknown';
 
-        this.#dispatcher.dispatch(PART_STATE_CHANGED_EVENT, {
+        this.#dispatcher.dispatch(PART_STATE_CHANGED_EVENT_ID, {
           partEntityId,
           ownerEntityId,
           partType,

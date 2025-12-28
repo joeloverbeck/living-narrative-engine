@@ -29,10 +29,11 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-
-const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';
-const PART_COMPONENT_ID = 'anatomy:part';
-const OXYGEN_DEPLETED_EVENT = 'breathing-states:oxygen_depleted';
+import {
+  RESPIRATORY_ORGAN_COMPONENT_ID,
+  ANATOMY_PART_COMPONENT_ID as PART_COMPONENT_ID,
+} from '../../constants/componentIds.js';
+import { OXYGEN_DEPLETED_EVENT_ID as OXYGEN_DEPLETED_EVENT } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} DepleteOxygenParams

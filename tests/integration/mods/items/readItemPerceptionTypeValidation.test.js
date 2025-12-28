@@ -7,16 +7,16 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import readItemRule from '../../../../data/mods/items/rules/handle_read_item.rule.json' assert { type: 'json' };
-import eventIsActionReadItem from '../../../../data/mods/items/conditions/event-is-action-read-item.condition.json' assert { type: 'json' };
+import readItemRule from '../../../../data/mods/reading/rules/handle_read_item.rule.json' assert { type: 'json' };
+import eventIsActionReadItem from '../../../../data/mods/reading/conditions/event-is-action-read-item.condition.json' assert { type: 'json' };
 
-describe('items:read_item perception type validation', () => {
+describe('reading:read_item perception type validation', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:read_item',
+      'reading',
+      'reading:read_item',
       readItemRule,
       eventIsActionReadItem
     );
@@ -44,7 +44,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Test Letter')
       .withComponent('items-core:item', {})
       .withComponent('items-core:portable', {})
-      .withComponent('items:readable', {
+      .withComponent('reading:readable', {
         text: 'This is a test message.',
       })
       .build();
@@ -117,7 +117,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Test Note')
       .withComponent('items-core:item', {})
       .withComponent('items-core:portable', {})
-      .withComponent('items:readable', {
+      .withComponent('reading:readable', {
         text: 'Important information.',
       })
       .build();
@@ -161,7 +161,7 @@ describe('items:read_item perception type validation', () => {
       .withName('Ancient Book')
       .withComponent('items-core:item', {})
       .withComponent('items-core:portable', {})
-      .withComponent('items:readable', {
+      .withComponent('reading:readable', {
         text: 'In the beginning was the Word.',
       })
       .build();
