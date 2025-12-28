@@ -74,6 +74,13 @@ describe('Integration: LLM Prompt Debug Panel', () => {
       formatDamageEvent: jest.fn(),
       formatFirstPerson: jest.fn(),
     });
+    ensureInstance(tokens.OxygenAggregationService, {
+      aggregateOxygen: jest.fn().mockReturnValue({
+        totalOxygen: 1,
+        maxOxygen: 1,
+        organs: [],
+      }),
+    });
 
     // Mock ISafeEventDispatcher
     // We need a real-ish dispatcher to test subscriptions?

@@ -11,6 +11,7 @@ export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position';
 export const PARTICIPATION_COMPONENT_ID = 'core:participation';
 export const EXITS_COMPONENT_ID = 'locations:exits';
+export const SENSORIAL_LINKS_COMPONENT_ID = 'locations:sensorial_links';
 export const PERCEPTION_LOG_COMPONENT_ID = 'core:perception_log';
 
 // Detailed character aspects
@@ -39,6 +40,7 @@ export const GOALS_COMPONENT_ID = 'core:goals';
 
 export const LEADING_COMPONENT_ID = 'companionship:leading';
 export const FOLLOWING_COMPONENT_ID = 'companionship:following';
+export const CLOSENESS_COMPONENT_ID = 'personal-space-states:closeness';
 
 export const APPARENT_AGE_COMPONENT_ID = 'core:apparent_age';
 
@@ -64,6 +66,9 @@ export const WEIGHT_COMPONENT_ID = 'core:weight';
 // Items components
 export const ITEM_COMPONENT_ID = 'items-core:item';
 export const PORTABLE_COMPONENT_ID = 'items-core:portable';
+
+// Item handling state components
+export const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
 
 // Breathing system components
 export const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';

@@ -92,6 +92,7 @@ export const coreTokens = freeze({
   PoisonTickSystem: 'PoisonTickSystem',
   InjuryAggregationService: 'InjuryAggregationService',
   InjuryNarrativeFormatterService: 'InjuryNarrativeFormatterService',
+  OxygenAggregationService: 'OxygenAggregationService',
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',

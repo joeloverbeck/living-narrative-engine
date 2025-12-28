@@ -28,6 +28,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ITEM_PUT_IN_CONTAINER_EVENT_ID: 'containers:item_put_in_container',
   ITEM_TAKEN_FROM_CONTAINER_EVENT_ID: 'containers:item_taken_from_container',
   CONTAINER_OPENED_EVENT_ID: 'containers:container_opened',
+  ITEM_UNWIELDED_EVENT: 'item-handling-states:item_unwielded',
   DISPLAY_SPEECH_ID: 'core:display_speech',
   DISPLAY_THOUGHT_ID: 'core:display_thought',
   PORTRAIT_CLICKED: 'core:portrait_clicked',

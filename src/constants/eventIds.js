@@ -34,6 +34,9 @@ export const ITEM_TAKEN_FROM_CONTAINER_EVENT_ID =
   'containers:item_taken_from_container';
 export const CONTAINER_OPENED_EVENT_ID = 'containers:container_opened';
 
+// Item handling state event IDs
+export const ITEM_UNWIELDED_EVENT = 'item-handling-states:item_unwielded';
+
 /**
  * @typedef {object} DisplaySpeechPayload
  * @property {string} entityId The ID of the entity that spoke. Used to fetch the portrait.

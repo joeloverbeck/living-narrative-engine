@@ -34,6 +34,9 @@ describe('registerUI', () => {
       formatFirstPerson: jest.fn(),
       formatDamageEvent: jest.fn(),
     });
+    container.register(tokens.OxygenAggregationService, {
+      aggregateOxygen: jest.fn(),
+    });
 
     const doc = document;
     elements = {

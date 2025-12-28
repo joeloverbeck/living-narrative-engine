@@ -15,6 +15,7 @@
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../anatomy/services/injuryAggregationService.js').default} InjuryAggregationService */
 /** @typedef {import('../anatomy/services/injuryNarrativeFormatterService.js').default} InjuryNarrativeFormatterService */
+/** @typedef {import('../anatomy/services/oxygenAggregationService.js').default} OxygenAggregationService */
 /** @typedef {import('../anatomy/dtos/InjurySummaryDTO.js').InjurySummaryDTO} InjurySummaryDTO */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
@@ -36,6 +37,9 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
   /** @type {InjuryNarrativeFormatterService} */
   #injuryNarrativeFormatterService;
 
+  /** @type {OxygenAggregationService} */
+  #oxygenAggregationService;
+
   /**
    * Creates an InjuryStatusPanel instance.
    *
@@ -45,6 +49,7 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - Dispatcher for validated events.
    * @param {InjuryAggregationService} dependencies.injuryAggregationService - Service for collecting injury data.
    * @param {InjuryNarrativeFormatterService} dependencies.injuryNarrativeFormatterService - Service for formatting injury narratives.
+   * @param {OxygenAggregationService} dependencies.oxygenAggregationService - Service for aggregating oxygen data.
    */
   constructor({
     logger,
@@ -52,6 +57,7 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     validatedEventDispatcher,
     injuryAggregationService,
     injuryNarrativeFormatterService,
+    oxygenAggregationService,
   }) {
     const elementsConfig = {
       narrativeElement: {
@@ -112,8 +118,29 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
       );
     }
 
+    if (!oxygenAggregationService) {
+      this.logger.error(
+        `${this._logPrefix} OxygenAggregationService dependency is missing.`
+      );
+      throw new Error(
+        `${this._logPrefix} OxygenAggregationService dependency is missing.`
+      );
+    }
+    if (
+      !oxygenAggregationService.aggregateOxygen ||
+      typeof oxygenAggregationService.aggregateOxygen !== 'function'
+    ) {
+      this.logger.error(
+        `${this._logPrefix} OxygenAggregationService must have aggregateOxygen method.`
+      );
+      throw new Error(
+        `${this._logPrefix} OxygenAggregationService must have aggregateOxygen method.`
+      );
+    }
+
     this.#injuryAggregationService = injuryAggregationService;
     this.#injuryNarrativeFormatterService = injuryNarrativeFormatterService;
+    this.#oxygenAggregationService = oxygenAggregationService;
 
     this.logger.debug(`${this._logPrefix} Initializing...`);
 
@@ -194,7 +221,18 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
         this.#injuryAggregationService.aggregateInjuries(entityId);
 
       // Render based on the summary
-      this.#renderSummary(summary);
+      let oxygenSummary = null;
+
+      try {
+        oxygenSummary = this.#oxygenAggregationService.aggregateOxygen(entityId);
+      } catch (error) {
+        this.logger.error(
+          `${this._logPrefix} Error aggregating oxygen for entity ${entityId}:`,
+          error
+        );
+      }
+
+      this.#renderSummary(summary, oxygenSummary);
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error aggregating injuries for entity ${entityId}:`,
@@ -208,9 +246,10 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
    * Renders the injury summary to the panel.
    *
    * @param {InjurySummaryDTO} summary - The injury summary to render.
+   * @param {object|null} oxygenSummary - The oxygen summary to render.
    * @private
    */
-  #renderSummary(summary) {
+  #renderSummary(summary, oxygenSummary) {
     if (!this.elements.narrativeElement) {
       this.logger.warn(
         `${this._logPrefix} Cannot render: narrative element not available.`
@@ -220,13 +259,13 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
 
     // Check for dead state first
     if (summary.isDead) {
-      this.#renderDeadState(summary);
+      this.#renderDeadState(summary, oxygenSummary);
       return;
     }
 
     // Check for dying state
     if (summary.isDying) {
-      this.#renderDyingState(summary);
+      this.#renderDyingState(summary, oxygenSummary);
       return;
     }
 
@@ -239,7 +278,7 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
       summary.fracturedParts.length > 0;
 
     if (!hasInjuries) {
-      this.#renderHealthyState();
+      this.#renderHealthyState(oxygenSummary);
       return;
     }
 
@@ -249,7 +288,8 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     this.#renderNarrative(
       narrative,
       this.#getSeverityClass(summary),
-      summary.overallHealthPercentage
+      summary.overallHealthPercentage,
+      oxygenSummary
     );
   }
 
@@ -259,9 +299,10 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
    * @param {string} narrative - The narrative text to display.
    * @param {string} severityClass - The CSS class for severity styling.
    * @param {number} healthPercentage - Health value 0-100.
+   * @param {object|null} oxygenSummary - The oxygen summary to render.
    * @private
    */
-  #renderNarrative(narrative, severityClass, healthPercentage) {
+  #renderNarrative(narrative, severityClass, healthPercentage, oxygenSummary) {
     if (!this.elements.contentElement) {
       return;
     }
@@ -272,6 +313,12 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     // Add health bar
     const healthBar = this.#createHealthBar(healthPercentage, severityClass);
     this.elements.contentElement.appendChild(healthBar);
+
+    // Add oxygen bar if available
+    const oxygenBar = this.#createOxygenBar(oxygenSummary);
+    if (oxygenBar) {
+      this.elements.contentElement.appendChild(oxygenBar);
+    }
 
     // Add narrative
     const narrativeEl = this.documentContext.create('div');
@@ -284,9 +331,10 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
   /**
    * Renders the healthy state (no injuries) with 100% health bar.
    *
+   * @param {object|null} oxygenSummary - The oxygen summary to render.
    * @private
    */
-  #renderHealthyState() {
+  #renderHealthyState(oxygenSummary) {
     if (!this.elements.contentElement) {
       return;
     }
@@ -297,6 +345,12 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     // Add health bar at 100%
     const healthBar = this.#createHealthBar(100, 'severity-healthy');
     this.elements.contentElement.appendChild(healthBar);
+
+    // Add oxygen bar if available
+    const oxygenBar = this.#createOxygenBar(oxygenSummary);
+    if (oxygenBar) {
+      this.elements.contentElement.appendChild(oxygenBar);
+    }
 
     // Add healthy message
     const narrativeEl = this.documentContext.create('div');
@@ -310,9 +364,10 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
    * Renders the dying state with countdown and health bar.
    *
    * @param {InjurySummaryDTO} summary - The injury summary.
+   * @param {object|null} oxygenSummary - The oxygen summary to render.
    * @private
    */
-  #renderDyingState(summary) {
+  #renderDyingState(summary, oxygenSummary) {
     if (!this.elements.contentElement) {
       return;
     }
@@ -327,6 +382,12 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
       severityClass
     );
     this.elements.contentElement.appendChild(healthBar);
+
+    // Add oxygen bar if available
+    const oxygenBar = this.#createOxygenBar(oxygenSummary);
+    if (oxygenBar) {
+      this.elements.contentElement.appendChild(oxygenBar);
+    }
 
     // First, render the injury narrative
     const narrative =
@@ -354,9 +415,10 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
    * Renders the dead state with 0% health bar.
    *
    * @param {InjurySummaryDTO} summary - The injury summary.
+   * @param {object|null} oxygenSummary - The oxygen summary to render.
    * @private
    */
-  #renderDeadState(summary) {
+  #renderDeadState(summary, oxygenSummary) {
     if (!this.elements.contentElement) {
       return;
     }
@@ -367,6 +429,12 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     // Add health bar at 0% with destroyed severity
     const healthBar = this.#createHealthBar(0, 'severity-destroyed');
     this.elements.contentElement.appendChild(healthBar);
+
+    // Add oxygen bar if available
+    const oxygenBar = this.#createOxygenBar(oxygenSummary);
+    if (oxygenBar) {
+      this.elements.contentElement.appendChild(oxygenBar);
+    }
 
     const causeText = summary.causeOfDeath ? ` (${summary.causeOfDeath})` : '';
 
@@ -436,6 +504,69 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
     wrapper.appendChild(percentText);
 
     return wrapper;
+  }
+
+  /**
+   * Creates the oxygen bar element with percentage display.
+   *
+   * @param {object|null} oxygenSummary - Oxygen summary or null when not available.
+   * @returns {HTMLElement|null} The oxygen bar wrapper element or null.
+   * @private
+   */
+  #createOxygenBar(oxygenSummary) {
+    if (!oxygenSummary?.hasRespiratoryOrgans) {
+      return null;
+    }
+
+    const oxygenPercentage = oxygenSummary.percentage;
+    const severityClass = this.#getOxygenSeverityClass(oxygenPercentage);
+
+    const wrapper = this.documentContext.create('div');
+    wrapper.className = `oxygen-bar-wrapper ${severityClass}`;
+    wrapper.id = 'oxygen-bar-wrapper';
+    wrapper.setAttribute('aria-label', `Oxygen level: ${oxygenPercentage}%`);
+
+    const label = this.documentContext.create('span');
+    label.className = 'oxygen-label';
+    label.innerHTML = 'O<sub>2</sub>';
+
+    const container = this.documentContext.create('div');
+    container.className = 'oxygen-bar-container';
+
+    const fill = this.documentContext.create('div');
+    fill.className = 'oxygen-bar-fill';
+    fill.style.width = `${oxygenPercentage}%`;
+
+    const percentText = this.documentContext.create('span');
+    percentText.className = 'oxygen-percentage-text';
+    percentText.textContent = `${oxygenPercentage}%`;
+
+    container.appendChild(fill);
+    wrapper.appendChild(label);
+    wrapper.appendChild(container);
+    wrapper.appendChild(percentText);
+
+    return wrapper;
+  }
+
+  /**
+   * Determines the CSS severity class based on the oxygen percentage.
+   *
+   * @param {number} percentage - Oxygen percentage 0-100.
+   * @returns {string} The CSS class name for the oxygen severity.
+   * @private
+   */
+  #getOxygenSeverityClass(percentage) {
+    if (percentage >= 80) {
+      return 'oxygen-full';
+    }
+    if (percentage >= 40) {
+      return 'oxygen-low';
+    }
+    if (percentage > 0) {
+      return 'oxygen-critical';
+    }
+    return 'oxygen-depleted';
   }
 
   // dispose() is inherited from BoundDomRendererBase and handles cleanup
