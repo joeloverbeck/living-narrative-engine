@@ -89,6 +89,104 @@
 }
 
 /* ============================================
+   Oxygen Bar
+   ============================================ */
+
+/* Oxygen bar wrapper (follows health-bar-wrapper pattern) */
+.oxygen-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  margin-bottom: var(--spacing-sm, 8px);
+}
+
+.oxygen-bar-wrapper .oxygen-bar-container {
+  flex: 1;
+}
+
+/* Oxygen bar container (follows health-bar-container pattern) */
+.oxygen-bar-container {
+  background-color: #e8e4dc;
+  border-radius: var(--border-radius-sm, 4px);
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color-subtle, #ddd3c7);
+}
+
+/* Oxygen bar fill with blue base color */
+.oxygen-bar-fill {
+  height: 100%;
+  background-color: #2196f3;
+  transition:
+    width 0.3s ease-in-out,
+    background-color 0.3s ease-in-out;
+}
+
+/* Oxygen percentage text */
+.oxygen-percentage-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+  color: var(--primary-text-color, #333);
+}
+
+/* O2 label styling */
+.oxygen-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 4px;
+  color: #2196f3;
+}
+
+/* ============================================
+   Oxygen Severity Classes - WCAG AA Compliant
+
+   Thresholds:
+   - oxygen-full: 80-100%
+   - oxygen-low: 40-79%
+   - oxygen-critical: 1-39%
+   - oxygen-depleted: 0%
+   ============================================ */
+
+.oxygen-full .oxygen-bar-fill {
+  background-color: #2196f3;
+}
+
+.oxygen-low .oxygen-bar-fill {
+  background-color: #ffc107;
+}
+
+.oxygen-critical .oxygen-bar-fill {
+  background-color: #ff9800;
+}
+
+.oxygen-depleted .oxygen-bar-fill {
+  background-color: #f44336;
+}
+
+/* ============================================
+   Suffocating State (0% oxygen)
+
+   Pulsing animation for visual urgency when
+   oxygen is completely depleted.
+   ============================================ */
+
+.oxygen-depleted {
+  animation: suffocating-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes suffocating-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ============================================
    Severity Classes - WCAG AA Compliant
 
    All colors adjusted for light background (#FFFEFB):

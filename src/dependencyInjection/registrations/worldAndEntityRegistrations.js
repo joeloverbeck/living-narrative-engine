@@ -90,6 +90,7 @@ import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
 import HypoxiaTickSystem from '../../breathing/services/hypoxiaTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
 import InjuryAggregationService from '../../anatomy/services/injuryAggregationService.js';
+import OxygenAggregationService from '../../anatomy/services/oxygenAggregationService.js';
 import InjuryNarrativeFormatterService from '../../anatomy/services/injuryNarrativeFormatterService.js';
 import DeathCheckService from '../../anatomy/services/deathCheckService.js';
 import DismemberedBodyPartSpawner from '../../anatomy/services/dismemberedBodyPartSpawner.js';
@@ -982,6 +983,19 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.InjuryAggregationService
+    )}.`
+  );
+
+  // Register OxygenAggregationService
+  registrar.singletonFactory(tokens.OxygenAggregationService, (c) => {
+    return new OxygenAggregationService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.OxygenAggregationService
     )}.`
   );
 

@@ -24,7 +24,11 @@
 /** @typedef {import('../../perception/services/recipientRoutingPolicyService.js').default} RecipientRoutingPolicyService */
 /** @typedef {import('../../perception/services/recipientSetBuilder.js').default} RecipientSetBuilder */
 
-import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
+import {
+  NAME_COMPONENT_ID,
+  PERCEPTION_LOG_COMPONENT_ID,
+  SENSORIAL_LINKS_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import {
   validateLocationId,
@@ -36,8 +40,6 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
-const SENSORIAL_LINKS_COMPONENT_ID = 'locations:sensorial_links';
-const LOCATION_NAME_COMPONENT_ID = 'core:name';
 
 /**
  * @typedef {object} AddPerceptionLogEntryParams
@@ -547,7 +549,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
     const originNameComponent = this.#entityManager.getComponentData(
       locationId,
-      LOCATION_NAME_COMPONENT_ID
+      NAME_COMPONENT_ID
     );
 
     const originName =

@@ -345,6 +345,7 @@ export function registerRenderers(registrar, logger) {
         injuryNarrativeFormatterService: c.resolve(
           tokens.InjuryNarrativeFormatterService
         ),
+        oxygenAggregationService: c.resolve(tokens.OxygenAggregationService),
       }),
     { lifecycle: 'singletonFactory' },
     logger

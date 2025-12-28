@@ -24,10 +24,9 @@ import {
   validateStringParam,
 } from '../../utils/handlerUtils/paramsUtils.js';
 import { unlockAppendagesHoldingItem } from '../../utils/grabbingUtils.js';
+import { WIELDING_COMPONENT_ID } from '../../constants/componentIds.js';
+import { ITEM_UNWIELDED_EVENT } from '../../constants/eventIds.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-
-const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
-const ITEM_UNWIELDED_EVENT = 'item-handling-states:item_unwielded';
 
 /**
  * @typedef {object} UnwieldItemParams

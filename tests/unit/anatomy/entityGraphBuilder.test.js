@@ -506,7 +506,7 @@ describe('EntityGraphBuilder', () => {
         'left'
       );
 
-      // Verify anatomy:part component is updated with definitionId and orientation
+      // Verify anatomy:part component is updated with definitionId, ownerEntityId, and orientation
       // Parent relationship is stored in anatomy:joint component instead
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
@@ -515,6 +515,7 @@ describe('EntityGraphBuilder', () => {
           subType: 'arm',
           someOtherField: 'value',
           definitionId: 'armDef',
+          ownerEntityId: 'owner123',
           orientation: 'left',
         }
       );
@@ -539,13 +540,14 @@ describe('EntityGraphBuilder', () => {
         'owner123'
       );
 
-      // Should store definitionId in anatomy:part component
+      // Should store definitionId and ownerEntityId in anatomy:part component
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
         'anatomy:part',
         {
           subType: 'arm',
           definitionId: 'armDef',
+          ownerEntityId: 'owner123',
         }
       );
       expect(mocks.logger.debug).toHaveBeenCalledWith(

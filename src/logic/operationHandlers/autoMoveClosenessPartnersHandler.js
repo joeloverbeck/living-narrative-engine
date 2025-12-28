@@ -33,9 +33,10 @@ import {
 } from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-
-const POSITION_COMPONENT_ID = 'core:position';
-const CLOSENESS_COMPONENT_ID = 'personal-space-states:closeness';
+import {
+  CLOSENESS_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 /**
  * @class AutoMoveClosenessPartnersHandler

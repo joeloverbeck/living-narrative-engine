@@ -2,12 +2,12 @@
 
 ## Summary
 
-Replace inline component ID constants in `autoMoveClosenessPartnersHandler` with imports from `src/constants/componentIds.js`. Update unit tests to use the same constants and remove the matching allowlist entries from the static analysis test.
+Replace inline component ID constants in `autoMoveClosenessPartnersHandler` with imports from `src/constants/componentIds.js`. Update unit tests to use the same constants and remove the matching allowlist entries from the static analysis test. Add the missing `CLOSENESS_COMPONENT_ID` export to `componentIds.js` (POSITION already exists).
 
 ## Files to Touch
 
 - `src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js`
-- `src/constants/componentIds.js` (only if required constants are missing)
+- `src/constants/componentIds.js` (add `CLOSENESS_COMPONENT_ID`)
 - `tests/unit/logic/operationHandlers/autoMoveClosenessPartnersHandler.test.js`
 - `tests/integration/validation/hardcodedConstantsStaticAnalysis.test.js`
 
@@ -19,6 +19,7 @@ Replace inline component ID constants in `autoMoveClosenessPartnersHandler` with
 ## Changes
 
 - Replace inline `*_COMPONENT_ID` constants in the handler with imports.
+- Add `CLOSENESS_COMPONENT_ID` to `src/constants/componentIds.js`.
 - Update unit tests to import the same constants (no duplicated string literals).
 - Remove the matching legacy allowlist entries from `hardcodedConstantsStaticAnalysis.test.js`.
 
@@ -38,3 +39,12 @@ Replace inline component ID constants in `autoMoveClosenessPartnersHandler` with
 ## Dependencies
 
 - `specs/operation-handler-namespace-coupling.md` (reference for constant sourcing rules).
+
+## Status
+
+Completed
+
+## Outcome
+
+- Added `CLOSENESS_COMPONENT_ID` to `src/constants/componentIds.js` and imported both component IDs in the handler/tests.
+- Removed the legacy allowlist entries for the handler in `hardcodedConstantsStaticAnalysis.test.js`.

@@ -45,6 +45,10 @@ const createMockInjuryNarrativeFormatterService = () => ({
   formatFirstPerson: jest.fn().mockReturnValue(''),
 });
 
+const createMockOxygenAggregationService = () => ({
+  aggregateOxygen: jest.fn().mockReturnValue(null),
+});
+
 const createHealthySummary = () => ({
   entityId: 'test-entity',
   injuredParts: [],
@@ -76,6 +80,15 @@ const createInjuredSummary = (overrides = {}) => ({
   ...overrides,
 });
 
+const createOxygenSummary = (percentage) => ({
+  entityId: 'test-entity',
+  totalCurrentOxygen: percentage,
+  totalOxygenCapacity: 100,
+  percentage,
+  organCount: 1,
+  hasRespiratoryOrgans: true,
+});
+
 describe('InjuryStatusPanel', () => {
   let narrativeElement;
   let contentElement;
@@ -100,6 +113,7 @@ describe('InjuryStatusPanel', () => {
       injuryAggregationService: createMockInjuryAggregationService(),
       injuryNarrativeFormatterService:
         createMockInjuryNarrativeFormatterService(),
+      oxygenAggregationService: createMockOxygenAggregationService(),
     };
   });
 
@@ -127,6 +141,29 @@ describe('InjuryStatusPanel', () => {
   const getHealthPercentageText = () =>
     contentElement.querySelector('.health-percentage-text');
 
+  /**
+   * Helper to get the oxygen bar wrapper from contentElement
+   */
+  const getOxygenBarWrapper = () =>
+    contentElement.querySelector('.oxygen-bar-wrapper');
+
+  /**
+   * Helper to get the oxygen bar fill from contentElement
+   */
+  const getOxygenBarFill = () =>
+    contentElement.querySelector('.oxygen-bar-fill');
+
+  /**
+   * Helper to get the oxygen percentage text from contentElement
+   */
+  const getOxygenPercentageText = () =>
+    contentElement.querySelector('.oxygen-percentage-text');
+
+  /**
+   * Helper to get the oxygen label from contentElement
+   */
+  const getOxygenLabel = () => contentElement.querySelector('.oxygen-label');
+
   describe('constructor', () => {
     it('constructs and subscribes to TURN_STARTED_ID event', () => {
       const panel = new InjuryStatusPanel(deps);
@@ -150,6 +187,9 @@ describe('InjuryStatusPanel', () => {
       expect(healthBar.classList.contains('severity-healthy')).toBe(true);
       expect(getHealthBarFill().style.width).toBe('100%');
       expect(getHealthPercentageText().textContent).toBe('100%');
+
+      // Oxygen bar is hidden when no respiratory organs are present
+      expect(getOxygenBarWrapper()).toBeNull();
     });
 
     it('throws when injuryAggregationService is null', () => {
@@ -203,6 +243,32 @@ describe('InjuryStatusPanel', () => {
       };
       expect(() => new InjuryStatusPanel(deps)).toThrow(
         '[InjuryStatusPanel] InjuryNarrativeFormatterService must have formatFirstPerson method.'
+      );
+    });
+
+    it('throws when oxygenAggregationService is null', () => {
+      deps.oxygenAggregationService = null;
+      expect(() => new InjuryStatusPanel(deps)).toThrow(
+        '[InjuryStatusPanel] OxygenAggregationService dependency is missing.'
+      );
+      expect(deps.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'OxygenAggregationService dependency is missing'
+        )
+      );
+    });
+
+    it('throws when oxygenAggregationService lacks aggregateOxygen method', () => {
+      deps.oxygenAggregationService = {};
+      expect(() => new InjuryStatusPanel(deps)).toThrow(
+        '[InjuryStatusPanel] OxygenAggregationService must have aggregateOxygen method.'
+      );
+    });
+
+    it('throws when oxygenAggregationService.aggregateOxygen is not a function', () => {
+      deps.oxygenAggregationService = { aggregateOxygen: 'not-a-function' };
+      expect(() => new InjuryStatusPanel(deps)).toThrow(
+        '[InjuryStatusPanel] OxygenAggregationService must have aggregateOxygen method.'
       );
     });
 
@@ -865,6 +931,55 @@ describe('InjuryStatusPanel', () => {
       expect(
         getNarrativeElement().classList.contains('severity-critical')
       ).toBe(true);
+    });
+  });
+
+  describe('oxygen bar rendering', () => {
+    it('renders oxygen bar with label, percentage, and aria-label when oxygen summary exists', () => {
+      deps.oxygenAggregationService.aggregateOxygen.mockReturnValue(
+        createOxygenSummary(75)
+      );
+
+      const panel = new InjuryStatusPanel(deps);
+      panel.updateForActor('test-entity');
+
+      const oxygenBar = getOxygenBarWrapper();
+      expect(oxygenBar).not.toBeNull();
+      expect(oxygenBar.classList.contains('oxygen-low')).toBe(true);
+      expect(oxygenBar.getAttribute('aria-label')).toBe('Oxygen level: 75%');
+      expect(getOxygenBarFill().style.width).toBe('75%');
+      expect(getOxygenPercentageText().textContent).toBe('75%');
+      expect(getOxygenLabel().innerHTML).toBe('O<sub>2</sub>');
+    });
+
+    it('hides oxygen bar when oxygen summary is null', () => {
+      deps.oxygenAggregationService.aggregateOxygen.mockReturnValue(null);
+
+      const panel = new InjuryStatusPanel(deps);
+      panel.updateForActor('test-entity');
+
+      expect(getOxygenBarWrapper()).toBeNull();
+    });
+
+    it.each([
+      ['oxygen-full', 100],
+      ['oxygen-full', 80],
+      ['oxygen-low', 79],
+      ['oxygen-low', 40],
+      ['oxygen-critical', 39],
+      ['oxygen-critical', 1],
+      ['oxygen-depleted', 0],
+    ])('applies %s class at %d%% oxygen', (expectedClass, percentage) => {
+      deps.oxygenAggregationService.aggregateOxygen.mockReturnValue(
+        createOxygenSummary(percentage)
+      );
+
+      const panel = new InjuryStatusPanel(deps);
+      panel.updateForActor('test-entity');
+
+      expect(getOxygenBarWrapper().classList.contains(expectedClass)).toBe(
+        true
+      );
     });
   });
 });

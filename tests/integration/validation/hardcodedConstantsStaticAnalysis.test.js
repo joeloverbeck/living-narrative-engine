@@ -5,14 +5,7 @@ import { globSync } from 'glob';
 import fs from 'fs';
 import path from 'path';
 
-const LEGACY_INLINE_CONSTANTS = new Set([
-  'src/logic/operationHandlers/addPerceptionLogEntryHandler.js:39:SENSORIAL_LINKS_COMPONENT_ID',
-  'src/logic/operationHandlers/addPerceptionLogEntryHandler.js:40:LOCATION_NAME_COMPONENT_ID',
-  'src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js:37:POSITION_COMPONENT_ID',
-  'src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js:38:CLOSENESS_COMPONENT_ID',
-  'src/logic/operationHandlers/unwieldItemHandler.js:29:WIELDING_COMPONENT_ID',
-  'src/logic/operationHandlers/unwieldItemHandler.js:30:ITEM_UNWIELDED_EVENT',
-]);
+const LEGACY_INLINE_CONSTANTS = new Set();
 
 const HANDLERS_DIR = 'src/logic/operationHandlers';
 const COMPONENT_CONSTANT_PATTERN = /const\s+(\w+_COMPONENT_ID)\s*=\s*['"`]/;

@@ -23,6 +23,10 @@
         "type": "string",
         "description": "The entity definition ID this body part was instantiated from (e.g., 'anatomy:human_foot'). Populated at runtime during anatomy graph building."
       },
+      "ownerEntityId": {
+        "type": "string",
+        "description": "The entity ID that owns this body part (i.e., the actor/character this part belongs to). Populated at runtime during anatomy graph building."
+      },
       "health_calculation_weight": {
         "type": "number",
         "description": "Weight for overall health calculation (higher = more impact on health percentage). Default is 1.0.",

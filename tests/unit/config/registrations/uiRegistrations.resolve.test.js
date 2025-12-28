@@ -41,6 +41,9 @@ describe('registerUI token resolution', () => {
       formatFirstPerson: jest.fn(),
       formatDamageEvent: jest.fn(),
     });
+    container.register(tokens.OxygenAggregationService, {
+      aggregateOxygen: jest.fn(),
+    });
   });
 
   it('registers DomUiFacade and EngineUIManager', () => {

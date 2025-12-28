@@ -280,18 +280,23 @@ export class EntityGraphBuilder {
         socketId: socketId,
       });
 
-      // Update anatomy:part component with definitionId and orientation if provided
+      // Update anatomy:part component with definitionId, ownerEntityId, and orientation if provided
       const anatomyPart = this.#entityManager.getComponentData(
         childEntity.id,
         'anatomy:part'
       );
       if (anatomyPart) {
-        // Update the anatomy:part component with definitionId and orientation
+        // Update the anatomy:part component with definitionId, ownerEntityId, and orientation
         // Note: Parent relationship is stored in anatomy:joint, not anatomy:part
         const updatedPart = {
           ...anatomyPart,
           definitionId: partDefinitionId,
         };
+
+        // Set ownerEntityId so services like OxygenAggregationService can find parts by owner
+        if (ownerId) {
+          updatedPart.ownerEntityId = ownerId;
+        }
 
         if (socketOrientation) {
           updatedPart.orientation = socketOrientation;
