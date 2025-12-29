@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_do_backward_roll",
-  "comment": "Handle Do Backward Roll action - roll backward through a tucked inversion",
+  "comment": "Handle Do Backward Roll action - chance-based gymnastics maneuver with 4 outcomes",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "gymnastics:event-is-action-do-backward-roll"
@@ -23,10 +23,22 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "RESOLVE_OUTCOME",
+      "comment": "Fixed difficulty contest using mobility_skill vs difficulty 50",
       "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} tucks down and rolls backward smoothly, rising centered and alert."
+        "actor_skill_component": "skills:mobility_skill",
+        "actor_skill_default": 0,
+        "difficulty_modifier": 50,
+        "formula": "linear",
+        "result_variable": "rollResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by the end-turn macros",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
       }
     },
     {
@@ -39,19 +51,187 @@
     {
       "type": "SET_VARIABLE",
       "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
         "variable_name": "targetId",
         "value": null
       }
     },
     {
-      "macro": "core:logSuccessAndEndTurn"
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} executes a flawless backward roll, tucking perfectly and rising with impressive grace and control.",
+              "actor_description": "I execute a flawless backward roll, feeling the perfect tuck and rising with complete control.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear the swift, controlled sound of someone rolling smoothly across the ground.",
+                "tactile": "I feel the floor vibrate briefly as someone performs a controlled roll nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} executes a flawless backward roll, tucking perfectly and rising with impressive grace and control."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} tucks down and rolls backward smoothly, rising centered and alert.",
+              "actor_description": "I tuck down and roll backward smoothly, rising centered and alert.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear the sound of someone rolling across the ground.",
+                "tactile": "I feel the floor shift as someone rolls nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} tucks down and rolls backward smoothly, rising centered and alert."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} attempts a backward roll but loses form mid-tuck, stumbling awkwardly back to a standing position.",
+              "actor_description": "I attempt a backward roll but lose my form mid-tuck, stumbling awkwardly back up.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear an unsteady thump and shuffling as someone fails to complete a roll.",
+                "tactile": "I feel uneven vibrations from someone stumbling through a failed roll."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} attempts a backward roll but loses form mid-tuck, stumbling awkwardly back to a standing position."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "recovery-states:fallen",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} misjudges the backward roll completely, losing balance and crashing awkwardly to the ground.",
+              "actor_description": "I misjudge the backward roll completely, losing my balance and crashing awkwardly to the ground.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear a heavy thud as someone crashes to the ground during a failed roll.",
+                "tactile": "I feel a jarring impact through the floor as someone falls hard nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} misjudges the backward roll completely, losing balance and crashing awkwardly to the ground."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
     }
   ]
 }

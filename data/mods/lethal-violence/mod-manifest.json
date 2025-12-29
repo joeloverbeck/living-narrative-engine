@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "lethal-violence",
+  "version": "1.0.0",
+  "name": "Lethal Violence",
+  "description": "Killing and maiming actions with lethal consequences",
+  "dependencies": [
+    {
+      "id": "biting-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "tear_out_throat.action.json"
+    ],
+    "rules": [
+      "handle_tear_out_throat.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-tear-out-throat.condition.json"
+    ]
+  }
+}

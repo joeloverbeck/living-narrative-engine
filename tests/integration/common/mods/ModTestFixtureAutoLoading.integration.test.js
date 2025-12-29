@@ -67,22 +67,22 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       );
     });
 
-    it('should auto-load violence:sucker_punch files', async () => {
+    it('should auto-load striking:sucker_punch files', async () => {
       const fixture = await ModTestFixture.forActionAutoLoad(
-        'violence',
-        'violence:sucker_punch'
+        'striking',
+        'striking:sucker_punch'
       );
 
       expect(fixture).toBeInstanceOf(ModActionTestFixture);
-      expect(fixture.modId).toBe('violence');
-      expect(fixture.actionId).toBe('violence:sucker_punch');
+      expect(fixture.modId).toBe('striking');
+      expect(fixture.actionId).toBe('striking:sucker_punch');
       expect(fixture.ruleFile).toBeDefined();
       expect(fixture.conditionFile).toBeDefined();
 
       // Verify file structure
       expect(fixture.ruleFile.rule_id).toBe('handle_sucker_punch');
       expect(fixture.conditionFile.id).toBe(
-        'violence:event-is-action-sucker-punch'
+        'striking:event-is-action-sucker-punch'
       );
     });
 
@@ -253,7 +253,7 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       const fixtures = await Promise.all([
         ModTestFixture.forActionAutoLoad('kissing', 'kissing:kiss_cheek'),
         ModTestFixture.forActionAutoLoad('deference', 'deference:kneel_before'),
-        ModTestFixture.forActionAutoLoad('violence', 'violence:sucker_punch'),
+        ModTestFixture.forActionAutoLoad('striking', 'striking:sucker_punch'),
       ]);
 
       const endTime = Date.now();

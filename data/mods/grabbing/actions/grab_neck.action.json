@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "grabbing:grab_neck",
+  "name": "Grab Neck",
+  "description": "Grab someone's neck",
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["personal-space-states:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "hugging-states:hugging",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining"
+    ]
+  },
+  "template": "grab {target}'s neck",
+  "visual": {
+    "backgroundColor": "#4a4a4a",
+    "textColor": "#f5f5f5",
+    "hoverBackgroundColor": "#5a5a5a",
+    "hoverTextColor": "#ffffff"
+  }
+}

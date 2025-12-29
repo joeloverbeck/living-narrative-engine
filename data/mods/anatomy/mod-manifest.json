@@ -13,6 +13,10 @@
     {
       "id": "breathing-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "damage-types",
+      "version": "^1.0.0"
     }
   ],
   "gameVersion": ">=0.0.1",

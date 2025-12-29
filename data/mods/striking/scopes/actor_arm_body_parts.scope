@@ -1,0 +1,17 @@
+// Returns the actor's body part entities where subType contains "arm" and has damage capabilities
+//
+// BEHAVIOR: Iterates through all body parts in the actor's anatomy:body component
+// and filters for those with:
+// 1. subType containing "arm" (case-sensitive substring match)
+// 2. A damage-types:damage_capabilities component (required for dealing damage)
+//
+// Example: For a character with humanoid_arm_muscular in their body graph, returns
+// the entity ID of the arm body part so it can be used as an attack source.
+//
+// Usage: Primary target scope for slap_target and punch_target actions
+striking:actor_arm_body_parts := actor.body_parts[][{
+  "and": [
+    {"in": ["arm", {"var": "entity.components.anatomy:part.subType"}]},
+    {"!=": [{"var": "entity.components.damage-types:damage_capabilities"}, null]}
+  ]
+}]

@@ -1,0 +1,81 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "striking",
+  "version": "1.0.0",
+  "name": "Striking",
+  "description": "Arm-based impact attacks including punches and slaps",
+  "dependencies": [
+    {
+      "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "physical-control-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "damage-types",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "performances-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "weapons",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "liquids-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "macros": [
+      "handleArmFumble.macro.json"
+    ],
+    "actions": [
+      "punch_target.action.json",
+      "slap_target.action.json",
+      "sucker_punch.action.json"
+    ],
+    "rules": [
+      "handle_punch_target.rule.json",
+      "handle_slap_target.rule.json",
+      "handle_sucker_punch.rule.json"
+    ],
+    "conditions": [
+      "actor-has-arm.condition.json",
+      "event-is-action-punch-target.condition.json",
+      "event-is-action-slap-target.condition.json",
+      "event-is-action-sucker-punch.condition.json"
+    ],
+    "scopes": [
+      "actor_arm_body_parts.scope"
+    ]
+  }
+}

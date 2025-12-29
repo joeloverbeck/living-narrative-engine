@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_do_cartwheel",
-  "comment": "Handle Do Cartwheel action - swing laterally through a hand-supported inversion",
+  "comment": "Handle Do Cartwheel action - chance-based gymnastics maneuver with 4 outcomes",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "gymnastics:event-is-action-do-cartwheel"
@@ -23,10 +23,22 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "RESOLVE_OUTCOME",
+      "comment": "Fixed difficulty contest using mobility_skill vs difficulty 50",
       "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} performs a cartwheel with precision, landing aligned and balanced."
+        "actor_skill_component": "skills:mobility_skill",
+        "actor_skill_default": 0,
+        "difficulty_modifier": 50,
+        "formula": "linear",
+        "result_variable": "rollResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by the end-turn macros",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
       }
     },
     {
@@ -39,19 +51,187 @@
     {
       "type": "SET_VARIABLE",
       "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
         "variable_name": "targetId",
         "value": null
       }
     },
     {
-      "macro": "core:logSuccessAndEndTurn"
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} executes a flawless cartwheel, wheeling through with arms and legs perfectly extended, landing with balletic grace.",
+              "actor_description": "I execute a flawless cartwheel, feeling my body move in perfect alignment as I land with complete control.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear the swift, precise sounds of hands slapping the ground in perfect rhythm.",
+                "tactile": "I feel the floor vibrate briefly with two sharp, controlled impacts."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} executes a flawless cartwheel, wheeling through with arms and legs perfectly extended, landing with balletic grace."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} swings laterally through a cartwheel, hands planting firmly, landing aligned and balanced.",
+              "actor_description": "I swing through a cartwheel, planting my hands firmly and landing centered and steady.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear the sound of hands hitting the ground and a body whooshing through the air.",
+                "tactile": "I feel the floor shift with the impact of hands and feet in sequence."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} swings laterally through a cartwheel, hands planting firmly, landing aligned and balanced."
+            }
+          },
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} attempts a cartwheel but wobbles mid-inversion, landing off-balance but managing to stay upright.",
+              "actor_description": "I attempt a cartwheel but lose my balance mid-rotation, stumbling but managing to stay on my feet.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear an unsteady thump and shuffling as someone fails to complete a cartwheel smoothly.",
+                "tactile": "I feel uneven vibrations from someone stumbling through a failed cartwheel."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} attempts a cartwheel but wobbles mid-inversion, landing off-balance but managing to stay upright."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.rollResult.outcome"
+            },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "recovery-states:fallen",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} misjudges the cartwheel completely, toppling sideways and crashing hard to the ground.",
+              "actor_description": "I completely misjudge the cartwheel, toppling over and crashing painfully to the ground.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "alternate_descriptions": {
+                "auditory": "I hear a heavy thud as someone crashes to the ground during a failed cartwheel.",
+                "tactile": "I feel a jarring impact through the floor as someone falls hard nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} misjudges the cartwheel completely, toppling sideways and crashing hard to the ground."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
     }
   ]
 }

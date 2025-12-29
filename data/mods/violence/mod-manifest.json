@@ -18,10 +18,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "sitting-states",
-      "version": "^1.0.0"
-    },
-    {
       "id": "hugging-states",
       "version": "^1.0.0"
     },
@@ -42,15 +38,7 @@
       "version": "^1.0.0"
     },
     {
-      "id": "personal-space",
-      "version": "^1.0.0"
-    },
-    {
       "id": "performances-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "biting-states",
       "version": "^1.0.0"
     },
     {
@@ -60,55 +48,23 @@
     {
       "id": "bending-states",
       "version": "^1.0.0"
-    },
-    {
-      "id": "personal-space-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "liquids-states",
-      "version": "^1.0.0"
     }
   ],
   "content": {
     "macros": [
-      "handleArmFumble.macro.json",
       "handleBeakFumble.macro.json"
     ],
     "actions": [
-      "grab_neck.action.json",
-      "peck_target.action.json",
-      "punch_target.action.json",
-      "slap.action.json",
-      "slap_target.action.json",
-      "squeeze_neck_with_both_hands.action.json",
-      "sucker_punch.action.json",
-      "tear_out_throat.action.json"
+      "peck_target.action.json"
     ],
     "rules": [
-      "handle_grab_neck.rule.json",
-      "handle_peck_target.rule.json",
-      "handle_punch_target.rule.json",
-      "handle_slap.rule.json",
-      "handle_slap_target.rule.json",
-      "handle_squeeze_neck_with_both_hands.rule.json",
-      "handle_sucker_punch.rule.json",
-      "handle_tear_out_throat.rule.json"
+      "handle_peck_target.rule.json"
     ],
     "conditions": [
-      "actor-has-arm.condition.json",
       "actor-has-beak.condition.json",
-      "event-is-action-grab-neck.condition.json",
-      "event-is-action-peck-target.condition.json",
-      "event-is-action-punch-target.condition.json",
-      "event-is-action-slap-target.condition.json",
-      "event-is-action-slap.condition.json",
-      "event-is-action-squeeze-neck-with-both-hands.condition.json",
-      "event-is-action-sucker-punch.condition.json",
-      "event-is-action-tear-out-throat.condition.json"
+      "event-is-action-peck-target.condition.json"
     ],
     "scopes": [
-      "actor_arm_body_parts.scope",
       "actor_beak_body_parts.scope"
     ]
   }

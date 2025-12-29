@@ -115,10 +115,11 @@ describe('Anatomy status-effect registry loading', () => {
     const modsLoader = container.resolve(tokens.ModsLoader);
     const loadReport = await modsLoader.loadMods('status-effects-world');
 
-    // Note: 'breathing-states' is loaded because it's a dependency of 'anatomy'
+    // Note: 'breathing-states' and 'damage-types' are loaded because they're dependencies of 'anatomy'
     expect(loadReport.finalModOrder).toEqual([
       'core',
       'descriptors',
+      'damage-types',
       'breathing-states',
       'anatomy',
     ]);

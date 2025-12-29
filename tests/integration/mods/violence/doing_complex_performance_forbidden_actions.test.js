@@ -1,6 +1,6 @@
 /**
- * @file Integration tests verifying that violence actions are correctly forbidden when actor is doing a complex performance.
- * @description Ensures that violence actions (slap, sucker punch) are not available when the acting actor
+ * @file Integration tests verifying that striking actions are correctly forbidden when actor is doing a complex performance.
+ * @description Ensures that striking actions (slap_target, sucker punch) are not available when the acting actor
  * has the performances-states:doing_complex_performance component.
  */
 
@@ -9,18 +9,19 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
-import slapAction from '../../../../data/mods/violence/actions/slap.action.json';
-import suckerPunchAction from '../../../../data/mods/violence/actions/sucker_punch.action.json';
+import slapTargetAction from '../../../../data/mods/striking/actions/slap_target.action.json';
+import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch.action.json';
 
 /**
- * Test suite for verifying forbidden component behavior for violence actions
+ * Test suite for verifying forbidden component behavior for striking actions
  * when actor is doing a complex performance.
  */
-describe('violence actions forbidden during complex performance', () => {
+describe('striking actions forbidden during complex performance', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', 'violence:slap');
+    // Using sucker_punch fixture since slap_target requires macros not loaded in tests
+    testFixture = await ModTestFixture.forAction('striking', 'striking:sucker_punch');
   });
 
   afterEach(() => {
@@ -30,8 +31,8 @@ describe('violence actions forbidden during complex performance', () => {
   });
 
   describe('Action structure validation', () => {
-    it('slap should have performances-states:doing_complex_performance as forbidden component', () => {
-      expect(slapAction.forbidden_components.actor).toContain(
+    it('slap_target should have performances-states:doing_complex_performance as forbidden component', () => {
+      expect(slapTargetAction.forbidden_components.actor).toContain(
         'performances-states:doing_complex_performance'
       );
     });
@@ -44,18 +45,18 @@ describe('violence actions forbidden during complex performance', () => {
   });
 
   describe('Action discovery when NOT doing complex performance', () => {
-    // Note: Violence actions have specific discovery requirements beyond just
+    // Note: Striking actions have specific discovery requirements beyond just
     // being in the same location. The key test is verifying they are blocked
     // when the forbidden component is present. The structure validation tests
     // above confirm the forbidden_components are correctly configured.
 
-    it('violence actions should be available under normal circumstances', () => {
-      // This is a placeholder test acknowledging that violence actions
+    it('striking actions should be available under normal circumstances', () => {
+      // This is a placeholder test acknowledging that striking actions
       // have discovery requirements that are tested in their respective
       // action discovery test files. The important validation is:
       // 1. Structure validation (tested above)
       // 2. Blocking when doing_complex_performance component present (tested below)
-      expect(slapAction.forbidden_components.actor).toContain(
+      expect(slapTargetAction.forbidden_components.actor).toContain(
         'performances-states:doing_complex_performance'
       );
       expect(suckerPunchAction.forbidden_components.actor).toContain(
@@ -74,8 +75,8 @@ describe('violence actions forbidden during complex performance', () => {
         return;
       }
 
-      // Build index with violence actions
-      testEnv.actionIndex.buildIndex([slapAction, suckerPunchAction]);
+      // Build index with striking actions
+      testEnv.actionIndex.buildIndex([slapTargetAction, suckerPunchAction]);
 
       // Mock scope resolver for actors_in_location
       const scopeResolver = testEnv.unifiedScopeResolver;
@@ -119,7 +120,7 @@ describe('violence actions forbidden during complex performance', () => {
       };
     };
 
-    it('slap is NOT available when actor is doing complex performance', () => {
+    it('slap_target is NOT available when actor is doing complex performance', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Add doing_complex_performance component to actor
@@ -134,7 +135,7 @@ describe('violence actions forbidden during complex performance', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('violence:slap');
+      expect(ids).not.toContain('striking:slap_target');
     });
 
     it('sucker_punch is NOT available when actor is doing complex performance', () => {
@@ -152,7 +153,7 @@ describe('violence actions forbidden during complex performance', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('violence:sucker_punch');
+      expect(ids).not.toContain('striking:sucker_punch');
     });
   });
 });

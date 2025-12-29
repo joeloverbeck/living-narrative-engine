@@ -8,9 +8,9 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 70
-**In Use**: 60 schemes actively implemented across mods
-**Available**: 10 schemes ready for future mods
+**Total Schemes Defined**: 69
+**In Use**: 56 schemes actively implemented across mods
+**Available**: 13 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
