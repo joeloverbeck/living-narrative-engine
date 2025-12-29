@@ -14,9 +14,10 @@ import {
 describe('bodyDescriptorRegistry', () => {
   describe('BODY_DESCRIPTOR_REGISTRY', () => {
     describe('Registry completeness', () => {
-      it('should contain all 6 body descriptors', () => {
+      it('should contain all 7 body descriptors', () => {
         const descriptorNames = Object.keys(BODY_DESCRIPTOR_REGISTRY);
-        expect(descriptorNames).toHaveLength(6);
+        expect(descriptorNames).toHaveLength(7);
+        expect(descriptorNames).toContain('gender');
         expect(descriptorNames).toContain('height');
         expect(descriptorNames).toContain('skinColor');
         expect(descriptorNames).toContain('build');
@@ -61,7 +62,7 @@ describe('bodyDescriptorRegistry', () => {
           .map((m) => m.displayOrder)
           .sort((a, b) => a - b);
 
-        expect(displayOrders).toEqual([10, 20, 30, 40, 50, 60]);
+        expect(displayOrders).toEqual([5, 10, 20, 30, 40, 50, 60]);
       });
     });
 
@@ -445,9 +446,9 @@ describe('bodyDescriptorRegistry', () => {
   });
 
   describe('getAllDescriptorNames', () => {
-    it('should return all 6 descriptor names', () => {
+    it('should return all 7 descriptor names', () => {
       const names = getAllDescriptorNames();
-      expect(names).toHaveLength(6);
+      expect(names).toHaveLength(7);
     });
 
     it('should return as array', () => {
@@ -457,6 +458,7 @@ describe('bodyDescriptorRegistry', () => {
 
     it('should contain all expected descriptor names', () => {
       const names = getAllDescriptorNames();
+      expect(names).toContain('gender');
       expect(names).toContain('height');
       expect(names).toContain('skinColor');
       expect(names).toContain('build');
@@ -470,6 +472,7 @@ describe('bodyDescriptorRegistry', () => {
     it('should return descriptors in correct display order', () => {
       const ordered = getDescriptorsByDisplayOrder();
       expect(ordered).toEqual([
+        'gender',
         'height',
         'skinColor',
         'build',
@@ -484,12 +487,12 @@ describe('bodyDescriptorRegistry', () => {
       const orders = ordered.map(
         (name) => BODY_DESCRIPTOR_REGISTRY[name].displayOrder
       );
-      expect(orders).toEqual([10, 20, 30, 40, 50, 60]);
+      expect(orders).toEqual([5, 10, 20, 30, 40, 50, 60]);
     });
 
     it('should return all descriptors', () => {
       const ordered = getDescriptorsByDisplayOrder();
-      expect(ordered).toHaveLength(6);
+      expect(ordered).toHaveLength(7);
     });
 
     it('should return as array', () => {

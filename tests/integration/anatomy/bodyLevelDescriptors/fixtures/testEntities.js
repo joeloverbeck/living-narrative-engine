@@ -222,3 +222,65 @@ export const createBodyCompositionVariantsEntity = (compositionValue) => {
 
   return entity;
 };
+
+/**
+ * Creates a test entity with core:gender component
+ *
+ * @param {string} genderValue - The gender value ('male', 'female', 'neutral')
+ * @param {object} bodyDescriptors - Additional body descriptors
+ * @returns {object} Mock entity with gender
+ */
+export const createEntityWithGender = (genderValue, bodyDescriptors = {}) => {
+  const entity = {
+    id: `test-gender-${genderValue}`,
+    hasComponent: jest.fn().mockImplementation((componentId) => {
+      const components = [ANATOMY_BODY_COMPONENT_ID, 'core:gender'];
+      return components.includes(componentId);
+    }),
+    getComponentData: jest.fn().mockImplementation((componentId) => {
+      if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+        return {
+          body: {
+            root: 'torso',
+            descriptors: bodyDescriptors,
+          },
+        };
+      }
+      if (componentId === 'core:gender') {
+        return { value: genderValue };
+      }
+      return null;
+    }),
+  };
+
+  return entity;
+};
+
+/**
+ * Creates a test entity without core:gender component
+ *
+ * @param {object} bodyDescriptors - Body descriptors
+ * @returns {object} Mock entity without gender
+ */
+export const createEntityWithoutGender = (bodyDescriptors = {}) => {
+  const entity = {
+    id: 'test-no-gender',
+    hasComponent: jest.fn().mockImplementation((componentId) => {
+      const components = [ANATOMY_BODY_COMPONENT_ID];
+      return components.includes(componentId);
+    }),
+    getComponentData: jest.fn().mockImplementation((componentId) => {
+      if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+        return {
+          body: {
+            root: 'torso',
+            descriptors: bodyDescriptors,
+          },
+        };
+      }
+      return null;
+    }),
+  };
+
+  return entity;
+};

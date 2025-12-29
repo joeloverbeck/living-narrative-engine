@@ -101,15 +101,28 @@ describe('WorldDiscoveryService', () => {
     });
 
     it('should return worlds from active mods only', async () => {
-      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(
-        mockModsWithWorlds
-      );
+      // Use mods with proper world metadata
+      const modsWithWorldMetadata = [
+        {
+          id: 'core',
+          name: 'Core',
+          hasWorlds: true,
+          worlds: [{ id: 'core:main', name: 'Core World', description: 'Core game world' }],
+        },
+        {
+          id: 'adventure-mod',
+          name: 'Adventure Mod',
+          hasWorlds: true,
+          worlds: [{ id: 'adventure-mod:quest', name: 'Quest World', description: 'Adventure world' }],
+        },
+      ];
+      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(modsWithWorldMetadata);
 
       const result = await service.discoverWorlds(['core', 'adventure-mod']);
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('core:core');
-      expect(result[1].id).toBe('adventure-mod:adventure-mod');
+      expect(result[0].id).toBe('core:main');
+      expect(result[1].id).toBe('adventure-mod:quest');
       expect(mockLogger.info).toHaveBeenCalledWith(
         'WorldDiscoveryService: Discovering worlds from active mods...'
       );
@@ -119,17 +132,30 @@ describe('WorldDiscoveryService', () => {
     });
 
     it('should filter to only active mods', async () => {
-      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(
-        mockModsWithWorlds
-      );
+      // Use mods with proper world metadata
+      const modsWithWorldMetadata = [
+        {
+          id: 'core',
+          name: 'Core',
+          hasWorlds: true,
+          worlds: [{ id: 'core:main', name: 'Core World', description: 'Core game world' }],
+        },
+        {
+          id: 'adventure-mod',
+          name: 'Adventure Mod',
+          hasWorlds: true,
+          worlds: [{ id: 'adventure-mod:quest', name: 'Quest World', description: 'Adventure world' }],
+        },
+      ];
+      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(modsWithWorldMetadata);
 
       // Only request 'core', not 'adventure-mod'
       const result = await service.discoverWorlds(['core']);
 
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('core:core');
+      expect(result[0].id).toBe('core:main');
       expect(result[0].modId).toBe('core');
-      expect(result[0].worldId).toBe('core');
+      expect(result[0].worldId).toBe('main');
     });
 
     it('should return empty array when no mods have worlds', async () => {
@@ -158,12 +184,20 @@ describe('WorldDiscoveryService', () => {
     });
 
     it('should create correct world structure with mod name and description', async () => {
+      // Mods must provide explicit worlds array with proper world metadata
       mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
         {
           id: 'test-mod',
           name: 'Test Mod',
           description: 'A test mod description',
           hasWorlds: true,
+          worlds: [
+            {
+              id: 'test-mod:main-world',
+              name: 'Test World',
+              description: 'A test world description',
+            },
+          ],
         },
       ]);
 
@@ -171,41 +205,86 @@ describe('WorldDiscoveryService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
-        id: 'test-mod:test-mod',
+        id: 'test-mod:main-world',
         modId: 'test-mod',
-        worldId: 'test-mod',
-        name: 'Test Mod World',
-        description: 'A test mod description',
+        worldId: 'main-world',
+        name: 'Test World',
+        description: 'A test world description',
       });
     });
 
-    it('should use fallback description when mod description is empty', async () => {
+    it('should use world metadata when provided', async () => {
+      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+        {
+          id: 'p_erotica_kern',
+          name: 'p_erotica_kern',
+          description: 'Kern mod',
+          hasWorlds: true,
+          worlds: [
+            {
+              id: 'p_erotica_kern:kern',
+              name: 'Marla Kern Scenario',
+              description: 'A scenario description',
+            },
+          ],
+        },
+      ]);
+
+      const result = await service.discoverWorlds(['p_erotica_kern']);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        id: 'p_erotica_kern:kern',
+        modId: 'p_erotica_kern',
+        worldId: 'kern',
+        name: 'Marla Kern Scenario',
+        description: 'A scenario description',
+      });
+    });
+
+    it('should use world description when provided', async () => {
       mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
         {
           id: 'minimal-mod',
           name: 'Minimal Mod',
           description: '',
           hasWorlds: true,
+          worlds: [
+            {
+              id: 'minimal-mod:world',
+              name: 'Minimal World',
+              description: 'The world description',
+            },
+          ],
         },
       ]);
 
       const result = await service.discoverWorlds(['minimal-mod']);
 
-      expect(result[0].description).toBe('Main world from Minimal Mod');
+      expect(result[0].description).toBe('The world description');
     });
 
-    it('should use fallback description when mod description is undefined', async () => {
+    it('should use mod description as fallback when world description is empty', async () => {
       mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
         {
-          id: 'no-desc-mod',
-          name: 'No Description Mod',
+          id: 'no-world-desc-mod',
+          name: 'No World Desc Mod',
+          description: 'Mod level description',
           hasWorlds: true,
+          worlds: [
+            {
+              id: 'no-world-desc-mod:world',
+              name: 'World Name',
+              description: '',
+            },
+          ],
         },
       ]);
 
-      const result = await service.discoverWorlds(['no-desc-mod']);
+      const result = await service.discoverWorlds(['no-world-desc-mod']);
 
-      expect(result[0].description).toBe('Main world from No Description Mod');
+      // Falls back to mod description when world description is empty
+      expect(result[0].description).toBe('Mod level description');
     });
 
     it('should handle empty activeModIds array', async () => {
@@ -225,6 +304,107 @@ describe('WorldDiscoveryService', () => {
 
       expect(mockModDiscoveryService.getModsWithWorlds).toHaveBeenCalledTimes(1);
     });
+
+    describe('legacy fallback bug fix', () => {
+      it('should return empty array when mod.worlds is undefined (no legacy fallback)', async () => {
+        // Bug reproduction: mods without explicit worlds should NOT generate modId:modId
+        mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+          {
+            id: 'mod-without-worlds',
+            name: 'Mod Without Worlds',
+            description: 'A mod that has no worlds defined',
+            hasWorlds: true,
+            // NOTE: No 'worlds' property - this used to trigger legacy fallback
+          },
+        ]);
+
+        const result = await service.discoverWorlds(['mod-without-worlds']);
+
+        // Should NOT create a world with modId:modId format
+        expect(result).toEqual([]);
+        expect(result.find((w) => w.id === 'mod-without-worlds:mod-without-worlds')).toBeUndefined();
+      });
+
+      it('should return empty array when mod.worlds is empty array', async () => {
+        mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+          {
+            id: 'empty-worlds-mod',
+            name: 'Empty Worlds Mod',
+            hasWorlds: true,
+            worlds: [], // Empty array
+          },
+        ]);
+
+        const result = await service.discoverWorlds(['empty-worlds-mod']);
+
+        expect(result).toEqual([]);
+      });
+
+      it('should return empty array when all worlds are filtered out due to invalid data', async () => {
+        mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+          {
+            id: 'invalid-worlds-mod',
+            name: 'Invalid Worlds Mod',
+            hasWorlds: true,
+            worlds: [
+              null,
+              undefined,
+              { id: '' }, // Empty string ID
+              { id: 123 }, // Non-string ID
+              { name: 'No ID' }, // Missing ID
+            ],
+          },
+        ]);
+
+        const result = await service.discoverWorlds(['invalid-worlds-mod']);
+
+        expect(result).toEqual([]);
+      });
+
+      it('should log warning when mod.worlds has entries but all are invalid', async () => {
+        mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+          {
+            id: 'bad-data-mod',
+            name: 'Bad Data Mod',
+            hasWorlds: true,
+            worlds: [{ id: '' }, { name: 'Missing ID' }],
+          },
+        ]);
+
+        await service.discoverWorlds(['bad-data-mod']);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          "WorldDiscoveryService: Mod 'bad-data-mod' has worlds array but no valid world entries"
+        );
+      });
+
+      it('should correctly use world ID from metadata (not modId:modId)', async () => {
+        // This is the exact scenario from the user's bug report
+        mockModDiscoveryService.getModsWithWorlds.mockResolvedValue([
+          {
+            id: 'p_erotica_kern',
+            name: 'p_erotica_kern',
+            description: 'Kern mod',
+            hasWorlds: true,
+            worlds: [
+              {
+                id: 'p_erotica_kern:kern', // Correct world ID
+                name: 'Marla Kern Scenario',
+                description: 'A scenario description',
+              },
+            ],
+          },
+        ]);
+
+        const result = await service.discoverWorlds(['p_erotica_kern']);
+
+        expect(result).toHaveLength(1);
+        // Should use the actual world ID, NOT p_erotica_kern:p_erotica_kern
+        expect(result[0].id).toBe('p_erotica_kern:kern');
+        expect(result[0].worldId).toBe('kern');
+        expect(result[0].modId).toBe('p_erotica_kern');
+      });
+    });
   });
 
   describe('isWorldAvailable', () => {
@@ -236,11 +416,24 @@ describe('WorldDiscoveryService', () => {
     });
 
     it('should return true for valid world', async () => {
-      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(
-        mockModsWithWorlds
-      );
+      // Use mods with proper world metadata
+      const modsWithWorldMetadata = [
+        {
+          id: 'core',
+          name: 'Core',
+          hasWorlds: true,
+          worlds: [{ id: 'core:main', name: 'Core World', description: 'Core game world' }],
+        },
+        {
+          id: 'adventure-mod',
+          name: 'Adventure Mod',
+          hasWorlds: true,
+          worlds: [{ id: 'adventure-mod:quest', name: 'Quest World', description: 'Adventure world' }],
+        },
+      ];
+      mockModDiscoveryService.getModsWithWorlds.mockResolvedValue(modsWithWorldMetadata);
 
-      const result = await service.isWorldAvailable('core:core', [
+      const result = await service.isWorldAvailable('core:main', [
         'core',
         'adventure-mod',
       ]);

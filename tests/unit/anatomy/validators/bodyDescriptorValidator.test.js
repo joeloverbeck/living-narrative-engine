@@ -241,6 +241,7 @@ describe('BodyDescriptorValidator', () => {
     it('should return valid:true if all descriptors present', () => {
       const config = {
         descriptionOrder: [
+          'gender',
           'height',
           'skin_color',
           'build',
@@ -257,6 +258,7 @@ describe('BodyDescriptorValidator', () => {
     it('should handle extra descriptors in descriptionOrder', () => {
       const config = {
         descriptionOrder: [
+          'gender',
           'height',
           'skin_color',
           'build',
@@ -273,7 +275,7 @@ describe('BodyDescriptorValidator', () => {
 
     it('should return warnings for missing descriptors', () => {
       const config = {
-        descriptionOrder: ['height', 'build'], // Missing skin_color, body_composition, body_hair, smell
+        descriptionOrder: ['height', 'build'], // Missing gender, skin_color, body_composition, body_hair, smell
       };
       const result = validator.validateFormattingConfig(config);
       expect(result.warnings.length).toBeGreaterThan(0);
@@ -285,10 +287,11 @@ describe('BodyDescriptorValidator', () => {
         descriptionOrder: ['height'], // Missing all others
       };
       const result = validator.validateFormattingConfig(config);
-      expect(result.warnings.length).toBe(5); // 6 total - 1 present = 5 missing
+      expect(result.warnings.length).toBe(6); // 7 total - 1 present = 6 missing
 
       // Check that warnings mention the missing descriptors
       const warningText = result.warnings.join(' ');
+      expect(warningText).toContain('gender');
       expect(warningText).toContain('skin_color');
       expect(warningText).toContain('build');
       expect(warningText).toContain('body_composition');
@@ -314,7 +317,7 @@ describe('BodyDescriptorValidator', () => {
       };
       const result = validator.validateFormattingConfig(config);
       expect(result.valid).toBe(true);
-      expect(result.warnings.length).toBe(6); // All 6 descriptors missing
+      expect(result.warnings.length).toBe(7); // All 7 descriptors missing
     });
   });
 
@@ -325,6 +328,7 @@ describe('BodyDescriptorValidator', () => {
           if (type === 'anatomyFormatting') {
             return {
               descriptionOrder: [
+                'gender',
                 'height',
                 'skin_color',
                 'build',
@@ -371,6 +375,7 @@ describe('BodyDescriptorValidator', () => {
           if (type === 'anatomyFormatting') {
             return {
               descriptionOrder: [
+                'gender',
                 'height',
                 'skin_color',
                 'build',
@@ -424,6 +429,7 @@ describe('BodyDescriptorValidator', () => {
           if (type === 'anatomyFormatting') {
             return {
               descriptionOrder: [
+                'gender',
                 'height',
                 'skin_color',
                 'build',
@@ -453,6 +459,7 @@ describe('BodyDescriptorValidator', () => {
           if (type === 'anatomyFormatting') {
             return {
               descriptionOrder: [
+                'gender',
                 'height',
                 'skin_color',
                 'build',
@@ -508,6 +515,7 @@ describe('BodyDescriptorValidator', () => {
       const mockDataRegistry = {
         get: jest.fn(() => ({
           descriptionOrder: [
+            'gender',
             'height',
             'skin_color',
             'build',
@@ -533,6 +541,7 @@ describe('BodyDescriptorValidator', () => {
           if (type === 'anatomyFormatting') {
             return {
               descriptionOrder: [
+                'gender',
                 'height',
                 'skin_color',
                 'build',

@@ -29,5 +29,11 @@
     }
   },
   "prerequisites": [],
-  "template": "lock {blocker} with {key}"
+  "template": "lock {blocker} with {key}",
+  "visual": {
+    "backgroundColor": "#3d4f5f",
+    "textColor": "#e8eef3",
+    "hoverBackgroundColor": "#4a6073",
+    "hoverTextColor": "#ffffff"
+  }
 }

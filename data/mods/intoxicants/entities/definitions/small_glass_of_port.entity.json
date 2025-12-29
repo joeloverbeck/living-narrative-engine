@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:small_glass_of_port",
+  "components": {
+    "core:name": {
+      "text": "small glass of port"
+    },
+    "core:description": {
+      "text": "A small tulip-shaped glass holds a measure of deep garnet port wine, its color so dark it appears nearly black at the center. The fortified wine has a subtle sheen, and the concentrated aroma of dark berries and chocolate drifts upward."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.25
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 75,
+      "maxCapacityMilliliters": 75,
+      "servingSizeMilliliters": 25,
+      "isRefillable": true,
+      "flavorText": "Sweet and rich, the port delivers an opulent cascade of blackberry, plum, and dark chocolate. The fortification adds warmth and depth, while subtle notes of walnut and caramel emerge on the long, satisfying finish."
+    }
+  }
+}

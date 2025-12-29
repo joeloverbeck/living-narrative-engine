@@ -106,11 +106,13 @@
       "step_back.rule.json"
     ],
     "scopes": [
+      "actors_sitting_with_space_to_right.scope",
       "close_actors.scope",
       "close_actors_facing_each_other.scope",
       "close_actors_facing_each_other_or_behind_target.scope",
       "close_actors_facing_each_other_or_behind_target_with_hands.scope",
-      "close_actors_or_entity_kneeling_before_actor.scope"
+      "close_actors_or_entity_kneeling_before_actor.scope",
+      "furniture_actor_sitting_on.scope"
     ]
   }
 }

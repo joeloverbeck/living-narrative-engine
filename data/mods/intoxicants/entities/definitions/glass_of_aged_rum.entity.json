@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:glass_of_aged_rum",
+  "components": {
+    "core:name": {
+      "text": "glass of aged rum"
+    },
+    "core:description": {
+      "text": "A rocks glass containing deep amber rum, its color speaking to years spent aging in charred oak barrels. The spirit gleams like liquid bronze, and the rich scent of caramelized sugar, tropical fruit, and warm spice drifts upward."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 60,
+      "maxCapacityMilliliters": 60,
+      "servingSizeMilliliters": 20,
+      "isRefillable": true,
+      "flavorText": "Rich and complex, the rum delivers waves of molasses sweetness, toasted coconut, and baking spices. The finish is long and warming, with hints of coffee and dark chocolate that evoke distant tropical shores."
+    }
+  }
+}

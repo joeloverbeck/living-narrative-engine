@@ -11,12 +11,12 @@ import fs from 'fs';
 const currentFilename = fileURLToPath(import.meta.url);
 const currentDirname = path.dirname(currentFilename);
 
-describe('Movement Mod - Travel Through Dimensions Validation', () => {
+describe('Dimensional Travel Mod - Travel Through Dimensions Validation', () => {
   describe('Rule Validation - handle_travel_through_dimensions', () => {
     it('should have event_type field after fix', () => {
       const rulePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/rules/handle_travel_through_dimensions.rule.json'
+        'data/mods/dimensional-travel/rules/handle_travel_through_dimensions.rule.json'
       );
 
       const ruleContent = JSON.parse(fs.readFileSync(rulePath, 'utf-8'));
@@ -29,7 +29,7 @@ describe('Movement Mod - Travel Through Dimensions Validation', () => {
     it('should have actions array instead of operations', () => {
       const rulePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/rules/handle_travel_through_dimensions.rule.json'
+        'data/mods/dimensional-travel/rules/handle_travel_through_dimensions.rule.json'
       );
 
       const ruleContent = JSON.parse(fs.readFileSync(rulePath, 'utf-8'));
@@ -43,7 +43,7 @@ describe('Movement Mod - Travel Through Dimensions Validation', () => {
     it('should use condition field with condition_ref', () => {
       const rulePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/rules/handle_travel_through_dimensions.rule.json'
+        'data/mods/dimensional-travel/rules/handle_travel_through_dimensions.rule.json'
       );
 
       const ruleContent = JSON.parse(fs.readFileSync(rulePath, 'utf-8'));
@@ -52,7 +52,7 @@ describe('Movement Mod - Travel Through Dimensions Validation', () => {
       expect(ruleContent).toHaveProperty('condition');
       expect(ruleContent.condition).toHaveProperty('condition_ref');
       expect(ruleContent.condition.condition_ref).toBe(
-        'movement:event-is-action-travel-through-dimensions'
+        'dimensional-travel:event-is-action-travel-through-dimensions'
       );
     });
   });

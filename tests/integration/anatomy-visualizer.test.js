@@ -490,6 +490,8 @@ describe('Anatomy Visualizer Integration', () => {
 
       // Mock the selectEntity method to resolve successfully
       mockVisualizerStateController.selectEntity.mockResolvedValue();
+      // Mock getCurrentState to return 'LOADED' so _handleAnatomyLoaded doesn't abort
+      mockVisualizerStateController.getCurrentState.mockReturnValue('LOADED');
 
       // Setup event subscription for state changes before initialization
       let stateChangeCallback;
@@ -565,6 +567,8 @@ describe('Anatomy Visualizer Integration', () => {
 
       // Mock the selectEntity method to resolve successfully
       mockVisualizerStateController.selectEntity.mockResolvedValue();
+      // Mock getCurrentState to return 'LOADED' so _handleAnatomyLoaded doesn't abort
+      mockVisualizerStateController.getCurrentState.mockReturnValue('LOADED');
 
       // Setup event subscription for state changes before initialization
       let stateChangeCallback;

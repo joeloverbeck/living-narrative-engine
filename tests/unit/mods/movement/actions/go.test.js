@@ -37,6 +37,13 @@ describe('Movement Go Action', () => {
     expect(action.template).toBe('go to {destination}');
   });
 
+  it('should forbid movement when actor is sitting', () => {
+    expect(action.forbidden_components).toBeDefined();
+    expect(action.forbidden_components.actor).toContain(
+      'sitting-states:sitting_on'
+    );
+  });
+
   it('should have prerequisites as array', () => {
     expect(Array.isArray(action.prerequisites)).toBe(true);
     expect(action.prerequisites).toHaveLength(2);

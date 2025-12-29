@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:snifter_of_brandy",
+  "components": {
+    "core:name": {
+      "text": "snifter of brandy"
+    },
+    "core:description": {
+      "text": "A rounded snifter cradled in the palm, warming the mahogany-colored brandy within. The wide bowl narrows to concentrate the intoxicating bouquet of dried fruit, vanilla, and aged oak that rises with each gentle swirl."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 60,
+      "maxCapacityMilliliters": 60,
+      "servingSizeMilliliters": 20,
+      "isRefillable": true,
+      "flavorText": "The brandy glides across the palate like liquid velvet, revealing layers of raisin, dried apricot, and honeyed warmth. A gentle heat blossoms in the chest as the complex finish lingers with notes of almond and spice."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:coupe_of_champagne_cocktail",
+  "components": {
+    "core:name": {
+      "text": "champagne cocktail"
+    },
+    "core:description": {
+      "text": "A wide coupe glass holds golden champagne, its surface dancing with fine bubbles. At the bottom rests a sugar cube soaked in bitters, slowly dissolving and releasing amber ribbons into the wine. A twist of lemon peel adorns the rim."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.3
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 150,
+      "maxCapacityMilliliters": 150,
+      "servingSizeMilliliters": 50,
+      "isRefillable": true,
+      "flavorText": "The first taste is pure celebration—effervescent champagne carries notes of toast and citrus, while the dissolving sugar cube adds a gradual sweetness balanced by the herbal complexity of bitters. Each sip evolves as the cocktail transforms."
+    }
+  }
+}

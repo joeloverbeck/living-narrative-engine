@@ -87,20 +87,20 @@ describe('unwield_item action definition', () => {
       expect(typeof actionJson.visual).toBe('object');
     });
 
-    it('should use Arctic Steel background color (#112a46)', () => {
-      expect(actionJson.visual.backgroundColor).toBe('#112a46');
+    it('should use Tactile Brown background color (#5d4037)', () => {
+      expect(actionJson.visual.backgroundColor).toBe('#5d4037');
     });
 
-    it('should use Arctic Steel text color (#e6f1ff)', () => {
-      expect(actionJson.visual.textColor).toBe('#e6f1ff');
+    it('should use Tactile Brown text color (#efebe9)', () => {
+      expect(actionJson.visual.textColor).toBe('#efebe9');
     });
 
-    it('should use Arctic Steel hover background color (#0b3954)', () => {
-      expect(actionJson.visual.hoverBackgroundColor).toBe('#0b3954');
+    it('should use Tactile Brown hover background color (#6d4c41)', () => {
+      expect(actionJson.visual.hoverBackgroundColor).toBe('#6d4c41');
     });
 
-    it('should use Arctic Steel hover text color (#f0f4f8)', () => {
-      expect(actionJson.visual.hoverTextColor).toBe('#f0f4f8');
+    it('should use Tactile Brown hover text color (#ffffff)', () => {
+      expect(actionJson.visual.hoverTextColor).toBe('#ffffff');
     });
   });
 

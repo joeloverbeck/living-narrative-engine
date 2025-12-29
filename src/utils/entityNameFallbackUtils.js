@@ -33,6 +33,15 @@ export function resolveEntityNameFallback(
 
   if (!entity) return undefined;
 
+  // Handle 'system' token - return 'Narrator' for system-generated events
+  // This prevents entity lookup warnings since 'system' is a special token, not a real entity
+  if (entity.id === 'system') {
+    logger?.debug(
+      `Resolved placeholder "${placeholderPath}" to "Narrator" for system-generated event.`
+    );
+    return 'Narrator';
+  }
+
   // If entity lacks getComponentData, provide a simple adapter so
   // getEntityDisplayName can still read from the components object.
   const adaptedEntity =

@@ -155,6 +155,7 @@ export class BodyDescriptionComposer {
       // Skip body descriptor types as they're already handled above
       if (
         [
+          'gender',
           'build',
           'body_composition',
           'body_hair',
@@ -616,6 +617,26 @@ export class BodyDescriptionComposer {
   // Currently maintaining backward compatibility without strict validation
 
   /**
+   * Extract gender description from body entity
+   * Uses core:gender component (not body.descriptors)
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Gender value or empty string (not formatted)
+   */
+  extractGenderDescription(bodyEntity) {
+    if (!bodyEntity || typeof bodyEntity.hasComponent !== 'function') {
+      return '';
+    }
+
+    if (!bodyEntity.hasComponent('core:gender')) {
+      return '';
+    }
+
+    const genderData = bodyEntity.getComponentData?.('core:gender');
+    return genderData?.value || '';
+  }
+
+  /**
    * Extract height description from body entity
    * Kept for backward compatibility but delegates to registry
    *
@@ -762,7 +783,9 @@ export class BodyDescriptionComposer {
 
     // Map registry descriptor names to their extraction methods
     // These methods include fallback logic for deprecated entity-level components
+    // Note: gender is special - it uses core:gender component, not body.descriptors
     const extractionMethodMap = {
+      gender: this.extractGenderDescription.bind(this),
       height: this.extractHeightDescription.bind(this),
       skinColor: this.extractSkinColorDescription.bind(this),
       build: this.extractBuildDescription.bind(this),

@@ -150,20 +150,8 @@ class ResolveHitLocationHandler extends ComponentOperationHandler {
       0
     );
 
-    // Fallback if total weight is 0 (should be caught by > 0 check, but good for safety)
-    if (totalWeight <= 0) {
-      writeContextVariable(
-        result_variable,
-        candidateParts[0].id,
-        executionContext,
-        this.#dispatcher,
-        logger
-      );
-      return;
-    }
-
     let randomValue = Math.random() * totalWeight;
-    let selectedPartId = null;
+    let selectedPartId = candidateParts[candidateParts.length - 1].id;
 
     for (const part of candidateParts) {
       randomValue -= part.weight;
@@ -171,11 +159,6 @@ class ResolveHitLocationHandler extends ComponentOperationHandler {
         selectedPartId = part.id;
         break;
       }
-    }
-
-    // Fallback if floating point weirdness caused no selection
-    if (!selectedPartId) {
-      selectedPartId = candidateParts[candidateParts.length - 1].id;
     }
 
     writeContextVariable(

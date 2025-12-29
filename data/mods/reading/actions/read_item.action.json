@@ -23,9 +23,9 @@
   ],
   "template": "read {item}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#3d2f1f",
+    "textColor": "#f5f0e1",
+    "hoverBackgroundColor": "#4a3a28",
+    "hoverTextColor": "#fffef8"
   }
 }

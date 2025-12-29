@@ -449,12 +449,12 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
       );
     });
 
-    it('should match the sex-vaginal-penetration visual styling palette', () => {
+    it('should match the sex-vaginal-penetration visual styling palette (Rose Petal Intimacy)', () => {
       expect(insertPenisIntoVaginaAction.visual).toEqual({
-        backgroundColor: '#6c0f36',
-        textColor: '#ffe6ef',
-        hoverBackgroundColor: '#861445',
-        hoverTextColor: '#fff2f7',
+        backgroundColor: '#7d3052',
+        textColor: '#ffeef5',
+        hoverBackgroundColor: '#943b62',
+        hoverTextColor: '#ffffff',
       });
     });
   });

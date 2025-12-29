@@ -29,16 +29,35 @@
  * - schemaProperty: Matches the property name in anatomy.recipe.schema.json
  * - displayLabel: Human-readable name for display
  * - displayKey: Key used in anatomy-formatting/default.json descriptionOrder
- * - dataPath: Path for accessing data (body.descriptors.{schemaProperty})
+ * - dataPath: Path for accessing data (body.descriptors.{schemaProperty} or component path)
  * - validValues: Array of valid values or null for free-form strings
  * - displayOrder: Numeric priority for sorting (lower = earlier)
- * - extractor: Function to extract value from body component
+ * - extractor: Function to extract value from body component (or entity for special cases)
  * - formatter: Function to format value for display
  * - required: Boolean indicating if descriptor is required
+ *
+ * Note: The gender descriptor is special - it extracts from core:gender component
+ * rather than body.descriptors. Its extractor receives entity as second parameter.
  *
  * @type {{[key: string]: BodyDescriptorMetadata}}
  */
 export const BODY_DESCRIPTOR_REGISTRY = {
+  gender: {
+    schemaProperty: 'gender',
+    displayLabel: 'Gender',
+    displayKey: 'gender',
+    dataPath: 'core:gender.value', // Special case: from component, not body.descriptors
+    validValues: ['male', 'female', 'neutral'],
+    displayOrder: 5,
+    // Note: extractor receives entity as second parameter for gender
+    extractor: (bodyComponent, entity) => {
+      if (!entity?.hasComponent?.('core:gender')) return undefined;
+      const genderData = entity.getComponentData?.('core:gender');
+      return genderData?.value;
+    },
+    formatter: (value) => `Gender: ${value}`,
+    required: false,
+  },
   height: {
     schemaProperty: 'height',
     displayLabel: 'Height',

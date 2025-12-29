@@ -142,6 +142,7 @@ describe('AnatomyFormattingService - Bootstrap Validation', () => {
           {
             _modId: 'core',
             descriptionOrder: [
+              'gender',
               'height',
               'skin_color',
               'build',

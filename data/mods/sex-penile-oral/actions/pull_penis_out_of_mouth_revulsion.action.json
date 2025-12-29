@@ -17,9 +17,9 @@
   "template": "pull {primary}'s penis out of your mouth in revulsion",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a1a1a",
-    "textColor": "#ffcccc",
-    "hoverBackgroundColor": "#6b2424",
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
     "hoverTextColor": "#ffffff"
   }
 }

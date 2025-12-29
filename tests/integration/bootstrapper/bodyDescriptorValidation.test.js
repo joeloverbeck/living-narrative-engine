@@ -93,6 +93,7 @@ describe('Body Descriptor Bootstrap Validation - Integration', () => {
         id: 'default',
         _modId: 'anatomy',
         descriptionOrder: [
+          'gender',
           'height',
           'skin_color',
           'build',

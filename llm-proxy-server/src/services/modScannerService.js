@@ -17,6 +17,13 @@ import path from 'path';
  */
 
 /**
+ * @typedef {object} WorldMetadata
+ * @property {string} id - Full world identifier
+ * @property {string} name - Display name
+ * @property {string} description - Description
+ */
+
+/**
  * @typedef {object} ModMetadata
  * @property {string} id - Unique mod identifier
  * @property {string} name - Human-readable mod name
@@ -26,6 +33,7 @@ import path from 'path';
  * @property {ModDependency[]} dependencies - Required mod dependencies
  * @property {string[]} conflicts - IDs of incompatible mods
  * @property {boolean} hasWorlds - Whether mod contains world definitions
+ * @property {WorldMetadata[]} worlds - Available worlds for the mod
  * @property {{backgroundColor: string, textColor: string}|null} actionVisual - Visual styling from first action
  */
 
@@ -104,6 +112,7 @@ export class ModScannerService {
             dependencies: manifest.dependencies || [],
             conflicts: manifest.conflicts || [],
             hasWorlds: await this.#checkForWorlds(entry.name),
+            worlds: await this.#extractWorlds(entry.name, manifest),
             actionVisual: await this.#extractActionVisual(entry.name),
           });
         } catch (manifestError) {
@@ -139,6 +148,53 @@ export class ModScannerService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Extract world metadata from manifest content.
+   * @param {string} modName - Name of the mod directory
+   * @param {object} manifest - Parsed manifest content
+   * @returns {Promise<WorldMetadata[]>} World metadata list
+   */
+  async #extractWorlds(modName, manifest) {
+    const worldFiles = manifest?.content?.worlds;
+    if (!Array.isArray(worldFiles) || worldFiles.length === 0) {
+      return [];
+    }
+
+    const worldsPath = path.join(this.#modsPath, modName, 'worlds');
+    /** @type {WorldMetadata[]} */
+    const worlds = [];
+
+    for (const worldFile of worldFiles) {
+      if (typeof worldFile !== 'string' || worldFile.trim().length === 0) {
+        continue;
+      }
+      try {
+        const content = await fs.readFile(
+          path.join(worldsPath, worldFile),
+          'utf-8'
+        );
+        const world = JSON.parse(content);
+        if (!world?.id || typeof world.id !== 'string') {
+          this.#logger.warn(
+            `ModScannerService: Skipping world file ${worldFile} for mod ${modName}: missing id`
+          );
+          continue;
+        }
+        worlds.push({
+          id: world.id,
+          name: world.name || world.id,
+          description: world.description || '',
+        });
+      } catch (error) {
+        this.#logger.warn(
+          `ModScannerService: Failed to read world file ${worldFile} for mod ${modName}: ${error.message}`
+        );
+      }
+    }
+
+    return worlds;
   }
 
   /**

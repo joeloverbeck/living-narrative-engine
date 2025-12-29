@@ -63,7 +63,8 @@ describe('physical-control:break_free_from_restraint action discovery', () => {
       .withName('Restrained Actor')
       .asActor()
       .atLocation('room1')
-      .withLocationComponent('room1');
+      .withLocationComponent('room1')
+      .withComponent('skills:mobility_skill', { value: 10 });
 
     if (withBeingRestrained) {
       actorBuilder.withComponent('physical-control-states:being_restrained', {
@@ -113,6 +114,12 @@ describe('physical-control:break_free_from_restraint action discovery', () => {
     it('requires physical-control-states:being_restrained on the actor', () => {
       expect(breakFreeAction.required_components.actor).toContain(
         'physical-control-states:being_restrained'
+      );
+    });
+
+    it('requires skills:mobility_skill on the actor', () => {
+      expect(breakFreeAction.required_components.actor).toContain(
+        'skills:mobility_skill'
       );
     });
 

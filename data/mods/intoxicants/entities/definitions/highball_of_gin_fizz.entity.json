@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:highball_of_gin_fizz",
+  "components": {
+    "core:name": {
+      "text": "gin fizz"
+    },
+    "core:description": {
+      "text": "A tall highball glass frosted with condensation, filled with a pale, effervescent cocktail topped with silky white foam. Bubbles rise continuously through the cloudy mixture, and the fresh scent of citrus and juniper cuts through the air."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.4
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 240,
+      "maxCapacityMilliliters": 240,
+      "servingSizeMilliliters": 80,
+      "isRefillable": true,
+      "flavorText": "The first sip is a revelation of texture and taste—the silky foam gives way to bright lemon, the sharpness tempered by sugar and softened by gin's botanical backbone. Fizzy bubbles carry the flavors across the palate in a refreshing wave."
+    }
+  }
+}

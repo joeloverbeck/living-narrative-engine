@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:mulled_wine_goblet",
+  "components": {
+    "core:name": {
+      "text": "goblet of mulled wine"
+    },
+    "core:description": {
+      "text": "A sturdy goblet cradles steaming ruby wine, wisps of aromatic vapor curling upward. Fragments of cinnamon stick, star anise, and orange peel float in the depths. The warm glass is comfortable to hold, and the spiced fragrance is intoxicating before the first sip."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.4
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 250,
+      "maxCapacityMilliliters": 250,
+      "servingSizeMilliliters": 80,
+      "isRefillable": true,
+      "flavorText": "The warm wine spreads comfort through the body immediately. Rich fruit flavors mingle with cinnamon, clove, and nutmeg, while hints of citrus and honey add brightness. Each swallow brings renewed warmth against the cold outside."
+    }
+  }
+}

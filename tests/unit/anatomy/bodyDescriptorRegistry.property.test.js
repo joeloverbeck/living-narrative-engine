@@ -255,13 +255,16 @@ describe('Body Descriptor Registry - Property Tests', () => {
     });
 
     it('should have valid dataPath format for each entry', () => {
-      // Property: ∀ entry, dataPath starts with "body.descriptors."
+      // Property: ∀ entry, dataPath matches valid patterns:
+      // - body.descriptors.* for standard body descriptors
+      // - core:gender.value for gender (extracted from component)
       const descriptorNames = getAllDescriptorNames();
 
       fc.assert(
         fc.property(fc.constantFrom(...descriptorNames), (descriptorName) => {
           const entry = BODY_DESCRIPTOR_REGISTRY[descriptorName];
-          expect(entry.dataPath).toMatch(/^body\.descriptors\./);
+          // Allow body.descriptors.* OR core:gender.value patterns
+          expect(entry.dataPath).toMatch(/^(body\.descriptors\.|core:gender\.)/);
         }),
         { numRuns: descriptorNames.length }
       );

@@ -30,6 +30,14 @@
       "partType": "brain",
       "preferId": "anatomy:human_brain"
     },
+    "left_lung": {
+      "partType": "lung",
+      "preferId": "anatomy-creatures:mustelid_lung_left"
+    },
+    "right_lung": {
+      "partType": "lung",
+      "preferId": "anatomy-creatures:mustelid_lung_right"
+    },
     "left_ear": {
       "partType": "ear",
       "preferId": "anatomy-creatures:badger_ear"

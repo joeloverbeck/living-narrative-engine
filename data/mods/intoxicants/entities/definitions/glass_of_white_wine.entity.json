@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:glass_of_white_wine",
+  "components": {
+    "core:name": {
+      "text": "glass of white wine"
+    },
+    "core:description": {
+      "text": "A tall stemmed glass holding pale golden wine that gleams like captured sunlight. Condensation beads on the crystal exterior, promising refreshing coolness. Delicate citrus and floral notes drift upward from the chilled liquid."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 180,
+      "maxCapacityMilliliters": 180,
+      "servingSizeMilliliters": 60,
+      "isRefillable": true,
+      "flavorText": "Crisp and bright, the wine bursts across the tongue with notes of green apple, pear, and a whisper of honeysuckle. A clean mineral finish leaves the palate refreshed and eager for another sip."
+    }
+  }
+}

@@ -6,15 +6,15 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import '../../../common/mods/domainMatchers.js';
-import handleTravelThroughDimensionsRule from '../../../../data/mods/movement/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
-import eventIsActionTravelThroughDimensions from '../../../../data/mods/movement/conditions/event-is-action-travel-through-dimensions.condition.json' assert { type: 'json' };
+import handleTravelThroughDimensionsRule from '../../../../data/mods/dimensional-travel/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
+import eventIsActionTravelThroughDimensions from '../../../../data/mods/dimensional-travel/conditions/event-is-action-travel-through-dimensions.condition.json' assert { type: 'json' };
 
 describe('travel_through_dimensions Rule Execution', () => {
   let fixture;
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'movement',
+      'dimensional-travel',
       'travel_through_dimensions',
       handleTravelThroughDimensionsRule,
       eventIsActionTravelThroughDimensions
@@ -157,7 +157,7 @@ async function createDimensionalScenario(fixture, options = {}) {
 
   if (actorHasAffordance) {
     actorComponents.push({
-      componentId: 'movement:can_travel_through_dimensions',
+      componentId: 'dimensional-travel:can_travel_through_dimensions',
       data: {},
     });
   }
@@ -225,7 +225,7 @@ async function createBidirectionalScenario(fixture) {
     components: [
       { componentId: 'core:actor', data: {} },
       { componentId: 'core:position', data: { locationId: perimeterId } },
-      { componentId: 'movement:can_travel_through_dimensions', data: {} },
+      { componentId: 'dimensional-travel:can_travel_through_dimensions', data: {} },
       { componentId: 'core:name', data: { text: 'Writhing Observer' } },
     ],
   });

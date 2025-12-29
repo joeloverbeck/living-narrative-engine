@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:cordial_glass_of_liqueur",
+  "components": {
+    "core:name": {
+      "text": "cordial glass of liqueur"
+    },
+    "core:description": {
+      "text": "A tiny stemmed cordial glass contains a viscous amber liqueur that clings to the sides in slow, thick sheets. The concentrated spirit gleams like honey under the light, and a complex bouquet of herbs, citrus, and spice rises from its surface."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.2
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 45,
+      "maxCapacityMilliliters": 45,
+      "servingSizeMilliliters": 15,
+      "isRefillable": true,
+      "flavorText": "Intensely sweet and aromatic, the liqueur coats the mouth with concentrated flavors of orange peel, wild herbs, and honey. The sweetness gives way to a warming, spiced finish that lingers long after the last drop is gone."
+    }
+  }
+}

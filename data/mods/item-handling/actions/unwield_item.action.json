@@ -16,9 +16,9 @@
   },
   "template": "unwield {target}",
   "visual": {
-    "backgroundColor": "#112a46",
-    "textColor": "#e6f1ff",
-    "hoverBackgroundColor": "#0b3954",
-    "hoverTextColor": "#f0f4f8"
+    "backgroundColor": "#5d4037",
+    "textColor": "#efebe9",
+    "hoverBackgroundColor": "#6d4c41",
+    "hoverTextColor": "#ffffff"
   }
 }

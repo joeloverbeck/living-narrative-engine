@@ -59,10 +59,8 @@ export class IsBodyPartAccessibleOperator extends BaseBodyPartOperator {
       return false;
     }
 
-    if (!params || params.length < 1) {
-      this.logger.warn(`${this.operatorName}: Invalid parameters`);
-      return false;
-    }
+    // Note: params validation is handled by BaseBodyPartOperator.evaluate()
+    // which ensures at least 2 elements before calling evaluateInternal
 
     const [partEntityRef, options] = params;
     const partEntityId = this.#resolvePartEntityId(partEntityRef);
@@ -88,7 +86,8 @@ export class IsBodyPartAccessibleOperator extends BaseBodyPartOperator {
     const { slotOptions, socketOptions, slotName, socketTargets } =
       this.#normalizeOptions(options, visibilityRules, joint);
 
-    const slotLayers = slotOptions.layers || [];
+    // slotOptions.layers is always an array from #normalizeOptions
+    const slotLayers = slotOptions.layers;
     const slotExposed =
       !slotName || slotLayers.length === 0
         ? true
@@ -130,23 +129,24 @@ export class IsBodyPartAccessibleOperator extends BaseBodyPartOperator {
   }
 
   #resolvePartEntityId(partEntityRef) {
+    // Object with valid id property (most common case)
     if (hasValidEntityId(partEntityRef)) {
       return partEntityRef.id;
     }
 
+    // Direct ID as string or number
     if (typeof partEntityRef === 'string' || typeof partEntityRef === 'number') {
       return partEntityRef;
     }
 
-    if (partEntityRef && typeof partEntityRef === 'object') {
-      if (typeof partEntityRef.getComponentData === 'function') {
-        // eslint-disable-next-line no-underscore-dangle
-        return partEntityRef.id ?? partEntityRef._id ?? null;
-      }
-
-      if (typeof partEntityRef.id === 'string' || typeof partEntityRef.id === 'number') {
-        return partEntityRef.id;
-      }
+    // Object with getComponentData method (entity-like object without standard id)
+    if (
+      partEntityRef &&
+      typeof partEntityRef === 'object' &&
+      typeof partEntityRef.getComponentData === 'function'
+    ) {
+       
+      return partEntityRef.id ?? partEntityRef._id ?? null;
     }
 
     return null;

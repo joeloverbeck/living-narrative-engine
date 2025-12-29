@@ -1,24 +1,24 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "movement:travel_through_dimensions",
+  "id": "dimensional-travel:travel_through_dimensions",
   "name": "Travel Through Dimensions",
   "description": "Slip through the tear in reality, traversing the boundary between dimensions. Your form ripples and distorts as you step into alien geometries.",
   "targets": {
     "primary": {
-      "scope": "movement:dimensional_portals",
+      "scope": "dimensional-travel:dimensional_portals",
       "placeholder": "destination",
       "description": "Dimensional destination to travel to"
     }
   },
   "required_components": {
-    "actor": ["movement:can_travel_through_dimensions"]
+    "actor": ["dimensional-travel:can_travel_through_dimensions"]
   },
   "template": "travel through dimensions to {destination}",
   "visual": {
-    "backgroundColor": "#1a0033",
-    "textColor": "#cc99ff",
-    "hoverBackgroundColor": "#330066",
-    "hoverTextColor": "#e6ccff"
+    "backgroundColor": "#3a1d5c",
+    "textColor": "#e8d4f8",
+    "hoverBackgroundColor": "#4f2878",
+    "hoverTextColor": "#f4ebfa"
   },
   "metadata": {
     "category": "dimensional",

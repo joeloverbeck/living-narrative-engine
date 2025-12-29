@@ -224,6 +224,56 @@ describe('ModScannerService', () => {
       expect(mods[0].hasWorlds).toBe(true);
     });
 
+    test('includes worlds metadata when manifest lists world files', async () => {
+      const mockEntries = [{ name: 'world-mod', isDirectory: () => true }];
+
+      const manifest = {
+        id: 'world_mod',
+        name: 'World Mod',
+        version: '1.0.0',
+        content: {
+          worlds: ['kern.world.json'],
+        },
+      };
+
+      const worldFile = {
+        id: 'world_mod:kern',
+        name: 'Kern World',
+        description: 'A world description',
+      };
+
+      fs.readdir.mockImplementation((dirPath) => {
+        if (dirPath.includes('actions')) {
+          const error = new Error('ENOENT');
+          error.code = 'ENOENT';
+          return Promise.reject(error);
+        }
+        return Promise.resolve(mockEntries);
+      });
+
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('mod-manifest.json')) {
+          return Promise.resolve(JSON.stringify(manifest));
+        }
+        if (filePath.includes('kern.world.json')) {
+          return Promise.resolve(JSON.stringify(worldFile));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      fs.stat.mockResolvedValue({ isDirectory: () => true });
+
+      const mods = await service.scanMods();
+
+      expect(mods).toHaveLength(1);
+      expect(mods[0].worlds).toEqual([
+        {
+          id: 'world_mod:kern',
+          name: 'Kern World',
+          description: 'A world description',
+        },
+      ]);
+    });
+
     test('parses dependencies array', async () => {
       const mockEntries = [{ name: 'dep-mod', isDirectory: () => true }];
 
@@ -355,6 +405,7 @@ describe('ModScannerService', () => {
         dependencies: [],
         conflicts: [],
         hasWorlds: false,
+        worlds: [],
         actionVisual: null,
       });
     });

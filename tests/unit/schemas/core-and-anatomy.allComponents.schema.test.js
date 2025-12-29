@@ -153,6 +153,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:provides_hearing': {},
     'anatomy:provides_sight': {},
     'anatomy:provides_smell': {},
+    'anatomy:provides_thinking': {},
   };
 
   /** @type {Record<string, unknown>} */
@@ -226,6 +227,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:provides_hearing': { extra: true }, // additionalProperties: false
     'anatomy:provides_sight': { extra: true }, // additionalProperties: false
     'anatomy:provides_smell': { extra: true }, // additionalProperties: false
+    'anatomy:provides_thinking': { extra: true }, // additionalProperties: false
   };
 
   // Additional test cases for DISBODPARSPA-001: anatomy:part definitionId field
