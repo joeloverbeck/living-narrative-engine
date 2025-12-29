@@ -2915,7 +2915,7 @@ beforeEach(async () => {
         if (positionData?.locationId) {
           locationEntity = testEnv.entityManager.getEntityInstance(
             positionData.locationId
-          );
+          ) || null;
         }
       }
 

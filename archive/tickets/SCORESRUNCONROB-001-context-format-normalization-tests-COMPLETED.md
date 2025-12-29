@@ -2,7 +2,7 @@
 
 ## Problem
 
-The `registerCustomScope()` method in `ModTestFixture.js` accepts three different context formats, but no tests verify that all formats are correctly normalized before validation. This normalization is critical because passing the wrong context format to `ParameterValidator.validateActorEntity()` causes "actorEntity must have an 'id' property" errors.
+`registerCustomScope()` in `tests/common/mods/ModTestFixture.js` already normalizes context formats before validation, but we have no unit coverage proving the three supported formats are accepted and validated post-extraction. The historical failure mode (validating a wrapper context before extracting the actor entity) caused "actorEntity must have an 'id' property" errors, so tests should lock in the current ordering and normalization behavior.
 
 The three accepted formats are:
 1. Direct entity: `{ id: "actor-123", components: {...} }`
@@ -23,7 +23,7 @@ Add unit tests that verify:
 
 ## Out of scope
 
-- `tests/common/mods/ModTestFixture.js` — no implementation changes
+- `tests/common/mods/ModTestFixture.js` — no implementation changes (normalization already present)
 - `src/scopeDsl/core/parameterValidator.js` — no changes
 - Any existing test files — no modifications
 - Any production source code — no changes
@@ -55,3 +55,11 @@ Both commands must pass.
 | `should accept actor pipeline context { actor: {...} }` | Pass `{ actor: { id: "actor-1" }, targets: {} }` |
 | `should fail validation when no id extractable from any format` | Pass `{ unrelated: "data" }` |
 | `should preserve original entity reference after normalization` | Verify reference equality |
+
+## Status
+
+Completed.
+
+## Outcome
+
+Added unit coverage for context normalization in `tests/unit/common/mods/ModTestFixture.contextNormalization.test.js`; no production code changes were required, and the existing registerCustomScope tests remained unchanged.

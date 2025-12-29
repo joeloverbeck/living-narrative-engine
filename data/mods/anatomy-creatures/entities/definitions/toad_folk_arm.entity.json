@@ -33,6 +33,20 @@
     },
     "descriptors:texture": {
       "texture": "bumpy"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 6,
+          "penetration": 0.2,
+          "stun": {
+            "enabled": true,
+            "chance": 0.1,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

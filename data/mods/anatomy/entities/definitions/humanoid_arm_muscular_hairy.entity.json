@@ -33,6 +33,20 @@
     },
     "descriptors:build": {
       "build": "muscular"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 8,
+          "penetration": 0.25,
+          "stun": {
+            "enabled": true,
+            "chance": 0.15,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

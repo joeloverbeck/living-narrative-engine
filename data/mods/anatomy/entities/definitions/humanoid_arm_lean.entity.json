@@ -30,6 +30,20 @@
     },
     "descriptors:body_composition": {
       "composition": "lean"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 4,
+          "penetration": 0.15,
+          "stun": {
+            "enabled": true,
+            "chance": 0.04,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

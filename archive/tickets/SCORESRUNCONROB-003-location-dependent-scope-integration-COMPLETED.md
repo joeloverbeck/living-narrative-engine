@@ -1,5 +1,7 @@
 # SCORESRUNCONROB-003 – Location-Dependent Scope Integration Tests
 
+**Status**: ✅ COMPLETED
+
 ## Problem
 
 Scopes that use `location.*` DSL patterns (e.g., `location.locations:exits[{filter}].target`) require `runtimeCtx.location` to be properly set. Currently, no integration tests verify:
@@ -62,3 +64,55 @@ All commands must pass.
 | `should return empty Set when location is null` | Set `runtimeCtx.location = null` → scope returns `Set()` |
 | `should not throw when location property is missing` | Omit `location` from `runtimeCtx` → no exception, returns empty Set |
 | `should correctly chain location.component[filter].field` | Verify multi-step resolution works end-to-end |
+
+---
+
+## Outcome
+
+### What Was Actually Changed vs Originally Planned
+
+**Planned**: Create `tests/integration/scopeDsl/locationDependentScopes.test.js` with 4 required test cases.
+
+**Actual**: Created the test file with **10 test cases** (exceeds requirements):
+
+| Test Suite | Test Name | Status |
+|------------|-----------|--------|
+| Basic location source resolution | should return matching entities when location is provided | ✅ |
+| Basic location source resolution | should return empty Set when location is null | ✅ |
+| Basic location source resolution | should not throw when location property is missing from runtimeCtx | ✅ |
+| Location component access chains | should correctly chain location.component access | ✅ |
+| Location component access chains | should correctly chain location.component[filter].field | ✅ |
+| Location component access chains | should return empty Set for location.component when location is null | ✅ |
+| Edge cases and error handling | should handle location entity with missing component gracefully | ✅ |
+| Edge cases and error handling | should handle location as string ID | ✅ |
+| Edge cases and error handling | should handle undefined location provider | ✅ |
+| Empty Set semantics invariant | should return empty Set for all missing location scenarios | ✅ |
+
+### Invariants Verified
+
+1. ✅ **Empty Set semantics**: All missing location scenarios return empty Set without throwing
+2. ✅ **Dimensional-travel tests remain green**: All 7 tests pass (145 total tests across all suites)
+3. ✅ **Scope DSL tests remain green**: `engine.test.js` and `sourceResolver.test.js` pass
+4. ✅ **No production code modified**: Only test file created
+
+### Technical Notes
+
+- Filter expressions on plain objects (without `id` property) require accessing properties via `entity.*` path
+- Example: `{"var": "entity.isPortal"}` instead of `{"var": "isPortal"}` for exit objects
+- This is documented in the test file for future reference
+
+### Files Created
+
+- `tests/integration/scopeDsl/locationDependentScopes.test.js` (CREATE) - 285 lines, 10 tests
+
+### Test Results
+
+```
+PASS tests/integration/scopeDsl/locationDependentScopes.test.js
+PASS tests/integration/mods/dimensional-travel/*.test.js (7 files)
+PASS tests/unit/scopeDsl/engine.test.js
+PASS tests/unit/scopeDsl/nodes/sourceResolver.test.js
+
+Test Suites: 10 passed, 10 total
+Tests:       145 passed, 145 total
+```

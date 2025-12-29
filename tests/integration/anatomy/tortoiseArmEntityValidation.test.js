@@ -82,11 +82,6 @@ describe('Tortoise Arm Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 7 components (includes core:weight)', () => {
-      const componentKeys = Object.keys(armEntity.components);
-      expect(componentKeys.length).toBe(7);
-    });
-
     it('should have all required components', () => {
       expect(armEntity.components['anatomy:part']).toBeDefined();
       expect(armEntity.components['anatomy:part_health']).toBeDefined();

@@ -1368,6 +1368,226 @@ await testFixture.registerCustomScope(
 );
 ```
 
+### Location-Based Scope Resolution
+
+Some scopes depend on **location context** to function correctly. These scopes use the `location.*` DSL pattern to access properties of the actor's current location.
+
+#### What Are Location-Based Scopes?
+
+Location-based scopes are scope definitions that reference location data using patterns like:
+
+- `location.locations:exits[{filter}].target` - Filter exits from current location
+- `location.components["locations:inhabitants"]` - Access inhabitants of current location
+- Any scope path starting with `location.` prefix
+
+These scopes query the entity representing the actor's current location (room, area, etc.) rather than querying the actor directly.
+
+#### How `runtimeCtx.location` Is Populated
+
+The location context is resolved from the actor's `core:position` component:
+
+```javascript
+// Location resolution flow (simplified from spec)
+const positionData = entityManager.getComponentData(actorEntity.id, 'core:position');
+const locationId = positionData?.locationId;
+
+// If actor has a position with locationId, resolve the location entity
+const locationEntity = locationId
+  ? entityManager.getEntityInstance(locationId)
+  : null;
+
+// runtimeCtx.location is set to the resolved entity (or null)
+runtimeCtx.location = locationEntity;
+```
+
+#### Empty Set Behavior (Graceful Degradation)
+
+When location context is missing, location-based scopes return an **empty Set** rather than throwing an error:
+
+| Scenario | Behavior |
+|----------|----------|
+| Actor has no `core:position` component | `runtimeCtx.location = null` → empty Set |
+| Actor's position has no `locationId` | `runtimeCtx.location = null` → empty Set |
+| Location entity doesn't exist | `runtimeCtx.location = null` → empty Set |
+| Location entity lacks queried component | Empty Set for that scope |
+
+This graceful degradation ensures that actions with location-based scopes simply don't appear in action discovery when the actor isn't in a valid location, rather than causing errors.
+
+#### Testing Location-Based Scopes
+
+When testing actions that use location-based scopes, ensure your test fixture creates a valid location context:
+
+```javascript
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+
+describe('dimensional-travel:open_portal action discovery', () => {
+  let fixture;
+
+  beforeEach(async () => {
+    fixture = await ModTestFixture.forAction(
+      'dimensional-travel',
+      'dimensional-travel:open_portal'
+    );
+  });
+
+  afterEach(() => {
+    fixture.cleanup();
+  });
+
+  it('should discover action when actor is in a location with exits', async () => {
+    // Create a location with exits
+    const locationId = fixture.createEntity('location', {
+      'locations:exits': [
+        { target: 'location:other_realm', direction: 'portal' }
+      ]
+    });
+
+    // Create actor positioned in that location
+    const actor = fixture.createEntity('actor', {
+      'core:position': { locationId }
+    });
+
+    // Action discovery will now have valid runtimeCtx.location
+    const actions = await fixture.discoverActions(actor.id);
+
+    expect(actions).toContainAction('dimensional-travel:open_portal');
+  });
+
+  it('should NOT discover action when actor has no location', async () => {
+    // Actor without position component
+    const actor = fixture.createEntity('actor', {});
+
+    const actions = await fixture.discoverActions(actor.id);
+
+    // Location-based scope returns empty Set → action not discoverable
+    expect(actions).not.toContainAction('dimensional-travel:open_portal');
+  });
+});
+```
+
+#### Cross-Reference
+
+For a complete list of available scope resolvers and their dependencies, see [`scope-resolver-registry.md`](./scope-resolver-registry.md).
+
+### Context Format Variants for Scope Resolution
+
+The scope resolution system accepts three different context formats. Understanding these formats helps prevent validation errors and makes debugging easier.
+
+#### The Three Accepted Context Formats
+
+Scope resolvers normalize incoming context using this extraction priority:
+
+```javascript
+const actorEntity = context.actorEntity || context.actor || context;
+```
+
+This means the system accepts:
+
+**Format 1: Direct entity** (most common in unit tests)
+
+```javascript
+const directEntity = { id: "actor-123", components: { "core:actor": {} } };
+resolver(directEntity);
+```
+
+When the context object itself has an `id` property, it's treated as the actor entity directly. This is the simplest format and what most unit tests use.
+
+**Format 2: Enriched context** (used by action discovery pipeline)
+
+```javascript
+const enrichedContext = {
+  actorEntity: { id: "actor-123", components: { "core:actor": {} } },
+  targets: { primary: targetEntity },
+  metadata: { phase: "discovery" }
+};
+resolver(enrichedContext);
+```
+
+When the context has an `actorEntity` property, that property is extracted as the actor. The action discovery pipeline uses this format to pass additional data alongside the actor.
+
+**Format 3: Actor pipeline context** (used internally by pipeline stages)
+
+```javascript
+const pipelineContext = {
+  actor: { id: "actor-123", components: { "core:actor": {} } },
+  targets: { primary: null, secondary: null },
+  action: { id: "positioning:sit_down" }
+};
+resolver(pipelineContext);
+```
+
+When the context has an `actor` property (but no `actorEntity`), the `actor` property is extracted. Internal pipeline stages use this format.
+
+#### When Each Format Is Used
+
+| Format | Typical Source | Common Scenario |
+|--------|----------------|-----------------|
+| **Direct entity** | Unit tests, simple scope calls | `testFixture.discoverActions(actorEntity)` |
+| **Enriched context** | Action discovery service | Pipeline resolving target scopes |
+| **Actor pipeline** | Internal pipeline stages | Multi-target resolution coordination |
+
+#### The Normalization Process
+
+Before any validation occurs, the `registerCustomScope()` method (and related scope resolution code) extracts the actor entity:
+
+```javascript
+// Step 1: Normalize - extract actor entity from any format
+const actorEntity = context.actorEntity || context.actor || context;
+
+// Step 2: Validate - now validate the normalized entity
+ParameterValidator.validateActorEntity(actorEntity, 'CustomScopeResolver...');
+
+// Step 3: Use - proceed with the validated actor
+const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
+```
+
+**Critical ordering**: Extraction MUST happen before validation. If you validate the raw context object when it's in enriched or pipeline format, validation will fail because the context wrapper doesn't have an `id` property.
+
+#### Common Error Scenarios
+
+**Error: "actorEntity must have an 'id' property"**
+
+```javascript
+// ❌ WRONG: Validating wrapper instead of extracted entity
+ParameterValidator.validateActorEntity(context, 'MyResolver');  // Fails!
+const actorEntity = context.actorEntity;  // Too late - already threw
+
+// ✅ CORRECT: Extract first, validate second
+const actorEntity = context.actorEntity || context.actor || context;
+ParameterValidator.validateActorEntity(actorEntity, 'MyResolver');  // Works
+```
+
+**Error: Empty scope results with wrapped context**
+
+If a scope returns an empty set unexpectedly, check that you're passing the extracted entity (not the wrapper) to `ScopeEngine.resolve()`:
+
+```javascript
+// ❌ WRONG: Passing wrapper to engine
+const result = scopeEngine.resolve(ast, context, runtimeCtx);  // May fail
+
+// ✅ CORRECT: Pass extracted actor entity
+const actorEntity = context.actorEntity || context.actor || context;
+const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
+```
+
+#### Format Detection in Tests
+
+When debugging scope resolution issues, you can detect which format you received:
+
+```javascript
+function detectContextFormat(context) {
+  if (context.actorEntity) return 'enriched';
+  if (context.actor) return 'pipeline';
+  if (context.id) return 'direct';
+  return 'unknown';
+}
+
+// In your resolver or test:
+console.log('Context format:', detectContextFormat(context));
+```
+
+---
+
 ### Action Discovery Troubleshooting Checklist
 
 If your action is not being discovered (`availableActions` returns empty array `[]`), follow this systematic checklist:

@@ -30,6 +30,20 @@
     },
     "descriptors:firmness": {
       "firmness": "soft"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 4,
+          "penetration": 0.15,
+          "stun": {
+            "enabled": true,
+            "chance": 0.05,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

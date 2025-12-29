@@ -273,11 +273,18 @@ class DamageTypeEffectsService extends BaseService {
       if (knownIds.has(id)) {
         mappedRegistryOrder.push(id);
       } else {
-        this.#warnOnce(
-          this.#missingOrderWarnings,
-          id,
-          `DamageTypeEffectsService: Unknown status-effect id in registry applyOrder: ${id}`
-        );
+        // Check if the ID exists in the registry.
+        // If yes, it's a valid non-damage effect (e.g., hypoxia from breathing mod) - silently skip.
+        // If no, it's a true configuration error - warn.
+        const existsInRegistry =
+          this.#statusEffectRegistry?.get?.(id) !== undefined;
+        if (!existsInRegistry) {
+          this.#warnOnce(
+            this.#missingOrderWarnings,
+            id,
+            `DamageTypeEffectsService: Unknown status-effect id in registry applyOrder: ${id}`
+          );
+        }
       }
     }
 

@@ -30,6 +30,20 @@
     },
     "descriptors:texture": {
       "texture": "scarred"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 5,
+          "penetration": 0.2,
+          "stun": {
+            "enabled": true,
+            "chance": 0.08,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

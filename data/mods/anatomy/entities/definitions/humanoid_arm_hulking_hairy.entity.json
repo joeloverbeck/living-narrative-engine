@@ -33,6 +33,20 @@
     },
     "descriptors:build": {
       "build": "hulking"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 12,
+          "penetration": 0.3,
+          "stun": {
+            "enabled": true,
+            "chance": 0.25,
+            "durationTurns": 2
+          }
+        }
+      ]
     }
   }
 }

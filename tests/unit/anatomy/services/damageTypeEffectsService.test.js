@@ -1307,14 +1307,204 @@ describe('DamageTypeEffectsService', () => {
     });
   });
 
+  describe('multi-mod registry applyOrder handling', () => {
+    it('should NOT warn for valid non-damage effect IDs from other mods', async () => {
+      // Setup: Simulate a multi-mod scenario where breathing mod effects are in applyOrder
+      // These effects (hypoxic, unconscious_anoxia) exist in registry but are not damage effects
+      const mockStatusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
+          { id: 'burning', effectType: 'burn', componentId: 'anatomy:burning' },
+        ]),
+        // applyOrder includes breathing mod effects that aren't damage effects
+        getApplyOrder: jest.fn().mockReturnValue([
+          'bleeding',
+          'burning',
+          'hypoxic', // from breathing mod - valid but not a damage effect
+          'unconscious_anoxia', // from breathing mod - valid but not a damage effect
+        ]),
+        // These effects exist in the registry, just not in damage definitions
+        get: jest.fn().mockImplementation((id) => {
+          const effects = {
+            bleeding: { id: 'bleeding', effectType: 'bleed' },
+            burning: { id: 'burning', effectType: 'burn' },
+            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
+            unconscious_anoxia: {
+              id: 'unconscious_anoxia',
+              effectType: 'anoxic_unconsciousness',
+            },
+          };
+          return effects[id];
+        }),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        rngProvider: mockRngProvider,
+        statusEffectRegistry: mockStatusEffectRegistry,
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      // Should NOT warn for hypoxic or unconscious_anoxia since they exist in registry
+      const hypoxicWarnings = mockLogger.warn.mock.calls.filter((call) =>
+        call[0].includes('hypoxic')
+      );
+      const anoxiaWarnings = mockLogger.warn.mock.calls.filter((call) =>
+        call[0].includes('unconscious_anoxia')
+      );
+
+      expect(hypoxicWarnings).toHaveLength(0);
+      expect(anoxiaWarnings).toHaveLength(0);
+    });
+
+    it('should STILL warn for truly unknown effect IDs not in registry', async () => {
+      // Setup: applyOrder has an ID that doesn't exist anywhere in registry
+      const mockStatusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
+        ]),
+        getApplyOrder: jest.fn().mockReturnValue([
+          'bleeding',
+          'completely_fake_effect', // doesn't exist anywhere
+          'hypoxic', // exists in registry (from breathing mod)
+        ]),
+        get: jest.fn().mockImplementation((id) => {
+          const effects = {
+            bleeding: { id: 'bleeding', effectType: 'bleed' },
+            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
+          };
+          return effects[id];
+        }),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        rngProvider: mockRngProvider,
+        statusEffectRegistry: mockStatusEffectRegistry,
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      // Should warn for completely_fake_effect since it doesn't exist in registry
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Unknown status-effect id in registry applyOrder: completely_fake_effect'
+        )
+      );
+
+      // Should NOT warn for hypoxic since it exists in registry
+      const hypoxicWarnings = mockLogger.warn.mock.calls.filter((call) =>
+        call[0].includes('hypoxic')
+      );
+      expect(hypoxicWarnings).toHaveLength(0);
+    });
+
+    it('should silently skip non-damage effects in applyOrder without processing them', async () => {
+      // Setup: applyOrder has non-damage effects that should be skipped
+      const mockStatusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
+        ]),
+        getApplyOrder: jest.fn().mockReturnValue([
+          'hypoxic', // non-damage effect - should be skipped silently
+          'bleeding', // damage effect - should be processed
+          'unconscious_anoxia', // non-damage effect - should be skipped silently
+        ]),
+        get: jest.fn().mockImplementation((id) => {
+          const effects = {
+            bleeding: { id: 'bleeding', effectType: 'bleed' },
+            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
+            unconscious_anoxia: {
+              id: 'unconscious_anoxia',
+              effectType: 'anoxic_unconsciousness',
+            },
+          };
+          return effects[id];
+        }),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        rngProvider: mockRngProvider,
+        statusEffectRegistry: mockStatusEffectRegistry,
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      // Only bleeding should be processed (added as component)
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        'part:arm',
+        'anatomy:bleeding',
+        expect.anything()
+      );
+
+      // Non-damage effects should not be processed
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        expect.anything(),
+        'breathing:hypoxic',
+        expect.anything()
+      );
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        expect.anything(),
+        'breathing:unconscious_anoxia',
+        expect.anything()
+      );
+
+      // No warnings should be logged for hypoxic or unconscious_anoxia
+      const allWarnings = mockLogger.warn.mock.calls.map((call) => call[0]);
+      const nonDamageWarnings = allWarnings.filter(
+        (msg) => msg.includes('hypoxic') || msg.includes('unconscious_anoxia')
+      );
+      expect(nonDamageWarnings).toHaveLength(0);
+    });
+  });
+
   describe('edge cases and warning suppression', () => {
     it('should suppress duplicate warnings for same key', async () => {
       // Setup: Create service with statusEffectRegistry that has unknown IDs in applyOrder
       const mockStatusEffectRegistry = {
         getAll: jest.fn().mockReturnValue([
-          { effectType: 'bleed', componentId: 'anatomy:bleeding' },
+          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
         ]),
         getApplyOrder: jest.fn().mockReturnValue(['unknown_id_1', 'bleed']),
+        // unknown_id_1 is NOT in the registry - should warn
+        get: jest.fn().mockImplementation((id) => {
+          if (id === 'bleeding') {
+            return { id: 'bleeding', effectType: 'bleed' };
+          }
+          return undefined;
+        }),
       };
 
       const serviceWithRegistry = new DamageTypeEffectsService({
@@ -1356,11 +1546,18 @@ describe('DamageTypeEffectsService', () => {
     it('should warn for unknown status-effect ids in registry applyOrder', async () => {
       const mockStatusEffectRegistry = {
         getAll: jest.fn().mockReturnValue([
-          { effectType: 'bleed', componentId: 'anatomy:bleeding' },
+          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
         ]),
         getApplyOrder: jest
           .fn()
           .mockReturnValue(['unknown_effect_id', 'bleed']),
+        // unknown_effect_id is NOT in the registry - should warn
+        get: jest.fn().mockImplementation((id) => {
+          if (id === 'bleeding') {
+            return { id: 'bleeding', effectType: 'bleed' };
+          }
+          return undefined;
+        }),
       };
 
       const serviceWithRegistry = new DamageTypeEffectsService({

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-punch-target",
+  "description": "Checks if the event is a punch_target action attempt",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "violence:punch_target"]
+  }
+}
