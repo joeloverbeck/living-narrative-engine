@@ -61,6 +61,7 @@ describe('AnatomyVisualizerUI - State Handlers', () => {
       reset: jest.fn(),
       startRendering: jest.fn(),
       completeRendering: jest.fn(),
+      getCurrentState: jest.fn().mockReturnValue('LOADED'),
     };
 
     // Mock visualization composer

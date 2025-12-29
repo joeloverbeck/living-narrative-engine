@@ -23,6 +23,7 @@
     },
     "core:weight": {
       "weight": 0.004
-    }
+    },
+    "anatomy:provides_thinking": {}
   }
 }

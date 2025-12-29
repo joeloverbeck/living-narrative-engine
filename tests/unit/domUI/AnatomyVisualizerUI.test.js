@@ -65,7 +65,7 @@ describe('AnatomyVisualizerUI', () => {
       reset: jest.fn(),
       startRendering: jest.fn(),
       completeRendering: jest.fn(),
-      getCurrentState: jest.fn(),
+      getCurrentState: jest.fn().mockReturnValue('IDLE'),
       getSelectedEntity: jest.fn(),
       getAnatomyData: jest.fn(),
     };
@@ -350,6 +350,7 @@ describe('AnatomyVisualizerUI', () => {
       await visualizerUI._loadEntity(entityDefId);
 
       // Simulate the state change to LOADED
+      mockVisualizerStateController.getCurrentState.mockReturnValue('LOADED');
       if (stateChangeCallback) {
         await stateChangeCallback({
           payload: {

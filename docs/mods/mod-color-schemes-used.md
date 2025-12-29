@@ -8,15 +8,16 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 62
-**In Use**: 50 schemes actively implemented across mods
-**Available**: 12 schemes ready for future mods
+**Total Schemes Defined**: 70
+**In Use**: 60 schemes actively implemented across mods
+**Available**: 10 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
 | Mod                     | Color Scheme        | Section | Background Color | Status |
 | ----------------------- | ------------------- | ------- | ---------------- | ------ |
 | Affection               | Soft Purple         | 3.1     | `#6a1b9a`        | Active |
+| Aiming                  | Slate Grey          | 1.2     | `#37474f`        | Active |
 | Ballet                  | Indigo Professional | 10.1    | `#283593`        | Active |
 | Bending                 | Yielding Posture    | 21.1    | `#5a4033`        | Active |
 | Breaching               | Rust Orange         | 2.4     | `#C44D0E`        | Active |
@@ -26,7 +27,9 @@ This document tracks which color schemes are actively used by mods in the Living
 | Containers              | Depot Olive         | 18.3    | `#354230`        | Active |
 | Core                    | Classic Blue-Grey   | 1.1     | `#455a64`        | Active |
 | Deference               | Ceremonial Midnight | 14.1    | `#1f2d3d`        | Active |
+| Dimensional-Travel      | Rift Violet         | 24.1    | `#3a1d5c`        | Active |
 | Distress                | Obsidian Frost      | 11.7    | `#0b132b`        | Active |
+| Drinking                | Beverage Bronze     | 17.3    | `#4a3728`        | Active |
 | Exercise                | Orange Flame        | 2.3     | `#e65100`        | Active |
 | Facing                  | Pathfinder Slate    | 9.2     | `#2e3f47`        | Active |
 | First-Aid               | Forest Green        | 4.1     | `#1b5e20`        | Active |
@@ -41,6 +44,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
 | Lighting                | Warm Lantern Glow   | 22.1    | `#8B5A2B`        | Active |
 | Liquids                 | Tidepool Teal       | 23.1    | `#3aaea3`        | Active |
+| Locks                   | Ironbound Lock      | 18.4    | `#3d4f5f`        | Active |
 | Lying                   | Deep Blue           | 7.1     | `#0d47a1`        | Active |
 | Maneuvering             | Midnight Green      | 7.3     | `#004d40`        | Active |
 | Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
@@ -50,6 +54,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Physical-Control        | Ironclad Slate      | 11.2    | `#2f2f2f`        | Active |
 | Positioning             | Deep Orange Energy  | 10.2    | `#bf360c`        | Active |
 | Ranged                  | Archer's Focus      | 15.1    | `#2a4a3f`        | Active |
+| Reading                 | Scholar's Parchment | 19.2    | `#3d2f1f`        | Active |
 | Recovery                | Evergreen Shadow    | 11.5    | `#123524`        | Active |
 | Seduction               | Golden Divine       | 5.2     | `#f57f17`        | Active |
 | Sex-Anal-Penetration    | Obsidian Teal       | 12.6    | `#053b3f`        | Active |
@@ -59,7 +64,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Sex-Penile-Manual       | Ember Touch         | 12.2    | `#8a3b12`        | Active |
 | Sex-Penile-Oral         | Midnight Orchid     | 12.3    | `#2a1a5e`        | Active |
 | Sex-Physical-Control    | Velvet Twilight     | 11.3    | `#2c0e37`        | Active |
-| Sex-Vaginal-Penetration | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
+| Sex-Vaginal-Penetration | Rose Petal Intimacy | 12.7    | `#7d3052`        | Active |
 | Sitting                 | Charcoal            | 1.3     | `#263238`        | Active |
 | Straddling              | Intimate Embrace    | 20.1    | `#5e2750`        | Active |
 | Vampirism               | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
@@ -90,6 +95,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 9.65:1 AAA
 - **Use Cases**: System actions, navigation, utilities
 - **Theme**: Professional, neutral, non-intrusive
+
+#### 1.2 Slate Grey - Aiming
+
+```json
+{
+  "backgroundColor": "#37474f",
+  "textColor": "#eceff1",
+  "hoverBackgroundColor": "#546e7a",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.86:1 AAA
+- **Hover Contrast**: 6.54:1 AA
+- **Use Cases**: Tactical precision, targeting, weapon aiming
+- **Theme**: Administrative, tactical, focused precision
 
 #### 1.3 Charcoal - Sitting
 
@@ -653,7 +674,7 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Grinding, frottage, clothed intimacy loops
 - **Theme**: Smoky plum aura reflecting close, rhythmic motion
 
-#### 12.5 Crimson Embrace - Sex-Vaginal-Penetration, Vampirism
+#### 12.5 Crimson Embrace - Vampirism
 
 ```json
 {
@@ -666,8 +687,8 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 - **Normal Contrast**: 9.84:1 AAA
 - **Hover Contrast**: 7.62:1 AAA
-- **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing, vampiric menace displays
-- **Theme**: Deep crimson passion with luminous highlights
+- **Use Cases**: Blood drinking, vampiric menace displays, predatory actions
+- **Theme**: Deep crimson predation with luminous highlights
 
 #### 12.6 Obsidian Teal - Sex-Anal-Penetration
 
@@ -684,6 +705,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 9.56:1 AAA
 - **Use Cases**: Anal teasing, exploratory penetration build-up
 - **Theme**: Cool, deliberate teal-black depth for focused exploration
+
+#### 12.7 Rose Petal Intimacy - Sex-Vaginal-Penetration
+
+```json
+{
+  "backgroundColor": "#7d3052",
+  "textColor": "#ffeef5",
+  "hoverBackgroundColor": "#943b62",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.1:1 AAA
+- **Hover Contrast**: 7.3:1 AAA
+- **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing, consensual intimacy
+- **Theme**: Warm rose/magenta evoking sensual intimacy, distinct from vampirism's predatory burgundy
 
 ### 13. Exchange/Transaction Colors
 
@@ -775,6 +812,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Drinking alcohol, tavern interactions, general intoxicant consumption
 - **Theme**: Warm whiskey/amber tones evoking tavern firelight and aged spirits
 
+#### 17.3 Beverage Bronze - Drinking
+
+```json
+{
+  "backgroundColor": "#4a3728",
+  "textColor": "#f5ebe0",
+  "hoverBackgroundColor": "#5d4632",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 10.5:1 AAA
+- **Hover Contrast**: 8.2:1 AAA
+- **Use Cases**: Drinking beverages, consuming drinks, beverage-related actions
+- **Theme**: Warm, inviting bronze tones evoking fine beverages and drink culture
+
 ### 18. Physical/Interaction Colors
 
 #### 18.1 Tactile Brown - Item-Handling
@@ -825,6 +878,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Storage and logistics interactions, container management actions
 - **Theme**: Depot-inspired olive tones conveying sturdy storage and organized shelving
 
+#### 18.4 Ironbound Lock - Locks
+
+```json
+{
+  "backgroundColor": "#3d4f5f",
+  "textColor": "#e8eef3",
+  "hoverBackgroundColor": "#4a6073",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 8.7:1 AAA
+- **Hover Contrast**: 6.8:1 AA
+- **Use Cases**: Locking and unlocking mechanisms, security interactions, key operations
+- **Theme**: Steel-blue gray evoking iron locks and keys, mechanical security
+
 ### 19. Literary/Scholarly Colors
 
 #### 19.1 Scribe's Ink - Writing
@@ -842,6 +911,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 10.2:1 AAA
 - **Use Cases**: Writing actions, note-taking, document signing, scholarly activities
 - **Theme**: Deep ink blue-black with warm parchment text, evoking manuscripts, quills, and scholarly work
+
+#### 19.2 Scholar's Parchment - Reading
+
+```json
+{
+  "backgroundColor": "#3d2f1f",
+  "textColor": "#f5f0e1",
+  "hoverBackgroundColor": "#4a3a28",
+  "hoverTextColor": "#fffef8"
+}
+```
+
+- **Normal Contrast**: 11.2:1 AAA
+- **Hover Contrast**: 9.8:1 AAA
+- **Use Cases**: Reading books, examining documents, studying texts
+- **Theme**: Aged parchment brown with cream text, evoking old books and manuscripts
 
 ### 20. Intimate Positioning Colors
 
@@ -915,6 +1000,24 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Entering water, wading, swimming, diving, submerged traversal
 - **Theme**: Lively teal water that keeps the mood fresh and exploratory
 
+### 24. Dimensional/Portal Colors
+
+#### 24.1 Rift Violet - Dimensional-Travel
+
+```json
+{
+  "backgroundColor": "#3a1d5c",
+  "textColor": "#e8d4f8",
+  "hoverBackgroundColor": "#4f2878",
+  "hoverTextColor": "#f4ebfa"
+}
+```
+
+- **Normal Contrast**: 10.2:1 AAA
+- **Hover Contrast**: 8.1:1 AAA
+- **Use Cases**: Dimensional portal travel, planar transitions, reality tears
+- **Theme**: Deep mystical violet evoking rifts between dimensions and otherworldly passages
+
 ## Maintenance
 
 ### Assigning a New Scheme to a Mod
@@ -934,6 +1037,12 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ## Version History
 
+- **2025-12**: Added Section 24 (Dimensional/Portal Colors) with Rift Violet (24.1) for Dimensional-Travel mod; migrated travel_through_dimensions from Movement mod
+- **2025-12**: Assigned Rose Petal Intimacy (12.7) to Sex-Vaginal-Penetration mod; released Crimson Embrace for Vampirism only
+- **2025-12**: Added Ironbound Lock (18.4) for Locks mod
+- **2025-12**: Added Scholar's Parchment (19.2) for Reading mod
+- **2025-12**: Added Beverage Bronze (17.3) for Drinking mod
+- **2025-12**: Assigned Slate Grey (1.2) to Aiming mod
 - **2025-12**: Reassigned Liquids to Tidepool Teal (23.1); released Blighted Moss (16.2) to available schemes
 - **2025-12**: Assigned Blighted Moss (16.2) to Liquids mod
 - **2025-12**: Added Section 21 (Posture/Position Colors) with Yielding Posture (21.1) for Bending mod

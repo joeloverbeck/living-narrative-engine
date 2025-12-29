@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:marble_bar_counter",
+  "description": "A long marble-topped bar counter with dark wood shelving, typical of upscale establishments",
+  "components": {
+    "core:name": {
+      "text": "marble bar counter"
+    },
+    "core:description": {
+      "text": "A long marble-topped bar counter with dark wood shelving behind. Glass cloches line the surface, and rows of wine bottles and neatly stacked stemware are arranged on the shelves. A stainless work area and sink sit below the counter."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/marble_bar_counter.png",
+      "altText": "A long marble-topped bar counter with dark wood shelving"
+    },
+    "items-core:item": {}
+  }
+}

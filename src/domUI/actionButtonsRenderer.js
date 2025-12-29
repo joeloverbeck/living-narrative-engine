@@ -95,6 +95,9 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   /** @type {string | null} Current active theme */
   #currentTheme = null;
 
+  /** @type {number | null} Timeout ID for pending event warning auto-clear */
+  #pendingEventWarningTimeout = null;
+
   /**
    * Constructs an ActionButtonsRenderer instance.
    *
@@ -1547,6 +1550,15 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   async #handleSendAction() {
     if (this.#isDisposed) return;
+
+    // Check for pending perceptible event message before proceeding
+    if (this.#checkPendingPerceptibleEvent()) {
+      this.logger.debug(
+        `${this._logPrefix} Action confirmation blocked: pending perceptible event message detected.`
+      );
+      return;
+    }
+
     if (!this.elements.sendButtonElement) {
       this.logger.error(
         `${this._logPrefix} #handleSendAction called, but sendButtonElement is null.`
@@ -1642,6 +1654,62 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
   }
 
+  /**
+   * Checks if there's a pending perceptible event message and shows a warning if so.
+   * This prevents accidental action confirmation when the user intended to send
+   * an event message first.
+   *
+   * @private
+   * @returns {boolean} True if there's a pending event (blocking action), false otherwise.
+   */
+  #checkPendingPerceptibleEvent() {
+    const messageInput = this.documentContext.query(
+      '#perceptible-event-message'
+    );
+    if (!messageInput) {
+      return false;
+    }
+
+    const pendingMessage = messageInput.value?.trim();
+    if (!pendingMessage) {
+      return false;
+    }
+
+    // Show warning in the perceptible event status area
+    const statusArea = this.documentContext.query('#perceptible-event-status');
+    if (statusArea) {
+      this.#showPendingEventWarning(statusArea);
+    }
+
+    return true;
+  }
+
+  /**
+   * Displays a temporary warning message about a pending perceptible event.
+   * The warning auto-clears after 5 seconds to match the existing status message pattern.
+   *
+   * @private
+   * @param {HTMLElement} statusArea - The status area element to show the warning in.
+   */
+  #showPendingEventWarning(statusArea) {
+    // Clear any existing timeout to prevent multiple overlapping timeouts
+    if (this.#pendingEventWarningTimeout) {
+      clearTimeout(this.#pendingEventWarningTimeout);
+      this.#pendingEventWarningTimeout = null;
+    }
+
+    statusArea.textContent =
+      'Event message waiting for dispatch. Please send or clear before confirming action.';
+    statusArea.className = 'status-message-area warning';
+
+    // Auto-clear after 5 seconds (matching existing PerceptibleEventSenderController pattern)
+    this.#pendingEventWarningTimeout = setTimeout(() => {
+      statusArea.textContent = '';
+      statusArea.className = 'status-message-area';
+      this.#pendingEventWarningTimeout = null;
+    }, 5000);
+  }
+
   /** @ignore */
 
   /* istanbul ignore next */
@@ -1664,6 +1732,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       return;
     }
     this.logger.debug(`${this._logPrefix} Disposing ActionButtonsRenderer.`);
+
+    // Clean up pending event warning timeout
+    if (this.#pendingEventWarningTimeout) {
+      clearTimeout(this.#pendingEventWarningTimeout);
+      this.#pendingEventWarningTimeout = null;
+    }
 
     // Clean up hover state (ACTBUTVIS-008)
     if (this.hoverTimeouts) {

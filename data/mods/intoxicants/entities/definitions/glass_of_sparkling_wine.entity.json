@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:glass_of_sparkling_wine",
+  "components": {
+    "core:name": {
+      "text": "glass of sparkling wine"
+    },
+    "core:description": {
+      "text": "An elegant flute of effervescent wine, tiny bubbles rising in persistent streams from the narrow base. The pale straw-gold liquid shimmers with reflected light, and the glass hums faintly with the sound of carbonation."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.3
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 150,
+      "maxCapacityMilliliters": 150,
+      "servingSizeMilliliters": 50,
+      "isRefillable": true,
+      "flavorText": "Bubbles dance across the tongue with playful effervescence, carrying notes of brioche, citrus zest, and white peach. The wine finishes dry and elegant, leaving a pleasant tingle and an urge to celebrate."
+    }
+  }
+}

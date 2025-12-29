@@ -6,7 +6,7 @@
   "template": "break free from {target} ({chance}% chance)",
   "generateCombinations": false,
   "required_components": {
-    "actor": ["physical-control-states:being_restrained"],
+    "actor": ["physical-control-states:being_restrained", "skills:mobility_skill"],
     "primary": ["physical-control-states:restraining"]
   },
   "targets": {
@@ -20,7 +20,7 @@
     "enabled": true,
     "contestType": "opposed",
     "actorSkill": {
-      "component": "skills:grappling_skill",
+      "component": "skills:mobility_skill",
       "property": "value",
       "default": 10
     },

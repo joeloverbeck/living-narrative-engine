@@ -13,7 +13,7 @@ describe('travel_through_dimensions - perceptionType Validation', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'movement',
+      'dimensional-travel',
       'travel_through_dimensions'
     );
   });
@@ -74,7 +74,7 @@ function createDimensionalScenario() {
     .withName('Test Observer')
     .asActor()
     .atLocation(perimeterId)
-    .withComponent('movement:can_travel_through_dimensions', {})
+    .withComponent('dimensional-travel:can_travel_through_dimensions', {})
     .build();
 
   return {

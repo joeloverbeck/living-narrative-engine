@@ -440,7 +440,7 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
     }
 
     // Dispatch success event
-    this.#dispatcher.dispatch('positioning:lying_closeness_established', {
+    this.#dispatcher.dispatch('lying:lying_closeness_established', {
       actorId: parameters.actor_id,
       furnitureId: parameters.furniture_id,
       otherLyingActors: otherLyingActors,

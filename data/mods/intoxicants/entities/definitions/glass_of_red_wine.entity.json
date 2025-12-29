@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:glass_of_red_wine",
+  "components": {
+    "core:name": {
+      "text": "glass of red wine"
+    },
+    "core:description": {
+      "text": "A delicate stemmed glass cradling a generous pour of deep ruby wine. The liquid catches the light with garnet glimmers at its edges. A complex bouquet of dark fruit and oak rises from the bowl, promising bold flavors and a velvety finish."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 180,
+      "maxCapacityMilliliters": 180,
+      "servingSizeMilliliters": 60,
+      "isRefillable": true,
+      "flavorText": "The wine unfolds across the palate with layers of blackberry, plum, and a hint of cedar. Silky tannins give way to a lingering finish of dark chocolate and spice that warms the throat pleasantly."
+    }
+  }
+}

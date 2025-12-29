@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:crystal_tumbler_of_whisky",
+  "components": {
+    "core:name": {
+      "text": "crystal tumbler of whisky"
+    },
+    "core:description": {
+      "text": "A heavy-bottomed crystal tumbler containing two fingers of amber whisky. The faceted glass refracts the liquid into honeyed prisms. A single sphere of ice slowly melts within, and the rich aroma of oak, vanilla, and smoke fills the air."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.4
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 90,
+      "maxCapacityMilliliters": 90,
+      "servingSizeMilliliters": 30,
+      "isRefillable": true,
+      "flavorText": "The whisky coats the tongue with warmth, releasing notes of caramel, toasted oak, and a subtle smokiness. It finishes long and smooth, leaving a pleasant burn that radiates through the chest."
+    }
+  }
+}

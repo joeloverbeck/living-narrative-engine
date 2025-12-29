@@ -14,15 +14,14 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 
 ## Current Status
 
-**Total Schemes Defined**: 62
-**In Use**: 50 schemes actively implemented
-**Available**: 12 schemes ready for new mods
+**Total Schemes Defined**: 70
+**In Use**: 60 schemes actively implemented
+**Available**: 10 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
 | Section | Scheme Name       | Background Color | Best For                                    |
 | ------- | ----------------- | ---------------- | ------------------------------------------- |
-| 1.2     | Slate Grey        | `#37474f`        | Administrative actions, settings            |
 | 2.1     | Bold Red          | `#c62828`        | Combat, aggressive actions                  |
 | 6.1     | Amber Warning     | `#ff6f00`        | Caution actions, moderate warnings          |
 | 6.2     | Dark Red Alert    | `#b71c1c`        | Critical alerts, dangerous actions          |
@@ -36,24 +35,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 | 23.3    | Deep Current Blue | `#0f5e7a`        | Diving, submerging, deeper water traversal  |
 
 ## Available Color Scheme Definitions
-
-### 1. Neutral/System Colors
-
-#### 1.2 Slate Grey
-
-```json
-{
-  "backgroundColor": "#37474f",
-  "textColor": "#eceff1",
-  "hoverBackgroundColor": "#546e7a",
-  "hoverTextColor": "#ffffff"
-}
-```
-
-- **Normal Contrast**: 10.34:1 AAA
-- **Hover Contrast**: 5.92:1 AA
-- **Use Cases**: Administrative actions, settings, configuration
-- **Theme**: Modern, sophisticated, calm
 
 ### 2. Action/Combat Colors
 

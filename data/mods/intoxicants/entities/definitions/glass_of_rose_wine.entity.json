@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:glass_of_rose_wine",
+  "components": {
+    "core:name": {
+      "text": "glass of rosé wine"
+    },
+    "core:description": {
+      "text": "A graceful stemmed glass holding wine the color of a summer sunset. The blush-pink liquid has a delicate translucence, and the aroma suggests sun-warmed strawberries and fresh rose petals."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 180,
+      "maxCapacityMilliliters": 180,
+      "servingSizeMilliliters": 60,
+      "isRefillable": true,
+      "flavorText": "Light and refreshing, the wine glides across the palate with flavors of wild strawberry, watermelon, and a hint of citrus blossom. It finishes bright and clean, perfect for a warm evening."
+    }
+  }
+}

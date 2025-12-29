@@ -27,9 +27,9 @@
   ],
   "template": "drink from {primary}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
+    "backgroundColor": "#4a3728",
+    "textColor": "#f5ebe0",
+    "hoverBackgroundColor": "#5d4632",
     "hoverTextColor": "#ffffff"
   }
 }

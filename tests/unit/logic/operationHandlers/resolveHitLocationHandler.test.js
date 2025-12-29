@@ -42,6 +42,39 @@ describe('ResolveHitLocationHandler', () => {
     });
   });
 
+  it('should return early when params is null', () => {
+    handler.execute(null, executionContext);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('params missing or invalid'),
+      })
+    );
+  });
+
+  it('should return early when params is undefined', () => {
+    handler.execute(undefined, executionContext);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('params missing or invalid'),
+      })
+    );
+  });
+
+  it('should return early when evaluationContext is missing', () => {
+    const params = { entity_ref: 'actor', result_variable: 'hit_location' };
+    handler.execute(params, {});
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining(
+          'evaluationContext.context is missing or invalid'
+        ),
+      })
+    );
+  });
+
   it('should handle invalid entity_ref', () => {
     const params = { entity_ref: null, result_variable: 'hit_location' };
     handler.execute(params, executionContext);
@@ -151,4 +184,55 @@ describe('ResolveHitLocationHandler', () => {
       'torso'
     );
   });
+
+  it('should handle error from bodyGraphService.getAllParts gracefully', () => {
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentType) => {
+        if (entityId === 'target1' && componentType === 'anatomy:body')
+          return { root: 'torso' };
+        return null;
+      }
+    );
+    mockBodyGraphService.getAllParts.mockImplementation(() => {
+      throw new Error('Service unavailable');
+    });
+
+    const params = {
+      entity_ref: 'target',
+      result_variable: 'hit_location',
+    };
+
+    handler.execute(params, executionContext);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Error retrieving parts')
+    );
+    expect(executionContext.evaluationContext.context.hit_location).toBeNull();
+  });
+
+  it('should handle all parts having zero weight (no eligible parts)', () => {
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentType) => {
+        if (entityId === 'target1' && componentType === 'anatomy:body')
+          return { root: 'torso' };
+        if (componentType === 'anatomy:part')
+          return { hit_probability_weight: 0 };
+        return null;
+      }
+    );
+    mockBodyGraphService.getAllParts.mockReturnValue(['torso', 'arm']);
+
+    const params = {
+      entity_ref: 'target',
+      result_variable: 'hit_location',
+    };
+
+    handler.execute(params, executionContext);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('No eligible parts')
+    );
+    expect(executionContext.evaluationContext.context.hit_location).toBeNull();
+  });
+
 });

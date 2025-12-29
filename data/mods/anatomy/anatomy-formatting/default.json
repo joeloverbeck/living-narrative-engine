@@ -2,6 +2,7 @@
   "$schema": "../../../schemas/anatomy-formatting.schema.json",
   "id": "default",
   "descriptionOrder": [
+    "gender",
     "height",
     "skin_color",
     "build",

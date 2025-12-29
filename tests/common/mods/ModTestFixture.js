@@ -2897,6 +2897,28 @@ beforeEach(async () => {
     const scopeTracer = this.scopeTracer;
 
     const resolver = (context) => {
+      // EXTRACT FIRST: Extract actorEntity from context
+      // The context can be:
+      // 1. An entity directly (has id, components)
+      // 2. An enriched context object (has actorEntity property)
+      // 3. An actor context (has actor property)
+      const actorEntity = context.actorEntity || context.actor || context;
+
+      // Resolve the actor's location for scopes that use `location` as a source
+      // (e.g., `location.locations:exits[...]`)
+      let locationEntity = null;
+      if (actorEntity?.id) {
+        const positionData = testEnv.entityManager.getComponentData(
+          actorEntity.id,
+          'core:position'
+        );
+        if (positionData?.locationId) {
+          locationEntity = testEnv.entityManager.getEntityInstance(
+            positionData.locationId
+          );
+        }
+      }
+
       // Build runtime context with getters for dynamic access
       // This ensures the resolver always uses the current entity manager,
       // even after reset() replaces it
@@ -2913,20 +2935,16 @@ beforeEach(async () => {
         get tracer() {
           return scopeTracer;
         },
+        // Required for scopes starting with `location.*`
+        location: locationEntity,
       };
 
       try {
-        // VALIDATE FIRST: Check the raw context parameter BEFORE extraction
-        // This ensures we can detect action pipeline context objects ({actor, targets})
-        // or scope resolution context objects ({runtimeCtx, dispatcher})
+        // VALIDATE: Check the extracted actorEntity
         ParameterValidator.validateActorEntity(
-          context,
+          actorEntity,
           `CustomScopeResolver[${fullScopeName}]`
         );
-
-        // EXTRACT SECOND: After validation passes, extract actorEntity
-        // ScopeEngine expects just actorEntity, not full context
-        const actorEntity = context.actorEntity || context.actor || context;
 
         // Resolve using the AST
         const result = scopeEngine.resolve(

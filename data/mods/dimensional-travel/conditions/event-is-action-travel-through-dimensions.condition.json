@@ -1,11 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "movement:event-is-action-travel-through-dimensions",
+  "id": "dimensional-travel:event-is-action-travel-through-dimensions",
   "description": "Checks if the event is an attempt_action event for travel_through_dimensions action",
   "logic": {
     "==": [
       { "var": "event.payload.actionId" },
-      "movement:travel_through_dimensions"
+      "dimensional-travel:travel_through_dimensions"
     ]
   }
 }

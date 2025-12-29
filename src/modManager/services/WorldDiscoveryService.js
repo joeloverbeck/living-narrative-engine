@@ -18,6 +18,7 @@
  * @property {string} name - Display name
  * @property {string} description - Mod description
  * @property {boolean} hasWorlds - Whether mod contains worlds
+ * @property {{id: string, name: string, description: string}[]} [worlds] - Worlds exposed by backend
  */
 
 /**
@@ -35,10 +36,7 @@
 
 /**
  * Service for discovering worlds from mod metadata.
- *
- * Note: Since no backend API exists for world details, this service
- * derives world information from mod metadata only, using the convention
- * that each mod with worlds has a primary world with ID `modId:modId`.
+ * Falls back to the legacy modId:modId convention when no world metadata exists.
  */
 export class WorldDiscoveryService {
   /** @type {ILogger} */
@@ -89,8 +87,8 @@ export class WorldDiscoveryService {
     }
 
     // Create world entries from mod metadata
-    const worlds = activeModsWithWorlds.map((mod) =>
-      this.#createWorldFromMod(mod)
+    const worlds = activeModsWithWorlds.flatMap((mod) =>
+      this.#createWorldsFromMod(mod)
     );
 
     this.#logger.info(
@@ -100,18 +98,46 @@ export class WorldDiscoveryService {
   }
 
   /**
-   * Create world entry from mod metadata
-   * Uses convention modId:modId for primary world
+   * Create world entries from mod metadata
    * @param {ModMetadata} mod - Mod metadata
+   * @returns {WorldInfo[]}
+   */
+  #createWorldsFromMod(mod) {
+    if (Array.isArray(mod.worlds) && mod.worlds.length > 0) {
+      const worlds = mod.worlds
+        .filter((world) => world && typeof world.id === 'string' && world.id)
+        .map((world) => this.#createWorldFromMetadata(mod, world));
+      if (worlds.length > 0) {
+        return worlds;
+      }
+      // All worlds were filtered out due to invalid data
+      this.#logger.warn(
+        `WorldDiscoveryService: Mod '${mod.id}' has worlds array but no valid world entries`
+      );
+    }
+    // No worlds defined - return empty array instead of legacy fallback
+    return [];
+  }
+
+  /**
+   * Create world entry from mod metadata world list
+   * @param {ModMetadata} mod - Mod metadata
+   * @param {{id: string, name: string, description: string}} world - World metadata
    * @returns {WorldInfo}
    */
-  #createWorldFromMod(mod) {
+  #createWorldFromMetadata(mod, world) {
+    const parsed = this.parseWorldId(world.id);
+    const modId = parsed?.modId || mod.id;
+    const worldId = parsed?.worldId || world.id;
+    const id = parsed ? `${modId}:${worldId}` : `${mod.id}:${world.id}`;
+
     return {
-      id: `${mod.id}:${mod.id}`,
-      modId: mod.id,
-      worldId: mod.id,
-      name: `${mod.name} World`,
-      description: mod.description || `Main world from ${mod.name}`,
+      id,
+      modId,
+      worldId,
+      name: world.name || `${mod.name} World`,
+      description:
+        world.description || mod.description || `Main world from ${mod.name}`,
     };
   }
 

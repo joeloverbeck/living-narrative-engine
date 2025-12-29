@@ -28,6 +28,7 @@ describe('Body Descriptor Validation - Integration', () => {
     // Store anatomy formatting configuration with all descriptors
     dataRegistry.store('anatomyFormatting', 'default', {
       descriptionOrder: [
+        'gender',
         'height',
         'skin_color',
         'build',
@@ -140,7 +141,7 @@ describe('Body Descriptor Validation - Integration', () => {
 
       // Should have info about registered descriptors
       expect(result.info.length).toBeGreaterThan(0);
-      expect(result.info[0]).toContain('Total registered descriptors: 6');
+      expect(result.info[0]).toContain('Total registered descriptors: 7');
       expect(result.info[1]).toContain('Registered:');
     });
 

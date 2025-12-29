@@ -167,6 +167,8 @@
         "kraken_head.entity.json",
         "kraken_mantle.entity.json",
         "kraken_tentacle.entity.json",
+        "mustelid_lung_left.entity.json",
+        "mustelid_lung_right.entity.json",
         "newt_eye.entity.json",
         "newt_folk_arm.entity.json",
         "newt_folk_ass_cheek.entity.json",

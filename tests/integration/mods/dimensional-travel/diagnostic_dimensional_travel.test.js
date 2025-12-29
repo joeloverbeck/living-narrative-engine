@@ -12,9 +12,12 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'movement',
+      'dimensional-travel',
       'travel_through_dimensions'
     );
+
+    // Register the dimensional_portals scope with its condition_ref dependencies
+    await fixture.registerCustomScope('dimensional-travel', 'dimensional_portals');
   });
 
   afterEach(() => {
@@ -81,7 +84,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
           data: { locationId: perimeterId },
         },
         {
-          componentId: 'movement:can_travel_through_dimensions',
+          componentId: 'dimensional-travel:can_travel_through_dimensions',
           data: {},
         },
       ],
@@ -137,6 +140,6 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
     console.log('Action IDs:', actionIds);
 
     // Check if our action is there
-    expect(actions).toContainAction('movement:travel_through_dimensions');
+    expect(actions).toContainAction('dimensional-travel:travel_through_dimensions');
   });
 });

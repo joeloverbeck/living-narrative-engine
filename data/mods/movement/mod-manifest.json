@@ -4,13 +4,17 @@
   "version": "1.0.0",
   "name": "Movement System",
   "description": "Provides core movement mechanics.",
-  "actionPurpose": "Move between locations, teleport, or travel through dimensional portals.",
-  "actionConsiderWhen": "Traveling to a new location, using teleportation abilities, or accessing dimensional gateways.",
+  "actionPurpose": "Move between locations, find exits, pass through breaches, or teleport.",
+  "actionConsiderWhen": "Traveling to a new location, navigating out of a space, crossing a breach, or using teleportation abilities.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
       "id": "recovery-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting-states",
       "version": "^1.0.0"
     },
     {
@@ -42,10 +46,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "blockers",
-      "version": "^1.0.0"
-    },
-    {
       "id": "breaching",
       "version": "^1.0.0"
     },
@@ -59,14 +59,12 @@
       "feel_your_way_to_an_exit.action.json",
       "go.action.json",
       "pass_through_breach.action.json",
-      "teleport.action.json",
-      "travel_through_dimensions.action.json"
+      "teleport.action.json"
     ],
     "rules": [
       "go.rule.json",
       "handle_feel_your_way_to_an_exit.rule.json",
       "handle_teleport.rule.json",
-      "handle_travel_through_dimensions.rule.json",
       "pass_through_breach.rule.json"
     ],
     "conditions": [
@@ -74,13 +72,11 @@
       "event-is-action-go.condition.json",
       "event-is-action-pass-through-breach.condition.json",
       "event-is-action-teleport.condition.json",
-      "event-is-action-travel-through-dimensions.condition.json",
       "exit-is-unblocked.condition.json"
     ],
     "scopes": [
       "clear_directions.scope",
-      "destinations_for_breached_blocker.scope",
-      "dimensional_portals.scope"
+      "destinations_for_breached_blocker.scope"
     ],
     "events": [
       "entity_entered_location.event.json",
@@ -88,7 +84,6 @@
     ],
     "components": [
       "can_teleport.component.json",
-      "can_travel_through_dimensions.component.json",
       "movement.component.json"
     ],
     "entities": {

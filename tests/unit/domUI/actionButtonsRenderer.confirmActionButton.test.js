@@ -152,6 +152,8 @@ describe('ActionButtonsRenderer', () => {
                 <div id="action-buttons"></div>
                 <button id="player-confirm-turn-button"></button>
                 <input type="text" id="speech-input" />
+                <textarea id="perceptible-event-message"></textarea>
+                <div id="perceptible-event-status" class="status-message-area"></div>
             </div>
         </body></html>`);
     currentDocument = dom.window.document;

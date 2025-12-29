@@ -16,9 +16,9 @@
   },
   "template": "lower {item}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
+    "backgroundColor": "#37474f",
+    "textColor": "#eceff1",
+    "hoverBackgroundColor": "#546e7a",
     "hoverTextColor": "#ffffff"
   }
 }

@@ -31,6 +31,30 @@ describe('resolveEntityNameFallback', () => {
     expect(getEntityDisplayName).not.toHaveBeenCalled();
   });
 
+  it('returns "Narrator" for system entity on actor.name', () => {
+    const entity = { id: 'system', components: {} };
+    const result = resolveEntityNameFallback(
+      'actor.name',
+      { actor: entity },
+      logger
+    );
+    expect(result).toBe('Narrator');
+    expect(getEntityDisplayName).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalled();
+  });
+
+  it('returns "Narrator" for system entity on target.name', () => {
+    const entity = { id: 'system' };
+    const result = resolveEntityNameFallback(
+      'target.name',
+      { target: entity },
+      logger
+    );
+    expect(result).toBe('Narrator');
+    expect(getEntityDisplayName).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalled();
+  });
+
   it('passes entity through when it already has getComponentData', () => {
     const entity = { id: 'id1', getComponentData: jest.fn() };
     getEntityDisplayName.mockReturnValue('Hero');

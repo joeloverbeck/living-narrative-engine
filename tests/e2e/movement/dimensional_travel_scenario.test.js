@@ -12,8 +12,8 @@ describe('Patrol Dimensional Travel Scenario', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'patrol',
-      'movement:travel_through_dimensions'
+      'dimensional-travel',
+      'dimensional-travel:travel_through_dimensions'
     );
   });
 
@@ -44,7 +44,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
       const actions = await fixture.discoverActions(lenId);
 
       // Should not have dimensional travel action (lacks component)
-      expect(actions).not.toContainAction('movement:travel_through_dimensions');
+      expect(actions).not.toContainAction('dimensional-travel:travel_through_dimensions');
 
       // Should not have go action to eldritch dimension (blocked exit)
       expect(actions).not.toContainAction('movement:go', {
@@ -59,7 +59,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
         components: [
           { componentId: 'core:actor', data: {} },
           { componentId: 'core:name', data: { text: 'Writhing Observer' } },
-          { componentId: 'movement:can_travel_through_dimensions', data: {} },
+          { componentId: 'dimensional-travel:can_travel_through_dimensions', data: {} },
         ],
       });
 
@@ -98,7 +98,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
         components: [
           { componentId: 'core:actor', data: {} },
           { componentId: 'core:name', data: { text: 'Writhing Observer' } },
-          { componentId: 'movement:can_travel_through_dimensions', data: {} },
+          { componentId: 'dimensional-travel:can_travel_through_dimensions', data: {} },
         ],
       });
 

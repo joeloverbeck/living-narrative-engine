@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:martini_glass",
+  "components": {
+    "core:name": {
+      "text": "martini"
+    },
+    "core:description": {
+      "text": "An iconic V-shaped glass holds the quintessential cocktail, perfectly clear with a slight sheen of oil from quality gin. A single olive rests at the bottom like a treasure, and the aroma of juniper and dry vermouth speaks of sophisticated evenings."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.3
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 90,
+      "maxCapacityMilliliters": 90,
+      "servingSizeMilliliters": 30,
+      "isRefillable": true,
+      "flavorText": "Crystal-clear and bone-dry, the martini delivers a crisp, botanical punch. Juniper and citrus give way to the subtle herbaceousness of vermouth. The olive adds a briny counterpoint that makes each sip more compelling than the last."
+    }
+  }
+}

@@ -1268,11 +1268,34 @@ export class ScopeResolverHelpers {
     const scopeEngine = new ScopeEngine();
 
     const resolver = (context) => {
+      // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
+      // The context can be:
+      // 1. An entity directly (has id, components)
+      // 2. An enriched context object (has actorEntity property from _registerResolvers)
+      // 3. An actor context (has actor property)
+      const actorEntity = context.actorEntity || context.actor || context;
+
+      // Resolve the actor's location for scopes that use `location` as a source
+      // (e.g., `location.locations:exits[...]`)
+      let locationEntity = null;
+      if (actorEntity?.id) {
+        const positionData = testEnv.entityManager.getComponentData(
+          actorEntity.id,
+          'core:position'
+        );
+        if (positionData?.locationId) {
+          locationEntity = testEnv.entityManager.getEntityInstance(
+            positionData.locationId
+          );
+        }
+      }
+
       const runtimeCtx = {
         entityManager: testEnv.entityManager,
         jsonLogicEval: testEnv.jsonLogic,
         logger: testEnv.logger,
         tracer: context?.tracer, // Pass tracer from context for scope tracing
+        location: locationEntity, // Required for scopes starting with `location.*`
         get container() {
           // Prefer a real container if the test environment exposes one
           if (testEnv.container && typeof testEnv.container.resolve === 'function') {
@@ -1292,12 +1315,6 @@ export class ScopeResolverHelpers {
       };
 
       try {
-        // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
-        // The context can be:
-        // 1. An entity directly (has id, components)
-        // 2. An enriched context object (has actorEntity property from _registerResolvers)
-        // 3. An actor context (has actor property)
-        const actorEntity = context.actorEntity || context.actor || context;
 
         // Validate the extracted actorEntity to ensure it's an entity instance
         // Skip validation if context was enriched by _registerResolvers (has tracer + actorEntity)

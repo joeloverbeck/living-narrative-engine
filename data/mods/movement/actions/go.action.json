@@ -18,7 +18,8 @@
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
       "recovery-states:fallen",
-      "liquids-states:in_liquid_body"
+      "liquids-states:in_liquid_body",
+      "sitting-states:sitting_on"
     ]
   },
   "prerequisites": [
@@ -45,6 +46,6 @@
     "migratedFrom": "core:go",
     "migrationTicket": "MOVMODMIG-004",
     "version": "1.0.0",
-    "migrationDate": "2024-11-01"
+    "migrationDate": "2024-05-01"
   }
 }

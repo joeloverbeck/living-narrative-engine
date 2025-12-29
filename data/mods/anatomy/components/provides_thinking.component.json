@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:provides_thinking",
+  "description": "Marker component indicating this body part enables cognitive function and conscious thought when functioning",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

@@ -192,7 +192,7 @@ describe('EstablishLyingClosenessHandler', () => {
       true
     );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      'positioning:lying_closeness_established',
+      'lying:lying_closeness_established',
       expect.objectContaining({
         actorId: 'actor1',
         furnitureId: 'furniture:1',

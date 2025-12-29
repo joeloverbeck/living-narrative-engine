@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "dimensional-travel",
+  "version": "1.0.0",
+  "name": "Dimensional Travel",
+  "description": "Supernatural dimensional portal traversal mechanics",
+  "actionPurpose": "Travel through tears in reality to access other dimensions.",
+  "actionConsiderWhen": "The actor has dimensional travel abilities and can see dimensional portals.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "blockers",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "locations",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "travel_through_dimensions.action.json"
+    ],
+    "rules": [
+      "handle_travel_through_dimensions.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-travel-through-dimensions.condition.json"
+    ],
+    "scopes": [
+      "dimensional_portals.scope"
+    ],
+    "components": [
+      "can_travel_through_dimensions.component.json"
+    ],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "macros": []
+  }
+}

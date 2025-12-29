@@ -12,9 +12,13 @@ describe('travel_through_dimensions Action Discovery', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'movement',
+      'dimensional-travel',
       'travel_through_dimensions'
     );
+
+    // Register the dimensional_portals scope with its condition_ref dependencies
+    // This loads blockers:blocker-is-dimensional-portal and registers the scope resolver
+    await fixture.registerCustomScope('dimensional-travel', 'dimensional_portals');
   });
 
   afterEach(() => {
@@ -60,7 +64,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       // Add exit with blocker to perimeter
-      await await fixture.modifyComponent(perimeterId, 'locations:exits', [
+      await fixture.modifyComponent(perimeterId, 'locations:exits', [
         {
           direction: 'through the dimensional rift',
           target: dimensionId,
@@ -82,7 +86,7 @@ describe('travel_through_dimensions Action Discovery', () => {
             data: { locationId: perimeterId },
           },
           {
-            componentId: 'movement:can_travel_through_dimensions',
+            componentId: 'dimensional-travel:can_travel_through_dimensions',
             data: {},
           },
         ],
@@ -92,7 +96,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       // Note: Test environment doesn't populate primaryTargetId/secondaryTargetId
       // The action being in the list means scopes were successfully resolved
-      expect(actions).toContainAction('movement:travel_through_dimensions');
+      expect(actions).toContainAction('dimensional-travel:travel_through_dimensions');
     });
 
     it('should NOT discover travel_through_dimensions for humans', async () => {
@@ -116,7 +120,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       const actions = await fixture.discoverActions(humanId);
 
-      expect(actions).not.toContainAction('movement:travel_through_dimensions');
+      expect(actions).not.toContainAction('dimensional-travel:travel_through_dimensions');
     });
 
     it('should NOT discover travel_through_dimensions for unblocked exits', async () => {
@@ -165,7 +169,7 @@ describe('travel_through_dimensions Action Discovery', () => {
             data: { locationId },
           },
           {
-            componentId: 'movement:can_travel_through_dimensions',
+            componentId: 'dimensional-travel:can_travel_through_dimensions',
             data: {},
           },
         ],
@@ -174,7 +178,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       const actions = await fixture.discoverActions(observerId);
 
       // Should not appear because exits are unblocked (normal movement)
-      expect(actions).not.toContainAction('movement:travel_through_dimensions');
+      expect(actions).not.toContainAction('dimensional-travel:travel_through_dimensions');
     });
   });
 
@@ -200,7 +204,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       const actions = await fixture.discoverActions(humanId);
 
       // Humans without dimensional travel component should not see the action
-      expect(actions).not.toContainAction('movement:travel_through_dimensions');
+      expect(actions).not.toContainAction('dimensional-travel:travel_through_dimensions');
     });
   });
 });

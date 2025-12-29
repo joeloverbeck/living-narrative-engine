@@ -30,9 +30,24 @@
     "scopes": [],
     "entities": {
       "definitions": [
+        "copper_cup_of_mule.entity.json",
+        "cordial_glass_of_liqueur.entity.json",
+        "coupe_of_champagne_cocktail.entity.json",
+        "crystal_tumbler_of_whisky.entity.json",
+        "glass_of_aged_rum.entity.json",
+        "glass_of_red_wine.entity.json",
+        "glass_of_rose_wine.entity.json",
+        "glass_of_sparkling_wine.entity.json",
+        "glass_of_white_wine.entity.json",
+        "highball_of_gin_fizz.entity.json",
         "jug_of_ale.entity.json",
         "jug_of_cider.entity.json",
-        "jug_of_mead.entity.json"
+        "jug_of_mead.entity.json",
+        "martini_glass.entity.json",
+        "mulled_wine_goblet.entity.json",
+        "shot_of_absinthe.entity.json",
+        "small_glass_of_port.entity.json",
+        "snifter_of_brandy.entity.json"
       ],
       "instances": []
     }

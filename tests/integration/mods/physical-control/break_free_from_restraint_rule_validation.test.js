@@ -40,7 +40,7 @@ describe('handle_break_free_from_restraint rule', () => {
     );
   });
 
-  it('aligns action chance config to opposed defense vs grappling ratio contest', () => {
+  it('aligns action chance config to opposed mobility vs grappling ratio contest', () => {
     const { chanceBased } = breakFreeAction;
 
     expect(chanceBased.enabled).toBe(true);
@@ -53,7 +53,7 @@ describe('handle_break_free_from_restraint rule', () => {
     });
 
     expect(chanceBased.actorSkill).toEqual({
-      component: 'skills:grappling_skill',
+      component: 'skills:mobility_skill',
       property: 'value',
       default: 10,
     });
@@ -68,7 +68,7 @@ describe('handle_break_free_from_restraint rule', () => {
       (op) => op.type === 'RESOLVE_OUTCOME'
     );
     expect(resolveOutcome?.parameters.actor_skill_component).toBe(
-      'skills:grappling_skill'
+      'skills:mobility_skill'
     );
     expect(resolveOutcome?.parameters.actor_skill_default).toBe(10);
     expect(resolveOutcome?.parameters.target_skill_component).toBe(

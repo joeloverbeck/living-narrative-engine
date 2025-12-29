@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:shot_of_absinthe",
+  "components": {
+    "core:name": {
+      "text": "shot of absinthe"
+    },
+    "core:description": {
+      "text": "A small glass of luminous green spirit, its color reminiscent of spring leaves or something more mysterious. A slotted spoon rests across the rim with a sugar cube, and the potent herbal aroma promises visions of the green fairy herself."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.25
+    },
+    "drinking:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 45,
+      "maxCapacityMilliliters": 45,
+      "servingSizeMilliliters": 15,
+      "isRefillable": true,
+      "flavorText": "The spirit hits the tongue with intense complexity—wormwood, anise, and fennel dancing together in an herbal symphony. The burn is sharp and clean, followed by a lingering coolness and the strange sensation that the edges of reality have softened."
+    }
+  }
+}

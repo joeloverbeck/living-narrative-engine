@@ -99,6 +99,9 @@ describe('Body Descriptor System Consistency', () => {
       );
 
       for (const descriptorName of getAllDescriptorNames()) {
+        // Gender is extracted from core:gender component, not bodyDescriptors
+        if (descriptorName === 'gender') continue;
+
         const metadata = BODY_DESCRIPTOR_REGISTRY[descriptorName];
         expect(schemaProperties).toContain(metadata.schemaProperty);
       }
@@ -106,6 +109,9 @@ describe('Body Descriptor System Consistency', () => {
 
     it('should have matching validValues between registry and schema', () => {
       for (const [name, metadata] of Object.entries(BODY_DESCRIPTOR_REGISTRY)) {
+        // Gender is extracted from core:gender component, not bodyDescriptors
+        if (name === 'gender') continue;
+
         if (metadata.validValues) {
           const schemaProperty =
             recipeSchema.properties.bodyDescriptors.properties[
@@ -165,6 +171,7 @@ describe('Body Descriptor System Consistency', () => {
       }
 
       // Verify expected body descriptor keys are present
+      expect(bodyDescriptorKeysInConfig).toContain('gender');
       expect(bodyDescriptorKeysInConfig).toContain('height');
       expect(bodyDescriptorKeysInConfig).toContain('skin_color');
       expect(bodyDescriptorKeysInConfig).toContain('build');
@@ -192,8 +199,19 @@ describe('Body Descriptor System Consistency', () => {
         },
       };
 
+      // Mock entity for gender extractor (requires entity with core:gender component)
+      const mockEntity = {
+        hasComponent: (id) => id === 'core:gender',
+        getComponentData: (id) =>
+          id === 'core:gender' ? { value: 'female' } : null,
+      };
+
       for (const [name, metadata] of Object.entries(BODY_DESCRIPTOR_REGISTRY)) {
-        const value = metadata.extractor(testBodyComponent);
+        // Gender uses a different extraction pattern - needs entity
+        const value =
+          name === 'gender'
+            ? metadata.extractor(testBodyComponent, mockEntity)
+            : metadata.extractor(testBodyComponent);
         expect(value).toBeDefined();
         expect(typeof value).toBe('string');
       }
@@ -203,6 +221,7 @@ describe('Body Descriptor System Consistency', () => {
       const emptyComponent = { body: { descriptors: {} } };
 
       for (const [name, metadata] of Object.entries(BODY_DESCRIPTOR_REGISTRY)) {
+        // Gender extractor returns undefined when entity lacks core:gender component
         const value = metadata.extractor(emptyComponent);
         // Should not throw, may return undefined/null
         expect(() => metadata.extractor(emptyComponent)).not.toThrow();

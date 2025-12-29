@@ -2,10 +2,10 @@
   "mods": [
     "core",
     "aiming",
-    "dredgers",
     "companionship",
     "containers",
     "deference",
+    "dimensional-travel",
     "distress",
     "first-aid",
     "hand-holding",
@@ -34,7 +34,15 @@
     "movement",
     "strangling-states",
     "breathing",
-    "facing"
+    "facing",
+    "p_erotica_kern",
+    "exercise",
+    "lighting",
+    "liquids",
+    "music",
+    "reading",
+    "straddling",
+    "writing"
   ],
-  "startWorld": "dredgers:dredgers"
+  "startWorld": "p_erotica_kern:kern"
 }

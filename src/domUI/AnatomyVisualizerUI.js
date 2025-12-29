@@ -207,18 +207,54 @@ class AnatomyVisualizerUI {
       // Get the entity instance for description update
       const entity = await this._entityManager.getEntityInstance(entityId);
 
+      // Guard: Check if this entity is still the selected entity after async operation
+      // (Another entity may have been selected while awaiting)
+      if (this._currentEntityId !== entityId) {
+        this._logger.debug(
+          `Aborting stale anatomy handler for entity ${entityId}, current entity is ${this._currentEntityId}`
+        );
+        return;
+      }
+
       // Update description panel
       this._updateEntityDescription(entity);
 
       // Update equipment panel
       const equipmentResult = await this._retrieveEquipmentData(entityId);
+
+      // Guard: Check again after second async operation
+      if (this._currentEntityId !== entityId) {
+        this._logger.debug(
+          `Aborting stale anatomy handler for entity ${entityId}, current entity is ${this._currentEntityId}`
+        );
+        return;
+      }
+
       this._updateEquipmentDisplay(equipmentResult);
+
+      // Guard: Check state before starting rendering
+      // The state may have been reset by a new entity selection
+      const currentState = this._visualizerStateController.getCurrentState();
+      if (currentState !== 'LOADED') {
+        this._logger.debug(
+          `Aborting anatomy handler: state is ${currentState}, expected LOADED`
+        );
+        return;
+      }
 
       // Start rendering
       this._visualizerStateController.startRendering();
 
       // Render the anatomy graph
       await this._visualizationComposer.renderGraph(entityId, anatomyData);
+
+      // Final guard before completing rendering
+      if (this._currentEntityId !== entityId) {
+        this._logger.debug(
+          `Aborting stale anatomy handler during rendering for entity ${entityId}`
+        );
+        return;
+      }
 
       // Complete rendering
       this._visualizerStateController.completeRendering();
@@ -345,6 +381,14 @@ class AnatomyVisualizerUI {
     try {
       // Clear any previous entities
       await this._clearPreviousEntities();
+
+      // Reset state to IDLE before selecting new entity to ensure valid state transition
+      // (When switching entities, state may be READY which cannot directly transition to LOADING)
+      const currentState = this._visualizerStateController.getCurrentState();
+      if (currentState !== 'IDLE') {
+        this._logger.debug(`Resetting visualizer state from ${currentState} to IDLE`);
+        this._visualizerStateController.reset();
+      }
 
       // Get entity definition to verify it has anatomy:body
       const definition = this._registry.getEntityDefinition(entityDefId);
