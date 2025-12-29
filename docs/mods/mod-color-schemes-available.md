@@ -14,17 +14,19 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 
 ## Current Status
 
-**Total Schemes Defined**: 70
-**In Use**: 60 schemes actively implemented
-**Available**: 10 schemes ready for new mods
+**Total Schemes Defined**: 69
+**In Use**: 56 schemes actively implemented
+**Available**: 13 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
 | Section | Scheme Name       | Background Color | Best For                                    |
 | ------- | ----------------- | ---------------- | ------------------------------------------- |
 | 2.1     | Bold Red          | `#c62828`        | Combat, aggressive actions                  |
+| 2.5     | Grip Iron         | `#4a4a4a`        | Grappling, restraint, control actions       |
 | 6.1     | Amber Warning     | `#ff6f00`        | Caution actions, moderate warnings          |
 | 6.2     | Dark Red Alert    | `#b71c1c`        | Critical alerts, dangerous actions          |
+| 7.4     | Feral Amber       | `#8b5a00`        | Predatory strikes, creature aggression      |
 | 8.1     | Pure Black & White| `#000000`        | Maximum accessibility                       |
 | 8.2     | White & Black     | `#ffffff`        | Light theme high contrast                   |
 | 8.3     | Yellow on Black   | `#000000`        | High visibility                             |
@@ -53,6 +55,22 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Hover Contrast**: 5.25:1 AA
 - **Use Cases**: Combat, aggressive actions, critical alerts
 - **Theme**: Danger, power, intensity
+
+#### 2.5 Grip Iron
+
+```json
+{
+  "backgroundColor": "#4a4a4a",
+  "textColor": "#f5f5f5",
+  "hoverBackgroundColor": "#5a5a5a",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 8.13:1 AAA
+- **Hover Contrast**: 6.90:1 AA
+- **Use Cases**: Grappling, restraint, control actions, firm holds
+- **Theme**: Control, restraint, iron grip
 
 ### 6. Warning/Alert Colors
 
@@ -87,6 +105,24 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Hover Contrast**: 7.13:1 AAA
 - **Use Cases**: Critical alerts, dangerous actions, urgent
 - **Theme**: Urgent, critical, immediate
+
+### 7. Dark Theme Optimized
+
+#### 7.4 Feral Amber
+
+```json
+{
+  "backgroundColor": "#8b5a00",
+  "textColor": "#fff8e1",
+  "hoverBackgroundColor": "#a06800",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 5.55:1 AA
+- **Hover Contrast**: 4.69:1 AA
+- **Use Cases**: Predatory strikes, creature attacks, feral aggression
+- **Theme**: Natural predator, animalistic instinct
 
 ### 8. High Contrast Options
 

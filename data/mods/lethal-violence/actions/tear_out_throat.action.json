@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "lethal-violence:tear_out_throat",
+  "name": "Tear Out Throat",
+  "description": "Violently tear out the throat of the target you are currently biting, causing severe trauma and ending the bite.",
+  "targets": "biting-states:actor_being_bitten_by_me",
+  "required_components": {
+    "actor": ["biting-states:biting_neck"]
+  },
+  "template": "tear out {target}'s throat",
+  "visual": {
+    "backgroundColor": "#b71c1c",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c62828",
+    "hoverTextColor": "#ffffff"
+  }
+}

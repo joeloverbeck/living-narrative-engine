@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "grabbing",
+  "version": "1.0.0",
+  "name": "Grabbing",
+  "description": "Close-range restraint and grappling actions",
+  "dependencies": [
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "physical-control-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "grab_neck.action.json",
+      "squeeze_neck_with_both_hands.action.json"
+    ],
+    "rules": [
+      "handle_grab_neck.rule.json",
+      "handle_squeeze_neck_with_both_hands.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-grab-neck.condition.json",
+      "event-is-action-squeeze-neck-with-both-hands.condition.json"
+    ]
+  }
+}

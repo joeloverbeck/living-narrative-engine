@@ -1,0 +1,161 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_punch_target",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "striking:event-is-action-punch-target" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "weaponName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "damage-types:damage_capabilities",
+        "result_variable": "weaponDamage"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:melee_skill",
+        "target_skill_component": "skills:defense_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "attackResult",
+        "target_role": "secondary"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by macros and the end-turn macro",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.target_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.secondaryId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: verb for critical hit messages",
+      "parameters": {
+        "variable_name": "attackVerb",
+        "value": "punch"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: past tense verb for other messages",
+      "parameters": {
+        "variable_name": "attackVerbPast",
+        "value": "punches"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: hit description for blunt impact",
+      "parameters": {
+        "variable_name": "hitDescription",
+        "value": "landing a solid blow"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: exclude non-blunt damage types (arms only do blunt damage)",
+      "parameters": {
+        "variable_name": "excludeDamageTypes",
+        "value": ["slashing", "piercing"]
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: success message template",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} punches {context.targetName} with their {context.weaponName}, {context.hitDescription}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Punch-specific: failure message template",
+      "parameters": {
+        "variable_name": "failureMessage",
+        "value": "{context.actorName} throws a punch at {context.targetName} with their {context.weaponName}, but the blow fails to connect."
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
+        "then_actions": [{ "macro": "weapons:handleMeleeCritical" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
+        "then_actions": [{ "macro": "weapons:handleMeleeHit" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - uses arm-specific fumble (falling from overextension)",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
+        "then_actions": [{ "macro": "striking:handleArmFumble" }]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
+        "then_actions": [{ "macro": "weapons:handleMeleeMiss" }]
+      }
+    }
+  ]
+}

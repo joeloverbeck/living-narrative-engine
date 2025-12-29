@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "violence:event-is-action-slap-target",
-  "description": "Checks if the event is a slap_target action attempt",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "violence:slap_target"]
-  }
-}
