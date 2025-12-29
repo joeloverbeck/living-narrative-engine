@@ -1,5 +1,7 @@
 # SCORESRUNCONROB-006 – Document Three Context Format Variants
 
+**Status**: ✅ COMPLETED
+
 ## Problem
 
 Scope resolvers accept three different context formats, but this is not documented anywhere:
@@ -88,3 +90,40 @@ resolver(pipelineContext);
 ### Placement
 
 Add as a subsection within or adjacent to the "Location-Based Scope Resolution" section added by SCORESRUNCONROB-005.
+
+---
+
+## Outcome
+
+### What was actually changed
+
+**Modified file**: `docs/testing/mod-testing-guide.md`
+
+Added a new section "Context Format Variants for Scope Resolution" (lines 1472-1589) containing:
+
+1. **Overview**: Explanation of why normalization exists and how it prevents validation failures
+2. **Three format examples** with JavaScript code showing:
+   - Direct entity format (most common in unit tests)
+   - Enriched context format (used by action discovery pipeline)
+   - Actor pipeline context format (used internally by pipeline stages)
+3. **Format usage table**: When each format is typically encountered
+4. **Normalization process**: Detailed explanation of the `actorEntity || actor || context` extraction priority
+5. **Common error scenarios**: Before/after code examples showing validation failures and their fixes
+6. **Format detection helper**: Utility function for debugging context format issues
+
+### Verification
+
+- Ticket assumptions verified against actual code:
+  - `tests/common/mods/ModTestFixture.js:2905` contains the normalization pattern
+  - `tests/common/mods/scopeResolverHelpers.js:1276` contains the same pattern
+- All acceptance criteria met:
+  - ✅ Three format examples with code
+  - ✅ Normalization explanation
+  - ✅ Usage context table
+  - ✅ Error examples with correct/incorrect patterns
+  - ✅ Placed adjacent to "Location-Based Scope Resolution" section
+- No source code or test files were modified (documentation-only change as specified)
+
+### Changes vs. originally planned
+
+No deviations from the original plan. The documentation was added exactly as specified in the ticket requirements, placed in the designated location within `docs/testing/mod-testing-guide.md`.

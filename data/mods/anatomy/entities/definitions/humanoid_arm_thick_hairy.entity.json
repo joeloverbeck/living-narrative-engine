@@ -33,6 +33,20 @@
     },
     "descriptors:build": {
       "build": "thick"
+    },
+    "damage-types:damage_capabilities": {
+      "entries": [
+        {
+          "name": "blunt",
+          "amount": 7,
+          "penetration": 0.2,
+          "stun": {
+            "enabled": true,
+            "chance": 0.12,
+            "durationTurns": 1
+          }
+        }
+      ]
     }
   }
 }

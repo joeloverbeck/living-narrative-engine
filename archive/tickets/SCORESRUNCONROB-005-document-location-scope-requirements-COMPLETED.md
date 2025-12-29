@@ -1,5 +1,7 @@
 # SCORESRUNCONROB-005 – Document Location Scope Requirements
 
+**Status: ✅ COMPLETED**
+
 ## Problem
 
 The mod testing guide (`docs/testing/mod-testing-guide.md`) does not document:
@@ -57,4 +59,30 @@ The new section "Location-Based Scope Resolution" must include:
 
 ### Placement
 
-Add the new section after the "Testing Custom Mod-Specific Scopes" section (approximately line 1500) and before "Best Practices".
+Add the new section after the "Testing Custom Mod-Specific Scopes" section (which ends around line 1370) and before the "Action Discovery Troubleshooting Checklist" section.
+
+---
+
+## Outcome
+
+**Completed on:** 2025-12-29
+
+### Changes Made
+
+1. **Corrected ticket placement assumption**: Original ticket stated "approximately line 1500" but the actual "Testing Custom Mod-Specific Scopes" section ends around line 1370. Updated ticket to reflect correct location.
+
+2. **Added "Location-Based Scope Resolution" section** to `docs/testing/mod-testing-guide.md` (lines 1371-1472) containing:
+   - Definition of location-based scopes (`location.*` DSL patterns)
+   - Explanation of when `runtimeCtx.location` is required
+   - Code showing how location is resolved from `core:position.locationId`
+   - Table documenting empty Set behavior (graceful degradation)
+   - Complete test example showing location context setup
+   - Cross-reference link to `scope-resolver-registry.md`
+
+### Verification
+
+- ✅ All acceptance criteria met
+- ✅ Existing documentation sections unchanged
+- ✅ Markdown link to `scope-resolver-registry.md` is valid
+- ✅ Follows existing documentation style
+- ✅ Examples use realistic scope patterns
