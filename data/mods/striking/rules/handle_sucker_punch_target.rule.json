@@ -1,0 +1,434 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_sucker_punch_target",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "striking:event-is-action-sucker-punch-target" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "weaponName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "damage-types:damage_capabilities",
+        "result_variable": "weaponDamage"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "parameters": {
+        "actor_skill_component": "skills:melee_skill",
+        "target_skill_component": "skills:awareness_skill",
+        "actor_skill_default": 10,
+        "target_skill_default": 0,
+        "formula": "ratio",
+        "result_variable": "attackResult",
+        "target_role": "secondary"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by the end-turn macros",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "physical.target_action"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.secondaryId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Sucker punch: exclude non-blunt damage types (arms only do blunt damage)",
+      "parameters": {
+        "variable_name": "excludeDamageTypes",
+        "value": ["slashing", "piercing"]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} catches {context.targetName} completely off guard, landing a devastating surprise blow with their {context.weaponName}!",
+              "actor_description": "I catch {context.targetName} completely off guard, landing a devastating surprise blow with my {context.weaponName}!",
+              "target_description": "{context.actorName} catches me completely off guard, landing a devastating surprise blow with their {context.weaponName}!",
+              "perception_type": "combat.attack",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the heavy thud of a surprise blow landing nearby.",
+                "tactile": "I feel the vibration of a hard impact nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set logMessage BEFORE damage loop so success message displays first",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} catches {context.targetName} completely off guard, landing a devastating surprise blow with their {context.weaponName}!"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message BEFORE damage details (which are deferred via queueMicrotask)",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.weaponDamage.entries",
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "damage_entry": {
+                      "var": "context.dmgEntry"
+                    },
+                    "damage_multiplier": 1.5,
+                    "exclude_damage_types": {
+                      "var": "context.excludeDamageTypes"
+                    }
+                  }
+                },
+                {
+                  "type": "REGENERATE_DESCRIPTION",
+                  "parameters": {
+                    "entity_ref": "secondary"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Add attacked_by component if missing",
+            "parameters": {
+              "condition": {
+                "!": { "var": "entity.secondary.components.attack-states:attacked_by" }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "component_type": "attack-states:attacked_by",
+                    "value": { "attackers": [] }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Mark target as attacked by actor",
+            "parameters": {
+              "entity_ref": "secondary",
+              "component_type": "attack-states:attacked_by",
+              "field": "attackers",
+              "mode": "push_unique",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "macro": "core:endTurnOnly"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} catches {context.targetName} off guard with their {context.weaponName}, landing a solid sucker punch.",
+              "actor_description": "I catch {context.targetName} off guard with my {context.weaponName}, landing a solid sucker punch.",
+              "target_description": "{context.actorName} catches me off guard with their {context.weaponName}, landing a solid sucker punch.",
+              "perception_type": "combat.attack",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sound of flesh striking flesh nearby.",
+                "tactile": "I feel the impact of a blow nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set logMessage BEFORE damage loop so success message displays first",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} catches {context.targetName} off guard with their {context.weaponName}, landing a solid sucker punch."
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message BEFORE damage details (which are deferred via queueMicrotask)",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.weaponDamage.entries",
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "damage_entry": {
+                      "var": "context.dmgEntry"
+                    },
+                    "exclude_damage_types": {
+                      "var": "context.excludeDamageTypes"
+                    }
+                  }
+                },
+                {
+                  "type": "REGENERATE_DESCRIPTION",
+                  "parameters": {
+                    "entity_ref": "secondary"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Add attacked_by component if missing",
+            "parameters": {
+              "condition": {
+                "!": { "var": "entity.secondary.components.attack-states:attacked_by" }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "component_type": "attack-states:attacked_by",
+                    "value": { "attackers": [] }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Mark target as attacked by actor",
+            "parameters": {
+              "entity_ref": "secondary",
+              "component_type": "attack-states:attacked_by",
+              "field": "attackers",
+              "mode": "push_unique",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "macro": "core:endTurnOnly"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} tries to sucker punch {context.targetName} with their {context.weaponName}, but {context.targetName} notices at the last moment and dodges.",
+              "actor_description": "I try to sucker punch {context.targetName} with my {context.weaponName}, but they notice at the last moment and dodge.",
+              "target_description": "{context.actorName} tries to sucker punch me with their {context.weaponName}, but I notice at the last moment and dodge.",
+              "perception_type": "combat.attack",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear someone swing and miss nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} tries to sucker punch {context.targetName} with their {context.weaponName}, but {context.targetName} notices at the last moment and dodges."
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Add attacked_by component if missing",
+            "parameters": {
+              "condition": {
+                "!": { "var": "entity.secondary.components.attack-states:attacked_by" }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "component_type": "attack-states:attacked_by",
+                    "value": { "attackers": [] }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Mark target as attacked by actor",
+            "parameters": {
+              "entity_ref": "secondary",
+              "component_type": "attack-states:attacked_by",
+              "field": "attackers",
+              "mode": "push_unique",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Fumble: actor falls from overextending while sneaking up",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "recovery-states:fallen",
+              "value": {}
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} overextends while sneaking up on {context.targetName}, completely missing and stumbling to the ground!",
+              "actor_description": "I overextend while sneaking up on {context.targetName}, completely missing and stumbling to the ground!",
+              "target_description": "{context.actorName} overextends while sneaking up on me, completely missing and stumbling to the ground!",
+              "perception_type": "combat.violence",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.secondaryId}",
+              "alternate_descriptions": {
+                "auditory": "I hear someone stumble and fall heavily nearby.",
+                "tactile": "I feel the thud of someone hitting the ground nearby."
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} overextends while sneaking up on {context.targetName}, completely missing and stumbling to the ground!"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Add attacked_by component if missing",
+            "parameters": {
+              "condition": {
+                "!": { "var": "entity.secondary.components.attack-states:attacked_by" }
+              },
+              "then_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "secondary",
+                    "component_type": "attack-states:attacked_by",
+                    "value": { "attackers": [] }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Mark target as attacked by actor",
+            "parameters": {
+              "entity_ref": "secondary",
+              "component_type": "attack-states:attacked_by",
+              "field": "attackers",
+              "mode": "push_unique",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    }
+  ]
+}

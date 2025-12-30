@@ -1022,25 +1022,59 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         getComponentData: jest.fn().mockReturnValue(null), // No anatomy data
       });
 
+      const fastRetryStrategy = {
+        execute: async (_operationId, operation) => operation(),
+      };
+      const fastErrorRecovery = {
+        handleError: jest.fn(async () => ({ success: false })),
+      };
+      const fastErrorReporter = {
+        report: jest.fn(async () => {}),
+      };
+
+      visualizerUI.dispose();
+      visualizerStateController.dispose();
+
+      visualizerState = new VisualizerState({ logger });
+      anatomyLoadingDetector = new AnatomyLoadingDetector({
+        entityManager,
+        eventDispatcher: sharedValidatedEventDispatcher,
+        logger,
+      });
+      jest
+        .spyOn(anatomyLoadingDetector, 'waitForEntityWithAnatomy')
+        .mockResolvedValueOnce(false);
+
+      visualizerStateController = new VisualizerStateController({
+        visualizerState,
+        anatomyLoadingDetector,
+        eventDispatcher: sharedValidatedEventDispatcher,
+        entityManager,
+        logger,
+        errorRecovery: fastErrorRecovery,
+        errorReporter: fastErrorReporter,
+        retryStrategy: fastRetryStrategy,
+      });
+      visualizerStateController._setEntityManager(entityManager);
+
+      visualizerUI = new AnatomyVisualizerUI({
+        logger,
+        registry,
+        entityManager,
+        anatomyDescriptionService,
+        eventDispatcher,
+        documentContext: { document },
+        visualizerStateController,
+        visualizationComposer,
+      });
+      await visualizerUI.initialize();
+
       // Act
-      visualizerUI._loadEntity(entityDefId);
+      await visualizerUI._loadEntity(entityDefId);
 
-      // Trigger entity created event without anatomy (reduced from 50ms)
-      setTimeout(() => {
-        eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-          payload: {
-            definitionId: entityDefId,
-            instanceId: 'test-entity',
-            wasReconstructed: false,
-          },
-        });
-      }, 5);
-
-      // Wait for timeout (reduced from 300ms)
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      // Assert - should still be waiting as no anatomy was generated
-      expect(visualizerUI._currentEntityId).not.toBe('test-entity');
+      // Assert - entity is selected but loading transitions to error
+      expect(visualizerUI._currentEntityId).toBe('test-entity');
+      expect(visualizerStateController.getCurrentState()).toBe('ERROR');
     });
   });
 

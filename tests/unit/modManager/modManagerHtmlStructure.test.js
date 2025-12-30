@@ -73,7 +73,6 @@ describe('mod-manager.html structure', () => {
     const requiredIds = [
       'mod-manager-root',
       'back-button',
-      'save-config-btn',
       'mod-search',
       'mod-list',
       'world-list',
@@ -141,12 +140,6 @@ describe('mod-manager.html structure', () => {
         b.includes('type="button"')
       );
       expect(buttonsWithType.length).toBe(buttonMatches.length);
-    });
-
-    it('should have disabled attribute on save button initially', () => {
-      expect(htmlContent).toMatch(
-        /id="save-config-btn"[^>]*disabled/
-      );
     });
   });
 

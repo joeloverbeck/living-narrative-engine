@@ -86,6 +86,134 @@ function createMockEntityManager() {
   };
 }
 
+function createMockEffectApplicators(mockEntityManager) {
+  const effectIds = {
+    dismember: 'dismembered',
+    fracture: 'fractured',
+    bleed: 'bleeding',
+    burn: 'burning',
+    poison: 'poisoned',
+  };
+  const startedEventIds = {
+    dismember: 'anatomy:dismembered',
+    fracture: 'anatomy:fractured',
+    bleed: 'anatomy:bleeding_started',
+    burn: 'anatomy:burning_started',
+    poison: 'anatomy:poisoned_started',
+  };
+
+  return {
+    effectDefinitionResolver: {
+      resolveEffectDefinition: jest.fn((effectType) => ({
+        id: effectIds[effectType],
+        effectType,
+        startedEventId: startedEventIds[effectType],
+      })),
+      resolveApplyOrder: jest.fn(() => Object.values(effectIds)),
+    },
+    dismembermentApplicator: {
+      apply: jest.fn(async () => ({ triggered: false })),
+    },
+    fractureApplicator: {
+      apply: jest.fn(async () => ({ triggered: false, stunApplied: false })),
+    },
+    bleedApplicator: {
+      apply: jest.fn(
+        async ({
+          damageEntryConfig,
+          dispatchStrategy,
+          sessionContext,
+          entityId,
+          partId,
+          effectDefinition,
+        }) => {
+          if (!damageEntryConfig?.enabled) {
+            return { applied: false };
+          }
+          const severity = damageEntryConfig.severity ?? 'minor';
+          await mockEntityManager.addComponent(partId, 'anatomy:bleeding', {
+            severity,
+          });
+          dispatchStrategy.dispatch(
+            effectDefinition?.startedEventId ?? 'anatomy:bleeding_started',
+            {
+              entityId,
+              partId,
+              severity,
+              timestamp: Date.now(),
+            },
+            sessionContext
+          );
+          return { applied: true };
+        }
+      ),
+    },
+    burnApplicator: {
+      apply: jest.fn(
+        async ({
+          damageEntryConfig,
+          dispatchStrategy,
+          sessionContext,
+          entityId,
+          partId,
+          effectDefinition,
+        }) => {
+          if (!damageEntryConfig?.enabled) {
+            return { stacked: false, stackedCount: 0 };
+          }
+          const stackedCount = damageEntryConfig.canStack ? 2 : 1;
+          await mockEntityManager.addComponent(partId, 'anatomy:burning', {
+            stackedCount,
+          });
+          dispatchStrategy.dispatch(
+            effectDefinition?.startedEventId ?? 'anatomy:burning_started',
+            {
+              entityId,
+              partId,
+              stackedCount,
+              timestamp: Date.now(),
+            },
+            sessionContext
+          );
+          return { stacked: false, stackedCount };
+        }
+      ),
+    },
+    poisonApplicator: {
+      apply: jest.fn(
+        async ({
+          damageEntryConfig,
+          dispatchStrategy,
+          sessionContext,
+          entityId,
+          partId,
+          effectDefinition,
+        }) => {
+          if (!damageEntryConfig?.enabled) {
+            return { scope: undefined, targetId: undefined };
+          }
+          const scope = damageEntryConfig.scope ?? 'part';
+          const targetId = scope === 'entity' ? entityId : partId;
+          await mockEntityManager.addComponent(targetId, 'anatomy:poisoned', {
+            scope,
+          });
+          dispatchStrategy.dispatch(
+            effectDefinition?.startedEventId ?? 'anatomy:poisoned_started',
+            {
+              entityId,
+              partId: scope === 'part' ? partId : undefined,
+              scope,
+              timestamp: Date.now(),
+            },
+            sessionContext
+          );
+          return { scope, targetId };
+        }
+      ),
+    },
+  };
+}
+
 describe('Damage Type Event Payloads', () => {
   /** @type {ReturnType<typeof createMockEntityManager>} */
   let entityManager;
@@ -327,12 +455,19 @@ describe('Damage Type Event Payloads', () => {
 
     beforeEach(() => {
       dataRegistry = { get: jest.fn() };
+      const mockApplicators = createMockEffectApplicators(entityManager);
       effectsService = new DamageTypeEffectsService({
         logger,
         entityManager,
         dataRegistry,
         safeEventDispatcher: dispatcher,
         rngProvider: () => 0.5, // Deterministic RNG
+        effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+        dismembermentApplicator: mockApplicators.dismembermentApplicator,
+        fractureApplicator: mockApplicators.fractureApplicator,
+        bleedApplicator: mockApplicators.bleedApplicator,
+        burnApplicator: mockApplicators.burnApplicator,
+        poisonApplicator: mockApplicators.poisonApplicator,
       });
     });
 

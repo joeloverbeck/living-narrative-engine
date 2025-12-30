@@ -15,6 +15,8 @@ import { DomUtils } from '../utils/domUtils.js';
 /** @typedef {import('./visualizer/VisualizerStateController.js').VisualizerStateController} VisualizerStateController */
 /** @typedef {import('./anatomy-renderer/VisualizationComposer.js').default} VisualizationComposer */
 /** @typedef {import('../clothing/services/clothingManagementService.js').ClothingManagementService} ClothingManagementService */
+/** @typedef {import('./shared/RecipeSelectorService.js').default} RecipeSelectorService */
+/** @typedef {import('./shared/EntityLoadingService.js').default} EntityLoadingService */
 
 class AnatomyVisualizerUI {
   /**
@@ -28,6 +30,8 @@ class AnatomyVisualizerUI {
    * @param {VisualizerStateController} dependencies.visualizerStateController
    * @param {VisualizationComposer} dependencies.visualizationComposer
    * @param {ClothingManagementService} [dependencies.clothingManagementService]
+   * @param {RecipeSelectorService} [dependencies.recipeSelectorService]
+   * @param {EntityLoadingService} [dependencies.entityLoadingService]
    */
   constructor({
     logger,
@@ -39,6 +43,8 @@ class AnatomyVisualizerUI {
     visualizerStateController,
     visualizationComposer,
     clothingManagementService,
+    recipeSelectorService,
+    entityLoadingService,
   }) {
     this._logger = logger;
     this._registry = registry;
@@ -49,6 +55,8 @@ class AnatomyVisualizerUI {
     this._visualizerStateController = visualizerStateController;
     this._visualizationComposer = visualizationComposer;
     this._clothingManagementService = clothingManagementService;
+    this._recipeSelectorService = recipeSelectorService;
+    this._entityLoadingService = entityLoadingService;
     this._currentEntityId = null;
     this._createdEntities = [];
     this._stateUnsubscribe = null;
@@ -300,6 +308,25 @@ class AnatomyVisualizerUI {
       return;
     }
 
+    // Use RecipeSelectorService if available, otherwise fall back to inline logic
+    if (this._recipeSelectorService) {
+      try {
+        const filteredDefinitions = this._recipeSelectorService.populateWithComponent(
+          selector,
+          'anatomy:body',
+          { placeholderText: 'Select an entity...' }
+        );
+        this._logger.info(
+          `AnatomyVisualizerUI: Found ${filteredDefinitions.length} entities with anatomy:body`
+        );
+      } catch (error) {
+        this._logger.error('Failed to populate entity selector:', error);
+        selector.innerHTML = '<option value="">Error loading entities</option>';
+      }
+      return;
+    }
+
+    // Fallback: inline logic for backward compatibility
     // Clear existing options
     selector.innerHTML = '';
 
@@ -378,6 +405,20 @@ class AnatomyVisualizerUI {
   async _loadEntity(entityDefId) {
     this._logger.info(`AnatomyVisualizerUI: Loading entity ${entityDefId}`);
 
+    // Delegate to EntityLoadingService if available
+    if (this._entityLoadingService) {
+      try {
+        const instanceId =
+          await this._entityLoadingService.loadEntityWithAnatomy(entityDefId);
+        this._currentEntityId = instanceId;
+      } catch (error) {
+        this._logger.error(`Failed to load entity ${entityDefId}:`, error);
+        // Error is already handled by the service, just log here
+      }
+      return;
+    }
+
+    // Fallback: inline implementation for backward compatibility
     try {
       // Clear any previous entities
       await this._clearPreviousEntities();
@@ -412,6 +453,7 @@ class AnatomyVisualizerUI {
 
       // Store the created entity ID for cleanup
       this._createdEntities.push(entityInstance.id);
+      this._currentEntityId = entityInstance.id;
 
       // Use the state controller to handle entity selection and anatomy detection
       // This replaces the problematic 100ms timeout hack with proper state management

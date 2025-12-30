@@ -129,7 +129,7 @@ Create the `inventory` mod containing inventory management component and item tr
 - ITEMSPLIT-006 (wielding) - needs inventory
 - ITEMSPLIT-007 (drinking) - needs inventory
 - ITEMSPLIT-009 (cosmetics) - needs inventory
-- ITEMSPLIT-010 (comfort-items) - needs inventory
+- ITEMSPLIT-010 (comfort) - needs inventory
 
 ## Status
 

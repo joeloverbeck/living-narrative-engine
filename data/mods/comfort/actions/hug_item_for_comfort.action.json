@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "comfort:hug_item_for_comfort",
+  "name": "Hug Item for Comfort",
+  "description": "Hug a comforting item like a plush toy or pillow to feel calmer.",
+  "generateCombinations": true,
+  "targets": {
+    "primary": {
+      "scope": "items-core:examinable_items",
+      "placeholder": "item",
+      "description": "Comfort item to hug"
+    }
+  },
+  "required_components": {
+    "primary": ["items-core:item", "comfort:allows_soothing_hug"]
+  },
+  "prerequisites": [],
+  "template": "hug {item} to soothe yourself",
+  "visual": {
+    "backgroundColor": "#4fc3f7",
+    "textColor": "#0b1f2a",
+    "hoverBackgroundColor": "#81d4fa",
+    "hoverTextColor": "#0b1f2a"
+  }
+}

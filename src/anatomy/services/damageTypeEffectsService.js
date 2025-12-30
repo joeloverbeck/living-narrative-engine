@@ -16,142 +16,23 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 import { classifyDamageSeverity } from '../constants/damageSeverity.js';
+import { createDispatchStrategy } from './eventDispatchStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-// Component IDs
-const BLEEDING_COMPONENT_ID = 'anatomy:bleeding';
-const BURNING_COMPONENT_ID = 'anatomy:burning';
-const POISONED_COMPONENT_ID = 'anatomy:poisoned';
-const FRACTURED_COMPONENT_ID = 'anatomy:fractured';
-const DISMEMBERED_COMPONENT_ID = 'anatomy:dismembered';
-const STUNNED_COMPONENT_ID = 'anatomy:stunned';
+// Component IDs - exported for use by tick systems
+export const BLEEDING_COMPONENT_ID = 'anatomy:bleeding';
+export const BURNING_COMPONENT_ID = 'anatomy:burning';
+export const POISONED_COMPONENT_ID = 'anatomy:poisoned';
+export const DISMEMBERED_COMPONENT_ID = 'anatomy:dismembered';
 
-// Event types - started events
-const DISMEMBERED_EVENT = 'anatomy:dismembered';
-const FRACTURED_EVENT = 'anatomy:fractured';
-const BLEEDING_STARTED_EVENT = 'anatomy:bleeding_started';
-const BURNING_STARTED_EVENT = 'anatomy:burning_started';
-const POISONED_STARTED_EVENT = 'anatomy:poisoned_started';
-
-// Event types - stopped events (used by tick systems)
+// Event types - stopped events (exported for use by tick systems)
 export const BLEEDING_STOPPED_EVENT = 'anatomy:bleeding_stopped';
 export const BURNING_STOPPED_EVENT = 'anatomy:burning_stopped';
 export const POISONED_STOPPED_EVENT = 'anatomy:poisoned_stopped';
-
-// Export component IDs for use by tick systems
-export {
-  BLEEDING_COMPONENT_ID,
-  BURNING_COMPONENT_ID,
-  POISONED_COMPONENT_ID,
-  DISMEMBERED_COMPONENT_ID,
-};
-
-// Severity to tick damage mapping per spec
-const BLEED_SEVERITY_MAP = {
-  minor: { tickDamage: 1 },
-  moderate: { tickDamage: 3 },
-  severe: { tickDamage: 5 },
-};
-
-// Default stun duration when fracture triggers stun
-const DEFAULT_STUN_DURATION = 1;
-
-// Default burn stack count
-const DEFAULT_BURN_STACK_COUNT = 1;
-
-const FALLBACK_APPLY_ORDER = [
-  'dismembered',
-  'fractured',
-  'bleeding',
-  'burning',
-  'poisoned',
-];
-
-const FALLBACK_EFFECT_DEFINITIONS = {
-  dismember: {
-    id: 'dismembered',
-    effectType: 'dismember',
-    componentId: DISMEMBERED_COMPONENT_ID,
-    startedEventId: DISMEMBERED_EVENT,
-    defaults: {
-      thresholdFraction: 0.8,
-    },
-  },
-  fracture: {
-    id: 'fractured',
-    effectType: 'fracture',
-    componentId: FRACTURED_COMPONENT_ID,
-    startedEventId: FRACTURED_EVENT,
-    defaults: {
-      thresholdFraction: 0.5,
-      stun: {
-        componentId: STUNNED_COMPONENT_ID,
-        durationTurns: DEFAULT_STUN_DURATION,
-        chance: 0,
-      },
-    },
-  },
-  bleed: {
-    id: 'bleeding',
-    effectType: 'bleed',
-    componentId: BLEEDING_COMPONENT_ID,
-    startedEventId: BLEEDING_STARTED_EVENT,
-    stoppedEventId: BLEEDING_STOPPED_EVENT,
-    defaults: {
-      baseDurationTurns: 2,
-      severity: BLEED_SEVERITY_MAP,
-    },
-  },
-  burn: {
-    id: 'burning',
-    effectType: 'burn',
-    componentId: BURNING_COMPONENT_ID,
-    startedEventId: BURNING_STARTED_EVENT,
-    stoppedEventId: BURNING_STOPPED_EVENT,
-    defaults: {
-      tickDamage: 1,
-      durationTurns: 2,
-      stacking: { canStack: false, defaultStacks: DEFAULT_BURN_STACK_COUNT },
-    },
-  },
-  poison: {
-    id: 'poisoned',
-    effectType: 'poison',
-    componentId: POISONED_COMPONENT_ID,
-    startedEventId: POISONED_STARTED_EVENT,
-    stoppedEventId: POISONED_STOPPED_EVENT,
-    defaults: {
-      tickDamage: 1,
-      durationTurns: 3,
-      scope: 'part',
-    },
-  },
-};
-
-function mergeDefaults(fallbackDefaults = {}, registryDefaults = {}) {
-  const merged = { ...fallbackDefaults };
-
-  for (const [key, value] of Object.entries(registryDefaults)) {
-    if (
-      value &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
-      typeof fallbackDefaults[key] === 'object' &&
-      fallbackDefaults[key] !== null &&
-      !Array.isArray(fallbackDefaults[key])
-    ) {
-      merged[key] = mergeDefaults(fallbackDefaults[key], value);
-    } else {
-      merged[key] = value;
-    }
-  }
-
-  return merged;
-}
 
 /**
  * Service responsible for applying immediate damage type effects.
@@ -162,25 +43,37 @@ class DamageTypeEffectsService extends BaseService {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
   /** @type {() => number} */ #rngProvider;
-  /** @type {import('./statusEffectRegistry.js').default | undefined} */
-  #statusEffectRegistry;
-  /** @type {Set<string>} */ #missingDefinitionWarnings;
-  /** @type {Set<string>} */ #missingOrderWarnings;
+  /** @type {import('./effectDefinitionResolver.js').default} */ #effectDefinitionResolver;
+  /** @type {import('../applicators/dismembermentApplicator.js').default} */ #dismembermentApplicator;
+  /** @type {import('../applicators/fractureApplicator.js').default} */ #fractureApplicator;
+  /** @type {import('../applicators/bleedApplicator.js').default} */ #bleedApplicator;
+  /** @type {import('../applicators/burnApplicator.js').default} */ #burnApplicator;
+  /** @type {import('../applicators/poisonApplicator.js').default} */ #poisonApplicator;
 
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {EntityManager} deps.entityManager
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {import('./statusEffectRegistry.js').default} [deps.statusEffectRegistry]
    * @param {() => number} [deps.rngProvider] - Injectable RNG for deterministic testing
+   * @param {import('./effectDefinitionResolver.js').default} deps.effectDefinitionResolver
+   * @param {import('../applicators/dismembermentApplicator.js').default} deps.dismembermentApplicator
+   * @param {import('../applicators/fractureApplicator.js').default} deps.fractureApplicator
+   * @param {import('../applicators/bleedApplicator.js').default} deps.bleedApplicator
+   * @param {import('../applicators/burnApplicator.js').default} deps.burnApplicator
+   * @param {import('../applicators/poisonApplicator.js').default} deps.poisonApplicator
    */
   constructor({
     logger,
     entityManager,
     safeEventDispatcher,
-    statusEffectRegistry,
     rngProvider,
+    effectDefinitionResolver,
+    dismembermentApplicator,
+    fractureApplicator,
+    bleedApplicator,
+    burnApplicator,
+    poisonApplicator,
   }) {
     super();
 
@@ -193,108 +86,42 @@ class DamageTypeEffectsService extends BaseService {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
+      effectDefinitionResolver: {
+        value: effectDefinitionResolver,
+        requiredMethods: ['resolveEffectDefinition', 'resolveApplyOrder'],
+      },
+      dismembermentApplicator: {
+        value: dismembermentApplicator,
+        requiredMethods: ['apply'],
+      },
+      fractureApplicator: {
+        value: fractureApplicator,
+        requiredMethods: ['apply'],
+      },
+      bleedApplicator: {
+        value: bleedApplicator,
+        requiredMethods: ['apply'],
+      },
+      burnApplicator: {
+        value: burnApplicator,
+        requiredMethods: ['apply'],
+      },
+      poisonApplicator: {
+        value: poisonApplicator,
+        requiredMethods: ['apply'],
+      },
     });
 
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-    this.#statusEffectRegistry = statusEffectRegistry;
     this.#rngProvider =
       typeof rngProvider === 'function' ? rngProvider : Math.random;
-    this.#missingDefinitionWarnings = new Set();
-    this.#missingOrderWarnings = new Set();
-  }
-
-  #warnOnce(cache, key, message) {
-    if (cache.has(key)) {
-      return;
-    }
-    cache.add(key);
-    this.#logger.warn(message);
-  }
-
-  #resolveEffectDefinition(effectType) {
-    const fallback = FALLBACK_EFFECT_DEFINITIONS[effectType];
-    const registryDef = this.#statusEffectRegistry
-      ?.getAll()
-      ?.find((effect) => effect?.effectType === effectType);
-
-    if (!registryDef) {
-      this.#warnOnce(
-        this.#missingDefinitionWarnings,
-        effectType,
-        `DamageTypeEffectsService: Missing status-effect registry entry for ${effectType}, using fallback defaults.`
-      );
-      return fallback;
-    }
-
-    const mergedDefaults = mergeDefaults(
-      fallback?.defaults ?? {},
-      registryDef.defaults ?? {}
-    );
-
-    const componentId = registryDef.componentId ?? fallback?.componentId;
-    // Note: Warning for missing componentId removed - unreachable due to nullish coalescing
-
-    return {
-      ...fallback,
-      ...registryDef,
-      id: registryDef.id ?? fallback?.id ?? effectType,
-      componentId: componentId ?? fallback?.componentId,
-      startedEventId: registryDef.startedEventId ?? fallback?.startedEventId,
-      stoppedEventId: registryDef.stoppedEventId ?? fallback?.stoppedEventId,
-      defaults: mergedDefaults,
-    };
-  }
-
-  #getApplyOrder(effectDefinitions) {
-    const registryOrder = this.#statusEffectRegistry?.getApplyOrder?.() ?? [];
-    const knownIds = new Set();
-    const fallbackIds = [];
-
-    for (const def of Object.values(effectDefinitions)) {
-      if (def?.id) {
-        knownIds.add(def.id);
-      }
-    }
-
-    for (const fallbackId of FALLBACK_APPLY_ORDER) {
-      const matching = Object.values(effectDefinitions).find(
-        (def) => def?.id === fallbackId
-      );
-      fallbackIds.push(matching?.id ?? fallbackId);
-    }
-
-    const mappedRegistryOrder = [];
-    if (registryOrder.length === 0) {
-      return fallbackIds;
-    }
-
-    for (const id of registryOrder) {
-      if (knownIds.has(id)) {
-        mappedRegistryOrder.push(id);
-      } else {
-        // Check if the ID exists in the registry.
-        // If yes, it's a valid non-damage effect (e.g., hypoxia from breathing mod) - silently skip.
-        // If no, it's a true configuration error - warn.
-        const existsInRegistry =
-          this.#statusEffectRegistry?.get?.(id) !== undefined;
-        if (!existsInRegistry) {
-          this.#warnOnce(
-            this.#missingOrderWarnings,
-            id,
-            `DamageTypeEffectsService: Unknown status-effect id in registry applyOrder: ${id}`
-          );
-        }
-      }
-    }
-
-    for (const fallbackId of fallbackIds) {
-      if (!mappedRegistryOrder.includes(fallbackId) && knownIds.has(fallbackId)) {
-        mappedRegistryOrder.push(fallbackId);
-      }
-    }
-
-    return mappedRegistryOrder;
+    this.#effectDefinitionResolver = effectDefinitionResolver;
+    this.#dismembermentApplicator = dismembermentApplicator;
+    this.#fractureApplicator = fractureApplicator;
+    this.#bleedApplicator = bleedApplicator;
+    this.#burnApplicator = burnApplicator;
+    this.#poisonApplicator = poisonApplicator;
   }
 
   /**
@@ -370,11 +197,11 @@ class DamageTypeEffectsService extends BaseService {
       classifyDamageSeverity(amount, maxHealth);
 
     const effectDefinitions = {
-      dismember: this.#resolveEffectDefinition('dismember'),
-      fracture: this.#resolveEffectDefinition('fracture'),
-      bleed: this.#resolveEffectDefinition('bleed'),
-      burn: this.#resolveEffectDefinition('burn'),
-      poison: this.#resolveEffectDefinition('poison'),
+      dismember: this.#effectDefinitionResolver.resolveEffectDefinition('dismember'),
+      fracture: this.#effectDefinitionResolver.resolveEffectDefinition('fracture'),
+      bleed: this.#effectDefinitionResolver.resolveEffectDefinition('bleed'),
+      burn: this.#effectDefinitionResolver.resolveEffectDefinition('burn'),
+      poison: this.#effectDefinitionResolver.resolveEffectDefinition('poison'),
     };
 
     const effectTypeById = new Map();
@@ -384,7 +211,8 @@ class DamageTypeEffectsService extends BaseService {
       }
     }
 
-    const applyOrder = this.#getApplyOrder(effectDefinitions);
+    const applyOrder = this.#effectDefinitionResolver.resolveApplyOrder();
+    const dispatchStrategy = createDispatchStrategy(this.#dispatcher, damageSession);
     const skipWhenDestroyed = new Set(
       ['bleed', 'burn', 'poison'].map(
         (effectType) => effectDefinitions[effectType]?.effectType
@@ -395,49 +223,59 @@ class DamageTypeEffectsService extends BaseService {
 
     if (effectDefinitions.dismember?.id) {
       effectHandlers[effectDefinitions.dismember.id] = async () => {
-        const dismembered = await this.#checkAndApplyDismemberment({
+        const result = await this.#dismembermentApplicator.apply({
           entityId,
           entityName,
           entityPronoun,
           partId,
           partType,
           orientation,
-          amount,
+          damageAmount: amount,
+          damageTypeId: damageEntry.name,
           maxHealth,
-          damageEntry,
-          damageSession,
+          currentHealth,
           effectDefinition: effectDefinitions.dismember,
+          damageEntryConfig: damageEntry.dismember,
+          dispatchStrategy,
+          sessionContext: damageSession,
         });
-        if (dismembered) {
+        if (result.triggered) {
           addTrace('effect_dismember', 'Dismemberment applied');
         }
       };
     }
 
     if (effectDefinitions.fracture?.id) {
-      effectHandlers[effectDefinitions.fracture.id] = async () =>
-        this.#checkAndApplyFracture({
+      effectHandlers[effectDefinitions.fracture.id] = async () => {
+        const result = await this.#fractureApplicator.apply({
           entityId,
           partId,
-          amount,
+          damageAmount: amount,
+          damageTypeId: damageEntry.name,
           maxHealth,
           currentHealth,
-          damageEntry,
-          damageSession,
-          rng: rngToUse,
           effectDefinition: effectDefinitions.fracture,
+          damageEntryConfig: damageEntry.fracture,
+          dispatchStrategy,
+          sessionContext: damageSession,
+          rng: rngToUse,
         });
+        if (result.triggered) {
+          addTrace('effect_fracture', 'Fracture applied', { stunApplied: result.stunApplied });
+        }
+      };
     }
 
     if (effectDefinitions.bleed?.id) {
       effectHandlers[effectDefinitions.bleed.id] = async () => {
         if (damageEntry.bleed?.enabled) {
-          await this.#applyBleedEffect({
+          await this.#bleedApplicator.apply({
             entityId,
             partId,
-            damageEntry,
-            damageSession,
             effectDefinition: effectDefinitions.bleed,
+            damageEntryConfig: damageEntry.bleed,
+            dispatchStrategy,
+            sessionContext: damageSession,
           });
           addTrace('effect_bleed', 'Bleed effect applied');
         }
@@ -447,14 +285,15 @@ class DamageTypeEffectsService extends BaseService {
     if (effectDefinitions.burn?.id) {
       effectHandlers[effectDefinitions.burn.id] = async () => {
         if (damageEntry.burn?.enabled) {
-          await this.#applyBurnEffect({
+          const result = await this.#burnApplicator.apply({
             entityId,
             partId,
-            damageEntry,
-            damageSession,
             effectDefinition: effectDefinitions.burn,
+            damageEntryConfig: damageEntry.burn,
+            dispatchStrategy,
+            sessionContext: damageSession,
           });
-          addTrace('effect_burn', 'Burn effect applied');
+          addTrace('effect_burn', 'Burn effect applied', { stacked: result.stacked, stackedCount: result.stackedCount });
         }
       };
     }
@@ -462,14 +301,15 @@ class DamageTypeEffectsService extends BaseService {
     if (effectDefinitions.poison?.id) {
       effectHandlers[effectDefinitions.poison.id] = async () => {
         if (damageEntry.poison?.enabled) {
-          await this.#applyPoisonEffect({
+          const result = await this.#poisonApplicator.apply({
             entityId,
             partId,
-            damageEntry,
-            damageSession,
             effectDefinition: effectDefinitions.poison,
+            damageEntryConfig: damageEntry.poison,
+            dispatchStrategy,
+            sessionContext: damageSession,
           });
-          addTrace('effect_poison', 'Poison effect applied');
+          addTrace('effect_poison', 'Poison effect applied', { scope: result.scope, targetId: result.targetId });
         }
       };
     }
@@ -496,441 +336,6 @@ class DamageTypeEffectsService extends BaseService {
     }
 
     return { severity };
-  }
-  /**
-   * Checks and applies dismemberment if threshold is exceeded.
-   *
-   * @param {object} params
-   * @param {string} params.entityId
-   * @param {string} [params.entityName]
-   * @param {string} [params.entityPronoun]
-   * @param {string} params.partId
-   * @param {string} [params.partType]
-   * @param {string} [params.orientation]
-   * @param {number} params.amount
-   * @param {number} params.maxHealth
-   * @param {object} params.damageEntry
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @param {object} [params.effectDefinition]
-   * @returns {Promise<boolean>} True if dismemberment was triggered
-   * @private
-   */
-  async #checkAndApplyDismemberment({
-    entityId,
-    entityName,
-    entityPronoun,
-    partId,
-    partType,
-    orientation,
-    amount,
-    maxHealth,
-    damageEntry,
-    damageSession,
-    effectDefinition,
-  }) {
-    const dismemberConfig = damageEntry.dismember;
-    if (!dismemberConfig?.enabled) {
-      return false;
-    }
-
-    // Check if part is marked as embedded (non-dismemberable)
-    if (this.#entityManager.hasComponent(partId, 'anatomy:embedded')) {
-      this.#logger.debug(
-        `DamageTypeEffectsService: Part ${partId} is embedded, skipping dismemberment.`
-      );
-      return false;
-    }
-
-    const thresholdFraction =
-      dismemberConfig.thresholdFraction ??
-      effectDefinition?.defaults?.thresholdFraction ??
-      0.8;
-    const threshold = thresholdFraction * maxHealth;
-
-    const componentId =
-      effectDefinition?.componentId ?? DISMEMBERED_COMPONENT_ID;
-    const startedEventId =
-      effectDefinition?.startedEventId ?? DISMEMBERED_EVENT;
-
-    if (amount >= threshold) {
-      // Mark part as dismembered
-      await this.#entityManager.addComponent(partId, componentId, {
-        sourceDamageType: damageEntry.name,
-      });
-
-      const eventPayload = {
-        entityId,
-        entityName,
-        entityPronoun,
-        partId,
-        partType,
-        orientation,
-        damageTypeId: damageEntry.name,
-        timestamp: Date.now(),
-      };
-
-      // Record effect to session if available, queue event for later dispatch
-      if (damageSession) {
-        damageSession.entries
-          .find((e) => e.partId === partId)
-          ?.effectsTriggered?.push('dismembered');
-        // Queue event for backwards compatibility dispatch
-        damageSession.pendingEvents.push({
-          eventType: startedEventId,
-          payload: eventPayload,
-        });
-      } else {
-        // No session - dispatch immediately (backwards compatibility)
-        this.#dispatcher.dispatch(startedEventId, eventPayload);
-      }
-
-      this.#logger.info(
-        `DamageTypeEffectsService: Part ${partId} dismembered by ${damageEntry.name} damage.`
-      );
-
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Checks and applies fracture effect if threshold is exceeded.
-   *
-   * @param {object} params
-   * @param {string} params.entityId
-   * @param {string} params.partId
-   * @param {number} params.amount
-   * @param {number} params.maxHealth
-   * @param {number} params.currentHealth
-   * @param {object} params.damageEntry
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @param {object} [params.effectDefinition]
-   * @returns {Promise<void>}
-   * @private
-   */
-  async #checkAndApplyFracture({
-    entityId,
-    partId,
-    amount,
-    maxHealth,
-    currentHealth,
-    damageEntry,
-    damageSession,
-    rng,
-    effectDefinition,
-  }) {
-    const fractureConfig = damageEntry.fracture;
-    if (!fractureConfig?.enabled) {
-      return;
-    }
-
-    const thresholdFraction =
-      fractureConfig.thresholdFraction ??
-      effectDefinition?.defaults?.thresholdFraction ??
-      0.5;
-    const threshold = thresholdFraction * maxHealth;
-
-    if (amount < threshold) {
-      return;
-    }
-
-    // Apply fractured component to part
-    const componentId =
-      effectDefinition?.componentId ?? FRACTURED_COMPONENT_ID;
-    const stunComponentId =
-      effectDefinition?.defaults?.stun?.componentId ?? STUNNED_COMPONENT_ID;
-    const startedEventId =
-      effectDefinition?.startedEventId ?? FRACTURED_EVENT;
-
-    await this.#entityManager.addComponent(partId, componentId, {
-      sourceDamageType: damageEntry.name,
-      appliedAtHealth: currentHealth,
-    });
-
-    // Roll for stun
-    const stunChance =
-      fractureConfig.stunChance ??
-      effectDefinition?.defaults?.stun?.chance ??
-      0;
-    const rngProvider = typeof rng === 'function' ? rng : this.#rngProvider;
-    const stunApplied = stunChance > 0 && rngProvider() < stunChance;
-
-    if (stunApplied) {
-      await this.#entityManager.addComponent(entityId, stunComponentId, {
-        remainingTurns:
-          fractureConfig.stunDuration ??
-          effectDefinition?.defaults?.stun?.durationTurns ??
-          DEFAULT_STUN_DURATION,
-        sourcePartId: partId,
-      });
-    }
-
-    const eventPayload = {
-      entityId,
-      partId,
-      damageTypeId: damageEntry.name,
-      stunApplied,
-      timestamp: Date.now(),
-    };
-
-    // Record effect to session if available, queue event for later dispatch
-    if (damageSession) {
-      const entry = damageSession.entries.find((e) => e.partId === partId);
-      if (entry) {
-        entry.effectsTriggered = entry.effectsTriggered || [];
-        entry.effectsTriggered.push('fractured');
-      }
-      // Queue event for backwards compatibility dispatch
-      damageSession.pendingEvents.push({
-        eventType: startedEventId,
-        payload: eventPayload,
-      });
-    } else {
-      // No session - dispatch immediately (backwards compatibility)
-      this.#dispatcher.dispatch(startedEventId, eventPayload);
-    }
-
-    this.#logger.debug(
-      `DamageTypeEffectsService: Part ${partId} fractured by ${damageEntry.name}. Stun: ${stunApplied}`
-    );
-  }
-
-  /**
-   * Applies bleed effect if enabled in damage entry.
-   *
-   * @param {object} params
-   * @param {string} params.entityId
-   * @param {string} params.partId
-   * @param {object} params.damageEntry
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @param {object} [params.effectDefinition]
-   * @returns {Promise<void>}
-   * @private
-   */
-  async #applyBleedEffect({
-    entityId,
-    partId,
-    damageEntry,
-    damageSession,
-    effectDefinition,
-  }) {
-    const bleedConfig = damageEntry.bleed;
-    // Note: enabled check is performed by caller in applyEffectsForDamage
-
-    const severity = bleedConfig.severity ?? 'minor';
-    const baseDuration =
-      bleedConfig.baseDurationTurns ??
-      effectDefinition?.defaults?.baseDurationTurns ??
-      2;
-    const severityData =
-      effectDefinition?.defaults?.severity?.[severity] ??
-      effectDefinition?.defaults?.severity?.minor ??
-      BLEED_SEVERITY_MAP.minor;
-
-    const componentId =
-      effectDefinition?.componentId ?? BLEEDING_COMPONENT_ID;
-    const startedEventId =
-      effectDefinition?.startedEventId ?? BLEEDING_STARTED_EVENT;
-
-    // Add or refresh bleeding component
-    await this.#entityManager.addComponent(partId, componentId, {
-      severity,
-      remainingTurns: baseDuration,
-      tickDamage: severityData.tickDamage,
-    });
-
-    const eventPayload = {
-      entityId,
-      partId,
-      severity,
-      timestamp: Date.now(),
-    };
-
-    // Record effect to session if available, queue event for later dispatch
-    if (damageSession) {
-      const entry = damageSession.entries.find((e) => e.partId === partId);
-      if (entry) {
-        entry.effectsTriggered = entry.effectsTriggered || [];
-        entry.effectsTriggered.push('bleeding');
-      }
-      // Queue event for backwards compatibility dispatch
-      damageSession.pendingEvents.push({
-        eventType: startedEventId,
-        payload: eventPayload,
-      });
-    } else {
-      // No session - dispatch immediately (backwards compatibility)
-      this.#dispatcher.dispatch(startedEventId, eventPayload);
-    }
-
-    this.#logger.debug(
-      `DamageTypeEffectsService: Bleeding (${severity}) applied to part ${partId}.`
-    );
-  }
-
-  /**
-   * Applies burn effect if enabled in damage entry.
-   * Handles stacking logic based on canStack configuration.
-   *
-   * @param {object} params
-   * @param {string} params.entityId
-   * @param {string} params.partId
-   * @param {object} params.damageEntry
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @param {object} [params.effectDefinition]
-   * @returns {Promise<void>}
-   * @private
-   */
-  async #applyBurnEffect({
-    entityId,
-    partId,
-    damageEntry,
-    damageSession,
-    effectDefinition,
-  }) {
-    const burnConfig = damageEntry.burn;
-    // Note: enabled check is performed by caller in applyEffectsForDamage
-
-    const dps = burnConfig.dps ?? effectDefinition?.defaults?.tickDamage ?? 1;
-    const durationTurns =
-      burnConfig.durationTurns ??
-      effectDefinition?.defaults?.durationTurns ??
-      2;
-    const stackingDefaults = effectDefinition?.defaults?.stacking ?? {};
-    const baseStackCount =
-      stackingDefaults.defaultStacks ?? DEFAULT_BURN_STACK_COUNT;
-    const canStack = burnConfig.canStack ?? stackingDefaults.canStack ?? false;
-
-    // Check for existing burn component
-    const componentId =
-      effectDefinition?.componentId ?? BURNING_COMPONENT_ID;
-    const startedEventId =
-      effectDefinition?.startedEventId ?? BURNING_STARTED_EVENT;
-
-    const existingBurn = this.#entityManager.hasComponent(partId, componentId)
-      ? this.#entityManager.getComponentData(partId, componentId)
-      : null;
-
-    let newTickDamage = dps;
-    let newStackedCount = baseStackCount;
-
-    if (existingBurn && canStack) {
-      // Stack: increase damage and stack count
-      newTickDamage = existingBurn.tickDamage + dps;
-      newStackedCount =
-        (existingBurn.stackedCount ?? baseStackCount) + 1;
-    } else if (existingBurn && !canStack) {
-      // No stack: just refresh duration, keep existing damage
-      newTickDamage = existingBurn.tickDamage;
-      newStackedCount = existingBurn.stackedCount ?? baseStackCount;
-    }
-
-    await this.#entityManager.addComponent(partId, componentId, {
-      remainingTurns: durationTurns,
-      tickDamage: newTickDamage,
-      stackedCount: newStackedCount,
-    });
-
-    const eventPayload = {
-      entityId,
-      partId,
-      stackedCount: newStackedCount,
-      timestamp: Date.now(),
-    };
-
-    // Record effect to session if available, queue event for later dispatch
-    if (damageSession) {
-      const entry = damageSession.entries.find((e) => e.partId === partId);
-      if (entry) {
-        entry.effectsTriggered = entry.effectsTriggered || [];
-        entry.effectsTriggered.push('burning');
-      }
-      // Queue event for backwards compatibility dispatch
-      damageSession.pendingEvents.push({
-        eventType: startedEventId,
-        payload: eventPayload,
-      });
-    } else {
-      // No session - dispatch immediately (backwards compatibility)
-      this.#dispatcher.dispatch(startedEventId, eventPayload);
-    }
-
-    this.#logger.debug(
-      `DamageTypeEffectsService: Burning applied to part ${partId}. Stack: ${newStackedCount}`
-    );
-  }
-
-  /**
-   * Applies poison effect if enabled in damage entry.
-   * Respects scope configuration (part vs entity).
-   *
-   * @param {object} params
-   * @param {string} params.entityId
-   * @param {string} params.partId
-   * @param {object} params.damageEntry
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @param {object} [params.effectDefinition]
-   * @returns {Promise<void>}
-   * @private
-   */
-  async #applyPoisonEffect({
-    entityId,
-    partId,
-    damageEntry,
-    damageSession,
-    effectDefinition,
-  }) {
-    const poisonConfig = damageEntry.poison;
-    // Note: enabled check is performed by caller in applyEffectsForDamage
-
-    const tick = poisonConfig.tick ?? effectDefinition?.defaults?.tickDamage ?? 1;
-    const durationTurns =
-      poisonConfig.durationTurns ??
-      effectDefinition?.defaults?.durationTurns ??
-      3;
-    const scope = poisonConfig.scope ?? effectDefinition?.defaults?.scope ?? 'part';
-
-    const componentId =
-      effectDefinition?.componentId ?? POISONED_COMPONENT_ID;
-    const startedEventId =
-      effectDefinition?.startedEventId ?? POISONED_STARTED_EVENT;
-
-    // Determine target based on scope
-    const targetId = scope === 'entity' ? entityId : partId;
-
-    await this.#entityManager.addComponent(targetId, componentId, {
-      remainingTurns: durationTurns,
-      tickDamage: tick,
-    });
-
-    const eventPayload = {
-      entityId,
-      partId: scope === 'part' ? partId : undefined,
-      scope,
-      timestamp: Date.now(),
-    };
-
-    // Record effect to session if available, queue event for later dispatch
-    if (damageSession) {
-      const entry = damageSession.entries.find((e) => e.partId === partId);
-      if (entry) {
-        entry.effectsTriggered = entry.effectsTriggered || [];
-        entry.effectsTriggered.push('poisoned');
-      }
-      // Queue event for backwards compatibility dispatch
-      damageSession.pendingEvents.push({
-        eventType: startedEventId,
-        payload: eventPayload,
-      });
-    } else {
-      // No session - dispatch immediately (backwards compatibility)
-      this.#dispatcher.dispatch(startedEventId, eventPayload);
-    }
-
-    this.#logger.debug(
-      `DamageTypeEffectsService: Poison applied to ${scope === 'entity' ? 'entity' : 'part'} ${targetId}.`
-    );
   }
 }
 

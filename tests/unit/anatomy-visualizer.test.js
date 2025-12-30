@@ -18,6 +18,7 @@ const mockTokens = {
   VisualizerStateController: 'VisualizerStateController',
   VisualizationComposer: 'VisualizationComposer',
   ClothingManagementService: 'ClothingManagementService',
+  IEntityLoadingService: 'IEntityLoadingService',
 };
 const mockAnatomyVisualizerUIConstructor = jest.fn().mockImplementation(() => ({
   initialize: mockVisualizerInitialize,
@@ -113,6 +114,7 @@ describe('anatomy-visualizer initialize', () => {
       [mockTokens.VisualizerStateController]: { id: 'stateController' },
       [mockTokens.VisualizationComposer]: { id: 'composer' },
       [mockTokens.ClothingManagementService]: { id: 'clothingService' },
+      [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
     };
 
     const container = {
@@ -167,6 +169,9 @@ describe('anatomy-visualizer initialize', () => {
     expect(container.resolve).toHaveBeenCalledWith(
       mockTokens.ClothingManagementService
     );
+    expect(container.resolve).toHaveBeenCalledWith(
+      mockTokens.IEntityLoadingService
+    );
 
     expect(mockAnatomyVisualizerUIConstructor).toHaveBeenCalledWith({
       logger,
@@ -181,6 +186,8 @@ describe('anatomy-visualizer initialize', () => {
       visualizationComposer: resolvedServices[mockTokens.VisualizationComposer],
       clothingManagementService:
         resolvedServices[mockTokens.ClothingManagementService],
+      entityLoadingService:
+        resolvedServices[mockTokens.IEntityLoadingService],
     });
 
     expect(mockVisualizerInitialize).toHaveBeenCalledTimes(1);
@@ -215,6 +222,7 @@ describe('anatomy-visualizer initialize', () => {
       [mockTokens.AnatomyDescriptionService]: { id: 'anatomyService' },
       [mockTokens.VisualizerStateController]: { id: 'stateController' },
       [mockTokens.VisualizationComposer]: { id: 'composer' },
+      [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
     };
 
     const container = {
@@ -265,6 +273,8 @@ describe('anatomy-visualizer initialize', () => {
         resolvedServices[mockTokens.VisualizerStateController],
       visualizationComposer: resolvedServices[mockTokens.VisualizationComposer],
       clothingManagementService: null,
+      entityLoadingService:
+        resolvedServices[mockTokens.IEntityLoadingService],
     });
 
     expect(mockVisualizerInitialize).toHaveBeenCalledTimes(1);
@@ -285,6 +295,8 @@ describe('anatomy-visualizer initialize', () => {
       [mockTokens.AnatomyDescriptionService]: { id: 'anatomyService' },
       [mockTokens.VisualizerStateController]: { id: 'stateController' },
       [mockTokens.VisualizationComposer]: { id: 'composer' },
+      [mockTokens.ClothingManagementService]: { id: 'clothingService' },
+      [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
     };
 
     const container = {
@@ -339,6 +351,7 @@ describe('anatomy-visualizer initialize', () => {
       [mockTokens.VisualizerStateController]: { id: 'stateController' },
       [mockTokens.VisualizationComposer]: { id: 'composer' },
       [mockTokens.ClothingManagementService]: { id: 'clothingService' },
+      [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
     };
 
     const container = {

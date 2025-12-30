@@ -16,6 +16,7 @@ const mockTokens = {
   VisualizerStateController: Symbol('VisualizerStateController'),
   VisualizationComposer: Symbol('VisualizationComposer'),
   ClothingManagementService: Symbol('ClothingManagementService'),
+  IEntityLoadingService: Symbol('IEntityLoadingService'),
 };
 
 let mockUIInstance = { initialize: jest.fn() };
@@ -86,6 +87,7 @@ describe('anatomy-visualizer bootstrap flow', () => {
     const visualizerStateController = { setState: jest.fn() };
     const visualizationComposer = { compose: jest.fn() };
     const clothingManagementService = { listItems: jest.fn() };
+    const entityLoadingService = { loadEntity: jest.fn() };
 
     mockServices = {
       logger: { info: jest.fn(), warn: jest.fn() },
@@ -105,6 +107,8 @@ describe('anatomy-visualizer bootstrap flow', () => {
             return visualizationComposer;
           case mockTokens.ClothingManagementService:
             return clothingManagementService;
+          case mockTokens.IEntityLoadingService:
+            return entityLoadingService;
           default:
             throw new Error(`Unexpected token: ${String(token)}`);
         }
@@ -116,6 +120,7 @@ describe('anatomy-visualizer bootstrap flow', () => {
       visualizerStateController,
       visualizationComposer,
       clothingManagementService,
+      entityLoadingService,
     };
   };
 
@@ -189,6 +194,10 @@ describe('anatomy-visualizer bootstrap flow', () => {
         4,
         mockTokens.ClothingManagementService
       );
+      expect(mockContainer.resolve).toHaveBeenNthCalledWith(
+        5,
+        mockTokens.IEntityLoadingService
+      );
 
       expect(MockAnatomyVisualizerUI).toHaveBeenCalledWith({
         logger: mockServices.logger,
@@ -200,6 +209,7 @@ describe('anatomy-visualizer bootstrap flow', () => {
         visualizerStateController: dependencies.visualizerStateController,
         visualizationComposer: dependencies.visualizationComposer,
         clothingManagementService: dependencies.clothingManagementService,
+        entityLoadingService: dependencies.entityLoadingService,
       });
 
       expect(mockUIInstance.initialize).toHaveBeenCalledTimes(1);
@@ -236,13 +246,19 @@ describe('anatomy-visualizer bootstrap flow', () => {
       if (token === mockTokens.ClothingManagementService) {
         throw new Error('Service not registered');
       }
-      return dependencies[
-        token === mockTokens.AnatomyDescriptionService
-          ? 'anatomyDescriptionService'
-          : token === mockTokens.VisualizerStateController
-            ? 'visualizerStateController'
-            : 'visualizationComposer'
-      ];
+      if (token === mockTokens.AnatomyDescriptionService) {
+        return dependencies.anatomyDescriptionService;
+      }
+      if (token === mockTokens.VisualizerStateController) {
+        return dependencies.visualizerStateController;
+      }
+      if (token === mockTokens.VisualizationComposer) {
+        return dependencies.visualizationComposer;
+      }
+      if (token === mockTokens.IEntityLoadingService) {
+        return dependencies.entityLoadingService;
+      }
+      throw new Error(`Unexpected token: ${String(token)}`);
     });
 
     mockBootstrap.mockImplementation(async (config) => {

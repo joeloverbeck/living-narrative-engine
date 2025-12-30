@@ -5,7 +5,6 @@
 
 import AnatomyVisualizerUI from '../../../src/domUI/AnatomyVisualizerUI.js';
 import { jest } from '@jest/globals';
-import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 
 describe('AnatomyVisualizerUI', () => {
   let mockLogger;
@@ -16,6 +15,7 @@ describe('AnatomyVisualizerUI', () => {
   let mockVisualizerStateController;
   let mockVisualizationComposer;
   let mockClothingManagementService;
+  let mockRecipeSelectorService;
   let mockDocument;
   let visualizerUI;
 
@@ -51,6 +51,11 @@ describe('AnatomyVisualizerUI', () => {
       getEquippedItems: jest
         .fn()
         .mockResolvedValue({ success: true, equipped: {} }),
+    };
+
+    // Mock recipe selector service
+    mockRecipeSelectorService = {
+      populateWithComponent: jest.fn().mockReturnValue([]),
     };
 
     // Mock event dispatcher
@@ -104,7 +109,7 @@ describe('AnatomyVisualizerUI', () => {
         if (id === 'anatomy-graph-container') return mockGraphContainer;
         return null;
       }),
-      createElement: jest.fn((tag) => ({
+      createElement: jest.fn(() => ({
         value: '',
         textContent: '',
       })),
@@ -121,13 +126,14 @@ describe('AnatomyVisualizerUI', () => {
       visualizerStateController: mockVisualizerStateController,
       visualizationComposer: mockVisualizationComposer,
       clothingManagementService: mockClothingManagementService,
+      recipeSelectorService: mockRecipeSelectorService,
     });
   });
 
   describe('initialize', () => {
-    it('should initialize successfully and populate entity selector', async () => {
+    it('should initialize successfully and populate entity selector via service', async () => {
       // Arrange
-      const mockEntityDefinitions = [
+      const mockFilteredDefinitions = [
         {
           id: 'test:entity1',
           components: {
@@ -141,15 +147,9 @@ describe('AnatomyVisualizerUI', () => {
             'anatomy:body': { templateId: 'humanoid' },
           },
         },
-        {
-          id: 'test:entity3',
-          components: {
-            'core:name': { text: 'No Anatomy' },
-          },
-        },
       ];
-      mockRegistry.getAllEntityDefinitions.mockReturnValue(
-        mockEntityDefinitions
+      mockRecipeSelectorService.populateWithComponent.mockReturnValue(
+        mockFilteredDefinitions
       );
 
       // Act
@@ -159,7 +159,11 @@ describe('AnatomyVisualizerUI', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyVisualizerUI: Initializing...'
       );
-      expect(mockRegistry.getAllEntityDefinitions).toHaveBeenCalled();
+      expect(mockRecipeSelectorService.populateWithComponent).toHaveBeenCalledWith(
+        expect.anything(),
+        'anatomy:body',
+        { placeholderText: 'Select an entity...' }
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AnatomyVisualizerUI: Found 2 entities with anatomy:body'
       );
@@ -184,10 +188,10 @@ describe('AnatomyVisualizerUI', () => {
       );
     });
 
-    it('should handle error when getAllEntityDefinitions fails', async () => {
+    it('should handle error when recipeSelectorService fails', async () => {
       // Arrange
-      const error = new Error('Registry error');
-      mockRegistry.getAllEntityDefinitions.mockImplementation(() => {
+      const error = new Error('Service error');
+      mockRecipeSelectorService.populateWithComponent.mockImplementation(() => {
         throw error;
       });
 
@@ -216,8 +220,57 @@ describe('AnatomyVisualizerUI', () => {
   });
 
   describe('_populateEntitySelector', () => {
-    it('should filter only entities with anatomy:body component', async () => {
+    it('should call recipeSelectorService to populate selector', async () => {
       // Arrange
+      const mockSelector = {
+        innerHTML: '',
+        appendChild: jest.fn(),
+        addEventListener: jest.fn(),
+      };
+      mockDocument.getElementById.mockImplementation((id) => {
+        if (id === 'entity-selector') return mockSelector;
+        return null;
+      });
+
+      const mockFilteredDefinitions = [
+        {
+          id: 'test:with-anatomy',
+          components: { 'anatomy:body': {} },
+        },
+      ];
+      mockRecipeSelectorService.populateWithComponent.mockReturnValue(
+        mockFilteredDefinitions
+      );
+
+      // Act
+      await visualizerUI._populateEntitySelector();
+
+      // Assert
+      expect(mockRecipeSelectorService.populateWithComponent).toHaveBeenCalledWith(
+        mockSelector,
+        'anatomy:body',
+        { placeholderText: 'Select an entity...' }
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'AnatomyVisualizerUI: Found 1 entities with anatomy:body'
+      );
+    });
+
+    it('should use fallback logic when recipeSelectorService is not available', async () => {
+      // Arrange - create instance without recipeSelectorService
+      const visualizerUIWithoutService = new AnatomyVisualizerUI({
+        logger: mockLogger,
+        registry: mockRegistry,
+        entityManager: mockEntityManager,
+        anatomyDescriptionService: mockAnatomyDescriptionService,
+        eventDispatcher: mockEventDispatcher,
+        documentContext: { document: mockDocument },
+        visualizerStateController: mockVisualizerStateController,
+        visualizationComposer: mockVisualizationComposer,
+        clothingManagementService: mockClothingManagementService,
+        // No recipeSelectorService provided
+      });
+
       const mockSelector = {
         innerHTML: '',
         appendChild: jest.fn(),
@@ -237,22 +290,17 @@ describe('AnatomyVisualizerUI', () => {
           id: 'test:without-anatomy',
           components: { 'core:name': { text: 'No Body' } },
         },
-        {
-          id: 'test:no-components',
-        },
-        {
-          id: 'test:null-components',
-          components: null,
-        },
       ];
       mockRegistry.getAllEntityDefinitions.mockReturnValue(
         mockEntityDefinitions
       );
 
       // Act
-      await visualizerUI._populateEntitySelector();
+      await visualizerUIWithoutService._populateEntitySelector();
 
-      // Assert
+      // Assert - should use inline logic, not the service
+      expect(mockRecipeSelectorService.populateWithComponent).not.toHaveBeenCalled();
+      expect(mockRegistry.getAllEntityDefinitions).toHaveBeenCalled();
       // Should create options for: default + 1 entity with anatomy
       expect(mockSelector.appendChild).toHaveBeenCalledTimes(2);
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -260,8 +308,21 @@ describe('AnatomyVisualizerUI', () => {
       );
     });
 
-    it('should handle null entity definitions gracefully', async () => {
-      // Arrange
+    it('should handle null entity definitions gracefully in fallback path', async () => {
+      // Arrange - create instance without recipeSelectorService
+      const visualizerUIWithoutService = new AnatomyVisualizerUI({
+        logger: mockLogger,
+        registry: mockRegistry,
+        entityManager: mockEntityManager,
+        anatomyDescriptionService: mockAnatomyDescriptionService,
+        eventDispatcher: mockEventDispatcher,
+        documentContext: { document: mockDocument },
+        visualizerStateController: mockVisualizerStateController,
+        visualizationComposer: mockVisualizationComposer,
+        clothingManagementService: mockClothingManagementService,
+        // No recipeSelectorService provided
+      });
+
       const mockSelector = {
         innerHTML: '',
         appendChild: jest.fn(),
@@ -285,7 +346,7 @@ describe('AnatomyVisualizerUI', () => {
       );
 
       // Act
-      await visualizerUI._populateEntitySelector();
+      await visualizerUIWithoutService._populateEntitySelector();
 
       // Assert
       expect(mockSelector.appendChild).toHaveBeenCalledTimes(2); // default + 1 valid
@@ -413,6 +474,83 @@ describe('AnatomyVisualizerUI', () => {
         `Failed to load entity ${entityDefId}:`,
         expect.any(Error)
       );
+    });
+  });
+
+  describe('_loadEntity with EntityLoadingService', () => {
+    let mockEntityLoadingService;
+    let visualizerUIWithService;
+
+    beforeEach(() => {
+      mockEntityLoadingService = {
+        loadEntityWithAnatomy: jest.fn(),
+        clearCurrentEntity: jest.fn(),
+        getCurrentEntityId: jest.fn(),
+        getCreatedEntities: jest.fn(() => []),
+      };
+
+      visualizerUIWithService = new AnatomyVisualizerUI({
+        logger: mockLogger,
+        registry: mockRegistry,
+        entityManager: mockEntityManager,
+        anatomyDescriptionService: mockAnatomyDescriptionService,
+        eventDispatcher: mockEventDispatcher,
+        documentContext: { document: mockDocument },
+        visualizerStateController: mockVisualizerStateController,
+        visualizationComposer: mockVisualizationComposer,
+        clothingManagementService: mockClothingManagementService,
+        recipeSelectorService: mockRecipeSelectorService,
+        entityLoadingService: mockEntityLoadingService,
+      });
+    });
+
+    it('should delegate to EntityLoadingService when available', async () => {
+      // Arrange
+      const entityDefId = 'test:entity';
+      mockEntityLoadingService.loadEntityWithAnatomy.mockResolvedValue(
+        'instance-123'
+      );
+
+      // Act
+      await visualizerUIWithService._loadEntity(entityDefId);
+
+      // Assert
+      expect(mockEntityLoadingService.loadEntityWithAnatomy).toHaveBeenCalledWith(
+        entityDefId
+      );
+      expect(visualizerUIWithService._currentEntityId).toBe('instance-123');
+      // Should NOT call inline methods
+      expect(mockRegistry.getEntityDefinition).not.toHaveBeenCalled();
+      expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
+    });
+
+    it('should handle EntityLoadingService errors gracefully', async () => {
+      // Arrange
+      const entityDefId = 'test:entity';
+      const error = new Error('Service error');
+      mockEntityLoadingService.loadEntityWithAnatomy.mockRejectedValue(error);
+
+      // Act - should not throw
+      await visualizerUIWithService._loadEntity(entityDefId);
+
+      // Assert
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to load entity ${entityDefId}:`,
+        error
+      );
+    });
+
+    it('should set currentEntityId from service result', async () => {
+      // Arrange
+      mockEntityLoadingService.loadEntityWithAnatomy.mockResolvedValue(
+        'custom-instance-id'
+      );
+
+      // Act
+      await visualizerUIWithService._loadEntity('test:entity');
+
+      // Assert
+      expect(visualizerUIWithService._currentEntityId).toBe('custom-instance-id');
     });
   });
 

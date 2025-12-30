@@ -20,19 +20,35 @@
     {
       "id": "personal-space",
       "version": "^1.0.0"
+    },
+    {
+      "id": "grabbing-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "recovery-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
     "actions": [
-      "grab_neck.action.json",
+      "grab_neck_target.action.json",
       "squeeze_neck_with_both_hands.action.json"
     ],
     "rules": [
-      "handle_grab_neck.rule.json",
+      "handle_grab_neck_target.rule.json",
       "handle_squeeze_neck_with_both_hands.rule.json"
     ],
     "conditions": [
-      "event-is-action-grab-neck.condition.json",
+      "event-is-action-grab-neck-target.condition.json",
       "event-is-action-squeeze-neck-with-both-hands.condition.json"
     ]
   }

@@ -69,53 +69,6 @@
   box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
 }
 
-/* Save button - extends base button with states */
-.save-button {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--button-bg-color);
-  color: var(--button-text-color);
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease,
-    box-shadow 0.2s ease;
-}
-
-.save-button:hover:not(:disabled) {
-  background-color: var(--button-hover-bg-color);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.save-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
-
-.save-button:disabled {
-  background-color: var(--button-disabled-bg-color);
-  color: var(--button-disabled-text-color);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.save-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
-}
-
-.save-button.saving {
-  animation: pulse 1s infinite;
-}
-
-.save-button.saved {
-  background-color: var(--success-text-color);
-}
-
 /* ===== Panels ===== */
 .mod-list-panel {
   display: flex;
@@ -1171,21 +1124,6 @@
   }
 }
 
-@keyframes save-spinner {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Save button icon spinner during saving state */
-.save-button--saving .save-button__icon {
-  display: inline-block;
-  animation: save-spinner 1s linear infinite;
-}
-
 /* Cascade animation placeholder */
 .mod-card.cascade-in {
   animation: cascadeIn 0.3s ease-out;
@@ -1412,7 +1350,6 @@
     padding: var(--spacing-sm) var(--spacing-md);
   }
 
-  .save-button,
   .mod-manager-header .menu-button {
     flex: 1;
     text-align: center;
@@ -1423,7 +1360,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mod-card,
   .world-option,
-  .save-button,
+  .summary-panel__save-button,
   .menu-button,
   .search-container input {
     transition: none;
@@ -1433,9 +1370,7 @@
   .mod-card.shake,
   .mod-card--shake,
   .mod-card--conflict-source,
-  .save-button.saving,
-  .save-button--saving,
-  .save-button--saving .save-button__icon,
+  .summary-panel__save-button--saving,
   .mod-card--activate-primary,
   .mod-card--activate-dependency,
   .mod-card--deactivate-primary,
@@ -1468,7 +1403,7 @@
 
   .mod-card:focus-within,
   .world-option:focus-within,
-  .save-button:focus-visible,
+  .summary-panel__save-button:focus-visible,
   .menu-button:focus-visible {
     outline: 3px solid var(--primary-text-color);
     outline-offset: 2px;

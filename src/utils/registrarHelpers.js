@@ -146,6 +146,17 @@ export class Registrar {
   }
 
   /**
+   * Backward-compatible alias for singletonFactory.
+   *
+   * @param {DiToken} token - The dependency injection token to register the factory against.
+   * @param {FactoryFunction} factoryFn - The factory function that creates the instance.
+   * @returns {this} The registrar instance for fluent chaining.
+   */
+  factory(token, factoryFn) {
+    return this.singletonFactory(token, factoryFn);
+  }
+
+  /**
    * Register a class as transient. A new instance of this class will be
    * created every time the token is resolved.
    *

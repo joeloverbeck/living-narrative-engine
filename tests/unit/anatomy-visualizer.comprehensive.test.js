@@ -111,6 +111,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -153,7 +154,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       });
 
       // Verify services were resolved
-      expect(mockContainer.resolve).toHaveBeenCalledTimes(4);
+      expect(mockContainer.resolve).toHaveBeenCalledTimes(5);
 
       // Verify visualizer components were registered
       expect(mockRegisterVisualizerComponents).toHaveBeenCalledWith(
@@ -171,6 +172,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
         visualizerStateController: {},
         visualizationComposer: {},
         clothingManagementService: {},
+        entityLoadingService: {},
       });
 
       // Note: We can't verify back button configuration in this test setup
@@ -252,6 +254,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -300,6 +303,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
         visualizerStateController: {},
         visualizationComposer: {},
         clothingManagementService: null,
+        entityLoadingService: {},
       });
     });
   });
@@ -368,6 +372,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -430,6 +435,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -499,6 +505,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -589,6 +596,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -690,6 +698,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -789,6 +798,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -880,6 +890,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 
@@ -969,6 +980,7 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
           VisualizerStateController: Symbol('VisualizerStateController'),
           VisualizationComposer: Symbol('VisualizationComposer'),
           ClothingManagementService: Symbol('ClothingManagementService'),
+          IEntityLoadingService: Symbol('IEntityLoadingService'),
         },
       }));
 

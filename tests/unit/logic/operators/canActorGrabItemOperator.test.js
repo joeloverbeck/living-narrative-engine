@@ -435,6 +435,120 @@ describe('CanActorGrabItemOperator', () => {
     });
   });
 
+  describe('Path Resolution Edge Cases - Object Without ID', () => {
+    it('should treat path as entity ID when resolved object has no id', () => {
+      const context = {
+        actor: { id: 'actor_1' },
+        myData: { name: 'some object', value: 42 }, // object without id
+      };
+      mockEntityManager.getComponentData.mockReturnValue({ handsRequired: 1 });
+      grabbingUtils.countFreeGrabbingAppendages.mockReturnValue(2);
+
+      // The path 'myData' resolves to an object without id
+      // So the operator should fall back to treating 'myData' as the entity ID
+      const result = operator.evaluate(['actor', 'myData'], context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Resolved "myData" to object without id, treating original path as item entity ID'
+        )
+      );
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'myData', // Falls back to using path as ID
+        'anatomy:requires_grabbing'
+      );
+    });
+
+    it('should treat actor path as entity ID when resolved actor object has no id', () => {
+      const context = {
+        myActor: { name: 'Some Actor' }, // object without id
+        entity: { id: 'item_1' },
+      };
+      mockEntityManager.getComponentData.mockReturnValue({ handsRequired: 1 });
+      grabbingUtils.countFreeGrabbingAppendages.mockReturnValue(2);
+
+      const result = operator.evaluate(['myActor', 'entity'], context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Resolved "myActor" to object without id, treating original path as actor entity ID'
+        )
+      );
+      expect(grabbingUtils.countFreeGrabbingAppendages).toHaveBeenCalledWith(
+        mockEntityManager,
+        'myActor' // Falls back to using path as ID
+      );
+    });
+  });
+
+  describe('JSON Logic Expression Edge Cases', () => {
+    it('should return false when JSON Logic expression evaluates to null', () => {
+      const context = { data: null };
+
+      const result = operator.evaluate([{ var: 'data' }, { id: 'item_1' }], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid actor at path')
+      );
+    });
+
+    it('should return false when JSON Logic expression evaluates to an array', () => {
+      const context = {
+        actors: ['actor_1', 'actor_2'],
+        entity: { id: 'item_1' },
+      };
+
+      const result = operator.evaluate([{ var: 'actors' }, 'entity'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid actor at path')
+      );
+    });
+
+    it('should return false when JSON Logic expression evaluates to undefined', () => {
+      const context = { entity: { id: 'item_1' } };
+
+      const result = operator.evaluate([{ var: 'nonexistent' }, 'entity'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid actor at path')
+      );
+    });
+
+    it('should return false when JSON Logic expression evaluates to boolean', () => {
+      const context = {
+        flag: true,
+        entity: { id: 'item_1' },
+      };
+
+      const result = operator.evaluate([{ var: 'flag' }, 'entity'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid actor at path')
+      );
+    });
+
+    it('should return false when item JSON Logic expression evaluates to array', () => {
+      const context = {
+        actor: { id: 'actor_1' },
+        items: ['item_1', 'item_2'],
+      };
+
+      const result = operator.evaluate(['actor', { var: 'items' }], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid item at path')
+      );
+    });
+  });
+
   describe('Invalid Entity ID Edge Cases', () => {
     it('should return false when actor entity has empty string id', () => {
       const context = { actor: { id: '' }, entity: { id: 'item_1' } };
@@ -449,6 +563,28 @@ describe('CanActorGrabItemOperator', () => {
 
     it('should return false when item entity has empty string id', () => {
       const context = { actor: { id: 'actor_1' }, entity: { id: '' } };
+
+      const result = operator.evaluate(['actor', 'entity'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid item ID')
+      );
+    });
+
+    it('should return false when actor entity has NaN id', () => {
+      const context = { actor: { id: NaN }, entity: { id: 'item_1' } };
+
+      const result = operator.evaluate(['actor', 'entity'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid actor ID')
+      );
+    });
+
+    it('should return false when item entity has NaN id', () => {
+      const context = { actor: { id: 'actor_1' }, entity: { id: NaN } };
 
       const result = operator.evaluate(['actor', 'entity'], context);
 

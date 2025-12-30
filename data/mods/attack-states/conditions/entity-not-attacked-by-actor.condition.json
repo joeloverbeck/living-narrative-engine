@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "attack-states:entity-not-attacked-by-actor",
+  "description": "Checks that the entity has NOT been attacked by the current actor",
+  "logic": {
+    "or": [
+      { "!": { "var": "entity.components.attack-states:attacked_by" } },
+      {
+        "!": {
+          "in": [
+            { "var": "actor.id" },
+            { "var": "entity.components.attack-states:attacked_by.attackers" }
+          ]
+        }
+      }
+    ]
+  }
+}

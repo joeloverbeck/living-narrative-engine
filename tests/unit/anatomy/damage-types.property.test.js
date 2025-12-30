@@ -92,6 +92,76 @@ function createMockDispatcher() {
   return { dispatch: jest.fn() };
 }
 
+/**
+ * Creates mock applicators for testing DamageTypeEffectsService.
+ * These applicators simulate the actual behavior of applying effects to entities.
+ *
+ * @param {object} entityManager - The entity manager to apply components to
+ * @returns {object} Mock applicators
+ */
+function createMockApplicators(entityManager) {
+  return {
+    effectDefinitionResolver: {
+      resolveEffectDefinition: jest.fn((effectType) => ({
+        id: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        effectType,
+        componentId: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        defaults: {},
+      })),
+      resolveApplyOrder: jest.fn(() => [
+        'anatomy:dismembered',
+        'anatomy:fractured',
+        'anatomy:bleeding',
+        'anatomy:burning',
+        'anatomy:poisoned',
+      ]),
+    },
+    dismembermentApplicator: { apply: jest.fn().mockResolvedValue({ triggered: false }) },
+    fractureApplicator: { apply: jest.fn().mockResolvedValue({ triggered: false, stunApplied: false }) },
+    bleedApplicator: {
+      apply: jest.fn().mockImplementation(async ({ partId, damageEntryConfig }) => {
+        if (!damageEntryConfig?.enabled) return { applied: false };
+        const severity = damageEntryConfig.severity || 'minor';
+        const tickDamage = BLEED_SEVERITY_MAP[severity]?.tickDamage || 1;
+        const remainingTurns = damageEntryConfig.baseDurationTurns || 3;
+        await entityManager.addComponent(partId, BLEEDING_COMPONENT_ID, {
+          severity,
+          remainingTurns,
+          tickDamage,
+        });
+        return { applied: true };
+      }),
+    },
+    burnApplicator: {
+      apply: jest.fn().mockImplementation(async ({ partId, damageEntryConfig }) => {
+        if (!damageEntryConfig?.enabled) return { applied: false, stacked: false, stackedCount: 0 };
+        const existing = entityManager._getComponent(partId, BURNING_COMPONENT_ID);
+        const canStack = damageEntryConfig.canStack ?? false;
+        const dps = damageEntryConfig.dps || 1;
+        const durationTurns = damageEntryConfig.durationTurns || 3;
+
+        if (existing && canStack) {
+          existing.stackedCount = (existing.stackedCount || 1) + 1;
+          await entityManager.addComponent(partId, BURNING_COMPONENT_ID, existing);
+          return { applied: true, stacked: true, stackedCount: existing.stackedCount };
+        } else if (existing && !canStack) {
+          existing.remainingTurns = durationTurns;
+          await entityManager.addComponent(partId, BURNING_COMPONENT_ID, existing);
+          return { applied: true, stacked: false, stackedCount: 1 };
+        } else {
+          await entityManager.addComponent(partId, BURNING_COMPONENT_ID, {
+            dps,
+            remainingTurns: durationTurns,
+            stackedCount: 1,
+          });
+          return { applied: true, stacked: false, stackedCount: 1 };
+        }
+      }),
+    },
+    poisonApplicator: { apply: jest.fn().mockResolvedValue({ applied: false, scope: 'part', targetId: '' }) },
+  };
+}
+
 describe('Damage Types - Property Tests', () => {
   describe('Bleed Severity Map Invariants', () => {
     it('should have positive tickDamage for all severities', () => {
@@ -179,11 +249,13 @@ describe('Damage Types - Property Tests', () => {
     let entityManager;
     let logger;
     let dispatcher;
+    let mockApplicators;
 
     beforeEach(() => {
       entityManager = createMockEntityManager();
       logger = createMockLogger();
       dispatcher = createMockDispatcher();
+      mockApplicators = createMockApplicators(entityManager);
     });
 
     it('should monotonically increase stackedCount with canStack=true', async () => {
@@ -203,6 +275,7 @@ describe('Damage Types - Property Tests', () => {
           fc.integer({ min: 1, max: 5 }), // durationTurns
           async (applicationCount, dps, durationTurns) => {
             entityManager._clear();
+            mockApplicators = createMockApplicators(entityManager);
             await entityManager.addComponent(ids.part, 'anatomy:part', {
               ownerEntityId: ids.entity,
               subType: 'torso',
@@ -219,6 +292,7 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
             let previousStackCount = 0;
@@ -266,6 +340,7 @@ describe('Damage Types - Property Tests', () => {
           fc.integer({ min: 1, max: 5 }), // durationTurns
           async (applicationCount, dps, durationTurns) => {
             entityManager._clear();
+            mockApplicators = createMockApplicators(entityManager);
             await entityManager.addComponent(ids.part, 'anatomy:part', {
               ownerEntityId: ids.entity,
               subType: 'torso',
@@ -282,6 +357,7 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
             for (let i = 0; i < applicationCount; i++) {
@@ -317,6 +393,7 @@ describe('Damage Types - Property Tests', () => {
           fc.integer({ min: 1, max: 5 }), // refresh duration
           async (initialDuration, refreshDuration) => {
             entityManager._clear();
+            mockApplicators = createMockApplicators(entityManager);
             await entityManager.addComponent(ids.part, 'anatomy:part', {
               ownerEntityId: ids.entity,
               subType: 'torso',
@@ -339,15 +416,16 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
-              await service.applyEffectsForDamage({
-                entityId: ids.entity,
-                partId: ids.part,
-                damageEntry: damageType,
-                maxHealth: 100,
-                currentHealth: 100,
-              });
+            await service.applyEffectsForDamage({
+              entityId: ids.entity,
+              partId: ids.part,
+              damageEntry: damageType,
+              maxHealth: 100,
+              currentHealth: 100,
+            });
 
             // Second application with different duration
             damageType = {
@@ -366,15 +444,16 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
-              await service.applyEffectsForDamage({
-                entityId: ids.entity,
-                partId: ids.part,
-                damageEntry: damageType,
-                maxHealth: 100,
-                currentHealth: 100,
-              });
+            await service.applyEffectsForDamage({
+              entityId: ids.entity,
+              partId: ids.part,
+              damageEntry: damageType,
+              maxHealth: 100,
+              currentHealth: 100,
+            });
 
             const burning = entityManager._getComponent(
               ids.part,
@@ -393,11 +472,13 @@ describe('Damage Types - Property Tests', () => {
     let entityManager;
     let logger;
     let dispatcher;
+    let mockApplicators;
 
     beforeEach(() => {
       entityManager = createMockEntityManager();
       logger = createMockLogger();
       dispatcher = createMockDispatcher();
+      mockApplicators = createMockApplicators(entityManager);
     });
 
     it('should attach bleeding component with valid structure', async () => {
@@ -410,6 +491,7 @@ describe('Damage Types - Property Tests', () => {
           fc.integer({ min: 1, max: 10 }),
           async (severity, baseDurationTurns) => {
             entityManager._clear();
+            mockApplicators = createMockApplicators(entityManager);
             await entityManager.addComponent(ids.part, 'anatomy:part', {
               ownerEntityId: ids.entity,
               subType: 'torso',
@@ -426,6 +508,7 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
             await service.applyEffectsForDamage({
@@ -486,6 +569,7 @@ describe('Damage Types - Property Tests', () => {
       const entityManager = createMockEntityManager();
       const logger = createMockLogger();
       const dispatcher = createMockDispatcher();
+      let mockApplicators = createMockApplicators(entityManager);
       const ids = { entity: 'entity-1', part: 'part-1' };
 
       await fc.assert(
@@ -497,6 +581,7 @@ describe('Damage Types - Property Tests', () => {
           }),
           async (minimalDamageType) => {
             entityManager._clear();
+            mockApplicators = createMockApplicators(entityManager);
             await entityManager.addComponent(ids.part, 'anatomy:part', {
               ownerEntityId: ids.entity,
               subType: 'torso',
@@ -507,6 +592,7 @@ describe('Damage Types - Property Tests', () => {
               entityManager,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
+              ...mockApplicators,
             });
 
             // Should not throw even with minimal damage type

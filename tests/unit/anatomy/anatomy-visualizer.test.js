@@ -16,6 +16,7 @@ const tokensMock = {
   VisualizerStateController: 'VisualizerStateController',
   VisualizationComposer: 'VisualizationComposer',
   ClothingManagementService: 'ClothingManagementService',
+  IEntityLoadingService: 'IEntityLoadingService',
 };
 
 jest.mock('../../../src/bootstrapper/CommonBootstrapper.js', () => ({
@@ -91,6 +92,8 @@ describe('anatomy-visualizer initialize', () => {
             return { id: 'visualizationComposer' };
           case tokensMock.ClothingManagementService:
             return { id: 'clothingManagementService' };
+          case tokensMock.IEntityLoadingService:
+            return { id: 'entityLoadingService' };
           default:
             throw new Error(`Unexpected token: ${token}`);
         }
@@ -161,6 +164,7 @@ describe('anatomy-visualizer initialize', () => {
       visualizerStateController: { id: 'visualizerStateController' },
       visualizationComposer: { id: 'visualizationComposer' },
       clothingManagementService: { id: 'clothingManagementService' },
+      entityLoadingService: { id: 'entityLoadingService' },
     });
 
     expect(mockUIInstance.initialize).toHaveBeenCalledTimes(1);
@@ -207,6 +211,7 @@ describe('anatomy-visualizer initialize', () => {
           id: 'visualizerStateController',
         },
         [tokensMock.VisualizationComposer]: { id: 'visualizationComposer' },
+        [tokensMock.IEntityLoadingService]: { id: 'entityLoadingService' },
       }[token];
     });
 

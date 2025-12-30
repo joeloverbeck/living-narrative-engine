@@ -114,14 +114,12 @@ describe('mod-manager.css', () => {
   });
 
   describe('Button Selectors', () => {
-    it('should define .save-button', () => {
-      expect(cssContent).toMatch(/\.save-button\s*\{/);
-    });
-
-    it('should define save button states', () => {
-      expect(cssContent).toMatch(/\.save-button:disabled/);
-      expect(cssContent).toMatch(/\.save-button\.saving/);
-      expect(cssContent).toMatch(/\.save-button\.saved/);
+    it('should define summary panel save button selectors', () => {
+      expect(cssContent).toMatch(/\.summary-panel__save-button\s*\{/);
+      expect(cssContent).toMatch(/\.summary-panel__save-button:disabled/);
+      expect(cssContent).toMatch(/\.summary-panel__save-button--saving/);
+      expect(cssContent).toMatch(/\.summary-panel__save-button--success/);
+      expect(cssContent).toMatch(/\.summary-panel__save-button--error/);
     });
 
     it('should define .menu-button styling', () => {
@@ -220,8 +218,8 @@ describe('mod-manager.css', () => {
       expect(cssContent).toMatch(/\.world-option:hover/);
     });
 
-    it('should define hover states for save-button', () => {
-      expect(cssContent).toMatch(/\.save-button:hover/);
+    it('should define hover states for summary save button', () => {
+      expect(cssContent).toMatch(/\.summary-panel__save-button:hover/);
     });
 
     it('should define focus states for mod-card', () => {
@@ -232,8 +230,8 @@ describe('mod-manager.css', () => {
       expect(cssContent).toMatch(/\.world-option:focus/);
     });
 
-    it('should define focus states for save-button', () => {
-      expect(cssContent).toMatch(/\.save-button:focus/);
+    it('should define focus states for summary save button', () => {
+      expect(cssContent).toMatch(/\.summary-panel__save-button:focus-visible/);
     });
 
     it('should define focus states for search input', () => {

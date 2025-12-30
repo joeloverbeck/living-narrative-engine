@@ -6,6 +6,10 @@
   "description": "Arm-based impact attacks including punches and slaps",
   "dependencies": [
     {
+      "id": "attack-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "recovery-states",
       "version": "^1.0.0"
     },
@@ -42,10 +46,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "weapons",
-      "version": "^1.0.0"
-    },
-    {
       "id": "bending-states",
       "version": "^1.0.0"
     },
@@ -61,18 +61,18 @@
     "actions": [
       "punch_target.action.json",
       "slap_target.action.json",
-      "sucker_punch.action.json"
+      "sucker_punch_target.action.json"
     ],
     "rules": [
       "handle_punch_target.rule.json",
       "handle_slap_target.rule.json",
-      "handle_sucker_punch.rule.json"
+      "handle_sucker_punch_target.rule.json"
     ],
     "conditions": [
       "actor-has-arm.condition.json",
       "event-is-action-punch-target.condition.json",
       "event-is-action-slap-target.condition.json",
-      "event-is-action-sucker-punch.condition.json"
+      "event-is-action-sucker-punch-target.condition.json"
     ],
     "scopes": [
       "actor_arm_body_parts.scope"

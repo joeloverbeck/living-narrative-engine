@@ -726,4 +726,240 @@ describe('AtomicModifyComponentHandler', () => {
       { deeply: { nested: { path: 'created' } } }
     );
   });
+
+  // ---------------------------------------------------------------------------
+  //  #deepEqual edge cases for full branch coverage
+  // ---------------------------------------------------------------------------
+  describe('#deepEqual edge cases', () => {
+    test('fails when current value is null but expected is non-null', async () => {
+      const currentComponent = { value: null };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: 'something',
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when current value is non-null but expected is null', async () => {
+      const currentComponent = { value: 'something' };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: null,
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when current value is undefined but expected is defined', async () => {
+      const currentComponent = { value: undefined };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: 'something',
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when current value is defined but expected is undefined', async () => {
+      const currentComponent = { value: 'something' };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: undefined,
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when types mismatch (string vs number)', async () => {
+      const currentComponent = { value: '5' };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: 5,
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when primitive values differ (same type)', async () => {
+      const currentComponent = { value: 'foo' };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: 'bar',
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when comparing array to object', async () => {
+      const currentComponent = { value: [1, 2, 3] };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: { 0: 1, 1: 2, 2: 3 },
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when comparing object to array', async () => {
+      const currentComponent = { value: { a: 1 } };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'value',
+          expected_value: [1],
+          new_value: 'new',
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when arrays have different elements at same index', async () => {
+      const currentComponent = { items: ['a', 'b', 'c'] };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'items',
+          expected_value: ['a', 'X', 'c'],
+          new_value: ['updated'],
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when object has key not in expected', async () => {
+      const currentComponent = { config: { a: 1, b: 2 } };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'config',
+          expected_value: { a: 1, c: 3 },
+          new_value: { updated: true },
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('fails when objects have same keys but different values', async () => {
+      const currentComponent = { config: { a: 1, b: 2 } };
+      mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+      const ctx = buildCtx();
+      await handler.execute(
+        {
+          entity_ref: 'actor',
+          component_type: 'test:comp',
+          field: 'config',
+          expected_value: { a: 1, b: 99 },
+          new_value: { updated: true },
+          result_variable: 'result',
+        },
+        ctx
+      );
+
+      expect(ctx.evaluationContext.context.result).toBe(false);
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    });
+  });
 });

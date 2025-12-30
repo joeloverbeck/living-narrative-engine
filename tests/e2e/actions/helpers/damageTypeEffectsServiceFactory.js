@@ -1,5 +1,12 @@
 import DamageTypeEffectsService from '../../../../src/anatomy/services/damageTypeEffectsService.js';
+import EffectDefinitionResolver from '../../../../src/anatomy/services/effectDefinitionResolver.js';
 import StatusEffectRegistry from '../../../../src/anatomy/services/statusEffectRegistry.js';
+import WarningTracker from '../../../../src/anatomy/services/warningTracker.js';
+import BleedApplicator from '../../../../src/anatomy/applicators/bleedApplicator.js';
+import BurnApplicator from '../../../../src/anatomy/applicators/burnApplicator.js';
+import DismembermentApplicator from '../../../../src/anatomy/applicators/dismembermentApplicator.js';
+import FractureApplicator from '../../../../src/anatomy/applicators/fractureApplicator.js';
+import PoisonApplicator from '../../../../src/anatomy/applicators/poisonApplicator.js';
 import statusEffectRegistryData from '../../../../data/mods/anatomy/status-effects/status-effects.registry.json' assert { type: 'json' };
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -37,12 +44,45 @@ export function createDamageTypeEffectsService({
     logger: testEnv.logger,
   });
 
+  const warningTracker = new WarningTracker({ logger: testEnv.logger });
+  const effectDefinitionResolver = new EffectDefinitionResolver({
+    statusEffectRegistry,
+    warningTracker,
+  });
+
+  const dismembermentApplicator = new DismembermentApplicator({
+    logger: testEnv.logger,
+    entityManager: testEnv.entityManager,
+  });
+  const fractureApplicator = new FractureApplicator({
+    logger: testEnv.logger,
+    entityManager: testEnv.entityManager,
+  });
+  const bleedApplicator = new BleedApplicator({
+    logger: testEnv.logger,
+    entityManager: testEnv.entityManager,
+  });
+  const burnApplicator = new BurnApplicator({
+    logger: testEnv.logger,
+    entityManager: testEnv.entityManager,
+  });
+  const poisonApplicator = new PoisonApplicator({
+    logger: testEnv.logger,
+    entityManager: testEnv.entityManager,
+  });
+
   const damageTypeEffectsService = new DamageTypeEffectsService({
     entityManager: testEnv.entityManager,
     logger: testEnv.logger,
     safeEventDispatcher,
     statusEffectRegistry,
     rngProvider,
+    effectDefinitionResolver,
+    dismembermentApplicator,
+    fractureApplicator,
+    bleedApplicator,
+    burnApplicator,
+    poisonApplicator,
   });
 
   return { damageTypeEffectsService, registrySnapshot, statusEffectRegistry };

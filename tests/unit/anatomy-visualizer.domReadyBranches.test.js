@@ -35,6 +35,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const registerVisualizerComponents = jest.fn();
@@ -54,6 +55,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       [tokens.VisualizerStateController, { service: 'state' }],
       [tokens.VisualizationComposer, { service: 'composer' }],
       [tokens.ClothingManagementService, { service: 'clothing' }],
+      [tokens.IEntityLoadingService, { service: 'entityLoading' }],
     ]);
 
     const container = {
@@ -129,6 +131,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       visualizerStateController: resolved.get(tokens.VisualizerStateController),
       visualizationComposer: resolved.get(tokens.VisualizationComposer),
       clothingManagementService: resolved.get(tokens.ClothingManagementService),
+      entityLoadingService: resolved.get(tokens.IEntityLoadingService),
     });
     expect(uiInitialize).toHaveBeenCalledTimes(1);
 
@@ -156,6 +159,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const registerVisualizerComponents = jest.fn();
@@ -246,6 +250,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const registerVisualizerComponents = jest.fn();
@@ -264,6 +269,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       [tokens.AnatomyDescriptionService, { service: 'anatomy' }],
       [tokens.VisualizerStateController, { service: 'state' }],
       [tokens.VisualizationComposer, { service: 'composer' }],
+      [tokens.IEntityLoadingService, { service: 'entityLoading' }],
     ]);
 
     const container = {
@@ -338,6 +344,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const registerVisualizerComponents = jest.fn();
@@ -403,6 +410,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const registerVisualizerComponents = jest.fn();

@@ -404,7 +404,7 @@ export class CharacterBuilderService {
         const generationTimeout =
           typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
             ? 5000
-            : 60000; // 5 seconds for tests, 60 seconds otherwise
+            : 300000; // 5 seconds for tests, 5 minutes for production
         const thematicDirections = await Promise.race([
           this.#directionGenerator.generateDirections(
             conceptId,

@@ -37,6 +37,7 @@ describe('anatomy-visualizer.js initialization coverage', () => {
     VisualizerStateController: Symbol('VisualizerStateController'),
     VisualizationComposer: Symbol('VisualizationComposer'),
     ClothingManagementService: Symbol('ClothingManagementService'),
+    IEntityLoadingService: Symbol('IEntityLoadingService'),
   });
 
   const createServices = () => ({
@@ -68,6 +69,7 @@ describe('anatomy-visualizer.js initialization coverage', () => {
       [tokens.VisualizerStateController, { id: 'state' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
       [tokens.ClothingManagementService, { id: 'clothing' }],
+      [tokens.IEntityLoadingService, { id: 'entityLoading' }],
     ]);
 
     const container = {
@@ -139,6 +141,7 @@ describe('anatomy-visualizer.js initialization coverage', () => {
       clothingManagementService: resolvedTokens.get(
         tokens.ClothingManagementService
       ),
+      entityLoadingService: resolvedTokens.get(tokens.IEntityLoadingService),
     });
     expect(uiInitialize).toHaveBeenCalledTimes(1);
 
@@ -164,6 +167,7 @@ describe('anatomy-visualizer.js initialization coverage', () => {
       [tokens.AnatomyDescriptionService, { id: 'anatomy' }],
       [tokens.VisualizerStateController, { id: 'state' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
+      [tokens.IEntityLoadingService, { id: 'entityLoading' }],
     ]);
 
     const container = {
@@ -209,13 +213,14 @@ describe('anatomy-visualizer.js initialization coverage', () => {
 
     await flushTasks();
 
-    expect(container.resolve).toHaveBeenCalledTimes(4);
+    expect(container.resolve).toHaveBeenCalledTimes(5);
     expect(services.logger.warn).toHaveBeenCalledWith(
       'ClothingManagementService not available - equipment panel will be disabled'
     );
 
     const constructorArgs = AnatomyVisualizerUI.mock.calls[0][0];
     expect(constructorArgs.clothingManagementService).toBeNull();
+    expect(constructorArgs.entityLoadingService).toEqual({ id: 'entityLoading' });
   });
 
   it('waits for DOMContentLoaded when document is still loading', async () => {
@@ -349,6 +354,7 @@ describe('anatomy-visualizer.js initialization coverage', () => {
       [tokens.VisualizerStateController, { id: 'state-controller' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
       [tokens.ClothingManagementService, { id: 'clothing' }],
+      [tokens.IEntityLoadingService, { id: 'entityLoading' }],
     ]);
 
     const container = {

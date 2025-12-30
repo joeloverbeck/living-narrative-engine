@@ -1,12 +1,180 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import DamageTypeEffectsService from '../../../../src/anatomy/services/damageTypeEffectsService.js';
 
+/**
+ * Creates mock applicators for testing DamageTypeEffectsService.
+ * These mocks simulate the real applicator behavior to preserve existing test coverage.
+ * The mocks use the dispatchStrategy passed to them for proper session/immediate mode handling.
+ */
+function createMockApplicators(mockEntityManager) {
+  return {
+    effectDefinitionResolver: {
+      resolveEffectDefinition: jest.fn((effectType) => ({
+        id: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        effectType,
+        componentId: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        startedEventId: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding_started' : effectType === 'burn' ? 'burning_started' : 'poisoned_started'}`,
+        defaults: {
+          thresholdFraction: effectType === 'dismember' ? 0.8 : 0.5,
+        },
+      })),
+      resolveApplyOrder: jest.fn(() => [
+        'anatomy:dismembered',
+        'anatomy:fractured',
+        'anatomy:bleeding',
+        'anatomy:burning',
+        'anatomy:poisoned',
+      ]),
+    },
+    dismembermentApplicator: {
+      apply: jest.fn(async ({ damageEntryConfig, damageAmount, maxHealth, effectDefinition, dispatchStrategy, sessionContext, entityId, entityName, entityPronoun, partId, partType, orientation, damageTypeId }) => {
+        if (!damageEntryConfig?.enabled) {
+          return { triggered: false };
+        }
+        const threshold = damageEntryConfig.thresholdFraction ?? effectDefinition?.defaults?.thresholdFraction ?? 0.8;
+        if (damageAmount < threshold * maxHealth) {
+          return { triggered: false };
+        }
+        // Check for embedded component
+        if (mockEntityManager.hasComponent(partId, 'anatomy:embedded')) {
+          return { triggered: false };
+        }
+        await mockEntityManager.addComponent(partId, 'anatomy:dismembered', {
+          sourceDamageType: damageTypeId,
+        });
+        dispatchStrategy.dispatch('anatomy:dismembered', {
+          entityId,
+          entityName,
+          entityPronoun,
+          partId,
+          partType,
+          orientation,
+          damageTypeId,
+          timestamp: Date.now(),
+        }, sessionContext);
+        dispatchStrategy.recordEffect(partId, 'dismembered', sessionContext);
+        return { triggered: true };
+      }),
+    },
+    fractureApplicator: {
+      apply: jest.fn(async ({ damageEntryConfig, damageAmount, maxHealth, currentHealth, effectDefinition, dispatchStrategy, sessionContext, entityId, partId, damageTypeId, rng }) => {
+        if (!damageEntryConfig?.enabled) {
+          return { triggered: false, stunApplied: false };
+        }
+        const threshold = damageEntryConfig.thresholdFraction ?? effectDefinition?.defaults?.thresholdFraction ?? 0.5;
+        if (damageAmount < threshold * maxHealth) {
+          return { triggered: false, stunApplied: false };
+        }
+        await mockEntityManager.addComponent(partId, 'anatomy:fractured', {
+          sourceDamageType: damageTypeId,
+          appliedAtHealth: currentHealth,
+        });
+        // Check for stun
+        const stunChance = damageEntryConfig.stunChance ?? 0;
+        const stunApplied = stunChance > 0 && rng() < stunChance;
+        if (stunApplied) {
+          const stunDuration = damageEntryConfig.stunDuration ?? 1;
+          await mockEntityManager.addComponent(entityId, 'anatomy:stunned', {
+            remainingTurns: stunDuration,
+            sourcePartId: partId,
+          });
+        }
+        dispatchStrategy.dispatch('anatomy:fractured', {
+          entityId,
+          partId,
+          damageTypeId,
+          stunApplied,
+          timestamp: Date.now(),
+        }, sessionContext);
+        dispatchStrategy.recordEffect(partId, 'fractured', sessionContext);
+        return { triggered: true, stunApplied };
+      }),
+    },
+    bleedApplicator: {
+      apply: jest.fn(async ({ damageEntryConfig, dispatchStrategy, sessionContext, entityId, partId }) => {
+        const severity = damageEntryConfig?.severity ?? 'minor';
+        const baseDuration = damageEntryConfig?.baseDurationTurns ?? 2;
+        const severityMap = { minor: { tickDamage: 1 }, moderate: { tickDamage: 3 }, severe: { tickDamage: 5 } };
+        const tickDamage = severityMap[severity]?.tickDamage ?? 1;
+        await mockEntityManager.addComponent(partId, 'anatomy:bleeding', {
+          severity,
+          remainingTurns: baseDuration,
+          tickDamage,
+        });
+        dispatchStrategy.dispatch('anatomy:bleeding_started', {
+          entityId,
+          partId,
+          severity,
+          timestamp: Date.now(),
+        }, sessionContext);
+        dispatchStrategy.recordEffect(partId, 'bleeding', sessionContext);
+        return { applied: true };
+      }),
+    },
+    burnApplicator: {
+      apply: jest.fn(async ({ damageEntryConfig, dispatchStrategy, sessionContext, entityId, partId }) => {
+        const dps = damageEntryConfig?.dps ?? 1;
+        const durationTurns = damageEntryConfig?.durationTurns ?? 2;
+        const canStack = damageEntryConfig?.canStack ?? false;
+        const existingBurn = mockEntityManager.hasComponent(partId, 'anatomy:burning')
+          ? mockEntityManager.getComponentData(partId, 'anatomy:burning')
+          : null;
+        let stackedCount = 1;
+        let tickDamage = dps;
+        let stacked = false;
+        if (existingBurn && canStack) {
+          tickDamage = existingBurn.tickDamage + dps;
+          stackedCount = (existingBurn.stackedCount ?? 1) + 1;
+          stacked = true;
+        } else if (existingBurn) {
+          tickDamage = existingBurn.tickDamage;
+          stackedCount = existingBurn.stackedCount ?? 1;
+        }
+        await mockEntityManager.addComponent(partId, 'anatomy:burning', {
+          remainingTurns: durationTurns,
+          tickDamage,
+          stackedCount,
+        });
+        dispatchStrategy.dispatch('anatomy:burning_started', {
+          entityId,
+          partId,
+          stackedCount,
+          timestamp: Date.now(),
+        }, sessionContext);
+        dispatchStrategy.recordEffect(partId, 'burning', sessionContext);
+        return { applied: true, stacked, stackedCount };
+      }),
+    },
+    poisonApplicator: {
+      apply: jest.fn(async ({ damageEntryConfig, dispatchStrategy, sessionContext, entityId, partId }) => {
+        const tickDamage = damageEntryConfig?.tick ?? 1;
+        const durationTurns = damageEntryConfig?.durationTurns ?? 3;
+        const scope = damageEntryConfig?.scope ?? 'part';
+        const targetId = scope === 'entity' ? entityId : partId;
+        await mockEntityManager.addComponent(targetId, 'anatomy:poisoned', {
+          remainingTurns: durationTurns,
+          tickDamage,
+        });
+        dispatchStrategy.dispatch('anatomy:poisoned_started', {
+          entityId,
+          partId: scope === 'part' ? partId : undefined,
+          scope,
+          timestamp: Date.now(),
+        }, sessionContext);
+        dispatchStrategy.recordEffect(partId, 'poisoned', sessionContext);
+        return { applied: true, scope, targetId };
+      }),
+    },
+  };
+}
+
 describe('DamageTypeEffectsService', () => {
   let service;
   let mockLogger;
   let mockEntityManager;
   let mockDispatcher;
   let mockRngProvider;
+  let mockApplicators;
 
   beforeEach(() => {
     mockLogger = {
@@ -28,11 +196,19 @@ describe('DamageTypeEffectsService', () => {
 
     mockRngProvider = jest.fn().mockReturnValue(0.5);
 
+    mockApplicators = createMockApplicators(mockEntityManager, mockDispatcher);
+
     service = new DamageTypeEffectsService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       safeEventDispatcher: mockDispatcher,
       rngProvider: mockRngProvider,
+      effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+      dismembermentApplicator: mockApplicators.dismembermentApplicator,
+      fractureApplicator: mockApplicators.fractureApplicator,
+      bleedApplicator: mockApplicators.bleedApplicator,
+      burnApplicator: mockApplicators.burnApplicator,
+      poisonApplicator: mockApplicators.poisonApplicator,
     });
   });
 
@@ -47,6 +223,12 @@ describe('DamageTypeEffectsService', () => {
           new DamageTypeEffectsService({
             entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
+            effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+            dismembermentApplicator: mockApplicators.dismembermentApplicator,
+            fractureApplicator: mockApplicators.fractureApplicator,
+            bleedApplicator: mockApplicators.bleedApplicator,
+            burnApplicator: mockApplicators.burnApplicator,
+            poisonApplicator: mockApplicators.poisonApplicator,
           })
       ).toThrow();
     });
@@ -57,6 +239,12 @@ describe('DamageTypeEffectsService', () => {
           new DamageTypeEffectsService({
             logger: mockLogger,
             safeEventDispatcher: mockDispatcher,
+            effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+            dismembermentApplicator: mockApplicators.dismembermentApplicator,
+            fractureApplicator: mockApplicators.fractureApplicator,
+            bleedApplicator: mockApplicators.bleedApplicator,
+            burnApplicator: mockApplicators.burnApplicator,
+            poisonApplicator: mockApplicators.poisonApplicator,
           })
       ).toThrow();
     });
@@ -67,6 +255,12 @@ describe('DamageTypeEffectsService', () => {
           new DamageTypeEffectsService({
             logger: mockLogger,
             entityManager: mockEntityManager,
+            effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+            dismembermentApplicator: mockApplicators.dismembermentApplicator,
+            fractureApplicator: mockApplicators.fractureApplicator,
+            bleedApplicator: mockApplicators.bleedApplicator,
+            burnApplicator: mockApplicators.burnApplicator,
+            poisonApplicator: mockApplicators.poisonApplicator,
           })
       ).toThrow();
     });
@@ -79,6 +273,12 @@ describe('DamageTypeEffectsService', () => {
             logger: mockLogger,
             entityManager: invalidEntityManager,
             safeEventDispatcher: mockDispatcher,
+            effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+            dismembermentApplicator: mockApplicators.dismembermentApplicator,
+            fractureApplicator: mockApplicators.fractureApplicator,
+            bleedApplicator: mockApplicators.bleedApplicator,
+            burnApplicator: mockApplicators.burnApplicator,
+            poisonApplicator: mockApplicators.poisonApplicator,
           })
       ).toThrow();
     });
@@ -88,6 +288,12 @@ describe('DamageTypeEffectsService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         safeEventDispatcher: mockDispatcher,
+        effectDefinitionResolver: mockApplicators.effectDefinitionResolver,
+        dismembermentApplicator: mockApplicators.dismembermentApplicator,
+        fractureApplicator: mockApplicators.fractureApplicator,
+        bleedApplicator: mockApplicators.bleedApplicator,
+        burnApplicator: mockApplicators.burnApplicator,
+        poisonApplicator: mockApplicators.poisonApplicator,
       });
       expect(serviceWithDefaultRng).toBeDefined();
     });
@@ -795,172 +1001,6 @@ describe('DamageTypeEffectsService', () => {
         ]);
       });
 
-      it('should honor registry-defined apply order when provided', async () => {
-        mockDispatcher.dispatch.mockClear();
-        const statusEffectRegistry = {
-          getAll: jest.fn().mockReturnValue([
-            {
-              id: 'dismembered',
-              effectType: 'dismember',
-              componentId: 'anatomy:dismembered',
-              startedEventId: 'anatomy:dismembered',
-              defaults: { thresholdFraction: 0.8 },
-            },
-            {
-              id: 'fractured',
-              effectType: 'fracture',
-              componentId: 'anatomy:fractured',
-              startedEventId: 'anatomy:fractured',
-              defaults: { thresholdFraction: 0.5 },
-            },
-            {
-              id: 'poisoned',
-              effectType: 'poison',
-              componentId: 'anatomy:poisoned',
-              startedEventId: 'anatomy:poisoned_started',
-              defaults: { durationTurns: 3, tickDamage: 1, scope: 'part' },
-            },
-            {
-              id: 'burning',
-              effectType: 'burn',
-              componentId: 'anatomy:burning',
-              startedEventId: 'anatomy:burning_started',
-              defaults: {
-                durationTurns: 2,
-                tickDamage: 1,
-                stacking: { canStack: false, defaultStacks: 1 },
-              },
-            },
-            {
-              id: 'bleeding',
-              effectType: 'bleed',
-              componentId: 'anatomy:bleeding',
-              startedEventId: 'anatomy:bleeding_started',
-              defaults: {
-                baseDurationTurns: 2,
-                severity: { minor: { tickDamage: 1 } },
-              },
-            },
-          ]),
-          getApplyOrder: jest
-            .fn()
-            .mockReturnValue(['poisoned', 'burning', 'bleeding']),
-        };
-
-        const orderedService = new DamageTypeEffectsService({
-          logger: mockLogger,
-          entityManager: mockEntityManager,
-          safeEventDispatcher: mockDispatcher,
-          statusEffectRegistry,
-          rngProvider: mockRngProvider,
-        });
-
-        const callOrder = [];
-        mockDispatcher.dispatch.mockImplementation((event) => {
-          callOrder.push(event);
-        });
-
-        await orderedService.applyEffectsForDamage({
-          ...baseParams,
-          damageEntry: {
-            name: 'mixed',
-            amount: 30,
-            bleed: { enabled: true },
-            burn: { enabled: true },
-            poison: { enabled: true },
-          },
-        });
-
-        expect(callOrder).toEqual([
-          'anatomy:poisoned_started',
-          'anatomy:burning_started',
-          'anatomy:bleeding_started',
-        ]);
-      });
-    });
-
-    it('should use registry defaults for component IDs and durations', async () => {
-      mockEntityManager.addComponent.mockClear();
-      mockDispatcher.dispatch.mockClear();
-
-      const statusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          {
-            id: 'dismembered',
-            effectType: 'dismember',
-            componentId: 'anatomy:dismembered',
-            startedEventId: 'anatomy:dismembered',
-            defaults: { thresholdFraction: 0.8 },
-          },
-          {
-            id: 'fractured',
-            effectType: 'fracture',
-            componentId: 'anatomy:fractured',
-            startedEventId: 'anatomy:fractured',
-            defaults: { thresholdFraction: 0.5 },
-          },
-          {
-            id: 'bleeding',
-            effectType: 'bleed',
-            componentId: 'anatomy:bleeding',
-            startedEventId: 'anatomy:bleeding_started',
-            defaults: { baseDurationTurns: 2, severity: { minor: { tickDamage: 1 } } },
-          },
-          {
-            id: 'burning',
-            effectType: 'burn',
-            componentId: 'custom:burning',
-            startedEventId: 'custom:burning_started',
-            defaults: {
-              tickDamage: 7,
-              durationTurns: 5,
-              stacking: { canStack: false, defaultStacks: 2 },
-            },
-          },
-          {
-            id: 'poisoned',
-            effectType: 'poison',
-            componentId: 'anatomy:poisoned',
-            startedEventId: 'anatomy:poisoned_started',
-            defaults: { durationTurns: 3, tickDamage: 1, scope: 'part' },
-          },
-        ]),
-        getApplyOrder: jest.fn().mockReturnValue(['burning']),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        statusEffectRegistry,
-        rngProvider: mockRngProvider,
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        ...baseParams,
-        damageEntry: {
-          name: 'fire',
-          amount: 30,
-          burn: { enabled: true },
-        },
-      });
-
-      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-        'part:arm',
-        'custom:burning',
-        expect.objectContaining({
-          remainingTurns: 5,
-          tickDamage: 7,
-          stackedCount: 2,
-        })
-      );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'custom:burning_started',
-        expect.objectContaining({
-          entityId: 'entity:player',
-          partId: 'part:arm',
-        })
-      );
     });
 
     describe('damageSession integration', () => {
@@ -1153,48 +1193,181 @@ describe('DamageTypeEffectsService', () => {
           'anatomy:dismembered'
         );
       });
-    });
 
-    describe('registry signaling', () => {
-      it('warns and falls back when registry is empty', async () => {
-        const emptyRegistry = {
-          getAll: jest.fn().mockReturnValue([]),
-          getApplyOrder: jest.fn().mockReturnValue([]),
+      it('should initialize effectsTriggered array when not present (fracture)', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:arm' }], // No effectsTriggered array
+          pendingEvents: [],
         };
-        mockLogger.warn.mockClear();
-        mockDispatcher.dispatch.mockClear();
-        mockEntityManager.addComponent.mockClear();
 
-        const serviceWithEmptyRegistry = new DamageTypeEffectsService({
-          logger: mockLogger,
-          entityManager: mockEntityManager,
-          safeEventDispatcher: mockDispatcher,
-          statusEffectRegistry: emptyRegistry,
-          rngProvider: mockRngProvider,
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5 },
+          },
+          damageSession,
         });
 
-        await serviceWithEmptyRegistry.applyEffectsForDamage({
+        // Should create effectsTriggered and add 'fractured'
+        expect(damageSession.entries[0].effectsTriggered).toEqual(['fractured']);
+        expect(damageSession.pendingEvents).toHaveLength(1);
+      });
+
+      it('should handle session with entry not found gracefully for fracture', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:other', effectsTriggered: [] }],
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5 },
+          },
+          damageSession,
+        });
+
+        // Should still queue the event even though entry not found
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe('anatomy:fractured');
+        // Entry for 'part:other' should remain unchanged
+        expect(damageSession.entries[0].effectsTriggered).toEqual([]);
+      });
+
+      it('should initialize effectsTriggered array when not present (bleed)', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:arm' }], // No effectsTriggered array
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'minor' },
+          },
+          damageSession,
+        });
+
+        // Should create effectsTriggered and add 'bleeding'
+        expect(damageSession.entries[0].effectsTriggered).toEqual(['bleeding']);
+        expect(damageSession.pendingEvents).toHaveLength(1);
+      });
+
+      it('should handle session with entry not found gracefully for bleed', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:other', effectsTriggered: [] }],
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'minor' },
+          },
+          damageSession,
+        });
+
+        // Should still queue the event even though entry not found
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe('anatomy:bleeding_started');
+        // Entry for 'part:other' should remain unchanged
+        expect(damageSession.entries[0].effectsTriggered).toEqual([]);
+      });
+
+      it('should initialize effectsTriggered array when not present (burn)', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:arm' }], // No effectsTriggered array
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
           ...baseParams,
           damageEntry: {
             name: 'fire',
             amount: 30,
-            bleed: { enabled: true },
+            burn: { enabled: true, dps: 5, durationTurns: 4 },
           },
+          damageSession,
         });
 
-        expect(mockLogger.warn).toHaveBeenCalledTimes(5);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'DamageTypeEffectsService: Missing status-effect registry entry for dismember'
-          )
-        );
-        expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-          'anatomy:bleeding_started',
-          expect.objectContaining({
-            entityId: 'entity:player',
-            partId: 'part:arm',
-          })
-        );
+        // Should create effectsTriggered and add 'burning'
+        expect(damageSession.entries[0].effectsTriggered).toEqual(['burning']);
+        expect(damageSession.pendingEvents).toHaveLength(1);
+      });
+
+      it('should handle session with entry not found gracefully for burn', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:other', effectsTriggered: [] }],
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 5, durationTurns: 4 },
+          },
+          damageSession,
+        });
+
+        // Should still queue the event even though entry not found
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe('anatomy:burning_started');
+        // Entry for 'part:other' should remain unchanged
+        expect(damageSession.entries[0].effectsTriggered).toEqual([]);
+      });
+
+      it('should initialize effectsTriggered array when not present (poison)', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:arm' }], // No effectsTriggered array
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true, tick: 2, durationTurns: 5 },
+          },
+          damageSession,
+        });
+
+        // Should create effectsTriggered and add 'poisoned'
+        expect(damageSession.entries[0].effectsTriggered).toEqual(['poisoned']);
+        expect(damageSession.pendingEvents).toHaveLength(1);
+      });
+
+      it('should handle session with entry not found gracefully for poison', async () => {
+        const damageSession = {
+          entries: [{ partId: 'part:other', effectsTriggered: [] }],
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true, tick: 2, durationTurns: 5 },
+          },
+          damageSession,
+        });
+
+        // Should still queue the event even though entry not found
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe('anatomy:poisoned_started');
+        // Entry for 'part:other' should remain unchanged
+        expect(damageSession.entries[0].effectsTriggered).toEqual([]);
       });
     });
 
@@ -1304,285 +1477,68 @@ describe('DamageTypeEffectsService', () => {
           expect.anything()
         );
       });
+
+      it('should handle existing burn without stackedCount when stacking', async () => {
+        // Existing burn component WITHOUT stackedCount property
+        mockEntityManager.hasComponent.mockReturnValue(true);
+        mockEntityManager.getComponentData.mockReturnValue({
+          tickDamage: 5,
+          remainingTurns: 2,
+          // NO stackedCount property - should fallback to baseStackCount
+        });
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 3, durationTurns: 4, canStack: true },
+          },
+        });
+
+        // Should use baseStackCount (1) as fallback: (1) + 1 = 2
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:burning',
+          expect.objectContaining({
+            tickDamage: 8, // 5 + 3
+            stackedCount: 2, // (baseStackCount=1) + 1
+          })
+        );
+      });
+
+      it('should handle existing burn without stackedCount when not stacking', async () => {
+        // Existing burn component WITHOUT stackedCount property
+        mockEntityManager.hasComponent.mockReturnValue(true);
+        mockEntityManager.getComponentData.mockReturnValue({
+          tickDamage: 5,
+          remainingTurns: 2,
+          // NO stackedCount property - should fallback to baseStackCount
+        });
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 3, durationTurns: 4, canStack: false },
+          },
+        });
+
+        // Should use baseStackCount (1) as fallback, keep existing damage
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'part:arm',
+          'anatomy:burning',
+          expect.objectContaining({
+            tickDamage: 5, // Keeps existing damage
+            stackedCount: 1, // baseStackCount fallback
+          })
+        );
+      });
     });
   });
 
-  describe('multi-mod registry applyOrder handling', () => {
-    it('should NOT warn for valid non-damage effect IDs from other mods', async () => {
-      // Setup: Simulate a multi-mod scenario where breathing mod effects are in applyOrder
-      // These effects (hypoxic, unconscious_anoxia) exist in registry but are not damage effects
-      const mockStatusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
-          { id: 'burning', effectType: 'burn', componentId: 'anatomy:burning' },
-        ]),
-        // applyOrder includes breathing mod effects that aren't damage effects
-        getApplyOrder: jest.fn().mockReturnValue([
-          'bleeding',
-          'burning',
-          'hypoxic', // from breathing mod - valid but not a damage effect
-          'unconscious_anoxia', // from breathing mod - valid but not a damage effect
-        ]),
-        // These effects exist in the registry, just not in damage definitions
-        get: jest.fn().mockImplementation((id) => {
-          const effects = {
-            bleeding: { id: 'bleeding', effectType: 'bleed' },
-            burning: { id: 'burning', effectType: 'burn' },
-            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
-            unconscious_anoxia: {
-              id: 'unconscious_anoxia',
-              effectType: 'anoxic_unconsciousness',
-            },
-          };
-          return effects[id];
-        }),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        rngProvider: mockRngProvider,
-        statusEffectRegistry: mockStatusEffectRegistry,
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      // Should NOT warn for hypoxic or unconscious_anoxia since they exist in registry
-      const hypoxicWarnings = mockLogger.warn.mock.calls.filter((call) =>
-        call[0].includes('hypoxic')
-      );
-      const anoxiaWarnings = mockLogger.warn.mock.calls.filter((call) =>
-        call[0].includes('unconscious_anoxia')
-      );
-
-      expect(hypoxicWarnings).toHaveLength(0);
-      expect(anoxiaWarnings).toHaveLength(0);
-    });
-
-    it('should STILL warn for truly unknown effect IDs not in registry', async () => {
-      // Setup: applyOrder has an ID that doesn't exist anywhere in registry
-      const mockStatusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
-        ]),
-        getApplyOrder: jest.fn().mockReturnValue([
-          'bleeding',
-          'completely_fake_effect', // doesn't exist anywhere
-          'hypoxic', // exists in registry (from breathing mod)
-        ]),
-        get: jest.fn().mockImplementation((id) => {
-          const effects = {
-            bleeding: { id: 'bleeding', effectType: 'bleed' },
-            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
-          };
-          return effects[id];
-        }),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        rngProvider: mockRngProvider,
-        statusEffectRegistry: mockStatusEffectRegistry,
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      // Should warn for completely_fake_effect since it doesn't exist in registry
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Unknown status-effect id in registry applyOrder: completely_fake_effect'
-        )
-      );
-
-      // Should NOT warn for hypoxic since it exists in registry
-      const hypoxicWarnings = mockLogger.warn.mock.calls.filter((call) =>
-        call[0].includes('hypoxic')
-      );
-      expect(hypoxicWarnings).toHaveLength(0);
-    });
-
-    it('should silently skip non-damage effects in applyOrder without processing them', async () => {
-      // Setup: applyOrder has non-damage effects that should be skipped
-      const mockStatusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
-        ]),
-        getApplyOrder: jest.fn().mockReturnValue([
-          'hypoxic', // non-damage effect - should be skipped silently
-          'bleeding', // damage effect - should be processed
-          'unconscious_anoxia', // non-damage effect - should be skipped silently
-        ]),
-        get: jest.fn().mockImplementation((id) => {
-          const effects = {
-            bleeding: { id: 'bleeding', effectType: 'bleed' },
-            hypoxic: { id: 'hypoxic', effectType: 'hypoxia' },
-            unconscious_anoxia: {
-              id: 'unconscious_anoxia',
-              effectType: 'anoxic_unconsciousness',
-            },
-          };
-          return effects[id];
-        }),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        rngProvider: mockRngProvider,
-        statusEffectRegistry: mockStatusEffectRegistry,
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      // Only bleeding should be processed (added as component)
-      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-        'part:arm',
-        'anatomy:bleeding',
-        expect.anything()
-      );
-
-      // Non-damage effects should not be processed
-      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
-        expect.anything(),
-        'breathing:hypoxic',
-        expect.anything()
-      );
-      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
-        expect.anything(),
-        'breathing:unconscious_anoxia',
-        expect.anything()
-      );
-
-      // No warnings should be logged for hypoxic or unconscious_anoxia
-      const allWarnings = mockLogger.warn.mock.calls.map((call) => call[0]);
-      const nonDamageWarnings = allWarnings.filter(
-        (msg) => msg.includes('hypoxic') || msg.includes('unconscious_anoxia')
-      );
-      expect(nonDamageWarnings).toHaveLength(0);
-    });
-  });
-
-  describe('edge cases and warning suppression', () => {
-    it('should suppress duplicate warnings for same key', async () => {
-      // Setup: Create service with statusEffectRegistry that has unknown IDs in applyOrder
-      const mockStatusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
-        ]),
-        getApplyOrder: jest.fn().mockReturnValue(['unknown_id_1', 'bleed']),
-        // unknown_id_1 is NOT in the registry - should warn
-        get: jest.fn().mockImplementation((id) => {
-          if (id === 'bleeding') {
-            return { id: 'bleeding', effectType: 'bleed' };
-          }
-          return undefined;
-        }),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        rngProvider: mockRngProvider,
-        statusEffectRegistry: mockStatusEffectRegistry,
-      });
-
-      // Call twice with same unknown ID - warning should only appear once
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      // Warning for unknown_id_1 should only be called once (duplicate suppression)
-      const unknownIdWarnings = mockLogger.warn.mock.calls.filter((call) =>
-        call[0].includes('unknown_id_1')
-      );
-      expect(unknownIdWarnings).toHaveLength(1);
-    });
-
-    it('should warn for unknown status-effect ids in registry applyOrder', async () => {
-      const mockStatusEffectRegistry = {
-        getAll: jest.fn().mockReturnValue([
-          { id: 'bleeding', effectType: 'bleed', componentId: 'anatomy:bleeding' },
-        ]),
-        getApplyOrder: jest
-          .fn()
-          .mockReturnValue(['unknown_effect_id', 'bleed']),
-        // unknown_effect_id is NOT in the registry - should warn
-        get: jest.fn().mockImplementation((id) => {
-          if (id === 'bleeding') {
-            return { id: 'bleeding', effectType: 'bleed' };
-          }
-          return undefined;
-        }),
-      };
-
-      const serviceWithRegistry = new DamageTypeEffectsService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockDispatcher,
-        rngProvider: mockRngProvider,
-        statusEffectRegistry: mockStatusEffectRegistry,
-      });
-
-      await serviceWithRegistry.applyEffectsForDamage({
-        entityId: 'entity:test',
-        partId: 'part:arm',
-        partName: 'Arm',
-        damageEntry: {
-          name: 'SLASH',
-          bleed: { enabled: true },
-        },
-      });
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown status-effect id in registry applyOrder: unknown_effect_id')
-      );
-    });
-
+  describe('execution context tracing', () => {
     it('should add trace entries when executionContext has trace array', async () => {
       const executionContext = {
         trace: [],

@@ -10,7 +10,7 @@ import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
 import slapTargetAction from '../../../../data/mods/striking/actions/slap_target.action.json';
-import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch.action.json';
+import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch_target.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for striking actions
@@ -20,8 +20,8 @@ describe('striking actions forbidden when giving blowjob', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Using sucker_punch fixture since slap_target requires macros not loaded in tests
-    testFixture = await ModTestFixture.forAction('striking', 'striking:sucker_punch');
+    // Using sucker_punch_target fixture since slap_target requires macros not loaded in tests
+    testFixture = await ModTestFixture.forAction('striking', 'striking:sucker_punch_target');
   });
 
   afterEach(() => {
@@ -37,7 +37,7 @@ describe('striking actions forbidden when giving blowjob', () => {
       );
     });
 
-    it('sucker_punch should have sex-states:giving_blowjob as forbidden component', () => {
+    it('sucker_punch_target should have sex-states:giving_blowjob as forbidden component', () => {
       expect(suckerPunchAction.forbidden_components.actor).toContain(
         'sex-states:giving_blowjob'
       );
@@ -142,7 +142,7 @@ describe('striking actions forbidden when giving blowjob', () => {
       expect(ids).not.toContain('striking:slap_target');
     });
 
-    it('sucker_punch is NOT available when actor is giving blowjob', () => {
+    it('sucker_punch_target is NOT available when actor is giving blowjob', () => {
       const scenario = testFixture.createCloseActors(['Grace', 'Henry']);
 
       // Add giving_blowjob component to actor
@@ -161,7 +161,7 @@ describe('striking actions forbidden when giving blowjob', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('striking:sucker_punch');
+      expect(ids).not.toContain('striking:sucker_punch_target');
     });
   });
 });
