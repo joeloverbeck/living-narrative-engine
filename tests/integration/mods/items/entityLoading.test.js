@@ -3,7 +3,7 @@ import { createTestBed } from '../../../common/testBed.js';
 import path from 'path';
 import fs from 'fs';
 
-describe('Reading/Items - Entity Loading', () => {
+describe('Reading - Entity Loading', () => {
   let testBed;
 
   beforeEach(() => {
@@ -35,19 +35,6 @@ describe('Reading/Items - Entity Loading', () => {
     expect(weight.weight).toBe(0.05);
   });
 
-  it('should load gold bar as heavy item', () => {
-    const entityPath = path.resolve(
-      process.cwd(),
-      'data/mods/items/entities/definitions/gold_bar.entity.json'
-    );
-    const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
-
-    expect(entityDef.id).toBe('items:gold_bar');
-    const weight = entityDef.components['core:weight'];
-    expect(weight.weight).toBe(12.4);
-    expect(weight.weight).toBeGreaterThan(10); // Heavy item threshold
-  });
-
   it('should validate reading entities are listed in manifest', () => {
     const manifestPath = path.resolve(
       process.cwd(),
@@ -65,28 +52,6 @@ describe('Reading/Items - Entity Loading', () => {
       const entityPath = path.resolve(
         process.cwd(),
         `data/mods/reading/entities/definitions/${filename}`
-      );
-      expect(fs.existsSync(entityPath)).toBe(true);
-    });
-  });
-
-  it('should validate items entities are listed in manifest', () => {
-    const manifestPath = path.resolve(
-      process.cwd(),
-      'data/mods/items/mod-manifest.json'
-    );
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-
-    const entityFiles = ['gold_bar.entity.json'];
-
-    entityFiles.forEach((filename) => {
-      expect(manifest.content.entities.definitions).toContain(filename);
-    });
-
-    entityFiles.forEach((filename) => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        `data/mods/items/entities/definitions/${filename}`
       );
       expect(fs.existsSync(entityPath)).toBe(true);
     });

@@ -611,12 +611,12 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         .build();
       expect(exerciseEntity).toBeDefined();
 
-      // Violence category
-      const violenceEntity = new ModEntityBuilder('violence-entity')
-        .withName('Violence Entity')
-        .withComponent('combat:stats', { health: 100 })
+      // Striking category
+      const strikingEntity = new ModEntityBuilder('striking-entity')
+        .withName('Striking Entity')
+        .withComponent('skills:melee_skill', { value: 10 })
         .build();
-      expect(violenceEntity).toBeDefined();
+      expect(strikingEntity).toBeDefined();
 
       // Intimacy category
       const intimacyEntity = new ModEntityBuilder('intimacy-entity')

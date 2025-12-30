@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "valuables",
+  "version": "1.0.0",
+  "name": "Valuables",
+  "description": "Valuable items like gold bars and precious metals.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "items-core",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "entities": {
+      "definitions": ["gold_bar.entity.json"]
+    }
+  }
+}

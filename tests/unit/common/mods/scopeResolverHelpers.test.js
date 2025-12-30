@@ -463,7 +463,7 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
     expect(mockTestEnv._registeredResolvers).toBeDefined();
     expect(mockTestEnv._registeredResolvers.size).toBeGreaterThan(0);
     expect(
-      mockTestEnv._registeredResolvers.has('items:actor_inventory_items')
+      mockTestEnv._registeredResolvers.has('inventory:actor_inventory_items')
     ).toBe(true);
     expect(
       mockTestEnv._registeredResolvers.has('items-core:portable_items_at_location')

@@ -11,6 +11,9 @@ import { ModTestHandlerFactory } from '../../common/mods/ModTestHandlerFactory.j
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import PerceptionFilterService from '../../../src/perception/services/perceptionFilterService.js';
 import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../../src/perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../src/perception/services/sensorialPropagationService.js';
 import logPerceptibleEventsRule from '../../../data/mods/core/rules/log_perceptible_events.rule.json' assert { type: 'json' };
 
 /**
@@ -126,6 +129,12 @@ function createHandlerFactoryWithPerceptionFilter({ sensoryOverrides = {}, light
       dispatcher: safeDispatcher,
     });
 
+    // Create recipientSetBuilder for SensorialPropagationService
+    const recipientSetBuilder = new RecipientSetBuilder({
+      entityManager,
+      logger,
+    });
+
     // Replace ADD_PERCEPTION_LOG_ENTRY handler with one that has perceptionFilterService
     return {
       ...baseHandlers,
@@ -135,6 +144,12 @@ function createHandlerFactoryWithPerceptionFilter({ sensoryOverrides = {}, light
         safeEventDispatcher: safeDispatcher,
         perceptionFilterService,
         routingPolicyService,
+        perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager,
+          recipientSetBuilder,
+          logger,
+        }),
       }),
     };
   };

@@ -176,7 +176,10 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
           'positioning',
           'intimacy',
           'sex',
-          'violence',
+          'striking',
+          'grabbing',
+          'lethal-violence',
+          'creature-attacks',
           'exercise',
         ];
 
@@ -888,8 +891,8 @@ describe('ModTestFixture - Comprehensive Unit Tests', () => {
         createActorTargetPairSpy.mockRestore();
       });
 
-      it('should create violence scenario without close proximity', () => {
-        const fixture = new ModCategoryTestFixture('violence');
+      it('should create striking scenario without close proximity', () => {
+        const fixture = new ModCategoryTestFixture('striking');
         const mockScenario = { actor: {}, target: {} };
 
         const createActorTargetPairSpy = jest

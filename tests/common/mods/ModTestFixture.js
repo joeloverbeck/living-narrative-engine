@@ -340,13 +340,13 @@ export class ModTestFixture {
    * @throws {Error} If schema validation fails (unless skipValidation is true)
    * @example
    * // Manual scope registration (backward compatible)
-   * const fixture = await ModTestFixture.forAction('violence', 'violence:grab_neck');
+   * const fixture = await ModTestFixture.forAction('grabbing', 'grabbing:grab_neck');
    * ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
    * @example
    * // Auto-register positioning scopes (auto-loading rule/condition files)
    * const fixture = await ModTestFixture.forAction(
-   *   'violence',
-   *   'violence:grab_neck',
+   *   'grabbing',
+   *   'grabbing:grab_neck',
    *   null,
    *   null,
    *   { autoRegisterScopes: true }
@@ -930,6 +930,7 @@ export class ModTestFixture {
 
         case 'inventory':
         case 'items':
+        case 'items-core':
           ScopeResolverHelpers.registerInventoryScopes(testEnv);
           break;
 
@@ -943,7 +944,7 @@ export class ModTestFixture {
 
         default:
           console.warn(
-            `Unknown scope category "${category}". Valid categories: positioning, inventory, anatomy, clothing`
+            `Unknown scope category "${category}". Valid categories: positioning, inventory, items-core, anatomy, clothing`
           );
       }
     }
@@ -1920,10 +1921,10 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'facing-states:actors_im_facing_away_from',
       ],
       inventory: [
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         'items-core:items_at_location',
         'items-core:portable_items_at_location',
-        'items:actors_at_location',
+        'core:actors_in_location',
         'containers-core:containers_at_location',
       ],
       anatomy: ['anatomy:actors_at_location', 'anatomy:target_body_parts'],
@@ -3092,7 +3093,10 @@ export class ModCategoryTestFixture extends BaseModTestFixture {
           closeProximity: true,
           ...options,
         });
-      case 'violence':
+      case 'striking':
+      case 'grabbing':
+      case 'lethal-violence':
+      case 'creature-attacks':
       case 'exercise':
         return ModEntityScenarios.createActorTargetPair(options);
       default:

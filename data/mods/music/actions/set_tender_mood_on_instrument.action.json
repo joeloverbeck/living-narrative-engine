@@ -5,7 +5,7 @@
   "description": "Play an instrument with a tender emotional tone, or transition an ongoing performance to a tender mood.",
   "targets": {
     "primary": {
-      "scope": "items:examinable_items",
+      "scope": "items-core:examinable_items",
       "placeholder": "instrument",
       "description": "Instrument to play with tender mood"
     }

@@ -230,4 +230,67 @@ describe('AutoMoveFollowersHandler.execute', () => {
       logger
     );
   });
+
+  test('returns early when params is null', async () => {
+    await handler.execute(null, { logger });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('params missing or invalid'),
+      expect.any(Object)
+    );
+    expect(moveHandler.execute).not.toHaveBeenCalled();
+  });
+
+  test('moves follower without position component when no previousLocationId constraint', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return null; // No position component
+      return null;
+    });
+
+    const ctx = { logger }; // No previousLocationId
+
+    await handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+
+    expect(moveHandler.execute).toHaveBeenCalled();
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({
+        contextualData: expect.objectContaining({ originLocationId: null }),
+      })
+    );
+  });
+
+  test('handles leader with no leading component gracefully', async () => {
+    entityManager.getComponentData.mockReturnValue(null);
+
+    await handler.execute(
+      { leader_id: 'leader', destination_id: 'dest' },
+      { logger }
+    );
+
+    expect(moveHandler.execute).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('moved 0 follower')
+    );
+  });
+
+  test('handles leading component with non-array followers', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: 'not-an-array' };
+      return null;
+    });
+
+    await handler.execute(
+      { leader_id: 'leader', destination_id: 'dest' },
+      { logger }
+    );
+
+    expect(moveHandler.execute).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('moved 0 follower')
+    );
+  });
 });

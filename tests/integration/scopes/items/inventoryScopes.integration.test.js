@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for items inventory scopes
+ * @file Integration tests for inventory scopes
  * @description Tests the actor_inventory_items and close_actors_with_inventory scopes
  */
 
@@ -12,7 +12,7 @@ import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
-describe('Items - Inventory Scopes Integration', () => {
+describe('Inventory - Inventory Scopes Integration', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
@@ -37,7 +37,7 @@ describe('Items - Inventory Scopes Integration', () => {
     // Register scopes with proper AST parsing
     const actorInventoryScope = readFileSync(
       new URL(
-        '../../../../data/mods/items/scopes/actor_inventory_items.scope',
+        '../../../../data/mods/inventory/scopes/actor_inventory_items.scope',
         import.meta.url
       ),
       'utf8'
@@ -45,17 +45,17 @@ describe('Items - Inventory Scopes Integration', () => {
 
     const closeActorsWithInventoryScope = readFileSync(
       new URL(
-        '../../../../data/mods/items/scopes/close_actors_with_inventory.scope',
+        '../../../../data/mods/inventory/scopes/close_actors_with_inventory.scope',
         import.meta.url
       ),
       'utf8'
     ).trim();
 
     const scopeDefinitions = {
-      'items:actor_inventory_items': actorInventoryScope,
+      'inventory:actor_inventory_items': actorInventoryScope,
       'personal-space:close_actors':
         'personal-space:close_actors := actor.components.personal-space-states:closeness.partners[]',
-      'items:close_actors_with_inventory': closeActorsWithInventoryScope,
+      'inventory:close_actors_with_inventory': closeActorsWithInventoryScope,
     };
 
     const parsedScopes = {};
@@ -143,7 +143,7 @@ describe('Items - Inventory Scopes Integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:actor_inventory_items');
+      const scopeDef = scopeRegistry.getScope('inventory:actor_inventory_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -190,7 +190,7 @@ describe('Items - Inventory Scopes Integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:actor_inventory_items');
+      const scopeDef = scopeRegistry.getScope('inventory:actor_inventory_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -223,7 +223,7 @@ describe('Items - Inventory Scopes Integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:actor_inventory_items');
+      const scopeDef = scopeRegistry.getScope('inventory:actor_inventory_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -249,7 +249,7 @@ describe('Items - Inventory Scopes Integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('items:actor_inventory_items');
+      const scopeDef = scopeRegistry.getScope('inventory:actor_inventory_items');
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 
@@ -307,7 +307,7 @@ describe('Items - Inventory Scopes Integration', () => {
       };
 
       const scopeDef = scopeRegistry.getScope(
-        'items:close_actors_with_inventory'
+        'inventory:close_actors_with_inventory'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
@@ -361,7 +361,7 @@ describe('Items - Inventory Scopes Integration', () => {
       };
 
       const scopeDef = scopeRegistry.getScope(
-        'items:close_actors_with_inventory'
+        'inventory:close_actors_with_inventory'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
@@ -394,7 +394,7 @@ describe('Items - Inventory Scopes Integration', () => {
       };
 
       const scopeDef = scopeRegistry.getScope(
-        'items:close_actors_with_inventory'
+        'inventory:close_actors_with_inventory'
       );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);

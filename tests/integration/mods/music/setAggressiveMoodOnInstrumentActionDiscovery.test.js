@@ -9,6 +9,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import setAggressiveMoodAction from '../../../../data/mods/music/actions/set_aggressive_mood_on_instrument.action.json' assert { type: 'json' };
 
 describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
@@ -19,6 +20,9 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
       'music',
       'music:set_aggressive_mood_on_instrument'
     );
+
+    // Register inventory scopes needed for examinable_items scope
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
   });
 
   afterEach(() => {
@@ -43,11 +47,11 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
       );
     });
 
-    it('should use items:examinable_items scope for primary targets', () => {
+    it('should use items-core:examinable_items scope for primary targets', () => {
       expect(setAggressiveMoodAction.targets).toBeDefined();
       expect(setAggressiveMoodAction.targets.primary).toBeDefined();
       expect(setAggressiveMoodAction.targets.primary.scope).toBe(
-        'items:examinable_items'
+        'items-core:examinable_items'
       );
       expect(setAggressiveMoodAction.targets.primary.placeholder).toBe(
         'instrument'
@@ -158,7 +162,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -228,7 +232,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -323,7 +327,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -395,7 +399,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -469,7 +473,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -563,7 +567,7 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 

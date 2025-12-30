@@ -133,8 +133,9 @@ describe('ResolveHitLocationHandler', () => {
       null: 0,
     };
 
-    // Run 1000 times to test distribution
-    for (let i = 0; i < 1000; i++) {
+    // Run 10000 times for statistically robust distribution testing
+    const iterations = 10000;
+    for (let i = 0; i < iterations; i++) {
       handler.execute(params, executionContext);
       const result =
         executionContext.evaluationContext.context.hit_location || 'null';
@@ -148,15 +149,17 @@ describe('ResolveHitLocationHandler', () => {
     expect(results.ghost).toBe(0);
     expect(results.null).toBe(0);
 
-    // Allow 5% variance (50 hits)
-    expect(results.torso).toBeGreaterThan(450);
-    expect(results.torso).toBeLessThan(550);
+    // With 10,000 samples and ±5% tolerance, this provides ~10σ confidence
+    // Standard deviation for binomial: σ = √(n × p × (1-p))
+    // For torso (p=0.5): σ ≈ 50, tolerance of ±500 = ~10σ
+    expect(results.torso).toBeGreaterThan(4500);
+    expect(results.torso).toBeLessThan(5500);
 
-    expect(results.head).toBeGreaterThan(50);
-    expect(results.head).toBeLessThan(150);
+    expect(results.head).toBeGreaterThan(500);
+    expect(results.head).toBeLessThan(1500);
 
-    expect(results.arms).toBeGreaterThan(350);
-    expect(results.arms).toBeLessThan(450);
+    expect(results.arms).toBeGreaterThan(3500);
+    expect(results.arms).toBeLessThan(4500);
   });
 
   it('should handle missing anatomy:part components gracefully', () => {

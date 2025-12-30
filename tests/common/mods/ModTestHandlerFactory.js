@@ -76,6 +76,8 @@ import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equip
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 import RecipientRoutingPolicyService from '../../../src/perception/services/recipientRoutingPolicyService.js';
 import RecipientSetBuilder from '../../../src/perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../src/perception/services/sensorialPropagationService.js';
 
 const ITEM_OPERATION_TYPES = new Set([
   'TRANSFER_ITEM',
@@ -1105,7 +1107,10 @@ export class ModTestHandlerFactory {
       items: this.createHandlersWithItemsSupport.bind(this),
       'item-handling': this.createHandlersWithItemsSupport.bind(this),
       exercise: this.createStandardHandlers.bind(this),
-      violence: this.createHandlersWithPerceptionLogging.bind(this),
+      striking: this.createHandlersWithPerceptionLogging.bind(this),
+      grabbing: this.createHandlersWithPerceptionLogging.bind(this),
+      'lethal-violence': this.createHandlersWithPerceptionLogging.bind(this),
+      'creature-attacks': this.createHandlersWithPerceptionLogging.bind(this),
       'physical-control': this.createHandlersWithPerceptionLogging.bind(this),
       sex: this.createHandlersWithComponentMutations.bind(this),
       intimacy: this.createStandardHandlers.bind(this),
@@ -1486,19 +1491,27 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         gameDataRepository,
       }),
-      ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-        routingPolicyService: new RecipientRoutingPolicyService({
-          dispatcher: safeDispatcher,
-          logger,
-        }),
-        recipientSetBuilder: new RecipientSetBuilder({
+      ADD_PERCEPTION_LOG_ENTRY: (() => {
+        const recipientSetBuilder = new RecipientSetBuilder({
           entityManager,
           logger,
-        }),
-      }),
+        });
+        return new AddPerceptionLogEntryHandler({
+          entityManager,
+          logger,
+          safeEventDispatcher: safeDispatcher,
+          routingPolicyService: new RecipientRoutingPolicyService({
+            dispatcher: safeDispatcher,
+            logger,
+          }),
+          perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+          sensorialPropagationService: new SensorialPropagationService({
+            entityManager,
+            recipientSetBuilder,
+            logger,
+          }),
+        });
+      })(),
       REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,
         logger,

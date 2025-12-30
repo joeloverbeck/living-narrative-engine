@@ -9,6 +9,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 
 // Import all music mood actions
 import setAggressiveMoodAction from '../../../../data/mods/music/actions/set_aggressive_mood_on_instrument.action.json' assert { type: 'json' };
@@ -86,6 +87,9 @@ describe('Music mood actions discovery', () => {
       'music:set_cheerful_mood_on_instrument'
     );
 
+    // Register inventory scopes needed for examinable_items scope
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
+
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
@@ -117,10 +121,10 @@ describe('Music mood actions discovery', () => {
           expect(action.template).toBe(`set ${name} mood on {instrument}`);
         });
 
-        it('should use items:examinable_items scope for primary targets', () => {
+        it('should use items-core:examinable_items scope for primary targets', () => {
           expect(action.targets).toBeDefined();
           expect(action.targets.primary).toBeDefined();
-          expect(action.targets.primary.scope).toBe('items:examinable_items');
+          expect(action.targets.primary.scope).toBe('items-core:examinable_items');
           expect(action.targets.primary.placeholder).toBe('instrument');
           expect(action.targets.primary.description).toBe(
             `Instrument to play with ${name} mood`
@@ -213,7 +217,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -266,7 +270,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -274,7 +278,7 @@ describe('Music mood actions discovery', () => {
         expect(Array.from(scopeResult.value)).toContain('guitar_1');
       });
 
-      it('should NOT discover actions for non-portable instruments at location', () => {
+      it('should discover actions for non-portable instruments at location', () => {
         const room = ModEntityScenarios.createRoom('room1', 'Concert Hall');
 
         const actor = new ModEntityBuilder('actor1')
@@ -284,8 +288,8 @@ describe('Music mood actions discovery', () => {
           .withComponent('music:is_musician', {})
           .build();
 
-        // Grand piano - non-portable and not in scope for music actions
-        // Note: items:examinable_items scope excludes non-portable items in test environment
+        // Grand piano - non-portable but still playable as an instrument
+        // items-core:examinable_items includes non-portable items at location
         const instrument = new ModEntityBuilder('grand_piano')
           .withName('grand piano')
           .atLocation('room1')
@@ -303,11 +307,11 @@ describe('Music mood actions discovery', () => {
             action.id.endsWith('_mood_on_instrument')
         );
 
-        // Should NOT discover mood actions for non-portable instrument
-        // Consistent with items:examinable_items scope behavior
-        expect(moodActions.length).toBe(0);
+        // Should discover mood actions for non-portable instrument
+        // items-core:examinable_items includes inventory items + items at location (portable & non-portable)
+        expect(moodActions.length).toBe(10);
 
-        // Verify scope resolution excludes non-portable instrument
+        // Verify scope resolution includes non-portable instrument
         const actorInstance =
           testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
@@ -319,12 +323,12 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
         expect(scopeResult.success).toBe(true);
-        expect(Array.from(scopeResult.value)).not.toContain('grand_piano');
+        expect(Array.from(scopeResult.value)).toContain('grand_piano');
       });
     });
 
@@ -404,7 +408,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -456,7 +460,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -512,7 +516,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 
@@ -577,7 +581,7 @@ describe('Music mood actions discovery', () => {
 
         const scopeResult =
           testFixture.testEnv.unifiedScopeResolver.resolveSync(
-            'items:examinable_items',
+            'items-core:examinable_items',
             scopeContext
           );
 

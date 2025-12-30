@@ -743,6 +743,455 @@ describe('ResolveOutcomeHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Target Role Selection Tests (Lines 200-204)
+  // ---------------------------------------------------------------------------
+
+  describe('Target Role Selection', () => {
+    test('target_role="primary" uses primaryTargetId when available', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: 'primary-111',
+        secondaryId: 'secondary-222',
+        tertiaryId: 'tertiary-333',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'primary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'primary-111',
+        })
+      );
+    });
+
+    test('target_role="primary" falls back to secondaryTargetId when primary missing', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: undefined,
+        targetId: undefined,
+        secondaryId: 'secondary-222',
+        tertiaryId: 'tertiary-333',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'primary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'secondary-222',
+        })
+      );
+    });
+
+    test('target_role="primary" falls back to tertiaryTargetId when primary and secondary missing', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: undefined,
+        targetId: undefined,
+        secondaryId: undefined,
+        tertiaryId: 'tertiary-333',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'primary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'tertiary-333',
+        })
+      );
+    });
+
+    test('target_role="tertiary" uses tertiaryTargetId when available', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: 'primary-111',
+        secondaryId: 'secondary-222',
+        tertiaryId: 'tertiary-333',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'tertiary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'tertiary-333',
+        })
+      );
+    });
+
+    test('target_role="tertiary" falls back to secondaryTargetId when tertiary missing', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: 'primary-111',
+        secondaryId: 'secondary-222',
+        tertiaryId: undefined,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'tertiary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'secondary-222',
+        })
+      );
+    });
+
+    test('target_role="tertiary" falls back to primaryTargetId when tertiary and secondary missing', () => {
+      const ctx = buildExecutionContext(mockLogger, {
+        actorId: 'actor-123',
+        primaryId: 'primary-111',
+        targetId: undefined,
+        secondaryId: undefined,
+        tertiaryId: undefined,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        target_skill_component: 'skills:defense',
+        target_role: 'tertiary',
+        result_variable: 'outcome',
+      };
+
+      handler.execute(params, ctx);
+
+      expect(mockChanceCalculationService.resolveOutcome).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetId: 'primary-111',
+        })
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Action Modifier Resolution Tests (Line 359)
+  // ---------------------------------------------------------------------------
+
+  describe('Action Modifier Resolution', () => {
+    test('returns null when action definition has no modifiers property', () => {
+      const actionDef = {
+        id: 'test:action-no-modifiers',
+        chanceBased: {
+          enabled: true,
+          // No modifiers property
+        },
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getActionDefinition: jest.fn(() => actionDef),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('returns null when action definition has empty modifiers array', () => {
+      const actionDef = {
+        id: 'test:action-empty-modifiers',
+        chanceBased: {
+          enabled: true,
+          modifiers: [], // Empty array
+        },
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getActionDefinition: jest.fn(() => actionDef),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      // Empty array modifiers should NOT be merged
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('does not merge modifiers when action definition has no chanceBased', () => {
+      const actionDef = {
+        id: 'test:action-no-chancebased',
+        // No chanceBased property at all
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getActionDefinition: jest.fn(() => actionDef),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getAllActionDefinitions Fallback Tests (Lines 378-385)
+  // ---------------------------------------------------------------------------
+
+  describe('getAllActionDefinitions Fallback Strategy', () => {
+    test('uses getAllActionDefinitions when getActionDefinition is not available', () => {
+      const actionDef = {
+        id: 'test:fallback-action',
+        chanceBased: {
+          modifiers: [{ tag: 'from-fallback', value: 5 }],
+        },
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          // No getActionDefinition method
+          getAllActionDefinitions: jest.fn(() => [
+            { id: 'other:action', chanceBased: {} },
+            actionDef,
+            { id: 'another:action', chanceBased: {} },
+          ]),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toEqual([
+        { tag: 'from-fallback', value: 5 },
+      ]);
+    });
+
+    test('returns null when action not found in getAllActionDefinitions array', () => {
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn(() => [
+            { id: 'other:action', chanceBased: { modifiers: [{ tag: 'x' }] } },
+          ]),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: 'nonexistent:action',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      // No modifiers merged since action wasn't found
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('handles getAllActionDefinitions returning non-array', () => {
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn(() => null),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: 'some:action',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('handles getAllActionDefinitions returning undefined', () => {
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn(() => undefined),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: 'some:action',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('returns null when repository has neither getActionDefinition nor getAllActionDefinitions', () => {
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          // Repository with no lookup methods
+          someOtherMethod: jest.fn(),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: 'some:action',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('handles getActionDefinition returning undefined (coerced to null)', () => {
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getActionDefinition: jest.fn(() => undefined),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: 'some:action',
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      // undefined is coerced to null, resulting in no modifiers
+      expect(calledWith.actionDef.chanceBased.modifiers).toBeUndefined();
+    });
+
+    test('handles null action entries in getAllActionDefinitions array', () => {
+      const actionDef = {
+        id: 'test:action-with-nulls',
+        chanceBased: {
+          modifiers: [{ tag: 'found', value: 10 }],
+        },
+      };
+      const handlerWithRepo = new ResolveOutcomeHandler({
+        chanceCalculationService: mockChanceCalculationService,
+        logger: mockLogger,
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn(() => [
+            null,
+            undefined,
+            { id: null },
+            actionDef,
+          ]),
+        },
+      });
+      const ctx = buildExecutionContext(mockLogger, {
+        actionId: actionDef.id,
+      });
+      const params = {
+        actor_skill_component: 'skills:melee',
+        result_variable: 'outcome',
+      };
+
+      mockChanceCalculationService.resolveOutcome.mockClear();
+      handlerWithRepo.execute(params, ctx);
+
+      const calledWith =
+        mockChanceCalculationService.resolveOutcome.mock.calls[0][0];
+      expect(calledWith.actionDef.chanceBased.modifiers).toEqual([
+        { tag: 'found', value: 10 },
+      ]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Logging Tests
   // ---------------------------------------------------------------------------
 

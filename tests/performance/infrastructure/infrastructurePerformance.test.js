@@ -243,7 +243,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should handle category selection within performance baseline', async () => {
       const categories = [
         'exercise',
-        'violence',
+        'striking',
         'intimacy',
         'sex',
         'positioning',
@@ -432,7 +432,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
             .withComponent('core:actor', {})
             .withComponent('positioning:standing', { posture: 'upright' })
             .withComponent('exercise:stamina', { current: 85, max: 100 })
-            .withComponent('violence:health', { current: 100, max: 100 })
+            .withComponent('damage-types:damage_capabilities', { entries: [] })
             .closeToEntity('other-entity')
             .build();
         },

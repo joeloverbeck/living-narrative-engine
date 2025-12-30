@@ -9,6 +9,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import signDocumentAction from '../../../../data/mods/writing/actions/sign_document.action.json' assert { type: 'json' };
 
 describe('writing:sign_document action definition', () => {
@@ -20,6 +21,9 @@ describe('writing:sign_document action definition', () => {
       'writing',
       'writing:sign_document'
     );
+
+    // Register inventory scopes needed for sign_document action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -53,7 +57,7 @@ describe('writing:sign_document action definition', () => {
     expect(signDocumentAction.targets).toBeDefined();
     expect(signDocumentAction.targets.primary).toBeDefined();
     expect(signDocumentAction.targets.primary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
     expect(signDocumentAction.targets.primary.placeholder).toBe('document');
     expect(signDocumentAction.targets.primary.description).toBe(
@@ -64,7 +68,7 @@ describe('writing:sign_document action definition', () => {
   it('should use correct scope for secondary targets (writing utensil)', () => {
     expect(signDocumentAction.targets.secondary).toBeDefined();
     expect(signDocumentAction.targets.secondary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
     expect(signDocumentAction.targets.secondary.placeholder).toBe('utensil');
     expect(signDocumentAction.targets.secondary.description).toBe(
@@ -160,7 +164,7 @@ describe('writing:sign_document action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 
@@ -432,7 +436,7 @@ describe('writing:sign_document action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 

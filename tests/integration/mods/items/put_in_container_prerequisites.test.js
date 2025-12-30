@@ -144,7 +144,7 @@ describe('containers:put_in_container prerequisites', () => {
         'containers-core:open_containers_at_location'
       );
       expect(putInContainerAction.targets.secondary.scope).toBe(
-        'items:actor_inventory_items'
+        'inventory:actor_inventory_items'
       );
       expect(putInContainerAction.required_components.actor).toContain(
         'inventory:inventory'

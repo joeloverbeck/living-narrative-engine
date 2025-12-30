@@ -39,6 +39,8 @@ import SystemLogicInterpreter from '../../../../src/logic/systemLogicInterpreter
 import OperationInterpreter from '../../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
+import PerceptionEntryBuilder from '../../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../../src/perception/services/sensorialPropagationService.js';
 
 describe('Go Action - Perception Routing', () => {
   let testEnv;
@@ -116,7 +118,12 @@ describe('Go Action - Perception Routing', () => {
         routingPolicyService: {
           validateAndHandle: jest.fn().mockReturnValue(true),
         },
-        recipientSetBuilder,
+        perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager,
+          recipientSetBuilder,
+          logger,
+        }),
       }),
       IF: {
         execute: jest.fn().mockResolvedValue(undefined),

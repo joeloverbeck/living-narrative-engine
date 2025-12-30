@@ -81,10 +81,10 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
 
   describe('Single Mod Validation', () => {
     it('should detect missing dependencies for external references', async () => {
-      // Mock reference extraction - positioning mod references intimacy and violence
+      // Mock reference extraction - positioning mod references intimacy and striking
       const extractedRefs = new Map();
       extractedRefs.set('intimacy', new Set(['kissing', 'attraction']));
-      extractedRefs.set('violence', new Set(['attacking']));
+      extractedRefs.set('striking', new Set(['attacking']));
 
       mockReferenceExtractor.extractReferences.mockResolvedValue(extractedRefs);
 
@@ -95,7 +95,7 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
         dependencies: [{ id: 'core', version: '^1.0.0' }],
       });
       manifestsMap.set('intimacy', { id: 'intimacy' });
-      manifestsMap.set('violence', { id: 'violence' });
+      manifestsMap.set('striking', { id: 'striking' });
 
       const report = await validator.validateModReferences(
         '/test/mods/positioning',
@@ -103,9 +103,9 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
       );
 
       expect(report.hasViolations).toBe(true);
-      expect(report.violations).toHaveLength(3); // 2 intimacy + 1 violence
+      expect(report.violations).toHaveLength(3); // 2 intimacy + 1 striking
       expect(report.missingDependencies).toEqual(
-        expect.arrayContaining(['intimacy', 'violence'])
+        expect.arrayContaining(['intimacy', 'striking'])
       );
       expect(report.modId).toBe('positioning');
       expect(report.declaredDependencies).toEqual(
@@ -358,7 +358,7 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
         },
         {
           file: 'other.json',
-          message: 'Missing dependency: violence',
+          message: 'Missing dependency: striking',
         },
       ];
 
@@ -370,7 +370,7 @@ describe('ModCrossReferenceValidator - Core Functionality', () => {
         'test.json: Missing dependency: intimacy'
       );
       expect(error.message).toContain(
-        'other.json: Missing dependency: violence'
+        'other.json: Missing dependency: striking'
       );
       expect(error.violations).toEqual(violations);
     });

@@ -35,14 +35,14 @@ describe('TestScopeResolverRegistry - Integration', () => {
       expect(list.some((id) => id.startsWith('personal-space:'))).toBe(true);
     }, 10000);
 
-    it('should discover and register scopes from inventory/items mod', async () => {
-      const count = await registry.discoverAndRegister(['items']);
+    it('should discover and register scopes from inventory mod', async () => {
+      const count = await registry.discoverAndRegister(['inventory']);
 
-      // Items mod should have scopes
+      // Inventory mod should have scopes
       expect(count).toBeGreaterThan(0);
 
       const list = registry.list();
-      expect(list.some((id) => id.startsWith('items:'))).toBe(true);
+      expect(list.some((id) => id.startsWith('inventory:'))).toBe(true);
     }, 10000);
 
     it('should handle mods with no scopes gracefully', async () => {
@@ -56,7 +56,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
     it('should discover from multiple mods', async () => {
       const count = await registry.discoverAndRegister([
         'personal-space',
-        'items',
+        'inventory',
       ]);
 
       // Should have scopes from both mods
@@ -64,11 +64,11 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
       const list = registry.list();
       expect(list.some((id) => id.startsWith('personal-space:'))).toBe(true);
-      expect(list.some((id) => id.startsWith('items:'))).toBe(true);
+      expect(list.some((id) => id.startsWith('inventory:'))).toBe(true);
     }, 10000);
 
     it('should filter by categories', async () => {
-      await registry.discoverAndRegister(['personal-space', 'items'], {
+      await registry.discoverAndRegister(['personal-space', 'inventory'], {
         categories: ['personal-space'],
       });
 
@@ -184,7 +184,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
     }, 10000);
 
     it('should organize scopes by category', async () => {
-      await registry.discoverAndRegister(['personal-space', 'items']);
+      await registry.discoverAndRegister(['personal-space', 'inventory']);
 
       const byCategory = registry.listByCategory();
 
@@ -205,7 +205,7 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
       await registry.discoverAndRegister([
         'personal-space',
-        'items',
+        'inventory',
         'movement',
         'caressing',
       ]);

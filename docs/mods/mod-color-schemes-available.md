@@ -15,14 +15,13 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 ## Current Status
 
 **Total Schemes Defined**: 69
-**In Use**: 56 schemes actively implemented
-**Available**: 13 schemes ready for new mods
+**In Use**: 58 schemes actively implemented
+**Available**: 11 schemes ready for new mods
 
 ## Quick Reference: Available Schemes by Category
 
 | Section | Scheme Name       | Background Color | Best For                                    |
 | ------- | ----------------- | ---------------- | ------------------------------------------- |
-| 2.1     | Bold Red          | `#c62828`        | Combat, aggressive actions                  |
 | 2.5     | Grip Iron         | `#4a4a4a`        | Grappling, restraint, control actions       |
 | 6.1     | Amber Warning     | `#ff6f00`        | Caution actions, moderate warnings          |
 | 6.2     | Dark Red Alert    | `#b71c1c`        | Critical alerts, dangerous actions          |
@@ -33,28 +32,11 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 | 14.2    | Humble Bronze     | `#4b2f14`        | Reverent gestures, respectful submissions   |
 | 16.2    | Blighted Moss     | `#1a1f14`        | Contaminated water traversal, canals        |
 | 17.2    | Hazy Smoke        | `#3d3a3f`        | Smoking, inhaling substances                |
-| 23.2    | Sunlit Lagoon     | `#4fc3f7`        | Wading, surface swimming, light water travel |
 | 23.3    | Deep Current Blue | `#0f5e7a`        | Diving, submerging, deeper water traversal  |
 
 ## Available Color Scheme Definitions
 
 ### 2. Action/Combat Colors
-
-#### 2.1 Bold Red
-
-```json
-{
-  "backgroundColor": "#c62828",
-  "textColor": "#ffffff",
-  "hoverBackgroundColor": "#d32f2f",
-  "hoverTextColor": "#ffffff"
-}
-```
-
-- **Normal Contrast**: 7.13:1 AAA
-- **Hover Contrast**: 5.25:1 AA
-- **Use Cases**: Combat, aggressive actions, critical alerts
-- **Theme**: Danger, power, intensity
 
 #### 2.5 Grip Iron
 
@@ -229,22 +211,6 @@ This document provides all available WCAG 2.1 AA compliant color schemes ready f
 - **Theme**: Smoky purple-gray evoking haze, pipe smoke, and altered states
 
 ### 23. Aquatic/Fluid Colors
-
-#### 23.2 Sunlit Lagoon
-
-```json
-{
-  "backgroundColor": "#4fc3f7",
-  "textColor": "#0b1f2a",
-  "hoverBackgroundColor": "#81d4fa",
-  "hoverTextColor": "#0b1f2a"
-}
-```
-
-- **Normal Contrast**: 8.43:1 AAA
-- **Hover Contrast**: 10.24:1 AAA
-- **Use Cases**: Wading, surface swimming, entering bright water
-- **Theme**: Clear, sunlit water with buoyant, airy motion
 
 #### 23.3 Deep Current Blue
 

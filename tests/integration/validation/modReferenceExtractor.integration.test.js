@@ -75,7 +75,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
               target: ['core:actor'],
             },
             forbidden_components: {
-              actor: ['violence:attacking'],
+              actor: ['striking:attacking'],
               target: ['kissing:kissing'],
             },
             targets: {
@@ -161,7 +161,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
         'positioning',
         'affection',
         'kissing',
-        'violence',
+        'striking',
         'stats_mod',
         'emotion_mod',
         'personal-space-states',
@@ -178,7 +178,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       expect(references.get('kissing')).toContain(
         'close_actors_facing_each_other'
       );
-      expect(references.get('violence')).toContain('attacking');
+      expect(references.get('striking')).toContain('attacking');
       // Note: base_mod:emotional_state in 'extends' field is not extracted by current implementation
       expect(references.get('stats_mod')).toContain('charisma');
       expect(references.get('emotion_mod')).toContain('happiness');
@@ -215,7 +215,7 @@ describe('ModReferenceExtractor - Integration Tests', () => {
         JSON.stringify({
           id: 'integration_test_mod:also_valid',
           forbidden_components: {
-            target: ['violence:fighting'],
+            target: ['striking:fighting'],
           },
         })
       );
@@ -225,11 +225,11 @@ describe('ModReferenceExtractor - Integration Tests', () => {
       // Should extract from valid files
       expect(references.has('positioning')).toBe(true);
       expect(references.has('affection')).toBe(true);
-      expect(references.has('violence')).toBe(true);
+      expect(references.has('striking')).toBe(true);
 
       expect(references.get('positioning')).toContain('standing');
       expect(references.get('affection')).toContain('arousal');
-      expect(references.get('violence')).toContain('fighting');
+      expect(references.get('striking')).toContain('fighting');
 
       // Should log warning for invalid file
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -361,7 +361,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
             target: ['core:actor', 'positioning:facing'],
           },
           forbidden_components: {
-            actor: ['violence:hostile', 'relationship_mod:married'],
+            actor: ['striking:hostile', 'relationship_mod:married'],
             target: ['affection:unavailable'],
           },
           condition: {
@@ -527,7 +527,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
         'positioning',
         'affection',
         'social_mod',
-        'violence',
+        'striking',
         'relationship_mod',
         'stats_mod',
         'emotion_mod',
@@ -727,7 +727,7 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
                 },
                 {
                   not: {
-                    has_component: ['target', 'violence:threatening'],
+                    has_component: ['target', 'striking:threatening'],
                   },
                 },
               ],
@@ -744,11 +744,11 @@ social_mod:conversation_partners := actor.partners | actor.components.social_mod
       // but not from nested metadata objects
       expect(references.has('positioning')).toBe(true);
       expect(references.has('affection')).toBe(true);
-      expect(references.has('violence')).toBe(true);
+      expect(references.has('striking')).toBe(true);
 
       expect(references.get('positioning')).toContain('sitting');
       expect(references.get('affection')).toContain('comfort');
-      expect(references.get('violence')).toContain('threatening');
+      expect(references.get('striking')).toContain('threatening');
 
       // Note: social_mod, stats_mod, emotion_mod references in nested metadata are not extracted
       // by current implementation as action files don't have generic object traversal

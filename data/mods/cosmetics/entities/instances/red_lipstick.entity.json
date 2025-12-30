@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "cosmetics:red_lipstick_instance",
+  "definitionId": "cosmetics:red_lipstick",
+  "componentOverrides": {}
+}

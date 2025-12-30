@@ -449,7 +449,7 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
       },
       targetDefinitions: {
         primary: {
-          scope: 'items:examinable_items',
+          scope: 'items-core:examinable_items',
           placeholder: 'item',
         },
       },

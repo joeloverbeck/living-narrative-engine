@@ -178,7 +178,7 @@ describe('ModGraphService - Load Order Parity', () => {
         { id: 'intimacy', dependencies: [{ id: 'anatomy' }] },
         { id: 'hexing', dependencies: [{ id: 'anatomy' }] },
         { id: 'music', dependencies: [{ id: 'core' }] },
-        { id: 'violence', dependencies: [{ id: 'anatomy' }] },
+        { id: 'striking', dependencies: [{ id: 'anatomy' }] },
       ];
 
       service.buildGraph(mockMods);
@@ -208,7 +208,7 @@ describe('ModGraphService - Load Order Parity', () => {
       expect(loadOrder).not.toContain('intimacy');
       expect(loadOrder).not.toContain('hexing');
       expect(loadOrder).not.toContain('music');
-      expect(loadOrder).not.toContain('violence');
+      expect(loadOrder).not.toContain('striking');
 
       // Expected: core, descriptors, anatomy, locations, dredgers = 5
       expect(loadOrder.length).toBe(5);

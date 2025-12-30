@@ -548,6 +548,14 @@ beforeAll(async () => {
           property: 'recipientSetBuilder',
           token: tokens.IRecipientSetBuilder,
         },
+        {
+          property: 'perceptionEntryBuilder',
+          token: tokens.IPerceptionEntryBuilder,
+        },
+        {
+          property: 'sensorialPropagationService',
+          token: tokens.ISensorialPropagationService,
+        },
       ],
     },
     {

@@ -5,7 +5,7 @@
   "description": "Tuck tightly and roll forward along the spine for a smooth transition",
   "targets": "none",
   "required_components": {
-    "actor": ["gymnastics:is_gymnast"]
+    "actor": ["gymnastics:is_gymnast", "skills:mobility_skill"]
   },
   "forbidden_components": {
     "actor": [
@@ -14,8 +14,27 @@
       "physical-control-states:restraining"
     ]
   },
-  "template": "do forward roll",
+  "template": "do forward roll ({chance}% chance)",
   "prerequisites": [],
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:mobility_skill",
+      "property": "value",
+      "default": 0
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
   "visual": {
     "backgroundColor": "#1a237e",
     "textColor": "#e8eaf6",

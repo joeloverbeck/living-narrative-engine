@@ -40,6 +40,10 @@ const FIXTURE_PATHS = {
 let sharedContainer = null;
 let sharedLoadFailures = {};
 const sharedRecipes = new Map();
+// Cache for recipe usage mods to avoid repeated filesystem scans
+let sharedRecipeUsageMods = [];
+// Shared AnatomyIntegrationTestBed to avoid repeated mod loading
+let sharedAnatomyTestBed = null;
 
 /**
  * Creates runtime overrides that reuse the shared container and skip expensive mod loading.
@@ -66,6 +70,8 @@ function createSharedRuntimeOverrides(additionalOverrides = {}) {
     loadMods: async () => ({
       loadFailures: sharedLoadFailures,
     }),
+    // Skip expensive filesystem scan - use cached results
+    detectRecipeUsageMods: async () => sharedRecipeUsageMods,
     ...additionalOverrides,
   };
 }
@@ -79,10 +85,11 @@ describe('Recipe Validation Comparison Regression Suite', () => {
     ];
 
     // Run executeRecipeValidation once to bootstrap the container and load mods
-    // We capture the container and load failures through runtime overrides
+    // We capture the container, load failures, and inferred mods through runtime overrides
     // IMPORTANT: Pass ALL recipe paths so all necessary mods get loaded
     let capturedContainer = null;
     let capturedLoadFailures = {};
+    let capturedInferredMods = [];
 
     await executeRecipeValidation(allRecipePaths, { verbose: false }, {
       console: createSilentConsole(),
@@ -93,6 +100,91 @@ describe('Recipe Validation Comparison Regression Suite', () => {
         );
         capturedContainer = new AppContainer();
         return capturedContainer;
+      },
+      // Capture inferred mods during first run - this is the expensive filesystem scan
+      detectRecipeUsageMods: async (recipeIds) => {
+        // Import the function dynamically to perform the actual detection once
+        const { promises: fsPromises } = await import('fs');
+        const pathModule = await import('path');
+
+        if (!Array.isArray(recipeIds) || recipeIds.length === 0) {
+          return [];
+        }
+
+        const normalizedIds = new Set(
+          recipeIds.filter((id) => typeof id === 'string' && id.trim() !== '')
+        );
+        if (normalizedIds.size === 0) {
+          return [];
+        }
+
+        const modsDir = pathModule.default.resolve(process.cwd(), 'data/mods');
+        let modEntries = [];
+        try {
+          modEntries = await fsPromises.readdir(modsDir, { withFileTypes: true });
+        } catch {
+          return [];
+        }
+
+        const referencingMods = new Set();
+
+        for (const modEntry of modEntries) {
+          if (!modEntry.isDirectory()) {
+            continue;
+          }
+
+          const modId = modEntry.name;
+          const definitionsDir = pathModule.default.join(modsDir, modId, 'entities', 'definitions');
+          let stats;
+          try {
+            stats = await fsPromises.stat(definitionsDir);
+            if (!stats.isDirectory()) continue;
+          } catch {
+            continue;
+          }
+
+          const directoryStack = [definitionsDir];
+          let foundReference = false;
+
+          while (directoryStack.length > 0 && !foundReference) {
+            const currentDir = directoryStack.pop();
+            let dirEntries = [];
+            try {
+              dirEntries = await fsPromises.readdir(currentDir, { withFileTypes: true });
+            } catch {
+              continue;
+            }
+
+            for (const entry of dirEntries) {
+              const entryPath = pathModule.default.join(currentDir, entry.name);
+              if (entry.isDirectory()) {
+                directoryStack.push(entryPath);
+                continue;
+              }
+
+              if (!entry.isFile() || !entry.name.endsWith('.json')) {
+                continue;
+              }
+
+              try {
+                const raw = await fsPromises.readFile(entryPath, 'utf-8');
+                const entity = JSON.parse(raw);
+                const recipeId = entity?.components?.['anatomy:body']?.recipeId;
+
+                if (recipeId && normalizedIds.has(recipeId)) {
+                  referencingMods.add(modId);
+                  foundReference = true;
+                  break;
+                }
+              } catch {
+                // Ignore malformed entity definitions during detection
+              }
+            }
+          }
+        }
+
+        capturedInferredMods = Array.from(referencingMods);
+        return capturedInferredMods;
       },
       loadMods: async ({ container, requestedMods }) => {
         // Use the default mod loading, but capture the result
@@ -123,21 +215,31 @@ describe('Recipe Validation Comparison Regression Suite', () => {
       },
     });
 
-    // Store the captured container and load failures for reuse
+    // Store the captured container, load failures, and inferred mods for reuse
     sharedContainer = capturedContainer;
     sharedLoadFailures = capturedLoadFailures;
+    sharedRecipeUsageMods = capturedInferredMods;
 
     // Pre-load all recipe files into cache
     for (const recipePath of allRecipePaths) {
       const recipeData = await loadRecipe(recipePath);
       sharedRecipes.set(recipePath, recipeData);
     }
+
+    // Initialize shared AnatomyIntegrationTestBed for runtime error capture
+    sharedAnatomyTestBed = new AnatomyIntegrationTestBed();
+    await sharedAnatomyTestBed.loadAnatomyModData();
   });
 
   afterAll(() => {
     sharedContainer = null;
     sharedLoadFailures = {};
     sharedRecipes.clear();
+    sharedRecipeUsageMods = [];
+    if (sharedAnatomyTestBed) {
+      sharedAnatomyTestBed.cleanup();
+      sharedAnatomyTestBed = null;
+    }
   });
 
   describe('CLI vs RecipeValidationRunner parity', () => {
@@ -339,18 +441,19 @@ async function performComparison(recipePath, options = {}) {
   let capturedValidator = null;
   const transformValidatorDeps = options.transformValidatorDeps;
 
-  // Use shared context unless transformValidatorDeps is provided or explicitly disabled
-  const useSharedContext =
-    options.useSharedContext !== false && !transformValidatorDeps;
+  // Use shared context unless explicitly disabled
+  // Even with transformValidatorDeps, we can still reuse the shared container/mods
+  const useSharedContext = options.useSharedContext !== false;
 
   let runtimeOverrides;
   if (useSharedContext && sharedContainer) {
     // Fast path: reuse shared context's container and mods
+    // This works even with transformValidatorDeps - we just transform at validator creation
     runtimeOverrides = createSharedRuntimeOverrides(
       options.runtimeOverrides || {}
     );
   } else {
-    // Slow path: fresh context for tests that modify dependencies
+    // Slow path: fresh context for tests that explicitly disable shared context
     runtimeOverrides = {
       console: createSilentConsole(),
       ...(options.runtimeOverrides || {}),
@@ -554,12 +657,14 @@ function createForwardingMatcher(baseMatcher) {
 }
 
 /**
+ * Capture runtime error from creating anatomy graph.
+ * Uses shared testbed for performance - avoids mod loading per call.
  *
  * @param recipeData
  */
 async function captureRuntimeError(recipeData) {
-  const testBed = new AnatomyIntegrationTestBed();
-  await testBed.loadAnatomyModData();
+  // Use shared testbed for performance - avoid repeated mod loading
+  const testBed = sharedAnatomyTestBed;
   testBed.loadRecipes({ [recipeData.recipeId]: recipeData });
 
   try {
@@ -570,9 +675,8 @@ async function captureRuntimeError(recipeData) {
     return null;
   } catch (error) {
     return error;
-  } finally {
-    testBed.cleanup();
   }
+  // Note: no cleanup here - shared testbed is cleaned up in afterAll
 }
 
 /**

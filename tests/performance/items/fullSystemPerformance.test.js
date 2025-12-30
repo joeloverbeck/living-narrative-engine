@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../common/mods/scopeResolverHelpers.js';
 import giveItemRule from '../../../data/mods/item-transfer/rules/handle_give_item.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../data/mods/item-transfer/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
 
@@ -19,6 +20,8 @@ describe('Items System - Performance', () => {
       giveItemRule,
       eventIsActionGiveItem
     );
+    // Register inventory scopes required for give_item action discovery
+    ScopeResolverHelpers.registerInventoryScopes(fixture.testEnv);
   });
 
   afterEach(() => {
@@ -186,7 +189,7 @@ describe('Items System - Performance', () => {
       console.log('Scaling measurements:', measurements);
     });
 
-    it('should handle large entity counts efficiently', () => {
+    it('should handle large entity counts efficiently', async () => {
       const location = new ModEntityBuilder('warehouse')
         .asRoom('Warehouse')
         .build();
@@ -269,6 +272,11 @@ describe('Items System - Performance', () => {
       }
 
       fixture.reset(entities);
+
+      // Allow entity manager's internal data structures (location index, component cache)
+      // to fully settle with the large entity count (241+ entities) before discovery.
+      // This prevents intermittent failures where scope resolution fails due to timing.
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const startTime = performance.now();
       const actions = fixture.discoverActions('worker');

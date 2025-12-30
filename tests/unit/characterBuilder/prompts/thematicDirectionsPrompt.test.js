@@ -125,7 +125,7 @@ describe('ThematicDirectionsPrompt', () => {
       expect(result).toContain('<role>');
       expect(result).toContain('<task_definition>');
       expect(result).toContain('<character_concept>');
-      expect(result).toContain('<instructions>');
+      expect(result).toContain('<hard_rules>');
       expect(result).toContain('<response_format>');
     });
 
@@ -144,9 +144,9 @@ describe('ThematicDirectionsPrompt', () => {
       expect(result).toContain('<role>');
       expect(result).toContain('<task_definition>');
       expect(result).toContain('<character_concept>');
-      expect(result).toContain('<instructions>');
+      expect(result).toContain('<hard_rules>');
+      expect(result).toContain('<method>');
       expect(result).toContain('<constraints>');
-      expect(result).toContain('<capabilities_and_remainders>');
       expect(result).toContain('<response_format>');
       expect(result).toContain('<content_policy>');
     });

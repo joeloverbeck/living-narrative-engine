@@ -8,6 +8,9 @@ import GameDataRepository from '../../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../../src/perception/services/sensorialPropagationService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
@@ -62,11 +65,28 @@ const createIntegrationHarness = (entityManager) => {
     logger,
   });
 
+  const recipientSetBuilder = new RecipientSetBuilder({
+    entityManager,
+    logger,
+  });
+
+  const perceptionEntryBuilder = new PerceptionEntryBuilder({
+    logger,
+  });
+
+  const sensorialPropagationService = new SensorialPropagationService({
+    entityManager,
+    recipientSetBuilder,
+    logger,
+  });
+
   const handler = new AddPerceptionLogEntryHandler({
     logger,
     entityManager,
     safeEventDispatcher,
     routingPolicyService,
+    perceptionEntryBuilder,
+    sensorialPropagationService,
   });
 
   const flushAsync = async () => {

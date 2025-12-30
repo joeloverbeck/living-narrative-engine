@@ -16,8 +16,8 @@ import throwSelfToGroundAction from '../../../../data/mods/distress/actions/thro
 import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
 import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json';
 import restrainTargetAction from '../../../../data/mods/physical-control/actions/restrain_target.action.json';
-import slapAction from '../../../../data/mods/violence/actions/slap.action.json';
-import suckerPunchAction from '../../../../data/mods/violence/actions/sucker_punch.action.json';
+import slapTargetAction from '../../../../data/mods/striking/actions/slap_target.action.json';
+import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch.action.json';
 
 const ACTIONS = [
   { id: 'movement:go', action: goAction },
@@ -26,8 +26,8 @@ const ACTIONS = [
   { id: 'maneuvering:place_yourself_behind', action: placeYourselfBehindAction },
   { id: 'personal-space:get_close', action: getCloseAction },
   { id: 'physical-control:restrain_target', action: restrainTargetAction },
-  { id: 'violence:slap', action: slapAction },
-  { id: 'violence:sucker_punch', action: suckerPunchAction },
+  { id: 'striking:slap_target', action: slapTargetAction },
+  { id: 'striking:sucker_punch', action: suckerPunchAction },
 ];
 
 describe('actions forbidden when in a liquid body', () => {

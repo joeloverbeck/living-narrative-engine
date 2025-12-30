@@ -16,7 +16,8 @@
       "bending-states:bending_over",
       "physical-control-states:being_restrained",
       "physical-control-states:restraining",
-      "recovery-states:fallen"
+      "recovery-states:fallen",
+      "liquids-states:in_liquid_body"
     ],
     "secondary": ["core:dead"]
   },

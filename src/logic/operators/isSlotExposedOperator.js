@@ -35,13 +35,9 @@ export class IsSlotExposedOperator extends BaseEquipmentOperator {
    * @returns {boolean} True if slot has no covering items in the selected layers
    */
   evaluateInternal(entityId, params, context) {
-    if (!params || params.length < 1) {
-      this.logger.warn(
-        `${this.operatorName}: Missing required parameter: slotName`
-      );
-      return false;
-    }
-
+    // Note: No need to check `!params || params.length < 1` because
+    // BaseEquipmentOperator.evaluate() requires params.length >= 2,
+    // which guarantees operatorParams has at least one element.
     const [slotName, options] = params;
 
     if (!slotName) {

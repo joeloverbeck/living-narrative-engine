@@ -409,6 +409,10 @@ export function registerOperationHandlers(registrar) {
           perceptionFilterService: c.resolve(tokens.IPerceptionFilterService),
           routingPolicyService: c.resolve(tokens.IRecipientRoutingPolicyService),
           recipientSetBuilder: c.resolve(tokens.IRecipientSetBuilder),
+          perceptionEntryBuilder: c.resolve(tokens.IPerceptionEntryBuilder),
+          sensorialPropagationService: c.resolve(
+            tokens.ISensorialPropagationService
+          ),
         }),
     ],
     [

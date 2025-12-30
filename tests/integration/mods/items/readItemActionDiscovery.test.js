@@ -11,6 +11,7 @@ import {
 } from '../../../common/mods/ModEntityBuilder.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import readItemAction from '../../../../data/mods/reading/actions/read_item.action.json' assert { type: 'json' };
 
 describe('reading:read_item action definition', () => {
@@ -19,6 +20,9 @@ describe('reading:read_item action definition', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('reading', 'reading:read_item');
+
+    // Register inventory scopes needed for examinable_items scope
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -49,7 +53,7 @@ describe('reading:read_item action definition', () => {
   it('should use examinable scope for primary targets', () => {
     expect(readItemAction.targets).toBeDefined();
     expect(readItemAction.targets.primary).toBeDefined();
-    expect(readItemAction.targets.primary.scope).toBe('items:examinable_items');
+    expect(readItemAction.targets.primary.scope).toBe('items-core:examinable_items');
     expect(readItemAction.targets.primary.placeholder).toBe('item');
     expect(readItemAction.targets.primary.description).toBe(
       'Readable item to read'

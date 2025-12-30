@@ -9,6 +9,9 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import PerceptionEntryBuilder from '../../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../../src/perception/services/sensorialPropagationService.js';
+import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
 import putInContainerRule from '../../../../data/mods/containers/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/containers/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
@@ -416,13 +419,25 @@ describe('containers:put_in_container action integration', () => {
       expect(turnEndedEvent).toBeDefined();
       expect(turnEndedEvent.payload.success).toBe(true);
 
+      const recipientSetBuilder = new RecipientSetBuilder({
+        entityManager: testFixture.entityManager,
+        logger: testFixture.logger,
+      });
       const perceptionLogHandler = new AddPerceptionLogEntryHandler({
         entityManager: testFixture.entityManager,
         logger: testFixture.logger,
         safeEventDispatcher: { dispatch: () => {} },
         routingPolicyService: {
-          validateAndHandle: jest.fn().mockReturnValue(true),
+          validateAndHandle: () => true,
         },
+        perceptionEntryBuilder: new PerceptionEntryBuilder({
+          logger: testFixture.logger,
+        }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager: testFixture.entityManager,
+          recipientSetBuilder,
+          logger: testFixture.logger,
+        }),
       });
 
       await perceptionLogHandler.execute({
@@ -490,13 +505,25 @@ describe('containers:put_in_container action integration', () => {
       expect(turnEndedEvent).toBeDefined();
       expect(turnEndedEvent.payload.success).toBe(false);
 
+      const recipientSetBuilder = new RecipientSetBuilder({
+        entityManager: testFixture.entityManager,
+        logger: testFixture.logger,
+      });
       const perceptionLogHandler = new AddPerceptionLogEntryHandler({
         entityManager: testFixture.entityManager,
         logger: testFixture.logger,
         safeEventDispatcher: { dispatch: () => {} },
         routingPolicyService: {
-          validateAndHandle: jest.fn().mockReturnValue(true),
+          validateAndHandle: () => true,
         },
+        perceptionEntryBuilder: new PerceptionEntryBuilder({
+          logger: testFixture.logger,
+        }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager: testFixture.entityManager,
+          recipientSetBuilder,
+          logger: testFixture.logger,
+        }),
       });
 
       await perceptionLogHandler.execute({

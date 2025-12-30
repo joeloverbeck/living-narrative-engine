@@ -5,6 +5,9 @@
 import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import PerceptionFilterService from '../../../src/perception/services/perceptionFilterService.js';
+import PerceptionEntryBuilder from '../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../src/perception/services/sensorialPropagationService.js';
+import RecipientSetBuilder from '../../../src/perception/services/recipientSetBuilder.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 /**
@@ -154,6 +157,12 @@ const createTestEnvironment = (config = {}) => {
     validateAndHandle: jest.fn().mockReturnValue(true),
   };
 
+  // Create perception services for handler
+  const recipientSetBuilder = new RecipientSetBuilder({
+    entityManager,
+    logger,
+  });
+
   // Create handler with real filter service
   const handler = new AddPerceptionLogEntryHandler({
     logger,
@@ -161,6 +170,12 @@ const createTestEnvironment = (config = {}) => {
     safeEventDispatcher: dispatcher,
     perceptionFilterService,
     routingPolicyService,
+    perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+    sensorialPropagationService: new SensorialPropagationService({
+      entityManager,
+      recipientSetBuilder,
+      logger,
+    }),
   });
 
   return {
@@ -527,6 +542,12 @@ describe('Sense-Aware Filtering Integration Tests', () => {
         validateAndHandle: jest.fn().mockReturnValue(true),
       };
 
+      // Create perception services for handler
+      const recipientSetBuilder = new RecipientSetBuilder({
+        entityManager,
+        logger,
+      });
+
       // Create handler WITHOUT perceptionFilterService
       const handler = new AddPerceptionLogEntryHandler({
         logger,
@@ -534,6 +555,12 @@ describe('Sense-Aware Filtering Integration Tests', () => {
         safeEventDispatcher: dispatcher,
         // perceptionFilterService: undefined - intentionally omitted
         routingPolicyService,
+        perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager,
+          recipientSetBuilder,
+          logger,
+        }),
       });
 
       const params = {

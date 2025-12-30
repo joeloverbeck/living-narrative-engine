@@ -15,6 +15,8 @@ import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTes
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
 import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../../src/perception/services/sensorialPropagationService.js';
 import accessPointDefinition from '../../../../data/mods/dredgers/entities/definitions/access_point_segment_a.location.json';
 import segmentBDefinition from '../../../../data/mods/dredgers/entities/definitions/segment_b.location.json';
 import accessPointInstance from '../../../../data/mods/dredgers/entities/instances/access_point_segment_a.location.json';
@@ -82,7 +84,12 @@ function createHandlers(entityManager, eventBus, logger) {
       logger,
       safeEventDispatcher: safeDispatcher,
       routingPolicyService,
-      recipientSetBuilder,
+      perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+      sensorialPropagationService: new SensorialPropagationService({
+        entityManager,
+        recipientSetBuilder,
+        logger,
+      }),
     }),
   };
 }

@@ -195,6 +195,9 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   let initializeTraitsRewriter;
   let startApp;
 
+  // Store the REAL bootstrap method before any spying
+  const realBootstrapMethod = CharacterBuilderBootstrap.prototype.bootstrap;
+
   beforeAll(async () => {
     // Disable auto-initialization before loading the module to prevent side effects
     globalThis.__LNE_FORCE_AUTO_INIT__ = false;
@@ -233,6 +236,18 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     jest.spyOn(console, 'info').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // Set up default spy that runs real bootstrap but skips mod loading for performance
+    // Tests that need actual mod loading can override this behavior
+    bootstrapSpy = jest
+      .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
+      .mockImplementation(async function (config) {
+        // Call real bootstrap with mod loading disabled for speed
+        return realBootstrapMethod.call(this, {
+          ...config,
+          includeModLoading: false,
+        });
+      });
   });
 
   afterEach(() => {
@@ -296,12 +311,11 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   });
 
   it('falls back to the default label when LLM initialization fails', async () => {
-    // Spy on the prototype directly since we share the module instance
-    const originalBootstrap = CharacterBuilderBootstrap.prototype.bootstrap;
+    // Use the real bootstrap method captured before any spying
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
       .mockImplementation(async function wrappedBootstrap(config) {
-        const result = await originalBootstrap.call(this, {
+        const result = await realBootstrapMethod.call(this, {
           ...config,
           includeModLoading: false,
         });
@@ -326,11 +340,11 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   });
 
   it('reports unknown status when the LLM adapter cannot be resolved', async () => {
-    const originalBootstrap = CharacterBuilderBootstrap.prototype.bootstrap;
+    // Use the real bootstrap method captured before any spying
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
       .mockImplementation(async function wrappedBootstrap(config) {
-        const result = await originalBootstrap.call(this, {
+        const result = await realBootstrapMethod.call(this, {
           ...config,
           includeModLoading: false,
         });

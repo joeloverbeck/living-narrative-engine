@@ -367,10 +367,9 @@ class ResolveOutcomeHandler {
    * @returns {object|null}
    */
   #getActionDefinition(actionId) {
-    if (!this.#gameDataRepository) {
-      return null;
-    }
-
+    // Note: #gameDataRepository is guaranteed to be truthy here because
+    // #resolveActionModifiers() already guards against !this.#gameDataRepository
+    // before calling this method.
     if (typeof this.#gameDataRepository.getActionDefinition === 'function') {
       return this.#gameDataRepository.getActionDefinition(actionId) ?? null;
     }

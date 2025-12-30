@@ -38,6 +38,8 @@ import SensoryCapabilityService from '../../perception/services/sensoryCapabilit
 import PerceptionFilterService from '../../perception/services/perceptionFilterService.js';
 import RecipientRoutingPolicyService from '../../perception/services/recipientRoutingPolicyService.js';
 import RecipientSetBuilder from '../../perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../perception/services/sensorialPropagationService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -596,6 +598,30 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   safeDebug(`Registered ${String(tokens.IRecipientSetBuilder)}.`);
+
+  // PerceptionEntryBuilder - builds perception entries with role-based descriptions (ADDPERLOGENTHANROB)
+  container.register(
+    tokens.IPerceptionEntryBuilder,
+    (c) =>
+      new PerceptionEntryBuilder({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IPerceptionEntryBuilder)}.`);
+
+  // SensorialPropagationService - handles sensorial link propagation (ADDPERLOGENTHANROB)
+  container.register(
+    tokens.ISensorialPropagationService,
+    (c) =>
+      new SensorialPropagationService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        recipientSetBuilder: c.resolve(tokens.IRecipientSetBuilder),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.ISensorialPropagationService)}.`);
 
   // ─── Storage and Playtime (migrated from persistenceRegistrations) ─────────────────────────────
   registrar.single(tokens.IStorageProvider, BrowserStorageProvider, [

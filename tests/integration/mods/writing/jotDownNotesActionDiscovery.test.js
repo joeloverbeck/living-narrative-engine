@@ -9,6 +9,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import jotDownNotesAction from '../../../../data/mods/writing/actions/jot_down_notes.action.json' assert { type: 'json' };
 
 describe('writing:jot_down_notes action definition', () => {
@@ -20,6 +21,9 @@ describe('writing:jot_down_notes action definition', () => {
       'writing',
       'writing:jot_down_notes'
     );
+
+    // Register inventory scopes needed for jot_down_notes action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -53,7 +57,7 @@ describe('writing:jot_down_notes action definition', () => {
     expect(jotDownNotesAction.targets).toBeDefined();
     expect(jotDownNotesAction.targets.primary).toBeDefined();
     expect(jotDownNotesAction.targets.primary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
     expect(jotDownNotesAction.targets.primary.placeholder).toBe('notebook');
     expect(jotDownNotesAction.targets.primary.description).toBe(
@@ -64,7 +68,7 @@ describe('writing:jot_down_notes action definition', () => {
   it('should use correct scope for secondary targets (writing utensil)', () => {
     expect(jotDownNotesAction.targets.secondary).toBeDefined();
     expect(jotDownNotesAction.targets.secondary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
     expect(jotDownNotesAction.targets.secondary.placeholder).toBe('utensil');
     expect(jotDownNotesAction.targets.secondary.description).toBe(
@@ -168,7 +172,7 @@ describe('writing:jot_down_notes action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 
@@ -442,7 +446,7 @@ describe('writing:jot_down_notes action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 

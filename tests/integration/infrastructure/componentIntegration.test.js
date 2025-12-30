@@ -623,7 +623,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
         'positioning',
         'intimacy',
         'sex',
-        'violence',
+        'striking',
         'exercise',
       ];
 

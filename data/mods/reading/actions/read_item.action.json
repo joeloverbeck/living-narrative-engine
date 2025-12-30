@@ -5,7 +5,7 @@
   "description": "Read an item's readable text to learn its contents.",
   "targets": {
     "primary": {
-      "scope": "items:examinable_items",
+      "scope": "items-core:examinable_items",
       "placeholder": "item",
       "description": "Readable item to read"
     }

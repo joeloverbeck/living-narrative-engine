@@ -240,10 +240,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     });
   });
 
-  describe('Violence Category Pattern Validation', () => {
-    it('should validate violence category uses perception logging handlers', () => {
+  describe('Striking Category Pattern Validation', () => {
+    it('should validate striking category uses perception logging handlers', () => {
       const factoryMethod =
-        ModTestHandlerFactory.getHandlerFactoryForCategory('violence');
+        ModTestHandlerFactory.getHandlerFactoryForCategory('striking');
       const handlers = factoryMethod(
         entityManager,
         eventBus,
@@ -251,7 +251,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         mockGameDataRepository
       );
 
-      // Violence category uses perception logging handlers (17 handlers)
+      // Striking category uses perception logging handlers (extended handlers)
       expect(handlers).toHaveProperty('DISPATCH_EVENT');
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('QUERY_COMPONENTS');
@@ -263,22 +263,19 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('LOCK_MOVEMENT');
       expect(handlers).toHaveProperty('UNLOCK_MOVEMENT');
 
-      // Violence uses perception logging handler set (extended handlers)
+      // Striking uses perception logging handler set (extended handlers)
       // Should have more handlers than standard set due to perception logging capabilities
       expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(20);
     });
 
-    it('should validate violence category entity patterns', () => {
-      // Violence entities have aggressor/victim roles, damage tracking
+    it('should validate striking category entity patterns', () => {
+      // Striking entities track combat skills and damage capabilities
       const aggressorActor = new ModEntityBuilder('aggressor-actor')
         .withName('Aggressive Character')
         .atLocation('hostile-area')
         .withComponent('core:actor', {})
-        .withComponent('violence:aggressor', {
-          aggressionLevel: 'high',
-          combatSkill: 7,
-        })
-        .withComponent('violence:health', { current: 100, max: 100 })
+        .withComponent('skills:melee_skill', { value: 7 })
+        .withComponent('damage-types:damage_capabilities', { entries: [] })
         .build();
 
       const victimActor = new ModEntityBuilder('victim-actor')
@@ -286,41 +283,41 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         .atLocation('hostile-area')
         .closeToEntity('aggressor-actor')
         .withComponent('core:actor', {})
-        .withComponent('violence:health', { current: 80, max: 100 })
+        .withComponent('skills:defense_skill', { value: 4 })
         .build();
 
       entityManager.addEntity(aggressorActor);
       entityManager.addEntity(victimActor);
 
-      // Validate violence-specific components
+      // Validate striking-specific components
       assertionHelpers.assertComponentAdded(
         'aggressor-actor',
-        'violence:aggressor'
+        'skills:melee_skill'
       );
-      assertionHelpers.assertComponentAdded('victim-actor', 'violence:health');
+      assertionHelpers.assertComponentAdded(
+        'victim-actor',
+        'skills:defense_skill'
+      );
 
       const aggressor = entityManager.getEntityInstance('aggressor-actor');
-      expect(aggressor.components['violence:aggressor']).toEqual({
-        aggressionLevel: 'high',
-        combatSkill: 7,
-      });
+      expect(aggressor.components['skills:melee_skill']).toEqual({ value: 7 });
     });
 
-    it('should validate violence category event patterns', async () => {
+    it('should validate striking category event patterns', async () => {
       const handlers = ModTestHandlerFactory.createStandardHandlers(
         entityManager,
         eventBus,
         logger
       );
 
-      // Violence events can be both regular and perceptible
+      // Striking events can be both regular and perceptible
       await handlers.DISPATCH_EVENT.execute([
-        'VIOLENCE_DAMAGE_CALCULATED',
+        'STRIKING_DAMAGE_CALCULATED',
         JSON.stringify({ damage: 15, target: 'victim-actor' }),
       ]);
 
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute([
-        'VIOLENCE_INITIATED',
+        'STRIKING_INITIATED',
         JSON.stringify({
           aggressor: 'aggressor-actor',
           victim: 'victim-actor',
@@ -328,7 +325,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         }),
       ]);
 
-      // Violence actions may not always end turn (combos, reactions)
+      // Striking actions may not always end turn (combos, reactions)
       assertionHelpers.assertActionSuccess({
         shouldEndTurn: false,
         shouldHavePerceptibleEvent: true,
@@ -721,7 +718,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate consistent handler factory selection across categories', () => {
       const categories = [
         'exercise',
-        'violence',
+        'striking',
         'affection',
         'sex',
         'positioning',
@@ -752,7 +749,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // Validate expected capabilities per category (not exact counts which are brittle)
       const expectedCapabilities = {
         exercise: { hasAddComponent: true, minHandlers: 10 },
-        violence: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
+        striking: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
         sex: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
         affection: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
         positioning: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
@@ -779,10 +776,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           .withComponent('exercise:stamina', { current: 100 })
           .build(),
 
-        violence: new ModEntityBuilder('violence-entity')
-          .withName('Violence Entity')
+        striking: new ModEntityBuilder('striking-entity')
+          .withName('Striking Entity')
           .withComponent('core:actor', {})
-          .withComponent('violence:health', { current: 100 })
+          .withComponent('damage-types:damage_capabilities', { entries: [] })
           .build(),
 
         affection: new ModEntityBuilder('affection-entity')
@@ -816,8 +813,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(categoryEntities.exercise.components).toHaveProperty(
         'exercise:stamina'
       );
-      expect(categoryEntities.violence.components).toHaveProperty(
-        'violence:health'
+      expect(categoryEntities.striking.components).toHaveProperty(
+        'damage-types:damage_capabilities'
       );
       expect(categoryEntities.affection.components).toHaveProperty(
         'affection:consent'
@@ -831,7 +828,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate consistent assertion patterns across categories', () => {
       const testCategories = [
         'exercise',
-        'violence',
+        'striking',
         'affection',
         'sex',
         'positioning',
@@ -867,7 +864,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate consistent file loading patterns across categories', async () => {
       const testCategories = [
         'exercise',
-        'violence',
+        'striking',
         'affection',
         'sex',
         'positioning',

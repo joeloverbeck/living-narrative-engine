@@ -744,7 +744,7 @@ describe('TargetComponentValidationStage items action regression', () => {
 
     unifiedScopeResolver = {
       resolve: jest.fn((scopeName) => {
-        if (scopeName === 'items:examinable_items') {
+        if (scopeName === 'items-core:examinable_items') {
           return ActionResult.success(
             new Set(['test:letter_instance', 'test:photo_instance'])
           );
@@ -825,7 +825,7 @@ describe('TargetComponentValidationStage items action regression', () => {
       template: 'examine {item}',
       targets: {
         primary: {
-          scope: 'items:examinable_items',
+          scope: 'items-core:examinable_items',
           placeholder: 'item',
           description: 'Item to examine',
         },
@@ -854,7 +854,7 @@ describe('TargetComponentValidationStage items action regression', () => {
       template: 'read {item}',
       targets: {
         primary: {
-          scope: 'items:examinable_items',
+          scope: 'items-core:examinable_items',
           placeholder: 'item',
           description: 'Readable item to read',
         },
