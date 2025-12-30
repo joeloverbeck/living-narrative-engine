@@ -53,7 +53,7 @@ describe('containers-core:container_contents Scope Definition Validation', () =>
     // Compare with actor_inventory_items.scope which we know is correct
     const referenceScopePath = path.join(
       process.cwd(),
-      'data/mods/items/scopes/actor_inventory_items.scope'
+      'data/mods/inventory/scopes/actor_inventory_items.scope'
     );
 
     const referenceContent = fs.readFileSync(referenceScopePath, 'utf8').trim();
@@ -69,7 +69,7 @@ describe('containers-core:container_contents Scope Definition Validation', () =>
     expect(targetContent).toMatch(scopePattern);
 
     // Namespaces should be applied consistently
-    expect(referenceContent).toMatch(/^items:/);
+    expect(referenceContent).toMatch(/^inventory:/);
     expect(targetContent).toMatch(/^containers-core:/);
   });
 

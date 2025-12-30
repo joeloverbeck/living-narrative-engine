@@ -370,14 +370,14 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       fs.readFile
         .mockResolvedValueOnce('{"target": "othermods:close"}')
-        .mockResolvedValueOnce('{"condition": "violence:engaged"}');
+        .mockResolvedValueOnce('{"condition": "striking:engaged"}');
 
       const result = await extractor.extractReferences(testPath);
 
       expect(result.has('othermods')).toBe(true);
-      expect(result.has('violence')).toBe(true);
+      expect(result.has('striking')).toBe(true);
       expect(result.get('othermods')).toEqual(new Set(['close']));
-      expect(result.get('violence')).toEqual(new Set(['engaged']));
+      expect(result.get('striking')).toEqual(new Set(['engaged']));
     });
   });
 
@@ -552,7 +552,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const testPath = '/test/mod/path';
         const mockActionData = {
           forbidden_components: {
-            actor: ['kissing:kissing', 'violence:attacking'],
+            actor: ['kissing:kissing', 'striking:attacking'],
           },
         };
 
@@ -568,7 +568,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
         const result = await extractor.extractReferences(testPath);
 
         expect(result.get('kissing')).toContain('kissing');
-        expect(result.get('violence')).toContain('attacking');
+        expect(result.get('striking')).toContain('attacking');
       });
 
       it('should extract target scopes', async () => {
@@ -856,7 +856,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
                 },
               ],
             },
-            { has_component: ['actor', 'violence:attacking'] },
+            { has_component: ['actor', 'striking:attacking'] },
           ],
         },
       };
@@ -870,7 +870,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       expect(result.get('kissing')).toContain('kissing');
       expect(result.get('caressing')).toContain('arousal');
-      expect(result.get('violence')).toContain('attacking');
+      expect(result.get('striking')).toContain('attacking');
     });
 
     it('should handle various component operators', async () => {
@@ -882,7 +882,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
               set_component_value: ['actor', 'positioning:facing', 'direction'],
             },
             { remove_component: ['actor', 'kissing:kissing'] },
-            { add_component: ['actor', 'violence:fighting', { level: 1 }] },
+            { add_component: ['actor', 'striking:fighting', { level: 1 }] },
           ],
         },
       };
@@ -896,7 +896,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       expect(result.get('positioning')).toContain('facing');
       expect(result.get('kissing')).toContain('kissing');
-      expect(result.get('violence')).toContain('fighting');
+      expect(result.get('striking')).toContain('fighting');
     });
   });
 

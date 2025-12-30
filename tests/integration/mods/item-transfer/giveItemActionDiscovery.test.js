@@ -6,6 +6,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import giveItemAction from '../../../../data/mods/item-transfer/actions/give_item.action.json' assert { type: 'json' };
 
 describe('item-transfer:give_item action definition', () => {
@@ -17,6 +18,9 @@ describe('item-transfer:give_item action definition', () => {
       'item-transfer',
       'item-transfer:give_item'
     );
+
+    // Register inventory scopes needed for give_item action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     // Configure action discovery system
     configureActionDiscovery = () => {
@@ -57,7 +61,7 @@ describe('item-transfer:give_item action definition', () => {
     expect(giveItemAction.targets).toBeDefined();
     expect(giveItemAction.targets.secondary).toBeDefined();
     expect(giveItemAction.targets.secondary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
     expect(giveItemAction.targets.secondary.placeholder).toBe('item');
     // contextFrom should NOT be present - we want actor's inventory, not primary target's
@@ -123,7 +127,7 @@ describe('item-transfer:give_item action definition', () => {
 
       // Assert: give_item action should NOT appear because there are no items to give
       // Actions only appear when they have valid targets
-      // The scope (items:actor_inventory_items) returns empty because inventory is empty
+      // The scope (inventory:actor_inventory_items) returns empty because inventory is empty
       const giveItemActions = availableActions.filter(
         (action) => action.id === 'item-transfer:give_item'
       );

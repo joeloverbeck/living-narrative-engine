@@ -8,7 +8,7 @@
 import { describe, it, expect } from '@jest/globals';
 
 // Import rule JSON for structure validation
-import handlePeckTarget from '../../../../../data/mods/violence/rules/handle_peck_target.rule.json' assert { type: 'json' };
+import handlePeckTarget from '../../../../../data/mods/creature-attacks/rules/handle_peck_target.rule.json' assert { type: 'json' };
 
 describe('handle_peck_target rule definition', () => {
   describe('Schema Structure', () => {
@@ -27,10 +27,10 @@ describe('handle_peck_target rule definition', () => {
       expect(handlePeckTarget.event_type).toBe('core:attempt_action');
     });
 
-    it('should reference violence:event-is-action-peck-target condition', () => {
+    it('should reference creature-attacks:event-is-action-peck-target condition', () => {
       expect(handlePeckTarget.condition).toBeDefined();
       expect(handlePeckTarget.condition.condition_ref).toBe(
-        'violence:event-is-action-peck-target'
+        'creature-attacks:event-is-action-peck-target'
       );
     });
   });
@@ -151,7 +151,7 @@ describe('handle_peck_target rule definition', () => {
       );
     });
 
-    it('should use violence:handleBeakFumble for FUMBLE (not weapons:handleMeleeFumble)', () => {
+    it('should use creature-attacks:handleBeakFumble for FUMBLE (not weapons:handleMeleeFumble)', () => {
       const ifOp = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
@@ -160,7 +160,7 @@ describe('handle_peck_target rule definition', () => {
       expect(ifOp).toBeDefined();
       expect(ifOp.parameters.then_actions).toBeDefined();
       expect(ifOp.parameters.then_actions[0].macro).toBe(
-        'violence:handleBeakFumble'
+        'creature-attacks:handleBeakFumble'
       );
       // Ensure it's NOT using the weapon fumble
       expect(ifOp.parameters.then_actions[0].macro).not.toBe(
@@ -329,7 +329,7 @@ describe('handle_peck_target rule definition', () => {
           JSON.stringify(op.parameters.condition).includes('FUMBLE')
       );
       expect(fumbleIf.parameters.then_actions[0].macro).toBe(
-        'violence:handleBeakFumble'
+        'creature-attacks:handleBeakFumble'
       );
     });
   });

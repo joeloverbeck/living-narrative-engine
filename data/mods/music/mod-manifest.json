@@ -24,10 +24,6 @@
     {
       "id": "performances-states",
       "version": "^1.0.0"
-    },
-    {
-      "id": "items",
-      "version": "^1.0.0"
     }
   ],
   "content": {

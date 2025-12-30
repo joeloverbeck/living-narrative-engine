@@ -20,6 +20,7 @@ import {
 import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
 
 // ─── JSDoc Types (optional) ───────────────────────────────────────────────────
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger}  ILogger */
@@ -30,6 +31,73 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
 
 const makeRoutingPolicyService = () => ({
   validateAndHandle: jest.fn().mockReturnValue(true),
+});
+
+const makePerceptionEntryBuilder = () => ({
+  buildForRecipient: jest.fn().mockImplementation((params) => {
+    const {
+      recipientId,
+      baseEntry,
+      actorDescription,
+      targetDescription,
+      originatingActorId,
+      targetId,
+      filteredRecipientsMap,
+    } = params;
+
+    // Replicate the real PerceptionEntryBuilder logic for test fidelity
+    let descriptionForRecipient = baseEntry.descriptionText;
+    let skipSenseFiltering = false;
+    let perceivedVia;
+
+    // Actor receives actor_description WITHOUT filtering
+    if (actorDescription && recipientId === originatingActorId) {
+      descriptionForRecipient = actorDescription;
+      skipSenseFiltering = true;
+      perceivedVia = 'self';
+    }
+    // Target receives target_description WITH filtering (only if not also actor)
+    else if (
+      targetDescription &&
+      recipientId === targetId &&
+      recipientId !== originatingActorId
+    ) {
+      descriptionForRecipient = targetDescription;
+    }
+
+    let finalEntry;
+    const hasCustomDescription =
+      descriptionForRecipient !== baseEntry.descriptionText;
+
+    if (!skipSenseFiltering && filteredRecipientsMap) {
+      const filtered = filteredRecipientsMap.get(recipientId);
+      finalEntry = {
+        ...baseEntry,
+        descriptionText: hasCustomDescription
+          ? descriptionForRecipient
+          : (filtered?.descriptionText ?? baseEntry.descriptionText),
+        perceivedVia: filtered?.sense,
+      };
+    } else if (
+      perceivedVia ||
+      descriptionForRecipient !== baseEntry.descriptionText
+    ) {
+      finalEntry = {
+        ...baseEntry,
+        descriptionText: descriptionForRecipient,
+        ...(perceivedVia && { perceivedVia }),
+      };
+    } else {
+      finalEntry = baseEntry;
+    }
+
+    return finalEntry;
+  }),
+});
+
+const makeSensorialPropagationService = () => ({
+  shouldPropagate: jest.fn().mockReturnValue(false),
+  getLinkedLocationsWithPrefixedEntries: jest.fn().mockReturnValue([]),
 });
 
 /**
@@ -52,6 +120,8 @@ const makeEntry = (id = '1') => ({
 /** @type {jest.Mocked<IEntityManager>}  */ let em;
 /** @type {{ dispatch: jest.Mock }}      */ let dispatcher;
 /** @type {{ validateAndHandle: jest.Mock }} */ let routingPolicyService;
+/** @type {{ buildForRecipient: jest.Mock }} */ let perceptionEntryBuilder;
+/** @type {{ shouldPropagate: jest.Mock, getLinkedLocationsWithPrefixedEntries: jest.Mock }} */ let sensorialPropagationService;
 
 beforeEach(() => {
   log = {
@@ -75,6 +145,8 @@ beforeEach(() => {
   };
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
   routingPolicyService = makeRoutingPolicyService();
+  perceptionEntryBuilder = makePerceptionEntryBuilder();
+  sensorialPropagationService = makeSensorialPropagationService();
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -89,6 +161,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
       expect(h).toBeInstanceOf(AddPerceptionLogEntryHandler);
     });
@@ -152,6 +226,54 @@ describe('AddPerceptionLogEntryHandler', () => {
           })
       ).toThrow(/IRecipientRoutingPolicyService/);
     });
+
+    test('throws if perceptionEntryBuilder is missing or invalid', () => {
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+            routingPolicyService,
+            sensorialPropagationService,
+          })
+      ).toThrow(/IPerceptionEntryBuilder/);
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+            routingPolicyService,
+            perceptionEntryBuilder: {},
+            sensorialPropagationService,
+          })
+      ).toThrow(/IPerceptionEntryBuilder/);
+    });
+
+    test('throws if sensorialPropagationService is missing or invalid', () => {
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+            routingPolicyService,
+            perceptionEntryBuilder,
+          })
+      ).toThrow(/ISensorialPropagationService/);
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: dispatcher,
+            routingPolicyService,
+            perceptionEntryBuilder,
+            sensorialPropagationService: {},
+          })
+      ).toThrow(/ISensorialPropagationService/);
+    });
   });
 
   // ── Parameter-validation ───────────────────────────────────────────────────
@@ -163,6 +285,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
     });
 
@@ -226,6 +350,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
     });
 
@@ -309,7 +435,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       expect(em.addComponent).toHaveBeenCalledTimes(2);
       expect(
         em.addComponent.mock.calls.every(
-          ([id, , data]) =>
+          ([, , data]) =>
             data.logEntries.length === 1 && data.logEntries[0] === entry
         )
       ).toBe(true);
@@ -403,6 +529,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC]));
       em.hasComponent.mockReturnValue(true);
@@ -517,6 +645,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
     });
 
@@ -764,9 +894,6 @@ describe('AddPerceptionLogEntryHandler', () => {
       await h.execute({ location_id: LOC, entry });
 
       // No batch update should be attempted
-      if (em.batchAddComponentsOptimized) {
-        expect(em.batchAddComponentsOptimized).not.toHaveBeenCalled();
-      }
       expect(em.addComponent).not.toHaveBeenCalled();
 
       expect(log.debug).toHaveBeenCalledWith(
@@ -792,6 +919,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
     });
 
@@ -1018,6 +1147,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
         perceptionFilterService: mockPerceptionFilterService,
       });
 
@@ -1032,6 +1163,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
         // No perceptionFilterService provided
       });
       expect(handlerWithoutFilter).toBeInstanceOf(AddPerceptionLogEntryHandler);
@@ -1292,6 +1425,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       const entry = makeEntry('no_service');
@@ -1359,6 +1494,8 @@ describe('AddPerceptionLogEntryHandler', () => {
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
         perceptionFilterService: mockPerceptionFilterService,
       });
 
@@ -1650,11 +1787,51 @@ describe('AddPerceptionLogEntryHandler', () => {
 
     /** @type {AddPerceptionLogEntryHandler} */ let h;
     beforeEach(() => {
+      // Configure sensorial propagation to enable propagation for these tests
+      sensorialPropagationService.shouldPropagate.mockReturnValue(true);
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockImplementation(
+        (params) => {
+          const prefixedEntry = {
+            ...params.entry,
+            descriptionText: `(From Segment B) ${params.entry.descriptionText}`,
+          };
+          const prefixedAlternateDescriptions = params.alternateDescriptions
+            ? Object.fromEntries(
+                Object.entries(params.alternateDescriptions).map(
+                  ([key, value]) => [
+                    key,
+                    typeof value === 'string'
+                      ? `(From Segment B) ${value}`
+                      : value,
+                  ]
+                )
+              )
+            : undefined;
+          return [
+            {
+              locationId: LINKED_LOC,
+              entityIds: new Set([LINKED_ACTOR]),
+              mode: 'exclusion',
+              prefixedEntry,
+              prefixedAlternateDescriptions,
+              prefixedActorDescription: params.actorDescription
+                ? `(From Segment B) ${params.actorDescription}`
+                : undefined,
+              prefixedTargetDescription: params.targetDescription
+                ? `(From Segment B) ${params.targetDescription}`
+                : undefined,
+            },
+          ];
+        }
+      );
+
       h = new AddPerceptionLogEntryHandler({
         logger: log,
         entityManager: em,
         safeEventDispatcher: dispatcher,
         routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       em.hasComponent.mockImplementation(
@@ -1716,6 +1893,9 @@ describe('AddPerceptionLogEntryHandler', () => {
       const entry = makeEntry('loop_guard');
       entry.descriptionText = 'A distant clang echoes.';
 
+      // When origin differs, shouldPropagate returns false
+      sensorialPropagationService.shouldPropagate.mockReturnValue(false);
+
       await h.execute({
         location_id: ORIGIN_LOC,
         origin_location_id: 'loc:elsewhere',
@@ -1725,6 +1905,725 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       expect(em.addComponent).toHaveBeenCalledTimes(1);
       expect(em.addComponent.mock.calls[0][0]).toBe(ORIGIN_ACTOR);
+    });
+
+    test('logs "No entities in location" for linked location with no perceivers', async () => {
+      const entry = makeEntry('linked_empty');
+      entry.descriptionText = 'A sound from afar.';
+
+      // Override getEntitiesInLocation so linked location returns empty set
+      em.getEntitiesInLocation.mockImplementation((locationId) => {
+        if (locationId === ORIGIN_LOC) return new Set([ORIGIN_ACTOR]);
+        if (locationId === LINKED_LOC) return new Set(); // Empty linked location
+        return new Set();
+      });
+
+      // Override the mock to return linked location with empty entityIds
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: LINKED_LOC,
+          entityIds: new Set(), // Empty - no entities in linked location
+          mode: 'broadcast',
+          prefixedEntry: {
+            ...entry,
+            descriptionText: `(From Segment B) ${entry.descriptionText}`,
+          },
+        },
+      ]);
+
+      // NOTE: Not passing originating_actor_id so exclusion mode is NOT triggered
+      // for the linked location - otherwise it would log "All actors excluded"
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        entry,
+        // No originating_actor_id, so no exclusions for linked locations
+      });
+
+      // Origin actor should receive entry
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent.mock.calls[0][0]).toBe(ORIGIN_ACTOR);
+
+      // Should log debug for empty linked location (broadcast mode, not exclusion)
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${LINKED_LOC} (sensorial link)`
+        )
+      );
+    });
+
+    test('logs "All actors excluded" when linked location has all actors excluded', async () => {
+      const entry = makeEntry('all_excluded_linked');
+      entry.descriptionText = 'Echoes through the link.';
+
+      // Linked location has the originating actor (who is excluded from linked locations)
+      em.getEntitiesInLocation.mockImplementation((locationId) => {
+        if (locationId === ORIGIN_LOC) return new Set([ORIGIN_ACTOR]);
+        if (locationId === LINKED_LOC) return new Set([ORIGIN_ACTOR]); // Same actor
+        return new Set();
+      });
+
+      // Override mock to return empty entityIds (all actors excluded) with exclusion mode
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue(
+        [
+          {
+            locationId: LINKED_LOC,
+            entityIds: new Set(), // Empty - all actors excluded
+            mode: 'exclusion',
+            prefixedEntry: {
+              ...entry,
+              descriptionText: `(From Segment B) ${entry.descriptionText}`,
+            },
+          },
+        ]
+      );
+
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        entry,
+        originating_actor_id: ORIGIN_ACTOR, // This actor is excluded in linked locations
+      });
+
+      // Origin actor should receive entry
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent.mock.calls[0][0]).toBe(ORIGIN_ACTOR);
+
+      // Should log debug for all actors excluded in linked location
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${LINKED_LOC} (sensorial link)`
+        )
+      );
+    });
+
+    test('preserves non-string values in alternate_descriptions when prefixing', async () => {
+      const entry = makeEntry('non_string_alt');
+      entry.descriptionText = 'Complex event.';
+
+      const nonStringValue = { nested: 'object' };
+      const alternateDescriptions = {
+        auditory: 'You hear something.',
+        custom_data: nonStringValue, // Non-string value
+      };
+
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        entry,
+        originating_actor_id: ORIGIN_ACTOR,
+        alternate_descriptions: alternateDescriptions,
+      });
+
+      // Both origin and linked should receive entries
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // The linked location should receive prefixed entry
+      const linkedCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === LINKED_ACTOR
+      );
+      expect(linkedCall).toBeDefined();
+    });
+  });
+
+  // Note: Empty recipient edge cases for "No matching recipients" were removed.
+  // The explicit mode branch is unreachable because:
+  // - Explicit mode (usingExplicitRecipients=true) requires non-empty recipient_ids array
+  // - Non-empty recipient_ids creates a non-empty entityIds Set
+  // - Empty recipient_ids array falls through to broadcast mode in RecipientSetBuilder
+  // Therefore, entityIds.size === 0 with usingExplicitRecipients is impossible.
+
+  describe('RecipientSetBuilder contract regression', () => {
+    test('explicit mode always produces non-empty entityIds', () => {
+      const builder = new RecipientSetBuilder({ entityManager: em, logger: log });
+
+      const { entityIds, mode } = builder.build({
+        locationId: 'loc:explicit',
+        explicitRecipients: ['actor:one'],
+      });
+
+      expect(mode).toBe('explicit');
+      expect(entityIds.size).toBeGreaterThan(0);
+    });
+
+    test('empty explicitRecipients falls through to broadcast mode', () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set(['actor:one']));
+
+      const builder = new RecipientSetBuilder({ entityManager: em, logger: log });
+
+      const { entityIds, mode } = builder.build({
+        locationId: 'loc:broadcast',
+        explicitRecipients: [],
+      });
+
+      expect(mode).toBe('broadcast');
+      expect(entityIds.size).toBe(1);
+    });
+  });
+
+  // ── Target Description with Partial Filtering ───────────────────────
+  describe('execute – target_description with partial sense filtering', () => {
+    const LOC = 'loc:partial_filter';
+    const ACTOR = 'actor:performer';
+    const TARGET = 'npc:target';
+    const OBSERVER = 'npc:observer';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    /** @type {jest.Mock} */ let mockPerceptionFilterService;
+
+    beforeEach(() => {
+      mockPerceptionFilterService = {
+        filterEventForRecipients: jest.fn(),
+      };
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+        perceptionFilterService: mockPerceptionFilterService,
+      });
+
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR, TARGET, OBSERVER])
+      );
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('uses target_description when recipient has no filtered result', async () => {
+      const entry = makeEntry('partial_filter_test');
+      entry.descriptionText = 'Observer sees action.';
+
+      const targetDescription = 'Target feels the action directly.';
+
+      // Filter returns result for OBSERVER but NOT for TARGET (canPerceive: false)
+      // This means TARGET will fall through to line 368 where it uses target_description
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: OBSERVER,
+          descriptionText: 'Observer filtered text.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: TARGET,
+          descriptionText: null, // No perception
+          sense: 'visual',
+          canPerceive: false, // Cannot perceive visually
+        },
+        {
+          entityId: ACTOR,
+          descriptionText: 'Actor sees self.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        originating_actor_id: ACTOR,
+        target_id: TARGET,
+        target_description: targetDescription,
+        alternate_descriptions: { auditory: 'fallback' }, // Triggers filtering
+      });
+
+      // ACTOR and OBSERVER should receive entries (TARGET filtered out by canPerceive: false)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // Observer should receive filtered text
+      const observerCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === OBSERVER
+      );
+      expect(observerCall[2].logEntries[0].descriptionText).toBe(
+        'Observer filtered text.'
+      );
+      expect(observerCall[2].logEntries[0].perceivedVia).toBe('visual');
+    });
+
+    test('preserves original entry when no custom description and no filtered result', async () => {
+      const entry = makeEntry('preserve_original');
+      entry.descriptionText = 'Original description.';
+
+      // Filter returns all recipients as able to perceive, but one has different description
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: OBSERVER,
+          descriptionText: 'Original description.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: TARGET,
+          descriptionText: 'Original description.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: ACTOR,
+          descriptionText: 'Original description.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        originating_actor_id: ACTOR,
+        alternate_descriptions: { auditory: 'fallback' }, // Triggers filtering
+      });
+
+      // All 3 should receive entries
+      expect(em.addComponent).toHaveBeenCalledTimes(3);
+
+      // TARGET should receive original entry (same description after filtering)
+      const targetCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === TARGET
+      );
+      expect(targetCall[2].logEntries[0].descriptionText).toBe(
+        'Original description.'
+      );
+    });
+  });
+
+  // ── Main Execute Level Empty Recipients (lines 508-514) ───────────────────────
+  // These lines are hit when primary location has no recipients AND sensorial links
+  // cannot be propagated (explicit recipients mode or origin_location_id != location_id)
+  describe('execute – main level empty recipients without sensorial link propagation', () => {
+    const LOC = 'loc:main_empty';
+    const OTHER_LOC = 'loc:other';
+    const ACTOR_A = 'npc:alpha';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    beforeEach(() => {
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('logs "All actors excluded" when all excluded and origin differs from location', async () => {
+      const entry = makeEntry('all_excluded_main');
+      // Location has entities but all are excluded
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A]));
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        excluded_actor_ids: [ACTOR_A], // Exclude all
+        origin_location_id: OTHER_LOC, // Different from location_id, prevents sensorial propagation
+      });
+
+      // No updates should happen
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should log the exclusion message
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(`ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${LOC}`)
+      );
+    });
+
+    test('logs "No entities in location" when empty and origin differs from location', async () => {
+      const entry = makeEntry('no_entities_main');
+      // Location is empty
+      em.getEntitiesInLocation.mockReturnValue(new Set());
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        origin_location_id: OTHER_LOC, // Different from location_id, prevents sensorial propagation
+      });
+
+      // No updates should happen
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should log the empty location message
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(`ADD_PERCEPTION_LOG_ENTRY: No entities in location ${LOC}`)
+      );
+    });
+  });
+
+  // ── Non-String Alternate Descriptions (line 566) ────────────────────────────
+  describe('execute – non-string alternate_descriptions in sensorial propagation', () => {
+    const ORIGIN_LOC = 'loc:origin_nonstring';
+    const LINKED_LOC = 'loc:linked_nonstring';
+    const ORIGIN_ACTOR = 'npc:origin_actor';
+    const LINKED_ACTOR = 'npc:linked_actor';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    beforeEach(() => {
+      // Configure sensorial propagation to enable propagation for these tests
+      sensorialPropagationService.shouldPropagate.mockReturnValue(true);
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockImplementation(
+        (params) => {
+          const prefixedEntry = {
+            ...params.entry,
+            descriptionText: `(From Origin Room) ${params.entry.descriptionText}`,
+          };
+          const prefixedAlternateDescriptions = params.alternateDescriptions
+            ? Object.fromEntries(
+                Object.entries(params.alternateDescriptions).map(
+                  ([key, value]) => [
+                    key,
+                    typeof value === 'string'
+                      ? `(From Origin Room) ${value}`
+                      : value,
+                  ]
+                )
+              )
+            : undefined;
+          return [
+            {
+              locationId: LINKED_LOC,
+              entityIds: new Set([LINKED_ACTOR]),
+              mode: 'exclusion',
+              prefixedEntry,
+              prefixedAlternateDescriptions,
+              prefixedActorDescription: params.actorDescription
+                ? `(From Origin Room) ${params.actorDescription}`
+                : undefined,
+              prefixedTargetDescription: params.targetDescription
+                ? `(From Origin Room) ${params.targetDescription}`
+                : undefined,
+            },
+          ];
+        }
+      );
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+      });
+
+      em.getEntitiesInLocation.mockImplementation((locationId) => {
+        if (locationId === ORIGIN_LOC) return new Set([ORIGIN_ACTOR]);
+        if (locationId === LINKED_LOC) return new Set([LINKED_ACTOR]);
+        return new Set();
+      });
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockImplementation((id, componentTypeId) => {
+        if (
+          id === ORIGIN_LOC &&
+          componentTypeId === 'locations:sensorial_links'
+        ) {
+          return { targets: [LINKED_LOC] };
+        }
+        if (id === ORIGIN_LOC && componentTypeId === 'core:name') {
+          return { text: 'Origin Room' };
+        }
+        return { maxEntries: 10, logEntries: [] };
+      });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('preserves non-string values in alternate_descriptions while prefixing strings', async () => {
+      const entry = makeEntry('nonstring_alt');
+      entry.descriptionText = 'A sound echoes.';
+
+      // alternate_descriptions includes non-string value (object/array/number)
+      const nonStringValue = { nested: 'object', count: 42 };
+      const arrayValue = ['item1', 'item2'];
+
+      await h.execute({
+        location_id: ORIGIN_LOC,
+        entry,
+        alternate_descriptions: {
+          auditory: 'You hear a sound.',
+          visual: nonStringValue, // Non-string, should be preserved as-is
+          tactile: arrayValue, // Non-string array, should be preserved as-is
+        },
+      });
+
+      // Both origin and linked actors should receive entries
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // The linked location should have received the call
+      const linkedCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === LINKED_ACTOR
+      );
+      expect(linkedCall).toBeDefined();
+
+      // Verify the entry was received (prefixing happened for strings but not non-strings)
+      expect(linkedCall[2].logEntries[0].descriptionText).toContain(
+        'A sound echoes.'
+      );
+    });
+  });
+
+  describe('execute – telemetry logging', () => {
+    const LOC = 'loc:telemetry';
+    const NPC1 = 'npc:telemetry_one';
+    const NPC2 = 'npc:telemetry_two';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    /** @type {{ filterEventForRecipients: jest.Mock }} */ let mockPerceptionFilterService;
+
+    const findDebugCall = (message) =>
+      log.debug.mock.calls.find(([callMessage]) =>
+        callMessage.includes(message)
+      );
+
+    beforeEach(() => {
+      mockPerceptionFilterService = {
+        filterEventForRecipients: jest.fn(),
+      };
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+        perceptionFilterService: mockPerceptionFilterService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('logs operation start with correct fields', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_start'),
+          recipient_ids: [NPC1],
+          alternate_descriptions: { auditory: 'sound' },
+          actor_description: 'actor text',
+          target_description: 'target text',
+          sense_aware: false,
+        },
+        { operationId: 'op-start' }
+      );
+
+      const startCall = findDebugCall(
+        'ADD_PERCEPTION_LOG_ENTRY: Starting operation'
+      );
+      expect(startCall).toBeDefined();
+      const [, payload] = startCall;
+      expect(payload).toEqual(
+        expect.objectContaining({
+          operationId: 'op-start',
+          locationId: LOC,
+          recipientMode: 'explicit',
+          recipientCount: 1,
+          senseAware: false,
+          hasAlternateDescriptions: true,
+          hasActorDescription: true,
+          hasTargetDescription: true,
+        })
+      );
+    });
+
+    test('logs filtering results when sense-aware', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, 'npc:three']));
+
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        { entityId: NPC1, descriptionText: 'text', sense: 'visual', canPerceive: true },
+        { entityId: NPC2, descriptionText: 'text', sense: 'auditory', canPerceive: true },
+        { entityId: 'npc:three', descriptionText: null, sense: 'visual', canPerceive: false },
+      ]);
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_filter'),
+          alternate_descriptions: { auditory: 'fallback' },
+        },
+        { operationId: 'op-filter' }
+      );
+
+      const filterCall = findDebugCall(
+        'ADD_PERCEPTION_LOG_ENTRY: Filtering complete'
+      );
+      expect(filterCall).toBeDefined();
+      const [, payload] = filterCall;
+      expect(payload).toEqual(
+        expect.objectContaining({
+          operationId: 'op-filter',
+          locationId: LOC,
+          filteredCount: 2,
+          excludedCount: 1,
+          filteringApplied: true,
+        })
+      );
+      expect(payload.durationMs).toEqual(expect.any(Number));
+    });
+
+    test('logs entry writing summary', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_write'),
+          sense_aware: false,
+        },
+        { operationId: 'op-write' }
+      );
+
+      const writeCall = findDebugCall('ADD_PERCEPTION_LOG_ENTRY: Entries written');
+      expect(writeCall).toBeDefined();
+      const [, payload] = writeCall;
+      expect(payload).toEqual(
+        expect.objectContaining({
+          operationId: 'op-write',
+          locationId: LOC,
+          successCount: 2,
+          failureCount: 0,
+          batchMode: false,
+        })
+      );
+      expect(payload.durationMs).toEqual(expect.any(Number));
+    });
+
+    test('logs sensorial propagation when applicable', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+      sensorialPropagationService.shouldPropagate.mockReturnValue(true);
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: 'loc:linked_one',
+          entityIds: new Set([NPC2]),
+          mode: 'broadcast',
+          prefixedEntry: makeEntry('telemetry_linked_1'),
+        },
+        {
+          locationId: 'loc:linked_two',
+          entityIds: new Set([NPC1, NPC2]),
+          mode: 'broadcast',
+          prefixedEntry: makeEntry('telemetry_linked_2'),
+        },
+      ]);
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_propagation'),
+          sense_aware: false,
+        },
+        { operationId: 'op-propagation' }
+      );
+
+      const propagationCall = findDebugCall(
+        'ADD_PERCEPTION_LOG_ENTRY: Sensorial propagation'
+      );
+      expect(propagationCall).toBeDefined();
+      const [, payload] = propagationCall;
+      expect(payload).toEqual(
+        expect.objectContaining({
+          operationId: 'op-propagation',
+          originLocationId: LOC,
+          linkedLocationCount: 2,
+          propagated: true,
+          totalPropagatedEntries: 3,
+        })
+      );
+    });
+
+    test('logs operation completion with duration', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_complete'),
+          sense_aware: false,
+        },
+        { operationId: 'op-complete' }
+      );
+
+      const completionCalls = log.debug.mock.calls.filter(
+        ([callMessage]) =>
+          callMessage.includes('ADD_PERCEPTION_LOG_ENTRY: Operation complete')
+      );
+      expect(completionCalls.length).toBeGreaterThan(0);
+      const [, payload] = completionCalls[completionCalls.length - 1];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          operationId: 'op-complete',
+          totalRecipientsProcessed: 1,
+          locationsProcessed: 1,
+        })
+      );
+      expect(payload.totalDurationMs).toEqual(expect.any(Number));
+    });
+
+    test('uses debug level for all telemetry', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_debug'),
+          sense_aware: false,
+        },
+        { operationId: 'op-debug' }
+      );
+
+      expect(log.info).not.toHaveBeenCalled();
+      expect(log.warn).not.toHaveBeenCalled();
+    });
+
+    test('handles missing operationId gracefully', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute({
+        location_id: LOC,
+        entry: makeEntry('telemetry_missing_op'),
+        sense_aware: false,
+      });
+
+      const startCall = findDebugCall(
+        'ADD_PERCEPTION_LOG_ENTRY: Starting operation'
+      );
+      expect(startCall).toBeDefined();
+      const [, payload] = startCall;
+      expect(payload.operationId).toMatch(/^aple_/);
+    });
+
+    test('does not log sensitive data', async () => {
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('telemetry_sensitive'),
+          alternate_descriptions: { auditory: 'secret' },
+          sense_aware: false,
+        },
+        { operationId: 'op-sensitive' }
+      );
+
+      const objectPayloads = log.debug.mock.calls
+        .map(([, payload]) => payload)
+        .filter((payload) => payload && typeof payload === 'object');
+
+      objectPayloads.forEach((payload) => {
+        const payloadKeys = Object.keys(payload);
+        expect(payloadKeys).not.toContain('entry');
+        expect(payloadKeys).not.toContain('descriptionText');
+        expect(payloadKeys).not.toContain('alternate_descriptions');
+        expect(payloadKeys).not.toContain('actor_description');
+        expect(payloadKeys).not.toContain('target_description');
+      });
     });
   });
 });

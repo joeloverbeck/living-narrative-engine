@@ -30,7 +30,7 @@ describe('deference-states:kneeling_before component schema validation', () => {
       expect(pattern.test('test:target_entity')).toBe(true);
       expect(pattern.test('p_erotica:amaia_castillo_instance')).toBe(true);
       expect(pattern.test('mod_name:entity_123')).toBe(true);
-      expect(pattern.test('violence:weapon-sword')).toBe(true);
+      expect(pattern.test('striking:weapon-sword')).toBe(true);
     });
 
     it('should reject non-namespaced entity IDs', () => {

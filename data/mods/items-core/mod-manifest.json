@@ -6,7 +6,12 @@
   "description": "Core item identification and portability markers shared by all item-related mods",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "inventory",
+      "version": "1.0.0"
+    }
+  ],
   "content": {
     "components": [
       "item.component.json",
@@ -14,6 +19,7 @@
       "portable.component.json"
     ],
     "scopes": [
+      "examinable_items.scope",
       "items_at_actor_location.scope",
       "items_at_location.scope",
       "non_portable_items_at_location.scope"

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "creature-attacks:event-is-action-peck-target",
+  "description": "Checks if the event is a peck_target action attempt",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "creature-attacks:peck_target"]
+  }
+}

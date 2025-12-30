@@ -32,10 +32,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "items",
-      "version": "^1.0.0"
-    },
-    {
       "id": "reading",
       "version": "^1.0.0"
     },
@@ -105,6 +101,10 @@
     },
     {
       "id": "drinking",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "smoking",
       "version": "^1.0.0"
     }
   ],

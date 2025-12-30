@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for violence:actor_beak_body_parts scope
+ * @file Integration tests for creature-attacks:actor_beak_body_parts scope
  * @description Tests that the actor_beak_body_parts scope properly returns body part
  * entity IDs where subType contains "beak" and has damage capabilities component.
  */
@@ -26,7 +26,7 @@ import path from 'path';
 const beakScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../../data/mods/violence/scopes/actor_beak_body_parts.scope'
+    '../../../../data/mods/creature-attacks/scopes/actor_beak_body_parts.scope'
   ),
   'utf8'
 );
@@ -92,8 +92,8 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'violence:actor_beak_body_parts': scopeDefinitions.get(
-        'violence:actor_beak_body_parts'
+      'creature-attacks:actor_beak_body_parts': scopeDefinitions.get(
+        'creature-attacks:actor_beak_body_parts'
       ),
     });
 
@@ -216,7 +216,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -268,7 +268,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -316,7 +316,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -366,7 +366,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -415,7 +415,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -464,7 +464,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -528,7 +528,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -594,7 +594,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -639,7 +639,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );
@@ -681,7 +681,7 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
       // Resolve the scope
       const result = scopeEngine.resolve(
-        scopeRegistry.getScopeAst('violence:actor_beak_body_parts'),
+        scopeRegistry.getScopeAst('creature-attacks:actor_beak_body_parts'),
         actorEntity,
         runtimeCtx
       );

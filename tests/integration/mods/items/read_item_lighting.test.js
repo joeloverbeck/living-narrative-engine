@@ -120,7 +120,7 @@ describe('reading:read_item lighting prerequisite', () => {
     test('should preserve other action properties', () => {
       expect(readItemAction.id).toBe('reading:read_item');
       expect(readItemAction.template).toBe('read {item}');
-      expect(readItemAction.targets.primary.scope).toBe('items:examinable_items');
+      expect(readItemAction.targets.primary.scope).toBe('items-core:examinable_items');
     });
   });
 

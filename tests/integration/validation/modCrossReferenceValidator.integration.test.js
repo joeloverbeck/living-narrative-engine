@@ -268,7 +268,7 @@ describe('ModCrossReferenceValidator - Integration', () => {
           ],
           dependencies: [{ id: 'anatomy', version: '^1.0.0' }], // Missing personal-space dependency
         },
-        violence: {
+        striking: {
           files: [],
           dependencies: [{ id: 'personal-space', version: '^1.0.0' }],
         },
@@ -313,10 +313,12 @@ describe('ModCrossReferenceValidator - Integration', () => {
       expect(results.get('anatomy').hasViolations).toBe(false);
       expect(results.get('personal-space').hasViolations).toBe(false);
 
-      // Violence has unused dependency (declares personal-space but no files use it)
+      // Striking has unused dependency (declares personal-space but no files use it)
       // This is correct behavior - unused dependencies are flagged as violations
-      expect(results.get('violence').hasViolations).toBe(true);
-      expect(results.get('violence').unusedDependencies).toContain('personal-space');
+      expect(results.get('striking').hasViolations).toBe(true);
+      expect(results.get('striking').unusedDependencies).toContain(
+        'personal-space'
+      );
     });
 
     it('should detect nested target scopes in action files (BUG FIX)', async () => {

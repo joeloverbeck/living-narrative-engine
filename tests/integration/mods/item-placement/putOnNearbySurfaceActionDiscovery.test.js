@@ -17,6 +17,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import putOnNearbySurfaceAction from '../../../../data/mods/item-placement/actions/put_on_nearby_surface.action.json' assert { type: 'json' };
 
 const ACTION_ID = 'item-placement:put_on_nearby_surface';
@@ -27,6 +28,9 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('item-placement', ACTION_ID);
+
+    // Register inventory scopes needed for put_on_nearby_surface action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -70,7 +74,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
 
   it('should use actor_inventory_items scope for secondary targets', () => {
     expect(putOnNearbySurfaceAction.targets.secondary.scope).toBe(
-      'items:actor_inventory_items'
+      'inventory:actor_inventory_items'
     );
   });
 

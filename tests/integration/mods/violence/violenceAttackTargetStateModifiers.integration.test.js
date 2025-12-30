@@ -1,9 +1,9 @@
 /**
- * @file Integration tests for violence attack target state modifiers
+ * @file Integration tests for striking attack target state modifiers
  * @description Tests the chance modifiers applied when attacking fallen or restrained targets
- *              with violence actions (punch_target, slap_target).
- * @see data/mods/violence/actions/punch_target.action.json
- * @see data/mods/violence/actions/slap_target.action.json
+ *              with striking actions (punch_target, slap_target).
+ * @see data/mods/striking/actions/punch_target.action.json
+ * @see data/mods/striking/actions/slap_target.action.json
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -52,10 +52,10 @@ function createMockEntityManager(entityComponents = {}) {
 }
 
 /**
- * Shared modifier configuration matching the actual violence action files.
+ * Shared modifier configuration matching the actual striking action files.
  * These are the modifiers added to punch_target and slap_target actions.
  */
-const VIOLENCE_ATTACK_MODIFIERS = [
+const STRIKING_ATTACK_MODIFIERS = [
   {
     condition: {
       logic: {
@@ -86,7 +86,7 @@ const VIOLENCE_ATTACK_MODIFIERS = [
   },
 ];
 
-describe('Violence Attack Target State Modifiers', () => {
+describe('Striking Attack Target State Modifiers', () => {
   let logger;
   let modifierContextBuilder;
   let modifierCollectorService;
@@ -132,7 +132,7 @@ describe('Violence Attack Target State Modifiers', () => {
 
       const actionConfig = {
         enabled: true,
-        modifiers: VIOLENCE_ATTACK_MODIFIERS,
+        modifiers: STRIKING_ATTACK_MODIFIERS,
       };
 
       // Act
@@ -162,7 +162,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'fallen_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       expect(result.modifiers.some((m) => m.tag === 'target downed')).toBe(
@@ -191,7 +191,7 @@ describe('Violence Attack Target State Modifiers', () => {
 
       const actionConfig = {
         enabled: true,
-        modifiers: VIOLENCE_ATTACK_MODIFIERS,
+        modifiers: STRIKING_ATTACK_MODIFIERS,
       };
 
       // Act
@@ -223,7 +223,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'restrained_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       expect(result.modifiers.some((m) => m.tag === 'target restrained')).toBe(
@@ -255,7 +255,7 @@ describe('Violence Attack Target State Modifiers', () => {
 
       const actionConfig = {
         enabled: true,
-        modifiers: VIOLENCE_ATTACK_MODIFIERS,
+        modifiers: STRIKING_ATTACK_MODIFIERS,
       };
 
       // Act
@@ -290,7 +290,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'helpless_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       expect(result.modifiers).toHaveLength(2);
@@ -317,7 +317,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'helpless_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // Without stackId, both flat modifiers should add together
@@ -343,7 +343,7 @@ describe('Violence Attack Target State Modifiers', () => {
 
       const actionConfig = {
         enabled: true,
-        modifiers: VIOLENCE_ATTACK_MODIFIERS,
+        modifiers: STRIKING_ATTACK_MODIFIERS,
       };
 
       // Act
@@ -369,7 +369,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'normal_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       expect(result.modifiers).toHaveLength(0);
@@ -380,8 +380,8 @@ describe('Violence Attack Target State Modifiers', () => {
     // Test that both punch_target and slap_target use the same modifier structure
 
     const actionConfigs = {
-      'violence:punch_target': {
-        id: 'violence:punch_target',
+      'striking:punch_target': {
+        id: 'striking:punch_target',
         name: 'Punch Target',
         template: 'punch {target} with {weapon} ({chance}% chance)',
         chanceBased: {
@@ -393,11 +393,11 @@ describe('Violence Attack Target State Modifiers', () => {
             default: 0,
             targetRole: 'secondary',
           },
-          modifiers: VIOLENCE_ATTACK_MODIFIERS,
+          modifiers: STRIKING_ATTACK_MODIFIERS,
         },
       },
-      'violence:slap_target': {
-        id: 'violence:slap_target',
+      'striking:slap_target': {
+        id: 'striking:slap_target',
         name: 'Slap Target',
         template: 'slap {target} with {weapon} ({chance}% chance)',
         chanceBased: {
@@ -409,7 +409,7 @@ describe('Violence Attack Target State Modifiers', () => {
             default: 0,
             targetRole: 'secondary',
           },
-          modifiers: VIOLENCE_ATTACK_MODIFIERS,
+          modifiers: STRIKING_ATTACK_MODIFIERS,
         },
       },
     };
@@ -490,7 +490,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         // No secondaryTargetId provided
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // No modifiers should apply when target is missing
@@ -507,7 +507,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'nonexistent_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // Should handle gracefully without errors
@@ -530,7 +530,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'normal_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // Modifiers check entity.secondary (target), not entity.actor
@@ -601,7 +601,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'fallen_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // The +15 flat modifier should be collected
@@ -629,7 +629,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'restrained_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // The +10 flat modifier should be collected
@@ -658,7 +658,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'helpless_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // Both modifiers should be collected (+15 + +10 = +25)
@@ -683,7 +683,7 @@ describe('Violence Attack Target State Modifiers', () => {
       const result = modifierCollectorService.collectModifiers({
         actorId: 'attacker',
         secondaryTargetId: 'normal_target',
-        actionConfig: { modifiers: VIOLENCE_ATTACK_MODIFIERS },
+        actionConfig: { modifiers: STRIKING_ATTACK_MODIFIERS },
       });
 
       // No modifiers collected

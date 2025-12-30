@@ -9,8 +9,8 @@ This document tracks which color schemes are actively used by mods in the Living
 ## Current Status
 
 **Total Schemes Defined**: 69
-**In Use**: 56 schemes actively implemented across mods
-**Available**: 13 schemes ready for future mods
+**In Use**: 58 schemes actively implemented across mods
+**Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -24,6 +24,8 @@ This document tracks which color schemes are actively used by mods in the Living
 | Caressing               | Dark Purple         | 7.2     | `#311b92`        | Active |
 | Clothing                | Earth Brown         | 4.2     | `#6d4c41`        | Active |
 | Companionship           | Deep Teal           | 3.3     | `#00695c`        | Active |
+| Comfort Items           | Sunlit Lagoon       | 23.2    | `#4fc3f7`        | Active |
+| Cosmetics               | Bold Red            | 2.1     | `#c62828`        | Active |
 | Containers              | Depot Olive         | 18.3    | `#354230`        | Active |
 | Core                    | Classic Blue-Grey   | 1.1     | `#455a64`        | Active |
 | Deference               | Ceremonial Midnight | 14.1    | `#1f2d3d`        | Active |
@@ -129,6 +131,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Theme**: Minimal, elegant, understated, restful
 
 ### 2. Action/Combat Colors
+
+#### 2.1 Bold Red - Cosmetics
+
+```json
+{
+  "backgroundColor": "#c62828",
+  "textColor": "#ffffff",
+  "hoverBackgroundColor": "#d32f2f",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 7.13:1 AAA
+- **Hover Contrast**: 5.25:1 AA
+- **Use Cases**: Cosmetic application, lipstick, bold personal presentation
+- **Theme**: Confident, vivid, polished
 
 #### 2.2 Dark Crimson - Violence
 
@@ -999,6 +1017,22 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Hover Contrast**: 9.10:1 AAA
 - **Use Cases**: Entering water, wading, swimming, diving, submerged traversal
 - **Theme**: Lively teal water that keeps the mood fresh and exploratory
+
+#### 23.2 Sunlit Lagoon - Comfort Items
+
+```json
+{
+  "backgroundColor": "#4fc3f7",
+  "textColor": "#0b1f2a",
+  "hoverBackgroundColor": "#81d4fa",
+  "hoverTextColor": "#0b1f2a"
+}
+```
+
+- **Normal Contrast**: 8.43:1 AAA
+- **Hover Contrast**: 10.24:1 AAA
+- **Use Cases**: Comfort items, soothing hugs, calming gestures
+- **Theme**: Clear, sunlit water with buoyant, airy calm
 
 ### 24. Dimensional/Portal Colors
 

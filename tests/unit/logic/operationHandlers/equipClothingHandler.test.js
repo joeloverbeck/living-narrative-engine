@@ -277,4 +277,367 @@ describe('EquipClothingHandler', () => {
       items: ['coat1', 'apple'],
     });
   });
+
+  it('returns early when params is null', async () => {
+    await handler.execute(null, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).not.toHaveBeenCalled();
+  });
+
+  it('returns early when params is undefined', async () => {
+    await handler.execute(undefined, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).not.toHaveBeenCalled();
+  });
+
+  it('returns false when entity_ref is invalid object', async () => {
+    const params = {
+      entity_ref: { invalid: 'object' },
+      clothing_item_id: 'coat1',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).not.toHaveBeenCalled();
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(false);
+  });
+
+  it('succeeds without writing result when result_variable is omitted', async () => {
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(executionContext.evaluationContext.context.equipSuccess).toBeUndefined();
+  });
+
+  it('handles equipment component without equipped property', async () => {
+    let equipmentState = {};
+    let inventoryState = { items: ['coat1', 'apple'] };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return inventoryState;
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'inventory:inventory') {
+        inventoryState = data;
+      }
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('handles inventory without items array during removal', async () => {
+    let equipmentState = { equipped: { torso: { outer: 'cape1' } } };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return { items: null };
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('not found in inventories')
+    );
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('handles item not present in inventory during removal', async () => {
+    let equipmentState = { equipped: { torso: { outer: 'cape1' } } };
+    let inventoryState = { items: ['apple', 'bread'] };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return inventoryState;
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'inventory:inventory') {
+        inventoryState = data;
+      }
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('not found in inventories')
+    );
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('falls back to ground when inventory has invalid items array for displaced item', async () => {
+    let equipmentState = { equipped: { torso: { outer: 'cape1' } } };
+
+    mockEntityManager.hasComponent = jest.fn((entityId, componentId) => {
+      if (componentId === 'clothing:equipment') return true;
+      if (componentId === 'inventory:inventory') return true;
+      if (componentId === 'core:inventory') return false;
+      if (componentId === 'core:position') return true;
+      return false;
+    });
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return { items: 'not-an-array' };
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      destination: 'inventory',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+      'cape1',
+      'core:position',
+      { locationId: 'room_001' }
+    );
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('skips adding displaced item when already in inventory', async () => {
+    let equipmentState = { equipped: { torso: { outer: 'cape1' } } };
+    let inventoryState = { items: ['coat1', 'cape1', 'apple'] };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return inventoryState;
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'inventory:inventory') {
+        inventoryState = data;
+      }
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      destination: 'inventory',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    const addInventoryCalls = mockEntityManager.addComponent.mock.calls.filter(
+      ([, componentId]) => componentId === 'inventory:inventory'
+    );
+    const lastInventoryState = addInventoryCalls.length > 0
+      ? addInventoryCalls[addInventoryCalls.length - 1][2]
+      : inventoryState;
+    expect(lastInventoryState.items.filter((id) => id === 'cape1').length).toBe(1);
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('logs warning when ground placement fails due to missing position', async () => {
+    let equipmentState = { equipped: { torso: { outer: 'cape1' } } };
+
+    mockEntityManager.hasComponent = jest.fn((entityId, componentId) => {
+      if (componentId === 'clothing:equipment') return true;
+      if (componentId === 'inventory:inventory') return false;
+      if (componentId === 'core:inventory') return false;
+      if (componentId === 'core:position') return true;
+      return false;
+    });
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'core:position') return {};
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      destination: 'ground',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Unable to place')
+    );
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('skips inventory removal when remove_from_inventory is false', async () => {
+    let inventoryState = { items: ['coat1', 'apple'] };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment')
+        return { equipped: { torso: { outer: 'cape1' } } };
+      if (componentId === 'inventory:inventory') return inventoryState;
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      remove_from_inventory: false,
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(inventoryState.items).toContain('coat1');
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
+
+  it('handles equipment slots with non-object values', async () => {
+    let equipmentState = {
+      equipped: {
+        torso: 'just-a-string',
+        head: null,
+        feet: { outer: 123 },
+      },
+    };
+    let inventoryState = { items: ['coat1', 'apple'] };
+
+    mockEntityManager.getComponentData = jest.fn((_, componentId) => {
+      if (componentId === 'clothing:equipment') return equipmentState;
+      if (componentId === 'inventory:inventory') return inventoryState;
+      if (componentId === 'core:position') return { locationId: 'room_001' };
+      return undefined;
+    });
+    mockEntityManager.addComponent = jest.fn((_, componentId, data) => {
+      if (componentId === 'inventory:inventory') {
+        inventoryState = data;
+      }
+      if (componentId === 'clothing:equipment') {
+        equipmentState = data;
+      }
+    });
+
+    mockEquipmentOrchestrator.orchestrateEquipment.mockImplementationOnce(
+      async () => {
+        equipmentState = { equipped: { torso: { outer: 'coat1' } } };
+        return { success: true };
+      }
+    );
+
+    const params = {
+      entity_ref: 'actor',
+      clothing_item_id: 'coat1',
+      result_variable: 'equipSuccess',
+    };
+
+    await handler.execute(params, executionContext);
+
+    expect(mockEquipmentOrchestrator.orchestrateEquipment).toHaveBeenCalled();
+    expect(executionContext.evaluationContext.context.equipSuccess).toBe(true);
+  });
 });

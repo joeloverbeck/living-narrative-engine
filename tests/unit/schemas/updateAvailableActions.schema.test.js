@@ -70,10 +70,10 @@ describe('Schema – core:update_available_actions payload', () => {
         },
         {
           index: 2,
-          actionId: 'violence:slap',
+          actionId: 'striking:slap_target',
           commandString: 'slap target',
           params: { targetId: 'core:npc_1' },
-          description: 'Slap someone across the face',
+          description: 'Slap a target',
           visual: {
             backgroundColor: '#cc0000',
             textColor: '#ffffff',

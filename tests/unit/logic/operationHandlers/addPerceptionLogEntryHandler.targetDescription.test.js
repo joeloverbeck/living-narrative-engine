@@ -28,6 +28,8 @@ import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandler
 /** @type {{ dispatch: jest.Mock }} */ let dispatcher;
 /** @type {{ filterEventForRecipients: jest.Mock }} */ let mockPerceptionFilterService;
 /** @type {{ validateAndHandle: jest.Mock }} */ let mockRoutingPolicyService;
+/** @type {{ buildForRecipient: jest.Mock }} */ let perceptionEntryBuilder;
+/** @type {{ shouldPropagate: jest.Mock, getLinkedLocationsWithPrefixedEntries: jest.Mock }} */ let sensorialPropagationService;
 
 const LOC = 'loc:test_room';
 const ACTOR_ID = 'npc:pitch';
@@ -75,6 +77,71 @@ beforeEach(() => {
   mockRoutingPolicyService = {
     validateAndHandle: jest.fn().mockReturnValue(true),
   };
+
+  // Mock perceptionEntryBuilder to replicate actual entry building logic
+  perceptionEntryBuilder = {
+    buildForRecipient: jest.fn().mockImplementation((params) => {
+      const {
+        recipientId,
+        baseEntry,
+        actorDescription,
+        targetDescription,
+        originatingActorId,
+        targetId,
+        filteredRecipientsMap,
+      } = params;
+
+      let descriptionForRecipient = baseEntry.descriptionText;
+      let skipSenseFiltering = false;
+      let perceivedVia;
+
+      if (actorDescription && recipientId === originatingActorId) {
+        descriptionForRecipient = actorDescription;
+        skipSenseFiltering = true;
+        perceivedVia = 'self';
+      } else if (
+        targetDescription &&
+        recipientId === targetId &&
+        recipientId !== originatingActorId
+      ) {
+        descriptionForRecipient = targetDescription;
+      }
+
+      let finalEntry;
+      const hasCustomDescription =
+        descriptionForRecipient !== baseEntry.descriptionText;
+
+      if (!skipSenseFiltering && filteredRecipientsMap) {
+        const filtered = filteredRecipientsMap.get(recipientId);
+        finalEntry = {
+          ...baseEntry,
+          descriptionText: hasCustomDescription
+            ? descriptionForRecipient
+            : (filtered?.descriptionText ?? baseEntry.descriptionText),
+          perceivedVia: filtered?.sense,
+        };
+      } else if (
+        perceivedVia ||
+        descriptionForRecipient !== baseEntry.descriptionText
+      ) {
+        finalEntry = {
+          ...baseEntry,
+          descriptionText: descriptionForRecipient,
+          ...(perceivedVia && { perceivedVia }),
+        };
+      } else {
+        finalEntry = baseEntry;
+      }
+
+      return finalEntry;
+    }),
+  };
+
+  // Mock sensorialPropagationService - disabled by default for these tests
+  sensorialPropagationService = {
+    shouldPropagate: jest.fn().mockReturnValue(false),
+    getLinkedLocationsWithPrefixedEntries: jest.fn().mockReturnValue([]),
+  };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -119,6 +186,8 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
         routingPolicyService: mockRoutingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       await h.execute({
@@ -199,6 +268,8 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
         routingPolicyService: mockRoutingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       await h.execute({
@@ -260,6 +331,8 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
         routingPolicyService: mockRoutingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       await h.execute({
@@ -322,6 +395,8 @@ describe('AddPerceptionLogEntryHandler - target_description routing', () => {
         safeEventDispatcher: dispatcher,
         perceptionFilterService: mockPerceptionFilterService,
         routingPolicyService: mockRoutingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
       });
 
       await h.execute({

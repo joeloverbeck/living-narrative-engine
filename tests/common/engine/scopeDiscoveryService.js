@@ -132,11 +132,14 @@ class ScopeDiscoveryService {
     const knownCategories = [
       'personal-space',
       'inventory',
-      'items',
+      'items-core',
       'anatomy',
       'affection',
       'intimacy',
-      'violence',
+      'striking',
+      'grabbing',
+      'lethal-violence',
+      'creature-attacks',
       'clothing',
       'movement',
       'caressing',
@@ -159,7 +162,7 @@ class ScopeDiscoveryService {
       return 'positioning';
     }
     if (scopeName.includes('item') || scopeName.includes('inventory')) {
-      return 'items';
+      return 'inventory';
     }
     if (scopeName.includes('body') || scopeName.includes('anatomy')) {
       return 'anatomy';

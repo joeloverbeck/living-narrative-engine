@@ -30,7 +30,7 @@
       "description": "Container to store the item in"
     },
     "secondary": {
-      "scope": "items:actor_inventory_items",
+      "scope": "inventory:actor_inventory_items",
       "placeholder": "item",
       "description": "Inventory item to store"
     }

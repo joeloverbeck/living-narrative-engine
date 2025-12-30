@@ -7,6 +7,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import putInContainerRule from '../../../../data/mods/containers/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/containers/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 import putInContainerAction from '../../../../data/mods/containers/actions/put_in_container.action.json' assert { type: 'json' };
@@ -22,6 +23,9 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       putInContainerRule,
       eventIsActionPutInContainer
     );
+
+    // Register inventory scopes needed for put_in_container action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -108,7 +112,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     const inventoryResult =
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
     expect(inventoryResult.success).toBe(true);
@@ -296,7 +300,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     const inventoryResult =
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
     expect(inventoryResult.success).toBe(true);

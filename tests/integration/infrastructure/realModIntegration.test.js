@@ -294,20 +294,20 @@ describe('Real Mod Integration Testing', () => {
     });
   });
 
-  describe('Violence Category Integration', () => {
+  describe('Grabbing Category Integration', () => {
     let test;
 
     beforeEach(async () => {
       try {
         test = await ModTestFixture.forActionAutoLoad(
-          'violence',
-          'violence:punch'
+          'grabbing',
+          'grabbing:grab_neck'
         );
       } catch (error) {
         try {
           test = await ModTestFixture.forActionAutoLoad(
-            'violence',
-            'violence:kick'
+            'grabbing',
+            'grabbing:squeeze_neck_with_both_hands'
           );
         } catch (fallbackError) {
           test = null;
@@ -321,12 +321,11 @@ describe('Real Mod Integration Testing', () => {
       }
     });
 
-    it('should execute violence actions with real mod files', async () => {
+    it('should execute grabbing actions with real mod files', async () => {
       if (!test) {
         return; // Skip test if no test fixture available
       }
 
-      // Violence actions might not require close proximity
       const { actor, target } = test.createStandardActorTarget([
         'Alice',
         'Bob',
@@ -334,19 +333,19 @@ describe('Real Mod Integration Testing', () => {
 
       await test.executeAction(actor.id, target.id);
 
-      // Validate violence action execution
+      // Validate grabbing action execution
       expect(test.events.length).toBeGreaterThan(0);
 
       const hasRelevantEvent = test.events.some(
         (event) =>
           event.eventType === 'core:attempt_action' ||
-          event.eventType?.includes('violence') ||
-          event.payload?.actionId?.includes('violence')
+          event.eventType?.includes('grabbing') ||
+          event.payload?.actionId?.includes('grabbing')
       );
       expect(hasRelevantEvent).toBeTruthy();
     });
 
-    it('should handle violence-specific targeting and effects', async () => {
+    it('should handle grabbing-specific targeting and effects', async () => {
       if (!test) {
         return; // Skip test if no test fixture available
       }
@@ -358,7 +357,7 @@ describe('Real Mod Integration Testing', () => {
 
       await test.executeAction(actor.id, target.id);
 
-      // Validate that violence actions can target and affect entities
+      // Validate that grabbing actions can target and affect entities
       expect(test.entityManager.getEntityInstance(actor.id)).toBeTruthy();
       expect(test.entityManager.getEntityInstance(target.id)).toBeTruthy();
 

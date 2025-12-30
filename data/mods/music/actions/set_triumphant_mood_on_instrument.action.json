@@ -5,7 +5,7 @@
   "description": "Play an instrument with a triumphant emotional tone, or transition an ongoing performance to a triumphant mood.",
   "targets": {
     "primary": {
-      "scope": "items:examinable_items",
+      "scope": "items-core:examinable_items",
       "placeholder": "instrument",
       "description": "Instrument to play with triumphant mood"
     }

@@ -45,11 +45,29 @@ const EXPECTED_COLOR_SCHEMES = {
     hoverBackgroundColor: '#6a1b9a', // Updated to match current actions
     hoverTextColor: '#f3e5f5',
   },
-  violence: {
-    backgroundColor: '#8b0000', // Updated to match current actions
+  striking: {
+    backgroundColor: '#c62828',
     textColor: '#ffffff',
-    hoverBackgroundColor: '#b71c1c', // Updated to match current actions
-    hoverTextColor: '#ffebee', // Updated to match current actions
+    hoverBackgroundColor: '#d32f2f',
+    hoverTextColor: '#ffffff',
+  },
+  grabbing: {
+    backgroundColor: '#4a4a4a',
+    textColor: '#f5f5f5',
+    hoverBackgroundColor: '#5a5a5a',
+    hoverTextColor: '#ffffff',
+  },
+  'lethal-violence': {
+    backgroundColor: '#b71c1c',
+    textColor: '#ffffff',
+    hoverBackgroundColor: '#c62828',
+    hoverTextColor: '#ffffff',
+  },
+  'creature-attacks': {
+    backgroundColor: '#8b5a00',
+    textColor: '#fff8e1',
+    hoverBackgroundColor: '#a06800',
+    hoverTextColor: '#ffffff',
   },
   breaching: {
     backgroundColor: '#C44D0E',

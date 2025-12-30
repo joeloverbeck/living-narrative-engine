@@ -208,7 +208,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
   describe('Handler Creation for Category Patterns', () => {
     const categoryTests = [
       { category: 'exercise', expectedFactory: 'createStandardHandlers' },
-      { category: 'violence', expectedFactory: 'createStandardHandlers' },
+      { category: 'striking', expectedFactory: 'createStandardHandlers' },
       { category: 'intimacy', expectedFactory: 'createStandardHandlers' },
       { category: 'sex', expectedFactory: 'createStandardHandlers' },
       {

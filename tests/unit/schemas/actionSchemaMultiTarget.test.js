@@ -548,23 +548,28 @@ describe('Multi-Target Action Schema Validation', () => {
     });
   });
 
-  // ── VIOLENCE MOD MIGRATION VALIDATION TESTS ──────────────────────────────
+  // ── STRIKING MOD MIGRATION VALIDATION TESTS ──────────────────────────────
 
-  describe('Violence Mod Migration Validation', () => {
-    test('✓ should validate migrated violence:slap action', () => {
+  describe('Striking Mod Migration Validation', () => {
+    test('✓ should validate migrated striking:slap_target action', () => {
       const slapAction = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
-        id: 'violence:slap',
-        name: 'Slap',
-        description: 'Slap someone across the face',
+        id: 'striking:slap_target',
+        name: 'Slap Target',
+        description: 'Slap a target with your arm',
         targets: {
           primary: {
+            scope: 'striking:actor_arm_body_parts',
+            placeholder: 'weapon',
+            description: 'Arm to slap with',
+          },
+          secondary: {
             scope: 'core:actors_in_location',
             placeholder: 'target',
-            description: 'Person to slap',
+            description: 'Target to slap',
           },
         },
-        template: 'slap {target}',
+        template: 'slap {target} with {weapon} ({chance}% chance)',
       };
 
       const isValid = validate(slapAction);
@@ -574,10 +579,10 @@ describe('Multi-Target Action Schema Validation', () => {
       expect(isValid).toBe(true);
     });
 
-    test('✓ should validate migrated violence:sucker_punch action', () => {
+    test('✓ should validate migrated striking:sucker_punch action', () => {
       const suckerPunchAction = {
         $schema: 'schema://living-narrative-engine/action.schema.json',
-        id: 'violence:sucker_punch',
+        id: 'striking:sucker_punch',
         name: 'Sucker Punch',
         description:
           "Throw an unexpected punch at someone when they're not looking",
@@ -601,20 +606,25 @@ describe('Multi-Target Action Schema Validation', () => {
       expect(isValid).toBe(true);
     });
 
-    test('✓ should validate both violence actions have correct target structure', () => {
-      const violenceActions = [
+    test('✓ should validate both striking actions have correct target structure', () => {
+      const strikingActions = [
         {
-          id: 'violence:slap',
+          id: 'striking:slap_target',
           targets: {
             primary: {
+              scope: 'striking:actor_arm_body_parts',
+              placeholder: 'weapon',
+              description: 'Arm to slap with',
+            },
+            secondary: {
               scope: 'core:actors_in_location',
               placeholder: 'target',
-              description: 'Person to slap',
+              description: 'Target to slap',
             },
           },
         },
         {
-          id: 'violence:sucker_punch',
+          id: 'striking:sucker_punch',
           targets: {
             primary: {
               scope: 'core:actors_in_location',
@@ -625,17 +635,11 @@ describe('Multi-Target Action Schema Validation', () => {
         },
       ];
 
-      violenceActions.forEach((actionData) => {
+      strikingActions.forEach((actionData) => {
         // Verify target structure matches expected pattern
         expect(actionData.targets).toHaveProperty('primary');
-        expect(actionData.targets.primary).toHaveProperty(
-          'scope',
-          'core:actors_in_location'
-        );
-        expect(actionData.targets.primary).toHaveProperty(
-          'placeholder',
-          'target'
-        );
+        expect(actionData.targets.primary).toHaveProperty('scope');
+        expect(actionData.targets.primary).toHaveProperty('placeholder');
         expect(actionData.targets.primary).toHaveProperty('description');
         expect(typeof actionData.targets.primary.description).toBe('string');
         expect(actionData.targets.primary.description.length).toBeGreaterThan(
@@ -644,10 +648,10 @@ describe('Multi-Target Action Schema Validation', () => {
       });
     });
 
-    test('✓ should verify violence actions maintain template compatibility', () => {
+    test('✓ should verify striking actions maintain template compatibility', () => {
       const expectedTemplates = {
-        'violence:slap': 'slap {target}',
-        'violence:sucker_punch': 'sucker-punch {target}', // Note hyphen preservation
+        'striking:slap_target': 'slap {target} with {weapon} ({chance}% chance)',
+        'striking:sucker_punch': 'sucker-punch {target}', // Note hyphen preservation
       };
 
       Object.entries(expectedTemplates).forEach(
@@ -680,19 +684,24 @@ describe('Multi-Target Action Schema Validation', () => {
       );
     });
 
-    test('✓ should verify violence actions use proper schema reference', () => {
-      const violenceActions = [
+    test('✓ should verify striking actions use proper schema reference', () => {
+      const strikingActions = [
         {
           $schema: 'schema://living-narrative-engine/action.schema.json',
-          id: 'violence:slap',
-          name: 'Slap',
+          id: 'striking:slap_target',
+          name: 'Slap Target',
           description: 'Test',
-          targets: { primary: { scope: 'test:scope', placeholder: 'target' } },
-          template: 'slap {target}',
+          targets: {
+            primary: {
+              scope: 'test:scope',
+              placeholder: 'target',
+            },
+          },
+          template: 'slap {target} with {weapon} ({chance}% chance)',
         },
         {
           $schema: 'schema://living-narrative-engine/action.schema.json',
-          id: 'violence:sucker_punch',
+          id: 'striking:sucker_punch',
           name: 'Sucker Punch',
           description: 'Test',
           targets: { primary: { scope: 'test:scope', placeholder: 'target' } },
@@ -700,7 +709,7 @@ describe('Multi-Target Action Schema Validation', () => {
         },
       ];
 
-      violenceActions.forEach((action) => {
+      strikingActions.forEach((action) => {
         expect(action).toHaveProperty(
           '$schema',
           'schema://living-narrative-engine/action.schema.json'

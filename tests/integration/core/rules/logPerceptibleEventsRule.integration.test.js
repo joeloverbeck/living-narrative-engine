@@ -19,6 +19,9 @@ import OperationInterpreter from '../../../../src/logic/operationInterpreter.js'
 import OperationRegistry from '../../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import RecipientRoutingPolicyService from '../../../../src/perception/services/recipientRoutingPolicyService.js';
+import RecipientSetBuilder from '../../../../src/perception/services/recipientSetBuilder.js';
+import PerceptionEntryBuilder from '../../../../src/perception/services/perceptionEntryBuilder.js';
+import SensorialPropagationService from '../../../../src/perception/services/sensorialPropagationService.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import accessPointDefinition from '../../../../data/mods/dredgers/entities/definitions/access_point_segment_a.location.json';
 import segmentBDefinition from '../../../../data/mods/dredgers/entities/definitions/segment_b.location.json';
@@ -82,12 +85,24 @@ function createHandlers(
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeEventDispatcher,
-      routingPolicyService,
-    }),
+    ADD_PERCEPTION_LOG_ENTRY: (() => {
+      const recipientSetBuilder = new RecipientSetBuilder({
+        entityManager,
+        logger,
+      });
+      return new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder: new PerceptionEntryBuilder({ logger }),
+        sensorialPropagationService: new SensorialPropagationService({
+          entityManager,
+          recipientSetBuilder,
+          logger,
+        }),
+      });
+    })(),
   };
 }
 

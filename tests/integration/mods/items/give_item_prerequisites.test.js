@@ -144,7 +144,7 @@ describe('item-transfer:give_item prerequisites', () => {
         'core:actors_in_location'
       );
       expect(giveItemAction.targets.secondary.scope).toBe(
-        'items:actor_inventory_items'
+        'inventory:actor_inventory_items'
       );
       expect(giveItemAction.required_components.actor).toContain(
         'inventory:inventory'

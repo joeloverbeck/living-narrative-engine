@@ -164,7 +164,7 @@ expect(ids).not.toContain(ACTION_ID);
 - Enabled real scope resolution with ScopeResolverHelpers
 
 **Pattern Reference:**
-Based on violence mod migration (TEAOUTTHR-004), specifically `tear_out_throat_action_discovery.test.js`
+Based on lethal-violence migration (TEAOUTTHR-004), specifically `tear_out_throat_action_discovery.test.js`
 
 ## Related Documentation
 

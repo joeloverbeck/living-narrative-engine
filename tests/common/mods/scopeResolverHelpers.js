@@ -952,15 +952,36 @@ export class ScopeResolverHelpers {
     const entityManager = testEnv.entityManager;
 
     const resolvers = {
-      // "items in actor's inventory"
-      'items:actor_inventory_items': this.createComponentLookupResolver(
-        'items:actor_inventory_items',
-        {
-          componentType: 'inventory:inventory',
-          sourceField: 'items',
-          contextSource: 'actor',
+      // "items in actor's inventory" - returns Set of item IDs
+      // Note: inventory.items can be array of strings or array of {itemId} objects
+      'inventory:actor_inventory_items': function (context) {
+        const { entityManager } = this;
+        const { entityId: actorId } = resolveContextEntity(
+          context,
+          'actor',
+          entityManager
+        );
+
+        if (!actorId) {
+          return { success: true, value: new Set() };
         }
-      ),
+
+        const inventory = entityManager.getComponentData(
+          actorId,
+          'inventory:inventory'
+        );
+
+        if (!inventory || !Array.isArray(inventory.items)) {
+          return { success: true, value: new Set() };
+        }
+
+        // Handle both string IDs and {itemId} objects
+        const itemIds = inventory.items.map((item) =>
+          typeof item === 'string' ? item : item.itemId
+        );
+
+        return { success: true, value: new Set(itemIds) };
+      },
 
       // "items at actor's location"
       'items-core:items_at_location': this.createLocationMatchResolver(
@@ -1012,8 +1033,8 @@ export class ScopeResolverHelpers {
       ),
 
       // "actors at same location" (for give_item)
-      'items:actors_at_location': this.createLocationMatchResolver(
-        'items:actors_at_location',
+      'core:actors_in_location': this.createLocationMatchResolver(
+        'core:actors_in_location',
         {
           filterFn: (entityId, source, context, em) => {
             return em.hasComponent(entityId, 'core:actor');
@@ -1030,6 +1051,70 @@ export class ScopeResolverHelpers {
           },
         }
       ),
+
+      // "open containers at location" - containers with isOpen: true at actor's location
+      'containers-core:open_containers_at_location': this.createLocationMatchResolver(
+        'containers-core:open_containers_at_location',
+        {
+          filterFn: (entityId, source, context, em) => {
+            const containerData = em.getComponentData(
+              entityId,
+              'containers-core:container'
+            );
+            return containerData && containerData.isOpen === true;
+          },
+        }
+      ),
+
+      // "examinable items" - union of inventory items and items at location
+      // Matches: inventory:actor_inventory_items | items-core:items_at_location | items-core:non_portable_items_at_location
+      'items-core:examinable_items': function (context) {
+        // Get CURRENT entityManager from testEnv (not captured at registration time)
+        const currentEntityManager = testEnv.entityManager;
+        const result = new Set();
+        const actorEntity = context?.actor;
+
+        // Get items from actor's inventory
+        if (actorEntity?.id) {
+          const inventory = currentEntityManager.getComponentData(
+            actorEntity.id,
+            'inventory:inventory'
+          );
+          if (inventory?.items) {
+            for (const item of inventory.items) {
+              const itemId = typeof item === 'string' ? item : item?.itemId;
+              if (itemId && currentEntityManager.hasComponent(itemId, 'items-core:item')) {
+                result.add(itemId);
+              }
+            }
+          }
+
+          // Get items at actor's location
+          const position = currentEntityManager.getComponentData(
+            actorEntity.id,
+            'core:position'
+          );
+          if (position?.locationId) {
+            // Use getEntityIds() which SimpleEntityManager provides, or getActiveEntityIds() as fallback
+            const allIds = currentEntityManager.getEntityIds?.() || currentEntityManager.getActiveEntityIds?.() || [];
+            for (const entityId of allIds) {
+              if (entityId === actorEntity.id) continue;
+              const entityPos = currentEntityManager.getComponentData(
+                entityId,
+                'core:position'
+              );
+              if (
+                entityPos?.locationId === position.locationId &&
+                currentEntityManager.hasComponent(entityId, 'items-core:item')
+              ) {
+                result.add(entityId);
+              }
+            }
+          }
+        }
+
+        return { success: true, value: result };
+      },
     };
 
     // Register all resolvers

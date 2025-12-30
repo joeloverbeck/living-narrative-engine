@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for violence:handleBeakFumble macro
+ * @file Unit tests for creature-attacks:handleBeakFumble macro
  * @description Verifies that the handleBeakFumble macro correctly handles beak attack
  * fumble outcomes by adding the fallen component (NOT dropping a weapon).
  */
@@ -7,15 +7,15 @@
 import { describe, it, expect } from '@jest/globals';
 
 // Import macro JSON for structure validation
-import handleBeakFumble from '../../../../../data/mods/violence/macros/handleBeakFumble.macro.json' assert { type: 'json' };
+import handleBeakFumble from '../../../../../data/mods/creature-attacks/macros/handleBeakFumble.macro.json' assert { type: 'json' };
 
-describe('violence:handleBeakFumble macro', () => {
+describe('creature-attacks:handleBeakFumble macro', () => {
   describe('Schema Structure', () => {
     it('should have valid macro schema structure', () => {
       expect(handleBeakFumble.$schema).toBe(
         'schema://living-narrative-engine/macro.schema.json'
       );
-      expect(handleBeakFumble.id).toBe('violence:handleBeakFumble');
+      expect(handleBeakFumble.id).toBe('creature-attacks:handleBeakFumble');
       expect(handleBeakFumble.description).toBeDefined();
       expect(handleBeakFumble.actions).toBeDefined();
       expect(Array.isArray(handleBeakFumble.actions)).toBe(true);

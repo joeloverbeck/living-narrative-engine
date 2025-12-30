@@ -5,7 +5,7 @@
   "description": "Take a single serving from a drinkable container, reducing its volume by the serving size.",
   "targets": {
     "primary": {
-      "scope": "items:examinable_items",
+      "scope": "items-core:examinable_items",
       "placeholder": "primary",
       "description": "Drinkable container to consume from"
     }

@@ -581,6 +581,409 @@ describe('RestoreOxygenHandler', () => {
     });
   });
 
+  // Execute Tests - JSON Logic Object Result Handling
+  describe('execute - JSON Logic object result handling', () => {
+    let handler;
+    let executionContext;
+
+    beforeEach(() => {
+      handler = new RestoreOxygenHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        jsonLogicService,
+      });
+      executionContext = {
+        evaluationContext: { context: {} },
+        logger: log,
+      };
+    });
+
+    test('resolves entityId from JSON Logic returning object with id property', async () => {
+      jsonLogicService.evaluate.mockReturnValue({ id: 'resolvedEntity' });
+      em.getEntitiesWithComponent.mockReturnValue([]);
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('resolvedEntity')
+      );
+    });
+
+    test('resolves entityId from JSON Logic returning object with entityId property', async () => {
+      jsonLogicService.evaluate.mockReturnValue({ entityId: 'resolvedEntity2' });
+      em.getEntitiesWithComponent.mockReturnValue([]);
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('resolvedEntity2')
+      );
+    });
+
+    test('dispatches error when JSON Logic returns object without id or entityId', async () => {
+      jsonLogicService.evaluate.mockReturnValue({ name: 'noIdField' });
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+
+    test('dispatches error when JSON Logic returns object with non-string id', async () => {
+      jsonLogicService.evaluate.mockReturnValue({ id: 12345 });
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+
+    test('dispatches error when JSON Logic returns empty object', async () => {
+      jsonLogicService.evaluate.mockReturnValue({});
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+
+    test('dispatches error when JSON Logic returns object with whitespace-only id', async () => {
+      jsonLogicService.evaluate.mockReturnValue({ id: '   ' });
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+
+    test('dispatches error when JSON Logic returns null', async () => {
+      jsonLogicService.evaluate.mockReturnValue(null);
+
+      await handler.execute(
+        { entityId: { var: 'target' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+  });
+
+  // Execute Tests - JSON Logic Error Handling
+  describe('execute - JSON Logic error handling', () => {
+    let handler;
+    let executionContext;
+
+    beforeEach(() => {
+      handler = new RestoreOxygenHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        jsonLogicService,
+      });
+      executionContext = {
+        evaluationContext: { context: {} },
+        logger: log,
+      };
+    });
+
+    test('handles JSON Logic evaluation error for entityId gracefully', async () => {
+      jsonLogicService.evaluate.mockImplementation(() => {
+        throw new Error('Evaluation failed');
+      });
+
+      await handler.execute(
+        { entityId: { var: 'badExpr' } },
+        executionContext
+      );
+
+      expect(log.warn).toHaveBeenCalledWith(
+        'RESTORE_OXYGEN: Failed to evaluate entityId',
+        expect.objectContaining({ error: 'Evaluation failed' })
+      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('entityId'),
+        })
+      );
+    });
+
+    test('handles JSON Logic evaluation error for amount gracefully', async () => {
+      // First call succeeds (for entityId), second call throws (for amount)
+      jsonLogicService.evaluate
+        .mockReturnValueOnce('validEntity')
+        .mockImplementationOnce(() => {
+          throw new Error('Amount evaluation failed');
+        });
+
+      await handler.execute(
+        { entityId: { var: 'entity' }, amount: { var: 'badAmount' } },
+        executionContext
+      );
+
+      expect(log.warn).toHaveBeenCalledWith(
+        'RESTORE_OXYGEN: Failed to evaluate amount',
+        expect.objectContaining({ error: 'Amount evaluation failed' })
+      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('amount'),
+        })
+      );
+    });
+
+    test('handles JSON Logic evaluation error for restoreFull gracefully', async () => {
+      jsonLogicService.evaluate.mockImplementation(() => {
+        throw new Error('RestoreFull evaluation failed');
+      });
+
+      await handler.execute(
+        { entityId: 'entity1', restoreFull: { var: 'badRestoreFull' } },
+        executionContext
+      );
+
+      expect(log.warn).toHaveBeenCalledWith(
+        'RESTORE_OXYGEN: Failed to evaluate restoreFull',
+        expect.objectContaining({ error: 'RestoreFull evaluation failed' })
+      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('restoreFull'),
+        })
+      );
+    });
+  });
+
+  // Execute Tests - Parameter Edge Cases
+  describe('execute - parameter edge cases', () => {
+    let handler;
+    let executionContext;
+
+    beforeEach(() => {
+      handler = new RestoreOxygenHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        jsonLogicService,
+      });
+      executionContext = {
+        evaluationContext: { context: {} },
+        logger: log,
+      };
+    });
+
+    test('dispatches error when restoreFull is explicitly null', async () => {
+      await handler.execute(
+        { entityId: 'entity1', restoreFull: null },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('restoreFull'),
+        })
+      );
+    });
+
+    test('dispatches error when amount JSON Logic resolves to non-number', async () => {
+      jsonLogicService.evaluate.mockReturnValue('not-a-number');
+
+      await handler.execute(
+        { entityId: 'entity1', amount: { var: 'amountVar' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('amount'),
+        })
+      );
+    });
+
+    test('dispatches error when restoreFull JSON Logic resolves to non-boolean', async () => {
+      jsonLogicService.evaluate.mockReturnValue('not-a-boolean');
+
+      await handler.execute(
+        { entityId: 'entity1', restoreFull: { var: 'restoreVar' } },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('restoreFull'),
+        })
+      );
+    });
+
+    test('handles amount as non-object non-number type', async () => {
+      await handler.execute(
+        { entityId: 'entity1', amount: 'invalidAmount' },
+        executionContext
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: expect.stringContaining('amount'),
+        })
+      );
+    });
+  });
+
+  // Execute Tests - Organ Finding Edge Cases
+  describe('execute - organ finding edge cases', () => {
+    let handler;
+    let executionContext;
+
+    beforeEach(() => {
+      handler = new RestoreOxygenHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        jsonLogicService,
+      });
+      executionContext = {
+        evaluationContext: { context: {} },
+        logger: log,
+      };
+    });
+
+    test('skips organs without anatomy:part component', async () => {
+      em.getEntitiesWithComponent.mockReturnValue([{ id: 'lung1' }]);
+      em.hasComponent.mockReturnValue(false);
+
+      await handler.execute({ entityId: 'entity1' }, executionContext);
+
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('no respiratory organs')
+      );
+      expect(em.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('skips organs with null organData', async () => {
+      em.getEntitiesWithComponent.mockReturnValue([{ id: 'lung1' }]);
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_COMPONENT_ID) {
+          return { ownerEntityId: 'entity1' };
+        }
+        // Return null for respiratory organ data
+        return null;
+      });
+
+      await handler.execute({ entityId: 'entity1' }, executionContext);
+
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('no respiratory organs')
+      );
+      expect(em.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('handles organ with undefined currentOxygen (defaults to 0)', async () => {
+      const organData = {
+        oxygenCapacity: 100,
+        restorationRate: 5,
+      };
+
+      em.getEntitiesWithComponent.mockReturnValue([{ id: 'lung1' }]);
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_COMPONENT_ID) {
+          return { ownerEntityId: 'entity1' };
+        }
+        if (componentId === RESPIRATORY_ORGAN_COMPONENT_ID) {
+          return organData;
+        }
+        return null;
+      });
+
+      await handler.execute({ entityId: 'entity1', amount: 10 }, executionContext);
+
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'lung1',
+        RESPIRATORY_ORGAN_COMPONENT_ID,
+        expect.objectContaining({
+          currentOxygen: 10,
+        })
+      );
+    });
+
+    test('handles organ with undefined oxygenCapacity (defaults to 0)', async () => {
+      const organData = {
+        currentOxygen: 50,
+        restorationRate: 5,
+      };
+
+      em.getEntitiesWithComponent.mockReturnValue([{ id: 'lung1' }]);
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_COMPONENT_ID) {
+          return { ownerEntityId: 'entity1' };
+        }
+        if (componentId === RESPIRATORY_ORGAN_COMPONENT_ID) {
+          return organData;
+        }
+        return null;
+      });
+
+      await handler.execute({ entityId: 'entity1', amount: 10 }, executionContext);
+
+      // Should clamp to capacity (0), so currentOxygen becomes 0
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'lung1',
+        RESPIRATORY_ORGAN_COMPONENT_ID,
+        expect.objectContaining({
+          currentOxygen: 0,
+        })
+      );
+    });
+  });
+
   // Execute Tests - Edge Cases
   describe('execute - edge cases', () => {
     let handler;

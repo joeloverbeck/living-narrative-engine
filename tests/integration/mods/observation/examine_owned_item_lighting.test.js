@@ -121,7 +121,7 @@ describe('observation:examine_owned_item lighting prerequisite', () => {
       expect(examineOwnedItemAction.id).toBe('observation:examine_owned_item');
       expect(examineOwnedItemAction.template).toBe('examine my {target}');
       expect(examineOwnedItemAction.targets.primary.scope).toBe(
-        'items:actor_inventory_items'
+        'inventory:actor_inventory_items'
       );
     });
 

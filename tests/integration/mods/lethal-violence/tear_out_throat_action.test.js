@@ -396,7 +396,7 @@ describe('Lethal Violence Mod: Tear Out Throat Action Integration', () => {
       const payload = {
         eventName: 'core:attempt_action',
         actorId: scenario.actor.id,
-        actionId: 'violence:grab_neck',
+        actionId: 'grabbing:grab_neck',
         targetId: scenario.target.id,
         originalInput: 'grab neck',
       };

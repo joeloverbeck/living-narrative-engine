@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "cosmetics",
+  "version": "1.0.0",
+  "name": "Cosmetics",
+  "description": "Actions for applying cosmetic items",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "inventory",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": ["apply_lipstick.action.json"],
+    "components": ["can_apply_lipstick.component.json"],
+    "conditions": ["event-is-action-apply-lipstick.condition.json"],
+    "rules": ["handle_apply_lipstick.rule.json"],
+    "events": [],
+    "scopes": [],
+    "entities": {
+      "definitions": ["red_lipstick.entity.json"],
+      "instances": ["red_lipstick.entity.json"]
+    }
+  }
+}

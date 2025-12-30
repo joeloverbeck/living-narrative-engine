@@ -67,7 +67,7 @@ describe('striking actions forbidden during complex performance', () => {
 
   describe('Action discovery when doing complex performance', () => {
     /**
-     * Helper to configure action discovery for violence actions
+     * Helper to configure action discovery for striking actions
      */
     const configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -81,10 +81,10 @@ describe('striking actions forbidden during complex performance', () => {
       // Mock scope resolver for actors_in_location
       const scopeResolver = testEnv.unifiedScopeResolver;
       const originalResolve =
-        scopeResolver.__violenceOriginalResolve ||
+        scopeResolver.__strikingOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
-      scopeResolver.__violenceOriginalResolve = originalResolve;
+      scopeResolver.__strikingOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (scopeName === 'core:actors_in_location') {
           const actorId = context?.actor?.id;

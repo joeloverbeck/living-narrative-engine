@@ -99,14 +99,14 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
 
     it('should convert underscores to hyphens for condition file names', () => {
       const { conditionPaths } = ModTestFixture.getConventionalPaths(
-        'violence',
-        'violence:sucker_punch'
+        'striking',
+        'striking:sucker_punch'
       );
 
       expect(conditionPaths).toEqual([
-        'data/mods/violence/conditions/event-is-action-sucker-punch.condition.json',
-        'data/mods/violence/conditions/sucker-punch.condition.json',
-        'data/mods/violence/conditions/event-is-action-violence-sucker-punch.condition.json',
+        'data/mods/striking/conditions/event-is-action-sucker-punch.condition.json',
+        'data/mods/striking/conditions/sucker-punch.condition.json',
+        'data/mods/striking/conditions/event-is-action-striking-sucker-punch.condition.json',
       ]);
     });
   });
@@ -590,20 +590,20 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       );
     });
 
-    it('should handle violence actions correctly', () => {
+    it('should handle striking actions correctly', () => {
       const { rulePaths, conditionPaths } = ModTestFixture.getConventionalPaths(
-        'violence',
-        'violence:sucker_punch'
+        'striking',
+        'striking:sucker_punch'
       );
 
       expect(rulePaths).toContain(
-        'data/mods/violence/rules/sucker_punch.rule.json'
+        'data/mods/striking/rules/sucker_punch.rule.json'
       );
       expect(rulePaths).toContain(
-        'data/mods/violence/rules/handle_sucker_punch.rule.json'
+        'data/mods/striking/rules/handle_sucker_punch.rule.json'
       );
       expect(conditionPaths).toContain(
-        'data/mods/violence/conditions/event-is-action-sucker-punch.condition.json'
+        'data/mods/striking/conditions/event-is-action-sucker-punch.condition.json'
       );
     });
 

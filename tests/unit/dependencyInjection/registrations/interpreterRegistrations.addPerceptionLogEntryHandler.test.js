@@ -88,6 +88,28 @@ describe('interpreterRegistrations', () => {
       };
       registrar.instance(tokens.IRecipientSetBuilder, mockRecipientSetBuilder);
 
+      // Mock perception entry builder for building log entries
+      const mockPerceptionEntryBuilder = {
+        buildForRecipient: jest.fn().mockReturnValue({
+          descriptionText: 'mocked',
+          timestamp: Date.now(),
+        }),
+      };
+      registrar.instance(
+        tokens.IPerceptionEntryBuilder,
+        mockPerceptionEntryBuilder
+      );
+
+      // Mock sensorial propagation service for cross-location perception
+      const mockSensorialPropagationService = {
+        shouldPropagate: jest.fn().mockReturnValue(false),
+        getLinkedLocationsWithPrefixedEntries: jest.fn().mockReturnValue([]),
+      };
+      registrar.instance(
+        tokens.ISensorialPropagationService,
+        mockSensorialPropagationService
+      );
+
       // Act
       // Run the actual registration function
       registerInterpreters(container);

@@ -23,8 +23,8 @@ import lickBreastsAction from '../../../data/mods/sex-breastplay/actions/lick_br
 import suckOnNipplesAction from '../../../data/mods/sex-breastplay/actions/suck_on_nipples.action.json' assert { type: 'json' };
 import nuzzleBareBreastsAction from '../../../data/mods/sex-breastplay/actions/nuzzle_bare_breasts.action.json' assert { type: 'json' };
 import pumpPenisAction from '../../../data/mods/sex-penile-manual/actions/pump_penis.action.json' assert { type: 'json' };
-import slapAction from '../../../data/mods/violence/actions/slap.action.json' assert { type: 'json' };
-import suckerPunchAction from '../../../data/mods/violence/actions/sucker_punch.action.json' assert { type: 'json' };
+import slapTargetAction from '../../../data/mods/striking/actions/slap_target.action.json' assert { type: 'json' };
+import suckerPunchAction from '../../../data/mods/striking/actions/sucker_punch.action.json' assert { type: 'json' };
 
 describe('Bending Over - Forbidden Actions Bug', () => {
   let testFixture;
@@ -665,12 +665,12 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         .build();
 
       testFixture.reset([room, table, target, actor]);
-      testFixture.testEnv.actionIndex.buildIndex([slapAction]);
+      testFixture.testEnv.actionIndex.buildIndex([slapTargetAction]);
 
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const slapActions = availableActions.filter(
-        (a) => a.id === 'violence:slap'
+        (a) => a.id === 'striking:slap_target'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)
@@ -706,7 +706,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const punchActions = availableActions.filter(
-        (a) => a.id === 'violence:sucker_punch'
+        (a) => a.id === 'striking:sucker_punch'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)

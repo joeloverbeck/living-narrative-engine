@@ -99,13 +99,14 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
 
     // Verify all inventory scopes are registered
     const expectedScopes = [
-      'items:actor_inventory_items',
+      'inventory:actor_inventory_items',
       'items-core:items_at_location',
       'items-core:portable_items_at_location',
       'items-core:non_portable_items_at_location',
       'items-core:items_at_actor_location',
-      'items:actors_at_location',
+      'core:actors_in_location',
       'containers-core:containers_at_location',
+      'items-core:examinable_items',
     ];
 
     expectedScopes.forEach((scopeName) => {

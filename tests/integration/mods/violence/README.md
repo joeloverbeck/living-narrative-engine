@@ -1,8 +1,8 @@
-# Violence Mod Tests
+# Striking Mod Tests
 
 ## Testing Pattern
 
-All violence mod tests use the ModTestFixture pattern with ScopeResolverHelpers for scope registration.
+All striking mod tests use the ModTestFixture pattern with ScopeResolverHelpers for scope registration.
 
 ### Standard Setup
 
@@ -10,11 +10,11 @@ All violence mod tests use the ModTestFixture pattern with ScopeResolverHelpers 
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 
-describe('violence:{action} - Action Discovery', () => {
+describe('striking:{action} - Action Discovery', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('violence', '{action}');
+    testFixture = await ModTestFixture.forAction('striking', '{action}');
 
     // Build action index for discovery
     testFixture.testEnv.actionIndex.buildIndex([{action}Action]);

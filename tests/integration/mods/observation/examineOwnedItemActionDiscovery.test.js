@@ -4,6 +4,7 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import examineOwnedItemAction from '../../../../data/mods/observation/actions/examine_owned_item.action.json' assert { type: 'json' };
 
 describe('observation:examine_owned_item action definition', () => {
@@ -15,6 +16,9 @@ describe('observation:examine_owned_item action definition', () => {
       'observation',
       'observation:examine_owned_item'
     );
+
+    // Register inventory scopes needed for examine_owned_item action discovery
+    ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -47,7 +51,7 @@ describe('observation:examine_owned_item action definition', () => {
       expect(examineOwnedItemAction.targets).toBeDefined();
       expect(examineOwnedItemAction.targets.primary).toBeDefined();
       expect(examineOwnedItemAction.targets.primary.scope).toBe(
-        'items:actor_inventory_items'
+        'inventory:actor_inventory_items'
       );
       expect(examineOwnedItemAction.targets.primary.placeholder).toBe('target');
       expect(examineOwnedItemAction.targets.primary.description).toBe(
@@ -126,7 +130,7 @@ describe('observation:examine_owned_item action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 
@@ -175,7 +179,7 @@ describe('observation:examine_owned_item action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 
@@ -287,7 +291,7 @@ describe('observation:examine_owned_item action definition', () => {
       };
 
       const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:actor_inventory_items',
+        'inventory:actor_inventory_items',
         scopeContext
       );
 
