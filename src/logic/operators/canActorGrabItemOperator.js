@@ -205,8 +205,6 @@ export class CanActorGrabItemOperator {
     }
 
     if (
-      entityId === undefined ||
-      entityId === null ||
       (typeof entityId === 'string' && entityId.trim() === '') ||
       (typeof entityId === 'number' && Number.isNaN(entityId))
     ) {

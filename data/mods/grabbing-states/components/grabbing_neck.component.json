@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "grabbing-states:grabbing_neck",
+  "description": "Marks an actor who is actively grabbing another entity's neck, physically controlling them.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["grabbed_entity_id", "initiated"],
+    "properties": {
+      "grabbed_entity_id": {
+        "type": "string",
+        "description": "The ID of the entity whose neck is being grabbed",
+        "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
+      },
+      "initiated": {
+        "type": "boolean",
+        "description": "Whether this entity initiated the grabbing interaction"
+      },
+      "consented": {
+        "type": "boolean",
+        "description": "Whether the grabbed entity has consented",
+        "default": false
+      },
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true
+          },
+          "template": {
+            "type": "string",
+            "default": "{actor} is grabbing {target}'s neck"
+          },
+          "targetRole": {
+            "type": "string",
+            "default": "grabbed_entity_id"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 70,
+            "description": "Higher than restraining (67) as neck grabbing is more immediately threatening"
+          }
+        }
+      }
+    }
+  }
+}

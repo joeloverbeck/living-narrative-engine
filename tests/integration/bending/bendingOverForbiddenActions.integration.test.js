@@ -24,7 +24,7 @@ import suckOnNipplesAction from '../../../data/mods/sex-breastplay/actions/suck_
 import nuzzleBareBreastsAction from '../../../data/mods/sex-breastplay/actions/nuzzle_bare_breasts.action.json' assert { type: 'json' };
 import pumpPenisAction from '../../../data/mods/sex-penile-manual/actions/pump_penis.action.json' assert { type: 'json' };
 import slapTargetAction from '../../../data/mods/striking/actions/slap_target.action.json' assert { type: 'json' };
-import suckerPunchAction from '../../../data/mods/striking/actions/sucker_punch.action.json' assert { type: 'json' };
+import suckerPunchAction from '../../../data/mods/striking/actions/sucker_punch_target.action.json' assert { type: 'json' };
 
 describe('Bending Over - Forbidden Actions Bug', () => {
   let testFixture;
@@ -706,7 +706,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const punchActions = availableActions.filter(
-        (a) => a.id === 'striking:sucker_punch'
+        (a) => a.id === 'striking:sucker_punch_target'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)

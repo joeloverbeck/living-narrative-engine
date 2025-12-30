@@ -21,6 +21,7 @@ const mockTokens = {
   VisualizerStateController: Symbol('VisualizerStateController'),
   VisualizationComposer: Symbol('VisualizationComposer'),
   ClothingManagementService: Symbol('ClothingManagementService'),
+  IEntityLoadingService: Symbol('IEntityLoadingService'),
 };
 
 jest.mock('../../../src/bootstrapper/CommonBootstrapper.js', () => ({
@@ -115,6 +116,7 @@ describe('anatomy-visualizer back navigation', () => {
       [mockTokens.VisualizerStateController]: { id: 'state-controller' },
       [mockTokens.VisualizationComposer]: { id: 'composer' },
       [mockTokens.ClothingManagementService]: { id: 'clothing-service' },
+      [mockTokens.IEntityLoadingService]: { id: 'entity-loading-service' },
     };
 
     const container = {
@@ -177,6 +179,8 @@ describe('anatomy-visualizer back navigation', () => {
       visualizationComposer: resolvedServices[mockTokens.VisualizationComposer],
       clothingManagementService:
         resolvedServices[mockTokens.ClothingManagementService],
+      entityLoadingService:
+        resolvedServices[mockTokens.IEntityLoadingService],
     });
 
     expect(backButtonAddListenerSpy).toHaveBeenCalledWith(

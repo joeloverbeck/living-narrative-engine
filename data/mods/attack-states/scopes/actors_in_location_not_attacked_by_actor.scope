@@ -1,0 +1,10 @@
+attack-states:actors_in_location_not_attacked_by_actor := entities(core:position)[][
+  {
+    "and": [
+      { "condition_ref": "core:entity-at-location" },
+      { "condition_ref": "core:entity-is-not-current-actor" },
+      { "condition_ref": "core:entity-has-actor-component" },
+      { "condition_ref": "attack-states:entity-not-attacked-by-actor" }
+    ]
+  }
+]

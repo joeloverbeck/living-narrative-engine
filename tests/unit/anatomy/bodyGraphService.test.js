@@ -711,4 +711,366 @@ describe('BodyGraphService', () => {
       mockCacheManager
     );
   });
+
+  describe('getCacheNode', () => {
+    it('returns cache node when found', () => {
+      const mockNode = {
+        entityId: 'part-1',
+        partType: 'limb',
+        parentId: 'parent',
+        socketId: 'socket-1',
+        children: ['child-1', 'child-2'],
+      };
+      mockCacheManager.get.mockReturnValue(mockNode);
+
+      const service = createService();
+      const node = service.getCacheNode('part-1');
+
+      expect(node).toEqual(mockNode);
+      expect(mockCacheManager.get).toHaveBeenCalledWith('part-1');
+    });
+
+    it('returns undefined when cache node does not exist', () => {
+      mockCacheManager.get.mockReturnValue(undefined);
+
+      const service = createService();
+      const node = service.getCacheNode('unknown-part');
+
+      expect(node).toBeUndefined();
+      expect(mockCacheManager.get).toHaveBeenCalledWith('unknown-part');
+    });
+  });
+
+  describe('hasPartWithStatusEffect - additional coverage', () => {
+    it('skips parts with empty component objects', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({}) // Empty object - should skip (Line 316)
+        .mockReturnValueOnce({ severity: 'minor' }); // Found on second part
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'severity',
+          null
+        )
+      ).toBe(true);
+    });
+
+    it('skips parts where property path does not exist', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ level: 1 }) // No 'severity' property - should skip (Line 325)
+        .mockReturnValueOnce({ severity: 'major' }); // Found on second part
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'severity',
+          null
+        )
+      ).toBe(true);
+    });
+
+    it('supports simple scalar predicates without operator object', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ state: 'active' });
+
+      // Simple value predicate, not {op: '===', value: 'active'} (Line 353)
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'state',
+          'active'
+        )
+      ).toBe(true);
+    });
+
+    it('supports != operator', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 2 });
+
+      // Line 363: != operator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '!=', value: 1 }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '!=', value: 2 }
+        )
+      ).toBe(false);
+    });
+
+    it('supports > operator', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // Line 365: > operator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '>', value: 3 }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '>', value: 5 }
+        )
+      ).toBe(false);
+    });
+
+    it('supports < operator', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 3 });
+
+      // Line 369: < operator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '<', value: 5 }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '<', value: 3 }
+        )
+      ).toBe(false);
+    });
+
+    it('supports <= operator', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 3 });
+
+      // Line 370-371: <= operator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '<=', value: 3 }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: '<=', value: 2 }
+        )
+      ).toBe(false);
+    });
+
+    it('supports includes operator on arrays', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        tags: ['poison', 'damage', 'bleed'],
+      });
+
+      // Lines 372-376: includes operator on array
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'tags',
+          { op: 'includes', value: 'poison' }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'tags',
+          { op: 'includes', value: 'fire' }
+        )
+      ).toBe(false);
+    });
+
+    it('supports includes operator on strings', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        name: 'bleeding_severe_wound',
+      });
+
+      // Lines 372-376: includes operator on string
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'name',
+          { op: 'includes', value: 'severe' }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'name',
+          { op: 'includes', value: 'minor' }
+        )
+      ).toBe(false);
+    });
+
+    it('returns false for includes on non-string non-array values', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // includes operator on a number should return false
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: 'includes', value: 5 }
+        )
+      ).toBe(false);
+    });
+
+    it('returns false for unknown operators', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // Line 378: default case for unknown operator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { op: 'unknown_op', value: 5 }
+        )
+      ).toBe(false);
+    });
+
+    it('supports "operator" property as alias for "op"', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // Line 349: predicate.operator fallback
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { operator: '>', value: 3 }
+        )
+      ).toBe(true);
+    });
+
+    it('supports "comparator" property as alias for "op"', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // Line 349: predicate.comparator fallback
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { comparator: '>=', value: 5 }
+        )
+      ).toBe(true);
+    });
+
+    it('defaults to === when predicate object has no operator property', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ level: 5 });
+
+      // Line 349: default to '===' when no op/operator/comparator
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { value: 5 }
+        )
+      ).toBe(true);
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:effect',
+          'level',
+          { value: 4 }
+        )
+      ).toBe(false);
+    });
+  });
+
+  describe('getAllParts - cache hit log branch coverage', () => {
+    it('logs truncated list when cache has 3 or fewer parts', () => {
+      mockQueryCache.getCachedGetAllParts.mockReturnValue(['a', 'b', 'c']);
+      mockCacheManager.size.mockReturnValue(3);
+      mockCacheManager.has.mockReturnValue(false);
+
+      const service = createService();
+      mockLogger.debug.mockClear();
+
+      const result = service.getAllParts(
+        { body: { root: 'root-id' } },
+        'actor-1'
+      );
+
+      expect(result).toEqual(['a', 'b', 'c']);
+      // Line 194: cachedResult.length <= 3, so no '...' appended
+      const cacheHitLog = mockLogger.debug.mock.calls
+        .map((call) => call[0])
+        .find((msg) => msg?.includes('CACHE HIT'));
+      expect(cacheHitLog).toBeDefined();
+      expect(cacheHitLog).not.toContain('...');
+    });
+  });
 });

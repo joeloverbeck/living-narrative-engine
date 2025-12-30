@@ -16,67 +16,68 @@ async function initialize() {
 
   try {
     // Bootstrap the application with minimal configuration
-    const { container, services } = await bootstrapper.bootstrap({
+    await bootstrapper.bootstrap({
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
       postInitHook: async (services, container) => {
+        // Register visualizer components that aren't included in minimal configuration
+        registerVisualizerComponents(container);
+
+        // Initialize UI after all services are ready
+        const { logger, registry, entityManager, eventDispatcher } = services;
+        const anatomyDescriptionService = container.resolve(
+          tokens.AnatomyDescriptionService
+        );
+        const visualizerStateController = container.resolve(
+          tokens.VisualizerStateController
+        );
+        const visualizationComposer = container.resolve(
+          tokens.VisualizationComposer
+        );
+
+        // Try to resolve ClothingManagementService - it may not be registered
+        let clothingManagementService = null;
         try {
-          // Register visualizer components that aren't included in minimal configuration
-          registerVisualizerComponents(container);
-
-          // Initialize UI after all services are ready
-          const { logger, registry, entityManager, eventDispatcher } = services;
-          const anatomyDescriptionService = container.resolve(
-            tokens.AnatomyDescriptionService
+          clothingManagementService = container.resolve(
+            tokens.ClothingManagementService
           );
-          const visualizerStateController = container.resolve(
-            tokens.VisualizerStateController
+        } catch (_err) {
+          logger.warn(
+            'ClothingManagementService not available - equipment panel will be disabled'
           );
-          const visualizationComposer = container.resolve(
-            tokens.VisualizationComposer
-          );
-
-          // Try to resolve ClothingManagementService - it may not be registered
-          let clothingManagementService = null;
-          try {
-            clothingManagementService = container.resolve(
-              tokens.ClothingManagementService
-            );
-          } catch (err) {
-            logger.warn(
-              'ClothingManagementService not available - equipment panel will be disabled'
-            );
-          }
-
-          logger.info('Anatomy Visualizer: Initializing UI...');
-          visualizerUI = new AnatomyVisualizerUI({
-            logger,
-            registry,
-            entityManager,
-            anatomyDescriptionService,
-            eventDispatcher,
-            documentContext: { document },
-            visualizerStateController,
-            visualizationComposer,
-            clothingManagementService,
-          });
-
-          await visualizerUI.initialize();
-
-          // Setup back button
-          const backButton = document.getElementById('back-button');
-          if (backButton) {
-            backButton.addEventListener('click', () => {
-              window.location.href = 'index.html';
-            });
-          }
-
-          logger.info('Anatomy Visualizer: Initialization complete');
-        } catch (error) {
-          // Re-throw the error to be caught by the outer try-catch
-          throw error;
         }
+
+        // Resolve EntityLoadingService - registered in visualizerRegistrations
+        const entityLoadingService = container.resolve(
+          tokens.IEntityLoadingService
+        );
+
+        logger.info('Anatomy Visualizer: Initializing UI...');
+        visualizerUI = new AnatomyVisualizerUI({
+          logger,
+          registry,
+          entityManager,
+          anatomyDescriptionService,
+          eventDispatcher,
+          documentContext: { document },
+          visualizerStateController,
+          visualizationComposer,
+          clothingManagementService,
+          entityLoadingService,
+        });
+
+        await visualizerUI.initialize();
+
+        // Setup back button
+        const backButton = document.getElementById('back-button');
+        if (backButton) {
+          backButton.addEventListener('click', () => {
+            window.location.href = 'index.html';
+          });
+        }
+
+        logger.info('Anatomy Visualizer: Initialization complete');
       },
     });
   } catch (error) {

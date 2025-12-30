@@ -180,7 +180,7 @@ export async function processBlueprintSlots(
   for (const [slotKey, slot] of sortedSlots) {
     try {
       // Log slot processing start for diagnostics
-      logger.info(`SlotResolutionOrchestrator: Processing slot '${slotKey}'`, {
+      logger.debug(`SlotResolutionOrchestrator: Processing slot '${slotKey}'`, {
         slotId: slot.id,
         parent: slot.parent,
         socket: slot.socket,
@@ -214,7 +214,7 @@ export async function processBlueprintSlots(
           throw new ValidationError(socketValidation.error);
         }
         // Skip optional slots if socket not available
-        logger.info(
+        logger.debug(
           `SlotResolutionOrchestrator: SKIPPING slot '${slotKey}' - socket validation failed`,
           { socketValidation }
         );
@@ -247,14 +247,14 @@ export async function processBlueprintSlots(
       );
 
       if (!partDefinitionId && slot.optional) {
-        logger.info(
+        logger.debug(
           `SlotResolutionOrchestrator: SKIPPING optional slot '${slotKey}' - no part selected`
         );
         continue; // Skip optional slots if no part found
       }
 
       // Log successful part selection
-      logger.info(
+      logger.debug(
         `SlotResolutionOrchestrator: Selected part '${partDefinitionId}' for slot '${slotKey}'`
       );
 
@@ -330,7 +330,7 @@ export async function processBlueprintSlots(
       );
 
       if (childId) {
-        logger.info(
+        logger.debug(
           `SlotResolutionOrchestrator: Created entity '${childId}' for slot '${slotKey}'`
         );
         context.addCreatedEntity(childId);

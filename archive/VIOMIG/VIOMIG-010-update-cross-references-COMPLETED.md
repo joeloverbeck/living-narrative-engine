@@ -145,4 +145,4 @@ grep -r "creature-attacks:" data/mods/ --include="*.json" --include="*.scope" | 
 
 ### Validation Result
 Before: 22 cross-reference violations (14 from creature-attacks)
-After: 8 cross-reference violations (unrelated mods: p_erotica_gymnast, comfort-items)
+After: 8 cross-reference violations (unrelated mods: p_erotica_gymnast, comfort)

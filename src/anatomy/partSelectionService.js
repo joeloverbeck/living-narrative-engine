@@ -124,7 +124,7 @@ export class PartSelectionService {
     const candidates = [];
     const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
 
-    this.#logger.info(
+    this.#logger.debug(
       `PartSelectionService: Searching ${allEntityDefs.length} entity definitions for partType=${requirements.partType}, allowedTypes=${JSON.stringify(allowedTypes)}`,
       {
         requirements,

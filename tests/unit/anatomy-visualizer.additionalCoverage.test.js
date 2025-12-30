@@ -49,6 +49,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -63,6 +64,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       [tokens.AnatomyDescriptionService, { id: 'anatomy-service' }],
       [tokens.VisualizerStateController, { id: 'state-controller' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
+      [tokens.IEntityLoadingService, { id: 'entity-loading-service' }],
     ]);
 
     const container = {
@@ -151,6 +153,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -166,6 +169,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       [tokens.VisualizerStateController, { id: 'state-controller' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
       [tokens.ClothingManagementService, { id: 'clothing' }],
+      [tokens.IEntityLoadingService, { id: 'entity-loading-service' }],
     ]);
 
     const container = {
@@ -265,6 +269,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       VisualizerStateController: Symbol('VisualizerStateController'),
       VisualizationComposer: Symbol('VisualizationComposer'),
       ClothingManagementService: Symbol('ClothingManagementService'),
+      IEntityLoadingService: Symbol('IEntityLoadingService'),
     };
 
     const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -280,6 +285,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       [tokens.VisualizerStateController, { id: 'state-controller' }],
       [tokens.VisualizationComposer, { id: 'composer' }],
       [tokens.ClothingManagementService, { id: 'clothing' }],
+      [tokens.IEntityLoadingService, { id: 'entity-loading-service' }],
     ]);
 
     const container = {

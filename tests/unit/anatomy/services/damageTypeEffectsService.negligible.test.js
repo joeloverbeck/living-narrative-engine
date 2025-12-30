@@ -1,11 +1,40 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import DamageTypeEffectsService from '../../../../src/anatomy/services/damageTypeEffectsService.js';
 
+/**
+ * Creates mock applicators for testing DamageTypeEffectsService.
+ */
+function createMockApplicators() {
+  return {
+    effectDefinitionResolver: {
+      resolveEffectDefinition: jest.fn((effectType) => ({
+        id: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        effectType,
+        componentId: `anatomy:${effectType === 'dismember' ? 'dismembered' : effectType === 'fracture' ? 'fractured' : effectType === 'bleed' ? 'bleeding' : effectType === 'burn' ? 'burning' : 'poisoned'}`,
+        defaults: {},
+      })),
+      resolveApplyOrder: jest.fn(() => [
+        'anatomy:dismembered',
+        'anatomy:fractured',
+        'anatomy:bleeding',
+        'anatomy:burning',
+        'anatomy:poisoned',
+      ]),
+    },
+    dismembermentApplicator: { apply: jest.fn().mockResolvedValue({ triggered: false }) },
+    fractureApplicator: { apply: jest.fn().mockResolvedValue({ triggered: false, stunApplied: false }) },
+    bleedApplicator: { apply: jest.fn().mockResolvedValue({ applied: false }) },
+    burnApplicator: { apply: jest.fn().mockResolvedValue({ applied: false, stacked: false, stackedCount: 0 }) },
+    poisonApplicator: { apply: jest.fn().mockResolvedValue({ applied: false, scope: 'part', targetId: '' }) },
+  };
+}
+
 describe('DamageTypeEffectsService - negligible severity return', () => {
   let service;
   let logger;
   let entityManager;
   let dispatcher;
+  let mockApplicators;
 
   beforeEach(() => {
     logger = {
@@ -25,10 +54,13 @@ describe('DamageTypeEffectsService - negligible severity return', () => {
       dispatch: jest.fn(),
     };
 
+    mockApplicators = createMockApplicators();
+
     service = new DamageTypeEffectsService({
       logger,
       entityManager,
       safeEventDispatcher: dispatcher,
+      ...mockApplicators,
     });
   });
 

@@ -51,9 +51,6 @@ const HTML_TEMPLATE = `
     <header class="mod-manager-header">
       <h1>Mod Manager</h1>
       <button type="button" id="back-button" class="menu-button">Back to Menu</button>
-      <button type="button" id="save-config-btn" class="save-button" disabled>
-        Save Configuration
-      </button>
     </header>
 
     <main class="mod-manager-main">

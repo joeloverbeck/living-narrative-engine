@@ -1,0 +1,89 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "grabbing:grab_neck_target",
+  "name": "Grab Neck",
+  "description": "Attempt to grab someone's neck to physically control them",
+  "template": "grab {target}'s neck ({chance}% chance)",
+  "required_components": {
+    "actor": ["personal-space-states:closeness", "skills:melee_skill"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "hugging-states:hugging",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "grabbing-states:grabbing_neck",
+      "recovery-states:fallen"
+    ],
+    "target": [
+      "grabbing-states:neck_grabbed",
+      "core:dead"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to grab someone's neck."
+    }
+  ],
+  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:melee_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:mobility_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "primary"
+    },
+    "formula": "ratio",
+    "bounds": { "min": 5, "max": 95 },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!!": [{ "var": "entity.primary.components.recovery-states:fallen" }]
+          }
+        },
+        "type": "flat",
+        "value": 20,
+        "tag": "target downed",
+        "targetRole": "primary",
+        "description": "Bonus for grabbing a fallen target"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [
+              {
+                "var": "entity.primary.components.physical-control-states:being_restrained"
+              }
+            ]
+          }
+        },
+        "type": "flat",
+        "value": 15,
+        "tag": "target restrained",
+        "targetRole": "primary",
+        "description": "Bonus for grabbing a restrained target"
+      }
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#4a4a4a",
+    "textColor": "#f5f5f5",
+    "hoverBackgroundColor": "#5a5a5a",
+    "hoverTextColor": "#ffffff"
+  }
+}

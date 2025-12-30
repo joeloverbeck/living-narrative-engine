@@ -47,7 +47,7 @@ This violates the project's modular design where each mod has a single, focused 
 | ITEMSPLIT-007 | `drinking` | `drink_from`, `drink_entirely` actions |
 | ITEMSPLIT-008 | `reading` | `read_item` action |
 | ITEMSPLIT-009 | `cosmetics` | `apply_lipstick` action |
-| ITEMSPLIT-010 | `comfort-items` | `hug_item_for_comfort` action |
+| ITEMSPLIT-010 | `comfort` | `hug_item_for_comfort` action |
 
 ### Phase 4: Cleanup
 | Ticket | Task | Purpose |
@@ -73,7 +73,7 @@ This violates the project's modular design where each mod has a single, focused 
 aiming-states   wielding-states  drinking   cosmetics
       │                │          │             │
       ▼                ▼          │             ▼
-   aiming           wielding      │        comfort-items
+   aiming           wielding      │        comfort
 ```
 
 ## Per-Ticket Migration Steps

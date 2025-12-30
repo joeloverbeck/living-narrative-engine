@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "attack-states",
+  "version": "1.0.0",
+  "name": "Attack States",
+  "description": "State components for tracking attack relationships between actors",
+  "dependencies": [],
+  "content": {
+    "components": ["attacked_by.component.json"],
+    "conditions": ["entity-not-attacked-by-actor.condition.json"],
+    "scopes": ["actors_in_location_not_attacked_by_actor.scope"]
+  }
+}

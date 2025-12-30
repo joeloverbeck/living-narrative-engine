@@ -244,31 +244,12 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       targetDescription: targetTargetDescription,
       targetId: targetTargetId,
       usingExplicitRecipients: targetUsingExplicitRecipients,
-      usingExclusions: targetUsingExclusions,
+      usingExclusions: _targetUsingExclusions, // Unused but kept for API consistency
       logLabel,
     } = params;
     const { log, senseAware, originatingActorId, telemetry, operationId } =
       context;
     const locationLabel = logLabel ?? targetLocationId;
-    /* ── Guard: Empty recipient set ────────────────────────────────────────
-     * Note: The explicit-recipient branch is logically unreachable because
-     * RecipientSetBuilder.build() only returns mode='explicit' when the
-     * explicitRecipients array is non-empty, which yields entityIds.size > 0.
-     * See src/perception/services/recipientSetBuilder.js:68-73 for the invariant.
-     */
-    if (targetEntityIds.size === 0) {
-      if (targetUsingExclusions) {
-        log.debug(
-          `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${locationLabel}`
-        );
-        return;
-      }
-
-      log.debug(
-        `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationLabel}`
-      );
-      return;
-    }
 
     // Determine if sense filtering should be applied:
     // - sense_aware must not be explicitly false
@@ -711,6 +692,17 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
     // Write entries to linked locations
     for (const linked of linkedLocations) {
+      // Skip linked locations without valid entityIds (defensive guard)
+      // but still log for transparency
+      if (!linked.entityIds || linked.entityIds.size === 0) {
+        const logLabel = `${linked.locationId} (sensorial link)`;
+        log.debug(
+          linked.mode === 'exclusion'
+            ? `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${logLabel}`
+            : `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${logLabel}`
+        );
+        continue;
+      }
       telemetry.locationsProcessed.add(linked.locationId);
       await this.#writeEntriesForRecipients(
         {

@@ -10,7 +10,7 @@ import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
 import slapTargetAction from '../../../../data/mods/striking/actions/slap_target.action.json';
-import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch.action.json';
+import suckerPunchAction from '../../../../data/mods/striking/actions/sucker_punch_target.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for striking actions
@@ -20,8 +20,8 @@ describe('striking actions forbidden during complex performance', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Using sucker_punch fixture since slap_target requires macros not loaded in tests
-    testFixture = await ModTestFixture.forAction('striking', 'striking:sucker_punch');
+    // Using sucker_punch_target fixture since slap_target requires macros not loaded in tests
+    testFixture = await ModTestFixture.forAction('striking', 'striking:sucker_punch_target');
   });
 
   afterEach(() => {
@@ -37,7 +37,7 @@ describe('striking actions forbidden during complex performance', () => {
       );
     });
 
-    it('sucker_punch should have performances-states:doing_complex_performance as forbidden component', () => {
+    it('sucker_punch_target should have performances-states:doing_complex_performance as forbidden component', () => {
       expect(suckerPunchAction.forbidden_components.actor).toContain(
         'performances-states:doing_complex_performance'
       );
@@ -138,7 +138,7 @@ describe('striking actions forbidden during complex performance', () => {
       expect(ids).not.toContain('striking:slap_target');
     });
 
-    it('sucker_punch is NOT available when actor is doing complex performance', () => {
+    it('sucker_punch_target is NOT available when actor is doing complex performance', () => {
       const scenario = testFixture.createCloseActors(['Charlie', 'Diana']);
 
       // Add doing_complex_performance component to actor
@@ -153,7 +153,7 @@ describe('striking actions forbidden during complex performance', () => {
       );
       const ids = availableActions.map((action) => action.id);
 
-      expect(ids).not.toContain('striking:sucker_punch');
+      expect(ids).not.toContain('striking:sucker_punch_target');
     });
   });
 });

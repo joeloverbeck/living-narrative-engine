@@ -81,6 +81,17 @@ import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordin
 import DamageAccumulator from '../../anatomy/services/damageAccumulator.js';
 import DamageNarrativeComposer from '../../anatomy/services/damageNarrativeComposer.js';
 import StatusEffectRegistry from '../../anatomy/services/statusEffectRegistry.js';
+import EffectDefinitionResolver from '../../anatomy/services/effectDefinitionResolver.js';
+import {
+  ImmediateDispatchStrategy,
+  SessionQueueStrategy,
+} from '../../anatomy/services/eventDispatchStrategy.js';
+import WarningTracker from '../../anatomy/services/warningTracker.js';
+import DismembermentApplicator from '../../anatomy/applicators/dismembermentApplicator.js';
+import FractureApplicator from '../../anatomy/applicators/fractureApplicator.js';
+import BleedApplicator from '../../anatomy/applicators/bleedApplicator.js';
+import BurnApplicator from '../../anatomy/applicators/burnApplicator.js';
+import PoisonApplicator from '../../anatomy/applicators/poisonApplicator.js';
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
 import DamageResolutionService from '../../logic/services/damageResolutionService.js';
@@ -883,13 +894,130 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register WarningTracker
+  registrar.singletonFactory(tokens.WarningTracker, (c) => {
+    return new WarningTracker({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.WarningTracker
+    )}.`
+  );
+
+  // Register EffectDefinitionResolver
+  registrar.singletonFactory(tokens.EffectDefinitionResolver, (c) => {
+    return new EffectDefinitionResolver({
+      statusEffectRegistry: c.resolve(tokens.StatusEffectRegistry),
+      warningTracker: c.resolve(tokens.WarningTracker),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.EffectDefinitionResolver
+    )}.`
+  );
+
+  // Register Event Dispatch Strategies
+  registrar.factory(tokens.ImmediateDispatchStrategy, (c) => {
+    return new ImmediateDispatchStrategy({
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ImmediateDispatchStrategy
+    )}.`
+  );
+
+  registrar.factory(tokens.SessionQueueStrategy, () => {
+    return new SessionQueueStrategy();
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SessionQueueStrategy
+    )}.`
+  );
+
+  // Register DismembermentApplicator
+  registrar.singletonFactory(tokens.DismembermentApplicator, (c) => {
+    return new DismembermentApplicator({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DismembermentApplicator
+    )}.`
+  );
+
+  // Register FractureApplicator
+  registrar.singletonFactory(tokens.FractureApplicator, (c) => {
+    return new FractureApplicator({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.FractureApplicator
+    )}.`
+  );
+
+  // Register BleedApplicator
+  registrar.singletonFactory(tokens.BleedApplicator, (c) => {
+    return new BleedApplicator({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BleedApplicator
+    )}.`
+  );
+
+  // Register BurnApplicator
+  registrar.singletonFactory(tokens.BurnApplicator, (c) => {
+    return new BurnApplicator({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.BurnApplicator
+    )}.`
+  );
+
+  // Register PoisonApplicator
+  registrar.singletonFactory(tokens.PoisonApplicator, (c) => {
+    return new PoisonApplicator({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.PoisonApplicator
+    )}.`
+  );
+
   // Register DamageTypeEffectsService
   registrar.singletonFactory(tokens.DamageTypeEffectsService, (c) => {
     return new DamageTypeEffectsService({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      statusEffectRegistry: c.resolve(tokens.StatusEffectRegistry),
+      rngProvider: Math.random,
+      effectDefinitionResolver: c.resolve(tokens.EffectDefinitionResolver),
+      dismembermentApplicator: c.resolve(tokens.DismembermentApplicator),
+      fractureApplicator: c.resolve(tokens.FractureApplicator),
+      bleedApplicator: c.resolve(tokens.BleedApplicator),
+      burnApplicator: c.resolve(tokens.BurnApplicator),
+      poisonApplicator: c.resolve(tokens.PoisonApplicator),
     });
   });
   logger.debug(

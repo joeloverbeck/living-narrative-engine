@@ -16,6 +16,8 @@ import SVGRenderer from '../../domUI/anatomy-renderer/SVGRenderer.js';
 import InteractionController from '../../domUI/anatomy-renderer/InteractionController.js';
 import ViewportManager from '../../domUI/anatomy-renderer/ViewportManager.js';
 import VisualizationComposer from '../../domUI/anatomy-renderer/VisualizationComposer.js';
+import RecipeSelectorService from '../../domUI/shared/RecipeSelectorService.js';
+import EntityLoadingService from '../../domUI/shared/EntityLoadingService.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -172,6 +174,34 @@ export function registerVisualizerComponents(container) {
         viewportManager: c.resolve(tokens.ViewportManager),
       }),
     { lifecycle: 'transient' },
+    logger
+  );
+
+  // Register RecipeSelectorService - shared service for entity selector population
+  registerWithLog(
+    registrar,
+    tokens.IRecipeSelectorService,
+    (c) =>
+      new RecipeSelectorService({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  // Register EntityLoadingService - shared service for entity loading and state coordination
+  registerWithLog(
+    registrar,
+    tokens.IEntityLoadingService,
+    (c) =>
+      new EntityLoadingService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        stateController: c.resolve(tokens.VisualizerStateController),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singletonFactory' },
     logger
   );
 

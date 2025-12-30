@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "striking:event-is-action-sucker-punch-target",
+  "description": "Checks if the event is a sucker_punch_target action attempt",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "striking:sucker_punch_target"]
+  }
+}

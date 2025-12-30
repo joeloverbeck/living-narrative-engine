@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "grabbing-states",
+  "version": "1.0.0",
+  "name": "Grabbing States",
+  "description": "State components for tracking grabbing interactions between actors",
+  "dependencies": [],
+  "content": {
+    "components": ["grabbing_neck.component.json", "neck_grabbed.component.json"]
+  }
+}

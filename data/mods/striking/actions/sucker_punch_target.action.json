@@ -1,0 +1,112 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "striking:sucker_punch_target",
+  "name": "Sucker Punch Target",
+  "description": "Throw an unexpected punch at someone when they're not looking",
+  "template": "sucker-punch {target} with {weapon} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "primary": ["damage-types:damage_capabilities"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "hugging-states:hugging",
+      "sex-states:giving_blowjob",
+      "performances-states:doing_complex_performance",
+      "bending-states:bending_over",
+      "physical-control-states:being_restrained",
+      "physical-control-states:restraining",
+      "recovery-states:fallen",
+      "sitting-states:sitting_on",
+      "liquids-states:in_liquid_body"
+    ],
+    "secondary": ["core:dead"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to throw a sucker punch."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to see your target."
+    }
+  ],
+  "targets": {
+    "primary": {
+      "scope": "striking:actor_arm_body_parts",
+      "placeholder": "weapon",
+      "description": "Arm to punch with"
+    },
+    "secondary": {
+      "scope": "attack-states:actors_in_location_not_attacked_by_actor",
+      "placeholder": "target",
+      "description": "Person to punch unexpectedly"
+    }
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "opposed",
+    "actorSkill": {
+      "component": "skills:melee_skill",
+      "property": "value",
+      "default": 10
+    },
+    "targetSkill": {
+      "component": "skills:awareness_skill",
+      "property": "value",
+      "default": 0,
+      "targetRole": "secondary"
+    },
+    "formula": "ratio",
+    "bounds": { "min": 5, "max": 95 },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "!!": [
+              {
+                "var": "entity.secondary.components.recovery-states:fallen"
+              }
+            ]
+          }
+        },
+        "type": "flat",
+        "value": 15,
+        "tag": "target downed",
+        "targetRole": "secondary",
+        "description": "Bonus for attacking a fallen target"
+      },
+      {
+        "condition": {
+          "logic": {
+            "!!": [
+              {
+                "var": "entity.secondary.components.physical-control-states:being_restrained"
+              }
+            ]
+          }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "target restrained",
+        "targetRole": "secondary",
+        "description": "Bonus for attacking a restrained target"
+      }
+    ]
+  },
+  "visual": {
+    "backgroundColor": "#c62828",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#d32f2f",
+    "hoverTextColor": "#ffffff"
+  }
+}

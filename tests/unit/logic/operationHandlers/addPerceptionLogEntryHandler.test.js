@@ -2626,4 +2626,435 @@ describe('AddPerceptionLogEntryHandler', () => {
       });
     });
   });
+
+  // ── shouldPropagate true but no linked locations (lines 693-709) ──────────
+  describe('execute – shouldPropagate true but no linked locations', () => {
+    const LOC = 'loc:empty_linked';
+    const NPC1 = 'npc:local_recipient';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+
+    const findDebugCall = (message) =>
+      log.debug.mock.calls.find(([callMessage]) =>
+        callMessage.includes(message)
+      );
+
+    beforeEach(() => {
+      // Key setup: propagation is enabled, but returns no linked locations
+      sensorialPropagationService.shouldPropagate.mockReturnValue(true);
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([]);
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('logs completion when propagation returns no linked locations and has recipients', async () => {
+      // Location has entities that will receive entries
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('linked_empty_has_recipients'),
+          sense_aware: false,
+        },
+        { operationId: 'op-linked-empty-recipients' }
+      );
+
+      // Entries should be written to local recipients
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        NPC1,
+        PERCEPTION_LOG_COMPONENT_ID,
+        expect.any(Object)
+      );
+
+      // Should log sensorial propagation with 0 linked locations
+      const propagationCall = findDebugCall('ADD_PERCEPTION_LOG_ENTRY: Sensorial propagation');
+      expect(propagationCall).toBeDefined();
+      const [, propagationPayload] = propagationCall;
+      expect(propagationPayload.linkedLocationCount).toBe(0);
+      expect(propagationPayload.propagated).toBe(true);
+
+      // Should log operation complete
+      const completionCall = findDebugCall('ADD_PERCEPTION_LOG_ENTRY: Operation complete');
+      expect(completionCall).toBeDefined();
+      const [, completionPayload] = completionCall;
+      expect(completionPayload.operationId).toBe('op-linked-empty-recipients');
+      expect(completionPayload.totalRecipientsProcessed).toBe(1);
+    });
+
+    test('logs "No entities in location" when empty location and linked returns empty', async () => {
+      // Empty location - no local recipients
+      em.getEntitiesInLocation.mockReturnValue(new Set());
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('linked_empty_no_entities'),
+          sense_aware: false,
+        },
+        { operationId: 'op-linked-empty-no-entities' }
+      );
+
+      // No entries should be written
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should log the empty location message
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(`ADD_PERCEPTION_LOG_ENTRY: No entities in location ${LOC}`)
+      );
+
+      // Should log operation complete
+      const completionCall = findDebugCall('ADD_PERCEPTION_LOG_ENTRY: Operation complete');
+      expect(completionCall).toBeDefined();
+      const [, completionPayload] = completionCall;
+      expect(completionPayload.operationId).toBe('op-linked-empty-no-entities');
+      expect(completionPayload.totalRecipientsProcessed).toBe(0);
+    });
+
+    test('logs "All actors excluded" when all excluded and linked returns empty', async () => {
+      // Location has entities but all are excluded
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      await h.execute(
+        {
+          location_id: LOC,
+          entry: makeEntry('linked_empty_all_excluded'),
+          excluded_actor_ids: [NPC1], // Exclude the only actor
+          sense_aware: false,
+        },
+        { operationId: 'op-linked-empty-excluded' }
+      );
+
+      // No entries should be written (all excluded)
+      expect(em.addComponent).not.toHaveBeenCalled();
+
+      // Should log the exclusion message
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(`ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${LOC}`)
+      );
+
+      // Should log operation complete
+      const completionCall = findDebugCall('ADD_PERCEPTION_LOG_ENTRY: Operation complete');
+      expect(completionCall).toBeDefined();
+      const [, completionPayload] = completionCall;
+      expect(completionPayload.operationId).toBe('op-linked-empty-excluded');
+      expect(completionPayload.totalRecipientsProcessed).toBe(0);
+    });
+  });
+
+  // ── Defensive branch coverage (lines 401, 417, 481, 558, 682) ────────────────
+  describe('execute – defensive code branches', () => {
+    const LOC = 'loc:defensive_test';
+    const NPC1 = 'npc:def_one';
+    const NPC2 = 'npc:def_two';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+
+    beforeEach(() => {
+      sensorialPropagationService.shouldPropagate.mockReturnValue(false);
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    // ── Line 401: updateCount is not a number ──────────────────────────────────
+    test('handles non-numeric updateCount from batchAddComponentsOptimized (line 401)', async () => {
+      const entry = makeEntry('non_numeric_update');
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      // Mock batchAddComponentsOptimized to return undefined updateCount
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: undefined, // Non-numeric value
+        errors: [],
+      });
+
+      await h.execute({ location_id: LOC, entry });
+
+      // Should still complete without error, using 0 as fallback
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('wrote entry to undefined/2 perceivers')
+      );
+    });
+
+    test('handles null updateCount from batchAddComponentsOptimized (line 401)', async () => {
+      const entry = makeEntry('null_update');
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: null, // Non-numeric value
+        errors: [],
+      });
+
+      await h.execute({ location_id: LOC, entry });
+
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
+      // Operation completes successfully with fallback
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('wrote entry to null/1 perceivers')
+      );
+    });
+
+    // ── Lines 417, 481: explicit recipients with batch/fallback modes ──────────
+    test('logs "(targeted)" in batch mode when using explicit recipients (line 417)', async () => {
+      const entry = makeEntry('targeted_batch');
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: 1,
+        errors: [],
+      });
+
+      // Use explicit recipients
+      await h.execute({
+        location_id: LOC,
+        entry,
+        recipient_ids: [NPC1], // Explicit targeting
+        sense_aware: false,
+      });
+
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalled();
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('wrote entry to 1/1 perceivers (targeted) (batch mode)')
+      );
+    });
+
+    test('logs "(targeted)" in fallback mode when using explicit recipients (line 481)', async () => {
+      const entry = makeEntry('targeted_fallback');
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      // Mock batchAddComponentsOptimized to throw error, triggering error recovery fallback path
+      em.batchAddComponentsOptimized = jest.fn().mockRejectedValue(new Error('Batch failed'));
+      em.addComponent.mockResolvedValue(true);
+
+      // Use explicit recipients
+      await h.execute({
+        location_id: LOC,
+        entry,
+        recipient_ids: [NPC1], // Explicit targeting
+        sense_aware: false,
+      });
+
+      // Should fall back to individual updates after batch error
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('wrote entry to 1/1 perceivers (targeted) (fallback mode)')
+      );
+    });
+
+    // ── Line 558: entityIds is not a Set ───────────────────────────────────────
+    test('converts entityIds array to Set when RecipientSetBuilder returns array (line 558)', async () => {
+      const entry = makeEntry('array_entity_ids');
+
+      // Create a mock recipientSetBuilder that returns an array instead of Set
+      const mockRecipientSetBuilder = {
+        build: jest.fn().mockReturnValue({
+          entityIds: [NPC1, NPC2], // Array instead of Set
+          mode: 'broadcast',
+        }),
+      };
+
+      const handlerWithMockBuilder = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+        recipientSetBuilder: mockRecipientSetBuilder, // Inject mock builder
+      });
+
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: 2,
+        errors: [],
+      });
+
+      await handlerWithMockBuilder.execute({ location_id: LOC, entry });
+
+      // Should convert array to Set and proceed
+      expect(mockRecipientSetBuilder.build).toHaveBeenCalled();
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ instanceId: NPC1 }),
+          expect.objectContaining({ instanceId: NPC2 }),
+        ]),
+        true
+      );
+    });
+
+  });
+
+  // ── Line 682 coverage: linked.entityIds?.size ?? 0 ──────────────────────────
+  // This describe block uses a separate setup where shouldPropagate is TRUE in
+  // beforeEach (matching the pattern from "sensorial link propagation" tests).
+  describe('execute – sensorial propagation totalPropagatedEntries calculation (line 682)', () => {
+    const LOC = 'loc:propagation_test';
+    const NPC1 = 'npc:prop_one';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+
+    beforeEach(() => {
+      // Enable propagation (like sensorial link propagation tests)
+      sensorialPropagationService.shouldPropagate.mockReturnValue(true);
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        routingPolicyService,
+        perceptionEntryBuilder,
+        sensorialPropagationService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1]));
+    });
+
+    test('sums entityIds.size correctly for valid linked locations (line 682 happy path)', async () => {
+      const entry = makeEntry('linked_valid_ids');
+
+      // Return linked locations with valid entityIds Sets
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: 'loc:linked_1',
+          prefixedEntryText: 'From nearby...',
+          prefixedEntry: makeEntry('linked1'),
+          entityIds: new Set(['npc:a', 'npc:b']), // 2 entities
+        },
+        {
+          locationId: 'loc:linked_2',
+          prefixedEntryText: 'From afar...',
+          prefixedEntry: makeEntry('linked2'),
+          entityIds: new Set(['npc:c']), // 1 entity
+        },
+      ]);
+
+      await h.execute({ location_id: LOC, entry, sense_aware: false });
+
+      // Should sum the sizes: 2 + 1 = 3
+      // Note: Logger adds class name prefix, so use substring match
+      const propagationCalls = log.debug.mock.calls.filter(([msg]) =>
+        msg.includes('Sensorial propagation')
+      );
+      expect(propagationCalls.length).toBeGreaterThan(0);
+      const [, payload] = propagationCalls[0];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          totalPropagatedEntries: 3,
+        })
+      );
+    });
+
+    test('handles empty entityIds Set in linked locations (line 682 size=0)', async () => {
+      const entry = makeEntry('linked_empty_set');
+
+      // Return linked location with empty Set (size=0)
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: 'loc:linked_empty',
+          prefixedEntryText: 'From nearby...',
+          prefixedEntry: makeEntry('linked_empty'),
+          entityIds: new Set(), // Empty Set - size is 0
+        },
+      ]);
+
+      await h.execute({ location_id: LOC, entry, sense_aware: false });
+
+      // Should calculate totalPropagatedEntries as 0
+      // Note: Logger adds class name prefix, so use substring match
+      const propagationCalls = log.debug.mock.calls.filter(([msg]) =>
+        msg.includes('Sensorial propagation')
+      );
+      expect(propagationCalls.length).toBeGreaterThan(0);
+      const [, payload] = propagationCalls[0];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          totalPropagatedEntries: 0,
+        })
+      );
+    });
+
+    test('uses fallback 0 when linked location has undefined entityIds (line 682 ?? 0)', async () => {
+      const entry = makeEntry('linked_undefined_ids');
+
+      // Return linked locations: one with undefined entityIds, one with valid entityIds
+      // This tests the ?? 0 fallback in line 682 AND the defensive guard at line 715
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: 'loc:linked_no_ids',
+          prefixedEntryText: 'From nearby...',
+          prefixedEntry: makeEntry('linked_no_ids'),
+          // entityIds is intentionally missing/undefined
+        },
+        {
+          locationId: 'loc:linked_with_ids',
+          prefixedEntryText: 'From afar...',
+          prefixedEntry: makeEntry('linked_with_ids'),
+          entityIds: new Set(['npc:x']), // 1 entity
+        },
+      ]);
+
+      await h.execute({ location_id: LOC, entry, sense_aware: false });
+
+      // Should calculate: 0 (undefined ?? 0) + 1 = 1
+      const propagationCalls = log.debug.mock.calls.filter(([msg]) =>
+        msg.includes('Sensorial propagation')
+      );
+      expect(propagationCalls.length).toBeGreaterThan(0);
+      const [, payload] = propagationCalls[0];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          totalPropagatedEntries: 1,
+        })
+      );
+    });
+
+    test('skips linked location with empty entityIds Set but logs for transparency (line 715 guard)', async () => {
+      const entry = makeEntry('linked_empty_skipped');
+
+      // Return linked location with empty Set - should be skipped at line 715
+      sensorialPropagationService.getLinkedLocationsWithPrefixedEntries.mockReturnValue([
+        {
+          locationId: 'loc:linked_empty_skipped',
+          prefixedEntryText: 'From nearby...',
+          prefixedEntry: makeEntry('linked_empty_entry'),
+          entityIds: new Set(), // Empty Set - should be skipped
+        },
+      ]);
+
+      await h.execute({ location_id: LOC, entry, sense_aware: false });
+
+      // The linked location is skipped from processing but logs for transparency
+      // Should log "No entities in location" since mode is not 'exclusion'
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'ADD_PERCEPTION_LOG_ENTRY: No entities in location loc:linked_empty_skipped (sensorial link)'
+        )
+      );
+    });
+  });
 });

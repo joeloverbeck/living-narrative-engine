@@ -1,8 +1,8 @@
-# ITEMSPLIT-010: Create comfort-items Mod
+# ITEMSPLIT-010: Create comfort Mod
 
 ## Summary
 
-Create the `comfort-items` mod containing actions for items that provide emotional comfort when hugged, like teddy bears. This includes the `hug_item_for_comfort` action and its supporting component, condition, rule, and entity definition.
+Create the `comfort` mod containing actions for items that provide emotional comfort when hugged, like teddy bears. This includes the `hug_item_for_comfort` action and its supporting component, condition, rule, and entity definition.
 
 **Status**: Completed
 
@@ -13,13 +13,13 @@ Create the `comfort-items` mod containing actions for items that provide emotion
 
 ## Mod Specification
 
-**Directory**: `data/mods/comfort-items/`
+**Directory**: `data/mods/comfort/`
 
 **mod-manifest.json**:
 ```json
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
-  "id": "comfort-items",
+  "id": "comfort",
   "version": "1.0.0",
   "name": "Comfort Items",
   "description": "Items that provide emotional comfort when hugged.",
@@ -68,44 +68,44 @@ Create the `comfort-items` mod containing actions for items that provide emotion
 
 ## Files to Move
 
-### Components (namespace change: `items:` → `comfort-items:`)
+### Components (namespace change: `items:` → `comfort:`)
 
 | Source File | Destination | Old ID | New ID |
 |-------------|-------------|--------|--------|
-| `data/mods/items/components/allows_soothing_hug.component.json` | `data/mods/comfort-items/components/` | `items:allows_soothing_hug` | `comfort-items:allows_soothing_hug` |
+| `data/mods/items/components/allows_soothing_hug.component.json` | `data/mods/comfort/components/` | `items:allows_soothing_hug` | `comfort:allows_soothing_hug` |
 
-### Actions (namespace change: `items:` → `comfort-items:`)
+### Actions (namespace change: `items:` → `comfort:`)
 
 | Source File | Destination | Old ID | New ID |
 |-------------|-------------|--------|--------|
-| `data/mods/items/actions/hug_item_for_comfort.action.json` | `data/mods/comfort-items/actions/` | `items:hug_item_for_comfort` | `comfort-items:hug_item_for_comfort` |
+| `data/mods/items/actions/hug_item_for_comfort.action.json` | `data/mods/comfort/actions/` | `items:hug_item_for_comfort` | `comfort:hug_item_for_comfort` |
 
 ### Rules
 
 | Source File | Destination |
 |-------------|-------------|
-| `data/mods/items/rules/handle_hug_item_for_comfort.rule.json` | `data/mods/comfort-items/rules/` |
+| `data/mods/items/rules/handle_hug_item_for_comfort.rule.json` | `data/mods/comfort/rules/` |
 
-### Conditions (namespace change: `items:` → `comfort-items:`)
-
-| Source File | Destination |
-|-------------|-------------|
-| `data/mods/items/conditions/event-is-action-hug-item-for-comfort.condition.json` | `data/mods/comfort-items/conditions/` | `items:event-is-action-hug-item-for-comfort` | `comfort-items:event-is-action-hug-item-for-comfort` |
-
-### Entities (namespace change: `items:` → `comfort-items:`)
+### Conditions (namespace change: `items:` → `comfort:`)
 
 | Source File | Destination |
 |-------------|-------------|
-| `data/mods/items/entities/definitions/plush_teddy_bear.entity.json` | `data/mods/comfort-items/entities/definitions/` | `items:plush_teddy_bear` | `comfort-items:plush_teddy_bear` |
+| `data/mods/items/conditions/event-is-action-hug-item-for-comfort.condition.json` | `data/mods/comfort/conditions/` | `items:event-is-action-hug-item-for-comfort` | `comfort:event-is-action-hug-item-for-comfort` |
+
+### Entities (namespace change: `items:` → `comfort:`)
+
+| Source File | Destination |
+|-------------|-------------|
+| `data/mods/items/entities/definitions/plush_teddy_bear.entity.json` | `data/mods/comfort/entities/definitions/` | `items:plush_teddy_bear` | `comfort:plush_teddy_bear` |
 
 ## Namespace Changes
 
 | Old ID | New ID |
 |--------|--------|
-| `items:allows_soothing_hug` | `comfort-items:allows_soothing_hug` |
-| `items:hug_item_for_comfort` | `comfort-items:hug_item_for_comfort` |
-| `items:event-is-action-hug-item-for-comfort` | `comfort-items:event-is-action-hug-item-for-comfort` |
-| `items:plush_teddy_bear` | `comfort-items:plush_teddy_bear` |
+| `items:allows_soothing_hug` | `comfort:allows_soothing_hug` |
+| `items:hug_item_for_comfort` | `comfort:hug_item_for_comfort` |
+| `items:event-is-action-hug-item-for-comfort` | `comfort:event-is-action-hug-item-for-comfort` |
+| `items:plush_teddy_bear` | `comfort:plush_teddy_bear` |
 
 ## External References to Update
 
@@ -123,7 +123,7 @@ grep -r "items:hug_item_for_comfort" data/mods/ tests/
 ## Test Updates
 
 Check for tests that:
-- Reference comfort-items-related component or action IDs
+- Reference comfort-related component or action IDs
 - Import from `data/mods/items/` for comfort-related files
 - Test comfort item action discovery and execution
 
@@ -138,16 +138,16 @@ Select a unique scheme for this mod (and its actions) from the available WCAG-co
 
 1. [x] Create directory structure:
    ```bash
-   mkdir -p data/mods/comfort-items/{components,actions,rules,conditions,entities/definitions}
+   mkdir -p data/mods/comfort/{components,actions,rules,conditions,entities/definitions}
    ```
 
 2. [x] Create `mod-manifest.json`
 
 3. [x] Copy and update component file (1 file)
-   - Update `id` from `items:allows_soothing_hug` to `comfort_items:allows_soothing_hug`
+   - Update `id` from `items:allows_soothing_hug` to `comfort:allows_soothing_hug`
 
 4. [x] Copy and update action file (1 file)
-   - Update `id` from `items:hug_item_for_comfort` to `comfort_items:hug_item_for_comfort`
+   - Update `id` from `items:hug_item_for_comfort` to `comfort:hug_item_for_comfort`
    - Update any internal component references
 
 5. [x] Copy rule file (1 file)
@@ -160,7 +160,7 @@ Select a unique scheme for this mod (and its actions) from the available WCAG-co
 7. [x] Copy entity file (1 file)
    - Update component references
 
-8. [x] Update `data/game.json` to include `comfort-items` after dependencies if the config lists `items-core`/`inventory` mods; otherwise leave `data/game.json` unchanged for this ticket
+8. [x] Update `data/game.json` to include `comfort` after dependencies if the config lists `items-core`/`inventory` mods; otherwise leave `data/game.json` unchanged for this ticket
 
 9. [x] Find and update all external references
 
@@ -179,10 +179,10 @@ Select a unique scheme for this mod (and its actions) from the available WCAG-co
 - [ ] `npm run test:unit` passes
 - [x] `npm run test:integration` passes
 - [x] No circular dependencies
-- [x] All `items:allows_soothing_hug` references updated to `comfort-items:allows_soothing_hug`
-- [x] All `items:hug_item_for_comfort` references updated to `comfort-items:hug_item_for_comfort`
-- [x] All `items:event-is-action-hug-item-for-comfort` references updated to `comfort-items:event-is-action-hug-item-for-comfort`
-- [x] Teddy bear entity loads correctly with new component references (`comfort-items:plush_teddy_bear`)
+- [x] All `items:allows_soothing_hug` references updated to `comfort:allows_soothing_hug`
+- [x] All `items:hug_item_for_comfort` references updated to `comfort:hug_item_for_comfort`
+- [x] All `items:event-is-action-hug-item-for-comfort` references updated to `comfort:event-is-action-hug-item-for-comfort`
+- [x] Teddy bear entity loads correctly with new component references (`comfort:plush_teddy_bear`)
 - [ ] Mod loads correctly in game
 
 ## Blocked By
@@ -202,6 +202,6 @@ None
 
 ## Outcome
 
-- Created the `comfort-items` mod with updated `comfort-items:` IDs, and removed the comfort-item assets from `items`.
+- Created the `comfort` mod with updated `comfort:` IDs, and removed the comfort-item assets from `items`.
 - Kept `data/game.json` unchanged because it does not list `items-core`/`inventory` in the current config.
 - Assigned the Sunlit Lagoon color scheme to the new mod and updated the action visual colors.

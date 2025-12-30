@@ -36,7 +36,7 @@ Final cleanup of the original `items` mod after all content has been migrated to
    - `data/mods/writing/actions/jot_down_notes.action.json`
 
 6. **[DONE] Updated actions using `items:examinable_items` → `items-core:examinable_items`**:
-   - `data/mods/comfort-items/actions/hug_item_for_comfort.action.json`
+   - `data/mods/comfort/actions/hug_item_for_comfort.action.json`
    - `data/mods/reading/actions/read_item.action.json`
    - `data/mods/drinking/actions/drink_entirely.action.json`
    - `data/mods/drinking/actions/drink_from.action.json`
@@ -68,7 +68,7 @@ Final cleanup of the original `items` mod after all content has been migrated to
       - `tests/integration/mods/item-placement/putOnSurfaceBertramScenario.test.js`
       - `tests/integration/mods/item-transfer/giveItemActionDiscovery.test.js`
       - `tests/integration/mods/cosmetics/applyLipstickActionDiscovery.test.js`
-      - `tests/integration/mods/comfort-items/hugItemForComfortActionDiscovery.test.js`
+      - `tests/integration/mods/comfort/hugItemForComfortActionDiscovery.test.js`
 
 11. **[DONE] Fixed test expectation in `musicMoodActionsDiscovery.test.js`**:
     - Updated test "should NOT discover actions for non-portable instruments" → "should discover actions for non-portable instruments"
@@ -107,7 +107,7 @@ The `items` mod has been completely removed. Its functionality is now distribute
 - **`drinking`** - Liquid consumption
 - **`reading`** - Readable items
 - **`cosmetics`** - Cosmetic items
-- **`comfort-items`** - Comfort items
+- **`comfort`** - Comfort items
 
 ## Completion Date
 

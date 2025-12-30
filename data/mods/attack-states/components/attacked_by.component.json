@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "attack-states:attacked_by",
+  "description": "Tracks which entities have attacked this actor",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["attackers"],
+    "properties": {
+      "attackers": {
+        "type": "array",
+        "description": "Entity IDs of actors who have attacked this entity",
+        "uniqueItems": true,
+        "default": [],
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        }
+      }
+    }
+  }
+}
