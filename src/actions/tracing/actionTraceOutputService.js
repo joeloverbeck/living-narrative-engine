@@ -1554,6 +1554,47 @@ export class ActionTraceOutputService {
   }
 
   /**
+   * Test-only helper to call private formatStructuredTrace implementation
+   *
+   * @param {object} trace - Structured trace to format
+   * @returns {object} Formatted trace data
+   */
+  __TEST_ONLY_formatStructuredTrace(trace) {
+    return this.#formatStructuredTrace(trace);
+  }
+
+  /**
+   * Test-only helper to call private formatTraceAsJSON
+   *
+   * @param {object} trace - Trace record
+   * @returns {string} JSON string
+   */
+  __TEST_ONLY_formatTraceAsJSON(trace) {
+    return this.#formatTraceAsJSON(trace);
+  }
+
+  /**
+   * Test-only helper to call private getTracesForExport
+   *
+   * @param {Array<string>|null} traceIds - Trace IDs to export
+   * @returns {Promise<Array>} Traces for export
+   */
+  async __TEST_ONLY_getTracesForExport(traceIds) {
+    return this.#getTracesForExport(traceIds);
+  }
+
+  /**
+   * Test-only helper to call private generateExportFileName
+   *
+   * @param {object} trace - Trace record
+   * @param {string} format - Export format
+   * @returns {string} File name
+   */
+  __TEST_ONLY_generateExportFileName(trace, format) {
+    return this.#generateExportFileName(trace, format);
+  }
+
+  /**
    * Update trace configuration
    *
    * @param {object} config - Action trace configuration

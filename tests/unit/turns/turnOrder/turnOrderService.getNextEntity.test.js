@@ -10,11 +10,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -34,8 +32,6 @@ describe('TurnOrderService', () => {
   let service;
   /** @type {jest.Mocked<SimpleRoundRobinQueue>} */
   let mockSimpleQueueInstance;
-  /** @type {jest.Mocked<InitiativePriorityQueue>} */
-  let mockInitiativeQueueInstance;
   /** @type {Entity[]} */
   let entities;
 
@@ -62,24 +58,8 @@ describe('TurnOrderService', () => {
         clear: jest.fn(),
         size: jest.fn().mockReturnValue(entities.length),
         toArray: jest.fn().mockReturnValue(entities),
-        // Add other methods as needed if they get called indirectly
       };
       return mockSimpleQueueInstance;
-    });
-
-    InitiativePriorityQueue.mockImplementation(() => {
-      mockInitiativeQueueInstance = {
-        add: jest.fn(),
-        remove: jest.fn(),
-        getNext: jest.fn(),
-        peek: jest.fn(),
-        isEmpty: jest.fn().mockReturnValue(false),
-        clear: jest.fn(),
-        size: jest.fn().mockReturnValue(entities.length),
-        toArray: jest.fn().mockReturnValue(entities),
-        // Add other methods as needed
-      };
-      return mockInitiativeQueueInstance;
     });
 
     // Clear logger calls made during constructor AFTER instantiation
@@ -111,44 +91,6 @@ describe('TurnOrderService', () => {
       // Assert
       expect(result).toEqual(expectedEntity);
       expect(mockSimpleQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      // Ensure the *other* queue type wasn't touched
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Advancing turn to entity "${expectedEntity.id}".`
-      );
-      // Now these checks should pass as we cleared logs before the 'Act' phase
-      expect(mockLogger.info).not.toHaveBeenCalled();
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
-    // Test Case: Delegate to Initiative Queue
-    it('Test Case 11.5.2: should delegate to the active InitiativePriorityQueue', () => {
-      // Arrange
-      const expectedEntity = { id: 'nextInit' };
-      const initiativeData = new Map([
-        ['a', 10],
-        ['b', 5],
-      ]);
-      service.startNewRound(entities, 'initiative', initiativeData); // Instantiates mockInitiativeQueueInstance
-      // Ensure the mock instance was created
-      expect(mockInitiativeQueueInstance).toBeDefined();
-      mockInitiativeQueueInstance.getNext.mockReturnValue(expectedEntity);
-      // --- Correction: Clear logs *after* arrange and *before* act ---
-      mockLogger.debug.mockClear();
-      mockLogger.info.mockClear();
-      mockLogger.warn.mockClear();
-      mockLogger.error.mockClear();
-
-      // Act
-      const result = service.getNextEntity();
-
-      // Assert
-      expect(result).toEqual(expectedEntity);
-      expect(mockInitiativeQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      // Ensure the *other* queue type wasn't touched
-      expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Advancing turn to entity "${expectedEntity.id}".`
@@ -186,37 +128,6 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    // Test Case: Queue Returns Null (End of Round - Initiative)
-    it('Test Case 11.5.4: should return null and log info when initiative queue returns null', () => {
-      // Arrange
-      const initiativeData = new Map([
-        ['a', 10],
-        ['b', 5],
-      ]);
-      service.startNewRound(entities, 'initiative', initiativeData);
-      expect(mockInitiativeQueueInstance).toBeDefined();
-      mockInitiativeQueueInstance.getNext.mockReturnValue(null);
-      // --- Correction: Clear logs *after* arrange and *before* act ---
-      mockLogger.info.mockClear();
-      mockLogger.debug.mockClear();
-      mockLogger.warn.mockClear();
-      mockLogger.error.mockClear();
-
-      // Act
-      const result = service.getNextEntity();
-
-      // Assert
-      expect(result).toBeNull();
-      expect(mockInitiativeQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'TurnOrderService: getNextEntity returned null (queue is likely empty).'
-      );
-      // The advancing turn debug is not called
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
     // Test Case: Called when no round is active (implicitly handled by 11.5)
     // Already covered by TEST-TURN-ORDER-001.11.1 tests for `getNextEntity` (no round active state).
     // However, adding a simple check here for completeness within this specific focus.
@@ -233,7 +144,6 @@ describe('TurnOrderService', () => {
       expect(result).toBeNull();
       // Crucially, ensure no queue constructor or getNext was called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
 
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(

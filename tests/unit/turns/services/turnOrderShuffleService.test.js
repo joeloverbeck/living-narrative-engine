@@ -126,11 +126,13 @@ describe('TurnOrderShuffleService', () => {
 
         const result = service.shuffleWithHumanPositionPreservation(
           entities,
-          'initiative'
+          'unknown-strategy'
         );
 
         expect(result).toEqual(original);
-        expect(isShuffleEnabledForStrategy).toHaveBeenCalledWith('initiative');
+        expect(isShuffleEnabledForStrategy).toHaveBeenCalledWith(
+          'unknown-strategy'
+        );
       });
     });
 

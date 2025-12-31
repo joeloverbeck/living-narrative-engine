@@ -14,10 +14,9 @@
  */
 
 /**
- * @typedef {'round-robin' | 'initiative'} TurnOrderStrategy
+ * @typedef {'round-robin'} TurnOrderStrategy
  * Defines the possible strategies for determining turn order.
  * - 'round-robin': Entities take turns in a fixed sequence.
- * - 'initiative': Entities take turns based on an initiative score (higher score usually goes first).
  */
 
 /**
@@ -31,14 +30,11 @@ export class ITurnOrderService {
    *
    * @function startNewRound
    * @param {Array<Entity>} entities - An array of entity objects participating in this round.
-   * @param {TurnOrderStrategy} strategy - The strategy to use for ordering turns ('round-robin' or 'initiative').
-   * @param {Map<string, number>} [initiativeData] - Optional map of entity IDs to their initiative scores.
-   * Required if the strategy is 'initiative'. Ignored otherwise.
-   * The exact interpretation of the score (higher/lower first) depends on the implementation.
+   * @param {TurnOrderStrategy} strategy - The strategy to use for ordering turns ('round-robin').
    * @returns {void}
-   * @throws {Error} Implementations might throw if entities array is empty, invalid, or if initiative data is missing/invalid when required.
+   * @throws {Error} Implementations might throw if entities array is empty or invalid.
    */
-  startNewRound(entities, strategy, initiativeData) {
+  startNewRound(entities, strategy) {
     throw new Error('ITurnOrderService.startNewRound method not implemented.');
   }
 
@@ -66,16 +62,14 @@ export class ITurnOrderService {
 
   /**
    * Adds an entity to the current round's turn order dynamically (e.g., a summoned creature).
-   * The entity's position depends on the current strategy and implementation details (e.g., added at the end for round-robin, slotted by initiative).
+   * The entity is added at the end of the round-robin queue.
    *
    * @function addEntity
    * @param {Entity} entity - The entity to add.
-   * @param {number} [initiativeValue] - The initiative score for the entity, primarily used if the current strategy is 'initiative'.
-   * Behavior if omitted may vary by implementation.
    * @returns {void}
    * @throws {Error} Implementations might throw if the entity is invalid or cannot be added (e.g., already present).
    */
-  addEntity(entity, initiativeValue) {
+  addEntity(entity) {
     throw new Error('ITurnOrderService.addEntity method not implemented.');
   }
 

@@ -283,30 +283,6 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       expect(turnOrderService.peekNextEntity()).toBe(null);
       expect(turnOrderService.getCurrentOrder()).toHaveLength(0);
     });
-
-    it('should allow switching between strategies', () => {
-      // Arrange
-      const entities = [
-        createMockEntity('entity1'),
-        createMockEntity('entity2'),
-      ];
-      const initiativeData = new Map([
-        ['entity1', 10],
-        ['entity2', 20],
-      ]);
-
-      // Start with round-robin
-      turnOrderService.startNewRound(entities, 'round-robin');
-      expect(turnOrderService.peekNextEntity().id).toBe('entity1');
-
-      // Switch to initiative (entity2 has higher initiative)
-      turnOrderService.startNewRound(entities, 'initiative', initiativeData);
-      expect(turnOrderService.peekNextEntity().id).toBe('entity2');
-
-      // Switch back to round-robin
-      turnOrderService.startNewRound(entities, 'round-robin');
-      expect(turnOrderService.peekNextEntity().id).toBe('entity1');
-    });
   });
 
   describe('Error handling', () => {

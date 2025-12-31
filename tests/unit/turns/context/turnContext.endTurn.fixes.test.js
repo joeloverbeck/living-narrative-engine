@@ -1,5 +1,5 @@
 // --- FILE START ---
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { jest, describe, it, expect } from '@jest/globals';
 import { TurnContext } from '../../../../src/turns/context/turnContext.js';
 
 // ▸ Tiny stubs ───────────────────────────────────────────────────────────────
@@ -67,5 +67,26 @@ describe('TurnContext.endTurn', () => {
     expect(onEndTurnCb).not.toHaveBeenCalled();
     expect(initialSignal.aborted).toBe(true); // still aborts the original prompt
     expect(tc.getPromptSignal().aborted).toBe(false); // future prompts can proceed
+  });
+
+  it('skips cancelActivePrompt if prompt is already aborted', () => {
+    createContext(false); // handler NOT destroyed
+    const initialSignal = tc.getPromptSignal();
+    expect(initialSignal.aborted).toBe(false);
+
+    // Pre-cancel the prompt
+    tc.cancelActivePrompt();
+    expect(initialSignal.aborted).toBe(true);
+
+    // Clear the debug mock to track only endTurn calls
+    logger.debug.mockClear();
+
+    tc.endTurn(); // act
+
+    // Should NOT log the abort message since prompt was already aborted
+    expect(logger.debug).not.toHaveBeenCalledWith(
+      expect.stringContaining('aborting prompt')
+    );
+    expect(onEndTurnCb).toHaveBeenCalledTimes(1);
   });
 });

@@ -120,6 +120,7 @@ describe('Index.html - Main Menu', () => {
         'Mod Manager',
         'Start New Game',
         'Anatomy Visualizer',
+        'Damage Simulator',
         'Change LLM',
         'Character Concepts Manager',
         'Thematic Direction Generator',
@@ -143,6 +144,7 @@ describe('Index.html - Main Menu', () => {
         { id: 'mod-manager-button', text: 'Mod Manager' },
         { id: 'start-button', text: 'Start New Game' },
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
+        { id: 'damage-simulator-button', text: 'Damage Simulator' },
         { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
         {
@@ -184,6 +186,7 @@ describe('Index.html - Main Menu', () => {
         { id: 'mod-manager-button', href: 'mod-manager.html' },
         { id: 'start-button', href: 'game.html' },
         { id: 'anatomy-button', href: 'anatomy-visualizer.html' },
+        { id: 'damage-simulator-button', href: 'damage-simulator.html' },
         {
           id: 'character-concepts-button',
           href: 'character-concepts-manager.html',

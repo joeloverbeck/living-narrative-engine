@@ -1003,4 +1003,904 @@ describe('ArrayIterationResolver', () => {
       expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
   });
+
+  describe('body part access object handling', () => {
+    let mockBodyGraphService;
+    let mockEntitiesGateway;
+
+    beforeEach(() => {
+      mockBodyGraphService = {
+        getAllParts: jest.fn(),
+      };
+
+      mockEntitiesGateway = {
+        getComponentData: jest.fn(),
+      };
+    });
+
+    it('should delegate body part access to bodyGraphService', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              'part:torso': { children: ['part:left_arm', 'part:right_arm'] },
+              'part:left_arm': { children: [] },
+              'part:right_arm': { children: [] },
+            },
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'part:torso',
+        'part:left_arm',
+        'part:right_arm',
+      ]);
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith(
+        bodyPartAccess.bodyComponent,
+        'entity-with-body'
+      );
+      expect(result).toEqual(
+        new Set(['part:torso', 'part:left_arm', 'part:right_arm'])
+      );
+    });
+
+    it('should handle bodyGraphService errors gracefully', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockImplementation(() => {
+        throw new Error('Body graph traversal failed');
+      });
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Body graph traversal failed',
+        }),
+        expect.objectContaining({
+          context: 'processBodyPartAccess',
+          entityId: 'entity-with-body',
+        }),
+        'ArrayIterationResolver',
+        ErrorCodes.RESOLUTION_FAILED_GENERIC
+      );
+      expect(result).toEqual(new Set());
+    });
+
+    it('should add trace steps when bodyGraphService returns parts', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'test-entity',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'part:torso',
+        'part:head',
+      ]);
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      resolverWithBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'Retrieved 2 body parts for entity: test-entity'
+      );
+    });
+
+    it('should return empty when body structure is invalid', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-no-body',
+        bodyComponent: {
+          body: {
+            // Missing root
+            parts: {},
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'Entity entity-no-body has no valid body structure'
+      );
+      expect(mockBodyGraphService.getAllParts).not.toHaveBeenCalled();
+      expect(result).toEqual(new Set());
+    });
+
+    it('should fall back to BFS traversal when bodyGraphService is null', () => {
+      const resolverWithoutBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              'part:torso': { children: ['part:left_arm', 'part:right_arm'] },
+              'part:left_arm': { children: ['part:left_hand'] },
+              'part:right_arm': { children: [] },
+              'part:left_hand': { children: [] },
+            },
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'No body graph service available, falling back to body.parts traversal'
+      );
+      // BFS should collect all parts from root
+      expect(result).toEqual(
+        new Set([
+          'part:torso',
+          'part:left_arm',
+          'part:right_arm',
+          'part:left_hand',
+        ])
+      );
+    });
+
+    it('should use entitiesGateway in fallback when parts not in bodyComponent', () => {
+      const resolverWithEntitiesGateway = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        entitiesGateway: mockEntitiesGateway,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              // torso has no children defined here
+              'part:torso': {},
+            },
+          },
+        },
+      };
+
+      // entitiesGateway provides children for torso
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (partId, componentName) => {
+          if (partId === 'part:torso' && componentName === 'anatomy:part') {
+            return { children: ['part:head', 'part:chest'] };
+          }
+          if (partId === 'part:head' && componentName === 'anatomy:part') {
+            return { children: [] };
+          }
+          if (partId === 'part:chest' && componentName === 'anatomy:part') {
+            return { children: [] };
+          }
+          return null;
+        }
+      );
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithEntitiesGateway.resolve(node, ctx);
+
+      expect(mockEntitiesGateway.getComponentData).toHaveBeenCalledWith(
+        'part:torso',
+        'anatomy:part'
+      );
+      expect(result).toEqual(
+        new Set(['part:torso', 'part:head', 'part:chest'])
+      );
+    });
+
+    it('should return empty in fallback when no root is present', () => {
+      const resolverWithoutBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-no-root',
+        bodyComponent: {
+          body: {
+            // No root defined
+            parts: {
+              'part:torso': { children: [] },
+            },
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'No body graph service available, falling back to body.parts traversal'
+      );
+      expect(result).toEqual(new Set());
+    });
+
+    it('should enforce array size limit for body parts', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-many-parts',
+        bodyComponent: {
+          body: {
+            root: 'part:root',
+            parts: {},
+          },
+        },
+      };
+
+      // Return more than MAX_ARRAY_SIZE (10000) parts
+      const manyParts = Array.from({ length: 10001 }, (_, i) => `part:${i}`);
+      mockBodyGraphService.getAllParts.mockReturnValue(manyParts);
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(result.size).toBeLessThanOrEqual(10000);
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        'Array size limit exceeded',
+        expect.objectContaining({
+          limit: 10000,
+          current: expect.any(Number),
+        }),
+        'ArrayIterationResolver',
+        ErrorCodes.MEMORY_LIMIT
+      );
+    });
+
+    it('should enforce body part size limit even without error handler', () => {
+      const resolverWithoutErrorHandler = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-many-parts',
+        bodyComponent: {
+          body: {
+            root: 'part:root',
+            parts: {},
+          },
+        },
+      };
+
+      const manyParts = Array.from({ length: 10001 }, (_, i) => `part:${i}`);
+      mockBodyGraphService.getAllParts.mockReturnValue(manyParts);
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutErrorHandler.resolve(node, ctx);
+
+      // Should still enforce limit
+      expect(result.size).toBeLessThanOrEqual(10000);
+    });
+
+    it('should handle body parts without trace context', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, actorEntity }; // No trace
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'test-entity',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockReturnValue(['part:torso']);
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      // Should not throw
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['part:torso']));
+    });
+
+    it('should suppress errors when trace and error handler are absent', () => {
+      const resolverMinimal = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, actorEntity }; // No trace, no error handler in resolver
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'test-entity',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockImplementation(() => {
+        throw new Error('Service failure');
+      });
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      // Should not throw, just return empty
+      const result = resolverMinimal.resolve(node, ctx);
+
+      expect(result).toEqual(new Set());
+    });
+
+    it('should handle mixed body parts, clothing, and arrays', () => {
+      const resolverWithBothServices = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      const clothingAccess = {
+        __isClothingAccessObject: true,
+        entityId: 'entity-with-clothes',
+        mode: 'topmost',
+      };
+
+      const regularArray = ['regular-item-1', 'regular-item-2'];
+
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'part:torso',
+        'part:head',
+      ]);
+      mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+        'clothing:shirt',
+        'clothing:pants',
+      ]);
+
+      dispatcher.resolve.mockReturnValue(
+        new Set([bodyPartAccess, clothingAccess, regularArray])
+      );
+
+      const result = resolverWithBothServices.resolve(node, ctx);
+
+      // Should contain items from all three sources
+      expect(result).toEqual(
+        new Set([
+          'part:torso',
+          'part:head',
+          'clothing:shirt',
+          'clothing:pants',
+          'regular-item-1',
+          'regular-item-2',
+        ])
+      );
+    });
+
+    it('should handle body part error trace when service fails', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'test-entity',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      mockBodyGraphService.getAllParts.mockImplementation(() => {
+        throw new Error('Graph traversal timeout');
+      });
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      resolverWithBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'Body part access failed: Graph traversal timeout'
+      );
+    });
+
+    it('should handle fallback BFS without trace', () => {
+      const resolverWithoutBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, actorEntity }; // No trace
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              'part:torso': { children: ['part:arm'] },
+              'part:arm': { children: [] },
+            },
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutBodyService.resolve(node, ctx);
+
+      // Should still traverse BFS without trace
+      expect(result).toEqual(new Set(['part:torso', 'part:arm']));
+    });
+
+    it('should handle BFS with non-string children gracefully', () => {
+      const resolverWithoutBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              'part:torso': { children: [42, null, 'part:arm'] },
+              'part:arm': { children: [] },
+            },
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutBodyService.resolve(node, ctx);
+
+      // Non-string values are still added to queue but only strings make it to collected
+      // The number 42 and null won't be added as strings
+      expect(result.has('part:torso')).toBe(true);
+      expect(result.has('part:arm')).toBe(true);
+    });
+
+    it('should handle BFS with missing children array gracefully', () => {
+      const resolverWithoutBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {
+              'part:torso': { children: ['part:arm'] },
+              // part:arm has no children property
+            },
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithoutBodyService.resolve(node, ctx);
+
+      // Should collect both parts even when children array is missing
+      expect(result).toEqual(new Set(['part:torso', 'part:arm']));
+    });
+
+    it('should pass through ScopeReference parent values', () => {
+      const resolverWithErrorHandler = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'ScopeReference' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(
+        new Set(['entity-from-scope', null, 'another-entity'])
+      );
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['entity-from-scope', 'another-entity']));
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should pass through Source parent values including non-arrays', () => {
+      const resolverWithErrorHandler = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Source' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(
+        new Set(['entity-id-1', undefined, 'entity-id-2'])
+      );
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      expect(result).toEqual(new Set(['entity-id-1', 'entity-id-2']));
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should log invalid body structure with trace present', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-bad-body',
+        bodyComponent: {
+          body: null, // Invalid body structure
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      expect(trace.addStep).toHaveBeenCalledWith(
+        'Entity entity-bad-body has no valid body structure'
+      );
+      expect(result).toEqual(new Set());
+    });
+
+    it('should handle invalid body structure without trace (line 178 false branch)', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      // Provide trace without addStep
+      const ctx = { dispatcher, actorEntity, trace: {} };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-bad-body',
+        bodyComponent: {
+          body: {
+            // No root
+            parts: {},
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithBodyService.resolve(node, ctx);
+
+      // Should return empty without crashing
+      expect(result).toEqual(new Set());
+    });
+
+    it('should use entitiesGateway children array when present (lines 165-169)', () => {
+      const resolverWithEntitiesGateway = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        entitiesGateway: mockEntitiesGateway,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'entity-with-body',
+        bodyComponent: {
+          body: {
+            root: 'part:root',
+            parts: {
+              // Root has no children in parts map
+            },
+          },
+        },
+      };
+
+      // entitiesGateway provides children with actual array
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (partId, componentName) => {
+          if (partId === 'part:root' && componentName === 'anatomy:part') {
+            return { children: ['part:child1', 'part:child2'] };
+          }
+          if (partId === 'part:child1' && componentName === 'anatomy:part') {
+            return { children: [] };
+          }
+          if (partId === 'part:child2' && componentName === 'anatomy:part') {
+            return null; // No component data for child2
+          }
+          return null;
+        }
+      );
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      const result = resolverWithEntitiesGateway.resolve(node, ctx);
+
+      // Should traverse BFS using entitiesGateway children array
+      expect(result).toEqual(
+        new Set(['part:root', 'part:child1', 'part:child2'])
+      );
+      expect(mockEntitiesGateway.getComponentData).toHaveBeenCalledWith(
+        'part:root',
+        'anatomy:part'
+      );
+    });
+
+    it('should use diagnostic logging with runtime context logger', () => {
+      const resolverWithBodyService = createArrayIterationResolver({
+        clothingAccessibilityService: mockClothingAccessibilityService,
+        bodyGraphService: mockBodyGraphService,
+        errorHandler: errorHandler,
+      });
+
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const mockRuntimeLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const ctx = {
+        dispatcher,
+        trace,
+        actorEntity,
+        runtimeCtx: { logger: mockRuntimeLogger },
+      };
+
+      mockBodyGraphService.getAllParts.mockReturnValue(['part:torso']);
+
+      const bodyPartAccess = {
+        __isBodyPartAccessObject: true,
+        entityId: 'test-entity',
+        bodyComponent: {
+          body: {
+            root: 'part:torso',
+            parts: {},
+          },
+        },
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([bodyPartAccess]));
+
+      resolverWithBodyService.resolve(node, ctx);
+
+      // Should have called runtime logger for diagnostic messages
+      expect(mockRuntimeLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('[DIAGNOSTIC]'),
+        expect.any(Object)
+      );
+    });
+  });
 });

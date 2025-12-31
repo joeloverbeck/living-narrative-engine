@@ -66,6 +66,7 @@ function enableMockTraceQueueProcessor() {
       this.enqueueCallCount = 0;
       this.shutdownCallCount = 0;
     }
+    // eslint-disable-next-line no-unused-vars
     enqueue(trace, priority) {
       this.enqueueCallCount++;
       return true;
@@ -140,9 +141,11 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
   let service;
   let mockLogger;
   let mockStorageAdapter;
+  // eslint-disable-next-line no-unused-vars
   let mockActionTraceFilter;
   let mockJsonFormatter;
   let mockHumanReadableFormatter;
+  // eslint-disable-next-line no-unused-vars
   let mockEventBus;
   let mockTraceDirectoryManager;
   let mockTimerService;
@@ -905,16 +908,14 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
 
     it('should get and reset statistics', async () => {
       let internalWriteCount = 0;
-      let internalErrorCount = 0;
 
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         outputHandler: async () => {
           internalWriteCount++;
-          // Simulate some errors
+          // Simulate some errors on 2nd and 4th writes
           if (internalWriteCount === 2 || internalWriteCount === 4) {
-            internalErrorCount++;
             throw new Error('Simulated error');
           }
         },
@@ -1047,6 +1048,1614 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionTraceOutputService: Shutdown complete'
       );
+    });
+  });
+
+  describe('Branch Coverage - Structured Trace Formatting', () => {
+    it('should extract operator evaluations from _current_scope_evaluation traces', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // Create a mock trace with _current_scope_evaluation actionId and operator_evaluations
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              '_current_scope_evaluation',
+              {
+                stages: {
+                  operator_evaluations: {
+                    timestamp: Date.now(),
+                    data: {
+                      evaluations: [
+                        { operator: 'eq', result: true },
+                        { operator: 'gt', result: false },
+                      ],
+                    },
+                  },
+                },
+              },
+            ],
+            [
+              'test:action',
+              {
+                actorId: 'actor-1',
+                stages: {
+                  start: { timestamp: 1000 },
+                  end: { timestamp: 2000 },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      // Call the private method using the exposed test helper
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.operatorEvaluations).toBeDefined();
+      expect(result.operatorEvaluations.evaluations).toHaveLength(2);
+      expect(result.operatorEvaluations.totalCount).toBe(2);
+      // The _current_scope_evaluation should not appear in actions
+      expect(result.actions['_current_scope_evaluation']).toBeUndefined();
+      expect(result.actions['test:action']).toBeDefined();
+    });
+
+    it('should calculate enhanced scope evaluation summaries with entityDiscovery data', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // Create a mock trace with enhanced_scope_evaluation containing entityDiscovery
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      scope: 'test_scope',
+                      timestamp: Date.now(),
+                      entityDiscovery: [
+                        { foundEntities: 5 },
+                        { foundEntities: 3 },
+                        { foundEntities: 2 },
+                      ],
+                      filterEvaluations: [
+                        { entityId: 'e1', filterPassed: true },
+                        { entityId: 'e2', filterPassed: true },
+                        { entityId: 'e3', filterPassed: false },
+                        { entityId: 'e4', filterPassed: true },
+                        { entityId: 'e5', filterPassed: false },
+                      ],
+                    },
+                  },
+                  start: { timestamp: 1000 },
+                  end: { timestamp: 2000 },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.actions['test:action'].enhancedScopeEvaluation).toBeDefined();
+      const summary = result.actions['test:action'].enhancedScopeEvaluation.summary;
+      expect(summary.entitiesDiscovered).toBe(10); // 5 + 3 + 2
+      expect(summary.entitiesEvaluated).toBe(5);
+      expect(summary.entitiesPassed).toBe(3); // 3 with filterPassed: true
+      expect(summary.entitiesFailed).toBe(2); // 2 with filterPassed: false
+    });
+
+    it('should handle enhanced scope evaluation with null/undefined entityDiscovery', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      scope: 'test_scope',
+                      timestamp: Date.now(),
+                      entityDiscovery: null,
+                      filterEvaluations: null,
+                    },
+                  },
+                  start: { timestamp: 1000 },
+                  end: { timestamp: 2000 },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      const summary = result.actions['test:action'].enhancedScopeEvaluation.summary;
+      expect(summary.entitiesDiscovered).toBe(0);
+      expect(summary.entitiesEvaluated).toBe(0);
+      expect(summary.entitiesPassed).toBe(0);
+      expect(summary.entitiesFailed).toBe(0);
+    });
+  });
+
+  describe('Branch Coverage - Span Duration Fallback', () => {
+    it('should calculate duration from startTime and endTime when duration is not provided', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([
+          {
+            operation: 'test-span',
+            startTime: 1000,
+            endTime: 2500,
+            // No duration property - should be calculated from startTime/endTime
+          },
+        ]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.spans).toHaveLength(1);
+      expect(result.spans[0].duration).toBe(1500); // 2500 - 1000
+    });
+
+    it('should prefer explicit duration over calculated duration', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([
+          {
+            operation: 'test-span',
+            startTime: 1000,
+            endTime: 2500,
+            duration: 999, // Explicit duration should be used
+          },
+        ]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.spans[0].duration).toBe(999);
+    });
+  });
+
+  describe('Branch Coverage - Text Format Extraction', () => {
+    it('should handle text format when trace has no actions property', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['text'],
+          textFormatOptions: {},
+        },
+      });
+
+      // Create a simple trace without getTracedActions (legacy format)
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        toJSON: () => ({
+          // No actions property
+          someData: 'value',
+        }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should still write despite no actions property
+      expect(mockFileHandler.writeTrace).toHaveBeenCalled();
+
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should handle text format when actions is empty object', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['text'],
+          textFormatOptions: {},
+        },
+      });
+
+      // Create trace where formatTraceData returns actions as empty object
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([]),
+        toJSON: () => ({ actions: {} }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Verify the text trace was created with fallback values
+      const writeCall = mockFileHandler.writeTrace.mock.calls.find(
+        (call) => call[1]._outputFormat === 'text'
+      );
+      expect(writeCall).toBeDefined();
+      // Should use fallback 'unknown' when no actionId found
+      expect(writeCall[1].actionId).toBeDefined();
+
+      process.env.NODE_ENV = originalEnv;
+    });
+  });
+
+  describe('Branch Coverage - Export Filename Fallbacks', () => {
+    beforeEach(() => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          data: {}, // No actionType or type property
+        },
+      ]);
+    });
+
+    it('should use "trace" as default action type in export filename', async () => {
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+      // The traces should have been processed with 'trace' as default type
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+
+    it('should use data.type when actionType is not available', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          data: { type: 'custom-type' }, // Has type but no actionType
+        },
+      ]);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('Branch Coverage - getTracesForExport', () => {
+    it('should return all traces when traceIds is empty array', async () => {
+      const allTraces = [
+        { id: 'trace-1', data: { action: 'test1' } },
+        { id: 'trace-2', data: { action: 'test2' } },
+        { id: 'trace-3', data: { action: 'test3' } },
+      ];
+      mockStorageAdapter.getItem.mockResolvedValue(allTraces);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // Export with empty array should return all traces
+      const result = await service.exportTracesAsDownload('json', []);
+
+      expect(result.success).toBe(true);
+      expect(result.totalTraces).toBe(3);
+    });
+  });
+
+  describe('Branch Coverage - NODE_ENV Production Path', () => {
+    it('should skip debug logging when NODE_ENV is production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        toJSON: () => ({ action: 'test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // In production, the ACTION_TRACE debug log should not be called
+      const debugCalls = mockLogger.debug.mock.calls;
+      const actionTraceCalls = debugCalls.filter(
+        (call) => call[0] === 'ACTION_TRACE'
+      );
+      expect(actionTraceCalls).toHaveLength(0);
+
+      process.env.NODE_ENV = originalEnv;
+    });
+  });
+
+  describe('Branch Coverage - writeTraceWithPriority Default', () => {
+    it('should use DEFAULT_PRIORITY when priority is not provided', async () => {
+      let capturedPriority = null;
+
+      mockTraceQueueProcessor = class MockTraceQueueProcessor {
+        constructor(dependencies) {
+          this.dependencies = dependencies;
+        }
+        enqueue(trace, priority) {
+          capturedPriority = priority;
+          return true;
+        }
+        async shutdown() {
+          return Promise.resolve();
+        }
+        getQueueStats() {
+          return {
+            totalSize: 0,
+            isProcessing: false,
+            memoryUsage: 0,
+            circuitBreakerOpen: false,
+            priorities: {},
+          };
+        }
+        getMetrics() {
+          return { throughput: 0, latency: 0, errorRate: 0 };
+        }
+      };
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        toJSON: () => ({ action: 'test' }),
+      };
+
+      // Call without priority argument to trigger default
+      await service.writeTraceWithPriority(trace);
+
+      // DEFAULT_PRIORITY = TracePriority.NORMAL = 1
+      expect(capturedPriority).toBe(1);
+    });
+  });
+
+  describe('Branch Coverage - Naming Options', () => {
+    it('should use provided namingOptions when explicitly passed', () => {
+      const customNamingOptions = {
+        prefix: 'custom',
+        includeTimestamp: true,
+        format: 'detailed',
+      };
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        namingOptions: customNamingOptions,
+      });
+
+      // The service should have initialized with custom naming options
+      // We can verify this indirectly by checking that no warnings were logged
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('namingOptions')
+      );
+    });
+  });
+
+  describe('Branch Coverage - formatTraceAsJSON without formatter', () => {
+    it('should use JSON.stringify fallback when jsonFormatter is not provided', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          data: { action: 'test', nested: { value: 123 } },
+        },
+      ]);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      // Create service without jsonFormatter
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        // No jsonFormatter provided
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+      // Should have used JSON.stringify fallback
+      expect(mockJsonFormatter.format).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Branch Coverage - Queue Stats Fallback', () => {
+    it('should return default maxQueueSize of 1000 when not explicitly set', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        // No maxQueueSize in config
+      });
+
+      const stats = service.getQueueStats();
+
+      expect(stats.maxQueueSize).toBe(1000);
+    });
+
+    it('should use outputQueue length when queue exists', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // The simple queue path is tested
+      const stats = service.getQueueStats();
+
+      expect(stats.queueLength).toBeDefined();
+      expect(typeof stats.queueLength).toBe('number');
+    });
+  });
+
+  describe('Branch Coverage - Storage Adapter Returns Null', () => {
+    it('should handle null from storage adapter in exportTracesAsDownload (line 900)', async () => {
+      // Make storage adapter return null to trigger the || [] fallback
+      mockStorageAdapter.getItem.mockResolvedValue(null);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      // Should return failure because null || [] gives empty array
+      expect(result.success).toBe(false);
+      expect(result.reason).toBe('No traces to export');
+    });
+
+    it('should handle undefined from storage adapter (line 994)', async () => {
+      // Make storage adapter return undefined to trigger the || [] fallback
+      mockStorageAdapter.getItem.mockResolvedValue(undefined);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // Try to export specific trace IDs
+      const result = await service.exportTracesAsDownload('json', ['trace-1']);
+
+      // Should return failure since there are no traces
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('Branch Coverage - Output Formats Configuration', () => {
+    it('should use explicitly configured output formats (line 282)', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['json', 'text'], // Explicitly set formats
+        },
+      });
+
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([]),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should have written both JSON and text formats
+      expect(mockFileHandler.writeTrace).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Using file output mode with formats',
+        expect.objectContaining({ formats: ['json', 'text'] })
+      );
+    });
+
+    it('should use default json format when actionTraceConfig is null (line 602)', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: null, // Explicitly null config
+      });
+
+      const trace = {
+        actionId: 'test-action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should use default ['json'] format
+      expect(mockFileHandler.writeTrace).toHaveBeenCalled();
+    });
+  });
+
+  describe('Branch Coverage - Text Format Fallbacks (lines 629-630)', () => {
+    it('should use trace.actionId fallback when no actions extracted', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['text'],
+        },
+      });
+
+      // Trace with actionId but no formattedData.actions
+      const trace = {
+        actionId: 'fallback-action-id',
+        actorId: 'fallback-actor-id',
+        toJSON: () => ({ noActions: true }),
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([]),
+      };
+
+      await service.writeTrace(trace);
+
+      // Check that the text trace was created with fallback values
+      const textWriteCall = mockFileHandler.writeTrace.mock.calls.find(
+        (call) => call[1]._outputFormat === 'text'
+      );
+      expect(textWriteCall).toBeDefined();
+      expect(textWriteCall[1].actionId).toBe('fallback-action-id');
+      expect(textWriteCall[1].actorId).toBe('fallback-actor-id');
+    });
+
+    it('should use unknown fallback when neither actions nor trace IDs available', async () => {
+      const mockFileHandler = {
+        initialize: jest.fn().mockResolvedValue(true),
+        writeTrace: jest.fn().mockResolvedValue(true),
+        setOutputDirectory: jest.fn(),
+      };
+      FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['text'],
+        },
+      });
+
+      // Trace with no actionId, actorId, or actions
+      const trace = {
+        // No actionId or actorId
+        toJSON: () => ({ noActions: true }),
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([]),
+      };
+
+      await service.writeTrace(trace);
+
+      // Check that the text trace was created with 'unknown' fallbacks
+      const textWriteCall = mockFileHandler.writeTrace.mock.calls.find(
+        (call) => call[1]._outputFormat === 'text'
+      );
+      expect(textWriteCall).toBeDefined();
+      expect(textWriteCall[1].actionId).toBe('unknown');
+      expect(textWriteCall[1].actorId).toBe('unknown');
+    });
+  });
+
+  describe('Branch Coverage - Export Filename Scenarios (line 1013)', () => {
+    it('should use actionType when available', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: 1234567890000,
+          data: { actionType: 'specific-action' }, // actionType is primary
+        },
+      ]);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('Branch Coverage - formatTraceAsJSON (line 1034)', () => {
+    it('should use jsonFormatter when available and trace has data', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          data: { action: 'test', value: 123 },
+        },
+      ]);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter, // Provide formatter
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+      expect(mockJsonFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'test' })
+      );
+    });
+
+    it('should handle jsonFormatter throwing error', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          data: { action: 'test' },
+        },
+      ]);
+
+      const failingFormatter = {
+        format: jest.fn().mockImplementation(() => {
+          throw new Error('Format error');
+        }),
+      };
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: failingFormatter,
+      });
+
+      // Should fall back to JSON.stringify
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+      // The actual log message from exportTracesAsDownload (line 927)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to format trace during export',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle trace with no data by passing undefined to formatter', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace-1',
+          timestamp: Date.now(),
+          // No data property
+        },
+      ]);
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      };
+      jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      global.URL.createObjectURL = jest.fn().mockReturnValue('blob:url');
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter,
+      });
+
+      const result = await service.exportTracesAsDownload('json');
+
+      expect(result.success).toBe(true);
+      // formatter IS called even with undefined data (at line 919)
+      expect(mockJsonFormatter.format).toHaveBeenCalledWith(undefined);
+    });
+  });
+
+  describe('Branch Coverage - Queue Stats with null queue (lines 1371, 1374)', () => {
+    it('should return 0 for queueLength when outputQueue is falsy', () => {
+      // Create service in a way that might not initialize the queue
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const stats = service.getQueueStats();
+
+      // Should handle undefined/null outputQueue gracefully
+      expect(stats.queueLength).toBeDefined();
+      expect(typeof stats.queueLength).toBe('number');
+    });
+
+    it('should return default 1000 for maxQueueSize when not set', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        // No queueConfig with maxQueueSize
+      });
+
+      const stats = service.getQueueStats();
+
+      expect(stats.maxQueueSize).toBe(1000);
+    });
+  });
+
+  describe('Branch Coverage - Span duration calculation edge cases', () => {
+    it('should return null duration when neither duration nor times are provided', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([
+          {
+            operation: 'test-span',
+            // No duration, startTime, or endTime
+          },
+        ]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.spans).toHaveLength(1);
+      expect(result.spans[0].duration).toBeNull();
+    });
+
+    it('should return null duration when only startTime is provided', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([
+          {
+            operation: 'test-span',
+            startTime: 1000,
+            // No endTime
+          },
+        ]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.spans).toHaveLength(1);
+      expect(result.spans[0].duration).toBeNull();
+    });
+
+    it('should return null duration when only endTime is provided', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getSpans: jest.fn().mockReturnValue([
+          {
+            operation: 'test-span',
+            endTime: 2000,
+            // No startTime
+          },
+        ]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      expect(result.spans).toHaveLength(1);
+      expect(result.spans[0].duration).toBeNull();
+    });
+  });
+
+  describe('Branch Coverage - Operator evaluations in structured trace (line 1170)', () => {
+    it('should extract operator evaluations from _current_scope_evaluation traces into operatorEvaluations', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const evaluations = [
+        { operator: 'and', result: true },
+        { operator: 'or', result: false },
+      ];
+      const evaluationTimestamp = Date.now();
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              '_current_scope_evaluation',
+              {
+                actionId: '_current_scope_evaluation',
+                stages: {
+                  operator_evaluations: {
+                    timestamp: evaluationTimestamp,
+                    data: {
+                      evaluations: evaluations,
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: '_current_scope_evaluation',
+        actorId: 'system',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      // Operator evaluations are extracted to a separate section (NOT to result.actions)
+      // The _current_scope_evaluation action is skipped from result.actions (line 1179: continue)
+      expect(result.operatorEvaluations).toBeDefined();
+      expect(result.operatorEvaluations.evaluations).toEqual(evaluations);
+      expect(result.operatorEvaluations.totalCount).toBe(2);
+      expect(result.operatorEvaluations.timestamp).toBe(evaluationTimestamp);
+      // The action should NOT be in result.actions
+      expect(result.actions['_current_scope_evaluation']).toBeUndefined();
+    });
+  });
+
+  describe('Branch Coverage - Enhanced scope evaluation with filter evaluations (line 1200)', () => {
+    it('should calculate entitiesPassed from filterEvaluations with filterPassed true', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      // entityDiscovery is an array where each item has foundEntities count
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actionId: 'test:action',
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      entityDiscovery: [
+                        { foundEntities: 3 }, // Array of discovery objects with counts
+                      ],
+                      filterEvaluations: [
+                        { entityId: 'entity-1', filterPassed: true },
+                        { entityId: 'entity-2', filterPassed: false },
+                        { entityId: 'entity-3', filterPassed: true },
+                      ],
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      const summary =
+        result.actions['test:action'].enhancedScopeEvaluation.summary;
+      expect(summary.entitiesDiscovered).toBe(3);
+      expect(summary.entitiesPassed).toBe(2);
+      expect(summary.entitiesFailed).toBe(1);
+    });
+
+    it('should handle missing filterPassed property (defaults to count as failed)', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actionId: 'test:action',
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      entityDiscovery: [{ foundEntities: 1 }],
+                      filterEvaluations: [
+                        { entityId: 'entity-1' }, // No filterPassed property
+                      ],
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      const summary =
+        result.actions['test:action'].enhancedScopeEvaluation.summary;
+      expect(summary.entitiesPassed).toBe(0); // filterPassed undefined counts as false
+    });
+  });
+
+  describe('Branch Coverage - formatTraceAsJSON private method (line 1034)', () => {
+    it('should use jsonFormatter when both formatter and trace.data exist', () => {
+      const mockJsonFormatter = {
+        format: jest.fn().mockReturnValue('{"formatted": true}'),
+      };
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: Date.now(),
+        data: { action: 'test', value: 123 },
+      };
+
+      const result = service.__TEST_ONLY_formatTraceAsJSON(trace);
+
+      expect(mockJsonFormatter.format).toHaveBeenCalledWith(trace.data);
+      expect(result).toBe('{"formatted": true}');
+    });
+
+    it('should fall back to JSON.stringify when trace.data is missing', () => {
+      const mockJsonFormatter = {
+        format: jest.fn(),
+      };
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: Date.now(),
+        // No data property
+      };
+
+      const result = service.__TEST_ONLY_formatTraceAsJSON(trace);
+
+      // Formatter should NOT be called when trace.data is missing
+      expect(mockJsonFormatter.format).not.toHaveBeenCalled();
+      // Should fall back to JSON.stringify
+      expect(result).toContain('"id"');
+      expect(result).toContain('trace-1');
+    });
+
+    it('should fall back to JSON.stringify when formatter throws', () => {
+      const mockJsonFormatter = {
+        format: jest.fn().mockImplementation(() => {
+          throw new Error('Format error');
+        }),
+      };
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: Date.now(),
+        data: { action: 'test' },
+      };
+
+      const result = service.__TEST_ONLY_formatTraceAsJSON(trace);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to use JSON formatter, falling back',
+        expect.any(Error)
+      );
+      expect(result).toContain('"id"');
+    });
+  });
+
+  describe('Branch Coverage - getTracesForExport private method (line 994)', () => {
+    it('should return empty array when storage returns null', async () => {
+      mockStorageAdapter.getItem.mockResolvedValue(null);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.__TEST_ONLY_getTracesForExport(null);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return all traces when traceIds is empty array', async () => {
+      const allTraces = [
+        { id: 'trace-1', data: 'test1' },
+        { id: 'trace-2', data: 'test2' },
+      ];
+      mockStorageAdapter.getItem.mockResolvedValue(allTraces);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.__TEST_ONLY_getTracesForExport([]);
+
+      expect(result).toEqual(allTraces);
+    });
+
+    it('should filter to specific trace IDs when provided', async () => {
+      const allTraces = [
+        { id: 'trace-1', data: 'test1' },
+        { id: 'trace-2', data: 'test2' },
+        { id: 'trace-3', data: 'test3' },
+      ];
+      mockStorageAdapter.getItem.mockResolvedValue(allTraces);
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const result = await service.__TEST_ONLY_getTracesForExport([
+        'trace-1',
+        'trace-3',
+      ]);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('trace-1');
+      expect(result[1].id).toBe('trace-3');
+    });
+  });
+
+  describe('Branch Coverage - generateExportFileName private method (line 1013)', () => {
+    it('should use trace.timestamp when available', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: new Date('2024-01-15T10:30:45.123Z').getTime(),
+        data: { actionType: 'test_action' },
+      };
+
+      const result = service.__TEST_ONLY_generateExportFileName(trace, 'json');
+
+      expect(result).toContain('test_action');
+      expect(result).toContain('2024-01-15');
+      expect(result).toEndWith('.json');
+    });
+
+    it('should use Date.now() fallback when trace.timestamp is missing', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        // No timestamp
+        data: { type: 'fallback_type' },
+      };
+
+      const result = service.__TEST_ONLY_generateExportFileName(trace, 'json');
+
+      // File name should contain today's date
+      const todayStr = new Date().toISOString().split('T')[0];
+      expect(result).toContain(todayStr);
+      expect(result).toContain('fallback_type');
+    });
+
+    it('should use "trace" as default actionType when not in data', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: Date.now(),
+        data: {}, // No actionType or type
+      };
+
+      const result = service.__TEST_ONLY_generateExportFileName(trace, 'txt');
+
+      expect(result).toContain('trace_');
+      expect(result).toEndWith('.txt');
+    });
+
+    it('should use data.type as fallback for actionType', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        id: 'trace-1',
+        timestamp: Date.now(),
+        data: { type: 'type_fallback' }, // No actionType, but has type
+      };
+
+      const result = service.__TEST_ONLY_generateExportFileName(trace, 'json');
+
+      expect(result).toContain('type_fallback');
+    });
+  });
+
+  describe('Branch Coverage - NODE_ENV production path (line 580)', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+
+    it('should skip debug logging when not in development or test', async () => {
+      // Temporarily set to production
+      process.env.NODE_ENV = 'production';
+
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const trace = {
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+      };
+
+      // Call the output handler which checks NODE_ENV
+      await service.__TEST_ONLY_defaultOutputHandler(
+        {
+          message: 'test',
+          writeMetadata: { writeSequence: 1 },
+        },
+        trace
+      );
+
+      // In production mode, debug should NOT be called with ACTION_TRACE
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        'ACTION_TRACE',
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Branch Coverage - Queue stats edge cases (lines 1371, 1374)', () => {
+    it('should handle queue stats when queue is null', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        // No queueConfig - queue may not initialize
+      });
+
+      const stats = service.getQueueStats();
+
+      // Should return valid stats even if queue is null
+      expect(stats).toBeDefined();
+      expect(typeof stats.queueLength).toBe('number');
+      expect(typeof stats.maxQueueSize).toBe('number');
+    });
+  });
+
+  describe('Branch Coverage - outputFormats fallback in file output mode (lines 282, 602)', () => {
+    it('should use default ["json"] when actionTraceConfig is null in writeTrace file mode', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        testMode: true,
+        actionTraceConfig: null, // Explicitly null config
+      });
+
+      const trace = {
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should log with default formats fallback
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Using file output mode with formats',
+        { formats: ['json'] }
+      );
+    });
+
+    it('should use default ["json"] when actionTraceConfig.outputFormats is undefined in writeTrace', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        testMode: true,
+        actionTraceConfig: {}, // Config without outputFormats property
+      });
+
+      const trace = {
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should log with default formats fallback
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Using file output mode with formats',
+        { formats: ['json'] }
+      );
+    });
+
+    it('should use provided outputFormats when actionTraceConfig has them', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        outputToFiles: true,
+        testMode: true,
+        actionTraceConfig: {
+          outputFormats: ['json', 'text'],
+        },
+      });
+
+      const trace = {
+        actionId: 'test:action',
+        actorId: 'test-actor',
+        toJSON: () => ({ data: 'test' }),
+      };
+
+      await service.writeTrace(trace);
+
+      // Should log with provided formats
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Using file output mode with formats',
+        { formats: ['json', 'text'] }
+      );
+    });
+  });
+
+  describe('Branch Coverage - Enhanced scope evaluation summary calculations (line 1170, 1200)', () => {
+    it('should correctly extract evaluations when operator_evaluations.data.evaluations exists', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const evaluations = [
+        { operator: 'eq', result: true, left: 5, right: 5 },
+        { operator: 'gt', result: false, left: 3, right: 7 },
+        { operator: 'lte', result: true, left: 10, right: 10 },
+      ];
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              '_current_scope_evaluation',
+              {
+                actionId: '_current_scope_evaluation',
+                stages: {
+                  operator_evaluations: {
+                    timestamp: Date.now(),
+                    data: {
+                      evaluations: evaluations,
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test',
+        actorId: 'test',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      // Verify the evaluations were extracted to operatorEvaluations
+      expect(result.operatorEvaluations).toBeDefined();
+      expect(result.operatorEvaluations.evaluations).toHaveLength(3);
+      expect(result.operatorEvaluations.totalCount).toBe(3);
+    });
+
+    it('should sum positive foundEntities values in entityDiscovery reduce', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actionId: 'test:action',
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      scope: 'test_scope',
+                      timestamp: Date.now(),
+                      entityDiscovery: [
+                        { foundEntities: 10 },
+                        { foundEntities: 5 },
+                        { foundEntities: 7 },
+                      ],
+                      filterEvaluations: [],
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      // Verify sum calculation works with truthy foundEntities values
+      expect(
+        result.actions['test:action'].enhancedScopeEvaluation.summary
+          .entitiesDiscovered
+      ).toBe(22); // 10 + 5 + 7
+    });
+
+    it('should handle zero and missing foundEntities values in reduce', () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+      });
+
+      const mockTrace = {
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'test:action',
+              {
+                actionId: 'test:action',
+                actorId: 'actor-1',
+                stages: {
+                  enhanced_scope_evaluation: {
+                    data: {
+                      scope: 'test_scope',
+                      timestamp: Date.now(),
+                      entityDiscovery: [
+                        { foundEntities: 0 }, // Zero should use || 0 fallback
+                        {}, // Missing should use || 0 fallback
+                        { foundEntities: 3 },
+                      ],
+                      filterEvaluations: [],
+                    },
+                  },
+                },
+              },
+            ],
+          ])
+        ),
+        getSpans: jest.fn().mockReturnValue([]),
+        actionId: 'test:action',
+        actorId: 'actor-1',
+        toJSON: jest.fn().mockReturnValue({ test: true }),
+      };
+
+      const result = service.__TEST_ONLY_formatStructuredTrace(mockTrace);
+
+      // 0 + 0 + 3 = 3
+      expect(
+        result.actions['test:action'].enhancedScopeEvaluation.summary
+          .entitiesDiscovered
+      ).toBe(3);
+    });
+  });
+
+  describe('Branch Coverage - Queue stats with null queue (line 1371)', () => {
+    it('should return 0 for queueLength when outputQueue is falsy', () => {
+      // Create service without queue processor
+      service = new ActionTraceOutputService({
+        logger: mockLogger,
+        // No storageAdapter, no queueConfig - minimal setup
+      });
+
+      const stats = service.getQueueStats();
+
+      // When queue doesn't exist, should return 0
+      expect(stats.queueLength).toBe(0);
+    });
+
+    it('should return 1000 for maxQueueSize when not configured', () => {
+      service = new ActionTraceOutputService({
+        logger: mockLogger,
+        // No maxQueueSize in config
+      });
+
+      const stats = service.getQueueStats();
+
+      // Default fallback is 1000
+      expect(stats.maxQueueSize).toBe(1000);
     });
   });
 });

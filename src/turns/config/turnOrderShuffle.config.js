@@ -25,12 +25,6 @@ export const turnOrderShuffleConfig = {
       // Shuffle non-human actors at the start of each round
       shuffleNonHumans: true,
     },
-
-    // Initiative strategy: actors ordered by initiative value
-    initiative: {
-      // Shuffle actors with identical initiative values
-      shuffleTieBreakers: false,
-    },
   },
 
   // Player type detection settings
@@ -151,11 +145,6 @@ export function isShuffleEnabledForStrategy(strategyName) {
   // For round-robin, check shuffleNonHumans
   if (strategyName === 'round-robin') {
     return strategyConfig.shuffleNonHumans === true;
-  }
-
-  // For initiative, check shuffleTieBreakers
-  if (strategyName === 'initiative') {
-    return strategyConfig.shuffleTieBreakers === true;
   }
 
   return false;

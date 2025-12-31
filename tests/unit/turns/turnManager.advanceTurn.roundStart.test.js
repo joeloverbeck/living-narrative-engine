@@ -137,8 +137,7 @@ describeTurnManagerSuite(
           testBed.mocks.turnOrderService.startNewRound
         ).toHaveBeenCalledWith(
           expect.arrayContaining([actor1, actor2]),
-          'round-robin',
-          undefined
+          'round-robin'
         );
         expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
           'New round started, recursively calling advanceTurn() to process the first turn.'

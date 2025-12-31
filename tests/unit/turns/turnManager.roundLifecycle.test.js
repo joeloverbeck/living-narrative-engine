@@ -66,8 +66,7 @@ describeTurnManagerSuite(
           expect.objectContaining({ id: ai1.id }),
           expect.objectContaining({ id: player.id }),
         ]),
-        'round-robin',
-        undefined
+        'round-robin'
       );
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
         'New round started, recursively calling advanceTurn() to process the first turn.'

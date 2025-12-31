@@ -51,13 +51,6 @@ describe('turnOrderShuffleConfig', () => {
       ).toBeDefined();
     });
 
-    it('should have initiative strategy configuration', () => {
-      expect(turnOrderShuffleConfig.strategies.initiative).toBeDefined();
-      expect(
-        turnOrderShuffleConfig.strategies.initiative.shuffleTieBreakers
-      ).toBeDefined();
-    });
-
     it('should have playerTypeDetection section', () => {
       expect(turnOrderShuffleConfig.playerTypeDetection).toBeDefined();
       expect(turnOrderShuffleConfig.playerTypeDetection.componentId).toBe(
@@ -154,10 +147,6 @@ describe('turnOrderShuffleConfig', () => {
 
     it('should return true for round-robin strategy when shuffleNonHumans is true', () => {
       expect(isShuffleEnabledForStrategy('round-robin')).toBe(true);
-    });
-
-    it('should return false for initiative strategy when shuffleTieBreakers is false', () => {
-      expect(isShuffleEnabledForStrategy('initiative')).toBe(false);
     });
 
     it('should return false for unknown strategy', () => {

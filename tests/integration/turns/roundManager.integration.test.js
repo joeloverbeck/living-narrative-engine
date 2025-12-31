@@ -96,173 +96,25 @@ describe('RoundManager integration with real turn order service', () => {
     );
   });
 
-  it('normalises complex initiative Maps supplied via options object and starts an initiative round', async () => {
+  it('starts a round-robin round with actors', async () => {
     entityManager.setEntities([
       createActor('actor1'),
       createActor('actor2'),
       createActor('actor3'),
-      createActor('actor4'),
-      createActor('actor6'),
-      createActor('actor7'),
     ]);
 
-    const rawMap = new Map();
-    rawMap.set('actor1', 5);
-    rawMap.set(' actor1 ', '7');
-    rawMap.set(42, 10);
-    rawMap.set('   ', 3);
-    rawMap.set('actor2', ' 9 ');
-    rawMap.set('actor3', null);
-    rawMap.set('actor4', 'foo');
-    rawMap.set('actor5', {});
-    rawMap.set('actor7', '');
-    rawMap.set('actor6', true);
-
-    await roundManager.startRound({ initiativeData: rawMap });
+    await roundManager.startRound();
 
     expect(roundManager.inProgress).toBe(true);
     expect(roundManager.hadSuccess).toBe(false);
 
-    const warnMessages = logger.warnLogs
-      .map((entry) => entry.message)
-      .filter((message) => message.startsWith('RoundManager.startRound()'));
-
-    expect(warnMessages).toEqual(
-      expect.arrayContaining([
-        'RoundManager.startRound(): Duplicate initiative entry for entity id "actor1" after normalisation. Using latest value.',
-        'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from Map input.',
-        'RoundManager.startRound(): Ignoring initiative entry with blank entity id from Map input after trimming whitespace.',
-        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
-        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
-        'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
-      ])
-    );
-
     const first = turnOrderService.getNextEntity();
     const second = turnOrderService.getNextEntity();
-
-    expect(first?.id).toBe('actor2');
-    expect(second?.id).toBe('actor1');
-  });
-
-  it('falls back to the initiative strategy when unknown strategy and object initiative data are provided', async () => {
-    entityManager.setEntities([createActor('alpha'), createActor('beta')]);
-
-    const rawObject = {
-      alpha: '5',
-      ' beta ': '9',
-      gamma: '',
-    };
-
-    await roundManager.startRound({
-      strategy: ' Mystery ',
-      initiativeData: rawObject,
-    });
-
-    const warnMessages = logger.warnLogs
-      .map((entry) => entry.message)
-      .filter((message) =>
-        message.startsWith('RoundManager.startRound(): Unknown strategy')
-      );
-
-    expect(warnMessages).toContain(
-      "RoundManager.startRound(): Unknown strategy 'mystery'. Falling back to 'initiative' because initiative data was provided."
-    );
-
-    expect(
-      logger.debugLogs.some((entry) =>
-        entry.message.includes(
-          'RoundManager.startRound(): Normalised plain object initiative data into Map for initiative round.'
-        )
-      )
-    ).toBe(true);
-
-    const next = turnOrderService.peekNextEntity();
-    expect(next?.id).toBe('beta');
-  });
-
-  it('falls back to round-robin when unknown strategy is provided without usable initiative data', async () => {
-    entityManager.setEntities([createActor('actor1'), createActor('actor2')]);
-
-    await roundManager.startRound('mystery', []);
-
-    const warnMessages = logger.warnLogs
-      .map((entry) => entry.message)
-      .filter((message) =>
-        message.startsWith('RoundManager.startRound(): Unknown strategy')
-      );
-
-    expect(warnMessages).toContain(
-      "RoundManager.startRound(): Unknown strategy 'mystery'. Falling back to 'round-robin'."
-    );
-
-    const first = turnOrderService.getNextEntity();
-    const second = turnOrderService.getNextEntity();
+    const third = turnOrderService.getNextEntity();
 
     expect(first?.id).toBe('actor1');
     expect(second?.id).toBe('actor2');
-  });
-
-  it('normalises initiative arrays and surfaces data issues before starting the round', async () => {
-    entityManager.setEntities([
-      createActor('actorA'),
-      createActor('actorB'),
-      createActor('actorC'),
-      createActor('actorD'),
-      createActor('actorE'),
-      createActor('actorF'),
-    ]);
-
-    const rawArray = [
-      ['actorA', '10'],
-      'bad entry',
-      ['actorB'],
-      ['actorC', null],
-      [{ id: 'actorD' }, 5],
-      ['  ', 4],
-      ['actorE', {}],
-      ['actorF', ''],
-      ['actorA', 15],
-    ];
-
-    await roundManager.startRound('initiative', rawArray);
-
-    const warnMessages = logger.warnLogs
-      .map((entry) => entry.message)
-      .filter((message) => message.startsWith('RoundManager.startRound()'));
-
-    expect(warnMessages).toEqual(
-      expect.arrayContaining([
-        'RoundManager.startRound(): Ignoring malformed initiative entry from array input.',
-        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
-        'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from array input.',
-        'RoundManager.startRound(): Ignoring initiative entry with blank entity id from array input after trimming whitespace.',
-        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
-        'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
-        'RoundManager.startRound(): Duplicate initiative entry for entity id "actorA" after normalisation. Using latest value.',
-      ])
-    );
-
-    const next = turnOrderService.getNextEntity();
-    expect(next?.id).toBe('actorA');
-  });
-
-  it('rejects initiative rounds when normalisation produces no usable entries', async () => {
-    entityManager.setEntities([createActor('actor1')]);
-
-    await expect(
-      roundManager.startRound('initiative', new Map())
-    ).rejects.toThrow(
-      'Cannot start an initiative round: initiativeData Map is required.'
-    );
-
-    expect(
-      logger.errorLogs.some((entry) =>
-        entry.message.includes(
-          'Cannot start an initiative round: initiativeData Map is required.'
-        )
-      )
-    ).toBe(true);
+    expect(third?.id).toBe('actor3');
   });
 
   it('rejects rounds when there are no active actor entities', async () => {
@@ -284,7 +136,7 @@ describe('RoundManager integration with real turn order service', () => {
   it('exposes lifecycle flags that reflect round progress', async () => {
     entityManager.setEntities([createActor('actor1'), createActor('actor2')]);
 
-    await roundManager.startRound(42);
+    await roundManager.startRound();
 
     expect(roundManager.inProgress).toBe(true);
     expect(roundManager.hadSuccess).toBe(false);
@@ -344,8 +196,8 @@ describe('RoundManager ROUND_STARTED event with shuffle integration', () => {
 
     const originalNpcOrder = ['kestrel_brune', 'saffi_two_tides', 'pitch', 'hobb_rusk'];
 
-    // Start the round
-    await roundManager.startRound('round-robin');
+    // Start the round (uses round-robin by default)
+    await roundManager.startRound();
 
     // Verify event was dispatched
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -384,7 +236,7 @@ describe('RoundManager ROUND_STARTED event with shuffle integration', () => {
     ];
     entityManager.setEntities(actors);
 
-    await roundManager.startRound('round-robin');
+    await roundManager.startRound();
 
     const eventPayload = mockDispatcher.dispatch.mock.calls[0][1];
     const eventActorIds = eventPayload.actors;
@@ -407,7 +259,7 @@ describe('RoundManager ROUND_STARTED event with shuffle integration', () => {
     ];
     entityManager.setEntities(actors);
 
-    await roundManager.startRound('round-robin');
+    await roundManager.startRound();
 
     const eventPayload = mockDispatcher.dispatch.mock.calls[0][1];
     const eventActorIds = eventPayload.actors;
@@ -438,7 +290,7 @@ describe('RoundManager ROUND_STARTED event with shuffle integration', () => {
     ];
     entityManager.setEntities(actors);
 
-    await roundManagerNoShuffle.startRound('round-robin');
+    await roundManagerNoShuffle.startRound();
 
     const eventPayload = mockDispatcher.dispatch.mock.calls[0][1];
     const eventActorIds = eventPayload.actors;
@@ -460,8 +312,8 @@ describe('RoundManager ROUND_STARTED event with shuffle integration', () => {
     ];
     entityManager.setEntities(actors);
 
-    // Start multiple rounds and verify each gets shuffled order
-    await roundManager.startRound('round-robin');
+    // Start round and verify it gets shuffled order
+    await roundManager.startRound();
 
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
 

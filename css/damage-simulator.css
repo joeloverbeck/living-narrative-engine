@@ -1,0 +1,417 @@
+/* damage-simulator.css */
+
+/* Main Container */
+#damage-simulator-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  font-family: var(--font-ui);
+}
+
+/* Header */
+#ds-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--panel-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+#ds-header h1 {
+  margin: 0;
+  font-size: var(--font-size-h1);
+}
+
+#ds-header nav .menu-button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-base);
+  text-decoration: none;
+}
+
+/* Main Content Area */
+.ds-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Recipe Selector */
+#ds-recipe-selector {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--secondary-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+#ds-recipe-selector label {
+  margin-right: var(--spacing-sm);
+  font-weight: 600;
+}
+
+#ds-recipe-selector select {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-base);
+  background: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  min-width: 300px;
+}
+
+/* Content Grid (Two-column layout) */
+.ds-content-grid {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+/* Panel Base Styles */
+.ds-panel {
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+.ds-panel h2 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-h2);
+  color: var(--secondary-text-color);
+}
+
+.ds-panel h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--secondary-text-color);
+}
+
+/* Anatomy Panel (Left) */
+#ds-anatomy-panel {
+  flex: 2;
+  background: var(--panel-bg-color);
+  border-right: 1px solid var(--border-color-subtle);
+}
+
+.ds-anatomy-tree {
+  padding: var(--spacing-sm);
+}
+
+/* Damage Composer Panel (Right) */
+#ds-damage-composer {
+  flex: 1;
+  background: var(--secondary-bg-color);
+  min-width: 280px;
+}
+
+/* Form Styles */
+.ds-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ds-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ds-form-group label {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+}
+
+.ds-form-group select,
+.ds-form-group input[type="text"],
+.ds-form-group input[type="number"] {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-base);
+  background: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+}
+
+.ds-form-group input[type="range"] {
+  width: 100%;
+}
+
+.ds-value-display {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--primary-text-color);
+  text-align: center;
+  min-width: 3ch;
+}
+
+/* Effects Group */
+.ds-effects-group {
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+}
+
+.ds-effects-group legend {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  padding: 0 var(--spacing-xs);
+}
+
+.ds-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ds-checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: normal;
+  cursor: pointer;
+}
+
+/* Button Styles */
+.ds-button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ds-button--primary {
+  background: var(--accent-color, #4a9eff);
+  color: #fff;
+}
+
+.ds-button--primary:hover:not(:disabled) {
+  background: var(--accent-color-hover, #3a8eef);
+}
+
+.ds-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Body Part Card Styles */
+.ds-part-card {
+  background: var(--primary-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.ds-part-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-part-card-name {
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.ds-part-card-health {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+}
+
+/* Health Bar Styles */
+.ds-health-bar {
+  height: 8px;
+  background: var(--border-color-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-health-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.ds-health-bar-fill--healthy {
+  background: #4caf50;
+}
+
+.ds-health-bar-fill--damaged {
+  background: #ff9800;
+}
+
+.ds-health-bar-fill--critical {
+  background: #f44336;
+}
+
+/* Status Effects */
+.ds-status-effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-small);
+}
+
+.ds-status-effect {
+  padding: 2px var(--spacing-xs);
+  background: var(--secondary-bg-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--secondary-text-color);
+}
+
+/* Hierarchy Indentation */
+.ds-part-card[data-depth="1"] {
+  margin-left: var(--spacing-md);
+}
+
+.ds-part-card[data-depth="2"] {
+  margin-left: calc(var(--spacing-md) * 2);
+}
+
+.ds-part-card[data-depth="3"] {
+  margin-left: calc(var(--spacing-md) * 3);
+}
+
+.ds-part-card[data-depth="4"] {
+  margin-left: calc(var(--spacing-md) * 4);
+}
+
+/* Analytics Panel */
+#ds-analytics {
+  background: var(--panel-bg-color);
+  border-top: 1px solid var(--border-color-subtle);
+  max-height: 200px;
+}
+
+.ds-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.ds-analytics-column {
+  min-height: 100px;
+}
+
+/* History Panel */
+#ds-history {
+  background: var(--secondary-bg-color);
+  border-top: 1px solid var(--border-color-subtle);
+  max-height: 150px;
+}
+
+.ds-history-log {
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.ds-history-entry {
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-history-entry:last-child {
+  border-bottom: none;
+}
+
+/* Collapsible Panel */
+.ds-collapsible h2 {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ds-collapsible h2::before {
+  content: "\25BC";
+  display: inline-block;
+  margin-right: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  transition: transform 0.2s ease;
+}
+
+.ds-collapsible.collapsed h2::before {
+  transform: rotate(-90deg);
+}
+
+.ds-collapsible.collapsed > *:not(h2) {
+  display: none;
+}
+
+/* Placeholder Messages */
+.ds-placeholder-message {
+  color: var(--secondary-text-color);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-lg);
+}
+
+/* Footer */
+.ds-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: center;
+  background: var(--secondary-bg-color);
+  border-top: 1px solid var(--border-color-subtle);
+}
+
+.ds-footer a {
+  color: var(--accent-color, #4a9eff);
+  text-decoration: none;
+}
+
+.ds-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design - works on 1024px+ screens, stacks on smaller */
+@media (max-width: 1024px) {
+  .ds-content-grid {
+    flex-direction: column;
+  }
+
+  #ds-anatomy-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color-subtle);
+    flex: unset;
+    min-height: 300px;
+  }
+
+  #ds-damage-composer {
+    flex: unset;
+    min-height: auto;
+  }
+
+  .ds-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #ds-analytics,
+  #ds-history {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  #ds-header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    text-align: center;
+  }
+
+  #ds-recipe-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #ds-recipe-selector select {
+    min-width: unset;
+    width: 100%;
+  }
+}

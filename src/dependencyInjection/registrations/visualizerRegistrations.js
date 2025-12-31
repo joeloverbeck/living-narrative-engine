@@ -18,6 +18,7 @@ import ViewportManager from '../../domUI/anatomy-renderer/ViewportManager.js';
 import VisualizationComposer from '../../domUI/anatomy-renderer/VisualizationComposer.js';
 import RecipeSelectorService from '../../domUI/shared/RecipeSelectorService.js';
 import EntityLoadingService from '../../domUI/shared/EntityLoadingService.js';
+import AnatomyDataExtractor from '../../domUI/shared/AnatomyDataExtractor.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -199,6 +200,19 @@ export function registerVisualizerComponents(container) {
         entityManager: c.resolve(tokens.IEntityManager),
         dataRegistry: c.resolve(tokens.IDataRegistry),
         stateController: c.resolve(tokens.VisualizerStateController),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  // Register AnatomyDataExtractor - extracts hierarchical anatomy data for card-based UIs
+  registerWithLog(
+    registrar,
+    tokens.IAnatomyDataExtractor,
+    (c) =>
+      new AnatomyDataExtractor({
+        entityManager: c.resolve(tokens.IEntityManager),
         logger: c.resolve(tokens.ILogger),
       }),
     { lifecycle: 'singletonFactory' },

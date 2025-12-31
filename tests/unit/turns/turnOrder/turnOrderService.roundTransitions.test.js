@@ -2,7 +2,7 @@
 
 /**
  * @file Unit tests for the TurnOrderService class, focusing on
- * transitions between different strategies when calling startNewRound multiple times.
+ * transitions when calling startNewRound multiple times.
  * Parent Ticket: TEST-TURN-ORDER-001.11
  * Ticket ID: TEST-TURN-ORDER-001.11.13
  */
@@ -10,11 +10,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -34,24 +32,24 @@ describe('TurnOrderService - Round Transitions', () => {
   let service;
   /** @type {jest.Mock<SimpleRoundRobinQueue>} */
   let MockSimpleRoundRobinQueue;
-  /** @type {jest.Mock<InitiativePriorityQueue>} */
-  let MockInitiativePriorityQueue;
 
   // Use broader types for instances to avoid Jest's complex mock types issues sometimes
   /** @type {any | null} */
-  let mockRRQueueInstance = null;
+  let mockRRQueueInstance1 = null;
   /** @type {any | null} */
-  let mockInitQueueInstance = null;
+  let mockRRQueueInstance2 = null;
+  /** @type {number} */
+  let instanceCount = 0;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear all mocks before each test
 
     mockLogger = createMockLogger();
     service = new TurnOrderService({ logger: mockLogger });
+    instanceCount = 0;
 
     // Store the mocked classes
     MockSimpleRoundRobinQueue = SimpleRoundRobinQueue;
-    MockInitiativePriorityQueue = InitiativePriorityQueue;
 
     // Reset the mock implementation for SimpleRoundRobinQueue
     MockSimpleRoundRobinQueue.mockImplementation(() => {
@@ -81,34 +79,13 @@ describe('TurnOrderService - Round Transitions', () => {
         // Dynamic size based on internal mock state
         size: jest.fn().mockImplementation(() => instance._entities.length),
       };
-      mockRRQueueInstance = instance; // Capture the instance
-      return instance;
-    });
-
-    // Reset the mock implementation for InitiativePriorityQueue
-    MockInitiativePriorityQueue.mockImplementation(() => {
-      let entityCount = 0; // Counter for dynamic size
-      const instance = {
-        // Track adds for dynamic size
-        add: jest.fn().mockImplementation(() => {
-          entityCount++;
-        }),
-        // Reset count on clear
-        clear: jest.fn().mockImplementation(() => {
-          entityCount = 0;
-        }),
-        getNext: jest.fn().mockReturnValue(null), // Default return
-        peek: jest.fn().mockReturnValue(null),
-        // Base isEmpty on dynamic count
-        isEmpty: jest.fn().mockImplementation(() => entityCount === 0),
-        toArray: jest.fn().mockReturnValue([]),
-        remove: jest.fn().mockReturnValue(null), // Always null for Initiative queue mock
-        // Dynamic size based on add/clear calls
-        size: jest.fn().mockImplementation(() => entityCount),
-        _queue: { length: 0, data: [] }, // Mock internal state minimally if needed
-        _activeSize: 0,
-      };
-      mockInitQueueInstance = instance; // Capture the instance
+      // Capture instances based on creation order
+      instanceCount++;
+      if (instanceCount === 1) {
+        mockRRQueueInstance1 = instance;
+      } else {
+        mockRRQueueInstance2 = instance;
+      }
       return instance;
     });
 
@@ -118,7 +95,7 @@ describe('TurnOrderService - Round Transitions', () => {
 
   // --- Test Suite for Round Transitions (TEST-TURN-ORDER-001.11.13) ---
   describe('startNewRound Transitions', () => {
-    it('Test Case 11.13.1: should correctly transition from Round Robin to Initiative', () => {
+    it('Test Case 11.13.1: should correctly transition from one Round Robin round to another', () => {
       // Arrange: First round (Round Robin)
       const entities1 = [{ id: 'a' }];
       const strategy1 = 'round-robin';
@@ -126,113 +103,120 @@ describe('TurnOrderService - Round Transitions', () => {
 
       // Capture the first mock queue instance created
       expect(MockSimpleRoundRobinQueue).toHaveBeenCalledTimes(1);
-      expect(mockRRQueueInstance).not.toBeNull();
-      const capturedMockRRQueue = mockRRQueueInstance; // Store reference
+      expect(mockRRQueueInstance1).not.toBeNull();
+      const capturedMockRRQueue1 = mockRRQueueInstance1; // Store reference
 
       // Verify initial setup (optional, sanity check)
-      expect(capturedMockRRQueue.add).toHaveBeenCalledWith(entities1[0]);
-      expect(capturedMockRRQueue.add).toHaveBeenCalledTimes(1);
-      expect(capturedMockRRQueue.size()).toBe(1); // Check dynamic size worked for round 1
+      expect(capturedMockRRQueue1.add).toHaveBeenCalledWith(entities1[0]);
+      expect(capturedMockRRQueue1.add).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.size()).toBe(1); // Check dynamic size worked for round 1
 
       // Clear mocks *after* first round setup to focus on the transition effects
       MockSimpleRoundRobinQueue.mockClear();
-      Object.values(capturedMockRRQueue).forEach((mockFn) => {
+      Object.values(capturedMockRRQueue1).forEach((mockFn) => {
         if (jest.isMockFunction(mockFn)) mockFn.mockClear();
       });
-      // Reset internal state of captured mock if necessary (clear already does this for RR)
-      // capturedMockRRQueue._entities = []; // Redundant due to mockImplementation of clear
 
-      MockInitiativePriorityQueue.mockClear(); // Ensure this wasn't called yet
       mockLogger.debug.mockClear();
       mockLogger.info.mockClear();
       mockLogger.warn.mockClear();
       mockLogger.error.mockClear();
 
-      // Arrange: Second round (Initiative)
+      // Arrange: Second round (also Round Robin with different entities)
       const entities2 = [{ id: 'b' }, { id: 'c' }];
-      const strategy2 = 'initiative';
-      const initiativeData2 = new Map([
-        ['b', 10],
-        ['c', 20],
-      ]); // c has higher priority
+      const strategy2 = 'round-robin';
 
       // Act: Start the second round, triggering the transition
-      // The internal call to .size() for logging will now use the dynamic mock implementation
-      service.startNewRound(entities2, strategy2, initiativeData2);
+      service.startNewRound(entities2, strategy2);
 
       // Assert: Transition effects
 
       // 1. Previous Queue Cleared
-      expect(capturedMockRRQueue.clear).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.clear).toHaveBeenCalledTimes(1);
 
-      // 2. New Queue (Initiative) Instantiated
-      expect(MockInitiativePriorityQueue).toHaveBeenCalledTimes(1);
-      expect(MockInitiativePriorityQueue).toHaveBeenCalledWith(); // Check constructor call
-      expect(mockInitQueueInstance).not.toBeNull();
-      expect(mockInitQueueInstance).not.toBe(capturedMockRRQueue); // Ensure it's a different queue instance
-      expect(mockInitQueueInstance.size()).toBe(entities2.length); // Verify dynamic size after adds
+      // 2. New Queue (Round Robin) Instantiated
+      expect(MockSimpleRoundRobinQueue).toHaveBeenCalledTimes(1);
+      expect(mockRRQueueInstance2).not.toBeNull();
+      expect(mockRRQueueInstance2).not.toBe(capturedMockRRQueue1); // Ensure it's a different queue instance
+      expect(mockRRQueueInstance2.size()).toBe(entities2.length); // Verify dynamic size after adds
 
-      // 3. Internal Service State (Strategy) - Checked indirectly
+      // 3. New Entities Added to New Queue
+      expect(mockRRQueueInstance2.add).toHaveBeenCalledTimes(entities2.length);
+      expect(mockRRQueueInstance2.add).toHaveBeenCalledWith(entities2[0]); // {id: 'b'}
+      expect(mockRRQueueInstance2.add).toHaveBeenCalledWith(entities2[1]); // {id: 'c'}
 
-      // 4. New Entities Added to New Queue (Initiative)
-      expect(mockInitQueueInstance.add).toHaveBeenCalledTimes(entities2.length);
-      expect(mockInitQueueInstance.add).toHaveBeenCalledWith(
-        entities2[0],
-        initiativeData2.get('b')
-      ); // {id: 'b'}, 10
-      expect(mockInitQueueInstance.add).toHaveBeenCalledWith(
-        entities2[1],
-        initiativeData2.get('c')
-      ); // {id: 'c'}, 20
+      // 4. Delegation to New Queue
+      const nextEntityFromNewQueue = { id: 'b' };
+      mockRRQueueInstance2.getNext.mockReturnValueOnce(nextEntityFromNewQueue);
 
-      // 5. Delegation to New Queue
-      const nextEntityFromInit = { id: 'c' }; // Expect 'c' due to higher priority (TinyQueue logic)
-      // We need to configure getNext *after* the instance exists but *before* we call service.getNextEntity
-      mockInitQueueInstance.getNext.mockReturnValueOnce(nextEntityFromInit);
+      const result = service.getNextEntity();
+      expect(result).toBe(nextEntityFromNewQueue);
+      expect(mockRRQueueInstance2.getNext).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.getNext).not.toHaveBeenCalled(); // Ensure old queue wasn't called
 
-      const result = service.getNextEntity(); // <<< Generates the 3rd Debug Log
-      expect(result).toBe(nextEntityFromInit);
-      expect(mockInitQueueInstance.getNext).toHaveBeenCalledTimes(1);
-      expect(capturedMockRRQueue.getNext).not.toHaveBeenCalled(); // Ensure old queue wasn't called
+      mockRRQueueInstance2.peek.mockReturnValueOnce({ id: 'c' }); // 'c' is next
+      expect(service.peekNextEntity()).toEqual({ id: 'c' });
+      expect(mockRRQueueInstance2.peek).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.peek).not.toHaveBeenCalled();
 
-      mockInitQueueInstance.peek.mockReturnValueOnce({ id: 'b' }); // Assuming 'b' is next
-      expect(service.peekNextEntity()).toEqual({ id: 'b' });
-      expect(mockInitQueueInstance.peek).toHaveBeenCalledTimes(1);
-      expect(capturedMockRRQueue.peek).not.toHaveBeenCalled();
-
-      // Need to reset isEmpty's implementation after adds if using dynamic count
-      mockInitQueueInstance.isEmpty.mockReturnValue(false); // Or use the dynamic impl: expect(mockInitQueueInstance.isEmpty()).toBe(false);
+      mockRRQueueInstance2.isEmpty.mockReturnValue(false);
       expect(service.isEmpty()).toBe(false);
-      expect(mockInitQueueInstance.isEmpty).toHaveBeenCalledTimes(1); // Called once by service.isEmpty()
-      expect(capturedMockRRQueue.isEmpty).not.toHaveBeenCalled();
+      expect(mockRRQueueInstance2.isEmpty).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.isEmpty).not.toHaveBeenCalled();
 
-      const order = [{ id: 'c' }, { id: 'b' }]; // Example order
-      mockInitQueueInstance.toArray.mockReturnValue(order);
+      const order = [{ id: 'c' }]; // Example order after getting 'b'
+      mockRRQueueInstance2.toArray.mockReturnValue(order);
       expect(service.getCurrentOrder()).toEqual(order);
-      expect(mockInitQueueInstance.toArray).toHaveBeenCalledTimes(1);
-      expect(capturedMockRRQueue.toArray).not.toHaveBeenCalled();
+      expect(mockRRQueueInstance2.toArray).toHaveBeenCalledTimes(1);
+      expect(capturedMockRRQueue1.toArray).not.toHaveBeenCalled();
 
-      // 6. Logging (Focus on logs during the *second* startNewRound call + subsequent calls in Assert block)
-      // No info logs expected after downgrading to debug
+      // 5. Logging
       expect(mockLogger.info).not.toHaveBeenCalled();
-
-      // Check the specific DEBUG calls *after* the mocks were cleared
-      // Expected: Clear existing queue, Init new queue, Advance turn
-      expect(mockLogger.debug).toHaveBeenCalledTimes(7);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Cleared existing turn queue.'
-      ); // Call 1 (from startNewRound -> clearCurrentRound)
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'TurnOrderService: Initialized InitiativePriorityQueue.'
-      ); // Call 2 (from startNewRound)
+        'TurnOrderService: Initialized SimpleRoundRobinQueue.'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Advancing turn to entity "${nextEntityFromInit.id}".`
-      ); // Call 3 (from getNextEntity call in Assert #5)
+        `TurnOrderService: Advancing turn to entity "${nextEntityFromNewQueue.id}".`
+      );
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    // Add more transition tests as needed
+    it('Test Case 11.13.2: should throw error when starting a new round with empty entities', () => {
+      // Arrange: First round with entities
+      const entities1 = [{ id: 'x' }, { id: 'y' }];
+      service.startNewRound(entities1, 'round-robin');
+
+      expect(MockSimpleRoundRobinQueue).toHaveBeenCalledTimes(1);
+      const capturedMockRRQueue1 = mockRRQueueInstance1;
+
+      // Clear mocks
+      MockSimpleRoundRobinQueue.mockClear();
+      Object.values(capturedMockRRQueue1).forEach((mockFn) => {
+        if (jest.isMockFunction(mockFn)) mockFn.mockClear();
+      });
+      mockLogger.debug.mockClear();
+      mockLogger.error.mockClear();
+
+      // Arrange: Second round with empty entities
+      const entities2 = [];
+
+      // Act & Assert
+      expect(() => service.startNewRound(entities2, 'round-robin')).toThrow(
+        'Entities array must be provided and non-empty.'
+      );
+
+      // Previous queue IS cleared because clearCurrentRound() happens before validation
+      expect(capturedMockRRQueue1.clear).toHaveBeenCalledTimes(1);
+
+      // Error should be logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TurnOrderService.startNewRound: Failed - entities array must be a non-empty array.'
+      );
+    });
   }); // End describe("startNewRound Transitions")
 }); // End describe('TurnOrderService - Round Transitions')
