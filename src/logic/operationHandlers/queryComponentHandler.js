@@ -228,26 +228,25 @@ class QueryComponentHandler extends ComponentOperationHandler {
           resolvedEntityId: entityId,
         }
       );
-      const stored = writeContextVariable(
+      writeContextVariable(
         resultVar,
         missingValue,
         executionContext,
         this.#dispatcher,
         logger
       );
-      if (stored.success) {
-        const missingString =
-          missingValue === null
-            ? 'null'
-            : missingValue === undefined
-              ? 'undefined'
-              : typeof missingValue === 'object'
-                ? JSON.stringify(missingValue)
-                : missingValue;
-        logger.warn(
-          `QueryComponentHandler: Stored '${missingString}' in "${trimmedResultVar}" due to EntityManager error.`
-        );
-      }
+
+      const missingString =
+        missingValue === null
+          ? 'null'
+          : missingValue === undefined
+            ? 'undefined'
+            : typeof missingValue === 'object'
+              ? JSON.stringify(missingValue)
+              : missingValue;
+      logger.warn(
+        `QueryComponentHandler: Stored '${missingString}' in "${trimmedResultVar}" due to EntityManager error.`
+      );
     }
   }
 

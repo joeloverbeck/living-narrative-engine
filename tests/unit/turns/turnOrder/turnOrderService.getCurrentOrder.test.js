@@ -10,11 +10,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -34,12 +32,9 @@ describe('TurnOrderService', () => {
   let service;
   /** @type {Entity[]} */
   let entities;
-  /** @type {Map<string, number>} */
-  let initiativeData;
 
   // Mocks for queue instances
   let mockSimpleQueueInstance;
-  let mockInitiativeQueueInstance;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear all mocks before each test
@@ -53,11 +48,6 @@ describe('TurnOrderService', () => {
       { id: 'b', name: 'Bob' },
       { id: 'c', name: 'Charlie' },
     ];
-    initiativeData = new Map([
-      ['a', 10],
-      ['b', 20],
-      ['c', 5],
-    ]);
 
     // --- Mock Queue Implementations ---
     // Reset mocks and provide fresh implementations for each test
@@ -74,21 +64,6 @@ describe('TurnOrderService', () => {
       size: jest.fn().mockReturnValue(0),
     };
     SimpleRoundRobinQueue.mockImplementation(() => mockSimpleQueueInstance);
-
-    // Mock InitiativePriorityQueue
-    mockInitiativeQueueInstance = {
-      add: jest.fn(),
-      clear: jest.fn(),
-      peek: jest.fn(),
-      isEmpty: jest.fn().mockReturnValue(true),
-      toArray: jest.fn().mockReturnValue([]), // Default empty array
-      getNext: jest.fn(),
-      remove: jest.fn(),
-      size: jest.fn().mockReturnValue(0),
-    };
-    InitiativePriorityQueue.mockImplementation(
-      () => mockInitiativeQueueInstance
-    );
   });
 
   // --- Test Suite for getCurrentOrder (TEST-TURN-ORDER-001.11.8) ---
@@ -104,25 +79,6 @@ describe('TurnOrderService', () => {
 
       // Assert
       expect(mockSimpleQueueInstance.toArray).toHaveBeenCalledTimes(1);
-      expect(mockInitiativeQueueInstance.toArray).not.toHaveBeenCalled(); // Ensure the other queue wasn't called
-      expect(order).toEqual(expectedOrder); // Use toEqual for deep comparison
-      expect(order).not.toBe(expectedOrder); // Ensure it's a copy (due to freeze)
-      expect(Object.isFrozen(order)).toBe(true);
-    });
-
-    it('Test Case 11.8.2: Delegate to Initiative Queue - should call toArray on the Init queue and return its frozen result', () => {
-      // Arrange
-      // Note: Initiative queue toArray doesn't guarantee order, but the mock does
-      const expectedOrder = [{ id: 'c' }, { id: 'a' }];
-      service.startNewRound(entities, 'initiative', initiativeData);
-      mockInitiativeQueueInstance.toArray.mockReturnValue([...expectedOrder]); // Return a copy
-
-      // Act
-      const order = service.getCurrentOrder();
-
-      // Assert
-      expect(mockInitiativeQueueInstance.toArray).toHaveBeenCalledTimes(1);
-      expect(mockSimpleQueueInstance.toArray).not.toHaveBeenCalled(); // Ensure the other queue wasn't called
       expect(order).toEqual(expectedOrder); // Use toEqual for deep comparison
       expect(order).not.toBe(expectedOrder); // Ensure it's a copy (due to freeze)
       expect(Object.isFrozen(order)).toBe(true);
@@ -153,7 +109,6 @@ describe('TurnOrderService', () => {
 
       // Assert
       expect(mockSimpleQueueInstance.toArray).not.toHaveBeenCalled();
-      expect(mockInitiativeQueueInstance.toArray).not.toHaveBeenCalled();
       expect(order).toEqual([]);
       expect(Object.isFrozen(order)).toBe(true);
       expect(order.length).toBe(0);

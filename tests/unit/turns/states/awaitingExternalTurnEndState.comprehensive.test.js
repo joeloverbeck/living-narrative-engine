@@ -383,6 +383,32 @@ describe('AwaitingExternalTurnEndState', () => {
       );
     });
 
+    test('should skip error dispatch when dispatcher becomes unavailable during timeout', async () => {
+      // Arrange
+      mockTurnContext.getChosenActionId.mockReturnValue('test-action');
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+
+      // Flush to allow state setup
+      await flushPromisesAndTimers();
+
+      // Make dispatcher unavailable before timeout fires (simulating race condition)
+      mockTurnContext.getSafeEventDispatcher.mockReturnValue(null);
+
+      // Advance time past timeout
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert - turn was ended with error even though dispatch didn't happen
+      expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
+      const endTurnError = mockTurnContext.endTurn.mock.calls[0][0];
+      expect(endTurnError).toBeInstanceOf(Error);
+      expect(endTurnError.code).toBe('TURN_END_TIMEOUT');
+      // Note: dispatch was not called because getSafeEventDispatcher returned null
+    });
+
     test('should not dispatch error if event arrives just before timeout', async () => {
       // Arrange
       const successEvent = { payload: { entityId: 'player-1', success: true } };
@@ -450,6 +476,29 @@ describe('AwaitingExternalTurnEndState', () => {
         'player-1'
       );
       expect(state.getInternalStateForTest().abortController).toBeNull();
+    });
+
+    test('should log warning when cleanup fails to clear awaiting flag', async () => {
+      // Arrange
+      const cleanupError = new Error('Cleanup failed');
+      mockTurnContext.setAwaitingExternalEvent
+        .mockImplementationOnce(() => {}) // First call: set true (succeeds)
+        .mockImplementationOnce(() => {
+          throw cleanupError;
+        }); // Second call: cleanup (throws)
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('failed to clear awaitingExternalEvent flag'),
+        cleanupError
+      );
     });
 
     test('cleanup should be idempotent', async () => {
@@ -538,8 +587,131 @@ describe('AwaitingExternalTurnEndState', () => {
     });
   });
 
+  // --- Early Listener Unsubscribe ---
+  describe('Early Listener Unsubscribe', () => {
+    test('should unsubscribe early listener and log debug on successful unsubscription', async () => {
+      // Arrange
+      const earlyUnsubscribeMock = jest.fn();
+      mockTurnContext.consumeEarlyListenerUnsubscribe = jest
+        .fn()
+        .mockReturnValue(earlyUnsubscribeMock);
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert
+      expect(earlyUnsubscribeMock).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Unsubscribed early listener for player-1')
+      );
+    });
+
+    test('should log warning when early listener unsubscribe throws', async () => {
+      // Arrange
+      const unsubError = new Error('Unsubscribe failed');
+      const earlyUnsubscribeMock = jest.fn().mockImplementation(() => {
+        throw unsubError;
+      });
+      mockTurnContext.consumeEarlyListenerUnsubscribe = jest
+        .fn()
+        .mockReturnValue(earlyUnsubscribeMock);
+
+      // Act
+      const enterPromise = state.enterState(mockHandler, null);
+      await flushPromisesAndTimers();
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await flushPromisesAndTimers();
+      await enterPromise;
+
+      // Assert
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Error unsubscribing early listener: Unsubscribe failed'
+        )
+      );
+    });
+  });
+
+  // --- Pre-captured Event Handling ---
+  describe('Pre-captured Event Handling', () => {
+    test('should handle pre-captured turn_ended event immediately on state entry', async () => {
+      // Arrange
+      const pendingEvent = { payload: { entityId: 'player-1', error: null } };
+      mockTurnContext.consumePendingTurnEndEvent = jest
+        .fn()
+        .mockReturnValue(pendingEvent);
+
+      // Act
+      await state.enterState(mockHandler, null);
+
+      // Assert
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Found pre-captured turn_ended event for player-1'
+        )
+      );
+      expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
+        true,
+        'player-1'
+      );
+      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
+      expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(
+        false,
+        'player-1'
+      );
+      // Should NOT subscribe - immediate return path
+      expect(mockEventDispatcher.subscribe).not.toHaveBeenCalled();
+    });
+
+    test('should pass error from pre-captured event to endTurn', async () => {
+      // Arrange
+      const error = new Error('Pre-captured error');
+      const pendingEvent = { payload: { entityId: 'player-1', error } };
+      mockTurnContext.consumePendingTurnEndEvent = jest
+        .fn()
+        .mockReturnValue(pendingEvent);
+
+      // Act
+      await state.enterState(mockHandler, null);
+
+      // Assert
+      expect(mockTurnContext.endTurn).toHaveBeenCalledWith(error);
+    });
+  });
+
+  // --- Error Handling ---
+  describe('Error Handling', () => {
+    test('should rethrow non-abort errors from Promise.race', async () => {
+      // Arrange - Make subscribe throw a non-abort error
+      const nonAbortError = new Error('Dispatcher subscription failed');
+      mockEventDispatcher.subscribe.mockImplementation(() => {
+        throw nonAbortError;
+      });
+
+      // Act & Assert
+      await expect(state.enterState(mockHandler, null)).rejects.toThrow(
+        'Dispatcher subscription failed'
+      );
+    });
+  });
+
   // --- Constructor Validation ---
   describe('Constructor Validation', () => {
+    test('should use default options when no options object is provided', () => {
+      // Arrange & Act - Create state with no options object at all
+      // This covers the branch where options = {} (default parameter)
+      const stateWithDefaults = new AwaitingExternalTurnEndState(mockHandler);
+
+      // Assert - should not throw and should have a state name
+      expect(stateWithDefaults.getStateName()).toBe(
+        'AwaitingExternalTurnEndState'
+      );
+    });
+
     test('should throw InvalidArgumentError when timeoutMs is NaN', () => {
       const {
         InvalidArgumentError,

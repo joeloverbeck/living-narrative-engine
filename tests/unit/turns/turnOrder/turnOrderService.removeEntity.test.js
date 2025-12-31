@@ -10,11 +10,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -34,12 +32,7 @@ describe('TurnOrderService', () => {
   let service;
   /** @type {Entity[]} */
   let entitiesRR;
-  /** @type {Entity[]} */
-  let entitiesInit;
-  /** @type {Map<string, number>} */
-  let initiativeData;
   let mockSimpleQueueInstance;
-  let mockInitiativeQueueInstance;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear all mocks before each test
@@ -48,12 +41,6 @@ describe('TurnOrderService', () => {
     service = new TurnOrderService({ logger: mockLogger }); // Constructor logs once
 
     entitiesRR = [{ id: 'rrA' }, { id: 'rrB' }, { id: 'rrC' }];
-    entitiesInit = [{ id: 'initA' }, { id: 'initB' }, { id: 'initC' }];
-    initiativeData = new Map([
-      ['initA', 10],
-      ['initB', 20],
-      ['initC', 5],
-    ]);
 
     // Reset mock implementations for queues
     SimpleRoundRobinQueue.mockImplementation(() => {
@@ -68,20 +55,6 @@ describe('TurnOrderService', () => {
         toArray: jest.fn().mockReturnValue(entitiesRR),
       };
       return mockSimpleQueueInstance;
-    });
-
-    InitiativePriorityQueue.mockImplementation(() => {
-      mockInitiativeQueueInstance = {
-        add: jest.fn(),
-        clear: jest.fn(),
-        remove: jest.fn(), // Default mock, will be overridden in tests
-        getNext: jest.fn(),
-        peek: jest.fn(),
-        isEmpty: jest.fn().mockReturnValue(false),
-        size: jest.fn().mockReturnValue(entitiesInit.length),
-        toArray: jest.fn().mockReturnValue(entitiesInit),
-      };
-      return mockInitiativeQueueInstance;
     });
   });
 
@@ -158,71 +131,6 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    // Test Case: Initiative - Found (Lazy Removal)
-    it('Test Case 11.11.3: should call remove on the Initiative queue and log success when the entity is flagged for lazy removal', () => {
-      // Arrange
-      service.startNewRound(entitiesInit, 'initiative', initiativeData);
-      const entityIdToRemove = 'initA';
-      const removedEntity = { id: entityIdToRemove };
-      mockInitiativeQueueInstance.remove.mockReturnValue(removedEntity);
-      mockLogger.info.mockClear(); // Clear logs after setup
-      mockLogger.warn.mockClear();
-      mockLogger.debug.mockClear();
-
-      // Act
-      service.removeEntity(entityIdToRemove);
-
-      // Assert
-      // 1. Queue Interaction
-      expect(mockInitiativeQueueInstance.remove).toHaveBeenCalledTimes(1);
-      expect(mockInitiativeQueueInstance.remove).toHaveBeenCalledWith(
-        entityIdToRemove
-      );
-
-      // 2. Logging
-      // Debug log is expected for the removal processing
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(
-        1,
-        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
-      );
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(
-        2,
-        `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
-      );
-      // Warn log for "not found" is NOT expected, because null IS expected from initiative queue remove
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-      // The two debug logs already asserted above
-      expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
-    it('Test Case 11.11.3b: should log a warning when the initiative queue reports no matching entity', () => {
-      // Arrange
-      service.startNewRound(entitiesInit, 'initiative', initiativeData);
-      const entityIdToRemove = 'missingInit';
-      mockInitiativeQueueInstance.remove.mockReturnValue(null);
-      mockLogger.info.mockClear();
-      mockLogger.warn.mockClear();
-      mockLogger.debug.mockClear();
-
-      // Act
-      service.removeEntity(entityIdToRemove);
-
-      // Assert
-      expect(mockInitiativeQueueInstance.remove).toHaveBeenCalledWith(
-        entityIdToRemove
-      );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
-      );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TurnOrderService.removeEntity: Entity "${entityIdToRemove}" not found in the current turn order queue.`
-      );
-      expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
     // Test Case: No Active Round
     it('Test Case 11.11.4: should log a warning and take no action if called when no round is active', () => {
       // Arrange
@@ -238,7 +146,6 @@ describe('TurnOrderService', () => {
       // 1. Queue Interaction (Should not happen)
       // Need to access the mock prototypes or check if constructor was called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
       // More directly, check if any remove method was called (it shouldn't exist yet)
       // This requires checking if the mocks were instantiated and *then* if remove was called,
       // but since no round was started, the internal #currentQueue is null.

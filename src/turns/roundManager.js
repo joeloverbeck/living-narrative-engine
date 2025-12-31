@@ -24,14 +24,11 @@ export default class RoundManager {
   }
 
   /**
-   * Starts a new round using the provided strategy and optional initiative data.
+   * Starts a new round using round-robin turn order.
    *
-   * @param {('round-robin' | 'initiative' | {strategy?: 'round-robin' | 'initiative'; initiativeData?: Map<string, number>})} [strategyOrOptions]
-   *  Either the turn order strategy string or an options object.
-   * @param {Map<string, number>} [initiativeDataParam] - Initiative data when the first parameter is a strategy string.
    * @returns {Promise<void>}
    */
-  async startRound(strategyOrOptions = 'round-robin', initiativeDataParam) {
+  async startRound() {
     this.#logger.debug('RoundManager.startRound() initiating...');
 
     // A new round is not considered active until we successfully hand control to
@@ -43,68 +40,7 @@ export default class RoundManager {
     this.#roundNumber++;
     this.#logger.debug(`Starting round ${this.#roundNumber}`);
 
-    let strategy;
-    let initiativeData;
-
-    const isOptionsObject =
-      strategyOrOptions &&
-      typeof strategyOrOptions === 'object' &&
-      !(strategyOrOptions instanceof String) &&
-      !(strategyOrOptions instanceof Map);
-
-    if (isOptionsObject) {
-      initiativeData = strategyOrOptions.initiativeData;
-
-      const rawStrategy = strategyOrOptions.strategy;
-      const hasExplicitStrategy =
-        typeof rawStrategy === 'string' && rawStrategy.trim() !== '';
-      const hasInitiativeData =
-        initiativeData !== undefined && initiativeData !== null;
-
-      if (hasExplicitStrategy) {
-        strategy = rawStrategy;
-      } else if (hasInitiativeData) {
-        strategy = 'initiative';
-      } else {
-        strategy = 'round-robin';
-      }
-    } else {
-      strategy = strategyOrOptions ?? 'round-robin';
-      initiativeData = initiativeDataParam;
-    }
-
-    if (typeof strategy !== 'string' || strategy.trim() === '') {
-      strategy = 'round-robin';
-    } else {
-      strategy = strategy.trim().toLowerCase();
-    }
-
-    const hasInitiativeCandidate =
-      this.#hasCandidateInitiativeData(initiativeData);
-    if (strategy !== 'initiative' && strategy !== 'round-robin') {
-      const fallbackStrategy = hasInitiativeCandidate
-        ? 'initiative'
-        : 'round-robin';
-      const reasonSuffix = hasInitiativeCandidate
-        ? ' because initiative data was provided.'
-        : '.';
-      this.#logger.warn(
-        `RoundManager.startRound(): Unknown strategy '${strategy}'. Falling back to '${fallbackStrategy}'${reasonSuffix}`
-      );
-      strategy = fallbackStrategy;
-    }
-
-    if (strategy === 'initiative') {
-      initiativeData = this.#normaliseInitiativeData(initiativeData);
-      if (!(initiativeData instanceof Map) || initiativeData.size === 0) {
-        const errorMsg =
-          'Cannot start an initiative round: initiativeData Map is required.';
-        this.#logger.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-    } else {
-      initiativeData = undefined;
-    }
+    const strategy = 'round-robin';
 
     // Get all active entities and filter for actors
     const allEntities = Array.from(this.#entityManager.entities ?? []);
@@ -127,11 +63,7 @@ export default class RoundManager {
     );
 
     // Start the new round in the service (this shuffles the actors array in place)
-    await this.#turnOrderService.startNewRound(
-      actors,
-      strategy,
-      initiativeData
-    );
+    await this.#turnOrderService.startNewRound(actors, strategy);
 
     // Extract actor IDs AFTER shuffle so the event reflects the actual turn order
     const actorIds = actors.map((a) => a.id);
@@ -170,226 +102,5 @@ export default class RoundManager {
     this.#inProgress = false;
     this.#hadSuccess = false;
     this.#roundNumber = 0;
-  }
-
-  /**
-   * @description Determines whether initiative data input contains any candidate entries.
-   * @param {unknown} rawInitiativeData - Initiative data provided by callers.
-   * @returns {boolean} True when the input contains at least one entry candidate.
-   */
-  #hasCandidateInitiativeData(rawInitiativeData) {
-    if (rawInitiativeData instanceof Map) {
-      return rawInitiativeData.size > 0;
-    }
-
-    if (Array.isArray(rawInitiativeData)) {
-      return rawInitiativeData.length > 0;
-    }
-
-    if (
-      rawInitiativeData &&
-      typeof rawInitiativeData === 'object' &&
-      !Array.isArray(rawInitiativeData)
-    ) {
-      return Object.keys(rawInitiativeData).length > 0;
-    }
-
-    return false;
-  }
-
-  /**
-   * Normalises initiative data passed to {@link startRound} into a Map.
-   *
-   * @param {unknown} rawInitiativeData - Initiative data provided by callers.
-   * @returns {Map<string, number> | undefined} Normalised initiative data or undefined when normalisation fails.
-   */
-  #normaliseInitiativeData(rawInitiativeData) {
-    if (rawInitiativeData instanceof Map) {
-      const normalisedFromMap = new Map();
-      for (const [entityId, score] of rawInitiativeData.entries()) {
-        const normalisedId = this.#normaliseEntityId(entityId, 'Map');
-        if (!normalisedId) {
-          continue;
-        }
-
-        const numericScore = this.#coerceInitiativeScore(score, normalisedId);
-        if (numericScore === undefined) {
-          continue;
-        }
-
-        if (normalisedFromMap.has(normalisedId)) {
-          this.#logger.warn(
-            `RoundManager.startRound(): Duplicate initiative entry for entity id "${normalisedId}" after normalisation. Using latest value.`,
-            { entityId }
-          );
-        }
-
-        normalisedFromMap.set(normalisedId, numericScore);
-      }
-
-      return normalisedFromMap.size > 0 ? normalisedFromMap : undefined;
-    }
-
-    if (Array.isArray(rawInitiativeData)) {
-      const normalisedFromArray = new Map();
-      for (const entry of rawInitiativeData) {
-        if (!Array.isArray(entry) || entry.length < 2) {
-          this.#logger.warn(
-            'RoundManager.startRound(): Ignoring malformed initiative entry from array input.',
-            { entry }
-          );
-          continue;
-        }
-        const [entityId, score] = entry;
-        const normalisedId = this.#normaliseEntityId(entityId, 'array');
-        if (!normalisedId) {
-          continue;
-        }
-
-        const numericScore = this.#coerceInitiativeScore(score, normalisedId);
-        if (numericScore === undefined) {
-          continue;
-        }
-
-        if (normalisedFromArray.has(normalisedId)) {
-          this.#logger.warn(
-            `RoundManager.startRound(): Duplicate initiative entry for entity id "${normalisedId}" after normalisation. Using latest value.`,
-            { entityId }
-          );
-        }
-
-        normalisedFromArray.set(normalisedId, numericScore);
-      }
-      return normalisedFromArray.size > 0 ? normalisedFromArray : undefined;
-    }
-
-    if (
-      rawInitiativeData &&
-      typeof rawInitiativeData === 'object' &&
-      !Array.isArray(rawInitiativeData)
-    ) {
-      const entries = Object.entries(rawInitiativeData);
-      if (entries.length === 0) {
-        return undefined;
-      }
-      const normalisedFromObject = new Map();
-      for (const [entityId, score] of entries) {
-        const normalisedId = this.#normaliseEntityId(entityId, 'object');
-        if (!normalisedId) {
-          continue;
-        }
-
-        const numericScore = this.#coerceInitiativeScore(score, normalisedId);
-        if (numericScore === undefined) {
-          continue;
-        }
-
-        if (normalisedFromObject.has(normalisedId)) {
-          this.#logger.warn(
-            `RoundManager.startRound(): Duplicate initiative entry for entity id "${normalisedId}" after normalisation. Using latest value.`,
-            { entityId }
-          );
-        }
-
-        normalisedFromObject.set(normalisedId, numericScore);
-      }
-
-      if (normalisedFromObject.size === 0) {
-        return undefined;
-      }
-
-      this.#logger.debug(
-        'RoundManager.startRound(): Normalised plain object initiative data into Map for initiative round.'
-      );
-      return normalisedFromObject;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * @description Coerces a raw initiative score into a finite number for queue consumption.
-   * @param {unknown} rawScore - The score provided by the caller.
-   * @param {string} entityId - The entity identifier used for logging context.
-   * @returns {number | undefined} A finite numeric score, or `undefined` when coercion fails.
-   */
-  #coerceInitiativeScore(rawScore, entityId) {
-    if (typeof rawScore === 'number' && Number.isFinite(rawScore)) {
-      return rawScore;
-    }
-
-    if (typeof rawScore === 'string') {
-      const trimmed = rawScore.trim();
-      if (trimmed.length === 0) {
-        this.#logger.warn(
-          'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
-          { entityId }
-        );
-        return undefined;
-      }
-      const parsed = Number(trimmed);
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-
-      this.#logger.warn(
-        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
-        {
-          entityId,
-          receivedType: 'string',
-          rawScore,
-        }
-      );
-      return undefined;
-    }
-
-    if (rawScore == null) {
-      this.#logger.warn(
-        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
-        { entityId }
-      );
-      return undefined;
-    }
-
-    const parsed = Number(rawScore);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-
-    this.#logger.warn(
-      'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
-      {
-        entityId,
-        receivedType: typeof rawScore,
-      }
-    );
-    return undefined;
-  }
-
-  /**
-   * @description Normalises an initiative entity identifier by validating it is a string and trimming whitespace.
-   * @param {unknown} rawEntityId - The raw identifier provided by the caller.
-   * @param {'Map' | 'array' | 'object'} source - Source container type for logging context.
-   * @returns {string | undefined} A trimmed entity identifier, or undefined when the id is invalid.
-   */
-  #normaliseEntityId(rawEntityId, source) {
-    if (typeof rawEntityId !== 'string') {
-      this.#logger.warn(
-        `RoundManager.startRound(): Ignoring initiative entry with non-string entity id from ${source} input.`,
-        { entityId: rawEntityId }
-      );
-      return undefined;
-    }
-
-    const trimmedId = rawEntityId.trim();
-    if (trimmedId.length === 0) {
-      this.#logger.warn(
-        `RoundManager.startRound(): Ignoring initiative entry with blank entity id from ${source} input after trimming whitespace.`,
-        { entityId: rawEntityId }
-      );
-      return undefined;
-    }
-
-    return trimmedId;
   }
 }

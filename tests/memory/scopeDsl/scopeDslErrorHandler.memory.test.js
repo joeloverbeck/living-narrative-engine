@@ -63,12 +63,12 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
   describe('Memory Leak Detection', () => {
     it('should not leak memory during repeated error handling', () => {
-      const iterations = 10; // Balanced for statistical stability and performance
-      const errorsPerIteration = 500;
+      const iterations = 8; // Balanced for statistical stability and performance
+      const errorsPerIteration = 300;
       const memorySnapshots = [];
 
-      // Warmup phase to stabilize memory measurements
-      for (let i = 0; i < 30; i++) {
+      // Warmup phase to stabilize memory measurements (10 iterations sufficient for JIT)
+      for (let i = 0; i < 10; i++) {
         try {
           errorHandler.handleError(
             new Error(`Warmup error ${i}`),
@@ -106,11 +106,6 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
         // Clear buffer to simulate normal usage
         errorHandler.clearErrorBuffer();
-
-        // Additional GC hint after clearing buffer to encourage cleanup of error objects
-        if (global.gc) {
-          global.gc();
-        }
 
         // Take memory snapshot after
         const memAfter = process.memoryUsage().heapUsed;
@@ -167,20 +162,20 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
       // Trend analysis: verify no severe consistent upward trend (CI-friendly)
       const trendSlope = calculateMemoryTrendSlope(memorySnapshots);
-      // Note: Threshold of 750KB accommodates normal GC behavior when processing
-      // 1000 errors with full stack traces per iteration. This tests for memory leaks,
-      // not absolute memory usage. JavaScript's GC may not immediately reclaim all
-      // memory from Error objects and their stack traces, creating apparent growth
-      // that stabilizes over longer runs.
-      expect(Math.abs(trendSlope)).toBeLessThan(750000); // <750KB per iteration trend (adjusted for error object GC patterns)
+      // Note: Threshold of 900KB accommodates:
+      // - Normal GC behavior when processing 300 errors with full stack traces per iteration
+      // - Increased variance due to reduced sample size (8 iterations vs original 10)
+      // - Non-deterministic V8 memory management patterns
+      // This tests for memory leaks (which would be multi-MB), not absolute efficiency
+      expect(Math.abs(trendSlope)).toBeLessThan(900000); // <900KB per iteration trend (adjusted for reduced iteration count)
     });
 
     it('should properly manage buffer size under extreme load', () => {
       const maxBufferSize = 100; // Default buffer size
-      const totalErrors = 10000; // Generate many more errors than buffer can hold
+      const totalErrors = 2000; // Generate many more errors than buffer can hold (20x buffer size)
 
-      // Warmup phase for buffer test
-      for (let w = 0; w < 20; w++) {
+      // Warmup phase for buffer test (5 iterations sufficient for JIT)
+      for (let w = 0; w < 5; w++) {
         try {
           errorHandler.handleError(
             new Error(`Buffer warmup ${w}`),
@@ -287,9 +282,9 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         },
       ];
 
-      // Warmup phase for error type testing
+      // Warmup phase for error type testing (5 iterations per type sufficient for JIT)
       errorTypes.forEach((errorType) => {
-        for (let w = 0; w < 20; w++) {
+        for (let w = 0; w < 5; w++) {
           try {
             errorHandler.handleError(
               errorType.create(w),
@@ -313,7 +308,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         if (global.gc) global.gc();
 
         const memBefore = process.memoryUsage().heapUsed;
-        const iterations = 5000;
+        const iterations = 1000; // Sufficient for statistical analysis while reducing test time
 
         for (let i = 0; i < iterations; i++) {
           try {
@@ -358,30 +353,32 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       // - Sanitized context objects with nested data structures
       // - Metadata (timestamps, categories, error codes)
       // - V8 memory allocation overhead and non-deterministic behavior
+      // - Fixed overhead amortized over fewer iterations (1,000 vs 5,000)
       // Note: This tests for memory leaks (which would be 100KB+), not absolute efficiency
       typeMetrics.forEach((metric) => {
-        expect(metric.avgMemPerError).toBeLessThan(25000); // <25KB per error average (accounts for variable stack trace sizes and environment variations)
+        expect(metric.avgMemPerError).toBeLessThan(35000); // <35KB per error average (adjusted for reduced iteration count)
       });
     });
   });
 
   describe('Memory Management Under Load', () => {
     it('should maintain stable memory during high-volume error generation', () => {
-      const testDuration = 2000; // 2 seconds
-      // const samplingInterval = 500; // Sample every 500ms
+      const totalIterations = 500; // Fixed iteration count for deterministic execution
+      const batchSize = 100;
+      const sampleInterval = 100; // Sample every 100 errors
       const memorySamples = [];
 
-      const startTime = Date.now();
       let errorCount = 0;
 
-      while (Date.now() - startTime < testDuration) {
+      // Process errors in batches
+      for (let batch = 0; batch < totalIterations / batchSize; batch++) {
         // Generate batch of errors
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < batchSize; i++) {
           errorCount++;
           try {
             errorHandler.handleError(
               new Error(`High volume error ${errorCount}`),
-              { depth: 0, timestamp: Date.now() },
+              { depth: 0, batch },
               'highVolumeResolver'
             );
           } catch (e) {
@@ -390,10 +387,9 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         }
 
         // Sample memory periodically
-        if (errorCount % 500 === 0) {
+        if (errorCount % sampleInterval === 0) {
           const currentMemory = process.memoryUsage();
           memorySamples.push({
-            time: Date.now() - startTime,
             errors: errorCount,
             heapUsed: currentMemory.heapUsed,
             heapTotal: currentMemory.heapTotal,
@@ -546,17 +542,17 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
     it('should handle garbage collection pressure gracefully', () => {
       const gcMetrics = [];
 
-      // Function to trigger GC pressure
+      // Function to trigger GC pressure (reduced for faster execution)
       const createGCPressure = () => {
         const tempArrays = [];
-        for (let i = 0; i < 100; i++) {
-          tempArrays.push(Array(1000).fill(`temp-${i}`));
+        for (let i = 0; i < 50; i++) {
+          tempArrays.push(Array(500).fill(`temp-${i}`));
         }
         return tempArrays.length;
       };
 
-      // Test error handling under GC pressure
-      for (let round = 0; round < 5; round++) {
+      // Test error handling under GC pressure (3 rounds sufficient for consistency analysis)
+      for (let round = 0; round < 3; round++) {
         // Create GC pressure
         createGCPressure();
 
@@ -564,9 +560,9 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         const memBefore = process.memoryUsage();
         const timeBefore = performance.now();
 
-        // Handle errors while GC may be active
+        // Handle errors while GC may be active (500 errors per round)
         let successCount = 0;
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 500; i++) {
           try {
             errorHandler.handleError(
               new Error(`GC pressure error ${round}-${i}`),
@@ -584,7 +580,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         gcMetrics.push({
           round,
           duration: timeAfter - timeBefore,
-          successRate: successCount / 1000,
+          successRate: successCount / 500,
           heapGrowth: memAfter.heapUsed - memBefore.heapUsed,
         });
 

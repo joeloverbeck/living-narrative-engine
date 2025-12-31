@@ -13,11 +13,9 @@ import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.j
 // instantiation, but it's good practice to have them minimally mocked
 // in case logic changes or for the unsupported strategy case.
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -97,7 +95,6 @@ describe('TurnOrderService', () => {
 
         // Assert Queue constructors were not called
         expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-        expect(InitiativePriorityQueue).not.toHaveBeenCalled();
       });
     });
 
@@ -140,98 +137,6 @@ describe('TurnOrderService', () => {
 
       // Assert Queue constructors were not called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-    });
-
-    // Test Case: Invalid initiativeData (Missing for Initiative)
-    it("Test Case 11.4.3: should throw error and log if strategy is 'initiative' and initiativeData is missing", () => {
-      // Arrange
-      const strategy = 'initiative';
-      const entities = [{ id: 'a' }];
-      const expectedErrorMsg =
-        'Valid initiativeData Map is required for the "initiative" strategy.';
-      const expectedSpecificLogMsg =
-        'TurnOrderService.startNewRound (initiative): Failed - initiativeData Map is required and must not be empty.';
-      const expectedCatchLogMsg = `TurnOrderService.startNewRound: Error during queue population for strategy "${strategy}": ${expectedErrorMsg}`;
-      const inputs = [undefined, null]; // Test both undefined and null
-
-      inputs.forEach((invalidData) => {
-        // Arrange
-        mockLogger.error.mockClear(); // Clear log mock for each iteration
-        mockLogger.debug.mockClear();
-
-        // Act & Assert
-        expect(() => {
-          service.startNewRound(entities, strategy, invalidData);
-        }).toThrow(expectedErrorMsg);
-
-        // Assert Logging
-        // Error logged TWICE: once specifically, once in catch block
-        expect(mockLogger.error).toHaveBeenCalledTimes(2);
-        // Check the first specific log
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificLogMsg);
-        // Check the second log from the catch block
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expectedCatchLogMsg,
-          expect.any(Error)
-        );
-
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(
-          'TurnOrderService: Cleared existing turn queue.'
-        ); // Still no *existing* queue cleared
-        expect(service.isEmpty()).toBe(true);
-        expect(service.peekNextEntity()).toBeNull();
-        expect(service.getCurrentOrder()).toEqual([]);
-
-        // Assert Queue constructor was not called
-        expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      });
-    });
-
-    // Test Case: Invalid initiativeData (Not a Map/Empty Map)
-    it("Test Case 11.4.4: should throw error and log if strategy is 'initiative' and initiativeData is not a valid Map or is empty", () => {
-      // Arrange
-      const strategy = 'initiative';
-      const entities = [{ id: 'a' }];
-      const expectedErrorMsg =
-        'Valid initiativeData Map is required for the "initiative" strategy.';
-      const expectedSpecificLogMsg =
-        'TurnOrderService.startNewRound (initiative): Failed - initiativeData Map is required and must not be empty.';
-      const expectedCatchLogMsg = `TurnOrderService.startNewRound: Error during queue population for strategy "${strategy}": ${expectedErrorMsg}`;
-      const inputs = [{}, new Map(), { get: 'not a function' }, []]; // Test object, empty map, invalid map-like, array
-
-      inputs.forEach((invalidData) => {
-        // Arrange
-        mockLogger.error.mockClear(); // Clear log mock for each iteration
-        mockLogger.debug.mockClear();
-
-        // Act & Assert
-        expect(() => {
-          // @ts-ignore - Intentionally passing invalid types
-          service.startNewRound(entities, strategy, invalidData);
-        }).toThrow(expectedErrorMsg);
-
-        // Assert Logging
-        // Error logged TWICE: once specifically, once in catch block
-        expect(mockLogger.error).toHaveBeenCalledTimes(2);
-        // Check the first specific log
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificLogMsg);
-        // Check the second log from the catch block
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expectedCatchLogMsg,
-          expect.any(Error)
-        );
-
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(
-          'TurnOrderService: Cleared existing turn queue.'
-        );
-        expect(service.isEmpty()).toBe(true);
-        expect(service.peekNextEntity()).toBeNull();
-        expect(service.getCurrentOrder()).toEqual([]);
-
-        // Assert Queue constructor was not called
-        expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      });
     });
 
     // Test Case: Unsupported strategy
@@ -241,7 +146,6 @@ describe('TurnOrderService', () => {
       const entities = [{ id: 'a' }];
       const expectedErrorMsg = `Unsupported turn order strategy: ${unsupportedStrategy}`;
       const expectedSpecificLogMsg = `TurnOrderService.startNewRound: Failed - Unsupported turn order strategy "${unsupportedStrategy}".`;
-      const expectedCatchLogMsg = `TurnOrderService.startNewRound: Error during queue population for strategy "${unsupportedStrategy}": ${expectedErrorMsg}`;
       // NO mock clear here, so constructor log is included
 
       // Act & Assert
@@ -250,13 +154,13 @@ describe('TurnOrderService', () => {
       }).toThrow(expectedErrorMsg);
 
       // Assert Logging
-      // Error logged TWICE: once specifically, once in catch block
+      // Error logged twice: once at detection, once in catch block
       expect(mockLogger.error).toHaveBeenCalledTimes(2);
-      // Check the first specific log
+      // Check the specific log for unsupported strategy
       expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificLogMsg);
-      // Check the second log from the catch block
+      // Check the catch block also logged with error details
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expectedCatchLogMsg,
+        expect.stringContaining('Error during queue population'),
         expect.any(Error)
       );
 
@@ -278,9 +182,8 @@ describe('TurnOrderService', () => {
         expect.stringContaining('when no round is active')
       );
 
-      // Assert Queue constructors were not called (error happens in switch default)
+      // Assert Queue constructors were not called (error happens before queue creation)
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
 
       // Additional check: The service attempts to set #currentStrategy before the switch,
       // but it should be reset to null in the default case (error path), AND reset again

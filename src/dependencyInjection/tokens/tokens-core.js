@@ -153,6 +153,7 @@ export const coreTokens = freeze({
   RecipeProcessor: 'RecipeProcessor',
   IRecipeSelectorService: 'IRecipeSelectorService',
   IEntityLoadingService: 'IEntityLoadingService',
+  IAnatomyDataExtractor: 'IAnatomyDataExtractor',
   PartSelectionService: 'PartSelectionService',
   SocketManager: 'SocketManager',
   ISocketGenerator: 'ISocketGenerator',

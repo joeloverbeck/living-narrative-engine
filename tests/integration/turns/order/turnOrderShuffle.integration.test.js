@@ -197,35 +197,6 @@ describe('TurnOrderService - Shuffle Integration', () => {
       expect(shuffleSpy).toHaveBeenCalledWith(entities, 'round-robin');
     });
 
-    it('should not apply shuffle for initiative strategy', () => {
-      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
-
-      const shuffleSpy = jest.spyOn(
-        shuffleService,
-        'shuffleWithHumanPositionPreservation'
-      );
-
-      const turnOrderService = new TurnOrderService({
-        logger: mockLogger,
-        shuffleService,
-      });
-
-      const entities = [
-        createMockEntity('npc1', 'llm'),
-        createMockEntity('npc2', 'llm'),
-      ];
-
-      const initiativeData = new Map([
-        ['npc1', 10],
-        ['npc2', 20],
-      ]);
-
-      turnOrderService.startNewRound(entities, 'initiative', initiativeData);
-
-      // Shuffle should not be called for initiative strategy
-      expect(shuffleSpy).not.toHaveBeenCalled();
-    });
-
     it('should work without shuffle service (backwards compatibility)', () => {
       // Create service without shuffle service
       const turnOrderService = new TurnOrderService({

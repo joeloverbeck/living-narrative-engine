@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Damage Simulator - Living Narrative Engine</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/damage-simulator.css" />
+  </head>
+
+  <body>
+    <div id="damage-simulator-container">
+      <header id="ds-header">
+        <h1>Damage Simulator</h1>
+        <nav><a href="index.html" class="menu-button">Back to Menu</a></nav>
+      </header>
+
+      <main class="ds-main">
+        <!-- Recipe Selector -->
+        <section id="ds-recipe-selector" class="ds-section" aria-labelledby="ds-recipe-label">
+          <label id="ds-recipe-label" for="entity-select">Select Entity:</label>
+          <select id="entity-select" disabled>
+            <option>Loading...</option>
+          </select>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="ds-content-grid">
+          <!-- Anatomy Display -->
+          <section id="ds-anatomy-panel" class="ds-panel" aria-labelledby="ds-anatomy-title">
+            <h2 id="ds-anatomy-title">Anatomy</h2>
+            <div id="anatomy-tree" class="ds-anatomy-tree">
+              <!-- Cards rendered here by JavaScript -->
+              <p class="ds-placeholder-message">Select an entity to view its anatomy.</p>
+            </div>
+          </section>
+
+          <!-- Damage Composer -->
+          <section id="ds-damage-composer" class="ds-panel" aria-labelledby="ds-damage-title">
+            <h2 id="ds-damage-title">Damage Configuration</h2>
+            <div id="damage-form" class="ds-form">
+              <!-- Form controls rendered here by JavaScript -->
+              <div class="ds-form-group">
+                <label for="damage-type">Damage Type:</label>
+                <select id="damage-type" disabled>
+                  <option>Loading...</option>
+                </select>
+              </div>
+
+              <div class="ds-form-group">
+                <label for="damage-amount">Base Amount:</label>
+                <input type="range" id="damage-amount" min="0" max="100" value="10" disabled />
+                <span id="damage-amount-display" class="ds-value-display">10</span>
+              </div>
+
+              <fieldset class="ds-form-group ds-effects-group" disabled>
+                <legend>Effects</legend>
+                <div class="ds-checkbox-group">
+                  <label><input type="checkbox" name="effect" value="bleed" /> Bleed</label>
+                  <label><input type="checkbox" name="effect" value="fracture" /> Fracture</label>
+                  <label><input type="checkbox" name="effect" value="burn" /> Burn</label>
+                  <label><input type="checkbox" name="effect" value="poison" /> Poison</label>
+                  <label><input type="checkbox" name="effect" value="dismember" /> Dismember</label>
+                </div>
+              </fieldset>
+
+              <button type="button" id="apply-damage-btn" class="ds-button ds-button--primary" disabled>
+                Apply Damage
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <!-- Analytics Panel -->
+        <section id="ds-analytics" class="ds-panel" aria-labelledby="ds-analytics-title">
+          <h2 id="ds-analytics-title">Analytics</h2>
+          <div class="ds-analytics-grid">
+            <div id="hits-to-destroy" class="ds-analytics-column">
+              <h3>Hits to Destroy</h3>
+              <p class="ds-placeholder-message">Select an entity to see analytics.</p>
+            </div>
+            <div id="hit-probability" class="ds-analytics-column">
+              <h3>Hit Probability</h3>
+              <p class="ds-placeholder-message">Select an entity to see analytics.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Damage History -->
+        <section id="ds-history" class="ds-panel ds-collapsible" aria-labelledby="ds-history-title">
+          <h2 id="ds-history-title">Damage History</h2>
+          <div id="history-log" class="ds-history-log">
+            <p class="ds-placeholder-message">No damage applied yet.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="ds-footer">
+        <a href="index.html">Developer Tools Index</a>
+      </footer>
+    </div>
+
+    <script src="damage-simulator.js"></script>
+  </body>
+</html>

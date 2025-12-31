@@ -10,11 +10,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { SimpleRoundRobinQueue } from '../../../../src/turns/order/queues/simpleRoundRobinQueue.js';
-import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
 jest.mock('../../../../src/turns/order/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../../src/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -34,8 +32,6 @@ describe('TurnOrderService', () => {
   let service;
   /** @type {jest.Mocked<SimpleRoundRobinQueue>} */
   let mockSimpleQueueInstance;
-  /** @type {jest.Mocked<InitiativePriorityQueue>} */
-  let mockInitiativeQueueInstance;
   /** @type {Entity[]} */
   let entities;
 
@@ -66,20 +62,6 @@ describe('TurnOrderService', () => {
       return mockSimpleQueueInstance;
     });
 
-    InitiativePriorityQueue.mockImplementation(() => {
-      mockInitiativeQueueInstance = {
-        add: jest.fn(),
-        remove: jest.fn(),
-        getNext: jest.fn(),
-        peek: jest.fn(), // Method under test
-        isEmpty: jest.fn().mockReturnValue(false),
-        clear: jest.fn(),
-        size: jest.fn().mockReturnValue(entities.length),
-        toArray: jest.fn().mockReturnValue(entities),
-      };
-      return mockInitiativeQueueInstance;
-    });
-
     // Clear logger calls made during constructor AFTER instantiation
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
@@ -107,44 +89,6 @@ describe('TurnOrderService', () => {
       expect(mockSimpleQueueInstance.peek).toHaveBeenCalledTimes(1);
       expect(mockSimpleQueueInstance.peek).toHaveBeenCalledWith(); // Ensure no args passed
 
-      // Ensure the *other* queue type wasn't touched
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
-      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
-
-      // Assert no logs were made by peekNextEntity itself
-      expect(mockLogger.info).not.toHaveBeenCalled();
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.debug).not.toHaveBeenCalled();
-    });
-
-    // Test Case: Delegate to Initiative Queue
-    it('Test Case 11.6.2: should delegate to the active InitiativePriorityQueue and return its peek result', () => {
-      // Arrange
-      const expectedPeekResult = { id: 'peekInit' };
-      const initiativeData = new Map([
-        ['entityA', 10],
-        ['entityB', 5],
-      ]);
-      service.startNewRound(entities, 'initiative', initiativeData); // Instantiates mockInitiativeQueueInstance
-      expect(mockInitiativeQueueInstance).toBeDefined();
-      mockInitiativeQueueInstance.peek.mockReturnValue(expectedPeekResult);
-      mockLogger.info.mockClear(); // Clear logs from startNewRound
-      mockLogger.debug.mockClear();
-      mockLogger.warn.mockClear(); // Clear potential warn from init scoring
-
-      // Act
-      const result = service.peekNextEntity();
-
-      // Assert
-      expect(result).toEqual(expectedPeekResult);
-      expect(mockInitiativeQueueInstance.peek).toHaveBeenCalledTimes(1);
-      expect(mockInitiativeQueueInstance.peek).toHaveBeenCalledWith(); // Ensure no args passed
-
-      // Ensure the *other* queue type wasn't touched
-      expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
-
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -169,41 +113,6 @@ describe('TurnOrderService', () => {
       expect(mockSimpleQueueInstance.peek).toHaveBeenCalledTimes(1);
       expect(mockSimpleQueueInstance.peek).toHaveBeenCalledWith();
 
-      // Ensure the *other* queue type wasn't touched
-      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
-
-      // Assert no logs were made by peekNextEntity itself
-      expect(mockLogger.info).not.toHaveBeenCalled();
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.debug).not.toHaveBeenCalled();
-    });
-
-    // Test Case: Queue Peek Returns Null (Initiative)
-    it('Test Case 11.6.4: should return null when the active initiative queue peek returns null', () => {
-      // Arrange
-      const initiativeData = new Map([
-        ['entityA', 10],
-        ['entityB', 5],
-      ]);
-      service.startNewRound(entities, 'initiative', initiativeData);
-      expect(mockInitiativeQueueInstance).toBeDefined();
-      mockInitiativeQueueInstance.peek.mockReturnValue(null);
-      mockLogger.info.mockClear(); // Clear logs from startNewRound
-      mockLogger.debug.mockClear();
-      mockLogger.warn.mockClear(); // Clear potential warn from init scoring
-
-      // Act
-      const result = service.peekNextEntity();
-
-      // Assert
-      expect(result).toBeNull();
-      expect(mockInitiativeQueueInstance.peek).toHaveBeenCalledTimes(1);
-      expect(mockInitiativeQueueInstance.peek).toHaveBeenCalledWith();
-
-      // Ensure the *other* queue type wasn't touched
-      expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
-
       // Assert no logs were made by peekNextEntity itself
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -225,9 +134,7 @@ describe('TurnOrderService', () => {
       expect(result).toBeNull();
       // Crucially, ensure no queue constructor or peek was called
       expect(SimpleRoundRobinQueue).not.toHaveBeenCalled();
-      expect(InitiativePriorityQueue).not.toHaveBeenCalled();
       expect(mockSimpleQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
-      expect(mockInitiativeQueueInstance?.peek?.mock.calls.length ?? 0).toBe(0);
 
       // Assert NO logs were made (unlike getNextEntity, peek is silent when no round)
       expect(mockLogger.info).not.toHaveBeenCalled();

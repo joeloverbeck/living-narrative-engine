@@ -697,4 +697,132 @@ describe('QueryComponentHandler', () => {
     );
     expect(mockLogger.debug).not.toHaveBeenCalled();
   });
+
+  // --- Branch Coverage Tests for Debug Logging Ternary Chains ---
+  test('execute should format primitive string result correctly in debug log', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:status',
+      result_variable: 'status',
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockReturnValue('active');
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['status']).toBe('active');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Result stored in "status": active')
+    );
+  });
+
+  test('execute should format object missing_value correctly when component not found', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:missing',
+      result_variable: 'data',
+      missing_value: { default: true, reason: 'not found' },
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockReturnValue(undefined);
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['data']).toEqual({
+      default: true,
+      reason: 'not found',
+    });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Stored '${JSON.stringify({ default: true, reason: 'not found' })}' in "data"`
+      )
+    );
+  });
+
+  test('execute should format primitive string missing_value correctly when component not found', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:missing',
+      result_variable: 'data',
+      missing_value: 'default-value',
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockReturnValue(undefined);
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['data']).toBe('default-value');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("Stored 'default-value' in \"data\"")
+    );
+  });
+
+  test('execute should format object missing_value correctly on EntityManager error', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:broken',
+      result_variable: 'result',
+      missing_value: { error: true },
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockImplementationOnce(() => {
+      throw new Error('EntityManager failure');
+    });
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['result']).toEqual({
+      error: true,
+    });
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Stored '${JSON.stringify({ error: true })}' in "result" due to EntityManager error`
+      )
+    );
+  });
+
+  test('execute should format primitive missing_value correctly on EntityManager error', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:broken',
+      result_variable: 'result',
+      missing_value: 'fallback',
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockImplementationOnce(() => {
+      throw new Error('EntityManager failure');
+    });
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['result']).toBe('fallback');
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Stored 'fallback' in \"result\" due to EntityManager error"
+      )
+    );
+  });
+
+  test('execute should format null missing_value correctly on EntityManager error', () => {
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'core:broken',
+      result_variable: 'result',
+      missing_value: null,
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockImplementationOnce(() => {
+      throw new Error('EntityManager failure');
+    });
+
+    handler.execute(params, context);
+
+    expect(context.evaluationContext.context['result']).toBeNull();
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Stored 'null' in \"result\" due to EntityManager error"
+      )
+    );
+  });
+
 });

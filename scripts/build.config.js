@@ -71,6 +71,11 @@ module.exports = {
       entry: 'src/mod-manager-main.js',
       output: 'mod-manager.js',
     },
+    {
+      name: 'damage-simulator',
+      entry: 'src/damage-simulator.js',
+      output: 'damage-simulator.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -87,6 +92,7 @@ module.exports = {
     'speech-patterns-generator.html',
     'traits-rewriter.html',
     'mod-manager.html',
+    'damage-simulator.html',
   ],
 
   // Static asset directories

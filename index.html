@@ -71,13 +71,20 @@
           <p class="category-description">
             Visualize and manage character anatomy
           </p>
-          <div class="button-grid button-grid--1col">
+          <div class="button-grid button-grid--2col button-grid--centered">
             <button
               id="anatomy-button"
               class="menu-button nav-button nav-button--anatomy"
             >
               <span class="button-icon" aria-hidden="true">❤️</span>
               <span class="button-text">Anatomy Visualizer</span>
+            </button>
+            <button
+              id="damage-simulator-button"
+              class="menu-button nav-button nav-button--anatomy"
+            >
+              <span class="button-icon" aria-hidden="true">⚔️</span>
+              <span class="button-text">Damage Simulator</span>
             </button>
           </div>
         </section>
@@ -235,6 +242,11 @@
         .getElementById('anatomy-button')
         .addEventListener('click', () => {
           window.location.href = 'anatomy-visualizer.html';
+        });
+      document
+        .getElementById('damage-simulator-button')
+        .addEventListener('click', () => {
+          window.location.href = 'damage-simulator.html';
         });
       document
         .getElementById('character-concepts-button')

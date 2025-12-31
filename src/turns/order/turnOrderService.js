@@ -7,9 +7,8 @@
 
 import { ITurnOrderService } from '../interfaces/ITurnOrderService.js';
 import { ITurnOrderQueue } from '../interfaces/ITurnOrderQueue.js';
-import { SimpleRoundRobinQueue } from './queues/simpleRoundRobinQueue.js'; // Added import
-import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js';
-import { freeze } from '../../utils/cloneUtils.js'; // Added import
+import { SimpleRoundRobinQueue } from './queues/simpleRoundRobinQueue.js';
+import { freeze } from '../../utils/cloneUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */
@@ -200,77 +199,37 @@ export class TurnOrderService extends ITurnOrderService {
     this.#currentStrategy = strategy; // Set strategy early for logging/debugging
 
     try {
-      switch (strategy) {
-        case 'initiative':
-          // Validate initiativeData
-          if (!(initiativeData instanceof Map) || initiativeData.size === 0) {
-            this.#logger.error(
-              'TurnOrderService.startNewRound (initiative): Failed - initiativeData Map is required and must not be empty.'
-            );
-            throw new Error(
-              'Valid initiativeData Map is required for the "initiative" strategy.'
-            );
-          }
-
-          this.#currentQueue = new InitiativePriorityQueue();
-          this.#logger.debug(
-            'TurnOrderService: Initialized InitiativePriorityQueue.'
-          );
-
-          for (const entity of entities) {
-            const initiativeScore = initiativeData.get(entity.id);
-
-            if (
-              initiativeScore === undefined ||
-              typeof initiativeScore !== 'number' ||
-              !Number.isFinite(initiativeScore)
-            ) {
-              this.#logger.warn(
-                `TurnOrderService.startNewRound (initiative): Entity "${entity.id}" missing valid initiative score. Defaulting to 0.`
-              );
-              // Default to 0 if missing or invalid
-              this.#currentQueue.add(entity, 0);
-            } else {
-              this.#currentQueue.add(entity, initiativeScore);
-            }
-          }
-          this.#logger.debug(
-            `TurnOrderService: Populated InitiativePriorityQueue with ${entities.length} entities.`
-          );
-          break;
-
-        case 'round-robin':
-          this.#currentQueue = new SimpleRoundRobinQueue();
-          this.#logger.debug(
-            'TurnOrderService: Initialized SimpleRoundRobinQueue.'
-          );
-
-          // Apply position-preserving shuffle if shuffle service is available
-          if (this.#shuffleService) {
-            this.#logger.debug(
-              'TurnOrderService: Applying position-preserving shuffle to non-human actors.'
-            );
-            this.#shuffleService.shuffleWithHumanPositionPreservation(
-              entities,
-              strategy
-            );
-          }
-
-          for (const entity of entities) {
-            this.#currentQueue.add(entity); // Priority is ignored by SimpleRoundRobinQueue
-          }
-          this.#logger.debug(
-            `TurnOrderService: Populated SimpleRoundRobinQueue with ${entities.length} entities.`
-          );
-          break;
-
-        default:
-          this.#logger.error(
-            `TurnOrderService.startNewRound: Failed - Unsupported turn order strategy "${strategy}".`
-          );
-          this.#currentStrategy = null; // Reset strategy if invalid
-          throw new Error(`Unsupported turn order strategy: ${strategy}`);
+      // Only round-robin strategy is supported
+      if (strategy !== 'round-robin') {
+        this.#logger.error(
+          `TurnOrderService.startNewRound: Failed - Unsupported turn order strategy "${strategy}".`
+        );
+        this.#currentStrategy = null;
+        throw new Error(`Unsupported turn order strategy: ${strategy}`);
       }
+
+      this.#currentQueue = new SimpleRoundRobinQueue();
+      this.#logger.debug(
+        'TurnOrderService: Initialized SimpleRoundRobinQueue.'
+      );
+
+      // Apply position-preserving shuffle if shuffle service is available
+      if (this.#shuffleService) {
+        this.#logger.debug(
+          'TurnOrderService: Applying position-preserving shuffle to non-human actors.'
+        );
+        this.#shuffleService.shuffleWithHumanPositionPreservation(
+          entities,
+          strategy
+        );
+      }
+
+      for (const entity of entities) {
+        this.#currentQueue.add(entity);
+      }
+      this.#logger.debug(
+        `TurnOrderService: Populated SimpleRoundRobinQueue with ${entities.length} entities.`
+      );
     } catch (error) {
       this.#logger.error(
         `TurnOrderService.startNewRound: Error during queue population for strategy "${strategy}": ${error.message}`,
@@ -319,11 +278,10 @@ export class TurnOrderService extends ITurnOrderService {
    *
    * @override
    * @param {Entity} entity - The entity to add. Must be a valid entity object.
-   * @param {number} [initiativeValue] - The initiative score for the entity. Required and used only if the current strategy is 'initiative'. Defaults to 0 if not provided or invalid in initiative mode. Ignored for 'round-robin'.
    * @returns {void}
    * @throws {Error} If no round is active, the entity is invalid, or the queue fails to add the entity.
    */
-  addEntity(entity, initiativeValue = 0) {
+  addEntity(entity) {
     if (!this.#currentQueue || !this.#currentStrategy) {
       this.#logger.error(
         'TurnOrderService.addEntity: Cannot add entity, no round is currently active.'
@@ -338,25 +296,10 @@ export class TurnOrderService extends ITurnOrderService {
     }
 
     try {
-      if (this.#currentStrategy === 'initiative') {
-        let score = initiativeValue;
-        if (typeof score !== 'number' || !Number.isFinite(score)) {
-          this.#logger.warn(
-            `TurnOrderService.addEntity (initiative): Invalid initiative value "${initiativeValue}" provided for entity "${entity.id}". Defaulting to 0.`
-          );
-          score = 0;
-        }
-        this.#logger.debug(
-          `TurnOrderService: Adding entity "${entity.id}" with initiative ${score} to the current round.`
-        );
-        this.#currentQueue.add(entity, score);
-      } else {
-        // startNewRound guarantees #currentStrategy is 'round-robin' here
-        this.#logger.debug(
-          `TurnOrderService: Adding entity "${entity.id}" to the end of the round-robin queue.`
-        );
-        this.#currentQueue.add(entity); // Priority is ignored
-      }
+      this.#logger.debug(
+        `TurnOrderService: Adding entity "${entity.id}" to the end of the round-robin queue.`
+      );
+      this.#currentQueue.add(entity);
       this.#logger.debug(
         `TurnOrderService: Entity "${entity.id}" successfully added to the turn order.`
       );
@@ -365,7 +308,7 @@ export class TurnOrderService extends ITurnOrderService {
         `TurnOrderService.addEntity: Failed to add entity "${entity.id}": ${error.message}`,
         error
       );
-      throw error; // Re-throw after logging
+      throw error;
     }
   }
 
