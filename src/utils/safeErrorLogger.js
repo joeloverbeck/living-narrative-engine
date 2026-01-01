@@ -4,6 +4,7 @@
  */
 
 import { ensureValidLogger } from './loggerUtils.js';
+import { normalizeError } from './errorNormalization.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -354,8 +355,7 @@ export function createSafeErrorLogger({
       try {
         disableGameLoadingMode();
       } catch (error) {
-        disableError =
-          error instanceof Error ? error : new Error(String(error));
+        disableError = normalizeError(error);
         safeLogger.error(
           'SafeErrorLogger: Failed to disable game loading mode during cleanup.',
           disableError
@@ -371,10 +371,7 @@ export function createSafeErrorLogger({
         try {
           disableGameLoadingMode({ force: true, reason: 'scope-exit' });
         } catch (forceError) {
-          const normalizedForceError =
-            forceError instanceof Error
-              ? forceError
-              : new Error(String(forceError));
+          const normalizedForceError = normalizeError(forceError);
           safeLogger.error(
             'SafeErrorLogger: Forced disable of game loading mode failed during cleanup.',
             normalizedForceError

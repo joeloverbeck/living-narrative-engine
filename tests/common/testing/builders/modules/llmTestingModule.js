@@ -3,7 +3,8 @@
  * @description Provides fluent API for configuring LLM behavior tests including prompts, responses, and strategies
  */
 
-import { createMockFacades } from '../../../facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../../../e2e/common/e2eTestContainer.js';
+import { getSharedContainer } from '../sharedContainerFactory.js';
 import { ITestModule } from '../interfaces/ITestModule.js';
 import { TestModuleValidationError } from '../errors/testModuleValidationError.js';
 import { TestModuleValidator } from '../validation/testModuleValidator.js';
@@ -51,6 +52,8 @@ export class LLMTestingModule extends ITestModule {
   };
 
   #mockFn = null; // Jest mock function creator
+
+  #sharedContainerKey = null; // Key for shared container reuse
 
   /**
    * Creates a new LLMTestingModule instance
@@ -248,6 +251,20 @@ export class LLMTestingModule extends ITestModule {
     return this;
   }
 
+
+  /**
+   * Configure this module to use a shared container for improved test performance.
+   * When a shared container key is set, the build() method will reuse an existing
+   * container instead of creating a new one, significantly reducing test setup time.
+   *
+   * @param {string} key - Unique identifier for the shared container group
+   * @returns {LLMTestingModule} This instance for chaining
+   */
+  withSharedContainer(key) {
+    this.#sharedContainerKey = key;
+    return this;
+  }
+
   /**
    * Use a standardized LLM configuration from TestConfigurationFactory
    *
@@ -364,57 +381,75 @@ export class LLMTestingModule extends ITestModule {
       );
     }
 
-    // Create facades with configuration
-    const facades = createMockFacades(
-      this.#config.facades,
-      this.#mockFn || (() => () => {})
-    );
+    // Determine default LLM response from mock responses
+    const defaultResponse =
+      this.#config.mockResponses.default || { actionId: 'core:wait' };
 
-    // Configure LLM service
-    await facades.llmService.configureLLMStrategy(this.#config.strategy, {
-      parameters: this.#config.parameters,
-      tokenLimits: this.#config.tokenLimits,
-    });
+    // Container options for E2E environment
+    const containerOptions = {
+      mods: ['core'],
+      stubLLM: true,
+      defaultLLMResponse: defaultResponse,
+    };
 
-    // Set up mock responses
-    for (const [key, response] of Object.entries(this.#config.mockResponses)) {
-      facades.llmService.setMockResponse(key, response);
-    }
+    // Create E2E test environment (shared or new)
+    const env = this.#sharedContainerKey
+      ? await getSharedContainer(this.#sharedContainerKey, containerOptions)
+      : await createE2ETestEnvironment(containerOptions);
+
+    // Store mock responses for scenario-based lookup
+    const mockResponses = { ...this.#config.mockResponses };
 
     // Create test actors if configured
     const createdActors = {};
     if (this.#config.actors.length > 0) {
-      const world = await facades.entityService.createTestWorld({
-        name: 'LLM Test World',
-      });
-
       for (const actorDef of this.#config.actors) {
-        const actorId = await facades.entityService.createTestActor({
-          ...actorDef,
-          location: world.mainLocationId,
+        const actorId = await env.helpers.createTestActor({
+          name: actorDef.name || 'Test Actor',
+          components: actorDef.components || {},
         });
         createdActors[actorDef.id] = actorId;
       }
     }
 
     // Set up monitoring
-    const monitors = this.#createMonitors(facades);
+    const monitors = this.#createMonitors(env);
+
+    // Create a facade-like interface for backward compatibility
+    const facades = {
+      llmService: {
+        getAIDecision: async (actorId, context = {}) => {
+          const scenario = context._testScenario || 'default';
+          return mockResponses[scenario] || defaultResponse;
+        },
+        generatePrompt: async (actorId, context = {}) => {
+          // Return a mock prompt since we're using stubbed LLM
+          return `Mock prompt for actor ${actorId}`;
+        },
+        setMockResponse: (key, response) => {
+          mockResponses[key] = response;
+        },
+        clearMockResponses: () => {
+          Object.keys(mockResponses).forEach((key) => delete mockResponses[key]);
+        },
+      },
+      entityService: env.helpers,
+    };
 
     // Return enriched test environment
     return {
       strategy: this.#config.strategy,
       actors: createdActors,
       facades,
+      env,
       config: Object.freeze({ ...this.#config }),
 
       // Convenience methods
       async getAIDecision(actorId, context = {}) {
         const startTime = Date.now();
 
-        const decision = await facades.llmService.getAIDecision(actorId, {
-          ...context,
-          _testScenario: context.scenario || 'default',
-        });
+        const scenario = context._testScenario || context.scenario || 'default';
+        const decision = mockResponses[scenario] || defaultResponse;
 
         if (monitors.responseCapture) {
           monitors.capturedResponses.push({
@@ -430,10 +465,7 @@ export class LLMTestingModule extends ITestModule {
       },
 
       async generatePrompt(actorId, context = {}) {
-        const prompt = await facades.llmService.generatePrompt(
-          actorId,
-          context
-        );
+        const prompt = `Mock prompt for actor ${actorId}`;
 
         if (monitors.promptCapture) {
           monitors.capturedPrompts.push({
@@ -445,11 +477,10 @@ export class LLMTestingModule extends ITestModule {
         }
 
         if (monitors.tokenCounting) {
-          // This would use a real token counter in production
           monitors.tokenCounts.push({
             actorId,
             prompt,
-            tokenCount: prompt.length / 4, // Rough estimate
+            tokenCount: prompt.length / 4,
             timestamp: Date.now(),
           });
         }
@@ -473,13 +504,8 @@ export class LLMTestingModule extends ITestModule {
       },
 
       async cleanup() {
-        // Clear mock responses
-        facades.llmService.clearMockResponses();
-
-        // Clean up actors
-        if (Object.keys(createdActors).length > 0) {
-          await facades.entityService.clearTestData();
-        }
+        // Clean up via container
+        await env.cleanup();
       },
 
       // Monitoring accessors

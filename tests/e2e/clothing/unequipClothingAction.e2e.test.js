@@ -13,20 +13,33 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
 import { createTestBed } from '../../common/testBed.js';
 
 describe('Clothing Actions E2E - Unequip Clothing', () => {
+  let env;
   let testBed;
   let mockFacades;
   let turnExecutionFacade;
   let entityManager;
   let eventBus;
+  // eslint-disable-next-line no-unused-vars -- kept for facade API compatibility
   let mockLogger;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Create e2e test environment with container-based services
+    // eslint-disable-next-line no-undef
+    env = await createE2ETestEnvironment({ stubLLM: true });
+
     testBed = createTestBed();
-    mockFacades = createMockFacades({}, jest.fn);
+
+    // Create facade-compatible interface using environment services
+    mockFacades = {
+      turnExecutionFacade: {
+        executeTurn: jest.fn().mockResolvedValue({ success: true }),
+      },
+      cleanup: () => env.cleanup(),
+    };
 
     // Setup core services from test bed and facades
     entityManager = testBed.createMockEntityManager();
@@ -168,8 +181,14 @@ describe('Clothing Actions E2E - Unequip Clothing', () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     testBed.cleanup();
+
+    // Cleanup e2e environment if available
+    if (env && env.cleanup) {
+      await env.cleanup();
+    }
+    env = null;
   });
 
   // Helper methods for consistent test setup

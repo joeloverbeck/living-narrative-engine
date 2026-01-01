@@ -6,6 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
+import fc from 'fast-check';
 import TargetResolutionTracingOrchestrator from '../../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import * as dependencyUtils from '../../../../../../src/utils/dependencyUtils.js';
 
@@ -456,6 +457,107 @@ describe('TargetResolutionTracingOrchestrator', () => {
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Action-aware trace missing captureActionData implementation'
+      );
+    });
+
+    it.each([
+      {
+        label: 'null',
+        input: null,
+        expectedError: 'Unknown error',
+        expectedType: 'Unknown',
+      },
+      {
+        label: 'undefined',
+        input: undefined,
+        expectedError: 'Unknown error',
+        expectedType: 'Unknown',
+      },
+      {
+        label: 'string',
+        input: 'string error',
+        expectedError: 'string error',
+        expectedType: 'String',
+      },
+      {
+        label: 'empty string',
+        input: '',
+        expectedError: 'Unknown error',
+        expectedType: 'String',
+      },
+      {
+        label: 'error instance',
+        input: new Error('boom'),
+        expectedError: 'boom',
+        expectedType: 'Error',
+      },
+      {
+        label: 'scope object',
+        input: { scopeName: 'test:scope' },
+        expectedError: '[object Object]',
+        expectedType: 'Object',
+        expectedScopeName: 'test:scope',
+      },
+      {
+        label: 'number',
+        input: 123,
+        expectedError: '123',
+        expectedType: 'Number',
+      },
+      {
+        label: 'empty object',
+        input: {},
+        expectedError: '[object Object]',
+        expectedType: 'Object',
+      },
+    ])(
+      'should normalize $label without throwing',
+      ({ input, expectedError, expectedType, expectedScopeName }) => {
+        const trace = createMockTrace({ captureActionData: true });
+        const actionDef = { id: 'act-err-normalize' };
+        const actor = { id: 'actor-normalize' };
+
+        expect(() => {
+          orchestrator.captureResolutionError(
+            trace,
+            actionDef,
+            actor,
+            input
+          );
+        }).not.toThrow();
+
+        expect(trace.captureActionData).toHaveBeenCalledWith(
+          'target_resolution',
+          'act-err-normalize',
+          expect.objectContaining({
+            error: expectedError,
+            errorType: expectedType,
+            scopeName: expectedScopeName,
+          })
+        );
+      }
+    );
+
+    it('should handle arbitrary error inputs without throwing', () => {
+      const actionDef = { id: 'act-err-prop' };
+      const actor = { id: 'actor-prop' };
+
+      fc.assert(
+        fc.property(fc.anything(), (input) => {
+          const trace = createMockTrace({ captureActionData: true });
+
+          orchestrator.captureResolutionError(
+            trace,
+            actionDef,
+            actor,
+            input
+          );
+
+          const payload = trace.captureActionData.mock.calls[0][2];
+          return (
+            typeof payload.error === 'string' && payload.error.length > 0
+          );
+        })
       );
     });
   });

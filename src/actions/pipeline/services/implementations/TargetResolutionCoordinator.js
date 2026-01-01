@@ -597,6 +597,12 @@ export default class TargetResolutionCoordinator {
         }
       );
 
+      if (typeof result?.success !== 'boolean') {
+        throw new Error(
+          `UnifiedScopeResolver.resolve must return { success: boolean } envelope; received success: ${typeof result?.success}`
+        );
+      }
+
       if (!result.success) {
         const errorDetails = result.errors || result.error || 'Unknown error';
         const errorMessage =

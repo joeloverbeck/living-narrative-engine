@@ -187,6 +187,58 @@ describe('engineErrorUtils', () => {
         resetError
       );
     });
+
+    it('normalizes non-Error throws from dispatcher via normalizeError', async () => {
+      // This test verifies the migration to normalizeError() handles non-Error dispatcher throws
+      const errorMessage = 'Test error';
+      const title = 'Test Title';
+      const nonErrorThrow = 'dispatcher threw a string';
+      mockDispatcher.dispatch.mockRejectedValueOnce(nonErrorThrow);
+
+      await dispatchFailureAndReset(
+        mockDispatcher,
+        errorMessage,
+        title,
+        mockResetEngineState,
+        mockLogger
+      );
+
+      // Verify the normalized error is an Error instance with the string message
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to dispatch UI failure event.',
+        expect.objectContaining({
+          message: 'dispatcher threw a string',
+        })
+      );
+      const [, normalizedError] = mockLogger.error.mock.calls[0];
+      expect(normalizedError).toBeInstanceOf(Error);
+    });
+
+    it('normalizes non-Error throws from resetEngineState via normalizeError', async () => {
+      // This test verifies the migration to normalizeError() handles non-Error reset throws
+      const errorMessage = 'Test error';
+      const title = 'Test Title';
+      const nonErrorThrow = { code: 'RESET_FAILED', details: 'some object' };
+      mockResetEngineState.mockImplementationOnce(() => {
+        throw nonErrorThrow;
+      });
+
+      await expect(
+        dispatchFailureAndReset(
+          mockDispatcher,
+          errorMessage,
+          title,
+          mockResetEngineState,
+          mockLogger
+        )
+      ).rejects.toBeInstanceOf(Error);
+
+      // Verify the normalized error has the object stringified as message
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
+        expect.any(Error)
+      );
+    });
   });
 
   describe('processOperationFailure', () => {
@@ -441,6 +493,32 @@ describe('engineErrorUtils', () => {
         'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
       );
       expect(mockResetEngineState).toHaveBeenCalled();
+    });
+
+    it('uses sanitized message for non-Error inputs via normalizeError integration', async () => {
+      // This test verifies the migration to normalizeError() preserves the sanitizedMessage behavior
+      const contextMessage = 'sanitizationTest';
+      // Object with a message property - getReadableErrorMessage extracts this
+      const rawError = { message: '  Trimmed message  ' };
+      const title = 'Operation Failed';
+      const userPrefix = 'Prefix';
+
+      await processOperationFailure(
+        mockLogger,
+        mockDispatcher,
+        contextMessage,
+        rawError,
+        title,
+        userPrefix,
+        mockResetEngineState,
+        true
+      );
+
+      const [, loggedError] = mockLogger.error.mock.calls[0];
+      // The error message should be the trimmed/sanitized version
+      expect(loggedError.message).toBe('Trimmed message');
+      // And the original error should be preserved as cause
+      expect(loggedError.cause ?? loggedError.originalError).toBe(rawError);
     });
 
     it('attaches original error metadata when assigning cause fails', async () => {

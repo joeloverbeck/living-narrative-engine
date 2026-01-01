@@ -11,7 +11,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../common/e2eTestContainer.js';
 import { EntityManagerTestBed } from '../../../common/entities/entityManagerTestBed.js';
 import {
   NAME_COMPONENT_ID,
@@ -19,15 +19,51 @@ import {
 } from '../../../../src/constants/componentIds.js';
 
 describe('Facing-aware action availability E2E', () => {
+  let env;
   let facades;
   let actionServiceFacade;
+  // eslint-disable-next-line no-unused-vars -- kept for facade API compatibility
   let entityServiceFacade;
   let entityTestBed;
+  // eslint-disable-next-line no-unused-vars -- kept for facade API compatibility
   let mockLogger;
 
   beforeEach(async () => {
-    // Create facades using the standard pattern
-    facades = createMockFacades({}, jest.fn);
+    // Create e2e test environment with container-based services
+    // eslint-disable-next-line no-undef
+    env = await createE2ETestEnvironment({ stubLLM: true });
+
+    // Create facade-compatible interface using environment services and helpers
+    facades = {
+      actionService: {
+        discoverActions: jest.fn().mockResolvedValue([]),
+        executeAction: jest.fn().mockResolvedValue({ success: true }),
+        setMockActions: jest.fn(),
+        clearMockData: jest.fn(),
+        actionPipelineOrchestrator: {
+          execute: jest.fn().mockResolvedValue({ success: true }),
+        },
+        _mockActions: new Map(),
+      },
+      entityService: env.helpers,
+      mockDeps: { logger: env.services.logger },
+      cleanup: () => env.cleanup(),
+    };
+
+    // Setup mock action service methods
+    facades.actionService.setMockActions = (actorId, actions) => {
+      facades.actionService._mockActions.set(actorId, actions);
+    };
+    facades.actionService.discoverActions = jest.fn().mockImplementation((actorId) => {
+      return Promise.resolve(facades.actionService._mockActions.get(actorId) || []);
+    });
+    facades.actionService.executeAction = jest.fn().mockImplementation(async (config) => {
+      return facades.actionService.actionPipelineOrchestrator.execute(config);
+    });
+    facades.actionService.clearMockData = () => {
+      facades.actionService._mockActions.clear();
+    };
+
     actionServiceFacade = facades.actionService;
     entityServiceFacade = facades.entityService;
 
@@ -44,6 +80,12 @@ describe('Facing-aware action availability E2E', () => {
   afterEach(async () => {
     entityTestBed.cleanup();
     actionServiceFacade.clearMockData();
+
+    // Cleanup e2e environment if available
+    if (env && env.cleanup) {
+      await env.cleanup();
+    }
+    env = null;
   });
 
   /**

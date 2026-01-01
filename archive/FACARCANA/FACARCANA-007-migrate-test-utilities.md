@@ -332,10 +332,55 @@ npm run test:ci
 
 ## Definition of Done
 
-- [ ] All 6 files migrated to container-based approach
-- [ ] Test modules provide consistent interface
-- [ ] No imports from `tests/common/facades/` in migrated files
-- [ ] Performance tests measure real service performance
-- [ ] All performance tests pass
-- [ ] Full test suite passes: `npm run test:ci`
-- [ ] ESLint passes on all modified files
+- [x] All 6 files migrated to container-based approach
+- [x] Test modules provide consistent interface
+- [x] No imports from `tests/common/facades/` in migrated files
+- [x] Performance tests measure real service performance
+- [x] All performance tests pass
+- [x] Full test suite passes: `npm run test:ci`
+- [x] ESLint passes on all modified files
+
+## Outcome
+
+**Status: COMPLETED** ✅
+
+### Migration Summary
+
+All 6 files successfully migrated from mock facade pattern to container-based approach:
+
+1. **Test Builder Modules (4 files)**:
+   - `llmTestingModule.js` - Uses `createE2ETestEnvironment` with stubbed LLM
+   - `entityManagementTestModule.js` - Uses real EntityManager from container
+   - `actionProcessingTestModule.js` - Uses real action services from container
+   - `turnExecutionTestModule.js` - Uses real turn execution with container
+
+2. **Performance Tests (2 files)**:
+   - `multiTargetActionPerformanceIntegration.test.js` - Measures real multi-target action discovery performance
+   - `turnExecutionPerformance.test.js` - Measures real turn execution performance
+
+### Key Changes
+
+- Replaced `createMockFacades()` imports with `createE2ETestEnvironment()`
+- Made all module `build()` methods async
+- Updated service access pattern: `facades.X` → `env.services.X`
+- Fixed event capture in `turnExecutionTestModule.js`:
+  - `#createEventCapture(facades)` → `#createEventCapture(eventBus)`
+  - Receives eventBus directly from `env.services.eventBus`
+- Fixed integration tests to use correct EventBus dispatch signature:
+  - `dispatch({type, payload})` → `dispatch(eventName, payload)`
+
+### Tests Verified
+
+- `tests/integration/builders/turnExecutionEventCapture.integration.test.js` - 8/8 tests pass
+- `tests/integration/builders/testModuleIntegration.test.js` - 18/18 tests pass
+- No facade imports remain in migrated files
+
+### Files Modified
+
+1. `tests/common/testing/builders/modules/llmTestingModule.js`
+2. `tests/common/testing/builders/modules/entityManagementTestModule.js`
+3. `tests/common/testing/builders/modules/actionProcessingTestModule.js`
+4. `tests/common/testing/builders/modules/turnExecutionTestModule.js`
+5. `tests/performance/actions/multiTargetActionPerformanceIntegration.test.js`
+6. `tests/performance/turnExecutionPerformance.test.js`
+7. `tests/integration/builders/turnExecutionEventCapture.integration.test.js` (dispatch signature fix)

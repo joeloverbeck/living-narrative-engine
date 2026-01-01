@@ -3,7 +3,8 @@
  * @description Provides fluent API for configuring action-related tests
  */
 
-import { createMockFacades } from '../../../facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../../../e2e/common/e2eTestContainer.js';
+import { getSharedContainer } from '../sharedContainerFactory.js';
 import { ITestModule } from '../interfaces/ITestModule.js';
 import { TestModuleValidationError } from '../errors/testModuleValidationError.js';
 import { TestModuleValidator } from '../validation/testModuleValidator.js';
@@ -33,6 +34,8 @@ export class ActionProcessingTestModule extends ITestModule {
   };
 
   #mockFn = null; // Jest mock function creator
+
+  #sharedContainerKey = null; // Key for shared container reuse
 
   /**
    * Creates a new ActionProcessingTestModule instance
@@ -170,6 +173,20 @@ export class ActionProcessingTestModule extends ITestModule {
     return this;
   }
 
+
+  /**
+   * Configure this module to use a shared container for improved test performance.
+   * When a shared container key is set, the build() method will reuse an existing
+   * container instead of creating a new one, significantly reducing test setup time.
+   *
+   * @param {string} key - Unique identifier for the shared container group
+   * @returns {ActionProcessingTestModule} This instance for chaining
+   */
+  withSharedContainer(key) {
+    this.#sharedContainerKey = key;
+    return this;
+  }
+
   /**
    * Use a standardized LLM configuration from TestConfigurationFactory
    *
@@ -285,14 +302,69 @@ export class ActionProcessingTestModule extends ITestModule {
       );
     }
 
-    // Create facades with configuration
-    const facades = createMockFacades(
-      this.#config.facades,
-      this.#mockFn || (() => () => {})
-    );
+    // Container options for E2E environment
+    const containerOptions = {
+      stubLLM: true,
+      loadMods: false,
+      mods: ['core'],
+    };
+
+    // Create container-based environment (shared or new)
+    const env = this.#sharedContainerKey
+      ? await getSharedContainer(this.#sharedContainerKey, containerOptions)
+      : await createE2ETestEnvironment(containerOptions);
+
+    // Track mock data for backward compatibility
+    const mockData = {
+      actions: new Map(),
+      validations: new Map(),
+      executions: new Map(),
+    };
+
+    // Create backward-compatible action service interface
+    const actionService = {
+      discoverActions: async (actorId) => {
+        // Return mocked actions if set, otherwise empty array
+        return mockData.actions.get(actorId) || [];
+      },
+      validateAction: async ({ actionId, actorId, targets }) => {
+        const key = `${actorId}:${actionId}`;
+        const mockResult = mockData.validations.get(key);
+        if (mockResult) {
+          return mockResult;
+        }
+        return { success: true, validatedAction: { actionId, actorId, targets } };
+      },
+      executeAction: async ({ actionId, actorId, targets }) => {
+        const key = `${actorId}:${actionId}`;
+        const mockResult = mockData.executions.get(key);
+        if (mockResult) {
+          return mockResult;
+        }
+        return { success: true, effects: [], description: 'Action executed' };
+      },
+      setMockActions: (actorId, actions) => {
+        mockData.actions.set(actorId, actions);
+      },
+      setMockValidation: (actorId, actionId, result) => {
+        mockData.validations.set(`${actorId}:${actionId}`, result);
+      },
+      setMockExecution: (actorId, actionId, result) => {
+        mockData.executions.set(`${actorId}:${actionId}`, result);
+      },
+      clearMockData: () => {
+        mockData.actions.clear();
+        mockData.validations.clear();
+        mockData.executions.clear();
+      },
+    };
+
+    const facades = {
+      actionService,
+    };
 
     // Configure action service mocks
-    this.#configureActionServiceMocks(facades.actionService);
+    this.#configureActionServiceMocks(actionService);
 
     // Create performance tracker if enabled
     const performanceTracker = this.#config.performanceMonitoring?.enabled
@@ -303,13 +375,15 @@ export class ActionProcessingTestModule extends ITestModule {
     return {
       actorId: this.#config.actorId,
       facades,
+      container: env.container,
+      services: env.services,
       config: Object.freeze({ ...this.#config }),
 
       // Action-focused convenience methods
       async discoverActions(actorId = this.#config.actorId) {
         const startTime = performanceTracker ? Date.now() : null;
 
-        const result = await facades.actionService.discoverActions(actorId);
+        const result = await actionService.discoverActions(actorId);
 
         if (performanceTracker) {
           performanceTracker.recordDiscovery(Date.now() - startTime);
@@ -321,7 +395,7 @@ export class ActionProcessingTestModule extends ITestModule {
       async validateAction(actionId, targets = {}) {
         const startTime = performanceTracker ? Date.now() : null;
 
-        const result = await facades.actionService.validateAction({
+        const result = await actionService.validateAction({
           actionId,
           actorId: this.#config.actorId,
           targets,
@@ -337,7 +411,7 @@ export class ActionProcessingTestModule extends ITestModule {
       async executeAction(actionId, targets = {}) {
         const startTime = performanceTracker ? Date.now() : null;
 
-        const result = await facades.actionService.executeAction({
+        const result = await actionService.executeAction({
           actionId,
           actorId: this.#config.actorId,
           targets,
@@ -352,28 +426,28 @@ export class ActionProcessingTestModule extends ITestModule {
 
       async processActionCandidate(candidate) {
         // Full action processing pipeline
-        const validation = await this.validateAction(
+        const validationResult = await this.validateAction(
           candidate.actionId,
           candidate.targets
         );
-        if (!validation.success) {
-          return { success: false, validation };
+        if (!validationResult.success) {
+          return { success: false, validation: validationResult };
         }
 
         const execution = await this.executeAction(
           candidate.actionId,
           candidate.targets
         );
-        return { success: execution.success, validation, execution };
+        return { success: execution.success, validation: validationResult, execution };
       },
 
       // Mock configuration methods
       setAvailableActions(actions) {
-        facades.actionService.setMockActions(this.#config.actorId, actions);
+        actionService.setMockActions(this.#config.actorId, actions);
       },
 
       setValidationResult(actionId, result) {
-        facades.actionService.setMockValidation(
+        actionService.setMockValidation(
           this.#config.actorId,
           actionId,
           result
@@ -381,7 +455,7 @@ export class ActionProcessingTestModule extends ITestModule {
       },
 
       setExecutionResult(actionId, result) {
-        facades.actionService.setMockExecution(
+        actionService.setMockExecution(
           this.#config.actorId,
           actionId,
           result
@@ -389,7 +463,8 @@ export class ActionProcessingTestModule extends ITestModule {
       },
 
       async cleanup() {
-        facades.actionService.clearMockData();
+        actionService.clearMockData();
+        await env.cleanup();
       },
 
       // Add performance methods if enabled

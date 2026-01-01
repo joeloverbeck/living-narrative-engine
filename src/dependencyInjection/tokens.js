@@ -7,7 +7,6 @@ import { freeze } from '../utils/cloneUtils.js';
 import { coreTokens } from './tokens/tokens-core.js';
 import { uiTokens } from './tokens/tokens-ui.js';
 import { aiTokens } from './tokens/tokens-ai.js';
-import { testingTokens } from './tokens/tokens-testing.js';
 import { pipelineTokens } from './tokens/tokens-pipeline.js';
 import { actionTracingTokens } from './tokens/actionTracingTokens.js';
 import { monitoringTokens } from './tokens/tokens-monitoring.js';
@@ -25,7 +24,6 @@ export const tokens = freeze({
   ...coreTokens,
   ...uiTokens,
   ...aiTokens,
-  ...testingTokens,
   ...pipelineTokens,
   ...actionTracingTokens,
   ...monitoringTokens,

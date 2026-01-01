@@ -4,7 +4,7 @@
  * from component filtering through target resolution and formatting with performance correlation.
  */
 
-import { createMockFacades } from '../../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../common/e2eTestContainer.js';
 import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
 import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
 import PipelinePerformanceAnalyzer from '../../../../src/actions/tracing/pipelinePerformanceAnalyzer.js';
@@ -66,12 +66,35 @@ export class PipelineTracingIntegrationTestBed {
       return;
     }
 
-    // Create facades using the standard e2e pattern (global jest available in test environment)
-    // eslint-disable-next-line no-undef
-    this.facades = createMockFacades({}, jest.fn);
-    this.turnExecutionFacade = this.facades.turnExecutionFacade;
-    this.actionService = this.facades.actionService;
-    this.entityService = this.facades.entityService;
+    // Create e2e test environment with container-based services
+    this.env = await createE2ETestEnvironment({ stubLLM: true });
+
+    // Create facade-compatible interface using environment services and helpers
+    // This maintains compatibility with existing testbed methods while using container services
+    const entityStore = new Map();
+    this.facades = {
+      logger: this.env.services.logger,
+      cleanup: () => this.env.cleanup(),
+    };
+    this.turnExecutionFacade = {
+      initializeTestEnvironment: async () => {
+        // No-op for test initialization - environment already configured
+        return { actors: [], world: {} };
+      },
+    };
+    this.actionService = this.env.helpers;
+    this.entityService = {
+      createEntity: async ({ type, id, initialData = {} }) => {
+        const entityId = id || `entity-${Date.now()}`;
+        entityStore.set(entityId, { id: entityId, definitionId: type, components: initialData });
+        return entityId;
+      },
+      getEntity: async (entityId) => entityStore.get(entityId) || null,
+      getComponent: async (entityId, componentId) => {
+        const entity = entityStore.get(entityId);
+        return entity?.components?.[componentId] || null;
+      },
+    };
 
     // Initialize tracing components
     await this.#initializePipelineTracingComponents();
@@ -852,9 +875,9 @@ export class PipelineTracingIntegrationTestBed {
    * Cleanup test resources
    */
   async cleanup() {
-    // Cleanup facades if available
-    if (this.facades && this.facades.cleanup) {
-      await this.facades.cleanup();
+    // Cleanup e2e environment if available
+    if (this.env && this.env.cleanup) {
+      await this.env.cleanup();
     }
 
     // Clear captured data
@@ -873,6 +896,7 @@ export class PipelineTracingIntegrationTestBed {
       performanceMonitor: null,
     };
 
+    this.env = null;
     this.facades = null;
     this.turnExecutionFacade = null;
     this.actionService = null;

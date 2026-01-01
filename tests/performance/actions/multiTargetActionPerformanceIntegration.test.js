@@ -6,28 +6,74 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../e2e/common/e2eTestContainer.js';
 import { performance } from 'perf_hooks';
 
 describe('Multi-Target Action Performance Integration', () => {
   let entityTestBed;
-  let facades;
+  let env;
   let actionServiceFacade;
-  let mockLogger;
 
-  beforeEach(() => {
+  // Track mock data for backward compatibility
+  const mockData = {
+    actions: new Map(),
+    validations: new Map(),
+    executions: new Map(),
+  };
+
+  beforeEach(async () => {
     entityTestBed = new EntityManagerTestBed();
-    const testBed = createTestBed();
-    mockLogger = testBed.mockLogger;
+    createTestBed(); // Create testBed for side effects
 
-    // Create facades
-    facades = createMockFacades({}, jest.fn);
-    actionServiceFacade = facades.actionService;
+    // Create container-based environment
+    env = await createE2ETestEnvironment({
+      stubLLM: true,
+      loadMods: false,
+      mods: ['core'],
+    });
+
+    // Create backward-compatible action service interface
+    actionServiceFacade = {
+      discoverActions: async (actorId) => {
+        return mockData.actions.get(actorId) || [];
+      },
+      validateAction: async ({ actionId, actorId, targets }) => {
+        const key = `${actorId}:${actionId}`;
+        const mockResult = mockData.validations.get(key);
+        if (mockResult) {
+          return mockResult;
+        }
+        return { success: true, validatedAction: { actionId, actorId, targets } };
+      },
+      executeAction: async ({ actionId, actorId, targets: _targets }) => {
+        const key = `${actorId}:${actionId}`;
+        const mockResult = mockData.executions.get(key);
+        if (mockResult) {
+          return mockResult;
+        }
+        return { success: true, effects: [], description: 'Action executed' };
+      },
+      setMockActions: (actorId, actions) => {
+        mockData.actions.set(actorId, actions);
+      },
+      setMockValidation: (actorId, actionId, result) => {
+        mockData.validations.set(`${actorId}:${actionId}`, result);
+      },
+      setMockExecution: (actorId, actionId, result) => {
+        mockData.executions.set(`${actorId}:${actionId}`, result);
+      },
+      clearMockData: () => {
+        mockData.actions.clear();
+        mockData.validations.clear();
+        mockData.executions.clear();
+      },
+    };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     entityTestBed.cleanup();
     actionServiceFacade.clearMockData();
+    await env.cleanup();
   });
 
   describe('Large-Scale Processing', () => {

@@ -3,7 +3,8 @@
  * @description Provides fluent API for configuring entity management tests with creation, updates, and queries
  */
 
-import { createMockFacades } from '../../../facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../../../e2e/common/e2eTestContainer.js';
+import { getSharedContainer } from '../sharedContainerFactory.js';
 import { ITestModule } from '../interfaces/ITestModule.js';
 import { TestModuleValidationError } from '../errors/testModuleValidationError.js';
 import { TestModuleValidator } from '../validation/testModuleValidator.js';
@@ -44,6 +45,8 @@ export class EntityManagementTestModule extends ITestModule {
   };
 
   #mockFn = null; // Jest mock function creator
+
+  #sharedContainerKey = null; // Key for shared container reuse
 
   /**
    * Creates a new EntityManagementTestModule instance
@@ -197,6 +200,20 @@ export class EntityManagementTestModule extends ITestModule {
     return this;
   }
 
+
+  /**
+   * Configure this module to use a shared container for improved test performance.
+   * When a shared container key is set, the build() method will reuse an existing
+   * container instead of creating a new one, significantly reducing test setup time.
+   *
+   * @param {string} key - Unique identifier for the shared container group
+   * @returns {EntityManagementTestModule} This instance for chaining
+   */
+  withSharedContainer(key) {
+    this.#sharedContainerKey = key;
+    return this;
+  }
+
   /**
    * Use a standardized LLM configuration from TestConfigurationFactory
    *
@@ -299,22 +316,52 @@ export class EntityManagementTestModule extends ITestModule {
       );
     }
 
-    // Create facades with configuration
-    const facades = createMockFacades(
-      this.#config.facades,
-      this.#mockFn || (() => () => {})
-    );
+    // Container options for E2E environment
+    const containerOptions = {
+      stubLLM: true,
+      loadMods: false,
+      mods: ['core'],
+    };
+
+    // Create container-based environment (shared or new)
+    const env = this.#sharedContainerKey
+      ? await getSharedContainer(this.#sharedContainerKey, containerOptions)
+      : await createE2ETestEnvironment(containerOptions);
+
+    // Create backward-compatible facade-like interface
+    const entityService = {
+      createEntity: env.helpers.createEntity,
+      getEntity: env.helpers.getEntity,
+      getComponent: env.helpers.getComponent,
+      updateComponent: env.helpers.updateComponent,
+      deleteEntity: env.helpers.deleteEntity,
+      createTestWorld: async (worldConfig) => {
+        // Create a minimal world representation
+        return { name: worldConfig?.name || 'Test World' };
+      },
+      queryEntities: async (scope, filter) => {
+        // Return empty array - tests should set up their own state
+        return [];
+      },
+      clearTestData: async () => {
+        await env.cleanup();
+      },
+    };
+
+    const facades = {
+      entityService,
+    };
 
     // Initialize world if configured
     let world = null;
     if (this.#config.world && this.#config.world.createLocations) {
-      world = await facades.entityService.createTestWorld(this.#config.world);
+      world = await entityService.createTestWorld(this.#config.world);
     }
 
     // Create configured entities
     const createdEntities = {};
     for (const entityDef of this.#config.entities) {
-      const entityId = await facades.entityService.createEntity({
+      const entityId = await entityService.createEntity({
         type: entityDef.type,
         id: entityDef.id,
         initialData: {
@@ -331,7 +378,7 @@ export class EntityManagementTestModule extends ITestModule {
     )) {
       if (createdEntities[entityId]) {
         for (const [componentId, data] of Object.entries(components)) {
-          await facades.entityService.updateComponent(
+          await entityService.updateComponent(
             createdEntities[entityId],
             componentId,
             data
@@ -342,20 +389,17 @@ export class EntityManagementTestModule extends ITestModule {
 
     // Create relationships
     for (const rel of this.#config.relationships) {
-      // This would need implementation in the entity service
-      // For now, we'll store them as metadata
       if (createdEntities[rel.from] && createdEntities[rel.to]) {
-        await facades.entityService.updateComponent(
+        const existingRels = await entityService.getComponent(
+          createdEntities[rel.from],
+          'core:relationships'
+        );
+        await entityService.updateComponent(
           createdEntities[rel.from],
           'core:relationships',
           {
             [rel.type]: [
-              ...((
-                await facades.entityService.getComponent(
-                  createdEntities[rel.from],
-                  'core:relationships'
-                )
-              )?.[rel.type] || []),
+              ...(existingRels?.[rel.type] || []),
               createdEntities[rel.to],
             ],
           }
@@ -374,46 +418,42 @@ export class EntityManagementTestModule extends ITestModule {
       entities: createdEntities,
       world,
       facades,
+      container: env.container,
+      services: env.services,
       config: Object.freeze({ ...this.#config }),
 
       // Convenience methods
       async createEntity(definition) {
-        return facades.entityService.createEntity(definition);
+        return entityService.createEntity(definition);
       },
 
       async updateComponent(entityId, componentId, data) {
-        return facades.entityService.updateComponent(
-          entityId,
-          componentId,
-          data
-        );
+        return entityService.updateComponent(entityId, componentId, data);
       },
 
       async getEntity(entityId) {
-        return facades.entityService.getEntity(entityId);
+        return entityService.getEntity(entityId);
       },
 
       async queryEntities(scope, filter) {
-        return facades.entityService.queryEntities(scope, filter);
+        return entityService.queryEntities(scope, filter);
       },
 
       async deleteEntity(entityId) {
-        return facades.entityService.deleteEntity(entityId);
+        return entityService.deleteEntity(entityId);
       },
 
       async cleanup() {
         // Clean up all created entities
         for (const entityId of Object.values(createdEntities)) {
           try {
-            await facades.entityService.deleteEntity(entityId);
+            await entityService.deleteEntity(entityId);
           } catch (error) {
             // Ignore cleanup errors
           }
         }
 
-        if (world) {
-          await facades.entityService.clearTestData();
-        }
+        await env.cleanup();
       },
 
       // Add event capture methods if enabled
