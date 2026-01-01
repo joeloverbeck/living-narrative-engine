@@ -198,7 +198,7 @@ describe('Trait model integration', () => {
   });
 
   it('captures targeted validation issues and surfaces guidance warnings', () => {
-    const longDescription = 'Intricate description '.repeat(40);
+    const longDescription = 'Intricate description '.repeat(100);
     const trait = new Trait(
       buildValidTraitData({
         physicalDescription: longDescription,
@@ -239,7 +239,7 @@ describe('Trait model integration', () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.warnings).toEqual([
-      `Physical description exceeds recommended maximum (got ${longDescription.trim().length} characters, maximum is 700)`,
+      `Physical description exceeds recommended maximum (got ${longDescription.trim().length} characters, maximum is 2100)`,
     ]);
     expect(validation.errors).toEqual(
       expect.arrayContaining([

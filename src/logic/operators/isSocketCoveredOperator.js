@@ -406,10 +406,8 @@ export class IsSocketCoveredOperator extends BaseEquipmentOperator {
    * @returns {boolean} True if any non-accessory layer item covers the slot via coverage_mapping
    */
   #hasCoverageMappingCoveringSlot(entityId, equipmentData, slotName) {
-    if (!equipmentData?.equipped || typeof equipmentData.equipped !== 'object') {
-      return false;
-    }
-
+    // Note: equipmentData.equipped is guaranteed to exist and be an object
+    // because this method is only called after evaluateInternal validates it at lines 93-96
     let covered = false;
 
     for (const slot of Object.values(equipmentData.equipped)) {

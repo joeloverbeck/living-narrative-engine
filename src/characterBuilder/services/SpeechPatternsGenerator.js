@@ -163,7 +163,6 @@ export class SpeechPatternsGenerator {
    * @param {object} characterData - Character definition data
    * @param {object} options - Generation options
    * @param {string} [options.llmConfigId] - Specific LLM configuration ID
-   * @param {string} [options.focusType] - Focus area (EMOTIONAL_FOCUS, SOCIAL_FOCUS, etc.)
    * @param {number} [options.patternCount] - Number of patterns to generate
    * @param {AbortSignal} [options.abortSignal] - Abort signal for cancellation
    * @returns {Promise<SpeechPatternsGenerationResult>} Generated speech patterns
@@ -242,7 +241,6 @@ export class SpeechPatternsGenerator {
     try {
       this.#logger.info('SpeechPatternsGenerator: Starting generation', {
         characterDataSize: JSON.stringify(characterData).length,
-        focusType: options.focusType,
         patternCount: options.patternCount,
       });
 
@@ -708,7 +706,6 @@ export class SpeechPatternsGenerator {
     // Create a deterministic key from character data and options
     const keyData = {
       characterData: JSON.stringify(characterData),
-      focusType: options.focusType,
       patternCount: options.patternCount,
       llmConfigId: options.llmConfigId,
     };

@@ -32,7 +32,7 @@ describe('clicheGenerationPrompt integration', () => {
 
     expect(prompt).toContain('<examples>');
     expect(prompt).toContain('Focus on sci-fi clichés');
-    expect(prompt).toContain('Provide 4-9 items per category');
+    expect(prompt).toContain('4-9 specific clichés');
     expect(prompt).toContain(baseConcept);
     expect(prompt).toContain(baseDirection.title);
   });

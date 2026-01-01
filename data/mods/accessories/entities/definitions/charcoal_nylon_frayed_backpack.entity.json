@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:charcoal_nylon_frayed_backpack",
+  "description": "Charcoal gray nylon frayed backpack with visible repairs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "back"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "core:material": {
+      "material": "nylon"
+    },
+    "core:name": {
+      "text": "frayed backpack"
+    },
+    "core:description": {
+      "text": "A well-traveled charcoal gray backpack showing the honest wear of years on the trail. The heavy nylon body has been patched in several places with mismatched fabric—a square of duct tape here, a sewn-on scrap of canvas there—each repair a memory of some mishap survived. The shoulder straps have molded to familiar contours, the compression straps fray at the edges, and a faded carabiner dangles from one of the external loops. Despite its battered appearance, every zipper still works and every seam holds."
+    },
+    "descriptors:color_extended": {
+      "color": "charcoal-gray"
+    },
+    "descriptors:texture": {
+      "texture": "patched"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["back"],
+      "coveragePriority": "accessories"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "items-core:container": {
+      "maxWeight": 15,
+      "maxVolume": 35
+    },
+    "core:weight": {
+      "weight": 0.85
+    }
+  }
+}

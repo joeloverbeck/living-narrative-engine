@@ -348,4 +348,338 @@ describe('TurnOrderService - Shuffle Integration', () => {
       expect(entities.map((e) => e.id)).toEqual(originalOrder);
     });
   });
+
+  describe('input validation', () => {
+    it('should return input unchanged when called with non-array object', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const input = { notAnArray: true };
+
+      const result = shuffleService.shuffleWithHumanPositionPreservation(
+        input,
+        'round-robin'
+      );
+
+      expect(result).toBe(input);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('non-array input')
+      );
+    });
+
+    it('should return null when called with null', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+
+      const result = shuffleService.shuffleWithHumanPositionPreservation(
+        null,
+        'round-robin'
+      );
+
+      expect(result).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('non-array input')
+      );
+    });
+
+    it('should return undefined when called with undefined', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+
+      const result = shuffleService.shuffleWithHumanPositionPreservation(
+        undefined,
+        'round-robin'
+      );
+
+      expect(result).toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('non-array input')
+      );
+    });
+  });
+
+  describe('strategy configuration', () => {
+    it('should skip shuffle for unknown strategy', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const entities = [
+        createMockEntity('npc1', 'llm'),
+        createMockEntity('npc2', 'llm'),
+        createMockEntity('npc3', 'llm'),
+      ];
+      const originalOrder = entities.map((e) => e.id);
+
+      const result = shuffleService.shuffleWithHumanPositionPreservation(
+        entities,
+        'unknown-strategy',
+        createSeededRandom(42)
+      );
+
+      // Order should remain unchanged
+      expect(result.map((e) => e.id)).toEqual(originalOrder);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Shuffling disabled for strategy "unknown-strategy"')
+      );
+    });
+
+    it('should skip shuffle for null strategy', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const entities = [
+        createMockEntity('npc1', 'llm'),
+        createMockEntity('npc2', 'llm'),
+      ];
+      const originalOrder = entities.map((e) => e.id);
+
+      shuffleService.shuffleWithHumanPositionPreservation(entities, null);
+
+      expect(entities.map((e) => e.id)).toEqual(originalOrder);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Shuffling disabled')
+      );
+    });
+  });
+
+  describe('isHumanPlayer method', () => {
+    it('should return true for human entities', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const humanEntity = createMockEntity('player1', 'human');
+
+      expect(shuffleService.isHumanPlayer(humanEntity)).toBe(true);
+    });
+
+    it('should return false for AI entities', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const aiEntity = createMockEntity('npc1', 'llm');
+
+      expect(shuffleService.isHumanPlayer(aiEntity)).toBe(false);
+    });
+
+    it('should return false for goap type entities', () => {
+      const shuffleService = new TurnOrderShuffleService({ logger: mockLogger });
+      const goapEntity = createMockEntity('npc2', 'goap');
+
+      expect(shuffleService.isHumanPlayer(goapEntity)).toBe(false);
+    });
+  });
+
+  describe('diagnostics logging', () => {
+    it('should log original and shuffled order when diagnostics are enabled', async () => {
+      // Use jest.isolateModules to get a fresh import with mocked config
+      await jest.isolateModulesAsync(async () => {
+        // Mock the config module before importing the service
+        jest.doMock(
+          '../../../../src/turns/config/turnOrderShuffle.config.js',
+          () => ({
+            isShuffleEnabledForStrategy: jest.fn().mockReturnValue(true),
+            getDiagnosticsConfig: jest.fn().mockReturnValue({
+              logOriginalOrder: true,
+              logShuffleResults: true,
+              includeActorNames: true,
+            }),
+          })
+        );
+
+        // Dynamic import to get the mocked version
+        const { TurnOrderShuffleService: MockedService } = await import(
+          '../../../../src/turns/services/turnOrderShuffleService.js'
+        );
+
+        const testLogger = {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+
+        const shuffleService = new MockedService({ logger: testLogger });
+
+        const entities = [
+          {
+            id: 'npc1',
+            name: 'Guard',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+          {
+            id: 'npc2',
+            name: 'Merchant',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+          {
+            id: 'npc3',
+            name: 'Villager',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+        ];
+
+        const { createSeededRandom: seededRandom } = await import(
+          '../../../../src/utils/shuffleUtils.js'
+        );
+
+        shuffleService.shuffleWithHumanPositionPreservation(
+          entities,
+          'round-robin',
+          seededRandom(42)
+        );
+
+        // Should log original order with names
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Original order')
+        );
+
+        // Should log shuffled order with names
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Shuffled order')
+        );
+
+        // Should log preservation count
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Preserved 0 human position(s)')
+        );
+
+        // Should include actor names in the format
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringMatching(/npc\d\([A-Za-z]+\)/)
+        );
+      });
+    });
+
+    it('should format entity list with IDs only when includeActorNames is false', async () => {
+      await jest.isolateModulesAsync(async () => {
+        jest.doMock(
+          '../../../../src/turns/config/turnOrderShuffle.config.js',
+          () => ({
+            isShuffleEnabledForStrategy: jest.fn().mockReturnValue(true),
+            getDiagnosticsConfig: jest.fn().mockReturnValue({
+              logOriginalOrder: true,
+              logShuffleResults: true,
+              includeActorNames: false,
+            }),
+          })
+        );
+
+        const { TurnOrderShuffleService: MockedService } = await import(
+          '../../../../src/turns/services/turnOrderShuffleService.js'
+        );
+
+        const testLogger = {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+
+        const shuffleService = new MockedService({ logger: testLogger });
+
+        const entities = [
+          {
+            id: 'npc1',
+            name: 'Guard',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+          {
+            id: 'npc2',
+            name: 'Merchant',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+        ];
+
+        const { createSeededRandom: seededRandom } = await import(
+          '../../../../src/utils/shuffleUtils.js'
+        );
+
+        shuffleService.shuffleWithHumanPositionPreservation(
+          entities,
+          'round-robin',
+          seededRandom(42)
+        );
+
+        // Should log but without names (just IDs)
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Original order')
+        );
+
+        // Should NOT include parentheses (which would indicate names)
+        const originalOrderCall = testLogger.debug.mock.calls.find((call) =>
+          call[0].includes('Original order')
+        );
+        expect(originalOrderCall[0]).not.toMatch(/\([A-Za-z]+\)/);
+      });
+    });
+
+    it('should log human position preservation count correctly', async () => {
+      await jest.isolateModulesAsync(async () => {
+        jest.doMock(
+          '../../../../src/turns/config/turnOrderShuffle.config.js',
+          () => ({
+            isShuffleEnabledForStrategy: jest.fn().mockReturnValue(true),
+            getDiagnosticsConfig: jest.fn().mockReturnValue({
+              logOriginalOrder: false,
+              logShuffleResults: true,
+              includeActorNames: false,
+            }),
+          })
+        );
+
+        const { TurnOrderShuffleService: MockedService } = await import(
+          '../../../../src/turns/services/turnOrderShuffleService.js'
+        );
+
+        const testLogger = {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+
+        const shuffleService = new MockedService({ logger: testLogger });
+
+        const entities = [
+          {
+            id: 'human1',
+            name: 'Player',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'human' })),
+          },
+          {
+            id: 'npc1',
+            name: 'Guard',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+          {
+            id: 'human2',
+            name: 'Player2',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'human' })),
+          },
+          {
+            id: 'npc2',
+            name: 'Merchant',
+            hasComponent: jest.fn(() => true),
+            getComponentData: jest.fn(() => ({ type: 'llm' })),
+          },
+        ];
+
+        const { createSeededRandom: seededRandom } = await import(
+          '../../../../src/utils/shuffleUtils.js'
+        );
+
+        shuffleService.shuffleWithHumanPositionPreservation(
+          entities,
+          'round-robin',
+          seededRandom(42)
+        );
+
+        // Should log preservation of 2 human positions
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Preserved 2 human position(s)')
+        );
+
+        // Should log that 2 non-humans were shuffled
+        expect(testLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('shuffled 2 non-human(s)')
+        );
+      });
+    });
+  });
 });

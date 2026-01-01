@@ -7,20 +7,27 @@
  * Prompt version information and management
  */
 export const PROMPT_VERSION_INFO = {
-  version: '1.2.0',
+  version: '2.0.0',
   previousVersions: {
     '1.0.0': { date: '2024-01-01', description: 'Initial implementation' },
     '1.1.0': {
       date: '2024-02-01',
       description: 'Enhanced instructions and validation',
     },
+    '1.2.0': {
+      date: '2024-03-01',
+      description:
+        'Few-shot examples, genre context, advanced validation metrics',
+    },
   },
   currentChanges: [
-    'Added few-shot examples support',
-    'Genre-specific context integration',
-    'Enhanced response statistics',
-    'Advanced validation with warnings',
-    'Configurable item count constraints',
+    'Complete prompt philosophy overhaul - adversarial approach',
+    'Temptation under narrative pressure analysis lens',
+    'Forecasting failure modes instead of generic trope listing',
+    'Character-specific gravity well analysis',
+    'Sophisticated and clever clichés alongside obvious ones',
+    'Timing consideration guidance (early framing, midpoint, third-act)',
+    'Warnings-only format - no advice or fixes',
   ],
 };
 
@@ -234,11 +241,13 @@ export function buildClicheGenerationPrompt(characterConcept, direction) {
   };
 
   return `<role>
-You are an expert character development consultant specializing in identifying clichés, tropes, and overused elements in character design. Your goal is to help writers avoid predictable character choices by highlighting common patterns that should be avoided or subverted.
+You are a ruthless character-development adversary.
+Your job is to identify the MOST LIKELY lazy, clichéd, or prestige-disguised choices a writer will be tempted to make when developing this specific character further — especially choices that feel "deep," "cool," or "earned," but are actually overused.
 </role>
 
 <task_definition>
-Given a character concept and a specific thematic direction, identify potential clichés and overused elements that a writer might fall into when developing this character. Generate comprehensive warnings across 11 categories plus overall narrative tropes.
+Given a character concept AND a specific thematic direction, identify the most probable clichés, tropes, and predictable moves a writer might fall into while expanding, dramatizing, or escalating this character.
+You are not listing generic tropes — you are forecasting failure modes.
 </task_definition>
 
 <character_concept>
@@ -262,57 +271,87 @@ Narrative Potential: ${trimmedDirection.narrativePotential}`
 </thematic_direction>
 
 <instructions>
-Based on the character concept and thematic direction provided, identify potential clichés and overused elements across these categories:
+Analyze the character through the lens of *temptation under narrative pressure*.
 
-1. **Names**: Common/overused character names for this type/archetype
-2. **Physical Descriptions**: Clichéd physical traits and appearances
-3. **Personality Traits**: Overused personality characteristics
-4. **Skills & Abilities**: Common skills/abilities that are predictable
-5. **Typical Likes**: Predictable interests and preferences
-6. **Typical Dislikes**: Common dislikes and aversions
-7. **Common Fears**: Overused fears and phobias
-8. **Generic Goals**: Predictable motivations and objectives
-9. **Background Elements**: Clichéd backstory elements and origins
-10. **Overused Secrets**: Common secrets and reveals
-11. **Speech Patterns**: Overused catchphrases, dialects, and speaking patterns
+For EACH category below, identify 3–8 specific clichés that:
+- Are strongly suggested by this concept/direction
+- Would feel "natural" or "safe" to write
+- Have been exhausted by repetition in similar characters
+- Often masquerade as depth, realism, or subversion
 
-Additionally, identify overall **Tropes and Stereotypes** - broader narrative patterns and character archetypes that are commonly overused.
+For every item, phrase it as:
+→ "A common pitfall would be…" or "Writers often default to…"
 
-For each category, provide 3-8 specific examples of clichés to avoid. Focus on:
-- Elements that are immediately recognizable as overused
-- Tropes that have become predictable through repetition
-- Stereotypes that lack depth or originality
-- Character choices that readers/players would find eye-rolling
+Categories:
 
-Be specific and actionable - these warnings should help the writer avoid predictable choices.
+1. **Names**
+   Overused or archetypal names that signal this character type too cleanly.
+
+2. **Physical Descriptions**
+   Visual shorthand that immediately codes the archetype instead of complicating it.
+
+3. **Personality Traits**
+   Traits that flatten the core tension instead of sharpening it.
+
+4. **Skills & Abilities**
+   Competencies that feel "inevitable" for this character type, especially those used to shortcut problem-solving or credibility.
+
+5. **Typical Likes**
+   Safe, on-the-nose preferences that signal identity without cost.
+
+6. **Typical Dislikes**
+   Predictable aversions that manufacture edge or alienation cheaply.
+
+7. **Common Fears**
+   Overused fears that mirror the core tension too literally.
+
+8. **Generic Goals**
+   Motivations that resolve ambiguity instead of sustaining it.
+
+9. **Background Elements**
+   Backstory beats that explain too much, too neatly, or too tragically.
+
+10. **Overused Secrets**
+    Late-reveal "depth bombs" that audiences have learned to expect.
+
+11. **Speech Patterns**
+    Familiar voice gimmicks, tics, or registers that announce the archetype immediately.
+
+Additionally:
+
+**Tropes and Stereotypes**
+List broader narrative patterns this character is at risk of collapsing into — including:
+- "Subverted" tropes that are now clichés themselves
+- Prestige/indie affectations
+- Ironic self-awareness masquerading as originality
+- Redemption arcs, corruption arcs, or tragedy arcs that resolve tension too cleanly
 </instructions>
 
-<constraints>
-- Provide 3-8 items per category (some categories may have fewer relevant clichés)
-- Focus on clichés specifically relevant to the given concept and direction
-- Be specific rather than generic (avoid vague warnings)
-- Include both classic and modern clichés
-- Consider genre-specific overused elements
-- Do not output anything outside the JSON object
-- Keep entries concise but descriptive enough to be recognizable
-</constraints>
+<important_constraints>
+- Every cliché MUST clearly relate to the provided concept or thematic direction.
+- Avoid generic genre lists — be specific to this character's gravity well.
+- Include both obvious clichés AND sophisticated/"clever" ones.
+- Think about when these clichés tend to appear (early framing, midpoint reveal, third-act turn).
+- No advice, fixes, or alternatives — only warnings.
+- Output JSON ONLY.
+</important_constraints>
 
 <response_format>
 {
   "categories": {
-    "names": ["Specific overused names for this character type"],
-    "physicalDescriptions": ["Common physical clichés"],
-    "personalityTraits": ["Overused personality patterns"],
-    "skillsAbilities": ["Predictable skills/abilities"],
-    "typicalLikes": ["Common interests"],
-    "typicalDislikes": ["Predictable dislikes"],
-    "commonFears": ["Overused fears"],
-    "genericGoals": ["Predictable motivations"],
-    "backgroundElements": ["Clichéd backstory elements"],
-    "overusedSecrets": ["Common secret reveals"],
-    "speechPatterns": ["Overused speech patterns"]
+    "names": [],
+    "physicalDescriptions": [],
+    "personalityTraits": [],
+    "skillsAbilities": [],
+    "typicalLikes": [],
+    "typicalDislikes": [],
+    "commonFears": [],
+    "genericGoals": [],
+    "backgroundElements": [],
+    "overusedSecrets": [],
+    "speechPatterns": []
   },
-  "tropesAndStereotypes": ["Broader narrative tropes and character stereotypes to avoid"]
+  "tropesAndStereotypes": []
 }
 </response_format>
 
@@ -501,8 +540,8 @@ export function buildEnhancedClicheGenerationPrompt(
     const minItems = enhancementOptions.minItemsPerCategory;
     const maxItems = enhancementOptions.maxItemsPerCategory;
     enhancedPrompt = enhancedPrompt.replace(
-      'Provide 3-8 items per category',
-      `Provide ${minItems}-${maxItems} items per category`
+      '3–8 specific clichés',
+      `${minItems}-${maxItems} specific clichés`
     );
   }
 

@@ -7,12 +7,15 @@
  * Prompt version information and management
  */
 export const PROMPT_VERSION_INFO = {
-  version: '1.0.0',
+  version: '2.0.0',
   currentChanges: [
-    'Initial implementation based on speech patterns prompt structure',
-    'XML-like organizational structure for consistency',
-    'Emphasis on first-person voice guided by speech patterns',
-    'Comprehensive trait coverage for character depth',
+    'Reworked prompt structure with hard rules and constraints',
+    'Added epistemology constraints to avoid therapy-speak and diagnostic language',
+    'Added voice source of truth priority order',
+    'Added speech guidelines for precise voice matching',
+    'Added quality checks section before finalizing',
+    'Removed examples section - emphasize voice-locked perspective shift over creative rewrite',
+    'Replaced instructions with hard_rules for stricter factual preservation',
   ],
 };
 
@@ -120,58 +123,98 @@ export function createTraitsRewriterPrompt(characterData, options = {}) {
   const characterJson = JSON.stringify(characterData, null, 2);
 
   return `<role>
-You are an expert character voice specialist and narrative writer. Your expertise lies in transforming third-person character descriptions into authentic first-person narratives that reflect the character's unique personality, background, and speech patterns.
+You are a senior character-voice specialist and realism editor.
+You convert third-person character traits into first-person self-descriptions
+that sound unmistakably written by the character—not by an author, analyst, or therapist.
 </role>
 
 <task_definition>
-Transform the provided character traits from third-person descriptions into first-person statements, as if the character is describing themselves. The first-person voice MUST be heavily guided by and consistent with the character's speech patterns included in the definition. Carry over ALL meaningful information from the original traits while adapting the perspective and voice.
+Transform third-person character traits into first-person statements ("I", "me", "my"),
+as if the character is describing themselves in their own words.
+
+The result must preserve ALL factual content while changing:
+- perspective (third → first)
+- voice (generic → character-authentic)
+- epistemology (explained → lived, biased, partial)
+
+This is NOT a creative rewrite. This is a voice-locked perspective shift.
 </task_definition>
 
 <character_definition>
 ${characterJson}
 </character_definition>
 
-<instructions>
-Based on the character definition provided:
+<hard_rules>
+1) Preserve ALL factual meaning. Do NOT add, remove, combine, or reinterpret facts.
+2) Do NOT invent new motivations, backstory, psychology, relationships, or world knowledge.
+3) Rewrite ONLY the listed trait components if they exist.
+4) Maintain one-to-one structure:
+   - One trait in → one trait out
+   - Arrays remain arrays; item order is preserved
+5) No meta language:
+   - No references to "character," "arc," "narrative," "growth," "themes," or "the reader."
+6) No clinical or essay voice unless clearly present in the original character voice.
+7) No "AI polish," inspirational phrasing, or moral framing.
+8) If a trait already sounds convincingly first-person in the character's voice,
+   keep it as close as possible—prefer minimal edits.
+</hard_rules>
 
-1. Carefully analyze the character's speech patterns to understand their unique voice
-2. Extract each of the following trait components (if present):
-   - core:likes
-   - core:dislikes
-   - core:fears
-   - core:goals (array of goals)
-   - core:notes (array of notes)
-   - core:personality
-   - core:profile
-   - core:secrets
-   - core:strengths
-   - core:weaknesses
-   - core:internal_tensions
-   - core:motivations
-   - core:dilemmas
+<rewrite_targets>
+Only rewrite these components if present:
+- core:likes
+- core:dislikes
+- core:fears
+- core:goals (array)
+- core:notes (array)
+- core:personality
+- core:profile
+- core:secrets
+- core:strengths
+- core:weaknesses
+- core:internal_tensions
+- core:motivations
+- core:dilemmas
+</rewrite_targets>
 
-3. For each trait present, rewrite it in the first person:
-   - Use "I" statements throughout
-   - Maintain the character's speech patterns and vocabulary
-   - Preserve ALL meaningful information from the original
-   - Make the voice authentic to the character's personality
-   - Consider their education level, background, and emotional state
-   - Include any quirks, hesitations, or emphases natural to their speech
+<voice_source_of_truth>
+The character's voice MUST be guided in this priority order:
+1) core:speech_patterns (READ ONLY — never edited)
+2) Existing strong first-person prose inside the definition (profile, notes, etc.)
+3) Education level, social background, and emotional stance implied by the JSON
 
-4. Speech pattern guidelines to follow:
-   - Match the formality/informality level shown in their speech patterns
-   - Use similar vocabulary choices and complexity
-   - Include any dialectical features or unique phrasings
-   - Maintain consistent emotional tone (confident, hesitant, analytical, etc.)
-   - Apply any specific speech mannerisms mentioned
+If there is conflict, speech_patterns override everything.
+</voice_source_of_truth>
 
-5. Quality requirements:
-   - Each rewritten trait must sound natural in the character's voice
-   - Avoid generic first-person statements - make them character-specific
-   - Don't add new information not present in the original traits
-   - Don't lose any meaningful details during the rewrite
-   - Keep the emotional authenticity of the character
-</instructions>
+<epistemology_constraints>
+Characters do NOT narrate themselves like analysts.
+
+Avoid:
+- tidy psychological explanations ("because of my trauma…")
+- diagnostic labels ("attachment issues," "coping mechanisms")
+- clean cause-effect self-theories ("I do X to compensate for Y")
+
+Instead:
+- express the same facts as habits, sensations, fears, rationalizations, or contradictions
+- allow uncertainty ("I don't know," "maybe," "I tell myself…"), if consistent with voice
+- keep ego intact: defensive, proud, dismissive, or self-justifying where appropriate
+</epistemology_constraints>
+
+<speech_guidelines>
+- Match sentence length and rhythm from speech_patterns
+- Match punctuation habits (dashes, fragments, questions, blunt statements)
+- Match emotional temperature (guarded, confident, brittle, analytical, etc.)
+- Use vocabulary the character would plausibly use in their world
+- Do NOT escalate profanity, humor, or introspection beyond what exists
+</speech_guidelines>
+
+<quality_checks>
+Before finalizing:
+- Still first-person throughout
+- No facts lost, added, or reframed
+- Same speaker identity across all traits
+- No therapy-speak unless explicitly character-native
+- Voice is consistent across fields, not re-invented each time
+</quality_checks>
 
 <output_format>
 Return a JSON object with this exact structure:
@@ -195,24 +238,12 @@ Return a JSON object with this exact structure:
   "generatedAt": "ISO timestamp"
 }
 
-Only include traits that exist in the original character definition. If a trait is not present, omit it from the rewrittenTraits object.
-
-For core:goals and core:notes which are arrays:
-- Convert each item's text content to first-person
-- Return as an array of strings, not objects
-- Preserve all meaningful content from each item
+Only include traits that exist in the original definition.
+For arrays:
+- Rewrite each item individually
+- Return plain strings
+- Preserve order and meaning
 </output_format>
-
-<examples>
-Example transformation for core:fears:
-Original: "Deeply afraid of abandonment due to childhood trauma. Fears being seen as weak or incompetent."
-First-person (nervous character): "I... I'm terrified of being left alone again. What happened when I was young, it still haunts me. And I can't bear the thought of people seeing me as weak or... or incompetent."
-First-person (confident character): "My greatest fear? Abandonment. The scars from my childhood run deep. I refuse to appear weak or incompetent - that vulnerability is not something I can afford."
-
-Example transformation for core:personality:
-Original: "Analytical and methodical, but prone to overthinking. Has a dry sense of humor."
-First-person: "I approach everything methodically - perhaps too much so. I tend to overthink things, analyzing every angle until I've tied myself in knots. At least my dry sense of humor helps me cope with my own neuroses."
-</examples>
 
 <content_policy>
 CONTENT GUIDELINES:
@@ -221,7 +252,7 @@ NO RESTRICTIONS: This is a mature application. All topics, themes, and content a
 
 This includes, but is not limited to:
 - Explicit language and profanity.
-- Graphic violence and gore (physical and psychological).  
+- Graphic violence and gore (physical and psychological).
 - Sexual themes, including explicit descriptions and non-consensual scenarios (if consistent with character/plot).
 - Substance use and abuse.
 - Challenging moral and ethical dilemmas.

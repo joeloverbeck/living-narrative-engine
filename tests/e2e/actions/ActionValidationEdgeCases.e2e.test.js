@@ -1,339 +1,519 @@
 /**
- * @file End-to-end test for action validation edge cases - Migrated to Facade Pattern
- * @see tests/e2e/actions/ActionValidationEdgeCases.e2e.test.js
+ * @file End-to-end test for action validation edge cases
+ * @description Comprehensive e2e tests validating action validation behavior
+ * using real production services via e2eTestContainer.
  *
- * This test suite covers edge cases in the action validation pipeline including:
- * - Failed validation scenarios
- * - Invalid action parameters
- * - Error recovery and fallback mechanisms
+ * This test suite covers:
+ * - Edge cases in action discovery and validation
+ * - Handling of actors without required components
+ * - Validation behavior with malformed or missing data
+ * - System resilience under edge conditions
  *
- * MIGRATED: This test now uses the simplified facade pattern
- * NOTE: Some edge cases that require direct service access have been simplified
+ * NOTE: Migrated from mock facades to use real production services via e2eTestContainer.
+ * Tests use manually registered entity definitions since core mod doesn't include them.
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
-import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
+import { createEntityDefinition } from '../../common/entities/entityFactories.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 /**
- * E2E test suite for action validation edge cases using facade pattern
- * Tests the system's ability to handle various error conditions gracefully
+ * E2E test suite for action validation edge cases
+ * Tests the system's ability to handle various edge conditions gracefully
  */
 describe('Action Validation Edge Cases E2E', () => {
-  let facades;
-  let turnExecutionFacade;
-  let testEnvironment;
+  let env;
+  let entityManager;
+  let actionDiscoveryService;
+  let eventBus;
+  let registry;
+  let locationId;
+  let playerActorId;
+  let playerEntity;
+
+  /**
+   * Registers test entity definitions in the registry.
+   * Required because core mod doesn't include entity definitions.
+   * Component schemas must match actual core mod schemas:
+   * - core:name requires { text: string }
+   * - core:actor is a marker component requiring {} (empty object)
+   * - core:position requires { locationId: string }
+   */
+  async function registerTestEntityDefinitions() {
+    // Register location definition
+    const locationDef = createEntityDefinition('test:location', {
+      'core:name': { text: 'Test Location' },
+    });
+    registry.store('entityDefinitions', 'test:location', locationDef);
+
+    // Register actor definition
+    const actorDef = createEntityDefinition('test:actor', {
+      'core:name': { text: 'Test Actor' },
+      'core:actor': {},
+    });
+    registry.store('entityDefinitions', 'test:actor', actorDef);
+
+    // Register minimal entity definition (no actor component)
+    const minimalDef = createEntityDefinition('test:minimal', {
+      'core:name': { text: 'Minimal Entity' },
+    });
+    registry.store('entityDefinitions', 'test:minimal', minimalDef);
+  }
 
   beforeEach(async () => {
-    // SIMPLIFIED: Single line facade creation replaces complex setup
-    facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
+    // Create real e2e test environment WITH core mod loading
+    env = await createE2ETestEnvironment({
+      loadMods: true,
+      mods: ['core'],
+      stubLLM: true,
+    });
 
-    // Set up test environment
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: {
-        name: 'Test World',
-        createConnections: true,
-      },
-      actorConfig: {
-        name: 'Test Player',
+    entityManager = env.services.entityManager;
+    actionDiscoveryService = env.services.actionDiscoveryService;
+    eventBus = env.services.eventBus;
+    registry = env.container.resolve(tokens.IDataRegistry);
+
+    // Register test entity definitions
+    await registerTestEntityDefinitions();
+
+    // Create a test location
+    const locationEntity = await entityManager.createEntityInstance(
+      'test:location',
+      {
+        instanceId: 'test-location-1',
+        componentOverrides: {
+          'core:name': { text: 'Test Location' },
+        },
+      }
+    );
+    locationId = locationEntity.id;
+
+    // Create player actor
+    playerEntity = await entityManager.createEntityInstance('test:actor', {
+      instanceId: 'test-player',
+      componentOverrides: {
+        'core:name': { text: 'Test Player' },
+        'core:position': { locationId },
+        'core:actor': {},
       },
     });
+    playerActorId = playerEntity.id;
   });
 
   afterEach(async () => {
-    // Simple cleanup
-    await turnExecutionFacade.clearTestData();
-    await turnExecutionFacade.dispose();
+    if (env) {
+      await env.cleanup();
+    }
   });
 
-  /**
-   * Test: Failed validation scenarios
-   * Verifies that actions with validation failures are handled correctly
-   */
-  test('should handle failed validation scenarios gracefully', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Set up mock validation failures for specific commands
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:wait`]: {
-          success: false,
-          error: 'Action prerequisites not met',
-          code: 'PREREQUISITES_FAILED',
-        },
-      },
-    });
-
-    // Test a command that should fail validation
-    const result = await turnExecutionFacade.executePlayerTurn(
-      playerId,
-      'wait'
-    );
-
-    // Should fail due to validation
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Action validation failed');
-    expect(result.validation).toBeDefined();
-    expect(result.validation.success).toBe(false);
-    expect(result.validation.error).toBe('Action prerequisites not met');
-  });
-
-  /**
-   * Test: Invalid action parameters
-   * Verifies handling of actions with invalid parameters
-   */
-  test('should validate and reject actions with invalid parameters', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Mock validation for action with invalid parameters
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:follow`]: {
-          success: false,
-          error: 'Target parameter is required but was not provided',
-          code: 'MISSING_PARAMETER',
-        },
-      },
-    });
-
-    // Try to execute action without required parameter
-    const result = await turnExecutionFacade.executePlayerTurn(
-      playerId,
-      'follow' // Missing target
-    );
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Action validation failed');
-    expect(result.validation.success).toBe(false);
-  });
-
-  /**
-   * Test: Error recovery
-   * Verifies the system can recover from error conditions
-   */
-  test('should recover gracefully from validation errors', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Initial failing validation
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:wait`]: {
-          success: false,
-          error: 'Temporary validation failure',
-          code: 'TEMP_ERROR',
-        },
-      },
-    });
-
-    let result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
-    expect(result.success).toBe(false);
-
-    // Update mock to simulate recovery
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:wait`]: {
-          success: true,
-          validatedAction: {
-            actionId: 'core:wait',
-            actorId: playerId,
-            targets: {},
-          },
-        },
-      },
-    });
-
-    // Should now succeed
-    result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
-    expect(result.success).toBe(true);
-  });
-
-  /**
-   * Test: Multiple validation errors
-   * Verifies handling of multiple concurrent validation failures
-   */
-  test('should handle multiple validation errors in sequence', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    const testActions = [
-      { command: 'wait', expectedError: 'Unknown action' },
-      { command: 'look', expectedError: 'Invalid syntax' },
-      { command: 'move', expectedError: 'Not available' },
-    ];
-
-    // Set up mocks for each action to fail
-    const validationResults = {};
-    testActions.forEach((action) => {
-      // Parse the command to get the likely action ID
-      const actionId = `core:${action.command}`;
-      validationResults[`${playerId}:${actionId}`] = {
-        success: false,
-        error: action.expectedError,
-        code: 'VALIDATION_ERROR',
-      };
-    });
-
-    turnExecutionFacade.setupMocks({ validationResults });
-
-    // Test each action
-    for (const action of testActions) {
-      const result = await turnExecutionFacade.executePlayerTurn(
-        playerId,
-        action.command
+  describe('Actor Without Location', () => {
+    /**
+     * Test: Actor without location component can still discover actions
+     * Verifies that action discovery handles missing location gracefully
+     */
+    it('should handle actor without location component gracefully', async () => {
+      // Create actor without location
+      const noLocationActorDef = createEntityDefinition(
+        'test:no-location-actor',
+        {
+          'core:name': { text: 'No Location Actor' },
+          'core:actor': {},
+        }
+      );
+      registry.store(
+        'entityDefinitions',
+        'test:no-location-actor',
+        noLocationActorDef
       );
 
-      expect(result.success).toBe(false);
-      expect(result.command).toBe(action.command);
-      expect(result.validation).toBeDefined();
-      expect(result.validation.success).toBe(false);
-    }
-  });
-
-  /**
-   * Test: Performance under error conditions
-   * Verifies system performs acceptably even with validation failures
-   */
-  test('should maintain performance despite validation failures', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Set up a failing validation
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:wait`]: {
-          success: false,
-          error: 'Validation failed',
-          code: 'VALIDATION_ERROR',
-        },
-      },
-    });
-
-    // Measure performance of failed validations
-    const iterations = 10;
-    const startTime = Date.now();
-
-    for (let i = 0; i < iterations; i++) {
-      await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
-    }
-
-    const endTime = Date.now();
-    const avgTime = (endTime - startTime) / iterations;
-
-    // Should fail quickly even with errors
-    expect(avgTime).toBeLessThan(50); // Under 50ms per validation
-  });
-
-  /**
-   * Test: Complex validation scenario
-   * Verifies handling of complex validation with multiple checks
-   */
-  test('should handle complex validation scenarios', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Mock a complex action that passes validation but with warnings
-    const complexValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:move',
-        actorId: playerId,
-        targets: { location: 'test-location-2' },
-      },
-      warnings: [
-        'Action may have unintended consequences',
-        'Target location is far away',
-      ],
-    };
-
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${playerId}:core:move`]: complexValidation,
-      },
-    });
-
-    const result = await turnExecutionFacade.executePlayerTurn(
-      playerId,
-      'move north'
-    );
-
-    // Should succeed despite warnings
-    expect(result.success).toBe(true);
-    expect(result.validation.success).toBe(true);
-
-    // Note: The facade abstracts warning details
-    // In a real implementation, warnings would be handled appropriately
-  });
-
-  /**
-   * Test: Action availability based on validation
-   * Verifies that validation affects action availability
-   */
-  test('should reflect validation in action availability', async () => {
-    const playerId = testEnvironment.actors.playerActorId;
-
-    // Set up mocks for action discovery with validation states
-    const mockActions = [
-      {
-        actionId: 'core:wait',
-        name: 'Wait',
-        available: true,
-      },
-      {
-        actionId: 'core:look',
-        name: 'Look',
-        available: true,
-      },
-      {
-        actionId: 'core:move',
-        name: 'Move',
-        available: true,
-      },
-    ];
-
-    turnExecutionFacade.setupMocks({
-      actionResults: {
-        [playerId]: mockActions,
-      },
-      validationResults: {
-        [`${playerId}:core:wait`]: {
-          success: true,
-          validatedAction: {
-            actionId: 'core:wait',
-            actorId: playerId,
-            targets: {},
+      const noLocationActor = await entityManager.createEntityInstance(
+        'test:no-location-actor',
+        {
+          instanceId: 'test-no-location-actor',
+          componentOverrides: {
+            'core:name': { text: 'No Location Actor' },
+            'core:actor': {},
           },
-        },
-        [`${playerId}:core:look`]: {
-          success: true,
-          validatedAction: {
-            actionId: 'core:look',
-            actorId: playerId,
-            targets: {},
+        }
+      );
+
+      // Action discovery should not throw
+      const result = await actionDiscoveryService.getValidActions(
+        noLocationActor,
+        {},
+        { trace: false }
+      );
+
+      // Should return valid structure
+      expect(result).toBeDefined();
+      expect(result.actions).toBeDefined();
+      expect(Array.isArray(result.actions)).toBe(true);
+    });
+  });
+
+  describe('Entity Without Actor Component', () => {
+    /**
+     * Test: Entity without actor component handles action discovery
+     * Verifies the system handles non-actor entities attempting action discovery
+     */
+    it('should handle entity without actor component', async () => {
+      // Create a minimal entity without actor component
+      const minimalEntity = await entityManager.createEntityInstance(
+        'test:minimal',
+        {
+          instanceId: 'test-minimal',
+          componentOverrides: {
+            'core:name': { text: 'Minimal Entity' },
           },
-        },
-      },
+        }
+      );
+
+      // Action discovery should handle this gracefully
+      const result = await actionDiscoveryService.getValidActions(
+        minimalEntity,
+        {},
+        { trace: false }
+      );
+
+      // Should return valid structure (possibly empty actions)
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.actions)).toBe(true);
+    });
+  });
+
+  describe('Empty Location Scenarios', () => {
+    /**
+     * Test: Actor in empty location can still perform self-actions
+     */
+    it('should handle actor in empty location', async () => {
+      // Create empty location
+      const emptyLocationDef = createEntityDefinition('test:empty-location', {
+        'core:name': { text: 'Empty Location' },
+      });
+      registry.store(
+        'entityDefinitions',
+        'test:empty-location',
+        emptyLocationDef
+      );
+
+      const emptyLocation = await entityManager.createEntityInstance(
+        'test:empty-location',
+        {
+          instanceId: 'test-empty-location',
+          componentOverrides: {
+            'core:name': { text: 'Empty Location' },
+          },
+        }
+      );
+
+      // Create actor in empty location
+      const aloneActor = await entityManager.createEntityInstance(
+        'test:actor',
+        {
+          instanceId: 'test-alone-actor',
+          componentOverrides: {
+            'core:name': { text: 'Alone Actor' },
+            'core:position': { locationId: emptyLocation.id },
+            'core:actor': {},
+          },
+        }
+      );
+
+      // Should discover actions without issues
+      const result = await actionDiscoveryService.getValidActions(
+        aloneActor,
+        {},
+        { trace: false }
+      );
+
+      expect(result).toBeDefined();
+      expect(result.actions).toBeDefined();
+      expect(Array.isArray(result.actions)).toBe(true);
+    });
+  });
+
+  describe('Multiple Sequential Discoveries', () => {
+    /**
+     * Test: Multiple rapid action discoveries in sequence
+     * Verifies system stability under repeated calls
+     */
+    it('should handle multiple sequential action discoveries', async () => {
+      const results = [];
+      const iterations = 5;
+
+      for (let i = 0; i < iterations; i++) {
+        const result = await actionDiscoveryService.getValidActions(
+          playerEntity,
+          {},
+          { trace: false }
+        );
+        results.push(result);
+      }
+
+      // All results should be valid
+      expect(results).toHaveLength(iterations);
+      results.forEach((result) => {
+        expect(result).toBeDefined();
+        expect(result.actions).toBeDefined();
+        expect(Array.isArray(result.actions)).toBe(true);
+      });
     });
 
-    // Test valid actions
-    const validAction = await turnExecutionFacade.executePlayerTurn(
-      playerId,
-      'wait'
-    );
-    expect(validAction.success).toBe(true);
-    expect(validAction.parsedCommand.actionId).toBe('core:wait');
+    /**
+     * Test: Action discoveries return consistent results
+     */
+    it('should return consistent results across multiple discoveries', async () => {
+      const result1 = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
 
-    // Test another valid action
-    const lookAction = await turnExecutionFacade.executePlayerTurn(
-      playerId,
-      'look'
-    );
-    expect(lookAction.success).toBe(true);
-    expect(lookAction.parsedCommand.actionId).toBe('core:look');
+      const result2 = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+
+      // Results should be structurally consistent
+      expect(result1.actions.length).toBe(result2.actions.length);
+
+      // Action IDs should match
+      const actionIds1 = result1.actions.map((a) => a.id).sort();
+      const actionIds2 = result2.actions.map((a) => a.id).sort();
+      expect(actionIds1).toEqual(actionIds2);
+    });
+  });
+
+  describe('Performance Under Edge Conditions', () => {
+    /**
+     * Test: Action discovery performance with empty location
+     */
+    it('should maintain performance with empty location', async () => {
+      // Create empty location
+      const emptyLocDef = createEntityDefinition('test:perf-empty-loc', {
+        'core:name': { text: 'Perf Empty Location' },
+      });
+      registry.store(
+        'entityDefinitions',
+        'test:perf-empty-loc',
+        emptyLocDef
+      );
+
+      const emptyLoc = await entityManager.createEntityInstance(
+        'test:perf-empty-loc',
+        {
+          instanceId: 'test-perf-empty-loc',
+          componentOverrides: {
+            'core:name': { text: 'Perf Empty Location' },
+          },
+        }
+      );
+
+      // Move player to empty location
+      await entityManager.addComponent(playerActorId, 'core:position', {
+        locationId: emptyLoc.id,
+      });
+
+      const updatedPlayer = await entityManager.getEntity(playerActorId);
+
+      const iterations = 10;
+      const startTime = Date.now();
+
+      for (let i = 0; i < iterations; i++) {
+        await actionDiscoveryService.getValidActions(
+          updatedPlayer,
+          {},
+          { trace: false }
+        );
+      }
+
+      const elapsed = Date.now() - startTime;
+      const avgTime = elapsed / iterations;
+
+      // Should complete quickly even with edge conditions
+      expect(avgTime).toBeLessThan(500); // Under 500ms per discovery
+    });
+  });
+
+  describe('Event Bus Integration', () => {
+    /**
+     * Test: Event bus remains functional during action discovery
+     */
+    it('should have functional event bus during discovery', async () => {
+      // Verify event bus works
+      expect(eventBus).toBeDefined();
+      expect(typeof eventBus.dispatch).toBe('function');
+
+      // Discover actions (should not throw)
+      const result = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+
+      expect(result).toBeDefined();
+
+      // Event bus should still be functional after discovery
+      expect(typeof eventBus.dispatch).toBe('function');
+    });
+
+    /**
+     * Test: Multiple actors can discover actions without event bus conflicts
+     */
+    it('should handle multiple actors discovering actions', async () => {
+      // Create additional actors
+      const npc1 = await entityManager.createEntityInstance('test:actor', {
+        instanceId: 'test-npc-1',
+        componentOverrides: {
+          'core:name': { text: 'NPC 1' },
+          'core:position': { locationId },
+          'core:actor': {},
+        },
+      });
+
+      const npc2 = await entityManager.createEntityInstance('test:actor', {
+        instanceId: 'test-npc-2',
+        componentOverrides: {
+          'core:name': { text: 'NPC 2' },
+          'core:position': { locationId },
+          'core:actor': {},
+        },
+      });
+
+      // All actors should be able to discover actions
+      const playerResult = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+
+      const npc1Result = await actionDiscoveryService.getValidActions(
+        npc1,
+        {},
+        { trace: false }
+      );
+
+      const npc2Result = await actionDiscoveryService.getValidActions(
+        npc2,
+        {},
+        { trace: false }
+      );
+
+      expect(playerResult).toBeDefined();
+      expect(npc1Result).toBeDefined();
+      expect(npc2Result).toBeDefined();
+
+      expect(Array.isArray(playerResult.actions)).toBe(true);
+      expect(Array.isArray(npc1Result.actions)).toBe(true);
+      expect(Array.isArray(npc2Result.actions)).toBe(true);
+    });
+  });
+
+  describe('Entity State Changes', () => {
+    /**
+     * Test: Action discovery after entity location change
+     */
+    it('should handle entity location changes', async () => {
+      // Initial discovery
+      const initialResult = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+      expect(initialResult).toBeDefined();
+
+      // Create new location
+      const newLocDef = createEntityDefinition('test:new-location', {
+        'core:name': { text: 'New Location' },
+      });
+      registry.store('entityDefinitions', 'test:new-location', newLocDef);
+
+      const newLocation = await entityManager.createEntityInstance(
+        'test:new-location',
+        {
+          instanceId: 'test-new-location',
+          componentOverrides: {
+            'core:name': { text: 'New Location' },
+          },
+        }
+      );
+
+      // Move player to new location
+      await entityManager.addComponent(playerActorId, 'core:position', {
+        locationId: newLocation.id,
+      });
+
+      const updatedPlayer = await entityManager.getEntity(playerActorId);
+
+      // Discovery after move should work
+      const afterMoveResult = await actionDiscoveryService.getValidActions(
+        updatedPlayer,
+        {},
+        { trace: false }
+      );
+
+      expect(afterMoveResult).toBeDefined();
+      expect(Array.isArray(afterMoveResult.actions)).toBe(true);
+    });
+  });
+
+  describe('Result Structure Validation', () => {
+    /**
+     * Test: Action discovery result has expected structure
+     */
+    it('should return properly structured results', async () => {
+      const result = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+
+      // Validate result structure
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('actions');
+      expect(Array.isArray(result.actions)).toBe(true);
+
+      // Each action should have basic structure
+      for (const action of result.actions) {
+        expect(action).toHaveProperty('id');
+        expect(typeof action.id).toBe('string');
+      }
+    });
+
+    /**
+     * Test: Actions with targets have proper target structure
+     */
+    it('should return actions with valid target structures', async () => {
+      // Create NPC for potential targeting
+      await entityManager.createEntityInstance('test:actor', {
+        instanceId: 'test-target-npc',
+        componentOverrides: {
+          'core:name': { text: 'Target NPC' },
+          'core:position': { locationId },
+          'core:actor': {},
+        },
+      });
+
+      const result = await actionDiscoveryService.getValidActions(
+        playerEntity,
+        {},
+        { trace: false }
+      );
+
+      // Check actions with targets
+      const actionsWithTargets = result.actions.filter(
+        (a) => a.targets && Object.keys(a.targets).length > 0
+      );
+
+      for (const action of actionsWithTargets) {
+        expect(action.targets).toBeDefined();
+        // Target keys should be strings
+        for (const key of Object.keys(action.targets)) {
+          expect(typeof key).toBe('string');
+        }
+      }
+    });
   });
 });

@@ -325,6 +325,319 @@ describe('GameEngine additional error recovery coverage', () => {
   });
 });
 
+describe('GameEngine #processOperationFailure resetState coverage', () => {
+  it('throws engineResetError when coreReset succeeds but engineReset fails', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const engineResetFailure = new Error('engine state reset failed');
+      const engineStateInstance = {
+        isInitialized: true,
+        isGameLoopRunning: true,
+        activeWorld: 'gamma',
+        reset: jest.fn(() => {
+          throw engineResetFailure;
+        }),
+        setStarted: jest.fn(),
+      };
+
+      jest.doMock('../../../src/engine/engineState.js', () => ({
+        __esModule: true,
+        default: jest.fn(() => engineStateInstance),
+      }));
+
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
+
+      const logger = createLogger();
+      const entityManager = { clearAll: jest.fn() };
+      const turnManager = { stop: jest.fn() };
+      const playtimeTracker = {
+        endSessionAndAccumulate: jest.fn(),
+        reset: jest.fn(),
+      };
+      const safeEventDispatcher = {
+        dispatch: jest.fn().mockResolvedValue(true),
+        setBatchMode: jest.fn(),
+      };
+      const initializationService = {
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(new Error('Init failed')),
+      };
+      const persistenceService = { isSavingAllowed: jest.fn() };
+
+      const container = createContainer({
+        [tokens.IEntityManager]: entityManager,
+        [tokens.ITurnManager]: turnManager,
+        [tokens.GamePersistenceService]: persistenceService,
+        [tokens.PlaytimeTracker]: playtimeTracker,
+        [tokens.ISafeEventDispatcher]: safeEventDispatcher,
+        [tokens.IInitializationService]: initializationService,
+      });
+
+      const sessionManager = {
+        prepareForNewGameSession: jest.fn(),
+        finalizeNewGameSuccess: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container,
+        logger,
+        sessionManager,
+      });
+
+      await expect(engine.startNewGame('test-world')).rejects.toBe(
+        engineResetFailure
+      );
+    });
+  });
+
+  it('attaches engineResetError as cause when coreResetError has no cause', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const engineResetFailure = new Error('engine state reset failed');
+      const engineStateInstance = {
+        isInitialized: true,
+        isGameLoopRunning: true,
+        activeWorld: 'delta',
+        reset: jest.fn(() => {
+          throw engineResetFailure;
+        }),
+        setStarted: jest.fn(),
+      };
+
+      jest.doMock('../../../src/engine/engineState.js', () => ({
+        __esModule: true,
+        default: jest.fn(() => engineStateInstance),
+      }));
+
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
+
+      const logger = createLogger();
+      const coreResetError = new Error('entity reset failed');
+      const entityManager = {
+        clearAll: jest.fn(() => {
+          throw coreResetError;
+        }),
+      };
+      const turnManager = { stop: jest.fn() };
+      const playtimeTracker = {
+        endSessionAndAccumulate: jest.fn(),
+        reset: jest.fn(),
+      };
+      const safeEventDispatcher = {
+        dispatch: jest.fn().mockResolvedValue(true),
+        setBatchMode: jest.fn(),
+      };
+      const initializationService = {
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(new Error('Init failed')),
+      };
+      const persistenceService = { isSavingAllowed: jest.fn() };
+
+      const container = createContainer({
+        [tokens.IEntityManager]: entityManager,
+        [tokens.ITurnManager]: turnManager,
+        [tokens.GamePersistenceService]: persistenceService,
+        [tokens.PlaytimeTracker]: playtimeTracker,
+        [tokens.ISafeEventDispatcher]: safeEventDispatcher,
+        [tokens.IInitializationService]: initializationService,
+      });
+
+      const sessionManager = {
+        prepareForNewGameSession: jest.fn(),
+        finalizeNewGameSuccess: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container,
+        logger,
+        sessionManager,
+      });
+
+      let thrownError;
+      try {
+        await engine.startNewGame('test-world');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBe(coreResetError);
+      expect(thrownError.cause).toBe(engineResetFailure);
+    });
+  });
+
+  it('attaches engineResetError as property when cause already exists', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const engineResetFailure = new Error('engine state reset failed');
+      const engineStateInstance = {
+        isInitialized: true,
+        isGameLoopRunning: true,
+        activeWorld: 'epsilon',
+        reset: jest.fn(() => {
+          throw engineResetFailure;
+        }),
+        setStarted: jest.fn(),
+      };
+
+      jest.doMock('../../../src/engine/engineState.js', () => ({
+        __esModule: true,
+        default: jest.fn(() => engineStateInstance),
+      }));
+
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
+
+      const logger = createLogger();
+      const existingCause = { reason: 'existing cause' };
+      const coreResetError = new Error('entity reset failed');
+      coreResetError.cause = existingCause;
+
+      const entityManager = {
+        clearAll: jest.fn(() => {
+          throw coreResetError;
+        }),
+      };
+      const turnManager = { stop: jest.fn() };
+      const playtimeTracker = {
+        endSessionAndAccumulate: jest.fn(),
+        reset: jest.fn(),
+      };
+      const safeEventDispatcher = {
+        dispatch: jest.fn().mockResolvedValue(true),
+        setBatchMode: jest.fn(),
+      };
+      const initializationService = {
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(new Error('Init failed')),
+      };
+      const persistenceService = { isSavingAllowed: jest.fn() };
+
+      const container = createContainer({
+        [tokens.IEntityManager]: entityManager,
+        [tokens.ITurnManager]: turnManager,
+        [tokens.GamePersistenceService]: persistenceService,
+        [tokens.PlaytimeTracker]: playtimeTracker,
+        [tokens.ISafeEventDispatcher]: safeEventDispatcher,
+        [tokens.IInitializationService]: initializationService,
+      });
+
+      const sessionManager = {
+        prepareForNewGameSession: jest.fn(),
+        finalizeNewGameSuccess: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container,
+        logger,
+        sessionManager,
+      });
+
+      let thrownError;
+      try {
+        await engine.startNewGame('test-world');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBe(coreResetError);
+      expect(thrownError.cause).toBe(existingCause);
+      expect(thrownError.engineResetError).toBe(engineResetFailure);
+    });
+  });
+
+  it('falls back to engineResetError property when cause assignment throws', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const engineResetFailure = new Error('engine state reset failed');
+      const engineStateInstance = {
+        isInitialized: true,
+        isGameLoopRunning: true,
+        activeWorld: 'zeta',
+        reset: jest.fn(() => {
+          throw engineResetFailure;
+        }),
+        setStarted: jest.fn(),
+      };
+
+      jest.doMock('../../../src/engine/engineState.js', () => ({
+        __esModule: true,
+        default: jest.fn(() => engineStateInstance),
+      }));
+
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
+
+      const logger = createLogger();
+      const coreResetError = new Error('entity reset failed');
+      Object.defineProperty(coreResetError, 'cause', {
+        configurable: true,
+        get() {
+          return undefined;
+        },
+        set() {
+          throw new Error('cause assignment blocked');
+        },
+      });
+
+      const entityManager = {
+        clearAll: jest.fn(() => {
+          throw coreResetError;
+        }),
+      };
+      const turnManager = { stop: jest.fn() };
+      const playtimeTracker = {
+        endSessionAndAccumulate: jest.fn(),
+        reset: jest.fn(),
+      };
+      const safeEventDispatcher = {
+        dispatch: jest.fn().mockResolvedValue(true),
+        setBatchMode: jest.fn(),
+      };
+      const initializationService = {
+        runInitializationSequence: jest
+          .fn()
+          .mockRejectedValue(new Error('Init failed')),
+      };
+      const persistenceService = { isSavingAllowed: jest.fn() };
+
+      const container = createContainer({
+        [tokens.IEntityManager]: entityManager,
+        [tokens.ITurnManager]: turnManager,
+        [tokens.GamePersistenceService]: persistenceService,
+        [tokens.PlaytimeTracker]: playtimeTracker,
+        [tokens.ISafeEventDispatcher]: safeEventDispatcher,
+        [tokens.IInitializationService]: initializationService,
+      });
+
+      const sessionManager = {
+        prepareForNewGameSession: jest.fn(),
+        finalizeNewGameSuccess: jest.fn(),
+      };
+
+      const engine = new GameEngine({
+        container,
+        logger,
+        sessionManager,
+      });
+
+      let thrownError;
+      try {
+        await engine.startNewGame('test-world');
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBe(coreResetError);
+      expect(thrownError.engineResetError).toBe(engineResetFailure);
+    });
+  });
+});
+
 describeEngineSuite(
   'GameEngine initialization error metadata coverage',
   (context) => {

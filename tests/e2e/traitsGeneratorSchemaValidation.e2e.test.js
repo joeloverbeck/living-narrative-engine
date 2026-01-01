@@ -165,7 +165,7 @@ describe('Traits Generator Schema Validation E2E', () => {
       expect(properties.personality.maxItems).toBe(8);
 
       expect(properties.physicalDescription.minLength).toBe(100);
-      expect(properties.physicalDescription.maxLength).toBe(700);
+      expect(properties.physicalDescription.maxLength).toBe(2100);
 
       expect(properties.profile.minLength).toBe(200);
       expect(properties.profile.maxLength).toBeUndefined();

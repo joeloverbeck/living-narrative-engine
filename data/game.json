@@ -41,11 +41,12 @@
     "music",
     "straddling",
     "writing",
-    "p_erotica_gymnast",
     "ballet",
     "intoxicants",
     "movement",
-    "cosmetics"
+    "cosmetics",
+    "p_erotica_swiss",
+    "comfort"
   ],
-  "startWorld": "p_erotica_gymnast:gymnast"
+  "startWorld": "p_erotica_swiss:sibylle"
 }

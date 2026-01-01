@@ -12,13 +12,11 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
-import { createTestBed } from '../../common/testBed.js';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
 import { JSDOM } from 'jsdom';
 
 describe('Proximity UI Workflows E2E', () => {
-  let facades;
-  let testBed;
+  let env;
   let actionService;
   let entityService;
   let dom;
@@ -45,22 +43,20 @@ describe('Proximity UI Workflows E2E', () => {
     global.window = window;
     global.document = document;
 
-    // Use existing test infrastructure
-    testBed = createTestBed();
-    facades = createMockFacades({}, jest.fn);
+    // Use production container with stubbed LLM
+    env = await createE2ETestEnvironment({ stubLLM: true });
 
-    // Setup services
-    actionService = facades.actionService;
-    entityService = facades.entityService;
+    // Setup services using helpers (facade-compatible API)
+    actionService = env.helpers;
+    entityService = env.helpers;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Clean up DOM globals
     delete global.window;
     delete global.document;
 
-    testBed.cleanup();
-    facades.cleanupAll();
+    await env.cleanupAll();
     jest.clearAllMocks();
   });
 

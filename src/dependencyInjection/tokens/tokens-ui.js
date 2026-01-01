@@ -48,5 +48,15 @@ export const uiTokens = freeze({
   TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
   InjuryStatusPanel: 'InjuryStatusPanel',
   DamageEventMessageRenderer: 'DamageEventMessageRenderer',
+  // Damage Simulator Components
+  DamageSimulatorUI: 'DamageSimulatorUI',
+  HierarchicalAnatomyRenderer: 'HierarchicalAnatomyRenderer',
+  DamageCapabilityComposer: 'DamageCapabilityComposer',
+  DamageExecutionService: 'DamageExecutionService',
+  DamageHistoryTracker: 'DamageHistoryTracker',
+  DamageAnalyticsPanel: 'DamageAnalyticsPanel',
+  HitProbabilityCalculator: 'HitProbabilityCalculator',
+  DeathConditionMonitor: 'DeathConditionMonitor',
+  MultiHitSimulator: 'MultiHitSimulator',
   PromptPreviewModal: 'PromptPreviewModal',
 });

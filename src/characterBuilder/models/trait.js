@@ -252,9 +252,9 @@ export class Trait {
       errors.push(
         `Physical description is below minimum (got ${this.physicalDescription.length} characters, minimum is 100)`
       );
-    } else if (this.physicalDescription.length > 700) {
+    } else if (this.physicalDescription.length > 2100) {
       warnings.push(
-        `Physical description exceeds recommended maximum (got ${this.physicalDescription.length} characters, maximum is 700)`
+        `Physical description exceeds recommended maximum (got ${this.physicalDescription.length} characters, maximum is 2100)`
       );
     }
 

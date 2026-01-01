@@ -272,11 +272,13 @@ export function buildTraitsGenerationPrompt(
   const formattedCliches = formatClichesForPrompt(cliches);
 
   return `<role>
-Expert character development analyst specializing in creating comprehensive character traits
+Senior character architect specializing in volatile, failure-prone, story-generative characters.
+You design people, not profiles.
 </role>
 
 <task_definition>
-Generate detailed character traits based on core concept, thematic direction, user inputs, and cliché avoidance
+Generate psychologically coherent but unstable character traits that produce scenes, bad decisions, and long-term consequences.
+Every trait must do work in play.
 </task_definition>
 
 <character_concept>
@@ -309,76 +311,122 @@ Central Question: ${trimmedCoreMotivations.centralQuestion}
 ${formattedCliches}
 </cliches_to_avoid>
 
+<hard_rules>
+- Traits must create *conflict*, not balance.
+- At least one strength must directly worsen a weakness.
+- At least one like must logically endanger a goal.
+- At least one weakness must appear reasonable to the character.
+- Avoid clinical, therapeutic, or meta self-analysis.
+- No "core wound," "coping mechanism," or diagnostic framing.
+- The character should plausibly misinterpret their own motives.
+</hard_rules>
+
+<method>
+## Step A — Internal Friction Map (do not output)
+Identify:
+- One desire they over-invest in
+- One value they violate under pressure
+- One behavior they repeat even when it backfires
+
+## Step B — Silhouette Lock
+Before writing traits, decide:
+- What this character does in conflict (escalate / withdraw / bargain / deflect / dominate)
+- How they fail when stressed
+- What choice they reliably regret too late
+
+All traits must reinforce this silhouette.
+
+## Step C — Trait Generation
+Generate the 12 categories below.
+For EACH category, ask internally:
+"Does this create a future scene or decision?"
+If not, rewrite it until it does.
+</method>
+
 <instructions>
-Based on the character concept, thematic direction, core motivations, and cliché avoidance guidelines, generate comprehensive character traits covering all 12 categories:
+Generate exactly the following 12 trait categories.
+Each must be specific, non-generic, and interdependent.
 
-1. **Names (3-5 unique names)**: Provide distinctive names that hint at character depth. Each name should include a 1-sentence justification showing how it subverts typical naming clichés and connects to the character's essence.
+1. **Names (3–5)**
+   Names should imply social class, cultural pressure, or family expectation.
+   Justifications must explain what expectation the name sets—and how the character violates it.
 
-2. **Physical Description (2-4 distinctive features)**: Focus on unique physical traits that subvert typical character appearances and hint at personality. Avoid generic descriptions - make each feature meaningful to the character's identity. (100-700 characters total)
+2. **Physical Description (2–4 features, 100–2100 chars)**
+   Every feature must either:
+   - contradict how others initially read the character, OR
+   - reinforce a behavioral flaw.
 
-3. **Personality (3-8 key traits)**: Create a coherent, nuanced personality with detailed explanations. Each trait should form part of a complex whole, avoiding surface-level or contradictory combinations. Explain how each trait manifests in behavior.
+3. **Personality (3–8 traits)**
+   Traits must describe *behavior under pressure*, not adjectives.
+   Each explanation must include:
+   - a typical action
+   - a misjudgment it leads to
 
-4. **Strengths (2-6 unexpected strengths)**: Identify strengths that are unexpected, uniquely applied, or subvert typical "hero" qualities. Connect these to core motivations and show how they might be double-edged.
+4. **Strengths (2–6)**
+   Strengths must be situational and conditional.
+   At least one strength must reliably cause trouble when overused.
 
-5. **Weaknesses (2-6 subversive weaknesses)**: Present weaknesses that avoid clichéd character flaws. Focus on unique applications or unexpected manifestations that relate to core contradictions.
+5. **Weaknesses (2–6)**
+   Weaknesses should feel defensible or invisible to the character.
+   Avoid generic flaws (impulsiveness, arrogance, etc.).
 
-6. **Likes (3-8 specific, telling preferences)**: Choose likes that reveal deeper motivations and personality layers. Avoid generic preferences - make each like meaningful and connected to character psychology.
+6. **Likes (3–8)**
+   Likes must be specific behaviors, routines, or environments.
+   At least one like must sabotage relationships or safety.
 
-7. **Dislikes (3-8 revealing dislikes)**: Select dislikes that expose character sensitivities, principles, or past experiences. Avoid clichéd dislikes - focus on specific, character-revealing aversions.
+7. **Dislikes (3–8)**
+   Dislikes should reveal moral lines, resentments, or avoided self-recognition.
 
-8. **Fears (1-2 profound fears)**: Identify deep, specific fears rooted in character psychology and core motivations. Go beyond common phobias to fears that connect to identity, relationships, or life purpose.
+8. **Fears (1–2)**
+   Fears must be existential or relational, not situational.
+   Phrase them as outcomes the character imagines, not labels.
 
-9. **Goals (1-3 short-term + 1 long-term)**: Create goals driven by core motivations. Short-term goals should be immediate and actionable, while the long-term goal should represent the character's ultimate aspiration or need.
+9. **Goals**
+   - Short-term (1–3): immediate, risky, or compromising actions.
+   - Long-term (1): something they pursue even when it costs them.
 
-10. **Notes (2-6 unique knowledge pieces)**: Include specialized knowledge, skills, or experiences acquired through non-clichéd means. These should add depth and potential story hooks.
+10. **Notes (2–6)**
+    Knowledge or skills acquired indirectly, reluctantly, or at a price.
+    Each should imply a past mistake or compromise.
 
-11. **Profile (3-5 sentence background)**: Provide a concise but comprehensive background that explains the character's current situation and how their core motivations originated. Focus on formative experiences. (at least 200 characters)
+11. **Profile (3–5 sentences, ≥200 chars)**
+    Explain how the character became this way without moral framing.
+    Focus on formative pressures, not lessons learned.
 
-12. **Secrets (1-2 significant secrets)**: Create secrets tied directly to core motivations and internal contradictions. These should have potential to impact relationships and drive narrative conflict.
-
-Each category should avoid the listed clichés and work together to create a cohesive, compelling character profile.
+12. **Secrets (1–2)**
+    Secrets must be:
+    - actionable if exposed
+    - capable of altering alliances or leverage
 </instructions>
 
 <constraints>
-- Generate exactly the 12 trait categories specified
-- Ensure all array fields meet the minimum/maximum requirements
-- Physical description must be 100-700 characters
-- Profile must be at least 200 characters
-- Each secret and fear must be substantial and character-defining
-- Goals must include both short-term array and single long-term goal
-- Names and personality items must include both the main field and explanation/justification
-- All content must avoid the specified clichés
-- Focus on psychological depth and narrative potential
-- Do not output anything outside the JSON object
+- Output valid JSON only.
+- Exactly 12 categories.
+- Meet all min/max counts.
+- No meta commentary or explanations outside fields.
 </constraints>
 
 <response_format>
 {
   "names": [
-    {
-      "name": "Character Name",
-      "justification": "1-sentence explanation showing cliché subversion"
-    }
+    { "name": "...", "justification": "..." }
   ],
-  "physicalDescription": "2-4 distinctive physical features that subvert typical appearances and hint at persona (100-700 chars)",
+  "physicalDescription": "...",
   "personality": [
-    {
-      "trait": "Personality trait name",
-      "explanation": "Detailed explanation of how this trait manifests in behavior and connects to other traits"
-    }
+    { "trait": "...", "explanation": "..." }
   ],
-  "strengths": ["Unexpected or uniquely applied strength"],
-  "weaknesses": ["Unexpected or uniquely applied weakness"],
-  "likes": ["Specific, meaningful preference that reveals character depth"],
-  "dislikes": ["Specific dislike that reveals sensitivities or principles"],
-  "fears": ["Profound, character-rooted fear beyond generic phobias"],
+  "strengths": ["..."],
+  "weaknesses": ["..."],
+  "likes": ["..."],
+  "dislikes": ["..."],
+  "fears": ["..."],
   "goals": {
-    "shortTerm": ["1-3 immediate, actionable goals"],
-    "longTerm": "Major life aspiration driven by core motivations"
+    "shortTerm": ["..."],
+    "longTerm": "..."
   },
-  "notes": ["Unique knowledge/skill/experience acquired in non-clichéd ways"],
-  "profile": "3-5 sentence background summary explaining current situation and core origin (at least 200 chars)",
-  "secrets": ["Significant secret tied to core motivations with relationship impact potential"]
+  "notes": ["..."],
+  "profile": "...",
+  "secrets": ["..."]
 }
 </response_format>
 
@@ -470,9 +518,9 @@ export function validateTraitsGenerationResponse(response) {
       `TraitsGenerationPrompt: physicalDescription is below minimum (got ${physDescLen} characters, minimum is 100)`
     );
   }
-  if (physDescLen > 700) {
+  if (physDescLen > 2100) {
     throw new Error(
-      `TraitsGenerationPrompt: physicalDescription exceeds maximum (got ${physDescLen} characters, maximum is 700)`
+      `TraitsGenerationPrompt: physicalDescription exceeds maximum (got ${physDescLen} characters, maximum is 2100)`
     );
   }
 

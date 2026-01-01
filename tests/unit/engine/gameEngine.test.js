@@ -663,6 +663,143 @@ describeEngineSuite('GameEngine', (context) => {
         expect.objectContaining({ allowSchemaNotFound: true })
       );
     });
+
+    it('should normalize non-Error values when getCurrentActiveLlmId retry throws', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
+
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockRejectedValue(new Error('Build choices failed'));
+      context.bed
+        .getLlmAdapter()
+        .getCurrentActiveLlmId.mockRejectedValue('String error from LLM');
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(
+        UI_SHOW_LLM_PROMPT_PREVIEW,
+        expect.objectContaining({
+          prompt: null,
+          actorId,
+          llmId: null,
+          errors: expect.arrayContaining([
+            'Build choices failed',
+            'String error from LLM',
+          ]),
+        }),
+        expect.objectContaining({ allowSchemaNotFound: true })
+      );
+    });
+
+    it('should log warning when prompt preview dispatch returns false', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
+      const availableActions = [{ id: 'a' }];
+      const prompt = 'test-prompt';
+
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockResolvedValue(availableActions);
+      context.bed
+        .getAiPromptPipeline()
+        .generatePrompt.mockResolvedValue(prompt);
+      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(false);
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher reported failure when dispatching UI_SHOW_LLM_PROMPT_PREVIEW.'
+      );
+    });
+
+    it('should log error when prompt preview dispatch throws', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
+      const availableActions = [{ id: 'a' }];
+      const prompt = 'test-prompt';
+      const dispatchError = new Error('Dispatch failed');
+
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockResolvedValue(availableActions);
+      context.bed
+        .getAiPromptPipeline()
+        .generatePrompt.mockResolvedValue(prompt);
+      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockRejectedValue(dispatchError);
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.',
+        dispatchError
+      );
+    });
+
+    it('should normalize non-Error values when dispatch throws non-Error', async () => {
+      const actor = { id: actorId };
+      const turnContext = { ctx: 'turn' };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
+      const availableActions = [{ id: 'a' }];
+      const prompt = 'test-prompt';
+
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
+      context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
+      context.bed
+        .getTurnActionChoicePipeline()
+        .buildChoices.mockResolvedValue(availableActions);
+      context.bed
+        .getAiPromptPipeline()
+        .generatePrompt.mockResolvedValue(prompt);
+      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockRejectedValue('String dispatch error');
+
+      await context.engine.previewLlmPromptForCurrentActor();
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.',
+        expect.any(Error)
+      );
+      const loggedError = context.bed.getLogger().error.mock.calls.find(
+        (call) =>
+          call[0] ===
+          'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.'
+      )[1];
+      expect(loggedError.message).toBe('String dispatch error');
+    });
   });
 
   describe('getEngineStatus', () => {

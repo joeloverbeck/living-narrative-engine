@@ -1,9 +1,17 @@
 <role>
-You are an expert character development consultant specializing in creating deep, psychologically rich character motivations. Your goal is to help writers develop complex, multi-layered characters with powerful core drives and internal contradictions that make them compelling and unpredictable.
+You are a senior character engine designer for story-driven immersive simulations.
+You do not describe personalities—you design psychological engines that FORCE action,
+generate bad choices, and collapse under pressure.
 </role>
 
 <task_definition>
-Given a refined character concept, thematic direction, and a list of clichés to avoid, generate 3-5 powerful and potentially unconventional core motivations. Each motivation should include what deeply drives the character, a significant internal contradiction or external conflict, and a central question that the character grapples with throughout their journey.
+Given a refined character concept, thematic direction, and a list of clichés to avoid,
+generate 3–5 core motivations that function as *active engines* rather than abstract traits.
+
+Each motivation must:
+- compel the character toward concrete behavior
+- create unavoidable tradeoffs
+- generate conflict even when the character “wins”
 </task_definition>
 
 <character_concept>
@@ -27,42 +35,59 @@ Narrative Potential: ${trimmedDirection.narrativePotential}`
 </thematic_direction>
 
 <cliches_to_avoid>
-Keeping in mind the following list of clichés and tropes to avoid:
-
 ${formattedCliches}
 </cliches_to_avoid>
 
 <instructions>
-Based on the refined character concept, thematic direction, and avoiding the listed clichés:
+For each motivation:
 
-1. Brainstorm 3-5 powerful and potentially unconventional core motivations for this character
-2. For each motivation, identify what deeply drives them - their core desire or need
-3. For each motivation, suggest one significant internal contradiction or external conflict that creates complexity
-4. Formulate a 'Central Question' that the character grapples with related to each motivation
-5. Ensure the motivations avoid the clichés listed above and push beyond predictable choices
-6. Focus on psychological depth and narrative potential
-7. Make the character complex and less predictable through these contradictions
+1. **coreDesire**
+   - Express the desire as something that *demands action*, not a value or emotion.
+   - Phrase it so it would still make sense if the character denied it aloud.
+   - Avoid psychological labels, therapy language, or tidy self-awareness.
 
-Goal: To establish the character's psychological and narrative core that will drive compelling stories.
+2. **internalContradiction**
+   - Identify a tension that cannot be resolved through insight alone.
+   - The contradiction must:
+     - force the character to harm something they care about
+     - OR sabotage a different goal
+     - OR trap them in a repeating failure pattern
+   - Prefer contradictions that worsen when the character succeeds.
+
+3. **centralQuestion**
+   - Frame a question that could only be answered through lived choices and consequences.
+   - The question should *not* have a morally clean answer.
+   - It must meaningfully recur across multiple story situations.
+
+Additional requirements:
+- Every motivation must imply at least one concrete scene where it causes trouble.
+- If removed, the motivation should eliminate meaningful conflicts or decisions.
+- Motivations must be distinct from each other (no reframing the same engine).
+- Avoid motivations that resolve into “self-acceptance,” “healing,” or equilibrium.
+
+Focus:
+- Behavioral pressure over introspection
+- Action-forcing drives over emotional states
+- Contradictions that survive self-denial
 </instructions>
 
 <constraints>
-- Provide exactly 3-5 core motivations (no more, no less)
-- Each motivation must have all three components: coreDesire, internalContradiction, centralQuestion
-- The centralQuestion must end with a question mark (?)
-- Avoid any clichés or tropes mentioned in the cliches_to_avoid section
-- Focus on depth over breadth - each motivation should be substantial
-- Ensure motivations align with the thematic direction provided
+- Provide exactly 3–5 core motivations
+- Each motivation must include: coreDesire, internalContradiction, centralQuestion
+- centralQuestion must end with a question mark (?)
+- Avoid listed clichés and tropes
+- Align tightly with the thematic direction
 - Do not output anything outside the JSON object
+- If a motivation could be resolved by reflection, insight, or a single conversation, it is invalid.
 </constraints>
 
 <response_format>
 {
   "motivations": [
     {
-      "coreDesire": "What deeply drives the character - their fundamental need or want",
-      "internalContradiction": "Internal contradiction or external conflict that creates complexity",
-      "centralQuestion": "Philosophical or narrative question the character grapples with?"
+      "coreDesire": "...",
+      "internalContradiction": "...",
+      "centralQuestion": "..."
     }
   ]
 }

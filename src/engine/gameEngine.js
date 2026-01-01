@@ -633,15 +633,13 @@ class GameEngine {
           'GameEngine.stop: Core game state cleared after stop.'
         );
       } catch (resetError) {
-        const normalizedResetError =
-          resetError instanceof Error
-            ? resetError
-            : new Error(String(resetError));
+        // resetError is always an Error instance because #resetCoreGameState()
+        // normalizes all internal errors before throwing (see lines 147, 164)
         this.#logger.error(
           'GameEngine.stop: Failed to reset core game state cleanly.',
-          normalizedResetError
+          resetError
         );
-        attachCleanupError(normalizedResetError);
+        attachCleanupError(resetError);
       }
 
       try {

@@ -426,14 +426,14 @@ describe('Trait Model', () => {
       });
 
       it('should warn for very long descriptions', () => {
-        const longDescription = 'A'.repeat(701);
+        const longDescription = 'A'.repeat(2101);
         const trait = new Trait({
           ...validTraitData,
           physicalDescription: longDescription,
         });
         const result = trait.validate();
         expect(result.warnings).toContain(
-          'Physical description exceeds recommended maximum (got 701 characters, maximum is 700)'
+          'Physical description exceeds recommended maximum (got 2101 characters, maximum is 2100)'
         );
       });
     });

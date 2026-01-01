@@ -640,6 +640,743 @@ describe('AnyOf Error Formatting Integration', () => {
     });
   });
 
+  describe('Coverage Enhancement - Uncovered Lines', () => {
+    describe('Line 84 - Empty instancePath fallback', () => {
+      it('should use "field" fallback when instancePath is empty for enum errors', () => {
+        const errors = [
+          {
+            keyword: 'enum',
+            schemaPath: '#/enum',
+            instancePath: '', // Empty path - triggers || 'field' fallback
+            params: { allowedValues: ['A', 'B', 'C'] },
+            data: 'INVALID',
+          },
+        ];
+
+        const formattedError = formatAnyOfErrors(errors, { value: 'INVALID' });
+
+        expect(formattedError).toContain("Invalid enum value 'INVALID'");
+        expect(formattedError).toContain('Allowed values: [A, B, C]');
+      });
+    });
+
+    describe('Line 458 - No validation errors', () => {
+      it('should return "No validation errors" when errors is null', () => {
+        const result = formatAnyOfErrors(null, {});
+        expect(result).toBe('No validation errors');
+      });
+
+      it('should return "No validation errors" when errors is empty array', () => {
+        const result = formatAnyOfErrors([], {});
+        expect(result).toBe('No validation errors');
+      });
+    });
+
+    describe('Lines 502-504 - entity_id fallback detection', () => {
+      const schemaId = 'schema://test/entity-id-fallback.schema.json';
+
+      beforeEach(async () => {
+        // Create schema with many branches to generate >100 errors
+        const anyOfBranches = Array.from({ length: 100 }, (_, i) => ({
+          type: 'object',
+          properties: {
+            type: { const: `OPERATION_${i}` },
+            parameters: {
+              type: 'object',
+              properties: {
+                [`field_${i}`]: { type: 'string' },
+              },
+              required: [`field_${i}`],
+              additionalProperties: false,
+            },
+          },
+          required: ['type', 'parameters'],
+          additionalProperties: false,
+        }));
+
+        // Add target operation that expects entity_ref
+        anyOfBranches.push({
+          type: 'object',
+          properties: {
+            type: { const: 'TARGET_OP' },
+            parameters: {
+              type: 'object',
+              properties: {
+                entity_ref: { type: 'string' },
+              },
+              required: ['entity_ref'],
+              additionalProperties: false,
+            },
+          },
+          required: ['type', 'parameters'],
+          additionalProperties: false,
+        });
+
+        const schema = {
+          $id: schemaId,
+          type: 'object',
+          anyOf: anyOfBranches,
+        };
+
+        await validator.addSchema(schema, schemaId);
+      });
+
+      it('should detect entity_id typo when pattern detection is bypassed with valid type', () => {
+        const data = {
+          type: 'TARGET_OP',
+          parameters: {
+            entity_id: 'npc-001', // Wrong - should be entity_ref
+          },
+        };
+
+        const result = validator.validate(schemaId, data);
+        expect(result.isValid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(100);
+
+        const formattedError = validator.formatAjvErrors(result.errors, data);
+        expect(formattedError).toContain('"entity_id" should be "entity_ref"');
+      });
+    });
+
+    describe('Lines 590-607 - perception_type enum handling', () => {
+      it('should provide perception_type specific guidance for enum errors', () => {
+        const errors = [
+          {
+            keyword: 'enum',
+            schemaPath:
+              '#/anyOf/0/properties/parameters/properties/perception_type/enum',
+            instancePath: '/parameters/perception_type',
+            params: {
+              allowedValues: ['sight', 'hearing', 'smell', 'touch', 'taste'],
+            },
+            data: 'vision',
+          },
+        ];
+
+        const data = {
+          type: 'SOME_OP',
+          parameters: { perception_type: 'vision' },
+        };
+
+        const formattedError = formatAnyOfErrors(errors, data);
+
+        expect(formattedError).toContain("Invalid enum value 'vision'");
+        expect(formattedError).toContain('perception_type');
+        expect(formattedError).toContain('💡 FIX:');
+        expect(formattedError).toContain(
+          'data/schemas/operations/dispatchPerceptibleEvent.schema.json'
+        );
+      });
+    });
+
+    describe('Line 664 - "Did you mean?" suggestion', () => {
+      it('should suggest similar operation type for typos', () => {
+        // Create errors with known operation types
+        const errors = [
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'QUERY_COMPONENT' },
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/1/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'ADD_COMPONENT' },
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/2/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'REMOVE_COMPONENT' },
+          },
+        ];
+
+        // Typo: QUREY instead of QUERY
+        const data = { type: 'QUREY_COMPONENT' };
+
+        const formattedError = formatAnyOfErrors(errors, data);
+
+        expect(formattedError).toContain(
+          "Unknown or invalid operation type: 'QUREY_COMPONENT'"
+        );
+        expect(formattedError).toContain('Did you mean');
+        expect(formattedError).toContain('QUERY_COMPONENT');
+      });
+    });
+
+    describe('Lines 682-691 - JSON Logic rule detection', () => {
+      it('should detect JSON Logic rule validation failures', () => {
+        // Create minimal errors that would lead to formatOperationTypeSummary
+        // but with a JSON Logic-like payload
+        const errors = [
+          {
+            keyword: 'anyOf',
+            schemaPath: '#/anyOf',
+            instancePath: '',
+            params: {},
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'OPERATION_A' },
+          },
+        ];
+
+        // Payload that passes isLikelyJsonLogic() - uses standard JSON Logic operators
+        const jsonLogicPayload = {
+          and: [{ var: 'actor.health' }, { '==': [{ var: 'state' }, 'active'] }],
+        };
+
+        const formattedError = formatAnyOfErrors(errors, jsonLogicPayload);
+
+        expect(formattedError).toContain('JSON Logic rule');
+        expect(formattedError).toContain('{"and": [...]}');
+        expect(formattedError).toContain('{"var": "path.to.data"}');
+      });
+
+      it('should detect "or" operator as JSON Logic', () => {
+        const errors = [
+          {
+            keyword: 'anyOf',
+            schemaPath: '#/anyOf',
+            instancePath: '',
+            params: {},
+          },
+        ];
+
+        const jsonLogicPayload = {
+          or: [{ var: 'condition1' }, { var: 'condition2' }],
+        };
+
+        const formattedError = formatAnyOfErrors(errors, jsonLogicPayload);
+
+        expect(formattedError).toContain('JSON Logic rule');
+      });
+    });
+
+    describe('Line 707 - "... and X more" truncation', () => {
+      it('should truncate operation types list when more than 12 types in groupedErrors', () => {
+        // Create errors with >12 different operation types
+        // These will be grouped and should trigger the "... and X more" message
+        const errors = Array.from({ length: 15 }, (_, i) => ({
+          keyword: 'const',
+          schemaPath: `#/anyOf/${i}/properties/type/const`,
+          instancePath: '',
+          params: { allowedValue: `OPERATION_TYPE_${i}` },
+        }));
+
+        // Payload without type field to trigger "Missing operation type" path
+        const data = { parameters: { someField: 'value' } };
+
+        const formattedError = formatAnyOfErrors(errors, data);
+
+        expect(formattedError).toContain('Missing operation type');
+        expect(formattedError).toContain('Common operation types:');
+        expect(formattedError).toContain('OPERATION_TYPE_0');
+        // 15 - 12 = 3 more
+        expect(formattedError).toContain('... and 3 more');
+      });
+
+      it('should not show truncation message when exactly 12 or fewer types', () => {
+        const errors = Array.from({ length: 12 }, (_, i) => ({
+          keyword: 'const',
+          schemaPath: `#/anyOf/${i}/properties/type/const`,
+          instancePath: '',
+          params: { allowedValue: `OPERATION_TYPE_${i}` },
+        }));
+
+        const data = { parameters: {} };
+
+        const formattedError = formatAnyOfErrors(errors, data);
+
+        expect(formattedError).toContain('Common operation types:');
+        expect(formattedError).not.toContain('... and');
+      });
+    });
+
+    describe('Lines 800-812 - wrapWithContext() with full context', () => {
+      it('should wrap errors with file context when filePath and fileContent provided', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            schemaPath: '#/anyOf/0/properties/parameters/required',
+            instancePath: '/parameters',
+            params: { missingProperty: 'target' },
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'MOVE' },
+          },
+        ];
+
+        const payload = { type: 'MOVE', parameters: {} };
+        const context = {
+          filePath: '/data/mods/test/rules/test_rule.rule.json',
+          fileContent:
+            '{\n  "type": "MOVE",\n  "parameters": {}\n}\n',
+        };
+
+        const formattedError = formatAjvErrorsEnhanced(
+          errors,
+          payload,
+          context
+        );
+
+        // Should include file path
+        expect(formattedError).toContain(
+          '/data/mods/test/rules/test_rule.rule.json'
+        );
+        // Should include line number reference
+        expect(formattedError).toContain('Line:');
+        // Should include context snippet with code
+        expect(formattedError).toContain('Context:');
+        // Should include the error message
+        expect(formattedError).toContain('target');
+      });
+
+      it('should not wrap with context when filePath is missing', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            schemaPath: '#/required',
+            instancePath: '/parameters',
+            params: { missingProperty: 'target' },
+          },
+        ];
+
+        const payload = { type: 'MOVE', parameters: {} };
+        const context = {
+          fileContent: '{"type": "MOVE"}',
+          // No filePath
+        };
+
+        const formattedError = formatAjvErrorsEnhanced(
+          errors,
+          payload,
+          context
+        );
+
+        // Should NOT include rich context formatting
+        expect(formattedError).not.toContain('Line:');
+        expect(formattedError).not.toContain('Context:');
+      });
+
+      it('should not wrap with context when fileContent is missing', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            schemaPath: '#/required',
+            instancePath: '/parameters',
+            params: { missingProperty: 'target' },
+          },
+        ];
+
+        const payload = { type: 'MOVE', parameters: {} };
+        const context = {
+          filePath: '/some/path.json',
+          // No fileContent
+        };
+
+        const formattedError = formatAjvErrorsEnhanced(
+          errors,
+          payload,
+          context
+        );
+
+        // Should NOT include rich context formatting
+        expect(formattedError).not.toContain('Line:');
+        expect(formattedError).not.toContain('Context:');
+      });
+
+      it('should include ruleId in context when provided', () => {
+        const errors = [
+          {
+            keyword: 'required',
+            schemaPath: '#/anyOf/0/properties/parameters/required',
+            instancePath: '/parameters',
+            params: { missingProperty: 'target' },
+          },
+          {
+            keyword: 'const',
+            schemaPath: '#/anyOf/0/properties/type/const',
+            instancePath: '',
+            params: { allowedValue: 'MOVE' },
+          },
+        ];
+
+        const payload = { type: 'MOVE', parameters: {} };
+        const context = {
+          filePath: '/data/mods/test/rules/my_rule.rule.json',
+          fileContent: '{\n  "type": "MOVE",\n  "parameters": {}\n}\n',
+          ruleId: 'test:my_rule',
+        };
+
+        const formattedError = formatAjvErrorsEnhanced(
+          errors,
+          payload,
+          context
+        );
+
+        // Should include rule ID in error message
+        expect(formattedError).toContain('test:my_rule');
+      });
+    });
+  });
+
+  describe('Additional Coverage - isLikelyJsonLogic edge cases', () => {
+    it('should return false for array payloads (Line 254)', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      // Array is not a JSON Logic rule
+      const arrayPayload = ['some', 'array', 'data'];
+      const formattedError = formatAnyOfErrors(errors, arrayPayload);
+
+      // Should NOT detect as JSON Logic since it's an array
+      expect(formattedError).not.toContain('JSON Logic rule');
+    });
+
+    it('should return false for empty object payloads (Line 259)', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      // Empty object has no keys to check
+      const emptyPayload = {};
+      const formattedError = formatAnyOfErrors(errors, emptyPayload);
+
+      // Should NOT detect as JSON Logic since empty object
+      expect(formattedError).not.toContain('JSON Logic rule');
+    });
+
+    it('should detect custom operators with "is" prefix (Line 279)', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      // Custom operator with 'is' prefix
+      const customOperatorPayload = {
+        isSlotExposed: { slot: 'chest' },
+      };
+
+      const formattedError = formatAnyOfErrors(errors, customOperatorPayload);
+
+      expect(formattedError).toContain('JSON Logic rule');
+    });
+
+    it('should detect custom operators with "has" prefix (Line 279)', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      const customOperatorPayload = {
+        hasPartOfType: { type: 'arm' },
+      };
+
+      const formattedError = formatAnyOfErrors(errors, customOperatorPayload);
+
+      expect(formattedError).toContain('JSON Logic rule');
+    });
+
+    it('should detect condition_ref as JSON Logic (Line 284)', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      // condition_ref is a JSON Logic extension
+      const conditionRefPayload = {
+        condition_ref: 'core:some_condition',
+      };
+
+      const formattedError = formatAnyOfErrors(errors, conditionRefPayload);
+
+      expect(formattedError).toContain('JSON Logic rule');
+    });
+
+    it('should NOT detect regular operation fields as JSON Logic', () => {
+      const errors = [
+        {
+          keyword: 'anyOf',
+          schemaPath: '#/anyOf',
+          instancePath: '',
+          params: {},
+        },
+      ];
+
+      // Regular operation payload - should NOT be detected as JSON Logic
+      const regularPayload = {
+        type: 'SOME_OP',
+        parameters: { field: 'value' },
+      };
+
+      const formattedError = formatAnyOfErrors(errors, regularPayload);
+
+      expect(formattedError).not.toContain('JSON Logic rule');
+    });
+  });
+
+  describe('Additional Coverage - formatSingleError const case (Line 588)', () => {
+    it('should format const keyword errors correctly', () => {
+      const errors = [
+        {
+          keyword: 'const',
+          schemaPath: '#/properties/mode/const',
+          instancePath: '/mode',
+          params: { allowedValue: 'strict' },
+          data: 'loose',
+        },
+      ];
+
+      const formattedError = formatAnyOfErrors(errors, { mode: 'loose' });
+
+      expect(formattedError).toContain("Must be equal to 'strict'");
+    });
+  });
+
+  describe('Additional Coverage - formatAjvErrorsEnhanced no errors (Line 728)', () => {
+    it('should return "No validation errors" when errors is null', () => {
+      const result = formatAjvErrorsEnhanced(null, {});
+      expect(result).toBe('No validation errors');
+    });
+
+    it('should return "No validation errors" when errors is empty array', () => {
+      const result = formatAjvErrorsEnhanced([], {});
+      expect(result).toBe('No validation errors');
+    });
+  });
+
+  describe('Additional Coverage - extractFailingData navigation (Lines 160-168)', () => {
+    // extractFailingData is called by formatAjvErrorsEnhanced when errors.length > 50
+    // and the first error has a non-empty instancePath. Lines 160-168 are the for-loop
+    // that navigates through nested data structures.
+
+    it('should navigate through nested data via extractFailingData (Lines 160-166)', () => {
+      // Create >100 errors with operation type patterns to trigger line 752
+      // The first error's instancePath must NOT end with 'type', 'macro', or 'parameters'
+      // so the full path is navigated through the for-loop
+      const errors = Array.from({ length: 105 }, (_, i) => ({
+        keyword: 'const',
+        schemaPath: `#/anyOf/${i}/properties/type/const`,
+        instancePath: '/nested/0/action', // Path NOT ending in type/macro/parameters
+        params: { allowedValue: `TYPE_${i}` },
+      }));
+
+      // Nested data structure - extractFailingData navigates nested → 0 → action
+      const data = {
+        nested: [
+          {
+            action: {
+              type: 42, // Non-string type triggers line 757 check
+            },
+          },
+        ],
+      };
+
+      // Call formatAjvErrorsEnhanced which calls extractFailingData at line 752
+      const formattedError = formatAjvErrorsEnhanced(errors, data);
+
+      // Should detect the non-string type after navigation
+      expect(formattedError).toContain('Invalid "type" field value');
+      expect(formattedError).toContain('must be a string');
+    });
+
+    it('should fallback to root when navigation hits null (Lines 162-163)', () => {
+      // Path that will hit null during navigation
+      const errors = Array.from({ length: 105 }, (_, i) => ({
+        keyword: 'const',
+        schemaPath: `#/anyOf/${i}/properties/type/const`,
+        instancePath: '/items/0/nested/deep', // Navigation will hit null at items[0]
+        params: { allowedValue: `TYPE_${i}` },
+      }));
+
+      // items[0] is null, so when navigating items → 0 → nested, we hit null
+      const data = {
+        items: [null],
+        type: 42, // Root has non-string type for fallback detection
+      };
+
+      const formattedError = formatAjvErrorsEnhanced(errors, data);
+
+      // Should fallback to root and detect the non-string type there
+      expect(formattedError).toContain('Invalid "type" field value');
+    });
+
+    it('should fallback to root when final navigation result is undefined (Line 168)', () => {
+      // Path where final navigation step returns undefined
+      const errors = Array.from({ length: 105 }, (_, i) => ({
+        keyword: 'const',
+        schemaPath: `#/anyOf/${i}/properties/type/const`,
+        instancePath: '/container/missing', // 'missing' doesn't exist in container
+        params: { allowedValue: `TYPE_${i}` },
+      }));
+
+      // container exists but 'missing' key doesn't
+      const data = {
+        container: {
+          // 'missing' property doesn't exist, current['missing'] = undefined
+        },
+        type: 42, // Root has non-string type for fallback detection
+      };
+
+      const formattedError = formatAjvErrorsEnhanced(errors, data);
+
+      // Should fallback to root (line 168) and detect the non-string type
+      expect(formattedError).toContain('Invalid "type" field value');
+    });
+
+    it('should navigate full path when not a field path (Line 165)', () => {
+      // Path that does NOT end in 'type', 'macro', or 'parameters'
+      // so isFieldPath is false and navigationParts equals pathParts
+      const errors = Array.from({ length: 105 }, (_, i) => ({
+        keyword: 'const',
+        schemaPath: `#/anyOf/${i}/properties/type/const`,
+        instancePath: '/operations/0', // Ends in '0', not a field path
+        params: { allowedValue: `TYPE_${i}` },
+      }));
+
+      // Navigation: operations → 0 returns the nested object
+      const data = {
+        operations: [
+          {
+            type: 42, // Non-string type at nested level
+          },
+        ],
+      };
+
+      const formattedError = formatAjvErrorsEnhanced(errors, data);
+
+      expect(formattedError).toContain('Invalid "type" field value');
+    });
+  });
+
+  describe('Additional Coverage - Parameter errors fallback (Lines 481-509)', () => {
+    const schemaId = 'schema://test/param-errors-fallback.schema.json';
+
+    beforeEach(async () => {
+      // Create a schema that will generate >100 errors when validating
+      const anyOfBranches = Array.from({ length: 110 }, (_, i) => ({
+        type: 'object',
+        properties: {
+          type: { const: `OP_${i}` },
+          parameters: {
+            type: 'object',
+            properties: {
+              [`required_field_${i}`]: { type: 'string' },
+            },
+            required: [`required_field_${i}`],
+            additionalProperties: false,
+          },
+        },
+        required: ['type', 'parameters'],
+        additionalProperties: false,
+      }));
+
+      const schema = {
+        $id: schemaId,
+        type: 'object',
+        anyOf: anyOfBranches,
+      };
+
+      await validator.addSchema(schema, schemaId);
+    });
+
+    it('should show parameter errors when type is valid and error count > 100', () => {
+      // Use a type that exists in our schema
+      const data = {
+        type: 'OP_0',
+        parameters: {
+          wrong_field: 'value', // This will generate additionalProperties error
+        },
+      };
+
+      const result = validator.validate(schemaId, data);
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(100);
+
+      const formattedError = validator.formatAjvErrors(result.errors, data);
+
+      // Should show parameter-specific error message
+      expect(formattedError).toContain("Operation type 'OP_0'");
+      expect(formattedError).toContain('invalid parameters');
+    });
+
+    it('should detect entity_id typo via fallback path (Lines 502-504)', () => {
+      // This test needs to trigger the fallback path for entity_id detection
+      // We need: data.type truthy, errors.length > 100, and paramErrors.length > 0
+      // with an error that has params.additionalProperty === 'entity_id'
+
+      // Create errors manually to ensure we hit the fallback path
+      const errors = [
+        // First, many const errors to get error count > 100
+        ...Array.from({ length: 105 }, (_, i) => ({
+          keyword: 'const',
+          schemaPath: `#/anyOf/${i}/properties/type/const`,
+          instancePath: '',
+          params: { allowedValue: `WRONG_TYPE_${i}` },
+        })),
+        // Add parameter errors with entity_id as additionalProperty
+        {
+          keyword: 'additionalProperties',
+          schemaPath: '#/anyOf/0/properties/parameters/additionalProperties',
+          instancePath: '/parameters',
+          params: { additionalProperty: 'entity_id' },
+        },
+        {
+          keyword: 'required',
+          schemaPath: '#/anyOf/0/properties/parameters/required',
+          instancePath: '/parameters',
+          params: { missingProperty: 'entity_ref' },
+        },
+      ];
+
+      // Payload with valid type (to pass the data?.type check)
+      const data = {
+        type: 'VALID_OP',
+        parameters: {
+          entity_id: 'npc-001',
+        },
+      };
+
+      // This should trigger the fallback path with entity_id detection
+      const formattedError = formatAnyOfErrors(errors, data);
+
+      expect(formattedError).toContain("Operation type 'VALID_OP'");
+      expect(formattedError).toContain('invalid parameters');
+      expect(formattedError).toContain('"entity_id" should be "entity_ref"');
+    });
+  });
+
   describe('Direct formatter edge cases', () => {
     it('infers intended operation when grouped errors indicate the closest match', () => {
       const fabricatedErrors = [

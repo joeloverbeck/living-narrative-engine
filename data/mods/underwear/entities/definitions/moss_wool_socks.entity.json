@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:moss_wool_socks",
+  "description": "Moss green merino wool socks",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "socks"
+    },
+    "core:description": {
+      "text": "Thick merino wool socks in a subdued moss green, the kind you pull on for a long hike and forget about until evening. The cushioned soles absorb trail shock while the reinforced heels show no signs of wear despite miles of use. Natural wool keeps feet dry through sweat and stream crossings alike, and the elastic arch band holds everything in place without binding."
+    },
+    "descriptors:color_extended": {
+      "color": "moss"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    }
+  }
+}

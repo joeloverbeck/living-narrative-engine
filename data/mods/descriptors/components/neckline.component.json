@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:neckline",
+  "description": "Neckline style descriptors for clothing",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "neckline": {
+        "type": "string",
+        "description": "The neckline style",
+        "enum": [
+          "crew-neck",
+          "high-collar",
+          "low-cut",
+          "modest",
+          "off-shoulder",
+          "plunging",
+          "scoop-neck",
+          "square-neck",
+          "sweetheart",
+          "v-neck"
+        ],
+        "default": "modest"
+      }
+    },
+    "required": ["neckline"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid neckline: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Neckline is required",
+      "invalidType": "Invalid type for neckline: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_soft_bubbly_large",
+  "description": "A soft, large human ass cheek with bubbly projection",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek",
+      "hit_probability_weight": 4,
+      "health_calculation_weight": 0.2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    },
+    "core:weight": {
+      "weight": 2.2
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
+    "descriptors:projection": {
+      "projection": "bubbly"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    }
+  }
+}

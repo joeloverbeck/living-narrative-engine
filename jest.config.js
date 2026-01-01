@@ -56,8 +56,9 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    // Ignore node_modules except for 'tinyqueue', 'uuid', and the ESM-only parse5 dependency (even when nested under jsdom)
-    '/node_modules/(?!tinyqueue/|uuid/|jsdom/node_modules/parse5/|parse5/)',
+    // Ignore node_modules except for ESM-only packages that need transformation
+    // (tinyqueue, uuid, parse5, @exodus/bytes - the latter added in jsdom 27.4.0)
+    '/node_modules/(?!tinyqueue/|uuid/|jsdom/node_modules/parse5/|parse5/|@exodus/bytes/)',
     '\\.pnp\\.[^\\/]+$',
   ],
 

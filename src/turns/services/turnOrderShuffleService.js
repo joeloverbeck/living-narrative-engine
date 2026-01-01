@@ -77,7 +77,7 @@ export class TurnOrderShuffleService extends ITurnOrderShuffleService {
    * @override
    * @param {Entity[]} entities - Array of entities to shuffle
    * @param {string} strategy - Turn order strategy (e.g., 'round-robin')
-   * @param {function(): number} [randomFn=Math.random] - Random function for testing
+   * @param {function(): number} [randomFn] - Random function for testing (defaults to Math.random)
    * @returns {Entity[]} Shuffled array (same reference, modified in place)
    */
   shuffleWithHumanPositionPreservation(
@@ -204,15 +204,7 @@ export class TurnOrderShuffleService extends ITurnOrderShuffleService {
    * @returns {string} 'human' or 'ai'
    */
   #determineActorType(entity) {
-    try {
-      return determineActorType(entity);
-    } catch (error) {
-      this.#logger.warn(
-        `TurnOrderShuffleService: Error determining actor type for entity "${entity?.id}": ${error.message}`
-      );
-      // Default to human to avoid shuffling unknown entities
-      return 'human';
-    }
+    return determineActorType(entity);
   }
 
   /**

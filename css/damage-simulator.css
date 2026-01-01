@@ -268,6 +268,63 @@
   color: var(--secondary-text-color);
 }
 
+/* Oxygen Bar Styles */
+.ds-part-oxygen {
+  margin-top: 4px;
+}
+
+.ds-oxygen-bar {
+  height: 8px;
+  background: var(--border-color-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-oxygen-fill {
+  height: 100%;
+  background: var(--oxygen-blue, #4a90d9);
+  transition: width 0.3s ease;
+}
+
+.ds-oxygen-text {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+}
+
+/* Part Effects (status effect badges on body parts) */
+.ds-part-effects {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.ds-effect {
+  font-size: 14px;
+  cursor: help;
+}
+
+.ds-effect-bleeding {
+  filter: drop-shadow(0 0 2px red);
+}
+
+.ds-effect-burning {
+  animation: ds-pulse 1s infinite;
+}
+
+.ds-effect-poisoned {
+  filter: hue-rotate(90deg);
+}
+
+.ds-effect-fractured {
+  opacity: 0.8;
+}
+
+@keyframes ds-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Hierarchy Indentation */
 .ds-part-card[data-depth="1"] {
   margin-left: var(--spacing-md);
@@ -302,6 +359,176 @@
   min-height: 100px;
 }
 
+/* Analytics Panel Component (DamageAnalyticsPanel) */
+.ds-analytics-panel {
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  margin-top: var(--spacing-md);
+  background: var(--panel-bg-color);
+}
+
+.ds-analytics-panel.collapsed .ds-analytics-section {
+  display: none;
+}
+
+.ds-analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--secondary-bg-color);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-analytics-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.ds-collapse-btn {
+  background: none;
+  border: none;
+  font-size: var(--font-size-base);
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  line-height: 1;
+}
+
+.ds-collapse-btn:hover {
+  color: var(--primary-text-color);
+}
+
+.ds-analytics-section {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color-subtle);
+}
+
+.ds-analytics-section:first-of-type {
+  border-top: none;
+}
+
+.ds-analytics-section h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hits Table */
+.ds-hits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.ds-hits-table th,
+.ds-hits-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-hits-table th {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  background: var(--primary-bg-color);
+}
+
+.ds-hits-table tbody tr:hover {
+  background: var(--primary-bg-color);
+}
+
+.ds-hits-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Critical Part Highlighting */
+.ds-critical-part {
+  font-weight: 600;
+}
+
+.ds-critical-part td:first-child {
+  color: var(--error-color, #f44336);
+}
+
+.ds-critical-part td:first-child::before {
+  content: '⚠ ';
+}
+
+/* Effect List */
+.ds-effect-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ds-effect-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-effect-item:last-child {
+  border-bottom: none;
+}
+
+.ds-effect-name {
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--primary-text-color);
+}
+
+.ds-effect-threshold {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  background: var(--primary-bg-color);
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Aggregate Stats */
+.ds-aggregate-stats {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.ds-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.ds-stat-label {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent-color, #4a9eff);
+}
+
+/* No Data Message */
+.ds-no-data {
+  color: var(--secondary-text-color);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-md);
+  margin: 0;
+}
+
 /* History Panel */
 #ds-history {
   background: var(--secondary-bg-color);
@@ -321,6 +548,104 @@
 
 .ds-history-entry:last-child {
   border-bottom: none;
+}
+
+/* History Table */
+.ds-history-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-history-table-container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ds-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.ds-history-table th,
+.ds-history-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.ds-history-table th {
+  background: var(--primary-bg-color);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ds-history-table tbody tr:hover {
+  background: var(--primary-bg-color);
+}
+
+.ds-no-history {
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  padding: var(--spacing-lg) !important;
+}
+
+/* Severity Badges */
+.ds-severity-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ds-severity-minor {
+  background: #e0e0e0;
+  color: #444;
+}
+
+.ds-severity-moderate {
+  background: #ffe0cc;
+  color: #940;
+}
+
+.ds-severity-severe {
+  background: #ffcccc;
+  color: #900;
+}
+
+.ds-severity-critical {
+  background: #ff9999;
+  color: #600;
+}
+
+/* Severity row highlighting */
+tr.ds-severity-critical {
+  background: rgba(255, 153, 153, 0.1);
+}
+
+tr.ds-severity-severe {
+  background: rgba(255, 204, 204, 0.1);
+}
+
+/* History Summary */
+.ds-history-summary {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  background: var(--primary-bg-color);
+  border-top: 1px solid var(--border-color-subtle);
+  font-size: var(--font-size-small);
+}
+
+.ds-history-summary strong {
+  color: var(--accent-color, #4a9eff);
 }
 
 /* Collapsible Panel */
@@ -370,6 +695,90 @@
   text-decoration: underline;
 }
 
+/* Effect Toggle Configuration (DamageCapabilityComposer) */
+.ds-effect-toggle {
+  border-bottom: 1px solid var(--border-color-subtle);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.ds-effect-toggle:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.ds-effect-config {
+  margin-left: var(--spacing-md);
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--primary-bg-color);
+  border-radius: var(--border-radius-sm);
+  display: none;
+}
+
+.ds-effect-config.expanded {
+  display: block;
+}
+
+.ds-effect-config .ds-form-group {
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-effect-config .ds-form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Validation Errors */
+.ds-validation-errors {
+  color: var(--error-color, #f44336);
+  font-size: var(--font-size-small);
+  padding: var(--spacing-sm);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: var(--border-radius-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.ds-validation-errors:empty {
+  display: none;
+}
+
+.ds-validation-errors ul {
+  margin: 0;
+  padding-left: var(--spacing-md);
+}
+
+.ds-validation-errors li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-validation-errors li:last-child {
+  margin-bottom: 0;
+}
+
+.ds-field-error {
+  border-color: var(--error-color, #f44336) !important;
+}
+
+.ds-field-error:focus {
+  outline-color: var(--error-color, #f44336);
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+}
+
+/* Slider with value display */
+.ds-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ds-slider-row input[type="range"] {
+  flex: 1;
+}
+
+.ds-slider-row .ds-value-display {
+  min-width: 4ch;
+}
+
 /* Responsive Design - works on 1024px+ screens, stacks on smaller */
 @media (max-width: 1024px) {
   .ds-content-grid {
@@ -413,5 +822,504 @@
   #ds-recipe-selector select {
     min-width: unset;
     width: 100%;
+  }
+}
+
+/* ============================================
+   Death Condition Monitor (DAMAGESIMULATOR-015)
+   ============================================ */
+
+.ds-death-monitor {
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-top: var(--spacing-md);
+  overflow: hidden;
+  background: var(--bg-dark);
+}
+
+.ds-death-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-darker);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ds-death-header:hover {
+  background: var(--bg-dark);
+}
+
+.ds-death-header h4 {
+  margin: 0;
+  font-size: var(--font-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ds-death-status {
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+}
+
+/* Death Status Colors */
+.ds-status-safe {
+  background: #2d5a2d;
+  color: #90ee90;
+}
+
+.ds-status-warning {
+  background: #5a5a2d;
+  color: #ffee90;
+}
+
+.ds-status-critical {
+  background: #5a2d2d;
+  color: #ff9090;
+}
+
+.ds-status-dead,
+.ds-status-destroyed {
+  background: #2d2d2d;
+  color: #ff4040;
+}
+
+/* Death Monitor Content */
+.ds-death-content {
+  padding: var(--spacing-md);
+}
+
+.ds-death-content.collapsed {
+  display: none;
+}
+
+/* Vital Organ List */
+.ds-vital-organ-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ds-vital-organ-item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-darker);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--color-success);
+}
+
+.ds-vital-organ-item.ds-status-warning {
+  border-left-color: var(--color-warning);
+}
+
+.ds-vital-organ-item.ds-status-critical {
+  border-left-color: var(--color-danger);
+  animation: pulse-border 1s infinite;
+}
+
+.ds-vital-organ-item.ds-status-destroyed {
+  border-left-color: #ff4040;
+  opacity: 0.7;
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-left-color: var(--color-danger);
+  }
+  50% {
+    border-left-color: #ff6666;
+  }
+}
+
+.ds-organ-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-organ-name {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.ds-organ-type {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.ds-organ-health {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+/* Death Progress Bar */
+.ds-death-progress {
+  position: relative;
+  height: 8px;
+  background: var(--bg-dark);
+  border-radius: 4px;
+  margin: var(--spacing-xs) 0;
+  overflow: hidden;
+}
+
+.ds-death-bar {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.ds-death-bar.ds-bar-warning {
+  background: var(--color-warning);
+}
+
+.ds-death-bar.ds-bar-critical {
+  background: var(--color-danger);
+  animation: pulse-bar 1s infinite;
+}
+
+@keyframes pulse-bar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.ds-death-threshold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: red;
+}
+
+/* Hits Until Death */
+.ds-hits-until-death {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.ds-hits-until-death.ds-critical-warning {
+  color: var(--color-danger);
+  font-weight: bold;
+}
+
+/* Death Alert */
+.ds-death-alert {
+  background: #4a1010;
+  color: #ff4040;
+  padding: var(--spacing-md);
+  text-align: center;
+  animation: flash 0.5s infinite;
+  border-top: 2px solid #ff4040;
+}
+
+.ds-death-alert.hidden {
+  display: none;
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.ds-alert-icon {
+  font-size: var(--font-lg);
+  margin-right: var(--spacing-sm);
+}
+
+.ds-alert-text {
+  font-weight: bold;
+  font-size: var(--font-md);
+}
+
+.ds-death-cause {
+  display: block;
+  font-size: var(--font-sm);
+  margin-top: var(--spacing-xs);
+  color: #ff8080;
+}
+
+/* Dying Alert (about to die) */
+.ds-dying-alert {
+  background: #3a2a10;
+  color: #ffa040;
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: center;
+  border-top: 2px solid #ffa040;
+  animation: pulse-alert 1.5s infinite;
+}
+
+.ds-dying-alert.hidden {
+  display: none;
+}
+
+@keyframes pulse-alert {
+  0%,
+  100% {
+    background: #3a2a10;
+  }
+  50% {
+    background: #4a3a20;
+  }
+}
+
+/* Empty State */
+.ds-death-empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ds-death-header {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    text-align: center;
+  }
+
+  .ds-organ-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}
+
+/* ============================================
+   Multi-Hit Simulator (DAMAGESIMULATOR-016)
+   ============================================ */
+
+.ds-multi-hit-simulator {
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  margin-top: var(--spacing-md);
+  background: var(--panel-bg-color);
+  overflow: hidden;
+}
+
+.ds-multi-hit-simulator h3 {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--secondary-bg-color);
+  border-bottom: 1px solid var(--border-color-subtle);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+/* Simulation Configuration */
+.ds-sim-config {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ds-sim-config .ds-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ds-sim-config label {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  font-size: var(--font-size-small);
+}
+
+/* Target Mode Fieldset */
+.ds-target-mode-fieldset {
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  margin: 0;
+}
+
+.ds-target-mode-fieldset legend {
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  font-size: var(--font-size-small);
+  padding: 0 var(--spacing-xs);
+}
+
+.ds-target-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ds-target-mode-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.ds-target-mode-options input[type="radio"] {
+  margin: 0;
+}
+
+/* Simulation Controls */
+.ds-sim-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid var(--border-color-subtle);
+  background: var(--secondary-bg-color);
+}
+
+.ds-sim-controls .ds-button {
+  flex: 1;
+}
+
+/* Button Danger Variant */
+.ds-button--danger {
+  background: var(--error-color, #f44336);
+  color: #fff;
+}
+
+.ds-button--danger:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.ds-button--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress Bar */
+.ds-sim-progress {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid var(--border-color-subtle);
+  display: none;
+}
+
+.ds-sim-progress.visible {
+  display: block;
+}
+
+.ds-progress-bar {
+  height: 12px;
+  background: var(--border-color-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-progress-fill {
+  height: 100%;
+  background: var(--accent-color, #4a9eff);
+  transition: width 0.2s ease;
+  border-radius: 6px;
+}
+
+.ds-progress-text {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  text-align: center;
+}
+
+/* Simulation Results */
+.ds-sim-results {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color-subtle);
+  display: none;
+}
+
+.ds-sim-results.visible {
+  display: block;
+}
+
+.ds-sim-results h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.ds-result-item {
+  background: var(--primary-bg-color);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+}
+
+.ds-result-label {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.ds-result-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent-color, #4a9eff);
+}
+
+.ds-result-value--success {
+  color: #4caf50;
+}
+
+.ds-result-value--warning {
+  color: #ff9800;
+}
+
+.ds-result-value--error {
+  color: var(--error-color, #f44336);
+}
+
+/* Running State Animation */
+.ds-multi-hit-simulator.running .ds-progress-fill {
+  animation: progress-pulse 1s infinite;
+}
+
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments for Multi-Hit Simulator */
+@media (max-width: 768px) {
+  .ds-sim-controls {
+    flex-direction: column;
+  }
+
+  .ds-results-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

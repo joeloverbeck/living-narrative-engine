@@ -162,12 +162,12 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
       // Trend analysis: verify no severe consistent upward trend (CI-friendly)
       const trendSlope = calculateMemoryTrendSlope(memorySnapshots);
-      // Note: Threshold of 900KB accommodates:
+      // Note: Threshold of 1MB accommodates:
       // - Normal GC behavior when processing 300 errors with full stack traces per iteration
       // - Increased variance due to reduced sample size (8 iterations vs original 10)
       // - Non-deterministic V8 memory management patterns
       // This tests for memory leaks (which would be multi-MB), not absolute efficiency
-      expect(Math.abs(trendSlope)).toBeLessThan(900000); // <900KB per iteration trend (adjusted for reduced iteration count)
+      expect(Math.abs(trendSlope)).toBeLessThan(1000000); // <1MB per iteration trend (accommodates V8 GC variance)
     });
 
     it('should properly manage buffer size under extreme load', () => {

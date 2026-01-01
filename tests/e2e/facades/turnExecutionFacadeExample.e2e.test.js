@@ -1,299 +1,278 @@
 /**
- * @file Example E2E test using TurnExecutionFacade
- * @description Demonstrates the simplified test setup using service facades.
- * This test shows how the facade pattern reduces complexity from 20+ services
- * to a single facade interface, achieving 60-70% reduction in test setup.
+ * @file Example E2E test demonstrating proper container-based test setup
+ * @description This is the canonical reference for e2e test migration from
+ * mock facades to real production services via createE2ETestEnvironment.
  *
- * Compare this to tests/e2e/turns/FullTurnExecution.e2e.test.js (1,238 lines)
- * and tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js (complex setup).
+ * Migration from FACARCANA-004: Replaced createMockFacades() with
+ * createE2ETestEnvironment() to use real production services.
+ * @see tests/e2e/common/e2eTestContainer.js
+ * @see reports/facade-architecture-analysis.md
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
+import { createEntityDefinition } from '../../common/entities/entityFactories.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
-describe('Turn Execution Facade Example E2E', () => {
-  let facades;
-  let turnExecutionFacade;
-  let testEnvironment;
+/**
+ * Canonical E2E Test Example
+ *
+ * This test suite demonstrates proper e2e test patterns using real
+ * production services instead of mock facades. Use this as a reference
+ * when migrating other e2e tests.
+ *
+ * Key patterns:
+ * 1. Use createE2ETestEnvironment() for container setup
+ * 2. Access services via env.services.* or env.container.resolve()
+ * 3. Use env.stubLLM() for deterministic AI responses
+ * 4. Always call env.cleanup() in afterEach
+ * 5. Register entity definitions if core mod doesn't include them
+ */
+describe('Turn Execution E2E Example (Container-Based)', () => {
+  let env;
+  let entityManager;
+  let actionDiscoveryService;
+  let eventBus;
+  let registry;
+  let locationId;
+  let playerActorId;
+  let aiActorId;
+
+  /**
+   * Registers test entity definitions in the registry.
+   * Required because core mod doesn't include all entity definitions.
+   */
+  async function registerTestEntityDefinitions() {
+    const locationDef = createEntityDefinition('test:location', {
+      'core:name': { text: 'Test Location' },
+    });
+    registry.store('entityDefinitions', 'test:location', locationDef);
+
+    const actorDef = createEntityDefinition('test:actor', {
+      'core:name': { text: 'Test Actor' },
+      'core:actor': {},
+    });
+    registry.store('entityDefinitions', 'test:actor', actorDef);
+  }
 
   beforeEach(async () => {
-    // BEFORE (complex): 150+ lines of container setup, 20+ service mocks
-    // AFTER (simplified): Single line facade creation
-    facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
+    // Create real e2e test environment with core mod loading
+    env = await createE2ETestEnvironment({
+      loadMods: true,
+      mods: ['core'],
+      stubLLM: true,
+      defaultLLMResponse: { actionId: 'core:wait' },
+    });
 
-    // Set up test environment - replaces 100+ lines of manual setup
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: {
-        name: 'Test World',
-        createConnections: true,
-      },
-      actorConfig: {
-        name: 'Test AI Actor',
+    // Get production services from container
+    entityManager = env.services.entityManager;
+    actionDiscoveryService = env.services.actionDiscoveryService;
+    eventBus = env.services.eventBus;
+    registry = env.container.resolve(tokens.IDataRegistry);
+
+    // Register test entity definitions
+    await registerTestEntityDefinitions();
+
+    // Create test location
+    const locationEntity = await entityManager.createEntityInstance(
+      'test:location',
+      {
+        instanceId: 'test-location-1',
+        componentOverrides: {
+          'core:name': { text: 'Test Location' },
+        },
+      }
+    );
+    locationId = locationEntity.id;
+
+    // Create player actor
+    const playerEntity = await entityManager.createEntityInstance(
+      'test:actor',
+      {
+        instanceId: 'test-player',
+        componentOverrides: {
+          'core:name': { text: 'Test Player' },
+          'core:position': { locationId },
+          'core:actor': {},
+        },
+      }
+    );
+    playerActorId = playerEntity.id;
+
+    // Create AI actor
+    const aiEntity = await entityManager.createEntityInstance('test:actor', {
+      instanceId: 'test-ai-actor',
+      componentOverrides: {
+        'core:name': { text: 'Test AI Actor' },
+        'core:position': { locationId },
+        'core:actor': {},
       },
     });
+    aiActorId = aiEntity.id;
   });
 
   afterEach(async () => {
-    // Simple cleanup - replaces complex manual cleanup
-    await turnExecutionFacade.clearTestData();
-    await turnExecutionFacade.dispose();
+    if (env) {
+      await env.cleanup();
+    }
   });
 
   /**
-   * Test: Complete AI turn execution workflow
-   * This test demonstrates the full AI turn execution using a single facade method
-   * instead of manually coordinating 5+ services.
+   * Test: Basic action discovery using real services
+   * Demonstrates that production action discovery works correctly.
    */
-  test('should execute complete AI turn successfully', async () => {
-    // Set up mock responses for the test scenario
-    const mockAIDecision = {
-      actionId: 'core:look',
-      targets: {},
-      reasoning: 'Looking around to understand the environment',
-    };
+  test('should discover actions using real production services', async () => {
+    // Get player entity
+    const playerEntity = await entityManager.getEntity(playerActorId);
 
-    const mockValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:look',
-        actorId: testEnvironment.actors.aiActorId,
-        targets: {},
-      },
-    };
-
-    const mockExecution = {
-      success: true,
-      effects: ['Actor looked around the room'],
-      description: 'You look around the test location.',
-    };
-
-    // Configure mocks - replaces 50+ lines of individual service mocking
-    turnExecutionFacade.setupMocks({
-      aiResponses: {
-        [testEnvironment.actors.aiActorId]: mockAIDecision,
-      },
-      actionResults: {
-        [testEnvironment.actors.aiActorId]: [
-          { actionId: 'core:look', name: 'Look Around', available: true },
-          { actionId: 'core:move', name: 'Move', available: true },
-        ],
-      },
-      validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:look`]: mockValidation,
-      },
-    });
-
-    // Execute the turn - single method call replaces 30+ lines of service coordination
-    const result = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId,
-      { situation: 'starting exploration' }
-    );
-
-    // Verify the result
-    expect(result.success).toBe(true);
-    expect(result.actorId).toBe(testEnvironment.actors.aiActorId);
-    expect(result.aiDecision.actionId).toBe('core:look');
-    expect(result.validation.success).toBe(true);
-    expect(result.duration).toBeGreaterThanOrEqual(0);
-    expect(result.availableActionCount).toBe(2);
-
-    // Verify events were dispatched (simplified event checking)
-    const events = turnExecutionFacade.getDispatchedEvents();
-    expect(events.length).toBeGreaterThanOrEqual(0); // Allow 0 events since we're using mocks
-  });
-
-  /**
-   * Test: Player turn execution
-   * Demonstrates simplified player turn processing.
-   */
-  test('should execute player turn with command parsing', async () => {
-    // Mock validation and execution for player command
-    const mockValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:look',
-        actorId: testEnvironment.actors.playerActorId,
-        targets: {},
-      },
-    };
-
-    const mockExecution = {
-      success: true,
-      effects: ['Player looked around the room'],
-      description: 'You look around the test location.',
-    };
-
-    // Set up mocks for player action
-    turnExecutionFacade.setupMocks({
-      validationResults: {
-        [`${testEnvironment.actors.playerActorId}:core:look`]: mockValidation,
-      },
-    });
-
-    // Execute player turn with natural language command
-    const result = await turnExecutionFacade.executePlayerTurn(
-      testEnvironment.actors.playerActorId,
-      'look around'
-    );
-
-    // Verify the result
-    expect(result.success).toBe(true);
-    expect(result.actorId).toBe(testEnvironment.actors.playerActorId);
-    expect(result.command).toBe('look around');
-    expect(result.parsedCommand.actionId).toBe('core:look');
-    expect(result.validation.success).toBe(true);
-    expect(result.execution.success).toBe(true);
-  });
-
-  /**
-   * Test: Multiple actors taking turns
-   * Demonstrates sequential turn execution for multiple actors.
-   */
-  test('should handle multiple actors taking sequential turns', async () => {
-    // Set up mocks for both actors
-    const aiMockDecision = {
-      actionId: 'core:move',
-      targets: { direction: 'north' },
-    };
-
-    const aiValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:move',
-        targets: { direction: 'north' },
-      },
-    };
-
-    const playerValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:look',
-        actorId: testEnvironment.actors.playerActorId,
-        targets: {},
-      },
-    };
-
-    turnExecutionFacade.setupMocks({
-      aiResponses: {
-        [testEnvironment.actors.aiActorId]: aiMockDecision,
-      },
-      actionResults: {
-        [testEnvironment.actors.aiActorId]: [
-          { actionId: 'core:move', name: 'Move', available: true },
-        ],
-        [testEnvironment.actors.playerActorId]: [
-          { actionId: 'core:look', name: 'Look Around', available: true },
-        ],
-      },
-      validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:move`]: aiValidation,
-        [`${testEnvironment.actors.playerActorId}:core:look`]: playerValidation,
-      },
-    });
-
-    // Execute AI turn
-    const aiResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
-
-    // Execute player turn
-    const playerResult = await turnExecutionFacade.executePlayerTurn(
-      testEnvironment.actors.playerActorId,
-      'look'
-    );
-
-    // Verify both turns succeeded
-    expect(aiResult.success).toBe(true);
-    expect(playerResult.success).toBe(true);
-
-    // Verify turns were executed in sequence
-    expect(aiResult.duration).toBeGreaterThanOrEqual(0);
-    expect(playerResult.duration).toBeGreaterThanOrEqual(0);
-
-    // Check that events were dispatched for both actors
-    const events = turnExecutionFacade.getDispatchedEvents();
-    expect(events.length).toBeGreaterThanOrEqual(0); // Allow 0 events since we're using mocks
-  });
-
-  /**
-   * Test: Validation-only mode
-   * Demonstrates action validation without execution.
-   */
-  test('should validate actions without executing them', async () => {
-    const mockDecision = {
-      actionId: 'core:invalid-action',
-      targets: {},
-    };
-
-    const mockValidation = {
-      success: false,
-      error: 'Action not found',
-      code: 'ACTION_NOT_FOUND',
-    };
-
-    turnExecutionFacade.setupMocks({
-      aiResponses: {
-        [testEnvironment.actors.aiActorId]: mockDecision,
-      },
-      actionResults: {
-        [testEnvironment.actors.aiActorId]: [
-          {
-            actionId: 'core:invalid-action',
-            name: 'Invalid Action',
-            available: true,
-          },
-        ],
-      },
-      validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:invalid-action`]:
-          mockValidation,
-      },
-    });
-
-    // Execute in validation-only mode
-    const result = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId,
+    // Discover actions using real action discovery service
+    const result = await actionDiscoveryService.getValidActions(
+      playerEntity,
       {},
-      { validateOnly: true }
+      { trace: false }
     );
 
-    // Verify validation failed but no execution occurred
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Action validation failed');
-    expect(result.validation.success).toBe(false);
-    expect(result.execution).toBeFalsy(); // null or undefined
+    // Verify structure
+    expect(result).toBeDefined();
+    expect(result.actions).toBeDefined();
+    expect(Array.isArray(result.actions)).toBe(true);
+    // Core mod may provide basic actions
+    expect(result.actions.length).toBeGreaterThanOrEqual(0);
   });
 
   /**
-   * Test: Error handling and recovery
-   * Demonstrates robust error handling in the facade.
+   * Test: Multiple actors can discover actions independently
+   * Demonstrates the system handles multiple actors correctly.
    */
-  test('should handle errors gracefully', async () => {
-    // Test uninitialized environment
-    const freshFacade = createMockFacades().turnExecutionFacade;
+  test('should handle multiple actors discovering actions', async () => {
+    // Get both entities
+    const playerEntity = await entityManager.getEntity(playerActorId);
+    const aiEntity = await entityManager.getEntity(aiActorId);
 
-    await expect(
-      freshFacade.executeAITurn('nonexistent-actor')
-    ).rejects.toThrow('Test environment not initialized');
+    // Discover actions for both actors
+    const playerResult = await actionDiscoveryService.getValidActions(
+      playerEntity,
+      {},
+      { trace: false }
+    );
 
-    // Test invalid actor - set up mock to return no available actions
-    turnExecutionFacade.setupMocks({
-      actionResults: {
-        'nonexistent-actor': [], // Empty array means no available actions
+    const aiResult = await actionDiscoveryService.getValidActions(
+      aiEntity,
+      {},
+      { trace: false }
+    );
+
+    // Both should succeed
+    expect(playerResult).toBeDefined();
+    expect(playerResult.actions).toBeDefined();
+    expect(aiResult).toBeDefined();
+    expect(aiResult.actions).toBeDefined();
+  });
+
+  /**
+   * Test: LLM stubbing works correctly
+   * Demonstrates how to configure stub LLM responses per test.
+   */
+  test('should use stubbed LLM responses', async () => {
+    // Configure specific LLM response for this test
+    env.stubLLM({
+      actionId: 'core:wait',
+      reasoning: 'Waiting for the right moment',
+    });
+
+    // The LLM stub is now configured - actual AI service calls
+    // would return this response. This test validates the stub
+    // was set up correctly via the container.
+    const llmAdapter = env.container.resolve(tokens.LLMAdapter);
+    const response = await llmAdapter.getAIDecision({});
+    const parsed = JSON.parse(response);
+
+    expect(parsed.actionId).toBe('core:wait');
+    expect(parsed.reasoning).toBe('Waiting for the right moment');
+  });
+
+  /**
+   * Test: Event bus integration
+   * Demonstrates that the event bus is functional in e2e environment.
+   */
+  test('should have functional event bus', async () => {
+    // Track events - subscribe to specific event name
+    let eventReceived = false;
+    let receivedPayload = null;
+    const unsubscribe = eventBus.subscribe('TEST_EVENT', (payload) => {
+      eventReceived = true;
+      receivedPayload = payload;
+    });
+
+    try {
+      // Dispatch a test event using correct API: dispatch(eventName, payload)
+      await eventBus.dispatch('TEST_EVENT', { test: true });
+
+      // Verify event was received
+      expect(eventReceived).toBe(true);
+      expect(receivedPayload).toBeDefined();
+    } finally {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    }
+  });
+
+  /**
+   * Test: Entity management works with real services
+   * Demonstrates entity CRUD operations work correctly.
+   */
+  test('should create and retrieve entities correctly', async () => {
+    // Create a new entity
+    const newEntity = await entityManager.createEntityInstance('test:actor', {
+      instanceId: 'test-new-actor',
+      componentOverrides: {
+        'core:name': { text: 'New Test Actor' },
+        'core:position': { locationId },
+        'core:actor': {},
       },
     });
 
-    const result = await turnExecutionFacade.executeAITurn('nonexistent-actor');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('No available actions');
+    // Retrieve it
+    const retrieved = await entityManager.getEntity(newEntity.id);
+
+    // Verify
+    expect(retrieved).toBeDefined();
+    expect(retrieved.id).toBe(newEntity.id);
+  });
+
+  /**
+   * Test: Action discovery result has expected structure
+   * Validates the shape of action discovery results.
+   */
+  test('should return action discovery result with expected structure', async () => {
+    const playerEntity = await entityManager.getEntity(playerActorId);
+
+    const result = await actionDiscoveryService.getValidActions(
+      playerEntity,
+      {},
+      { trace: false }
+    );
+
+    // Structure validation
+    expect(result).toBeDefined();
+    expect(result).toHaveProperty('actions');
+    expect(Array.isArray(result.actions)).toBe(true);
+
+    // Each action should have basic properties if present
+    for (const action of result.actions) {
+      expect(action).toHaveProperty('id');
+    }
+  });
+
+  /**
+   * Test: Services are properly resolved from container
+   * Validates that all required services are available.
+   */
+  test('should have all required services available', () => {
+    expect(entityManager).toBeDefined();
+    expect(actionDiscoveryService).toBeDefined();
+    expect(eventBus).toBeDefined();
+    expect(registry).toBeDefined();
   });
 });

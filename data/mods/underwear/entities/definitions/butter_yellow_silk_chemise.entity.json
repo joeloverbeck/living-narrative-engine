@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:butter_yellow_silk_chemise",
+  "description": "A butter-yellow silk chemise with delicate straps",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "chemise"
+    },
+    "core:description": {
+      "text": "A luxurious chemise of fine butter-yellow silk that drapes with liquid grace against the skin. The delicate fabric catches the light with a subtle luster, its warm golden hue suggesting spring sunshine and fresh butter. Thin shoulder straps and a low neckline create an elegant silhouette, while the silk whispers softly with every movement. The craftsmanship speaks of skilled hands—each seam nearly invisible, the hem finished with minute rolled edges."
+    },
+    "descriptors:color_extended": {
+      "color": "butter-yellow"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.08
+    }
+  }
+}

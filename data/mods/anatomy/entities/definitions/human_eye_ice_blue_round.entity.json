@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_eye_ice_blue_round",
+  "description": "A human eye with ice-blue iris and round shape",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye",
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "eye"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
+    "descriptors:color_extended": {
+      "color": "ice-blue"
+    },
+    "descriptors:shape_eye": {
+      "shape": "round"
+    },
+    "anatomy:provides_sight": {}
+  }
+}

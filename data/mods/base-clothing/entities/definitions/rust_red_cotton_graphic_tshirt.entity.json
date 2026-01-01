@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:rust_red_cotton_graphic_tshirt",
+  "description": "Rust red cotton graphic T-shirt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "graphic T-shirt"
+    },
+    "core:description": {
+      "text": "A well-worn rust red cotton T-shirt with a faded graphic across the chest—something about a mountain range or maybe a band, hard to tell anymore. The cotton has gone soft from years of wash cycles, and the collar has that relaxed droop that comes with comfortable neglect. It fits loose, the way a favorite shirt should, good for trail days or lazy mornings."
+    },
+    "descriptors:color_extended": {
+      "color": "rust-red"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.25
+    }
+  }
+}
