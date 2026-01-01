@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:nude_silk_stockings",
+  "description": "Sheer nude silk stockings",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "stockings"
+    },
+    "core:description": {
+      "text": "Exquisitely sheer silk stockings in a delicate nude shade that seems to disappear against bare skin. The fine silk weave creates a barely-there sensation, adding a subtle sheen to the legs while remaining almost invisible. These elegant stockings extend to mid-thigh, held in place by their own gentle grip. The silk is cool to the touch initially, warming quickly against the body, and moves with a whispered grace."
+    },
+    "descriptors:color_extended": {
+      "color": "nude"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "underwear"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.04
+    }
+  }
+}

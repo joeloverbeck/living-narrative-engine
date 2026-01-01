@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_nose_medium",
+  "description": "A humanoid nose of medium size",
+  "components": {
+    "anatomy:part": {
+      "subType": "nose",
+      "hit_probability_weight": 0.6,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "nose"
+    },
+    "core:weight": {
+      "weight": 0.03
+    },
+    "anatomy:provides_smell": {},
+    "descriptors:size_category": {
+      "size": "medium"
+    }
+  }
+}

@@ -11,12 +11,18 @@ import {
 
 const mockBootstrap = jest.fn();
 const mockDisplayFatalStartupError = jest.fn();
+const mockRegisterVisualizerComponents = jest.fn();
 const mockRegisterDamageSimulatorComponents = jest.fn();
 const mockTokens = {
   ILogger: 'ILogger',
   IRecipeSelectorService: 'IRecipeSelectorService',
   IEntityLoadingService: 'IEntityLoadingService',
   IAnatomyDataExtractor: 'IAnatomyDataExtractor',
+  DamageSimulatorUI: 'DamageSimulatorUI',
+  DamageHistoryTracker: 'DamageHistoryTracker',
+  HierarchicalAnatomyRenderer: 'HierarchicalAnatomyRenderer',
+  DamageCapabilityComposer: 'DamageCapabilityComposer',
+  DamageExecutionService: 'DamageExecutionService',
 };
 
 jest.mock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
@@ -26,6 +32,14 @@ jest.mock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
     displayFatalStartupError: mockDisplayFatalStartupError,
   })),
 }));
+
+jest.mock(
+  '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
+  () => ({
+    __esModule: true,
+    registerVisualizerComponents: mockRegisterVisualizerComponents,
+  })
+);
 
 jest.mock(
   '../../src/dependencyInjection/registrations/damageSimulatorRegistrations.js',
@@ -67,6 +81,7 @@ beforeEach(() => {
   jest.resetModules();
   mockBootstrap.mockReset();
   mockDisplayFatalStartupError.mockReset();
+  mockRegisterVisualizerComponents.mockReset();
   mockRegisterDamageSimulatorComponents.mockReset();
   mockBootstrap.mockImplementation(() => {
     throw new Error('bootstrapMock not implemented for this test');
@@ -86,10 +101,22 @@ describe('damage-simulator initialize', () => {
 
     const logger = { info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
 
+    const mockDamageSimulatorUI = {
+      initialize: jest.fn(),
+      setChildComponent: jest.fn(),
+    };
+    const mockHistoryTracker = { render: jest.fn() };
+    const mockAnatomyRenderer = { render: jest.fn() };
+    const mockDamageComposer = { initialize: jest.fn() };
     const resolvedServices = {
       [mockTokens.IRecipeSelectorService]: { id: 'recipeSelectorService' },
       [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
       [mockTokens.IAnatomyDataExtractor]: { id: 'anatomyDataExtractor' },
+      [mockTokens.DamageSimulatorUI]: mockDamageSimulatorUI,
+      [mockTokens.DamageHistoryTracker]: () => mockHistoryTracker,
+      [mockTokens.HierarchicalAnatomyRenderer]: () => mockAnatomyRenderer,
+      [mockTokens.DamageCapabilityComposer]: () => mockDamageComposer,
+      [mockTokens.DamageExecutionService]: { applyDamage: jest.fn() },
     };
 
     const container = {
@@ -128,9 +155,19 @@ describe('damage-simulator initialize', () => {
     const readyHandler = addEventListenerSpy.mock.calls[0][1];
     await readyHandler();
 
+    // Verify both registration functions were called
+    expect(mockRegisterVisualizerComponents).toHaveBeenCalledWith(container);
     expect(mockRegisterDamageSimulatorComponents).toHaveBeenCalledWith(
       container
     );
+
+    // Verify visualizer components are registered before damage simulator components
+    const visualizerCallOrder =
+      mockRegisterVisualizerComponents.mock.invocationCallOrder[0];
+    const damageSimulatorCallOrder =
+      mockRegisterDamageSimulatorComponents.mock.invocationCallOrder[0];
+    expect(visualizerCallOrder).toBeLessThan(damageSimulatorCallOrder);
+
     expect(container.resolve).toHaveBeenCalledWith(
       mockTokens.IRecipeSelectorService
     );
@@ -159,10 +196,22 @@ describe('damage-simulator initialize', () => {
 
     const logger = { info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
 
+    const mockDamageSimulatorUI = {
+      initialize: jest.fn(),
+      setChildComponent: jest.fn(),
+    };
+    const mockHistoryTracker = { render: jest.fn() };
+    const mockAnatomyRenderer = { render: jest.fn() };
+    const mockDamageComposer = { initialize: jest.fn() };
     const resolvedServices = {
       [mockTokens.IRecipeSelectorService]: { id: 'recipeSelectorService' },
       [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
       [mockTokens.IAnatomyDataExtractor]: { id: 'anatomyDataExtractor' },
+      [mockTokens.DamageSimulatorUI]: mockDamageSimulatorUI,
+      [mockTokens.DamageHistoryTracker]: () => mockHistoryTracker,
+      [mockTokens.HierarchicalAnatomyRenderer]: () => mockAnatomyRenderer,
+      [mockTokens.DamageCapabilityComposer]: () => mockDamageComposer,
+      [mockTokens.DamageExecutionService]: { applyDamage: jest.fn() },
     };
 
     const container = {
@@ -198,10 +247,22 @@ describe('damage-simulator initialize', () => {
 
     const logger = { info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
 
+    const mockDamageSimulatorUI = {
+      initialize: jest.fn(),
+      setChildComponent: jest.fn(),
+    };
+    const mockHistoryTracker = { render: jest.fn() };
+    const mockAnatomyRenderer = { render: jest.fn() };
+    const mockDamageComposer = { initialize: jest.fn() };
     const resolvedServices = {
       [mockTokens.IRecipeSelectorService]: { id: 'recipeSelectorService' },
       [mockTokens.IEntityLoadingService]: { id: 'entityLoadingService' },
       [mockTokens.IAnatomyDataExtractor]: { id: 'anatomyDataExtractor' },
+      [mockTokens.DamageSimulatorUI]: mockDamageSimulatorUI,
+      [mockTokens.DamageHistoryTracker]: () => mockHistoryTracker,
+      [mockTokens.HierarchicalAnatomyRenderer]: () => mockAnatomyRenderer,
+      [mockTokens.DamageCapabilityComposer]: () => mockDamageComposer,
+      [mockTokens.DamageExecutionService]: { applyDamage: jest.fn() },
     };
 
     const container = {
@@ -231,6 +292,7 @@ describe('damage-simulator initialize', () => {
       expect.anything()
     );
     expect(mockBootstrap).toHaveBeenCalledTimes(1);
+    expect(mockRegisterVisualizerComponents).toHaveBeenCalledTimes(1);
     expect(mockRegisterDamageSimulatorComponents).toHaveBeenCalledTimes(1);
 
     addEventListenerSpy.mockRestore();

@@ -68,6 +68,23 @@
                 </div>
               </fieldset>
 
+              <fieldset class="ds-form-group ds-target-mode">
+                <legend>Target Mode</legend>
+                <div class="ds-radio-group">
+                  <label>
+                    <input type="radio" name="target-mode" value="random" checked />
+                    Random (weighted)
+                  </label>
+                  <label>
+                    <input type="radio" name="target-mode" value="specific" />
+                    Specific Part:
+                    <select id="target-part" disabled>
+                      <option value="">Select part...</option>
+                    </select>
+                  </label>
+                </div>
+              </fieldset>
+
               <button type="button" id="apply-damage-btn" class="ds-button ds-button--primary" disabled>
                 Apply Damage
               </button>

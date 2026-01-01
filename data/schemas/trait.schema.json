@@ -53,7 +53,7 @@
       "type": "string",
       "description": "Physical description of the character",
       "minLength": 100,
-      "maxLength": 700
+      "maxLength": 2100
     },
     "personality": {
       "type": "array",

@@ -12,28 +12,24 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
-import { createTestBed } from '../../common/testBed.js';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
 
 describe('Proximity-Based Closeness User Journeys E2E', () => {
-  let facades;
-  let testBed;
+  let env;
   let actionService;
   let entityService;
 
   beforeEach(async () => {
-    // Use existing test infrastructure
-    testBed = createTestBed();
-    facades = createMockFacades({}, jest.fn);
+    // Use production container with stubbed LLM
+    env = await createE2ETestEnvironment({ stubLLM: true });
 
-    // Setup complete game engine simulation
-    actionService = facades.actionService;
-    entityService = facades.entityService;
+    // Setup services using helpers (facade-compatible API)
+    actionService = env.helpers;
+    entityService = env.helpers;
   });
 
-  afterEach(() => {
-    testBed.cleanup();
-    facades.cleanupAll();
+  afterEach(async () => {
+    await env.cleanupAll();
     jest.clearAllMocks();
   });
 

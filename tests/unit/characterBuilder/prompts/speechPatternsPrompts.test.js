@@ -3,9 +3,7 @@ import {
   PROMPT_VERSION_INFO,
   SPEECH_PATTERNS_LLM_PARAMS,
   SPEECH_PATTERNS_RESPONSE_SCHEMA,
-  PromptVariations,
   createSpeechPatternsPrompt,
-  createFocusedPrompt,
   validateSpeechPatternsGenerationResponse,
   buildSpeechPatternsGenerationPrompt,
 } from '../../../../src/characterBuilder/prompts/speechPatternsPrompts.js';
@@ -13,14 +11,18 @@ import {
 describe('speechPatternsPrompts constants', () => {
   it('exposes the current prompt version information', () => {
     expect(PROMPT_VERSION_INFO).toEqual({
-      version: '3.0.0',
+      version: '4.0.0',
       previousVersions: {
         '1.0.0': 'Initial implementation with unstructured format',
         '2.0.0': 'XML-like structure with pattern/example/circumstances fields',
+        '3.0.0': 'Updated to type/contexts[]/examples[] structure',
       },
       currentChanges: expect.arrayContaining([
-        'Updated schema to match speech_patterns.component.json structure',
-        'Changed from pattern/example/circumstances to type/contexts[]/examples[]',
+        'Replaced generic consultant role with voice architect role',
+        'Added hard rules section with 6 strict requirements',
+        'Added 4-step method with quality gates',
+        'Added example length mix requirements',
+        'Removed unused PromptVariations and createFocusedPrompt',
       ]),
     });
   });
@@ -50,19 +52,6 @@ describe('speechPatternsPrompts constants', () => {
       },
     });
   });
-
-  it('lists all supported focused prompt variations', () => {
-    expect(Object.keys(PromptVariations)).toEqual([
-      'EMOTIONAL_FOCUS',
-      'SOCIAL_FOCUS',
-      'PSYCHOLOGICAL_FOCUS',
-      'RELATIONSHIP_FOCUS',
-    ]);
-    expect(PromptVariations.EMOTIONAL_FOCUS.patternCount).toBe(25);
-    expect(PromptVariations.SOCIAL_FOCUS.additionalInstructions).toContain(
-      'Social Dynamics'
-    );
-  });
 });
 
 describe('createSpeechPatternsPrompt', () => {
@@ -78,15 +67,38 @@ describe('createSpeechPatternsPrompt', () => {
   it('renders the full prompt template with default pattern count', () => {
     const prompt = createSpeechPatternsPrompt(baseCharacter);
 
+    // Check for new prompt structure sections
     expect(prompt).toContain('<role>');
-    expect(prompt).toContain('<task_definition>');
-    expect(prompt).toContain('4-8 speech pattern groups');
-    expect(prompt).toContain('approximately 20 total examples');
-    expect(prompt).toContain('targeting ~20');
-    expect(prompt).toContain('Focus on psychological and emotional depth');
+    expect(prompt).toContain(
+      'senior character-voice architect for fiction and dialogue-heavy RPGs'
+    );
+    expect(prompt).toContain('<inputs>');
+    expect(prompt).toContain('<character_definition>');
+    expect(prompt).toContain('<target_settings>');
+    expect(prompt).toContain('<pattern_group_count>4-8</pattern_group_count>');
+    expect(prompt).toContain('<target_total_examples>20</target_total_examples>');
+    expect(prompt).toContain('<example_length_mix>');
+    expect(prompt).toContain('<hard_rules>');
+    expect(prompt).toContain('### 1) NO RETCONS');
+    expect(prompt).toContain('### 2) SPOKEN DIALOGUE ONLY');
+    expect(prompt).toContain('### 3) DISTINCTIVENESS IS MANDATORY');
+    expect(prompt).toContain('### 4) RANGE, NOT ONE NOTE');
+    expect(prompt).toContain('### 5) AVOID LLM-SLOP');
+    expect(prompt).toContain('### 6) KEEP STRUCTURE STRICT');
+    expect(prompt).toContain('<method>');
+    expect(prompt).toContain('### Step A — Extract Voice Fingerprint');
+    expect(prompt).toContain('### Step B — Set Constraints');
+    expect(prompt).toContain('### Step C — Build the Pattern Groups');
+    expect(prompt).toContain('### Step D — Quality Gates');
+    expect(prompt).toContain('GATE 1: 1–2 Line Recognizability');
+    expect(prompt).toContain('GATE 2: Not-a-Gimmick');
+    expect(prompt).toContain('GATE 3: Speakability');
+    expect(prompt).toContain('GATE 4: Persona Grounding');
+    expect(prompt).toContain('<output_requirements>');
+    expect(prompt).toContain('<response_format>');
     expect(prompt).toContain('"name": "Lyra"');
     expect(prompt).toContain('"origin": "Nova Station"');
-    expect(prompt).toContain('"type": "Pattern Category Name"');
+    expect(prompt).toContain('"type": "Pattern Category Name');
     expect(prompt).toContain('"contexts"');
     expect(prompt).toContain('"examples"');
     expect(prompt).toContain('<content_policy>');
@@ -97,38 +109,26 @@ describe('createSpeechPatternsPrompt', () => {
       patternCount: 12,
     });
 
-    expect(prompt).toContain('approximately 12 total examples');
-    expect(prompt).toContain('targeting ~12');
-  });
-});
-
-describe('createFocusedPrompt', () => {
-  const character = {
-    name: 'Rin',
-    traits: ['resolute'],
-  };
-
-  it('applies the requested focus variation instructions', () => {
-    const prompt = createFocusedPrompt(character, 'EMOTIONAL_FOCUS');
-
-    expect(prompt).toContain('SPECIAL FOCUS: Emotional Expression');
-    expect(prompt).toContain('targeting ~25');
+    expect(prompt).toContain('<target_total_examples>12</target_total_examples>');
+    expect(prompt).toContain('Aim for ~12 total examples across all groups');
   });
 
-  it('falls back to psychological focus when the type is unknown', () => {
-    const prompt = createFocusedPrompt(character, 'UNKNOWN_TYPE');
+  it('includes example length mix requirements', () => {
+    const prompt = createSpeechPatternsPrompt(baseCharacter);
 
-    expect(prompt).toContain('SPECIAL FOCUS: Psychological Complexity');
-    expect(prompt).toContain('targeting ~20');
+    expect(prompt).toContain('20–35% "barks" (<= 10 words)');
+    expect(prompt).toContain('55–75% "standard lines" (<= 25 words)');
+    expect(prompt).toContain('0–15% "long lines" (<= 60 words');
   });
 
-  it('allows overriding the variation pattern count through options', () => {
-    const prompt = createFocusedPrompt(character, 'RELATIONSHIP_FOCUS', {
-      patternCount: 18,
-    });
+  it('includes pattern group suggestions', () => {
+    const prompt = createSpeechPatternsPrompt(baseCharacter);
 
-    expect(prompt).toContain('targeting ~18');
-    expect(prompt).toContain('SPECIAL FOCUS: Relationship Dynamics');
+    expect(prompt).toContain('Social Mask / Default Charm');
+    expect(prompt).toContain('Deflection Under Praise');
+    expect(prompt).toContain('Predatory People-Reading / Negotiation');
+    expect(prompt).toContain('Boundary-Setting / Exit Lines');
+    expect(prompt).toContain('Intimacy Pressure Response');
   });
 });
 
@@ -383,20 +383,24 @@ describe('buildSpeechPatternsGenerationPrompt', () => {
     );
   });
 
-  it('delegates to focused prompt generation when a focus type is provided', () => {
-    const prompt = buildSpeechPatternsGenerationPrompt(character, {
-      focusType: 'SOCIAL_FOCUS',
-    });
-
-    expect(prompt).toContain('SPECIAL FOCUS: Social Dynamics');
-    expect(prompt).toContain('targeting ~22');
-  });
-
-  it('builds a standard prompt when no focus is supplied', () => {
+  it('builds a standard prompt with new v4 structure', () => {
     const prompt = buildSpeechPatternsGenerationPrompt(character);
 
-    expect(prompt).toContain('4-8 speech pattern groups');
-    expect(prompt).toContain('approximately 20 total examples');
-    expect(prompt).toContain('targeting ~20');
+    expect(prompt).toContain('<role>');
+    expect(prompt).toContain('senior character-voice architect');
+    expect(prompt).toContain('<hard_rules>');
+    expect(prompt).toContain('<method>');
+    expect(prompt).toContain('<output_requirements>');
+    expect(prompt).toContain('<pattern_group_count>4-8</pattern_group_count>');
+    expect(prompt).toContain('<target_total_examples>20</target_total_examples>');
+  });
+
+  it('passes options through to the underlying prompt function', () => {
+    const prompt = buildSpeechPatternsGenerationPrompt(character, {
+      patternCount: 15,
+    });
+
+    expect(prompt).toContain('<target_total_examples>15</target_total_examples>');
+    expect(prompt).toContain('Aim for ~15 total examples across all groups');
   });
 });

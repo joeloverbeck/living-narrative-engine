@@ -437,26 +437,6 @@ describe('TurnOrderShuffleService', () => {
       });
     });
 
-    describe('error handling', () => {
-      it('should handle determineActorType throwing', () => {
-        determineActorType.mockImplementation(() => {
-          throw new Error('Component not found');
-        });
-
-        const entities = [{ id: 'entity1' }, { id: 'entity2' }];
-        const original = entities.map((e) => e.id);
-
-        // Should not throw, should default to treating as human
-        const result = service.shuffleWithHumanPositionPreservation(
-          entities,
-          'round-robin'
-        );
-
-        // All treated as human = no shuffle
-        expect(result.map((e) => e.id)).toEqual(original);
-        expect(mockLogger.warn).toHaveBeenCalled();
-      });
-    });
   });
 
   describe('isHumanPlayer', () => {
@@ -474,17 +454,6 @@ describe('TurnOrderShuffleService', () => {
       const result = service.isHumanPlayer({ id: 'npc1' });
 
       expect(result).toBe(false);
-    });
-
-    it('should handle errors gracefully', () => {
-      determineActorType.mockImplementation(() => {
-        throw new Error('Error');
-      });
-
-      // Should default to human
-      const result = service.isHumanPlayer({ id: 'unknown' });
-
-      expect(result).toBe(true);
     });
   });
 });

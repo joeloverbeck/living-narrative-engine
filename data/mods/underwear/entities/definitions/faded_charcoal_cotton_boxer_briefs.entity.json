@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:faded_charcoal_cotton_boxer_briefs",
+  "description": "Faded charcoal cotton boxer briefs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "cotton"
+    },
+    "core:name": {
+      "text": "boxer briefs"
+    },
+    "core:description": {
+      "text": "Comfortable cotton boxer briefs in a faded charcoal shade, the color softened by countless washes into something lived-in and familiar. The elastic waistband has relaxed just enough to sit easy, and the fabric has that broken-in feel that only comes with time. Neither flashy nor faded to rags—just practical underwear for someone who values function over fashion."
+    },
+    "descriptors:color_extended": {
+      "color": "faded-charcoal"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.09
+    }
+  }
+}

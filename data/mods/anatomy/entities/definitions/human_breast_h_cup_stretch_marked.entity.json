@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_breast_h_cup_stretch_marked",
+  "description": "An H-cup breast with impressive fullness, weight, and faint stretch marks",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast",
+      "hit_probability_weight": 4,
+      "health_calculation_weight": 0.35
+    },
+    "anatomy:part_health": {
+      "currentHealth": 20,
+      "maxHealth": 20,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "breast"
+    },
+    "core:weight": {
+      "weight": 1.8
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
+    "descriptors:size_specific": {
+      "size": "H-cup"
+    },
+    "descriptors:texture": {
+      "texture": "stretch-marked"
+    },
+    "descriptors:weight_feel": {
+      "weight": "heavy"
+    }
+  }
+}

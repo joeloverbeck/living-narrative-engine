@@ -51,10 +51,16 @@ describe('damageSimulatorRegistrations', () => {
 
       registerDamageSimulatorComponents(mockContainer);
 
-      expect(callOrder).toEqual([
-        '[DamageSimulator] Starting component registrations...',
-        '[DamageSimulator] Component registrations complete.',
-      ]);
+      // Verify start and complete messages are present and in correct order
+      const startIndex = callOrder.indexOf(
+        '[DamageSimulator] Starting component registrations...'
+      );
+      const completeIndex = callOrder.indexOf(
+        '[DamageSimulator] Component registrations complete.'
+      );
+      expect(startIndex).toBe(0);
+      expect(completeIndex).toBe(callOrder.length - 1);
+      expect(startIndex).toBeLessThan(completeIndex);
     });
   });
 });

@@ -33,7 +33,7 @@ describe('traitsRewriterPrompts', () => {
   });
 
   describe('createTraitsRewriterPrompt', () => {
-    it('embeds the serialized character definition and instruction blocks', () => {
+    it('embeds the serialized character definition and all prompt sections', () => {
       const characterData = {
         'core:name': { text: 'Ari' },
         traits: { 'core:likes': 'Sunrises' },
@@ -49,7 +49,12 @@ describe('traitsRewriterPrompts', () => {
       const serialized = JSON.stringify(characterData, null, 2);
       expect(prompt).toContain('<role>');
       expect(prompt).toContain('<task_definition>');
-      expect(prompt).toContain('<instructions>');
+      expect(prompt).toContain('<hard_rules>');
+      expect(prompt).toContain('<rewrite_targets>');
+      expect(prompt).toContain('<voice_source_of_truth>');
+      expect(prompt).toContain('<epistemology_constraints>');
+      expect(prompt).toContain('<speech_guidelines>');
+      expect(prompt).toContain('<quality_checks>');
       expect(prompt).toContain('<output_format>');
       expect(prompt).toContain('<content_policy>');
       expect(prompt).toContain(serialized);
@@ -66,6 +71,18 @@ describe('traitsRewriterPrompts', () => {
 
       expect(prompt).toContain('Nia');
       expect(prompt).toContain('core:notes');
+    });
+
+    it('emphasizes voice-locked perspective shift philosophy', () => {
+      const characterData = {
+        'core:name': { text: 'Test' },
+      };
+
+      const prompt = createTraitsRewriterPrompt(characterData);
+
+      expect(prompt).toContain('voice-locked perspective shift');
+      expect(prompt).toContain('Preserve ALL factual meaning');
+      expect(prompt).toContain('Do NOT add, remove, combine, or reinterpret facts');
     });
   });
 

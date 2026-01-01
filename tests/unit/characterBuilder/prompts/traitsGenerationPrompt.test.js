@@ -161,12 +161,16 @@ describe('TraitsGenerationPrompt - buildTraitsGenerationPrompt', () => {
 
     expect(prompt).toContain('<role>');
     expect(prompt).toContain(
-      'Expert character development analyst specializing in creating comprehensive character traits'
+      'Senior character architect specializing in volatile, failure-prone, story-generative characters'
     );
     expect(prompt).toContain('<task_definition>');
     expect(prompt).toContain(
-      'Generate detailed character traits based on core concept'
+      'Generate psychologically coherent but unstable character traits'
     );
+    expect(prompt).toContain('<hard_rules>');
+    expect(prompt).toContain('Traits must create *conflict*, not balance');
+    expect(prompt).toContain('<method>');
+    expect(prompt).toContain('Internal Friction Map');
     expect(prompt).toContain('<character_concept>');
     expect(prompt).toContain(validCharacterConcept);
     expect(prompt).toContain('<thematic_direction>');
@@ -550,12 +554,12 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
   it('should validate physical description - above maximum', () => {
     const response = createValidResponse();
-    response.physicalDescription = 'A'.repeat(701); // More than 700 chars
+    response.physicalDescription = 'A'.repeat(2101); // More than 2100 chars
 
     expect(() => {
       validateTraitsGenerationResponse(response);
     }).toThrow(
-      'TraitsGenerationPrompt: physicalDescription exceeds maximum (got 701 characters, maximum is 700)'
+      'TraitsGenerationPrompt: physicalDescription exceeds maximum (got 2101 characters, maximum is 2100)'
     );
   });
 

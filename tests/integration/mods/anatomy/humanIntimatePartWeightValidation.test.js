@@ -353,8 +353,11 @@ describe('Human Intimate Part Weight Validation', () => {
         (f) => getWeight(loadEntityFile(f)) !== undefined
       );
 
-      expect(bodyParts.length).toBe(34);
-      expect(bodyPartsWithWeight.length).toBe(34);
+      // Use >= to avoid brittle tests when new anatomy parts are added
+      expect(bodyParts.length).toBeGreaterThanOrEqual(34);
+      expect(bodyPartsWithWeight.length).toBeGreaterThanOrEqual(34);
+      // All body parts must have weight (complete coverage)
+      expect(bodyPartsWithWeight.length).toBe(bodyParts.length);
     });
 
     it('should have all weights as positive numbers', () => {

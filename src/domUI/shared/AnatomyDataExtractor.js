@@ -48,6 +48,50 @@ class AnatomyDataExtractor {
   }
 
   /**
+   * Extract hierarchical anatomy data from an entity instance.
+   * Convenience wrapper that retrieves the anatomy:body component and calls extractHierarchy.
+   *
+   * @param {string} entityInstanceId - The entity instance ID
+   * @returns {Promise<AnatomyTreeNode|null>} Tree structure or null if entity has no anatomy
+   */
+  async extractFromEntity(entityInstanceId) {
+    if (!entityInstanceId) {
+      this.#logger.warn(
+        'AnatomyDataExtractor: entityInstanceId is required for extractFromEntity'
+      );
+      return null;
+    }
+
+    try {
+      const entity =
+        await this.#entityManager.getEntityInstance(entityInstanceId);
+      if (!entity) {
+        this.#logger.warn(
+          `AnatomyDataExtractor: Entity not found: ${entityInstanceId}`
+        );
+        return null;
+      }
+
+      // eslint-disable-next-line mod-architecture/no-hardcoded-mod-references -- Service explicitly works with anatomy mod components
+      const bodyData = entity.getComponentData('anatomy:body');
+      if (!bodyData) {
+        this.#logger.debug(
+          `AnatomyDataExtractor: Entity ${entityInstanceId} has no anatomy:body component`
+        );
+        return null;
+      }
+
+      return this.extractHierarchy(bodyData);
+    } catch (error) {
+      this.#logger.error(
+        `AnatomyDataExtractor: Failed to extract from entity ${entityInstanceId}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  /**
    * Extract hierarchical part data from anatomy:body component.
    * Uses BFS traversal with cycle detection to build a tree structure.
    *

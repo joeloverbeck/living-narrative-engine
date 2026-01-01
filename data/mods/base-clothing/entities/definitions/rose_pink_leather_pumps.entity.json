@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:rose_pink_leather_pumps",
+  "description": "Rose-pink leather pumps with a modest heel",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base"]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "pumps"
+    },
+    "core:description": {
+      "text": "Elegant pumps crafted from supple rose-pink leather, dyed to a soft, feminine hue that complements warm skin tones. The modest heel provides a graceful lift without sacrificing comfort, while the rounded toe and smooth lines create a timeless silhouette. The leather has been carefully worked to a soft sheen, and the insoles are lined for all-day wear. These are practical shoes dressed in prettiness—suitable for a village square or a manor house alike."
+    },
+    "descriptors:color_extended": {
+      "color": "rose-pink"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.48
+    }
+  }
+}

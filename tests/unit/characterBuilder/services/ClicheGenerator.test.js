@@ -691,7 +691,7 @@ describe('ClicheGenerator', () => {
         const versionInfo = service.getPromptVersionInfo();
 
         expect(versionInfo).toEqual(PROMPT_VERSION_INFO);
-        expect(versionInfo.version).toBe('1.2.0');
+        expect(versionInfo.version).toBe('2.0.0');
         expect(versionInfo).toHaveProperty('previousVersions');
         expect(versionInfo).toHaveProperty('currentChanges');
       });

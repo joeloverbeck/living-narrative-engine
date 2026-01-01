@@ -1,64 +1,120 @@
 /**
  * @file AIActionDecisionIntegration.simple.e2e.test.js
- * @description Simplified AI action decision tests that work with mock facades
+ * @description Simplified AI action decision tests using container-based approach.
+ *
+ * Migration from FACARCANA-004: Replaced createMockFacades() with
+ * createE2ETestEnvironment() to use real production services.
+ * @see tests/e2e/common/e2eTestContainer.js
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
+import { createEntityDefinition } from '../../common/entities/entityFactories.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 describe('AI Action Decision Integration E2E - Simplified', () => {
-  let facades;
-  let turnExecutionFacade;
-  let llmService;
-  let testEnvironment;
+  let env;
+  let entityManager;
+  let registry;
+  let llmAdapter;
+  let locationId;
+  let aiActorId1;
+  let aiActorId2;
+
+  /**
+   * Registers test entity definitions in the registry.
+   */
+  async function registerTestEntityDefinitions() {
+    const locationDef = createEntityDefinition('test:location', {
+      'core:name': { text: 'AI Test World' },
+    });
+    registry.store('entityDefinitions', 'test:location', locationDef);
+
+    const actorDef = createEntityDefinition('test:ai-actor', {
+      'core:name': { text: 'AI Actor' },
+      'core:actor': {},
+    });
+    registry.store('entityDefinitions', 'test:ai-actor', actorDef);
+  }
 
   beforeEach(async () => {
-    // Create facades with mocking support
-    facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
-    llmService = facades.llmService;
+    // Create real e2e test environment with core mod loading
+    env = await createE2ETestEnvironment({
+      loadMods: true,
+      mods: ['core'],
+      stubLLM: true,
+      defaultLLMResponse: { actionId: 'core:wait', targets: {} },
+    });
 
-    // Initialize test environment with AI actors
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: {
-        name: 'AI Test World',
-        createConnections: true,
-      },
-      actorConfig: {
-        name: 'Human Player',
-        additionalActors: [
-          { id: 'ai-actor-1', name: 'AI Companion', isAI: true },
-          { id: 'ai-actor-2', name: 'AI Enemy', isAI: true },
-        ],
+    // Get production services from container
+    entityManager = env.services.entityManager;
+    registry = env.container.resolve(tokens.IDataRegistry);
+    // Note: llmAdapter resolved here uses the default stub from environment creation
+    // Tests that call env.stubLLM() must re-resolve the adapter
+    llmAdapter = env.container.resolve(tokens.LLMAdapter);
+
+    // Register test entity definitions
+    await registerTestEntityDefinitions();
+
+    // Create test location
+    const locationEntity = await entityManager.createEntityInstance(
+      'test:location',
+      {
+        instanceId: 'test-ai-location',
+        componentOverrides: {
+          'core:name': { text: 'AI Test World' },
+        },
+      }
+    );
+    locationId = locationEntity.id;
+
+    // Create AI actors
+    const aiActor1 = await entityManager.createEntityInstance('test:ai-actor', {
+      instanceId: 'ai-actor-1',
+      componentOverrides: {
+        'core:name': { text: 'AI Companion' },
+        'core:position': { locationId },
+        'core:actor': {},
       },
     });
+    aiActorId1 = aiActor1.id;
+
+    const aiActor2 = await entityManager.createEntityInstance('test:ai-actor', {
+      instanceId: 'ai-actor-2',
+      componentOverrides: {
+        'core:name': { text: 'AI Enemy' },
+        'core:position': { locationId },
+        'core:actor': {},
+      },
+    });
+    aiActorId2 = aiActor2.id;
   });
 
   afterEach(async () => {
-    // Clean up test environment
-    await turnExecutionFacade.clearTestData();
-    await turnExecutionFacade.dispose();
+    if (env) {
+      await env.cleanup();
+    }
   });
 
-  test('should make valid AI decisions using LLM', async () => {
-    // Arrange - Configure LLM to return valid action
-    llmService.getAIDecision = jest.fn().mockResolvedValue({
-      actionId: 'core:move',
+  /**
+   * Test: LLM stub returns configured response
+   * Demonstrates using env.stubLLM() to configure AI responses.
+   * Note: Must re-resolve adapter after stubLLM() since it creates a new stub instance
+   */
+  test('should make valid AI decisions using stubbed LLM', async () => {
+    // Arrange - Configure LLM to return specific action
+    env.stubLLM({
+      actionId: 'core:wait',
       targets: { direction: 'north' },
       reasoning: 'Exploring the area',
     });
 
-    // Act - Get AI decision
-    const decision = await llmService.getAIDecision({
-      actorId: 'ai-actor-1',
+    // Must re-resolve adapter after stubLLM
+    const currentAdapter = env.container.resolve(tokens.LLMAdapter);
+
+    // Act - Get AI decision through the stubbed adapter
+    const response = await currentAdapter.getAIDecision({
+      actorId: aiActorId1,
       availableActions: [
         { id: 'core:move', name: 'Move' },
         { id: 'core:wait', name: 'Wait' },
@@ -70,114 +126,80 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
       },
     });
 
-    // Assert
-    expect(decision).toBeDefined();
-    expect(decision.actionId).toBe('core:move');
-    expect(decision.targets.direction).toBe('north');
-    expect(decision.reasoning).toBeDefined();
-    expect(llmService.getAIDecision).toHaveBeenCalledWith(
-      expect.objectContaining({
-        actorId: 'ai-actor-1',
-      })
-    );
-  });
-
-  test('should handle LLM failures with fallback', async () => {
-    // Arrange - Configure LLM to fail
-    llmService.getAIDecision = jest
-      .fn()
-      .mockRejectedValue(new Error('LLM service unavailable'));
-
-    // Act - Attempt AI decision with fallback
-    let decision = null;
-    let error = null;
-
-    try {
-      decision = await llmService.getAIDecision({
-        actorId: 'ai-actor-1',
-        availableActions: [{ id: 'core:wait' }],
-      });
-    } catch (e) {
-      error = e;
-      // Use fallback
-      decision = {
-        actionId: 'core:wait',
-        targets: {},
-        reason: 'llm_unavailable_fallback',
-      };
-    }
+    // Parse response (stub returns JSON string)
+    const decision = JSON.parse(response);
 
     // Assert
-    expect(error).toBeTruthy();
-    expect(error.message).toContain('unavailable');
     expect(decision).toBeDefined();
     expect(decision.actionId).toBe('core:wait');
-    expect(decision.reason).toContain('fallback');
+    expect(decision.targets.direction).toBe('north');
+    expect(decision.reasoning).toBe('Exploring the area');
   });
 
-  test('should handle LLM timeouts gracefully', async () => {
-    // Arrange - Configure LLM with delay
-    llmService.getAIDecision = jest
-      .fn()
-      .mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () => resolve({ actionId: 'core:wait', targets: {} }),
-              6000
-            )
-          )
-      );
+  /**
+   * Test: Can configure different LLM responses per test
+   * Demonstrates flexibility of stubLLM.
+   * Note: Must re-resolve adapter after stubLLM() since it creates a new stub instance
+   */
+  test('should allow reconfiguring LLM response during test', async () => {
+    // First configuration
+    env.stubLLM({ actionId: 'core:wait', targets: {} });
+    let currentAdapter = env.container.resolve(tokens.LLMAdapter);
+    let response = await currentAdapter.getAIDecision({});
+    let decision = JSON.parse(response);
+    expect(decision.actionId).toBe('core:wait');
 
-    // Act - Create timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('AI decision timeout')), 1000);
-    });
-
-    const decisionPromise = llmService.getAIDecision({
-      actorId: 'ai-actor-1',
-    });
-
-    let result = null;
-    let timedOut = false;
-
-    try {
-      result = await Promise.race([decisionPromise, timeoutPromise]);
-    } catch (error) {
-      timedOut = true;
-      // Use default action
-      result = { actionId: 'core:wait', targets: {} };
-    }
-
-    // Assert
-    expect(timedOut).toBe(true);
-    expect(result.actionId).toBe('core:wait');
+    // Reconfigure - must re-resolve adapter after stubLLM
+    env.stubLLM({ actionId: 'core:look', targets: { target: 'room' } });
+    currentAdapter = env.container.resolve(tokens.LLMAdapter);
+    response = await currentAdapter.getAIDecision({});
+    decision = JSON.parse(response);
+    expect(decision.actionId).toBe('core:look');
+    expect(decision.targets.target).toBe('room');
   });
 
+  /**
+   * Test: Validate AI decision structure
+   * Tests that AI responses have expected properties.
+   * Note: Must re-resolve adapter after each stubLLM() call
+   */
   test('should validate AI decisions before execution', async () => {
-    // Arrange - Configure LLM to return various responses
+    // Test cases for validation
     const testCases = [
       {
         response: { actionId: 'core:wait', targets: {} },
         isValid: true,
+        description: 'valid core action',
+      },
+      {
+        response: { actionId: 'test:custom', targets: {} },
+        isValid: true,
+        description: 'valid test action',
       },
       {
         response: { actionId: 'invalid_action', targets: {} },
         isValid: false,
+        description: 'action without namespace prefix',
       },
       {
         response: { notAnAction: true },
         isValid: false,
+        description: 'missing actionId property',
       },
     ];
 
     for (const testCase of testCases) {
-      llmService.getAIDecision = jest.fn().mockResolvedValue(testCase.response);
+      // Configure stub for this test case
+      env.stubLLM(testCase.response);
 
-      // Act
-      const decision = await llmService.getAIDecision({
-        actorId: 'ai-actor-1',
+      // Must re-resolve adapter after stubLLM
+      const currentAdapter = env.container.resolve(tokens.LLMAdapter);
+
+      // Get decision
+      const response = await currentAdapter.getAIDecision({
+        actorId: aiActorId1,
       });
+      const decision = JSON.parse(response);
 
       // Simple validation
       let isValid = false;
@@ -196,98 +218,110 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
     }
   });
 
-  test('should maintain smooth AI behavior under various conditions', async () => {
-    // Test different conditions
-    const conditions = [
-      { name: 'normal', shouldFail: false, delay: 100 },
-      { name: 'slow', shouldFail: false, delay: 500 },
-      { name: 'error', shouldFail: true, delay: 0 },
-    ];
-
-    for (const condition of conditions) {
-      // Configure based on condition
-      if (condition.shouldFail) {
-        llmService.getAIDecision = jest
-          .fn()
-          .mockRejectedValue(new Error(`${condition.name} condition failure`));
-      } else {
-        llmService.getAIDecision = jest
-          .fn()
-          .mockImplementation(
-            () =>
-              new Promise((resolve) =>
-                setTimeout(
-                  () => resolve({ actionId: 'core:wait', targets: {} }),
-                  condition.delay
-                )
-              )
-          );
-      }
-
-      // Act
-      const start = performance.now();
-      let decision = null;
-
-      try {
-        decision = await llmService.getAIDecision({ actorId: 'ai-actor-1' });
-      } catch (error) {
-        // Use fallback
-        decision = { actionId: 'core:wait', targets: {}, fallback: true };
-      }
-
-      const duration = performance.now() - start;
-
-      // Assert
-      expect(decision).toBeDefined();
-      expect(decision.actionId).toBe('core:wait');
-
-      if (condition.shouldFail) {
-        expect(decision.fallback).toBe(true);
-      }
-
-      // Performance check
-      expect(duration).toBeLessThan(1000);
-    }
+  /**
+   * Test: LLM adapter is properly available from container
+   */
+  test('should have LLM adapter available from container', async () => {
+    expect(llmAdapter).toBeDefined();
+    expect(typeof llmAdapter.getAIDecision).toBe('function');
+    expect(typeof llmAdapter.getCurrentActiveLlmId).toBe('function');
   });
 
-  test('should achieve high success rate for AI decisions', async () => {
-    // Arrange - Run multiple AI decisions
+  /**
+   * Test: Stub returns correct LLM identifier
+   */
+  test('should report stub LLM identifier', async () => {
+    const llmId = llmAdapter.getCurrentActiveLlmId();
+    expect(llmId).toBe('stub-llm');
+  });
+
+  /**
+   * Test: Multiple actors can use the same stubbed LLM
+   * Note: Must re-resolve adapter after stubLLM() since it creates a new stub instance
+   */
+  test('should serve multiple actors with same stub configuration', async () => {
+    // Configure stub
+    env.stubLLM({ actionId: 'core:wait', targets: {} });
+
+    // Must re-resolve adapter after stubLLM
+    const currentAdapter = env.container.resolve(tokens.LLMAdapter);
+
+    // Get decisions for both actors
+    const response1 = await currentAdapter.getAIDecision({ actorId: aiActorId1 });
+    const response2 = await currentAdapter.getAIDecision({ actorId: aiActorId2 });
+
+    const decision1 = JSON.parse(response1);
+    const decision2 = JSON.parse(response2);
+
+    // Both should get the same stubbed response
+    expect(decision1.actionId).toBe('core:wait');
+    expect(decision2.actionId).toBe('core:wait');
+  });
+
+  /**
+   * Test: Rapid sequential decisions work correctly
+   * Note: Must re-resolve adapter after stubLLM() since it creates a new stub instance
+   */
+  test('should handle rapid sequential AI decisions', async () => {
     const iterations = 10;
     const results = [];
 
-    // Configure mostly successful responses
-    let callCount = 0;
-    llmService.getAIDecision = jest.fn().mockImplementation(async () => {
-      callCount++;
-      // 10% failure rate
-      if (Math.random() < 0.1) {
-        throw new Error('Random failure');
-      }
-      return { actionId: 'core:wait', targets: {} };
-    });
+    env.stubLLM({ actionId: 'core:wait', targets: {} });
 
-    // Act
+    // Must re-resolve adapter after stubLLM
+    const currentAdapter = env.container.resolve(tokens.LLMAdapter);
+
+    // Perform multiple rapid decisions
     for (let i = 0; i < iterations; i++) {
-      let success = false;
-
-      try {
-        const decision = await llmService.getAIDecision({
-          actorId: `ai-actor-${(i % 2) + 1}`,
-        });
-        success = decision && decision.actionId;
-      } catch (error) {
-        // Count fallback as success
-        success = true;
-      }
-
-      results.push({ iteration: i, success });
+      const response = await currentAdapter.getAIDecision({
+        actorId: i % 2 === 0 ? aiActorId1 : aiActorId2,
+      });
+      const decision = JSON.parse(response);
+      results.push({
+        iteration: i,
+        success: decision && decision.actionId === 'core:wait',
+      });
     }
 
-    // Assert - High success rate
+    // All should succeed
     const successCount = results.filter((r) => r.success).length;
-    const successRate = successCount / results.length;
+    expect(successCount).toBe(iterations);
+  });
 
-    expect(successRate).toBeGreaterThanOrEqual(0.9); // 90% success rate
-    expect(callCount).toBe(iterations);
+  /**
+   * Test: Complex response structures are preserved
+   * Note: Must re-resolve adapter after stubLLM() since it creates a new stub instance
+   */
+  test('should preserve complex response structures', async () => {
+    const complexResponse = {
+      actionId: 'core:wait',
+      targets: {
+        primary: aiActorId2,
+        secondary: ['item-1', 'item-2'],
+        options: {
+          aggressive: false,
+          stealthy: true,
+        },
+      },
+      reasoning: 'Complex strategic decision',
+      metadata: {
+        confidence: 0.85,
+        alternatives: ['core:flee', 'core:attack'],
+      },
+    };
+
+    env.stubLLM(complexResponse);
+
+    // Must re-resolve adapter after stubLLM
+    const currentAdapter = env.container.resolve(tokens.LLMAdapter);
+    const response = await currentAdapter.getAIDecision({ actorId: aiActorId1 });
+    const decision = JSON.parse(response);
+
+    expect(decision.actionId).toBe('core:wait');
+    expect(decision.targets.primary).toBe(aiActorId2);
+    expect(decision.targets.secondary).toEqual(['item-1', 'item-2']);
+    expect(decision.targets.options.stealthy).toBe(true);
+    expect(decision.metadata.confidence).toBe(0.85);
+    expect(decision.metadata.alternatives).toContain('core:flee');
   });
 });

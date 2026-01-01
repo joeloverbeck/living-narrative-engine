@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:dusty_black_mesh_trail_runners",
+  "description": "Dusty black mesh trail runners",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear", "base"]
+    },
+    "core:material": {
+      "material": "mesh"
+    },
+    "core:name": {
+      "text": "trail runners"
+    },
+    "core:description": {
+      "text": "Low-cut trail running shoes in dusty black, the mesh uppers permanently stained with the memory of a hundred miles of mountain paths. The aggressive lugged soles still grip well on loose scree, though the tread pattern has smoothed in the high-wear zones. Breathable and quick-drying, they've sacrificed any pretense of water resistance for the ability to shed moisture fast—the kind of footwear that says their owner would rather run through streams than around them."
+    },
+    "descriptors:color_extended": {
+      "color": "dusty-black"
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.55
+    }
+  }
+}

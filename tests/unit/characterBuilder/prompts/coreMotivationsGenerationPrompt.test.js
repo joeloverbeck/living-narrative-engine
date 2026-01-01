@@ -94,7 +94,7 @@ describe('coreMotivationsGenerationPrompt', () => {
       expect(PROMPT_VERSION_INFO).toHaveProperty('version');
       expect(PROMPT_VERSION_INFO).toHaveProperty('previousVersions');
       expect(PROMPT_VERSION_INFO).toHaveProperty('currentChanges');
-      expect(PROMPT_VERSION_INFO.version).toBe('1.0.0');
+      expect(PROMPT_VERSION_INFO.version).toBe('2.0.0');
       expect(Array.isArray(PROMPT_VERSION_INFO.currentChanges)).toBe(true);
     });
   });

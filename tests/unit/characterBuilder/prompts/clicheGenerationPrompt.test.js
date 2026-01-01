@@ -133,7 +133,7 @@ describe('clicheGenerationPrompt', () => {
       expect(prompt).toContain('<character_concept>');
       expect(prompt).toContain('<thematic_direction>');
       expect(prompt).toContain('<instructions>');
-      expect(prompt).toContain('<constraints>');
+      expect(prompt).toContain('<important_constraints>');
       expect(prompt).toContain('<response_format>');
       expect(prompt).toContain('<content_policy>');
     });
@@ -519,7 +519,7 @@ describe('clicheGenerationPrompt', () => {
         expect(PROMPT_VERSION_INFO).toHaveProperty('version');
         expect(PROMPT_VERSION_INFO).toHaveProperty('previousVersions');
         expect(PROMPT_VERSION_INFO).toHaveProperty('currentChanges');
-        expect(PROMPT_VERSION_INFO.version).toBe('1.2.0');
+        expect(PROMPT_VERSION_INFO.version).toBe('2.0.0');
         expect(Array.isArray(PROMPT_VERSION_INFO.currentChanges)).toBe(true);
       });
     });
@@ -603,8 +603,8 @@ describe('clicheGenerationPrompt', () => {
           { minItemsPerCategory: 5, maxItemsPerCategory: 10 }
         );
 
-        expect(enhancedPrompt).toContain('Provide 5-10 items per category');
-        expect(enhancedPrompt).not.toContain('Provide 3-8 items per category');
+        expect(enhancedPrompt).toContain('5-10 specific clichés');
+        expect(enhancedPrompt).not.toContain('3–8 specific clichés');
       });
 
       it('should combine multiple enhancements', () => {
@@ -622,7 +622,7 @@ describe('clicheGenerationPrompt', () => {
         expect(enhancedPrompt).toContain('<examples>');
         expect(enhancedPrompt).toContain('<genre_context>');
         expect(enhancedPrompt).toContain('sci-fi clichés');
-        expect(enhancedPrompt).toContain('Provide 4-6 items per category');
+        expect(enhancedPrompt).toContain('4-6 specific clichés');
       });
 
       it('should handle invalid genre gracefully', () => {
