@@ -11,6 +11,7 @@ import {
   getReadableErrorMessage,
 } from '../utils/engineErrorUtils.js';
 import { assertNonBlankString } from '../utils/dependencyUtils.js';
+import { normalizeError } from '../utils/errorNormalization.js';
 import createSafeErrorLogger from '../utils/safeErrorLogger.js';
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
@@ -143,8 +144,7 @@ class GameEngine {
       try {
         this.#entityManager.clearAll();
       } catch (error) {
-        entityResetError =
-          error instanceof Error ? error : new Error(String(error));
+        entityResetError = normalizeError(error);
         this.#logger.error(
           'GameEngine._resetCoreGameState: Failed to clear EntityManager.',
           entityResetError
@@ -160,8 +160,7 @@ class GameEngine {
       try {
         this.#playtimeTracker.reset();
       } catch (error) {
-        playtimeResetError =
-          error instanceof Error ? error : new Error(String(error));
+        playtimeResetError = normalizeError(error);
         this.#logger.error(
           'GameEngine._resetCoreGameState: Failed to reset PlaytimeTracker.',
           playtimeResetError
@@ -240,8 +239,7 @@ class GameEngine {
         );
       }
     } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeError(error);
       this.#logger.error(
         'GameEngine._executeInitializationSequence: SafeEventDispatcher threw when dispatching ENGINE_INITIALIZING_UI.',
         normalizedError
@@ -442,8 +440,7 @@ class GameEngine {
    * @returns {Promise<never>} Always throws the processed error.
    */
   async #handleInitializationError(error, initError, worldName) {
-    const caughtError =
-      error instanceof Error ? error : new Error(String(error));
+    const caughtError = normalizeError(error);
     this.#logger.error(
       `GameEngine: Overall catch in startNewGame for world "${worldName}". Error: ${caughtError.message || String(caughtError)}`,
       caughtError
@@ -540,10 +537,7 @@ class GameEngine {
         this.#playtimeTracker.endSessionAndAccumulate();
         this.#logger.debug('GameEngine.stop: Playtime session ended.');
       } catch (trackerError) {
-        const normalizedTrackerError =
-          trackerError instanceof Error
-            ? trackerError
-            : new Error(String(trackerError));
+        const normalizedTrackerError = normalizeError(trackerError);
         this.#logger.error(
           'GameEngine.stop: Failed to end playtime session cleanly.',
           normalizedTrackerError
@@ -573,8 +567,7 @@ class GameEngine {
         );
       }
     } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeError(error);
       if (!caughtError) {
         caughtError = normalizedError;
       }
@@ -596,8 +589,7 @@ class GameEngine {
         );
       }
     } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeError(error);
       if (!caughtError) {
         caughtError = normalizedError;
       }
@@ -654,10 +646,7 @@ class GameEngine {
           );
         }
       } catch (engineResetError) {
-        const normalizedEngineResetError =
-          engineResetError instanceof Error
-            ? engineResetError
-            : new Error(String(engineResetError));
+        const normalizedEngineResetError = normalizeError(engineResetError);
         this.#logger.error(
           'GameEngine.stop: Failed to reset engine state cleanly.',
           normalizedEngineResetError
@@ -720,18 +709,14 @@ class GameEngine {
         availableActions
       );
     } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeError(error);
       errors.push(normalizedError.message || String(normalizedError));
 
       if (!llmId && this.#llmAdapter?.getCurrentActiveLlmId) {
         try {
           llmId = await this.#llmAdapter.getCurrentActiveLlmId();
         } catch (llmIdError) {
-          const normalizedLlmIdError =
-            llmIdError instanceof Error
-              ? llmIdError
-              : new Error(String(llmIdError));
+          const normalizedLlmIdError = normalizeError(llmIdError);
           errors.push(
             normalizedLlmIdError.message || String(normalizedLlmIdError)
           );
@@ -765,8 +750,7 @@ class GameEngine {
         );
       }
     } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
+      const normalizedError = normalizeError(error);
       this.#logger.error(
         'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.',
         normalizedError

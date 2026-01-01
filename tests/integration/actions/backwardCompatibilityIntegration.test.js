@@ -6,29 +6,53 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { createIntegrationTestContext } from './testConfiguration.js';
 
 describe('Backward Compatibility Integration', () => {
   let entityTestBed;
-  let facades;
+  let context;
   let actionServiceFacade;
   let mockLogger;
   let mockEventBus;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
 
-    // Create facades
-    facades = createMockFacades({}, jest.fn);
-    actionServiceFacade = facades.actionService;
-    mockEventBus = facades.mockDeps.entity.eventBus;
+    // Create integration context with container-based services
+    context = await createIntegrationTestContext();
+
+    // Create mock facades for backward compatibility during migration
+    // These tests rely on mock behavior - will need refactoring for true integration testing
+    const pipelineOrchestrator = {
+      execute: jest.fn().mockResolvedValue({ success: true }),
+    };
+    actionServiceFacade = {
+      discoverActions: jest.fn().mockResolvedValue([]),
+      // executeAction delegates to actionPipelineOrchestrator.execute so spies work
+      executeAction: jest.fn().mockImplementation(async (params) => {
+        return pipelineOrchestrator.execute(params);
+      }),
+      validateAction: jest.fn().mockResolvedValue({ success: true }),
+      setMockActions: jest.fn((actorId, actions) => {
+        actionServiceFacade.discoverActions.mockResolvedValue(actions);
+      }),
+      setMockValidation: jest.fn((actorId, actionId, result) => {
+        actionServiceFacade.validateAction.mockResolvedValue(result);
+      }),
+      clearMockData: jest.fn(),
+      actionPipelineOrchestrator: pipelineOrchestrator,
+    };
+    mockEventBus = context.eventBus;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     entityTestBed.cleanup();
     actionServiceFacade.clearMockData();
+    if (context) {
+      await context.cleanup();
+    }
   });
 
   describe('Legacy Action Processing', () => {

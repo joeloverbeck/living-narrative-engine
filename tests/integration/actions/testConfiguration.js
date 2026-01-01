@@ -4,8 +4,40 @@
  */
 
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../e2e/common/e2eTestContainer.js';
 import { performance } from 'perf_hooks';
+
+/**
+ * Creates an integration test context using the container-based approach.
+ * This replaces createMockFacades() for integration tests.
+ *
+ * @param {object} options - Configuration options
+ * @param {boolean} [options.loadMods=false] - Whether to load real mods
+ * @param {string[]} [options.mods=['core']] - Mods to load if loadMods is true
+ * @param {boolean} [options.stubLLM=true] - Whether to stub LLM calls
+ * @returns {Promise<object>} Integration test context
+ */
+export async function createIntegrationTestContext(options = {}) {
+  const env = await createE2ETestEnvironment({
+    stubLLM: options.stubLLM ?? true,
+    loadMods: options.loadMods ?? false,
+    mods: options.mods ?? ['core'],
+    ...options,
+  });
+
+  return {
+    env,
+    services: env.services,
+    helpers: env.helpers,
+    // Provide convenience accessors for common services
+    entityManager: env.services.entityManager,
+    actionDiscoveryService: env.services.actionDiscoveryService,
+    actionExecutor: env.services.actionExecutor,
+    eventBus: env.services.eventBus,
+    logger: env.services.logger,
+    cleanup: () => env.cleanup(),
+  };
+}
 
 /**
  * Configuration class for multi-target action integration tests
@@ -13,24 +45,24 @@ import { performance } from 'perf_hooks';
 export class MultiTargetTestConfiguration {
   constructor() {
     this.entityTestBed = null;
-    this.facades = null;
+    this.context = null;
     this.logger = null;
     this.performanceMetrics = [];
   }
 
   /**
-   * Initialize test environment
+   * Initialize test environment using container-based approach
    *
    * @returns {Promise<object>} Test environment configuration
    */
   async initialize() {
     this.entityTestBed = new EntityManagerTestBed();
-    this.facades = createMockFacades({}, jest.fn);
-    this.logger = this.facades.mockDeps.logger;
+    this.context = await createIntegrationTestContext();
+    this.logger = this.context.logger;
 
     return {
       entityTestBed: this.entityTestBed,
-      facades: this.facades,
+      context: this.context,
       logger: this.logger,
     };
   }
@@ -42,8 +74,8 @@ export class MultiTargetTestConfiguration {
     if (this.entityTestBed) {
       this.entityTestBed.cleanup();
     }
-    if (this.facades?.actionService) {
-      this.facades.actionService.clearMockData();
+    if (this.context) {
+      await this.context.cleanup();
     }
     this.performanceMetrics = [];
   }
@@ -308,21 +340,21 @@ export class MultiTargetTestConfiguration {
   /**
    * Validate system integrity
    *
-   * @param {object} facades - Facade instances
+   * @param {object} context - Integration test context (from createIntegrationTestContext)
    * @returns {object} Validation results
    */
-  validateSystemIntegrity(facades) {
+  validateSystemIntegrity(context) {
     const services = [
-      'actionService',
-      'entityService',
-      'llmService',
-      'turnExecutionFacade',
+      'entityManager',
+      'actionDiscoveryService',
+      'actionExecutor',
+      'eventBus',
     ];
 
     const serviceStatus = {};
     services.forEach((serviceName) => {
       try {
-        const service = facades[serviceName];
+        const service = context.services?.[serviceName] || context[serviceName];
         serviceStatus[serviceName] = service !== null && service !== undefined;
       } catch (error) {
         serviceStatus[serviceName] = false;

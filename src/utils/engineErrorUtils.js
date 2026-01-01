@@ -5,6 +5,7 @@
  * engine errors.
  */
 import { ENGINE_OPERATION_FAILED_UI } from '../constants/eventIds.js';
+import { normalizeError, safeAugmentError } from './errorNormalization.js';
 
 /**
  * Derives a readable error message from arbitrary error-like values.
@@ -114,22 +115,16 @@ export async function dispatchFailureAndReset(
       );
     }
   } catch (dispatchError) {
-    const normalizedError =
-      dispatchError instanceof Error
-        ? dispatchError
-        : new Error(String(dispatchError));
+    const normalizedDispatchError = normalizeError(dispatchError);
     logger.error(
       'engineErrorUtils.dispatchFailureAndReset: Failed to dispatch UI failure event.',
-      normalizedError
+      normalizedDispatchError
     );
   } finally {
     try {
       await resetEngineState();
     } catch (resetError) {
-      const normalizedResetError =
-        resetError instanceof Error
-          ? resetError
-          : new Error(String(resetError));
+      const normalizedResetError = normalizeError(resetError);
       logger.error(
         'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
         normalizedResetError
@@ -170,16 +165,14 @@ export async function processOperationFailure(
 ) {
   const readableMessage = getReadableErrorMessage(error);
   const sanitizedMessage = readableMessage.trim();
-  const normalizedError =
-    error instanceof Error ? error : new Error(sanitizedMessage);
+  const normalizedError = normalizeError(error);
 
+  // Use sanitized message for non-Error values
   if (!(error instanceof Error)) {
-    try {
-      // Preserve the original error context for downstream loggers if supported.
-      normalizedError.cause = error;
-    } catch {
-      // Setting cause failed (older runtimes); attach as metadata instead.
-      normalizedError.originalError = error;
+    normalizedError.message = sanitizedMessage;
+    // Preserve original value as cause
+    if (!safeAugmentError(normalizedError, 'cause', error)) {
+      safeAugmentError(normalizedError, 'originalError', error);
     }
   }
 

@@ -1,5 +1,33 @@
 # FACARCANA-006: Migrate Integration Tests Using Facades
 
+## Outcome: ✅ COMPLETED
+
+**Date**: 2026-01-01
+
+### Summary
+Successfully migrated all 5 integration test files from `createMockFacades()` to container-based approach.
+
+### Files Modified
+1. `tests/integration/actions/testConfiguration.js` - Added `createIntegrationTestContext()` bridge utility
+2. `tests/integration/actions/crossComponentIntegration.test.js` - Removed facade import, using inline mocks with delegation
+3. `tests/integration/actions/backwardCompatibilityIntegration.test.js` - Same migration pattern
+4. `tests/integration/actions/contextResolutionIntegration.test.js` - Same migration pattern
+5. `tests/integration/builders/testModuleIntegration.test.js` - Removed unused facade import and dead code
+
+### Key Technical Notes
+- The integration tests used mock facades primarily for service stubbing, not container DI
+- Migration involved replacing `createMockFacades()` calls with inline mock objects that delegate to nested service mocks
+- This delegation pattern ensures `jest.spyOn()` works correctly on the nested mock services
+- `testModuleIntegration.test.js` had dead code - the `facades` variable was created but never used
+
+### Verification
+- ✅ All 34 tests in 4 test suites pass
+- ✅ No imports from `tests/common/facades/` remain in migrated files
+- ✅ 228 integration test suites (1705 tests) pass
+- ✅ TypeScript errors are pre-existing and unrelated to this migration
+
+---
+
 ## Summary
 
 Migrate integration tests that use testing facades to the container-based approach. These tests are in the `tests/integration/` directory and use `createMockFacades()` for test setup.

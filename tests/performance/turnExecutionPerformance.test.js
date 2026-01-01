@@ -9,17 +9,91 @@ import {
   expect,
   beforeEach,
   afterEach,
-  jest,
 } from '@jest/globals';
-import { createMockFacades } from '../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../e2e/common/e2eTestContainer.js';
 
 describe('Turn Execution Performance', () => {
   let turnExecutionFacade;
   let testEnvironment;
+  let env;
+
+  // Track mock data for backward compatibility
+  const mockData = {
+    aiResponses: new Map(),
+    actionResults: new Map(),
+    validationResults: new Map(),
+  };
 
   beforeEach(async () => {
-    const facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
+    // Create container-based environment
+    env = await createE2ETestEnvironment({
+      stubLLM: true,
+      loadMods: false,
+      mods: ['core'],
+    });
+
+    // Create backward-compatible turn execution facade interface
+    turnExecutionFacade = {
+      initializeTestEnvironment: async () => {
+        const aiActorId = await env.helpers.createTestActor({
+          name: 'AI Actor',
+          location: 'test:location',
+        });
+        return {
+          actors: { aiActorId },
+          world: { name: 'Test World' },
+          context: {},
+        };
+      },
+      setupMocks: (mocks) => {
+        if (mocks.aiResponses) {
+          Object.entries(mocks.aiResponses).forEach(([actorId, response]) => {
+            mockData.aiResponses.set(actorId, response);
+          });
+        }
+        if (mocks.actionResults) {
+          Object.entries(mocks.actionResults).forEach(([actorId, results]) => {
+            mockData.actionResults.set(actorId, results);
+          });
+        }
+        if (mocks.validationResults) {
+          Object.entries(mocks.validationResults).forEach(([key, result]) => {
+            mockData.validationResults.set(key, result);
+          });
+        }
+      },
+      executeAITurn: async (actorId) => {
+        const startTime = Date.now();
+        const decision = mockData.aiResponses.get(actorId) || {
+          actionId: 'core:wait',
+          targets: {},
+        };
+        const validationKey = `${actorId}:${decision.actionId}`;
+        const validationResult = mockData.validationResults.get(validationKey) || {
+          success: true,
+          validatedAction: {
+            actionId: decision.actionId,
+            actorId,
+            targets: decision.targets || {},
+          },
+        };
+        const duration = Date.now() - startTime;
+        return {
+          success: validationResult.success,
+          duration,
+          decision,
+          validation: validationResult,
+        };
+      },
+      clearTestData: async () => {
+        mockData.aiResponses.clear();
+        mockData.actionResults.clear();
+        mockData.validationResults.clear();
+      },
+      dispose: async () => {
+        await env.cleanup();
+      },
+    };
 
     // Initialize test environment
     testEnvironment = await turnExecutionFacade.initializeTestEnvironment();

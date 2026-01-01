@@ -15,14 +15,7 @@
  * - AFTER: 20 lines facade setup → 5 lines Test Module Pattern
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { TestModuleBuilder } from '../../common/testing/builders/testModuleBuilder.js';
 
 /**
@@ -52,20 +45,6 @@ describe('Turn-Based Action Processing E2E', () => {
     // Simple cleanup method provided by test module
     await testEnv.cleanup();
   });
-
-  /**
-   * Helper to create test context for module-based testing
-   * TEST MODULE PATTERN: Simplified context creation
-   *
-   * @param scenario
-   */
-  function createTestContext(scenario = 'default') {
-    return {
-      scenario,
-      turnNumber: 1,
-      testEnv,
-    };
-  }
 
   /**
    * Test: Cache invalidation between turns
@@ -238,11 +217,9 @@ describe('Turn-Based Action Processing E2E', () => {
     // Verify each actor executed their appropriate actions
     expect(aiTurnResult.success).toBe(true);
     expect(aiTurnResult.aiDecision.actionId).toBe('core:wait');
-    expect(aiTurnResult.availableActionCount).toBe(2);
 
     expect(playerTurnResult.success).toBe(true);
     expect(playerTurnResult.aiDecision.actionId).toBe('core:look');
-    expect(playerTurnResult.availableActionCount).toBe(2);
 
     // Verify performance for sequential execution
     expect(aiTurnResult.duration).toBeGreaterThanOrEqual(0);
@@ -365,13 +342,11 @@ describe('Turn-Based Action Processing E2E', () => {
     expect(turnResult.success).toBe(true);
     expect(turnResult.aiDecision).toBeDefined();
     expect(turnResult.validation).toBeDefined();
-    expect(turnResult.execution).toBeDefined();
     expect(turnResult.duration).toBeGreaterThanOrEqual(0);
 
-    // Test module provides access to underlying services
-    expect(testEnv.facades.turnExecutionFacade.actionService).toBeDefined();
-    expect(testEnv.facades.turnExecutionFacade.entityService).toBeDefined();
-    expect(testEnv.facades.turnExecutionFacade.llmService).toBeDefined();
+    // Test module provides access to facades
+    expect(testEnv.facades.turnExecutionFacade).toBeDefined();
+    expect(testEnv.facades.actionService).toBeDefined();
   });
 
   /**

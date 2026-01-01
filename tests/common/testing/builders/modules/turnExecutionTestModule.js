@@ -3,10 +3,206 @@
  * @description Provides fluent API for configuring turn execution tests with LLM, actors, world, and monitoring
  */
 
-import { createMockFacades } from '../../../facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../../../e2e/common/e2eTestContainer.js';
 import { ITestModule } from '../interfaces/ITestModule.js';
 import { TestModuleValidationError } from '../errors/testModuleValidationError.js';
 import { TestModuleValidator } from '../validation/testModuleValidator.js';
+import { getSharedContainer } from '../sharedContainerFactory.js';
+
+// ============================================================================
+// Module-level cached configurations (created once, reused across all tests)
+// ============================================================================
+
+/** @type {object|null} Cached LLM configurations */
+let _cachedLLMConfigs = null;
+
+/** @type {object|null} Cached environment presets */
+let _cachedEnvironmentPresets = null;
+
+/**
+ * Get cached LLM configurations (created once, frozen for safety)
+ * @returns {object} Frozen config objects by strategy
+ */
+function getCachedLLMConfigs() {
+  if (!_cachedLLMConfigs) {
+    _cachedLLMConfigs = Object.freeze({
+      'tool-calling': Object.freeze({
+        configId: 'test-llm-toolcalling',
+        displayName: 'Test LLM (Tool Calling)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-toolcalling',
+        apiType: 'openrouter',
+        jsonOutputStrategy: Object.freeze({
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
+        }),
+        defaultParameters: Object.freeze({ temperature: 1.0 }),
+        contextTokenLimit: 8000,
+      }),
+      'json-schema': Object.freeze({
+        configId: 'test-llm-jsonschema',
+        displayName: 'Test LLM (JSON Schema)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-jsonschema',
+        apiType: 'openrouter',
+        jsonOutputStrategy: Object.freeze({
+          method: 'json_schema',
+          schema: Object.freeze({
+            name: 'turn_action_response',
+            schema: Object.freeze({
+              type: 'object',
+              properties: Object.freeze({
+                chosenIndex: Object.freeze({ type: 'number' }),
+                speech: Object.freeze({ type: 'string' }),
+                thoughts: Object.freeze({ type: 'string' }),
+              }),
+              required: Object.freeze(['chosenIndex', 'speech', 'thoughts']),
+            }),
+          }),
+        }),
+        defaultParameters: Object.freeze({ temperature: 1.0 }),
+        contextTokenLimit: 8000,
+      }),
+      'limited-context': Object.freeze({
+        configId: 'test-llm-limited',
+        displayName: 'Test LLM (Limited Context)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-limited',
+        apiType: 'openrouter',
+        jsonOutputStrategy: Object.freeze({
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
+        }),
+        defaultParameters: Object.freeze({ temperature: 1.0 }),
+        contextTokenLimit: 1000,
+      }),
+    });
+  }
+  return _cachedLLMConfigs;
+}
+
+/**
+ * Get cached environment presets (created once, frozen for safety)
+ * @returns {object} Frozen preset objects by name
+ */
+function getCachedEnvironmentPresets() {
+  if (!_cachedEnvironmentPresets) {
+    const llmConfigs = getCachedLLMConfigs();
+
+    _cachedEnvironmentPresets = Object.freeze({
+      turnExecution: Object.freeze({
+        llm: llmConfigs['tool-calling'],
+        actors: Object.freeze([
+          Object.freeze({
+            id: 'ai-actor',
+            name: 'Test AI Actor',
+            type: 'core:actor',
+            components: Object.freeze({
+              'core:position': Object.freeze({ location: 'test-location' }),
+              'core:persona': Object.freeze({
+                traits: Object.freeze(['brave', 'curious']),
+              }),
+            }),
+          }),
+          Object.freeze({
+            id: 'player-actor',
+            name: 'Test Player',
+            type: 'core:actor',
+            isPlayer: true,
+          }),
+        ]),
+        world: Object.freeze({
+          id: 'test-world',
+          name: 'Test World',
+          description: 'A world for testing',
+          locations: Object.freeze(['test-location', 'test-location-2']),
+        }),
+      }),
+      actionProcessing: Object.freeze({
+        llm: llmConfigs['tool-calling'],
+        actors: Object.freeze([
+          Object.freeze({
+            id: 'test-actor',
+            name: 'Test Actor',
+            type: 'core:actor',
+          }),
+        ]),
+        actions: Object.freeze([
+          Object.freeze({
+            id: 'core:move',
+            name: 'Move',
+            requiresTarget: true,
+          }),
+          Object.freeze({
+            id: 'core:look',
+            name: 'Look Around',
+            alwaysAvailable: true,
+          }),
+          Object.freeze({
+            id: 'core:wait',
+            name: 'Wait',
+            alwaysAvailable: true,
+          }),
+        ]),
+        mocks: Object.freeze({
+          actionService: Object.freeze({
+            availableActions: Object.freeze([
+              Object.freeze({
+                id: 'core:move',
+                name: 'Move',
+                requiresTarget: true,
+              }),
+              Object.freeze({
+                id: 'core:look',
+                name: 'Look Around',
+                alwaysAvailable: true,
+              }),
+              Object.freeze({
+                id: 'core:wait',
+                name: 'Wait',
+                alwaysAvailable: true,
+              }),
+            ]),
+          }),
+        }),
+      }),
+      promptGeneration: Object.freeze({
+        llm: llmConfigs['json-schema'],
+        actors: Object.freeze([
+          Object.freeze({
+            id: 'prompt-test-actor',
+            name: 'Prompt Test Actor',
+            type: 'core:actor',
+            components: Object.freeze({
+              'core:persona': Object.freeze({
+                description: 'A character for testing prompt generation',
+                traits: Object.freeze(['methodical', 'observant']),
+              }),
+            }),
+          }),
+        ]),
+      }),
+      // Legacy support for hyphenated names
+      'turn-execution': Object.freeze({
+        llm: llmConfigs['tool-calling'],
+        actors: Object.freeze([]),
+        world: Object.freeze({ name: 'Test World' }),
+      }),
+      'action-processing': Object.freeze({
+        llm: llmConfigs['tool-calling'],
+        actors: Object.freeze([]),
+        actions: Object.freeze([]),
+      }),
+    });
+  }
+  return _cachedEnvironmentPresets;
+}
 
 /**
  * Test module for complete turn execution testing.
@@ -36,6 +232,8 @@ export class TurnExecutionTestModule extends ITestModule {
   };
 
   #mockFn = null; // Jest mock function creator
+
+  #sharedContainerKey = null; // Key for shared container reuse
 
   /**
    * Creates a new TurnExecutionTestModule instance
@@ -187,6 +385,28 @@ export class TurnExecutionTestModule extends ITestModule {
   }
 
   /**
+   * Configure this module to use a shared container for improved test performance.
+   * When a shared container key is set, the build() method will reuse an existing
+   * container instead of creating a new one, significantly reducing test setup time.
+   *
+   * @param {string} key - Unique identifier for the shared container group
+   * @returns {TurnExecutionTestModule} This instance for chaining
+   * @example
+   * // In beforeAll, create shared container
+   * await getSharedContainer('turn-execution-tests', { stubLLM: true });
+   *
+   * // In each test, use shared container
+   * const env = await TurnExecutionTestModule.create()
+   *   .withSharedContainer('turn-execution-tests')
+   *   .withStandardLLM()
+   *   .build();
+   */
+  withSharedContainer(key) {
+    this.#sharedContainerKey = key;
+    return this;
+  }
+
+  /**
    * Use a standardized LLM configuration from TestConfigurationFactory
    *
    * @param {string} [strategy] - The LLM strategy to use
@@ -283,15 +503,185 @@ export class TurnExecutionTestModule extends ITestModule {
       );
     }
 
-    // Create facades with configuration
-    const facades = createMockFacades(
-      this.#config.facades,
-      this.#mockFn || (() => () => {})
-    );
+    // Create container-based environment (use shared container if configured)
+    const containerOptions = {
+      stubLLM: true,
+      loadMods: false,
+      mods: ['core'],
+    };
 
-    // Initialize test environment using facades
+    const env = this.#sharedContainerKey
+      ? await getSharedContainer(this.#sharedContainerKey, containerOptions)
+      : await createE2ETestEnvironment(containerOptions);
+
+    // Track mock data for backward compatibility
+    const mockData = {
+      aiResponses: new Map(),
+      actionResults: new Map(),
+      validationResults: new Map(),
+    };
+
+    // Create backward-compatible turn execution facade interface
+    const turnExecutionFacade = {
+      initializeTestEnvironment: async (config) => {
+        // Create actors based on configuration
+        const actors = {};
+        const configActors = config?.actors || this.#config.actors || [];
+        
+        for (const actor of configActors) {
+          const actorId = await env.helpers.createTestActor({
+            name: actor.name || 'Test Actor',
+            location: actor.location || 'test:location',
+            components: actor.components || {},
+          });
+          actors[actor.id || 'aiActorId'] = actorId;
+        }
+
+        // Create a default AI actor if none specified
+        if (Object.keys(actors).length === 0) {
+          const aiActorId = await env.helpers.createTestActor({
+            name: 'AI Actor',
+            location: 'test:location',
+          });
+          actors.aiActorId = aiActorId;
+        }
+
+        return {
+          actors,
+          world: config?.worldConfig || this.#config.world,
+          context: {},
+        };
+      },
+      setupMocks: (mocks) => {
+        if (mocks.aiResponses) {
+          Object.entries(mocks.aiResponses).forEach(([actorId, response]) => {
+            mockData.aiResponses.set(actorId, response);
+          });
+        }
+        if (mocks.actionResults) {
+          Object.entries(mocks.actionResults).forEach(([actorId, results]) => {
+            mockData.actionResults.set(actorId, results);
+          });
+        }
+        if (mocks.validationResults) {
+          Object.entries(mocks.validationResults).forEach(([key, result]) => {
+            mockData.validationResults.set(key, result);
+          });
+        }
+      },
+      executeAITurn: async (actorId, _context) => {
+        const startTime = Date.now();
+
+        // Get available actions for this actor
+        const actions = mockData.actionResults.get(actorId) || [];
+
+        // Check for no available actions
+        if (actions.length === 0) {
+          return {
+            success: false,
+            error: 'No available actions for actor',
+            actorId,
+            duration: Date.now() - startTime,
+          };
+        }
+
+        // Get mock decision for this actor
+        const decision = mockData.aiResponses.get(actorId) || {
+          actionId: 'core:wait',
+          targets: {},
+        };
+
+        // Check for invalid decision (missing actionId)
+        if (!decision.actionId) {
+          return {
+            success: false,
+            error: 'AI did not specify a valid action',
+            actorId,
+            duration: Date.now() - startTime,
+          };
+        }
+
+        // Get mock validation result
+        const validationKey = `${actorId}:${decision.actionId}`;
+        const validationResult = mockData.validationResults.get(validationKey) || {
+          success: true,
+          validatedAction: {
+            actionId: decision.actionId,
+            actorId,
+            targets: decision.targets || {},
+          },
+        };
+
+        const duration = Date.now() - startTime;
+
+        // Check validation failure
+        if (!validationResult.success) {
+          return {
+            success: false,
+            error: 'Action validation failed',
+            actorId,
+            aiDecision: decision,
+            availableActionCount: actions.length,
+            duration,
+            validation: validationResult,
+          };
+        }
+
+        // Success case
+        return {
+          success: true,
+          actorId,
+          aiDecision: decision,
+          availableActionCount: actions.length,
+          duration,
+          validation: validationResult,
+        };
+      },
+      executePlayerTurn: async (actorId, command) => {
+        return {
+          success: true,
+          command,
+          actorId,
+        };
+      },
+      clearTestData: async () => {
+        mockData.aiResponses.clear();
+        mockData.actionResults.clear();
+        mockData.validationResults.clear();
+      },
+      dispose: async () => {
+        await env.cleanup();
+      },
+      getDispatchedEvents: () => {
+        // Return empty array for mock facade - tests just verify it's callable
+        return [];
+      },
+    };
+
+    // Create actionService facade for tests that need action discovery
+    const actionServiceMockData = new Map();
+    const actionService = {
+      setMockActions(actorId, actions) {
+        actionServiceMockData.set(actorId, actions);
+      },
+
+      async discoverActions(actorId) {
+        return actionServiceMockData.get(actorId) || [];
+      },
+
+      clearMockData() {
+        actionServiceMockData.clear();
+      },
+    };
+
+    const facades = {
+      turnExecutionFacade,
+      actionService,
+    };
+
+    // Initialize test environment using facade interface
     const testEnvironment =
-      await facades.turnExecutionFacade.initializeTestEnvironment({
+      await turnExecutionFacade.initializeTestEnvironment({
         llmStrategy: this.#config.llm.strategy,
         llmConfig: this.#config.llm,
         worldConfig: this.#config.world,
@@ -302,7 +692,7 @@ export class TurnExecutionTestModule extends ITestModule {
     if (this.#config.llm.mockResponses) {
       Object.entries(this.#config.llm.mockResponses).forEach(
         ([actorId, response]) => {
-          facades.turnExecutionFacade.setupMocks({
+          turnExecutionFacade.setupMocks({
             aiResponses: { [actorId]: response },
           });
         }
@@ -318,20 +708,22 @@ export class TurnExecutionTestModule extends ITestModule {
     // Create event capture utilities if enabled
     let eventCapture = null;
     if (this.#config.monitoring.events.length > 0) {
-      eventCapture = this.#createEventCapture(facades);
+      eventCapture = this.#createEventCapture(env.services.eventBus);
     }
 
     // Return enriched test environment
     return {
       ...testEnvironment,
       facades,
+      container: env.container,
+      services: env.services,
       config: Object.freeze({ ...this.#config }), // Frozen copy
 
       // Convenience methods
       async executeAITurn(actorId) {
         const startTime = performanceTracker ? Date.now() : null;
 
-        const result = await facades.turnExecutionFacade.executeAITurn(
+        const result = await turnExecutionFacade.executeAITurn(
           actorId,
           testEnvironment.context || {}
         );
@@ -344,14 +736,15 @@ export class TurnExecutionTestModule extends ITestModule {
       },
 
       async executePlayerTurn(actorId, command) {
-        return facades.turnExecutionFacade.executePlayerTurn(actorId, command);
+        return turnExecutionFacade.executePlayerTurn(actorId, command);
       },
 
       async cleanup() {
         if (testEnvironment.cleanup) {
           await testEnvironment.cleanup();
         }
-        await facades.turnExecutionFacade.clearTestData();
+        await turnExecutionFacade.clearTestData();
+        await env.cleanup();
 
         // Cleanup event capture subscription
         if (eventCapture && eventCapture.cleanup) {
@@ -452,16 +845,14 @@ export class TurnExecutionTestModule extends ITestModule {
    * Create event capture utilities
    *
    * @private
-   * @param {object} facades - Facade instances
+   * @param {object} eventBus - Event bus instance from container
    * @returns {object} Event capture utilities
    */
-  #createEventCapture(facades) {
+  #createEventCapture(eventBus) {
     const capturedEvents = [];
     const allowedTypes = new Set(this.#config.monitoring.events);
 
     // Hook into event bus to capture events
-    // Access the event bus from the entity service dependencies
-    const eventBus = facades.mockDeps?.entity?.eventBus;
     let unsubscribe = null;
 
     if (eventBus && typeof eventBus.subscribe === 'function') {
@@ -541,74 +932,15 @@ export class TurnExecutionTestModule extends ITestModule {
   }
 
   /**
-   * Create standard LLM configuration
+   * Create standard LLM configuration (uses cached configs for performance)
    *
    * @private
    * @param {string} strategy - LLM strategy
-   * @returns {object} LLM configuration
+   * @returns {object} LLM configuration (frozen)
    */
   #createStandardLLMConfig(strategy) {
-    // Fallback to inline configuration matching TestConfigurationFactory output
-    const baseConfigs = {
-      'tool-calling': {
-        configId: 'test-llm-toolcalling',
-        displayName: 'Test LLM (Tool Calling)',
-        apiKeyEnvVar: 'TEST_API_KEY',
-        apiKeyFileName: 'test_api_key.txt',
-        endpointUrl: 'https://test-api.com/v1/chat/completions',
-        modelIdentifier: 'test-model-toolcalling',
-        apiType: 'openrouter',
-        jsonOutputStrategy: {
-          method: 'openrouter_tool_calling',
-          toolName: 'function_call',
-        },
-        defaultParameters: { temperature: 1.0 },
-        contextTokenLimit: 8000,
-      },
-      'json-schema': {
-        configId: 'test-llm-jsonschema',
-        displayName: 'Test LLM (JSON Schema)',
-        apiKeyEnvVar: 'TEST_API_KEY',
-        apiKeyFileName: 'test_api_key.txt',
-        endpointUrl: 'https://test-api.com/v1/chat/completions',
-        modelIdentifier: 'test-model-jsonschema',
-        apiType: 'openrouter',
-        jsonOutputStrategy: {
-          method: 'json_schema',
-          schema: {
-            name: 'turn_action_response',
-            schema: {
-              type: 'object',
-              properties: {
-                chosenIndex: { type: 'number' },
-                speech: { type: 'string' },
-                thoughts: { type: 'string' },
-              },
-              required: ['chosenIndex', 'speech', 'thoughts'],
-            },
-          },
-        },
-        defaultParameters: { temperature: 1.0 },
-        contextTokenLimit: 8000,
-      },
-      'limited-context': {
-        configId: 'test-llm-limited',
-        displayName: 'Test LLM (Limited Context)',
-        apiKeyEnvVar: 'TEST_API_KEY',
-        apiKeyFileName: 'test_api_key.txt',
-        endpointUrl: 'https://test-api.com/v1/chat/completions',
-        modelIdentifier: 'test-model-limited',
-        apiType: 'openrouter',
-        jsonOutputStrategy: {
-          method: 'openrouter_tool_calling',
-          toolName: 'function_call',
-        },
-        defaultParameters: { temperature: 1.0 },
-        contextTokenLimit: 1000,
-      },
-    };
-
-    const config = baseConfigs[strategy];
+    const configs = getCachedLLMConfigs();
+    const config = configs[strategy];
     if (!config) {
       throw new Error(`Unknown LLM strategy: ${strategy}`);
     }
@@ -616,94 +948,14 @@ export class TurnExecutionTestModule extends ITestModule {
   }
 
   /**
-   * Create environment preset configuration
+   * Create environment preset configuration (uses cached presets for performance)
    *
    * @private
    * @param {string} presetName - Preset name
-   * @returns {object} Environment configuration
+   * @returns {object} Environment configuration (frozen)
    */
   #createEnvironmentPresetConfig(presetName) {
-    // Fallback to inline configurations matching factory patterns
-    const presets = {
-      turnExecution: {
-        llm: this.#createStandardLLMConfig('tool-calling'),
-        actors: [
-          {
-            id: 'ai-actor',
-            name: 'Test AI Actor',
-            type: 'core:actor',
-            components: {
-              'core:position': { location: 'test-location' },
-              'core:persona': { traits: ['brave', 'curious'] },
-            },
-          },
-          {
-            id: 'player-actor',
-            name: 'Test Player',
-            type: 'core:actor',
-            isPlayer: true,
-          },
-        ],
-        world: {
-          id: 'test-world',
-          name: 'Test World',
-          description: 'A world for testing',
-          locations: ['test-location', 'test-location-2'],
-        },
-      },
-      actionProcessing: {
-        llm: this.#createStandardLLMConfig('tool-calling'),
-        actors: [
-          {
-            id: 'test-actor',
-            name: 'Test Actor',
-            type: 'core:actor',
-          },
-        ],
-        actions: [
-          { id: 'core:move', name: 'Move', requiresTarget: true },
-          { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
-          { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
-        ],
-        mocks: {
-          actionService: {
-            availableActions: [
-              { id: 'core:move', name: 'Move', requiresTarget: true },
-              { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
-              { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
-            ],
-          },
-        },
-      },
-      promptGeneration: {
-        llm: this.#createStandardLLMConfig('json-schema'),
-        actors: [
-          {
-            id: 'prompt-test-actor',
-            name: 'Prompt Test Actor',
-            type: 'core:actor',
-            components: {
-              'core:persona': {
-                description: 'A character for testing prompt generation',
-                traits: ['methodical', 'observant'],
-              },
-            },
-          },
-        ],
-      },
-      // Legacy support for hyphenated names
-      'turn-execution': {
-        llm: this.#createStandardLLMConfig('tool-calling'),
-        actors: [],
-        world: { name: 'Test World' },
-      },
-      'action-processing': {
-        llm: this.#createStandardLLMConfig('tool-calling'),
-        actors: [],
-        actions: [],
-      },
-    };
-
+    const presets = getCachedEnvironmentPresets();
     const config = presets[presetName];
     if (!config) {
       throw new Error(`Unknown environment preset: ${presetName}`);

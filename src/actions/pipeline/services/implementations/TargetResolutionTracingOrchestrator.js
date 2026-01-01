@@ -207,19 +207,40 @@ export default class TargetResolutionTracingOrchestrator {
    * @param {TraceLike} trace - Trace instance used to capture telemetry
    * @param {ActionDefinition} actionDef - Definition of the action being resolved
    * @param {Entity} actor - Actor whose action is being resolved
-   * @param {Error} error - Error encountered during resolution
+   * @param {any} error - Error encountered during resolution. Accepts null/undefined, strings,
+   *   Error instances, and arbitrary objects. Normalizes to safe string values for tracing.
    * @returns {void}
+   * @throws {never} This method never throws; errors are captured internally.
    */
   captureResolutionError(trace, actionDef, actor, error) {
     if (!this.isActionAwareTrace(trace)) return;
+
+    const rawMessage = typeof error === 'string' ? error : error?.message;
+    let fallbackMessage = 'Unknown error';
+    if (typeof error !== 'string' && error !== null && error !== undefined) {
+      try {
+        fallbackMessage = String(error);
+      } catch {
+        fallbackMessage = '[object with non-callable toString]';
+      }
+    }
+    const errorMessage =
+      rawMessage && rawMessage.length > 0
+        ? rawMessage
+        : fallbackMessage && fallbackMessage.length > 0
+          ? fallbackMessage
+          : 'Unknown error';
+    const errorType =
+      error?.constructor?.name ??
+      (typeof error === 'string' ? 'String' : 'Unknown');
 
     const errorData = {
       stage: 'target_resolution',
       actorId: actor.id,
       resolutionFailed: true,
-      error: error.message,
-      errorType: error.constructor?.name,
-      scopeName: error.scopeName,
+      error: errorMessage,
+      errorType: errorType,
+      scopeName: error?.scopeName,
       timestamp: Date.now(),
     };
 

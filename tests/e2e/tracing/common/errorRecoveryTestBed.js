@@ -3,7 +3,7 @@
  * @description Specialized test infrastructure for error recovery workflow testing
  */
 
-import { createMockFacades } from '../../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../common/e2eTestContainer.js';
 import { TraceErrorHandler } from '../../../../src/actions/tracing/errors/traceErrorHandler.js';
 import { RecoveryManager } from '../../../../src/actions/tracing/recovery/recoveryManager.js';
 import { RetryManager } from '../../../../src/actions/tracing/resilience/retryManager.js';
@@ -18,6 +18,9 @@ import { ActionExecutionTraceFactory } from '../../../../src/actions/tracing/act
  */
 export class ErrorRecoveryTestBed {
   constructor() {
+    // E2E test environment
+    this.env = null;
+
     // Core facades
     this.facades = null;
     this.logger = null;
@@ -107,10 +110,11 @@ export class ErrorRecoveryTestBed {
       return;
     }
 
-    // Create facades
+    // Create e2e test environment with container-based services
     // eslint-disable-next-line no-undef
-    this.facades = createMockFacades({}, jest.fn);
-    this.logger = this.facades.logger;
+    this.env = await createE2ETestEnvironment({ stubLLM: true });
+    this.facades = { logger: this.env.services.logger };
+    this.logger = this.env.services.logger;
 
     // Initialize error recovery components
     this.#initializeErrorComponents();
@@ -527,6 +531,12 @@ export class ErrorRecoveryTestBed {
     this.reset();
     this.resilientWrappers.clear();
     this.initialized = false;
+
+    // Cleanup e2e environment if available
+    if (this.env && this.env.cleanup) {
+      await this.env.cleanup();
+    }
+    this.env = null;
   }
 
   /**

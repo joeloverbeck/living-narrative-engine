@@ -3,7 +3,7 @@
  * @description Integration tests for event capture functionality in TurnExecutionTestModule
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import { TestModuleBuilder } from '../../common/testing/builders/testModuleBuilder.js';
 
 describe('TurnExecutionTestModule - Event Capture Integration', () => {
@@ -22,17 +22,14 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      // Dispatch test events through the event bus
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      // Dispatch test events through the event bus (container-based approach)
+      const eventBus = testEnv.services.eventBus;
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
 
-      await eventBus.dispatch({
-        type: 'COMPONENT_UPDATED',
-        payload: { entityId: 'test-entity-1', componentId: 'core:name' },
+      await eventBus.dispatch('COMPONENT_UPDATED', {
+        entityId: 'test-entity-1',
+        componentId: 'core:name',
       });
 
       // Verify events were captured
@@ -50,22 +47,18 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
+
+      // This should NOT be captured
+      await eventBus.dispatch('COMPONENT_UPDATED', {
+        entityId: 'test-entity-1',
+        componentId: 'core:name',
       });
 
-      await eventBus.dispatch({
-        type: 'COMPONENT_UPDATED', // This should NOT be captured
-        payload: { entityId: 'test-entity-1', componentId: 'core:name' },
-      });
-
-      await eventBus.dispatch({
-        type: 'ENTITY_REMOVED', // This should NOT be captured
-        payload: { entityId: 'test-entity-1' },
-      });
+      // This should NOT be captured
+      await eventBus.dispatch('ENTITY_REMOVED', { entityId: 'test-entity-1' });
 
       // Verify only ENTITY_CREATED was captured
       const capturedEvents = testEnv.getCapturedEvents();
@@ -83,27 +76,18 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'entity-1' },
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'entity-1' });
+
+      await eventBus.dispatch('COMPONENT_UPDATED', {
+        entityId: 'entity-1',
+        componentId: 'core:name',
       });
 
-      await eventBus.dispatch({
-        type: 'COMPONENT_UPDATED',
-        payload: { entityId: 'entity-1', componentId: 'core:name' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'entity-2' });
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'entity-2' },
-      });
-
-      await eventBus.dispatch({
-        type: 'ENTITY_REMOVED',
-        payload: { entityId: 'entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_REMOVED', { entityId: 'entity-1' });
 
       // Get all events
       const allEvents = testEnv.getCapturedEvents();
@@ -132,17 +116,11 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-2' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-2' });
 
       // Verify events were captured
       let capturedEvents = testEnv.getCapturedEvents();
@@ -156,10 +134,7 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
       expect(capturedEvents).toHaveLength(0);
 
       // Verify new events are still captured after clearing
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-3' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-3' });
 
       capturedEvents = testEnv.getCapturedEvents();
       expect(capturedEvents).toHaveLength(1);
@@ -171,12 +146,9 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
 
       // Verify event capture methods are not available
       expect(testEnv.getCapturedEvents).toBeUndefined();
@@ -189,13 +161,10 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
       // Capture an event before cleanup
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
 
       expect(testEnv.getCapturedEvents()).toHaveLength(1);
 
@@ -203,10 +172,7 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
       await testEnv.cleanup();
 
       // Dispatch an event after cleanup
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-2' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-2' });
 
       // The event should still be in the captured events array
       // because cleanup doesn't clear the array, it only unsubscribes
@@ -220,14 +186,11 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .withTestActors(['test-actor'])
         .build();
 
-      const eventBus = testEnv.facades.mockDeps.entity.eventBus;
+      const eventBus = testEnv.services.eventBus;
 
       const beforeTime = Date.now();
 
-      await eventBus.dispatch({
-        type: 'ENTITY_CREATED',
-        payload: { entityId: 'test-entity-1' },
-      });
+      await eventBus.dispatch('ENTITY_CREATED', { entityId: 'test-entity-1' });
 
       const afterTime = Date.now();
 
@@ -247,7 +210,7 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
         .build();
 
       // Remove the event bus to simulate it not being available
-      delete testEnv.facades.mockDeps.entity.eventBus;
+      delete testEnv.services.eventBus;
 
       // The test environment should still be usable
       expect(testEnv.getCapturedEvents).toBeDefined();

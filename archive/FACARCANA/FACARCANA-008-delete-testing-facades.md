@@ -1,8 +1,56 @@
 # FACARCANA-008: Delete Testing Facades & Cleanup
 
+**Status**: ✅ COMPLETED
+**Completed**: 2026-01-01
+
 ## Summary
 
 Remove all testing facade files and their unit tests now that all consumers have been migrated to the container-based approach. This is the final cleanup ticket that should only be executed after all other FACARCANA tickets are complete.
+
+## ⚠️ Discrepancies Found During Implementation
+
+**Date**: 2026-01-01
+
+The original assumption that "all consumers have been migrated" was **incorrect**. The following discrepancies were discovered:
+
+### 1. Legacy E2E Tests Still Using Facade-Based Builder
+
+Four e2e tests still use `createMultiTargetTestBuilder()` which internally depends on `createMockFacades()`:
+
+| Test File | Dependency |
+|-----------|------------|
+| `tests/e2e/actions/realRuleExecution.e2e.test.js` | `createMultiTargetTestBuilder` |
+| `tests/e2e/actions/multiTargetExecution.e2e.test.js` | `createMultiTargetTestBuilder` |
+| `tests/e2e/actions/contextDependencies.e2e.test.js` | `createMultiTargetTestBuilder` |
+| `tests/e2e/actions/actionSideEffects.e2e.test.js` | `createMultiTargetTestBuilder` |
+
+### 2. MultiTargetTestBuilder Contains Legacy Class
+
+`tests/e2e/actions/helpers/multiTargetTestBuilder.js` contains:
+- **Legacy code** (lines 31-443): `MultiTargetTestBuilder` class using `createMockFacades`
+- **Modern code** (lines 483-556): `createMultiTargetTestContext` function using container-based approach
+
+### 3. Token Definitions Not Mentioned
+
+`src/dependencyInjection/tokens/tokens-testing.js` defines facade tokens that were not included in the original deletion scope:
+```javascript
+export const testingTokens = freeze({
+  ILLMServiceFacade: 'ILLMServiceFacade',
+  IActionServiceFacade: 'IActionServiceFacade',
+  IEntityServiceFacade: 'IEntityServiceFacade',
+  ITurnExecutionFacade: 'ITurnExecutionFacade',
+});
+```
+
+These are imported and spread in `src/dependencyInjection/tokens.js`.
+
+### Expanded Scope
+
+To properly complete this ticket, the following additional work was performed:
+1. Migrated 4 legacy e2e tests to use `createMultiTargetTestContext`
+2. Removed `MultiTargetTestBuilder` class and `createMultiTargetTestBuilder` factory from `multiTargetTestBuilder.js`
+3. Deleted `src/dependencyInjection/tokens/tokens-testing.js`
+4. Removed `testingTokens` import/spread from `src/dependencyInjection/tokens.js`
 
 ## Dependencies
 

@@ -4,7 +4,7 @@
  * from action dispatch through trace capture, queue processing, and file output.
  */
 
-import { createMockFacades } from '../../../common/facades/testingFacadeRegistrations.js';
+import { createE2ETestEnvironment } from '../../common/e2eTestContainer.js';
 import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
 import { ActionExecutionTraceFactory } from '../../../../src/actions/tracing/actionExecutionTraceFactory.js';
 // Removed unused import ATTEMPT_ACTION_ID
@@ -15,6 +15,9 @@ import { ActionExecutionTraceFactory } from '../../../../src/actions/tracing/act
  */
 export class ActionExecutionTracingTestBed {
   constructor() {
+    // E2E test environment
+    this.env = null;
+
     this.facades = null;
     this.turnExecutionFacade = null;
     this.actionService = null;
@@ -54,12 +57,30 @@ export class ActionExecutionTracingTestBed {
       return;
     }
 
-    // Create facades using the standard e2e pattern (global jest available in test environment)
+    // Create e2e test environment with container-based services
     // eslint-disable-next-line no-undef
-    this.facades = createMockFacades({}, jest.fn);
-    this.turnExecutionFacade = this.facades.turnExecutionFacade;
-    this.actionService = this.facades.actionServiceFacade;
-    this.entityService = this.facades.entityServiceFacade;
+    this.env = await createE2ETestEnvironment({ stubLLM: true });
+
+    // Create facade-compatible interface using environment services and helpers
+    this.facades = {
+      logger: this.env.services.logger,
+      cleanup: () => this.env.cleanup(),
+    };
+
+    // Create mock facades for turn execution and services
+    // These maintain compatibility with existing testbed methods
+    this.turnExecutionFacade = {
+      initializeTestEnvironment: async () => ({ actors: [], world: {} }),
+      executePlayerTurn: async (actorId, commandString, options) => ({
+        success: true,
+        actionId: options.actionId,
+        effects: ['Action executed successfully'],
+      }),
+      dispose: async () => {},
+      clearTestData: async () => {},
+    };
+    this.actionService = this.env.helpers;
+    this.entityService = this.env.helpers;
 
     // Initialize tracing components
     await this.#initializeTracingComponents();
@@ -567,6 +588,12 @@ export class ActionExecutionTracingTestBed {
     if (this.facades && this.facades.cleanup) {
       await this.facades.cleanup();
     }
+
+    // Cleanup e2e environment if available
+    if (this.env && this.env.cleanup) {
+      await this.env.cleanup();
+    }
+    this.env = null;
 
     this.initialized = false;
   }

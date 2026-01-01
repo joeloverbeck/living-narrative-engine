@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
-import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
@@ -92,7 +91,7 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
 
     // Create mock coordinator
     mockDeps.targetResolutionCoordinator = {
-      coordinateResolution: jest.fn(async (context, trace) => {
+      coordinateResolution: jest.fn(async (context) => {
         const { actionDef } = context;
 
         // Handle errors in getting resolution order
@@ -303,9 +302,6 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       // We need to test the specific condition in line 167-169
       // Instead of mocking the private method, let's test through the actual flow
       // by having the resolve return success but controlling what data is returned
-
-      // Mock a custom implementation that bypasses normal resolution
-      const originalResolve = mockDeps.unifiedScopeResolver.resolve;
 
       // First call will work normally for primary resolution
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
@@ -1353,6 +1349,670 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(0);
+    });
+  });
+
+  describe('Branch Coverage - Uncovered Edges', () => {
+    let actionAwareTrace;
+    let capturedTraceData;
+    let captureResolutionDataSpy;
+
+    beforeEach(() => {
+      capturedTraceData = [];
+
+      // Create action-aware trace mock (has captureActionData method)
+      actionAwareTrace = {
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+        captureActionData: jest.fn((stage, actionId, data) => {
+          capturedTraceData.push({ stage, actionId, data });
+        }),
+        captureLegacyDetection: jest.fn(),
+        captureLegacyConversion: jest.fn(),
+        captureScopeEvaluation: jest.fn(),
+        captureMultiTargetResolution: jest.fn(),
+      };
+
+      // Spy on the tracingOrchestrator's captureResolutionData method
+      captureResolutionDataSpy = jest.spyOn(
+        mockDeps.tracingOrchestrator,
+        'captureResolutionData'
+      );
+    });
+
+    afterEach(() => {
+      captureResolutionDataSpy.mockRestore();
+    });
+
+    describe('Line 338 - Legacy tracing scope fallback', () => {
+      it('should fall back to actionDef.targets when targetDefinitions.primary.scope is missing', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:fallback_scope',
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        // Return conversion result without primary.scope
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: {
+                placeholder: 'target',
+                // NO scope property
+              },
+            },
+          }
+        );
+
+        // targetResolver.resolveTargets returns { success: true, value: [...targetContexts] }
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          value: [{ entityId: 'entity1', displayName: 'Entity 1' }],
+        });
+
+        // Mock entityManager.getEntityInstance for the legacy resolution
+        mockDeps.entityManager.getEntityInstance.mockReturnValue({
+          id: 'entity1',
+          components: {},
+        });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Verify tracing was called with the fallback scope
+        expect(captureResolutionDataSpy).toHaveBeenCalled();
+        const captureCall = captureResolutionDataSpy.mock.calls[0];
+        expect(captureCall[3].scope).toBe('test:fallback_scope');
+      });
+    });
+
+    describe('Lines 363-386 - Multi-target tracing edge cases', () => {
+      it('should handle actionDef.targets being null with action-aware trace (line 363-365)', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          targets: null, // null targets
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue(
+          []
+        );
+
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              actionsWithTargets: [{ actionDef: actionDef }],
+              resolvedTargets: null, // no resolved targets
+              targetContexts: [],
+            },
+          }
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Verify tracing was called with empty targetKeys
+        expect(captureResolutionDataSpy).toHaveBeenCalled();
+        const captureCall = captureResolutionDataSpy.mock.calls[0];
+        expect(captureCall[3].targetKeys).toEqual([]);
+        expect(captureCall[3].resolvedTargetCounts).toEqual({});
+      });
+
+      it('should skip resolvedTargetCounts loop when resolvedTargets is missing (line 368)', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Return result without resolvedTargets in data
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              actionsWithTargets: [{ actionDef: actionDef }],
+              // No resolvedTargets property
+              targetContexts: [],
+            },
+          }
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(captureResolutionDataSpy).toHaveBeenCalled();
+        const captureCall = captureResolutionDataSpy.mock.calls[0];
+        expect(captureCall[3].resolvedTargetCounts).toEqual({});
+      });
+    });
+
+    describe('Line 400 - Metadata attachment conditional', () => {
+      it('should not attach metadata when resolvedTargets is missing', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        const actionWithTargets = { actionDef: actionDef };
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              actionsWithTargets: [actionWithTargets],
+              // No resolvedTargets but has targetDefinitions
+              targetDefinitions: { primary: { scope: 'test:scope' } },
+              targetContexts: [],
+            },
+          }
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Check that isMultiTarget was NOT set (conditional failed)
+        expect(result.data.actionsWithTargets[0].isMultiTarget).toBeUndefined();
+      });
+
+      it('should not attach metadata when targetDefinitions is missing', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        const actionWithTargets = { actionDef: actionDef };
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              actionsWithTargets: [actionWithTargets],
+              resolvedTargets: { primary: [{ id: 'entity1' }] },
+              // No targetDefinitions
+              targetContexts: [],
+            },
+          }
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Check that isMultiTarget was NOT set (conditional failed)
+        expect(result.data.actionsWithTargets[0].isMultiTarget).toBeUndefined();
+      });
+    });
+
+    describe('Lines 424-425 - Error message formatting', () => {
+      it('should use scopeName in error message when error has scopeName property (line 423-424)', async () => {
+        const actionDef = {
+          id: 'test:action',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Throw error with scopeName but empty message
+        const scopeError = new Error();
+        scopeError.scopeName = 'test:failing_scope';
+        // Error message will be '' (empty string) which is falsy
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockRejectedValue(
+          scopeError
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Errors are at result.errors, not result.data.errors
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toBeGreaterThan(0);
+        // The error property is 'error', not 'message', and includes scopeName
+        expect(result.errors[0].error).toContain('test:failing_scope');
+        expect(result.errors[0].scopeName).toBe('test:failing_scope');
+      });
+
+      it('should use String(error) fallback when error has no message (line 425-426)', async () => {
+        const actionDef = {
+          id: 'test:action',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Throw a string (not Error object) to test String(error) path
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockRejectedValue(
+          'Simple string error'
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Errors are at result.errors, not result.data.errors
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toBeGreaterThan(0);
+        // The error property is 'error', not 'message'
+        expect(result.errors[0].error).toBe('Simple string error');
+      });
+    });
+
+    describe('Line 547 - null actionContext', () => {
+      it('should handle null actionContext with empty keys array (line 547)', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:scope',
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.actionContext = null; // Set actionContext to null
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: { scope: 'test:scope', placeholder: 'target' },
+            },
+          }
+        );
+
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          data: {
+            actionsWithTargets: [{ actionDef: actionDef }],
+            resolvedTargets: { primary: [{ id: 'entity1' }] },
+            targetContexts: [{ entityId: 'entity1', displayName: 'Entity 1' }],
+          },
+        });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Verify debug was called with empty array for actionContextKeys
+        expect(mockDeps.logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('[DIAGNOSTIC] Legacy resolution'),
+          expect.objectContaining({
+            hasActionContext: false,
+            actionContextKeys: [],
+          })
+        );
+      });
+    });
+
+    describe('Line 602 - displayName validation', () => {
+      it('should use fallback resolver when displayName is empty string (line 604-605)', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:scope',
+        };
+        mockContext.candidateActions = [actionDef];
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: { scope: 'test:scope', placeholder: 'target' },
+            },
+          }
+        );
+
+        // Return target context with empty displayName
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          value: [
+            {
+              entityId: 'entity1',
+              displayName: '', // Empty string
+            },
+          ],
+        });
+
+        mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValue(
+          'Resolved Name'
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Should have called the resolver due to empty displayName
+        expect(
+          mockDeps.targetDisplayNameResolver.getEntityDisplayName
+        ).toHaveBeenCalledWith('entity1');
+        // Check the final displayName was resolved
+        const targetContext = result.data.targetContexts[0];
+        expect(targetContext.displayName).toBe('Resolved Name');
+      });
+
+      it('should use fallback resolver when displayName is not a string (line 604)', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:scope',
+        };
+        mockContext.candidateActions = [actionDef];
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: { scope: 'test:scope', placeholder: 'target' },
+            },
+          }
+        );
+
+        // Return target context with non-string displayName
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          value: [
+            {
+              entityId: 'entity1',
+              displayName: 123, // Number instead of string
+            },
+          ],
+        });
+
+        mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValue(
+          'Resolved Name'
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(
+          mockDeps.targetDisplayNameResolver.getEntityDisplayName
+        ).toHaveBeenCalledWith('entity1');
+        const targetContext = result.data.targetContexts[0];
+        expect(targetContext.displayName).toBe('Resolved Name');
+      });
+
+      it('should skip displayName enrichment when targetContext has no entityId (line 602)', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:scope',
+        };
+        mockContext.candidateActions = [actionDef];
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: { scope: 'test:scope', placeholder: 'target' },
+            },
+          }
+        );
+
+        // Return target context without entityId
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          value: [
+            {
+              // No entityId
+              type: 'location',
+              displayName: 'Original Name',
+            },
+          ],
+        });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Should NOT have called the resolver since no entityId
+        expect(
+          mockDeps.targetDisplayNameResolver.getEntityDisplayName
+        ).not.toHaveBeenCalled();
+        // Original displayName should be preserved
+        const targetContext = result.data.targetContexts[0];
+        expect(targetContext.displayName).toBe('Original Name');
+      });
+    });
+
+    describe('Line 280 - hasScopeOnly branch when targets also exists', () => {
+      it('should set hasScopeOnly to false when action has both scope AND targets (line 280)', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          scope: 'test:explicit_scope', // Has scope
+          targets: {
+            primary: { scope: 'test:primary', placeholder: 'target' }, // AND has targets object
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              actionsWithTargets: [{ actionDef: actionDef }],
+              resolvedTargets: { primary: [{ id: 'entity1' }] },
+              targetContexts: [{ entityId: 'entity1', displayName: 'Entity 1' }],
+            },
+          }
+        );
+
+        const captureLegacyDetectionSpy = jest.spyOn(
+          mockDeps.tracingOrchestrator,
+          'captureLegacyDetection'
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Verify captureLegacyDetection was called with hasScopeOnly: false
+        expect(captureLegacyDetectionSpy).toHaveBeenCalled();
+        const captureCall = captureLegacyDetectionSpy.mock.calls[0];
+        expect(captureCall[2].hasScopeOnly).toBe(false);
+
+        captureLegacyDetectionSpy.mockRestore();
+      });
+    });
+
+    describe('Line 336 - targetCount fallback to 0 when resolvedTargets.primary is missing', () => {
+      it('should use targetCount 0 when resolvedTargets.primary is undefined (line 336)', async () => {
+        const actionDef = {
+          id: 'test:legacy',
+          targets: 'test:fallback_scope',
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          true
+        );
+        mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+          {
+            targetDefinitions: {
+              primary: { scope: 'test:fallback_scope', placeholder: 'target' },
+            },
+          }
+        );
+
+        // Return empty target contexts so no valid targets - this triggers the || 0 fallback
+        // because resolvedTargets won't have a primary array with length
+        mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+          success: true,
+          value: [], // Empty array = no targets
+        });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // Verify tracing captured targetCount: 0 due to fallback
+        expect(captureResolutionDataSpy).toHaveBeenCalled();
+        const captureCall = captureResolutionDataSpy.mock.calls[0];
+        expect(captureCall[3].targetCount).toBe(0);
+      });
+    });
+
+    describe('Line 397 - multi-target result missing actionsWithTargets', () => {
+      it('should skip processing when result.data.actionsWithTargets is missing (line 397)', async () => {
+        const actionDef = {
+          id: 'test:multi',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Return success result but without actionsWithTargets
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockResolvedValue(
+          {
+            success: true,
+            data: {
+              // No actionsWithTargets property
+              resolvedTargets: { primary: [{ id: 'entity1' }] },
+              targetContexts: [],
+            },
+          }
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // allActionsWithTargets should be empty since actionsWithTargets was missing
+        expect(result.data.actionsWithTargets).toHaveLength(0);
+      });
+    });
+
+    describe('Line 425 - error.message exists but is empty string', () => {
+      it('should fall back to Unknown error when error.message is empty (line 425)', async () => {
+        const actionDef = {
+          id: 'test:action',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Throw error object with empty message (but no scopeName to take the other branch)
+        const emptyMessageError = new Error('');
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockRejectedValue(
+          emptyMessageError
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toBeGreaterThan(0);
+        // The error should contain "Error" string from String(error) which returns "Error"
+        expect(result.errors[0].error).toContain('Error');
+      });
+
+      it('should use String(error) when error has no message property (line 427)', async () => {
+        const actionDef = {
+          id: 'test:action',
+          targets: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        };
+        mockContext.candidateActions = [actionDef];
+        mockContext.trace = actionAwareTrace;
+
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+        ]);
+
+        // Throw null to test String(error) fallback - String(null) = "null"
+        mockDeps.targetResolutionCoordinator.coordinateResolution.mockRejectedValue(
+          null
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toBeGreaterThan(0);
+        // String(null) returns "null"
+        expect(result.errors[0].error).toBe('null');
+      });
     });
   });
 });

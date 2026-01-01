@@ -358,6 +358,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
             trace
           );
 
+          if (typeof result?.success !== 'boolean') {
+            throw new Error(
+              `Coordinator must return { success: boolean } envelope; received success: ${typeof result?.success}`
+            );
+          }
+
           // Capture tracing data for multi-target action if enabled
           if (isActionAwareTrace) {
             const targetKeys = actionDef.targets
@@ -420,11 +426,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         }
       } catch (error) {
+        // Note: String(error) always produces a non-empty string for any value,
+        // so no further fallback is needed after it
         const errorMessage = error?.scopeName
           ? `Scope resolution failed for '${error.scopeName}': ${error?.message || 'Unknown error'}`
-          : error?.message ||
-            String(error) ||
-            'Unknown error during target resolution';
+          : error?.message || String(error);
 
         this.#logger.error(
           `Error resolving targets for action '${actionDef.id}':`,
@@ -565,6 +571,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
       trace,
       actionDef.id
     );
+
+    if (typeof result?.success !== 'boolean') {
+      throw new Error(
+        `TargetResolver must return { success: boolean } envelope; received success: ${typeof result?.success}`
+      );
+    }
 
     // TEMPORARY DIAGNOSTIC: resolveTargets returned
     this.#logger.debug(

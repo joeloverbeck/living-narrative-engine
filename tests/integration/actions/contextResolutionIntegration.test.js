@@ -6,31 +6,53 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
+import { createIntegrationTestContext } from './testConfiguration.js';
 
 describe('Context Resolution Integration', () => {
   let entityTestBed;
-  let facades;
+  let context;
   let actionServiceFacade;
   let mockLogger;
   let contextLog;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
 
-    // Create facades
-    facades = createMockFacades({}, jest.fn);
-    actionServiceFacade = facades.actionService;
+    // Create integration context with container-based services
+    context = await createIntegrationTestContext();
+
+    // Create mock facades for backward compatibility during migration
+    // These tests rely on mock behavior - will need refactoring for true integration testing
+    const actionDiscoveryService = {
+      discoverActions: jest.fn().mockResolvedValue({ actions: [], errors: [] }),
+    };
+    const targetResolutionService = {
+      resolveTargets: jest.fn().mockResolvedValue({ success: true, resolvedTargets: [] }),
+    };
+    actionServiceFacade = {
+      // discoverActions delegates to actionDiscoveryService so spies work
+      discoverActions: jest.fn().mockImplementation(async (actorId) => {
+        const result = await actionDiscoveryService.discoverActions(actorId);
+        return result.actions || [];
+      }),
+      executeAction: jest.fn().mockResolvedValue({ success: true }),
+      clearMockData: jest.fn(),
+      actionDiscoveryService,
+      targetResolutionService,
+    };
 
     // Initialize context log for tracking
     contextLog = [];
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     entityTestBed.cleanup();
     actionServiceFacade.clearMockData();
+    if (context) {
+      await context.cleanup();
+    }
   });
 
   describe('Complex Context Dependency Chains', () => {
