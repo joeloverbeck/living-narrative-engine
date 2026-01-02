@@ -774,6 +774,59 @@ describe('MultiHitSimulator', () => {
     });
   });
 
+  describe('state machine guards', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should prevent configure() while running', async () => {
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 5,
+        delayMs: 100,
+      });
+
+      const runPromise = simulator.run();
+
+      expect(() =>
+        simulator.configure({
+          ...createValidConfig(),
+          hitCount: 3,
+          delayMs: 0,
+        })
+      ).toThrow('Cannot configure while simulation is active');
+
+      simulator.stop();
+      await jest.runAllTimersAsync();
+      await runPromise;
+    });
+
+    it('should allow reconfigure after completion', async () => {
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 2,
+        delayMs: 0,
+      });
+
+      const runPromise = simulator.run();
+      await jest.runAllTimersAsync();
+      await runPromise;
+
+      expect(() =>
+        simulator.configure({
+          ...createValidConfig(),
+          hitCount: 4,
+          delayMs: 0,
+        })
+      ).not.toThrow();
+    });
+
+    it('should handle stop() gracefully when not running', () => {
+      expect(() => simulator.stop()).not.toThrow();
+      expect(simulator.isRunning()).toBe(false);
+    });
+  });
+
   describe('should reset state between simulations', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -1084,248 +1137,6 @@ describe('MultiHitSimulator', () => {
     // The default switch case was dead code and has been removed.
   });
 
-  describe('DOM event binding and interaction', () => {
-    /**
-     * Create a fully functional JSDOM-like container for testing DOM interactions
-     */
-    const createInteractiveDOMContainer = () => {
-      const eventListeners = {};
-
-      const createElement = (tag, attrs = {}) => {
-        const listeners = [];
-        return {
-          ...attrs,
-          tagName: tag.toUpperCase(),
-          addEventListener: jest.fn((event, handler) => {
-            listeners.push({ event, handler });
-            if (!eventListeners[attrs.id]) eventListeners[attrs.id] = {};
-            eventListeners[attrs.id][event] = handler;
-          }),
-          dispatchEvent: (eventObj) => {
-            listeners
-              .filter((l) => l.event === eventObj.type)
-              .forEach((l) => l.handler(eventObj));
-          },
-          appendChild: jest.fn(),
-          removeChild: jest.fn(),
-          children: [],
-          innerHTML: '',
-        };
-      };
-
-      const elements = {
-        '#ds-hit-count': createElement('input', {
-          id: 'ds-hit-count',
-          value: '10',
-          type: 'number',
-        }),
-        '#ds-hit-delay-slider': createElement('input', {
-          id: 'ds-hit-delay-slider',
-          value: '100',
-          type: 'range',
-        }),
-        '#ds-hit-delay-value': createElement('span', {
-          id: 'ds-hit-delay-value',
-          textContent: '100ms',
-        }),
-        '#ds-sim-focus-part': createElement('select', {
-          id: 'ds-sim-focus-part',
-          value: '',
-          disabled: true,
-        }),
-        '#ds-sim-run-btn': createElement('button', {
-          id: 'ds-sim-run-btn',
-          disabled: false,
-        }),
-        '#ds-sim-stop-btn': createElement('button', {
-          id: 'ds-sim-stop-btn',
-          disabled: true,
-        }),
-        '.ds-sim-progress': createElement('div', {
-          className: 'ds-sim-progress',
-          hidden: true,
-        }),
-        '.ds-sim-results': createElement('div', {
-          className: 'ds-sim-results',
-          hidden: true,
-        }),
-        '.ds-progress-fill': createElement('div', {
-          className: 'ds-progress-fill',
-          style: { width: '0%' },
-        }),
-        '.ds-progress-text': createElement('span', {
-          className: 'ds-progress-text',
-          textContent: '0 / 10 hits',
-        }),
-        '#ds-result-hits': createElement('span', {
-          id: 'ds-result-hits',
-          textContent: '--',
-        }),
-        '#ds-result-damage': createElement('span', {
-          id: 'ds-result-damage',
-          textContent: '--',
-        }),
-        '#ds-result-duration': createElement('span', {
-          id: 'ds-result-duration',
-          textContent: '--',
-        }),
-        '#ds-result-avg': createElement('span', {
-          id: 'ds-result-avg',
-          textContent: '--',
-        }),
-        'input[name="ds-sim-target-mode"]:checked': createElement('input', {
-          name: 'ds-sim-target-mode',
-          value: 'random',
-          checked: true,
-          type: 'radio',
-        }),
-      };
-
-      // Create radio buttons array
-      const radioButtons = [
-        createElement('input', {
-          name: 'ds-sim-target-mode',
-          value: 'random',
-          type: 'radio',
-        }),
-        createElement('input', {
-          name: 'ds-sim-target-mode',
-          value: 'round-robin',
-          type: 'radio',
-        }),
-        createElement('input', {
-          name: 'ds-sim-target-mode',
-          value: 'focus',
-          type: 'radio',
-        }),
-      ];
-
-      return {
-        querySelector: jest.fn((selector) => elements[selector] || null),
-        querySelectorAll: jest.fn((selector) => {
-          if (selector === 'input[name="ds-sim-target-mode"]') {
-            return radioButtons;
-          }
-          return [];
-        }),
-        innerHTML: '',
-        appendChild: jest.fn(),
-        eventListeners,
-        elements,
-        radioButtons,
-      };
-    };
-
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    it('should update delay value display when slider input changes', () => {
-      const domContainer = createInteractiveDOMContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: domContainer,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.render();
-
-      // Get the slider and value elements
-      const slider = domContainer.elements['#ds-hit-delay-slider'];
-      const valueDisplay = domContainer.elements['#ds-hit-delay-value'];
-
-      // Simulate slider input event
-      const inputHandler = domContainer.eventListeners['ds-hit-delay-slider']?.input;
-      if (inputHandler) {
-        inputHandler({ target: { value: '250' } });
-        expect(valueDisplay.textContent).toBe('250ms');
-      }
-    });
-
-    it('should enable focus part select when focus mode is selected', () => {
-      const domContainer = createInteractiveDOMContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: domContainer,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.render();
-
-      const focusSelect = domContainer.elements['#ds-sim-focus-part'];
-
-      // Find the focus radio button and trigger change
-      const focusRadio = domContainer.radioButtons.find(
-        (r) => r.value === 'focus'
-      );
-      if (focusRadio) {
-        const changeHandler =
-          domContainer.eventListeners[focusRadio.id]?.change;
-        if (changeHandler) {
-          changeHandler({ target: { value: 'focus' } });
-          expect(focusSelect.disabled).toBe(false);
-        }
-      }
-    });
-
-    it('should disable focus part select when non-focus mode is selected', () => {
-      const domContainer = createInteractiveDOMContainer();
-      domContainer.elements['#ds-sim-focus-part'].disabled = false;
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: domContainer,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.render();
-
-      const focusSelect = domContainer.elements['#ds-sim-focus-part'];
-
-      // Trigger change to random mode
-      const randomRadio = domContainer.radioButtons.find(
-        (r) => r.value === 'random'
-      );
-      if (randomRadio) {
-        const changeHandler =
-          domContainer.eventListeners[randomRadio.id]?.change;
-        if (changeHandler) {
-          focusSelect.disabled = false; // Ensure it starts enabled
-          changeHandler({ target: { value: 'random' } });
-          expect(focusSelect.disabled).toBe(true);
-        }
-      }
-    });
-
-    it('should trigger stop when stop button is clicked', () => {
-      const domContainer = createInteractiveDOMContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: domContainer,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.render();
-
-      const stopHandler =
-        domContainer.eventListeners['ds-sim-stop-btn']?.click;
-      if (stopHandler) {
-        // Spy on stop method
-        const stopSpy = jest.spyOn(testSimulator, 'stop');
-        stopHandler();
-        expect(stopSpy).toHaveBeenCalled();
-        stopSpy.mockRestore();
-      }
-    });
-  });
-
   describe('#handleRunClick edge cases', () => {
     /**
      * Create a container that captures event handlers for direct invocation
@@ -1568,305 +1379,6 @@ describe('MultiHitSimulator', () => {
     });
   });
 
-  describe('DOM update methods', () => {
-    const createUpdatableContainer = () => {
-      const elements = {
-        '#ds-hit-count': { value: '5' },
-        '#ds-hit-delay-slider': {
-          value: '50',
-          addEventListener: jest.fn(),
-        },
-        '#ds-hit-delay-value': { textContent: '50ms' },
-        '#ds-sim-focus-part': {
-          value: '',
-          disabled: true,
-          innerHTML: '',
-          appendChild: jest.fn(),
-        },
-        '#ds-sim-run-btn': {
-          disabled: false,
-          addEventListener: jest.fn(),
-        },
-        '#ds-sim-stop-btn': {
-          disabled: true,
-          addEventListener: jest.fn(),
-        },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: true },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '0 / 5 hits' },
-        '#ds-result-hits': { textContent: '--' },
-        '#ds-result-damage': { textContent: '--' },
-        '#ds-result-duration': { textContent: '--' },
-        '#ds-result-avg': { textContent: '--' },
-        'input[name="ds-sim-target-mode"]:checked': {
-          value: 'random',
-          checked: true,
-        },
-      };
-
-      return {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-        elements,
-      };
-    };
-
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    it('should update progress bar during simulation', async () => {
-      const container = createUpdatableContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 4,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Check that progress fill was updated
-      const progressFill = container.elements['.ds-progress-fill'];
-      expect(progressFill.style.width).toBe('100%');
-
-      // Check that progress text was updated
-      const progressText = container.elements['.ds-progress-text'];
-      expect(progressText.textContent).toBe('4 / 4 hits');
-    });
-
-    it('should update results display after simulation completes', async () => {
-      const container = createUpdatableContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 3,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Check that results section is now visible
-      const resultsSection = container.elements['.ds-sim-results'];
-      expect(resultsSection.hidden).toBe(false);
-
-      // Check hits value
-      const hitsEl = container.elements['#ds-result-hits'];
-      expect(hitsEl.textContent).toBe('3');
-
-      // Check damage value
-      const damageEl = container.elements['#ds-result-damage'];
-      expect(damageEl.textContent).toBe('30.0');
-
-      // Check duration value - should be a number followed by 'ms'
-      const durationEl = container.elements['#ds-result-duration'];
-      expect(durationEl.textContent).toMatch(/\d+ms/);
-
-      // Check average value
-      const avgEl = container.elements['#ds-result-avg'];
-      expect(avgEl.textContent).toBe('10.00');
-    });
-
-    it('should update button disabled states after simulation completes', async () => {
-      const container = createUpdatableContainer();
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runBtn = container.elements['#ds-sim-run-btn'];
-      const stopBtn = container.elements['#ds-sim-stop-btn'];
-
-      // Before simulation
-      expect(runBtn.disabled).toBe(false);
-      expect(stopBtn.disabled).toBe(true);
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // After completion - #updateControlsState is called in finally block
-      // with #isRunning = false
-      expect(runBtn.disabled).toBe(false);
-      expect(stopBtn.disabled).toBe(true);
-    });
-
-    it('should populate focus part dropdown with available parts', () => {
-      const container = createUpdatableContainer();
-      const focusPartSelect = container.elements['#ds-sim-focus-part'];
-      const addedOptions = [];
-      focusPartSelect.appendChild = jest.fn((option) => {
-        addedOptions.push(option);
-      });
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.setEntityConfig({
-        entityId: 'test-entity',
-        damageEntry: { base_damage: 10 },
-      });
-
-      // Check that options were added for each part
-      expect(addedOptions.length).toBe(3);
-      expect(addedOptions[0].value).toBe('part-head');
-      expect(addedOptions[0].textContent).toBe('Head');
-      expect(addedOptions[1].value).toBe('part-torso');
-      expect(addedOptions[1].textContent).toBe('Torso');
-      expect(addedOptions[2].value).toBe('part-arm');
-      expect(addedOptions[2].textContent).toBe('Arm');
-    });
-
-    it('should handle results display with zero hits executed', async () => {
-      const container = createUpdatableContainer();
-
-      mockDamageExecutionService.applyDamage.mockResolvedValue({
-        success: false,
-        results: [],
-        error: 'test error',
-      });
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Check average with 0 damage - should handle divide by zero
-      const avgEl = container.elements['#ds-result-avg'];
-      // With 0 total damage and 2 hits executed, avg should be 0.00
-      expect(avgEl.textContent).toBe('0.00');
-    });
-
-    it('should not throw when progress elements are missing', async () => {
-      const container = {
-        querySelector: jest.fn(() => null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      // Should not throw even with missing DOM elements
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      const result = await runPromise;
-
-      expect(result.completed).toBe(true);
-    });
-
-    it('should not throw when results elements are missing', async () => {
-      const container = {
-        querySelector: jest.fn(() => null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      const result = await runPromise;
-
-      // Should complete without errors even if DOM elements are missing
-      expect(result.completed).toBe(true);
-      expect(result.hitsExecuted).toBe(2);
-    });
-
-    it('should update focus part options when focus select is not present', () => {
-      const container = {
-        querySelector: jest.fn(() => null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      // Should not throw when focus select is missing
-      expect(() => {
-        testSimulator.setEntityConfig({
-          entityId: 'test-entity',
-          damageEntry: { base_damage: 10 },
-        });
-      }).not.toThrow();
-    });
-  });
-
   describe('damage result handling edge cases', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -1929,6 +1441,63 @@ describe('MultiHitSimulator', () => {
       expect(result.hitsExecuted).toBe(2);
       // Part hit counts should have entries
       expect(Object.keys(result.partHitCounts).length).toBeGreaterThan(0);
+    });
+
+    it('should prefer result targetPartId over selector target', async () => {
+      mockDamageExecutionService.applyDamage.mockResolvedValue({
+        success: true,
+        results: [
+          {
+            damageDealt: 12,
+            targetPartId: 'part-arm',
+            severity: 'minor',
+          },
+        ],
+        error: null,
+      });
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 1,
+        delayMs: 0,
+        targetMode: 'focus',
+        focusPartId: 'part-torso',
+      });
+
+      const runPromise = simulator.run();
+      await jest.runAllTimersAsync();
+      const result = await runPromise;
+
+      expect(result.partHitCounts['part-arm']).toBe(1);
+      expect(result.partHitCounts['part-torso']).toBeUndefined();
+    });
+
+    it('should fall back to selector target when result targetPartId is missing', async () => {
+      mockDamageExecutionService.applyDamage.mockResolvedValue({
+        success: true,
+        results: [
+          {
+            damageDealt: 12,
+            targetPartId: null,
+            severity: 'minor',
+          },
+        ],
+        error: null,
+      });
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 1,
+        delayMs: 0,
+        targetMode: 'focus',
+        focusPartId: 'part-torso',
+      });
+
+      const runPromise = simulator.run();
+      await jest.runAllTimersAsync();
+      const result = await runPromise;
+
+      expect(result.partHitCounts['part-torso']).toBe(1);
     });
 
     it('should handle damage result with empty results array', async () => {
@@ -2074,62 +1643,6 @@ describe('MultiHitSimulator', () => {
     });
   });
 
-  describe('DOM event binding - focusPartSelect null branch', () => {
-    it('should not throw when focusPartSelect is null during radio change', () => {
-      // Create container where focusPartSelect returns null
-      const radioButtons = [];
-      const elements = {
-        '#ds-hit-delay-slider': {
-          value: '100',
-          addEventListener: jest.fn(),
-        },
-        '#ds-hit-delay-value': { textContent: '100ms' },
-        '#ds-sim-focus-part': null, // Focus part select is null
-        '#ds-sim-run-btn': { addEventListener: jest.fn() },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn() },
-      };
-
-      // Create radio button with working event listener
-      const capturedChangeHandlers = [];
-      const radio = {
-        value: 'focus',
-        addEventListener: jest.fn((event, handler) => {
-          if (event === 'change') {
-            capturedChangeHandlers.push(handler);
-          }
-        }),
-      };
-      radioButtons.push(radio);
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn((sel) => {
-          if (sel === 'input[name="ds-sim-target-mode"]') {
-            return radioButtons;
-          }
-          return [];
-        }),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.render();
-
-      // Trigger the change handler - should not throw even if focusPartSelect is null
-      expect(capturedChangeHandlers.length).toBeGreaterThan(0);
-      expect(() => {
-        capturedChangeHandlers[0]({ target: { value: 'focus' } });
-      }).not.toThrow();
-    });
-  });
-
   describe('#handleRunClick optional chaining branches', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -2199,247 +1712,6 @@ describe('MultiHitSimulator', () => {
         // Should have called applyDamage
         expect(mockDamageExecutionService.applyDamage).toHaveBeenCalled();
       }
-    });
-  });
-
-  describe('#updateResultsDisplay null element branches', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    it('should skip updating each result element when null', async () => {
-      // Create container where specific result elements are null
-      const elements = {
-        '#ds-hit-count': { value: '2' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-hit-delay-value': { textContent: '' },
-        '#ds-sim-run-btn': { addEventListener: jest.fn(), disabled: false },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: true },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        // Result elements are null to test null branch
-        '#ds-result-hits': null,
-        '#ds-result-damage': null,
-        '#ds-result-duration': null,
-        '#ds-result-avg': null,
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      // Should not throw when result elements are null
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      const result = await runPromise;
-
-      expect(result.completed).toBe(true);
-      expect(result.hitsExecuted).toBe(2);
-    });
-
-    it('should skip updating hitsEl when null but update others', async () => {
-      const elements = {
-        '#ds-hit-count': { value: '2' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-sim-run-btn': { addEventListener: jest.fn(), disabled: false },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: false },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': null, // Only this one is null
-        '#ds-result-damage': { textContent: '' },
-        '#ds-result-duration': { textContent: '' },
-        '#ds-result-avg': { textContent: '' },
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Other elements should be updated
-      expect(elements['#ds-result-damage'].textContent).toBe('20.0');
-      expect(elements['#ds-result-avg'].textContent).toBe('10.00');
-    });
-
-    it('should skip updating damageEl when null but update others', async () => {
-      const elements = {
-        '#ds-hit-count': { value: '2' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-sim-run-btn': { addEventListener: jest.fn(), disabled: false },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: false },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': { textContent: '' },
-        '#ds-result-damage': null, // Only this one is null
-        '#ds-result-duration': { textContent: '' },
-        '#ds-result-avg': { textContent: '' },
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Other elements should be updated
-      expect(elements['#ds-result-hits'].textContent).toBe('2');
-      expect(elements['#ds-result-avg'].textContent).toBe('10.00');
-    });
-
-    it('should skip updating durationEl when null but update others', async () => {
-      const elements = {
-        '#ds-hit-count': { value: '2' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-sim-run-btn': { addEventListener: jest.fn(), disabled: false },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: false },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': { textContent: '' },
-        '#ds-result-damage': { textContent: '' },
-        '#ds-result-duration': null, // Only this one is null
-        '#ds-result-avg': { textContent: '' },
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Other elements should be updated
-      expect(elements['#ds-result-hits'].textContent).toBe('2');
-      expect(elements['#ds-result-damage'].textContent).toBe('20.0');
-      expect(elements['#ds-result-avg'].textContent).toBe('10.00');
-    });
-
-    it('should skip updating avgEl when null but update others', async () => {
-      const elements = {
-        '#ds-hit-count': { value: '2' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-sim-run-btn': { addEventListener: jest.fn(), disabled: false },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': { hidden: false },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': { textContent: '' },
-        '#ds-result-damage': { textContent: '' },
-        '#ds-result-duration': { textContent: '' },
-        '#ds-result-avg': null, // Only this one is null
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel] || null),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.configure({
-        ...createValidConfig(),
-        hitCount: 2,
-        delayMs: 0,
-      });
-
-      const runPromise = testSimulator.run();
-      await jest.runAllTimersAsync();
-      await runPromise;
-
-      // Other elements should be updated
-      expect(elements['#ds-result-hits'].textContent).toBe('2');
-      expect(elements['#ds-result-damage'].textContent).toBe('20.0');
-      expect(elements['#ds-result-duration'].textContent).toMatch(/\d+ms/);
     });
   });
 
@@ -2537,6 +1809,38 @@ describe('MultiHitSimulator', () => {
           targetPartId: null,
         })
       );
+    });
+  });
+
+  describe('development-mode invariant assertions', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should skip console.assert in production mode', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      const assertSpy = jest
+        .spyOn(console, 'assert')
+        .mockImplementation(() => {});
+
+      try {
+        simulator.configure({
+          ...createValidConfig(),
+          hitCount: 2,
+          delayMs: 0,
+        });
+
+        const runPromise = simulator.run();
+        await jest.runAllTimersAsync();
+        await runPromise;
+
+        expect(assertSpy).not.toHaveBeenCalled();
+      } finally {
+        assertSpy.mockRestore();
+        process.env.NODE_ENV = originalEnv;
+      }
     });
   });
 
@@ -2749,128 +2053,6 @@ describe('MultiHitSimulator', () => {
         // The fallback branch '' || '' was covered during configure() call
         // Even if the run fails, the branch coverage goal is achieved
         expect(mockLogger.debug).toHaveBeenCalled();
-      }
-    });
-  });
-
-  describe('#handleRunClick progress element null branches', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    it('should not throw when progressEl is null during click handler', async () => {
-      const capturedClickHandler = { handler: null };
-
-      const elements = {
-        '#ds-hit-count': { value: '1' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-hit-delay-value': { textContent: '0ms' },
-        '#ds-sim-focus-part': { value: 'part-head', appendChild: jest.fn() },
-        '#ds-sim-run-btn': {
-          addEventListener: jest.fn((event, handler) => {
-            if (event === 'click') capturedClickHandler.handler = handler;
-          }),
-          disabled: false,
-        },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': null, // Progress element is null
-        '.ds-sim-results': { hidden: true },
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': { textContent: '' },
-        '#ds-result-damage': { textContent: '' },
-        '#ds-result-duration': { textContent: '' },
-        '#ds-result-avg': { textContent: '' },
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel]),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.setEntityConfig({
-        entityId: 'test-entity',
-        damageEntry: { base_damage: 10 },
-        multiplier: 1,
-      });
-
-      testSimulator.render();
-
-      if (capturedClickHandler.handler) {
-        const clickPromise = capturedClickHandler.handler();
-        await jest.runAllTimersAsync();
-        await clickPromise;
-
-        // Should complete without throwing
-        expect(mockDamageExecutionService.applyDamage).toHaveBeenCalled();
-      }
-    });
-
-    it('should not throw when resultsEl is null during click handler', async () => {
-      const capturedClickHandler = { handler: null };
-
-      const elements = {
-        '#ds-hit-count': { value: '1' },
-        '#ds-hit-delay-slider': { value: '0', addEventListener: jest.fn() },
-        '#ds-hit-delay-value': { textContent: '0ms' },
-        '#ds-sim-focus-part': { value: 'part-head', appendChild: jest.fn() },
-        '#ds-sim-run-btn': {
-          addEventListener: jest.fn((event, handler) => {
-            if (event === 'click') capturedClickHandler.handler = handler;
-          }),
-          disabled: false,
-        },
-        '#ds-sim-stop-btn': { addEventListener: jest.fn(), disabled: true },
-        '.ds-sim-progress': { hidden: true },
-        '.ds-sim-results': null, // Results element is null
-        '.ds-progress-fill': { style: { width: '0%' } },
-        '.ds-progress-text': { textContent: '' },
-        '#ds-result-hits': { textContent: '' },
-        '#ds-result-damage': { textContent: '' },
-        '#ds-result-duration': { textContent: '' },
-        '#ds-result-avg': { textContent: '' },
-        'input[name="ds-sim-target-mode"]:checked': { value: 'random' },
-      };
-
-      const container = {
-        querySelector: jest.fn((sel) => elements[sel]),
-        querySelectorAll: jest.fn(() => []),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      };
-
-      const testSimulator = new MultiHitSimulator({
-        containerElement: container,
-        damageExecutionService: mockDamageExecutionService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
-
-      testSimulator.setEntityConfig({
-        entityId: 'test-entity',
-        damageEntry: { base_damage: 10 },
-        multiplier: 1,
-      });
-
-      testSimulator.render();
-
-      if (capturedClickHandler.handler) {
-        const clickPromise = capturedClickHandler.handler();
-        await jest.runAllTimersAsync();
-        await clickPromise;
-
-        // Should complete without throwing
-        expect(mockDamageExecutionService.applyDamage).toHaveBeenCalled();
       }
     });
   });

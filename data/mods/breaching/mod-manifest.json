@@ -6,15 +6,15 @@
   "description": "Actions, tools and components for breaching.",
   "dependencies": [
     {
+      "id": "breaching-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "items-core",
       "version": "1.0.0"
     },
     {
       "id": "descriptors",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "locations",
       "version": "^1.0.0"
     },
     {
@@ -42,8 +42,7 @@
       "handle_saw_through_barred_blocker_stage_two.rule.json"
     ],
     "components": [
-      "allows_abrasive_sawing.component.json",
-      "breached.component.json"
+      "allows_abrasive_sawing.component.json"
     ],
     "entities": {
       "definitions": [
@@ -52,8 +51,7 @@
       "instances": []
     },
     "scopes": [
-      "abrasive_sawing_tools.scope",
-      "breached_blockers_at_location.scope"
+      "abrasive_sawing_tools.scope"
     ],
     "conditions": [
       "event-is-action-saw-through-barred-blocker-stage-three.condition.json",

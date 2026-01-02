@@ -63,7 +63,7 @@ const registerPassThroughBreachResolvers = (fixture) => {
         blockerId
           ? entityManager.getComponentData(
               blockerId,
-              'breaching:breached'
+              'breaching-states:breached'
             )
           : false
       );
@@ -96,7 +96,7 @@ const registerPassThroughBreachResolvers = (fixture) => {
     fixture.testEnv,
     fixture.testEnv.entityManager,
     {
-      'breaching:breached_blockers_at_location': breachedBlockersResolver,
+      'breaching-states:breached_blockers_at_location': breachedBlockersResolver,
       'movement:destinations_for_breached_blocker': destinationsResolver,
     }
   );
@@ -132,7 +132,7 @@ const createBreachScenario = async (
   ];
   if (breached) {
     blockerComponents.push({
-      componentId: 'breaching:breached',
+      componentId: 'breaching-states:breached',
       data: {},
     });
   }
@@ -216,7 +216,7 @@ describe('movement:pass_through_breach target pairing', () => {
     services = containerHandle.services;
 
     const breachedScopePath = new URL(
-      '../../../../data/mods/breaching/scopes/breached_blockers_at_location.scope',
+      '../../../../data/mods/breaching-states/scopes/breached_blockers_at_location.scope',
       import.meta.url
     );
     const destinationScopePath = new URL(
@@ -323,12 +323,12 @@ describe('movement:pass_through_breach target pairing', () => {
 
     storeDefinition(blockerAId, {
       'core:name': { text: 'Breach A' },
-      'breaching:breached': {},
+      'breaching-states:breached': {},
     });
 
     storeDefinition(blockerBId, {
       'core:name': { text: 'Breach B' },
-      'breaching:breached': {},
+      'breaching-states:breached': {},
     });
 
     storeDefinition(actorId, {
@@ -362,7 +362,7 @@ describe('movement:pass_through_breach target pairing', () => {
 
   it('pairs destinations to the matching breached blocker', () => {
     const primaryResult = targetResolutionService.resolveTargets(
-      'breaching:breached_blockers_at_location',
+      'breaching-states:breached_blockers_at_location',
       actorEntity,
       discoveryContext,
       null,

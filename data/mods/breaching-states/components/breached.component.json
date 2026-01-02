@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "breaching:breached",
+  "id": "breaching-states:breached",
   "description": "Marker component indicating a blocker has been breached.",
   "dataSchema": {
     "type": "object",

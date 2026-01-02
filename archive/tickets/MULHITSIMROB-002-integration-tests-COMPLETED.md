@@ -2,11 +2,15 @@
 
 ## Summary
 
-Add integration tests to verify MultiHitSimulator workflows including full simulation cycles, stop behavior, consecutive runs, and focus mode targeting.
+Add integration tests to verify MultiHitSimulator workflows including full simulation cycles, stop behavior, consecutive runs, and focus mode targeting, using the real jsdom DOM output from `render()`.
+
+## Status
+
+- [x] Completed
 
 ## Background
 
-The `MultiHitSimulator` class orchestrates damage simulation with external dependencies (`DamageExecutionService`, `ISafeEventDispatcher`). Integration tests verify that these components work together correctly in realistic scenarios.
+The `MultiHitSimulator` class orchestrates damage simulation with external dependencies (`DamageExecutionService`, `ISafeEventDispatcher`). Integration tests verify that these components work together correctly in realistic scenarios and that DOM updates from `render()` reflect simulation results.
 
 **Reference**: `specs/multi-hit-simulator-robustness.md` lines 354-362
 
@@ -24,7 +28,7 @@ The `MultiHitSimulator` class orchestrates damage simulation with external depen
   - `tests/integration/domUI/damage-simulator/damageSimulatorEventValidation.integration.test.js`
   - `tests/integration/domUI/damage-simulator/entityLoading.integration.test.js`
 - NOT modifying `DamageExecutionService` or other production code
-- NOT adding DOM mocking (integration tests use real behavior where possible)
+- NOT adding custom DOM mocking (integration tests should use jsdom DOM elements from `render()`)
 
 ## Implementation Details
 
@@ -34,11 +38,12 @@ The `MultiHitSimulator` class orchestrates damage simulation with external depen
 describe('Full simulation workflow', () => {
   it('should complete Configure -> Run -> Events -> UI update cycle', async () => {
     // 1. Create simulator with mock dependencies
-    // 2. Configure with valid config (hitCount: 5, delay: 10ms)
-    // 3. Run simulation
+    // 2. Configure with valid config (hitCount: 5, delayMs: 10)
+    // 3. Call render() to create DOM nodes and bind listeners
+    // 4. Run simulation
     // 4. Verify: PROGRESS events emitted (5 total)
     // 5. Verify: COMPLETE event emitted with correct results
-    // 6. Verify: UI update methods called (if applicable)
+    // 6. Verify: UI DOM updates (progress text + results values)
   });
 });
 ```
@@ -50,12 +55,12 @@ describe('Stop during execution', () => {
   it('should emit STOPPED event with partial results and clean up', async () => {
     // 1. Configure with hitCount: 10, delay: 50ms
     // 2. Start run()
-    // 3. After 2-3 hits, call stop()
+    // 3. After at least 1 hit while delay is pending, call stop()
     // 4. Verify: STOPPED event emitted (not COMPLETE)
     // 5. Verify: results.completed === false
     // 6. Verify: results.hitsExecuted < 10
     // 7. Verify: isRunning() returns false after stop
-    // 8. Verify: No pending timers (cleanup complete)
+    // 8. Verify: No pending timers (cleanup complete) using jest.getTimerCount()
   });
 });
 ```
@@ -70,7 +75,7 @@ describe('Multiple consecutive runs', () => {
     // 3. Configure and run again (hitCount: 5)
     // 4. Verify: Second run completes with correct hitCount
     // 5. Verify: Progress resets to 0 at start of second run
-    // 6. Verify: Round-robin index resets between runs
+    // 6. Verify: Round-robin index resets between runs (applyDamage targetPartId sequence)
     // 7. Verify: No cross-contamination of results
   });
 });
@@ -95,25 +100,25 @@ describe('Focus mode with real parts', () => {
 
 ### Tests That Must Pass
 
-- [ ] Full simulation workflow test passes
-- [ ] Stop during execution test passes
-- [ ] Multiple consecutive runs test passes
-- [ ] Focus mode end-to-end test passes
-- [ ] All existing unit tests (94) still pass
-- [ ] All existing integration tests still pass
+- [x] Full simulation workflow test passes
+- [x] Stop during execution test passes
+- [x] Multiple consecutive runs test passes
+- [x] Focus mode end-to-end test passes
+- [x] All existing unit tests (94) still pass
+- [x] All existing integration tests still pass
 
 ### Invariants That Must Remain True
 
-- Simulation completes successfully when not stopped
-- Stop cancels simulation and emits correct event
-- State fully resets between runs
-- Focus mode targets only the specified part
+- [x] Simulation completes successfully when not stopped
+- [x] Stop cancels simulation and emits correct event
+- [x] State fully resets between runs
+- [x] Focus mode targets only the specified part
 
 ### Quality Requirements
 
-- Tests should be deterministic (no flaky behavior)
-- Tests should complete in < 5 seconds total
-- Use `jest.useFakeTimers()` for timer-dependent tests
+- [x] Tests should be deterministic (no flaky behavior)
+- [x] Tests should complete in < 5 seconds total
+- [x] Use `jest.useFakeTimers()` for timer-dependent tests
 
 ## Test File Template
 
@@ -142,10 +147,15 @@ function createIntegrationTestDependencies() {
       { id: 'part-2', name: 'Torso', weight: 2 },
       { id: 'part-3', name: 'Arms', weight: 1 },
     ]),
-    applyDamage: jest.fn(async () => ({
+    applyDamage: jest.fn(async ({ targetPartId }) => ({
       success: true,
-      damageDealt: 10,
-      effects: [],
+      results: [
+        {
+          damageDealt: 10,
+          targetPartId,
+          severity: null,
+        },
+      ],
     })),
   };
 
@@ -196,3 +206,8 @@ Small - focused integration test file following existing patterns in `tests/inte
 - Pattern: `tests/integration/domUI/damage-simulator/entityLoading.integration.test.js`
 - Pattern: `tests/integration/domUI/damage-simulator/damageSimulatorEventValidation.integration.test.js`
 - Source: `src/domUI/damage-simulator/MultiHitSimulator.js`
+
+## Outcome
+
+- Implemented integration tests that exercise full run, stop cleanup, consecutive runs, and focus targeting using real DOM from `render()`.
+- Updated mocks to reflect `applyDamage()` returning `results[]`, aligning tests with production expectations.

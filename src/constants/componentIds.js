@@ -56,8 +56,8 @@ export const CONTAINER_COMPONENT_ID = 'containers-core:container';
 export const OPENABLE_COMPONENT_ID = 'items-core:openable';
 
 // Drinking system components
-export const DRINKABLE_COMPONENT_ID = 'drinking:drinkable';
-export const EMPTY_COMPONENT_ID = 'drinking:empty';
+export const DRINKABLE_COMPONENT_ID = 'drinking-states:drinkable';
+export const EMPTY_COMPONENT_ID = 'drinking-states:empty';
 
 // Inventory components
 export const INVENTORY_COMPONENT_ID = 'inventory:inventory';

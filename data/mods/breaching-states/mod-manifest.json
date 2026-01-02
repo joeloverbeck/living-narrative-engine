@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "breaching-states",
+  "version": "1.0.0",
+  "name": "Breaching States",
+  "description": "State components for breaching mechanics. Separated from action mod to allow other mods to check breach state without requiring breaching actions.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "locations",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "breached.component.json"
+    ],
+    "scopes": [
+      "breached_blockers_at_location.scope"
+    ]
+  }
+}

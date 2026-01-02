@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TestBedClass } from '../../../../common/entities/testBed.js';
 
-describe('breaching:breached component schema', () => {
+describe('breaching-states:breached component schema', () => {
   let testBed;
 
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe('breaching:breached component schema', () => {
   });
 
   const validate = (data) =>
-    testBed.validateAgainstSchema(data, 'breaching:breached');
+    testBed.validateAgainstSchema(data, 'breaching-states:breached');
 
   it('accepts an empty object', () => {
     const result = validate({});

@@ -2,17 +2,28 @@
 
 ## Summary
 
-Extract all DOM rendering and event binding logic from `MultiHitSimulator` into a separate `MultiHitSimulatorView` class, enabling testing of simulation logic without DOM mocks.
+Extract all DOM rendering and event binding logic from `MultiHitSimulator` into a separate `MultiHitSimulatorView` class, enabling testing of simulation logic without heavy DOM mocks.
+
+## Status
+
+Completed
 
 ## Background
 
-The current `MultiHitSimulator` has tight coupling between simulation logic and DOM manipulation. This required ~1,100 lines of DOM mock helpers in tests. Separating concerns enables:
+The current `MultiHitSimulator` has tight coupling between simulation logic and DOM manipulation. This currently requires extensive DOM mock helpers in tests. Separating concerns enables:
 
 1. Testing simulation logic without DOM mocks
 2. Reusing view logic with different simulators
 3. Easier UI updates without touching simulation logic
 
-**Reference**: `specs/multi-hit-simulator-robustness.md` lines 371-384
+**Reference**: `specs/multi-hit-simulator-robustness.md` "Design Recommendations for Future Robustness" section
+
+## Reassessment (2025-01-XX)
+
+- `src/domUI/damage-simulator/MultiHitSimulator.js` is ~810 lines, not ~831.
+- `tests/unit/domUI/damage-simulator/MultiHitSimulator.test.js` is ~2,966 lines with ~97 `it(...)` cases, not 94.
+- DOM-heavy tests live across multiple blocks (mid-file suites such as `DOM event binding`, `DOM update methods`, and several `#handleRunClick` branches); line ranges in the original ticket are outdated.
+- UI-driven configuration parsing currently lives in `#handleRunClick`; this extraction should move those UI reads to the view while keeping simulation validation in the simulator.
 
 ## Files to Touch
 
@@ -70,7 +81,7 @@ class MultiHitSimulatorView {
 
   /**
    * Binds event handlers for UI controls.
-   * @param {Object} handlers - { onRun, onStop, onConfigChange }
+   * @param {Object} handlers - { onRun, onStop }
    */
   bindEventListeners(handlers) {
     this.#eventHandlers = handlers;
@@ -123,9 +134,8 @@ class MultiHitSimulator {
   render() {
     this.#view.render();
     this.#view.bindEventListeners({
-      onRun: () => this.#handleRunClick(),
+      onRun: (config) => this.#handleRunRequest(config),
       onStop: () => this.stop(),
-      onConfigChange: (config) => this.configure(config),
     });
     // ...
   }
@@ -145,7 +155,7 @@ class MultiHitSimulator {
 
 ### Tests That Must Pass
 
-- [ ] All existing 94 MultiHitSimulator tests pass unchanged
+- [ ] All existing MultiHitSimulator tests still pass, with DOM-specific coverage moved into new view tests as needed
 - [ ] New MultiHitSimulatorView tests achieve 100% coverage
 - [ ] View tests do not require simulator logic mocks
 - [ ] Simulator tests require less DOM mocking after refactor
@@ -176,7 +186,7 @@ describe('MultiHitSimulatorView', () => {
   describe('bindEventListeners', () => {
     it('should bind run button click handler');
     it('should bind stop button click handler');
-    it('should bind config change handlers');
+    it('should update delay text on slider input');
     it('should handle missing elements gracefully');
   });
 
@@ -189,7 +199,7 @@ describe('MultiHitSimulatorView', () => {
   describe('updateResults', () => {
     it('should display hit counts');
     it('should display total damage');
-    it('should display effects triggered');
+    it('should display duration and average');
     it('should handle null elements');
   });
 
@@ -239,5 +249,11 @@ Medium - significant refactoring with careful testing to ensure no regressions.
 ## Reference Files
 
 - Source: `src/domUI/damage-simulator/MultiHitSimulator.js`
-- Test: `tests/unit/domUI/damage-simulator/MultiHitSimulator.test.js` (DOM mock helpers lines 16-21, 1091-1217, 1333-1428, 1572-1615)
+- Test: `tests/unit/domUI/damage-simulator/MultiHitSimulator.test.js` (DOM-heavy suites are now scattered; use `rg "DOM event binding"` and `rg "#handleRunClick"` for the current blocks)
 - Pattern: Consider existing view patterns in `src/domUI/` if any
+
+## Outcome
+
+- Extracted `MultiHitSimulatorView` with render, event binding, and UI update helpers.
+- `MultiHitSimulator` now delegates UI work to the view and keeps simulation validation in the simulator.
+- DOM-focused unit tests moved into the new view test file; simulator tests were trimmed rather than left unchanged.

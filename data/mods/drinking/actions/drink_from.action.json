@@ -11,11 +11,11 @@
     }
   },
   "required_components": {
-    "primary": ["drinking:drinkable", "containers-core:liquid_container"]
+    "primary": ["drinking-states:drinkable", "containers-core:liquid_container"]
   },
   "forbidden_components": {
     "actor": ["physical-control-states:being_restrained", "physical-control-states:restraining"],
-    "primary": ["drinking:empty"]
+    "primary": ["drinking-states:empty"]
   },
   "prerequisites": [
     {

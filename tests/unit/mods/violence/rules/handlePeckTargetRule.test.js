@@ -1,8 +1,8 @@
 /**
  * @file Unit tests for handle_peck_target rule
  * @description Verifies that the handle_peck_target rule correctly processes peck
- * attack attempts, setting peck-specific variables and delegating to appropriate
- * macros based on attack outcomes (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE).
+ * attack attempts, setting peck-specific variables and emitting outcome-specific
+ * events/actions based on attack outcomes (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE).
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -36,36 +36,6 @@ describe('handle_peck_target rule definition', () => {
   });
 
   describe('Peck-Specific Variables', () => {
-    it('should set attackVerb to "peck"', () => {
-      const setVarOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'attackVerb'
-      );
-      expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value).toBe('peck');
-    });
-
-    it('should set attackVerbPast to "pecks"', () => {
-      const setVarOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'attackVerbPast'
-      );
-      expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value).toBe('pecks');
-    });
-
-    it('should set hitDescription for piercing damage', () => {
-      const setVarOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'hitDescription'
-      );
-      expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value.toLowerCase()).toContain('piercing');
-    });
-
     it('should exclude slashing and blunt damage types', () => {
       const setVarOp = handlePeckTarget.actions.find(
         (op) =>
@@ -88,43 +58,27 @@ describe('handle_peck_target rule definition', () => {
     });
   });
 
-  describe('Message Templates', () => {
-    it('should set successMessage with peck verb', () => {
-      const setVarOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'successMessage'
-      );
-      expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value.toLowerCase()).toContain('pecks');
-    });
-
-    it('should set failureMessage with peck verb', () => {
-      const setVarOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'failureMessage'
-      );
-      expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value.toLowerCase()).toContain('peck');
-    });
-  });
-
   describe('Outcome Handling', () => {
-    it('should use weapons:handleMeleeCritical for CRITICAL_SUCCESS', () => {
+    it('should dispatch a perceptible event for CRITICAL_SUCCESS', () => {
       const ifOp = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
           JSON.stringify(op.parameters.condition).includes('CRITICAL_SUCCESS')
       );
       expect(ifOp).toBeDefined();
-      expect(ifOp.parameters.then_actions).toBeDefined();
-      expect(ifOp.parameters.then_actions[0].macro).toBe(
-        'weapons:handleMeleeCritical'
+      const dispatchOp = ifOp.parameters.then_actions.find(
+        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
+      expect(dispatchOp).toBeDefined();
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('peck');
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('piercing');
     });
 
-    it('should use weapons:handleMeleeHit for SUCCESS', () => {
+    it('should dispatch a perceptible event for SUCCESS', () => {
       const ifOp = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
@@ -132,40 +86,89 @@ describe('handle_peck_target rule definition', () => {
           !JSON.stringify(op.parameters.condition).includes('CRITICAL_SUCCESS')
       );
       expect(ifOp).toBeDefined();
-      expect(ifOp.parameters.then_actions).toBeDefined();
-      expect(ifOp.parameters.then_actions[0].macro).toBe(
-        'weapons:handleMeleeHit'
+      const dispatchOp = ifOp.parameters.then_actions.find(
+        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
+      expect(dispatchOp).toBeDefined();
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('pecks');
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('piercing');
     });
 
-    it('should use weapons:handleMeleeMiss for FAILURE', () => {
+    it('should dispatch a perceptible event for FAILURE', () => {
       const ifOp = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
           JSON.stringify(op.parameters.condition).includes('FAILURE')
       );
       expect(ifOp).toBeDefined();
-      expect(ifOp.parameters.then_actions).toBeDefined();
-      expect(ifOp.parameters.then_actions[0].macro).toBe(
-        'weapons:handleMeleeMiss'
+      const dispatchOp = ifOp.parameters.then_actions.find(
+        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
+      expect(dispatchOp).toBeDefined();
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('pecks');
     });
 
-    it('should use creature-attacks:handleBeakFumble for FUMBLE (not weapons:handleMeleeFumble)', () => {
+    it('should add fallen component for FUMBLE', () => {
       const ifOp = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
           JSON.stringify(op.parameters.condition).includes('FUMBLE')
       );
       expect(ifOp).toBeDefined();
-      expect(ifOp.parameters.then_actions).toBeDefined();
-      expect(ifOp.parameters.then_actions[0].macro).toBe(
-        'creature-attacks:handleBeakFumble'
+      const addComponentOp = ifOp.parameters.then_actions.find(
+        (action) =>
+          action.type === 'ADD_COMPONENT' &&
+          action.parameters.component_type === 'recovery-states:fallen'
       );
-      // Ensure it's NOT using the weapon fumble
-      expect(ifOp.parameters.then_actions[0].macro).not.toBe(
-        'weapons:handleMeleeFumble'
+      expect(addComponentOp).toBeDefined();
+    });
+
+    it('should use end-turn macros per outcome', () => {
+      const criticalIf = handlePeckTarget.actions.find(
+        (op) =>
+          op.type === 'IF' &&
+          JSON.stringify(op.parameters.condition).includes('CRITICAL_SUCCESS')
       );
+      const successIf = handlePeckTarget.actions.find(
+        (op) =>
+          op.type === 'IF' &&
+          JSON.stringify(op.parameters.condition).includes('"SUCCESS"') &&
+          !JSON.stringify(op.parameters.condition).includes('CRITICAL_SUCCESS')
+      );
+      const failureIf = handlePeckTarget.actions.find(
+        (op) =>
+          op.type === 'IF' &&
+          JSON.stringify(op.parameters.condition).includes('FAILURE')
+      );
+      const fumbleIf = handlePeckTarget.actions.find(
+        (op) =>
+          op.type === 'IF' &&
+          JSON.stringify(op.parameters.condition).includes('FUMBLE')
+      );
+
+      const criticalEnd = criticalIf.parameters.then_actions.find(
+        (action) => action.macro === 'core:endTurnOnly'
+      );
+      const successEnd = successIf.parameters.then_actions.find(
+        (action) => action.macro === 'core:endTurnOnly'
+      );
+      const failureEnd = failureIf.parameters.then_actions.find(
+        (action) => action.macro === 'core:logFailureOutcomeAndEndTurn'
+      );
+      const fumbleEnd = fumbleIf.parameters.then_actions.find(
+        (action) => action.macro === 'core:logFailureOutcomeAndEndTurn'
+      );
+
+      expect(criticalEnd).toBeDefined();
+      expect(successEnd).toBeDefined();
+      expect(failureEnd).toBeDefined();
+      expect(fumbleEnd).toBeDefined();
     });
   });
 
@@ -282,35 +285,37 @@ describe('handle_peck_target rule definition', () => {
   });
 
   describe('Key Differentiator from handle_strike_target', () => {
-    it('should use peck verb instead of strike', () => {
-      const attackVerbOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'attackVerb'
+    it('should use pecking language in outcome descriptions', () => {
+      const dispatchOps = handlePeckTarget.actions
+        .filter((op) => op.type === 'IF')
+        .flatMap((op) =>
+          op.parameters.then_actions.filter(
+            (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+          )
+        );
+      const descriptions = dispatchOps.map((op) =>
+        op.parameters.description_text.toLowerCase()
       );
-      expect(attackVerbOp.parameters.value).toBe('peck');
-      expect(attackVerbOp.parameters.value).not.toBe('strike');
+      expect(descriptions.some((text) => text.includes('peck'))).toBe(true);
+      expect(descriptions.some((text) => text.includes('strike'))).toBe(false);
     });
 
-    it('should use pecks instead of strikes', () => {
-      const attackVerbPastOp = handlePeckTarget.actions.find(
+    it('should highlight piercing in success descriptions', () => {
+      const successIf = handlePeckTarget.actions.find(
         (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'attackVerbPast'
+          op.type === 'IF' &&
+          JSON.stringify(op.parameters.condition).includes('"SUCCESS"') &&
+          !JSON.stringify(op.parameters.condition).includes('CRITICAL_SUCCESS')
       );
-      expect(attackVerbPastOp.parameters.value).toBe('pecks');
-      expect(attackVerbPastOp.parameters.value).not.toBe('strikes');
-    });
-
-    it('should use piercing description instead of crushing', () => {
-      const hitDescOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'SET_VARIABLE' &&
-          op.parameters.variable_name === 'hitDescription'
+      const dispatchOp = successIf.parameters.then_actions.find(
+        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
-      const value = hitDescOp.parameters.value.toLowerCase();
-      expect(value).toContain('piercing');
-      expect(value).not.toContain('crushing');
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).toContain('piercing');
+      expect(
+        dispatchOp.parameters.description_text.toLowerCase()
+      ).not.toContain('crushing');
     });
 
     it('should exclude damage types (unlike strike which allows all)', () => {
@@ -322,15 +327,17 @@ describe('handle_peck_target rule definition', () => {
       expect(excludeOp.parameters.value.length).toBeGreaterThan(0);
     });
 
-    it('should use beak-specific fumble macro', () => {
+    it('should mark fumbles as combat violence events', () => {
       const fumbleIf = handlePeckTarget.actions.find(
         (op) =>
           op.type === 'IF' &&
           JSON.stringify(op.parameters.condition).includes('FUMBLE')
       );
-      expect(fumbleIf.parameters.then_actions[0].macro).toBe(
-        'creature-attacks:handleBeakFumble'
+      const dispatchOp = fumbleIf.parameters.then_actions.find(
+        (action) => action.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
+      expect(dispatchOp).toBeDefined();
+      expect(dispatchOp.parameters.perception_type).toBe('combat.violence');
     });
   });
 });

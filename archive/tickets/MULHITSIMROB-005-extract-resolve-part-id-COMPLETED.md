@@ -14,7 +14,7 @@ const hitPartId = firstResult.targetPartId || targetPartId || 'unknown';
 
 Extracting this into a method makes each fallback path testable individually.
 
-**Reference**: `specs/multi-hit-simulator-robustness.md` lines 400-419
+**Reference**: `specs/multi-hit-simulator-robustness.md` section "Simplify Fallback Chains"
 
 ## Files to Touch
 
@@ -33,7 +33,7 @@ Extracting this into a method makes each fallback path testable individually.
 
 ## Implementation Details
 
-### Current Code (line 382-386)
+### Current Code (around line 322)
 
 ```javascript
 // In the simulation loop
@@ -61,7 +61,7 @@ results.partHitCounts[hitPartId] = (results.partHitCounts[hitPartId] || 0) + 1;
 const hitPartId = this.#resolvePartId(firstResult, targetPartId);
 ```
 
-### Test Cases to Add
+### Test Cases to Add (delta vs existing coverage)
 
 ```javascript
 describe('Part ID Resolution (via partHitCounts behavior)', () => {
@@ -76,13 +76,10 @@ describe('Part ID Resolution (via partHitCounts behavior)', () => {
     // Configure with targetSelector returning 'selector-part'
     // Assert: partHitCounts has 'selector-part'
   });
-
-  it('should use "unknown" when both are null', async () => {
-    // Mock applyDamage to return { targetPartId: null }
-    // Configure with empty parts (selector returns null)
-    // Assert: partHitCounts has 'unknown'
-  });
 });
+
+Note: The suite already covers the "both null -> unknown" case in the existing
+"damage result handling edge cases" section; do not duplicate it.
 ```
 
 **Note**: Since `#resolvePartId` is private, we test its behavior through the public API (checking `results.partHitCounts`).
@@ -91,7 +88,7 @@ describe('Part ID Resolution (via partHitCounts behavior)', () => {
 
 ### Tests That Must Pass
 
-- [ ] All existing 94 tests pass unchanged
+- [ ] All existing tests pass unchanged
 - [ ] New fallback path tests pass
 - [ ] Result uses `result.targetPartId` when present
 - [ ] Result uses selector target when `result.targetPartId` is null/undefined
@@ -134,5 +131,13 @@ Trivial - extract ~3 lines into a method, add ~3 test cases.
 
 ## Reference Files
 
-- Source: `src/domUI/damage-simulator/MultiHitSimulator.js` (lines 382-386)
+- Source: `src/domUI/damage-simulator/MultiHitSimulator.js` (around line 322)
 - Test: `tests/unit/domUI/damage-simulator/MultiHitSimulator.test.js` (lines 1870-2033 for existing edge case tests)
+
+## Status
+
+Completed.
+
+## Outcome
+
+Added a private `#resolvePartId` helper and routed the run loop through it, plus added focused tests for result-over-selector precedence and selector fallback. The existing "both null -> unknown" test already covered that path, so no duplicate test was added.

@@ -145,7 +145,7 @@
             "comment": "Mark the barred blocker as breached after the third bar is cleared.",
             "parameters": {
               "entity_ref": "primary",
-              "component_type": "breaching:breached",
+              "component_type": "breaching-states:breached",
               "value": {}
             }
           },
@@ -242,7 +242,7 @@
             "comment": "Mark the barred blocker as breached after the third bar is cleared.",
             "parameters": {
               "entity_ref": "primary",
-              "component_type": "breaching:breached",
+              "component_type": "breaching-states:breached",
               "value": {}
             }
           },

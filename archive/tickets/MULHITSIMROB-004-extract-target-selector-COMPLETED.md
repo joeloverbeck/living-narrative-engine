@@ -4,6 +4,10 @@
 
 Extract the `TargetSelector` class from `MultiHitSimulator.js` into its own module for independent testing and reusability.
 
+## Status
+
+Completed
+
 ## Background
 
 The `TargetSelector` class (lines 79-137 in `MultiHitSimulator.js`) manages target part selection across three modes: random, round-robin, and focus. Currently embedded in `MultiHitSimulator.js`, it cannot be tested independently.
@@ -37,9 +41,9 @@ class TargetSelector {
   #parts;
   #currentIndex;
 
-  constructor(mode, parts, focusPartId) {
+  constructor(parts, mode, focusPartId) {
+    this.#parts = parts;
     this.#mode = mode;
-    this.#parts = parts || [];
     this.#focusPartId = focusPartId;
     this.#currentIndex = 0;
   }
@@ -110,7 +114,7 @@ import TargetSelector from './TargetSelector.js';
 - [ ] All existing 94 MultiHitSimulator tests pass unchanged
 - [ ] Random mode returns valid part IDs
 - [ ] Round-robin mode cycles through parts deterministically
-- [ ] Focus mode always returns the specified focusPartId
+- [ ] Focus mode returns focusPartId when parts are present
 - [ ] Empty parts array returns null
 - [ ] Reset() resets round-robin index to 0
 
@@ -119,16 +123,16 @@ import TargetSelector from './TargetSelector.js';
 - TargetSelector API unchanged (constructor signature, getNextTarget(), reset())
 - Round-robin determinism preserved (same sequence given same parts)
 - Mode validation still happens in `configure()`, NOT in TargetSelector
-- Focus mode with no parts still returns focusPartId
+- Focus mode returns null when parts array is empty (guard runs before mode switch)
+- TargetSelector expects `parts` to be an array (no new null handling added)
 
 ### New Test Coverage Requirements
 
 ```javascript
 describe('TargetSelector', () => {
   describe('constructor', () => {
-    it('should accept mode, parts, and focusPartId');
+    it('should accept parts, mode, and focusPartId');
     it('should handle empty parts array');
-    it('should handle null parts');
   });
 
   describe('getNextTarget - random mode', () => {
@@ -143,8 +147,8 @@ describe('TargetSelector', () => {
   });
 
   describe('getNextTarget - focus mode', () => {
-    it('should always return focusPartId');
-    it('should return focusPartId even with empty parts');
+    it('should always return focusPartId when parts exist');
+    it('should return null with empty parts');
   });
 
   describe('reset', () => {
@@ -181,3 +185,7 @@ Small - straightforward class extraction with no logic changes.
 
 - Source: `src/domUI/damage-simulator/MultiHitSimulator.js` (lines 79-137)
 - Pattern: Any standalone class module in `src/` (e.g., `src/entities/Entity.js`)
+
+## Outcome
+
+TargetSelector was extracted into a standalone module and unit tests were added as planned. Assumptions were corrected to reflect the actual constructor signature and focus-mode behavior with empty parts (returns null), but no behavior changes were introduced.

@@ -43,7 +43,7 @@ describe('drinking:drink_entirely Prerequisites', () => {
           flavorText: 'A suspicious liquid.',
         }
       );
-      // Note: NOT adding drinking:drinkable component
+      // Note: NOT adding drinking-states:drinkable component
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],
@@ -64,7 +64,7 @@ describe('drinking:drink_entirely Prerequisites', () => {
       ]);
 
       // Only add drinkable but not liquid_container (invalid state)
-      fixture.entityManager.addComponent(item.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(item.id, 'drinking-states:drinkable', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [item.id],
@@ -97,7 +97,7 @@ describe('drinking:drink_entirely Prerequisites', () => {
         }
       );
       // Add empty component (forbidden for drink_entirely)
-      fixture.entityManager.addComponent(container.id, 'drinking:empty', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:empty', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],
@@ -131,7 +131,7 @@ describe('drinking:drink_entirely Prerequisites', () => {
           flavorText: 'Glowing red liquid.',
         }
       );
-      fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],
@@ -163,7 +163,7 @@ describe('drinking:drink_entirely Prerequisites', () => {
           flavorText: 'Just a few drops.',
         }
       );
-      fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],
