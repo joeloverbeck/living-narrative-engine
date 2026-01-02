@@ -15,6 +15,7 @@ const DAMAGE_ENTRY_SCHEMA_ID =
 
 /**
  * Element IDs for form controls
+ *
  * @type {Readonly<Record<string, string>>}
  */
 const ELEMENT_IDS = Object.freeze({
@@ -48,6 +49,7 @@ const ELEMENT_IDS = Object.freeze({
 
 /**
  * CSS classes used by the component
+ *
  * @type {Readonly<Record<string, string>>}
  */
 const CSS_CLASSES = Object.freeze({
@@ -61,6 +63,7 @@ const CSS_CLASSES = Object.freeze({
 
 /**
  * Available damage types
+ *
  * @type {Readonly<string[]>}
  */
 const DAMAGE_TYPES = Object.freeze([
@@ -78,28 +81,32 @@ const DAMAGE_TYPES = Object.freeze([
 
 /**
  * Bleed severity options
+ *
  * @type {Readonly<string[]>}
  */
 const BLEED_SEVERITIES = Object.freeze(['minor', 'moderate', 'severe']);
 
 /**
  * Poison scope options
+ *
  * @type {Readonly<string[]>}
  */
 const POISON_SCOPES = Object.freeze(['part', 'entity']);
 
 /**
  * Event types emitted by the composer
+ *
  * @type {Readonly<Record<string, string>>}
  */
 const COMPOSER_EVENTS = Object.freeze({
-  CONFIG_CHANGED: 'damage-composer:config-changed',
-  VALIDATION_ERROR: 'damage-composer:validation-error',
-  VALIDATION_SUCCESS: 'damage-composer:validation-success',
+  CONFIG_CHANGED: 'core:damage_composer_config_changed',
+  VALIDATION_ERROR: 'core:damage_composer_validation_error',
+  VALIDATION_SUCCESS: 'core:damage_composer_validation_success',
 });
 
 /**
  * Default configuration matching schema defaults
+ *
  * @type {Readonly<object>}
  */
 const DEFAULT_CONFIG = Object.freeze({
@@ -138,6 +145,7 @@ const DEFAULT_CONFIG = Object.freeze({
 
 /**
  * Effect configurations for building effect config sections
+ *
  * @type {Readonly<object[]>}
  */
 const EFFECT_CONFIGS = Object.freeze([
@@ -288,6 +296,9 @@ class DamageCapabilityComposer {
   /** @type {number} */
   #multiplier;
 
+  /** @type {boolean} */
+  #initialized;
+
   /**
    * Expose constants for testing
    */
@@ -330,6 +341,7 @@ class DamageCapabilityComposer {
     this.#elements = new Map();
     this.#validationErrors = [];
     this.#multiplier = 1;
+    this.#initialized = false;
   }
 
   /**
@@ -346,6 +358,7 @@ class DamageCapabilityComposer {
     this.#updateFormFromConfig();
     this.#createValidationErrorsContainer();
 
+    this.#initialized = true;
     this.#logger.info('[DamageCapabilityComposer] Initialized');
   }
 
@@ -357,6 +370,11 @@ class DamageCapabilityComposer {
    * @throws {Error} If configuration is invalid
    */
   getDamageEntry() {
+    if (!this.#initialized) {
+      throw new Error(
+        'DamageCapabilityComposer must be initialized before calling getDamageEntry()'
+      );
+    }
     this.#updateConfigFromForm();
 
     // Build damage entry (without multiplier and enabled flags)
@@ -368,8 +386,13 @@ class DamageCapabilityComposer {
       entry
     );
 
-    if (!validationResult.valid) {
-      const errorMessage = `Invalid damage configuration: ${validationResult.errors?.map((e) => e.message).join(', ')}`;
+    if (!validationResult.isValid) {
+      const errors = validationResult.errors ?? [];
+      const errorMessages =
+        errors.length > 0
+          ? errors.map((e) => e.message).join(', ')
+          : 'Unknown validation error';
+      const errorMessage = `Invalid damage configuration: ${errorMessages}`;
       this.#logger.error(
         '[DamageCapabilityComposer] getDamageEntry validation failed',
         validationResult.errors
@@ -438,7 +461,7 @@ class DamageCapabilityComposer {
     this.#updateConfigFromForm();
     const entry = this.#buildDamageEntry();
     const result = this.#schemaValidator.validate(DAMAGE_ENTRY_SCHEMA_ID, entry);
-    return result.valid;
+    return result.isValid;
   }
 
   /**
@@ -456,6 +479,7 @@ class DamageCapabilityComposer {
 
   /**
    * Bind DOM elements from existing HTML structure.
+   *
    * @private
    */
   #bindElements() {
@@ -484,6 +508,7 @@ class DamageCapabilityComposer {
 
   /**
    * Populate the damage type select with options.
+   *
    * @private
    */
   #populateDamageTypeSelect() {
@@ -511,6 +536,7 @@ class DamageCapabilityComposer {
 
   /**
    * Create expandable effect configuration sections.
+   *
    * @private
    */
   #createEffectConfigSections() {
@@ -541,6 +567,7 @@ class DamageCapabilityComposer {
 
   /**
    * Create a single effect toggle with configuration section.
+   *
    * @private
    * @param {object} effectConfig - Effect configuration object
    * @returns {HTMLElement} The toggle container element
@@ -579,6 +606,7 @@ class DamageCapabilityComposer {
 
   /**
    * Create a form field element.
+   *
    * @private
    * @param {object} field - Field configuration
    * @returns {HTMLElement} The field container element
@@ -650,6 +678,7 @@ class DamageCapabilityComposer {
 
   /**
    * Create the validation errors container.
+   *
    * @private
    */
   #createValidationErrorsContainer() {
@@ -670,6 +699,7 @@ class DamageCapabilityComposer {
 
   /**
    * Setup event listeners for form controls.
+   *
    * @private
    */
   #setupEventListeners() {
@@ -737,6 +767,7 @@ class DamageCapabilityComposer {
 
   /**
    * Handle any input change event.
+   *
    * @private
    */
   #handleInputChange() {
@@ -747,6 +778,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update the amount display element.
+   *
    * @private
    */
   #updateAmountDisplay() {
@@ -759,6 +791,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update a range slider's value display.
+   *
    * @private
    * @param {string} sliderId - ID of the range slider
    */
@@ -772,6 +805,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update form controls from internal config.
+   *
    * @private
    */
   #updateFormFromConfig() {
@@ -850,6 +884,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update a single effect's form controls from config.
+   *
    * @private
    * @param {string} effectName - Effect name
    * @param {object} fieldMap - Map of config property to element ID
@@ -887,6 +922,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update internal config from form controls.
+   *
    * @private
    */
   #updateConfigFromForm() {
@@ -950,6 +986,7 @@ class DamageCapabilityComposer {
 
   /**
    * Update a single effect config from form controls.
+   *
    * @private
    * @param {string} effectName - Effect name
    * @param {object} fieldMap - Map of config property to element ID
@@ -958,15 +995,27 @@ class DamageCapabilityComposer {
     // effectDef is guaranteed to exist - only called with hardcoded valid effect names
     const effectDef = EFFECT_CONFIGS.find((e) => e.name === effectName);
 
-    // Checkbox is guaranteed to exist - created during initialize()
+    // Guard against missing checkbox (defensive programming)
     const checkbox = this.#elements.get(effectDef.checkboxId);
+    if (!checkbox) {
+      this.#logger.warn(
+        `[DamageCapabilityComposer] Missing checkbox for effect: ${effectName}`
+      );
+      return; // Skip this effect if element not found
+    }
     // Note: this.#config[effectName] is always populated from DEFAULT_CONFIG
     // via constructor, reset(), or setConfiguration()
     this.#config[effectName].enabled = checkbox.checked;
 
     for (const [configKey, elementId] of Object.entries(fieldMap)) {
-      // Element is guaranteed to exist - created during initialize()
+      // Guard against missing element (defensive programming)
       const element = this.#elements.get(elementId);
+      if (!element) {
+        this.#logger.warn(
+          `[DamageCapabilityComposer] Missing element for ${effectName}.${configKey}: ${elementId}`
+        );
+        continue; // Skip this field if element not found
+      }
       if (element.type === 'checkbox') {
         this.#config[effectName][configKey] = element.checked;
       } else if (element.tagName === 'SELECT') {
@@ -989,6 +1038,7 @@ class DamageCapabilityComposer {
 
   /**
    * Parse comma-separated flags string.
+   *
    * @private
    * @param {string} value - Comma-separated flags
    * @returns {string[]} Array of trimmed, non-empty flags
@@ -1005,6 +1055,7 @@ class DamageCapabilityComposer {
 
   /**
    * Build the damage entry object from config.
+   *
    * @private
    * @returns {object} Damage entry matching schema
    */
@@ -1071,13 +1122,14 @@ class DamageCapabilityComposer {
 
   /**
    * Validate current configuration against schema.
+   *
    * @private
    */
   #validate() {
     const entry = this.#buildDamageEntry();
     const result = this.#schemaValidator.validate(DAMAGE_ENTRY_SCHEMA_ID, entry);
 
-    if (result.valid) {
+    if (result.isValid) {
       this.#validationErrors = [];
       this.#clearValidationErrors();
       this.#eventBus.dispatch(COMPOSER_EVENTS.VALIDATION_SUCCESS, { entry });
@@ -1092,6 +1144,7 @@ class DamageCapabilityComposer {
 
   /**
    * Dispatch config changed event.
+   *
    * @private
    */
   #dispatchChange() {
@@ -1104,6 +1157,7 @@ class DamageCapabilityComposer {
 
   /**
    * Show validation errors in the UI.
+   *
    * @private
    * @param {string[]} errors - Error messages
    */
@@ -1122,6 +1176,7 @@ class DamageCapabilityComposer {
 
   /**
    * Clear validation errors from the UI.
+   *
    * @private
    */
   #clearValidationErrors() {
@@ -1132,6 +1187,7 @@ class DamageCapabilityComposer {
 
   /**
    * Toggle effect configuration visibility.
+   *
    * @private
    * @param {string} effectName - Effect name
    * @param {boolean} enabled - Whether effect is enabled
@@ -1152,6 +1208,7 @@ class DamageCapabilityComposer {
 
   /**
    * Deep clone an object.
+   *
    * @private
    * @param {object} obj - Object to clone
    * @returns {object} Cloned object
@@ -1162,6 +1219,7 @@ class DamageCapabilityComposer {
 
   /**
    * Deep merge two objects.
+   *
    * @private
    * @param {object} target - Target object
    * @param {object} source - Source object

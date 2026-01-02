@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_push_target_playfully",
+  "comment": "Handles the 'affection-gentle-touch:push_target_playfully' action. Dispatches descriptive text and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "affection-gentle-touch:event-is-action-push-target-playfully"
+  },
+  "actions": [
+    { "type": "PREPARE_ACTION_CONTEXT", "parameters": {} },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} pushes {context.targetName} playfully."
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

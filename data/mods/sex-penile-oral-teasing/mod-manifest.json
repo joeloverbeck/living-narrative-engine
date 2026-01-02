@@ -1,0 +1,64 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-penile-oral-teasing",
+  "version": "1.0.0",
+  "name": "Sex - Penile Oral Teasing",
+  "description": "Teasing oral actions including breathing teasingly and nuzzling through clothing.",
+  "actionPurpose": "Tease and build anticipation through breath and touch without direct oral contact.",
+  "actionConsiderWhen": "Building anticipation before oral sex, teasing with breath, or nuzzling genitals through clothing.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "sex-core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "lying-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "breathe_teasingly_on_penis.action.json",
+      "breathe_teasingly_on_penis_lying_close.action.json",
+      "breathe_teasingly_on_penis_sitting_close.action.json",
+      "nuzzle_penis_through_clothing.action.json",
+      "nuzzle_penis_through_clothing_sitting_close.action.json"
+    ],
+    "conditions": [
+      "event-is-action-breathe-teasingly-on-penis-lying-close.condition.json",
+      "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
+      "event-is-action-breathe-teasingly-on-penis.condition.json",
+      "event-is-action-nuzzle-penis-through-clothing-sitting-close.condition.json",
+      "event-is-action-nuzzle-penis-through-clothing.condition.json"
+    ],
+    "rules": [
+      "handle_breathe_teasingly_on_penis.rule.json",
+      "handle_breathe_teasingly_on_penis_lying_close.rule.json",
+      "handle_breathe_teasingly_on_penis_sitting_close.rule.json",
+      "handle_nuzzle_penis_through_clothing.rule.json",
+      "handle_nuzzle_penis_through_clothing_sitting_close.rule.json"
+    ]
+  }
+}

@@ -36,7 +36,7 @@ import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import DefaultDslParser from '../../../../src/scopeDsl/parser/defaultDslParser.js';
 
 // Import action definitions
-import placeHandsOnShouldersAction from '../../../../data/mods/affection/actions/place_hands_on_shoulders.action.json';
+import placeHandsOnShouldersAction from '../../../../data/mods/affection-embracing/actions/place_hands_on_shoulders.action.json';
 import ruffleHairPlayfullyAction from '../../../../data/mods/affection/actions/ruffle_hair_playfully.action.json';
 import massageShouldersAction from '../../../../data/mods/affection/actions/massage_shoulders.action.json';
 
@@ -479,7 +479,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(true);
@@ -502,7 +502,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(false);
@@ -522,7 +522,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2.id || actor2
         )
       ).toBe(true);
@@ -671,7 +671,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(true);
@@ -704,7 +704,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(false);
@@ -736,7 +736,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(false);
@@ -754,7 +754,7 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(true);
@@ -791,14 +791,14 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor2
         )
       ).toBe(true);
       expect(
         hasActionForTarget(
           actor1Actions,
-          'affection:place_hands_on_shoulders',
+          'affection-embracing:place_hands_on_shoulders',
           actor3
         )
       ).toBe(true);

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action and rule.
+ * @file Integration tests for the sex-penile-oral-teasing:nuzzle_penis_through_clothing_sitting_close action and rule.
  * @description Verifies seated clothed nuzzling narration, perceptible event payload, and turn resolution.
  */
 
@@ -11,9 +11,9 @@ import {
   buildBreatheTeasinglyOnPenisSittingCloseScenario,
   installSittingCloseCoveredPenisScopeOverride,
 } from '../../../common/mods/sex/breatheTeasinglyOnPenisSittingCloseFixtures.js';
-import nuzzlePenisThroughClothingSittingCloseAction from '../../../../data/mods/sex-penile-oral/actions/nuzzle_penis_through_clothing_sitting_close.action.json';
+import nuzzlePenisThroughClothingSittingCloseAction from '../../../../data/mods/sex-penile-oral-teasing/actions/nuzzle_penis_through_clothing_sitting_close.action.json';
 
-const ACTION_ID = 'sex-penile-oral:nuzzle_penis_through_clothing_sitting_close';
+const ACTION_ID = 'sex-penile-oral-teasing:nuzzle_penis_through_clothing_sitting_close';
 const EXPECTED_MESSAGE =
   "Ava, leaning almost horizontally, nuzzles their face against the bulge of Nolan's crotch through the silk briefs.";
 

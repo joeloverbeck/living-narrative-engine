@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection-embracing:event-is-action-wrap-arm-around-waist",
+  "description": "Checks if the event represents the wrap arm around waist action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection-embracing:wrap_arm_around_waist"
+    ]
+  }
+}

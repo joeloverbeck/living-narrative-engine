@@ -396,6 +396,32 @@ describe('DamageSimulatorUI', () => {
         })
       );
     });
+
+    it('should call anatomyRenderer.render() with updated anatomy data', async () => {
+      // Load an entity first
+      await damageSimulatorUI.handleEntitySelection('core:human');
+
+      // Setup mock anatomy renderer
+      const mockAnatomyRenderer = { render: jest.fn(), clear: jest.fn() };
+      damageSimulatorUI.setChildComponent('anatomyRenderer', mockAnatomyRenderer);
+      mockAnatomyRenderer.render.mockClear(); // Clear initial render call from handleEntitySelection
+
+      // Updated anatomy data with modified health
+      const updatedAnatomyData = {
+        bodyParts: [
+          { id: 'head', name: 'Head', health: 50 },
+          { id: 'arm', name: 'Arm', health: 80 },
+        ],
+      };
+      mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue(updatedAnatomyData);
+
+      // Act
+      await damageSimulatorUI.refreshAnatomyDisplay();
+
+      // Assert: anatomyRenderer.render() is called with updated data
+      expect(mockAnatomyRenderer.render).toHaveBeenCalledTimes(1);
+      expect(mockAnatomyRenderer.render).toHaveBeenCalledWith(updatedAnatomyData);
+    });
   });
 
   describe('Child Component Management', () => {

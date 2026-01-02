@@ -16,22 +16,25 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * Event types emitted by the execution service
+ *
  * @readonly
  */
 const EXECUTION_EVENTS = Object.freeze({
-  EXECUTION_STARTED: 'damage-simulator:execution-started',
-  EXECUTION_COMPLETE: 'damage-simulator:execution-complete',
-  EXECUTION_ERROR: 'damage-simulator:execution-error',
+  EXECUTION_STARTED: 'core:damage_simulator_execution_started',
+  EXECUTION_COMPLETE: 'core:damage_simulator_execution_complete',
+  EXECUTION_ERROR: 'core:damage_simulator_execution_error',
 });
 
 /**
  * Event type for anatomy damage applied (subscribed to capture results)
+ *
  * @readonly
  */
 const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
 
 /**
  * Component IDs for entity queries
+ *
  * @readonly
  */
 const COMPONENT_IDS = Object.freeze({
@@ -42,7 +45,7 @@ const COMPONENT_IDS = Object.freeze({
 });
 
 /**
- * @typedef {Object} DamageResult
+ * @typedef {object} DamageResult
  * @property {boolean} success - Whether damage was applied successfully
  * @property {string} [targetPartId] - Which part was hit
  * @property {string} [targetPartName] - Human-readable part name
@@ -53,7 +56,7 @@ const COMPONENT_IDS = Object.freeze({
  */
 
 /**
- * @typedef {Object} ExecutionResult
+ * @typedef {object} ExecutionResult
  * @property {boolean} success - Overall execution success
  * @property {DamageResult[]} results - Array of damage results
  * @property {string|null} error - Error message if execution failed
@@ -84,7 +87,7 @@ class DamageExecutionService {
   static COMPONENT_IDS = COMPONENT_IDS;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {OperationInterpreter} dependencies.operationInterpreter - Executes operations
    * @param {EntityManager} dependencies.entityManager - Entity management service
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
@@ -113,11 +116,11 @@ class DamageExecutionService {
   /**
    * Apply damage to an entity using the real APPLY_DAMAGE operation handler.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.entityId - Target entity instance ID
-   * @param {Object} options.damageEntry - Damage entry from DamageCapabilityComposer
-   * @param {number} [options.multiplier=1] - Damage multiplier
-   * @param {string|null} [options.targetPartId=null] - Specific part ID or null for random
+   * @param {object} options.damageEntry - Damage entry from DamageCapabilityComposer
+   * @param {number} [options.multiplier] - Damage multiplier
+   * @param {string|null} [options.targetPartId] - Specific part ID or null for random
    * @returns {Promise<ExecutionResult>}
    */
   async applyDamage({ entityId, damageEntry, multiplier = 1, targetPartId = null }) {
@@ -249,12 +252,12 @@ class DamageExecutionService {
    * Build the APPLY_DAMAGE operation object.
    *
    * @private
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.entityId
-   * @param {Object} options.damageEntry
+   * @param {object} options.damageEntry
    * @param {number} options.multiplier
    * @param {string|null} options.targetPartId
-   * @returns {Object} Operation object
+   * @returns {object} Operation object
    */
   #buildOperation({ entityId, damageEntry, multiplier, targetPartId }) {
     const parameters = {
@@ -279,7 +282,7 @@ class DamageExecutionService {
    *
    * @private
    * @param {string} entityId
-   * @returns {Object} Execution context
+   * @returns {object} Execution context
    */
   #buildExecutionContext(entityId) {
     return {
@@ -292,6 +295,9 @@ class DamageExecutionService {
         target: this.#buildEntityContext(entityId),
         context: {},
       },
+      // Suppress perceptible events to prevent errors when actor is null
+      // and target has no location (simulator context has no real game actor)
+      suppressPerceptibleEvents: true,
       entityManager: this.#entityManager,
       validatedEventDispatcher: this.#eventBus,
       logger: this.#logger,
@@ -303,7 +309,7 @@ class DamageExecutionService {
    *
    * @private
    * @param {string} entityId
-   * @returns {Object|null} Entity context
+   * @returns {object | null} Entity context
    */
   #buildEntityContext(entityId) {
     const entity = this.#entityManager.getEntityInstance(entityId);
@@ -329,7 +335,7 @@ class DamageExecutionService {
    * Extract a DamageResult from an anatomy:damage_applied event payload.
    *
    * @private
-   * @param {Object} payload - Event payload
+   * @param {object} payload - Event payload
    * @returns {DamageResult} Extracted result
    */
   #extractResult(payload) {

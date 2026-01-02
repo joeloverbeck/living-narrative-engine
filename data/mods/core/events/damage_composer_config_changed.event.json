@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_composer_config_changed",
+  "description": "Fired when damage configuration changes in the damage capability composer.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["config", "multiplier", "isValid"],
+    "properties": {
+      "config": {
+        "type": "object",
+        "description": "The current damage configuration object."
+      },
+      "multiplier": {
+        "type": "number",
+        "description": "The damage multiplier value."
+      },
+      "isValid": {
+        "type": "boolean",
+        "description": "Whether the current configuration is valid."
+      }
+    },
+    "additionalProperties": false
+  }
+}

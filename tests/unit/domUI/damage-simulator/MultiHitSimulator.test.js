@@ -4,6 +4,10 @@
  */
 
 import MultiHitSimulator from '../../../../src/domUI/damage-simulator/MultiHitSimulator.js';
+import {
+  SimulationStateMachine,
+  SimulationState,
+} from '../../../../src/domUI/damage-simulator/SimulationStateMachine.js';
 import { jest } from '@jest/globals';
 
 describe('MultiHitSimulator', () => {
@@ -827,6 +831,81 @@ describe('MultiHitSimulator', () => {
     });
   });
 
+  describe('state machine transition branches', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should throw when run cannot transition to RUNNING', async () => {
+      const canTransitionSpy = jest
+        .spyOn(SimulationStateMachine.prototype, 'canTransition')
+        .mockReturnValue(false);
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 1,
+        delayMs: 0,
+      });
+
+      await expect(simulator.run()).rejects.toThrow(
+        'Simulation not configured'
+      );
+
+      canTransitionSpy.mockRestore();
+    });
+
+    it('should skip COMPLETED transition when canTransition returns false', async () => {
+      const canTransitionSpy = jest
+        .spyOn(SimulationStateMachine.prototype, 'canTransition')
+        .mockImplementation((state) => {
+          if (state === SimulationState.RUNNING) return true;
+          if (state === SimulationState.COMPLETED) return false;
+          return true;
+        });
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 1,
+        delayMs: 0,
+      });
+
+      const runPromise = simulator.run();
+      await jest.runAllTimersAsync();
+      await runPromise;
+
+      expect(canTransitionSpy).toHaveBeenCalledWith(
+        SimulationState.COMPLETED
+      );
+
+      canTransitionSpy.mockRestore();
+    });
+
+    it('should skip ERROR transition when canTransition returns false', async () => {
+      const canTransitionSpy = jest
+        .spyOn(SimulationStateMachine.prototype, 'canTransition')
+        .mockImplementation((state) => {
+          if (state === SimulationState.RUNNING) return true;
+          if (state === SimulationState.ERROR) return false;
+          return true;
+        });
+
+      mockDamageExecutionService.applyDamage.mockRejectedValueOnce(
+        new Error('Failure during run')
+      );
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 1,
+        delayMs: 0,
+      });
+
+      await expect(simulator.run()).rejects.toThrow('Failure during run');
+      expect(canTransitionSpy).toHaveBeenCalledWith(SimulationState.ERROR);
+
+      canTransitionSpy.mockRestore();
+    });
+  });
+
   describe('should reset state between simulations', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -994,6 +1073,44 @@ describe('MultiHitSimulator', () => {
         })
       ).not.toThrow();
     });
+
+    it('should throw when called while simulation is active', async () => {
+      jest.useFakeTimers();
+
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 2,
+        delayMs: 100,
+      });
+
+      const runPromise = simulator.run();
+
+      expect(() =>
+        simulator.setEntityConfig({
+          entityId: 'active-entity',
+          damageEntry: { base_damage: 5 },
+        })
+      ).toThrow('Cannot configure while simulation is active');
+
+      simulator.stop();
+      await jest.runAllTimersAsync();
+      await runPromise;
+    });
+
+    it('should not transition when already configured', () => {
+      simulator.configure({
+        ...createValidConfig(),
+        hitCount: 2,
+        delayMs: 0,
+      });
+
+      expect(() =>
+        simulator.setEntityConfig({
+          entityId: 'configured-entity',
+          damageEntry: { base_damage: 12 },
+        })
+      ).not.toThrow();
+    });
   });
 
   describe('render', () => {
@@ -1027,6 +1144,42 @@ describe('MultiHitSimulator', () => {
       expect(mockContainerElement.innerHTML).toContain('ds-result-damage');
       expect(mockContainerElement.innerHTML).toContain('ds-result-duration');
       expect(mockContainerElement.innerHTML).toContain('ds-result-avg');
+    });
+
+    it('should wire stop button to stop handler', () => {
+      const stopButton = {
+        addEventListener: jest.fn(),
+      };
+      const container = {
+        innerHTML: '',
+        querySelector: jest.fn((selector) =>
+          selector === '#ds-sim-stop-btn' ? stopButton : null
+        ),
+        querySelectorAll: jest.fn(() => []),
+        appendChild: jest.fn(),
+      };
+
+      const testSimulator = new MultiHitSimulator({
+        containerElement: container,
+        damageExecutionService: mockDamageExecutionService,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      const stopSpy = jest.spyOn(testSimulator, 'stop');
+
+      testSimulator.render();
+
+      const clickHandler = stopButton.addEventListener.mock.calls.find(
+        (call) => call[0] === 'click'
+      )?.[1];
+
+      expect(clickHandler).toBeDefined();
+      clickHandler();
+
+      expect(stopSpy).toHaveBeenCalled();
+
+      stopSpy.mockRestore();
     });
   });
 

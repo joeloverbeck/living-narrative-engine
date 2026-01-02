@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "name": "Sex - Penile Oral",
   "description": "Oral stimulation of the penis including licking, sucking, and blowjob actions.",
-  "actionPurpose": "Perform oral stimulation on a penis including teasing, licking, sucking, and managing oral penetration.",
-  "actionConsiderWhen": "Giving or receiving oral sex, teasing with breath, licking genitals, or performing a blowjob.",
+  "actionPurpose": "Perform oral stimulation on a penis including licking, sucking, and managing oral penetration.",
+  "actionConsiderWhen": "Giving or receiving oral sex, licking genitals, or performing a blowjob.",
   "author": "Living Narrative Engine Team",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -26,10 +26,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "clothing",
-      "version": "^1.0.0"
-    },
-    {
       "id": "personal-space-states",
       "version": "^1.0.0"
     },
@@ -40,9 +36,6 @@
   ],
   "content": {
     "actions": [
-      "breathe_teasingly_on_penis.action.json",
-      "breathe_teasingly_on_penis_lying_close.action.json",
-      "breathe_teasingly_on_penis_sitting_close.action.json",
       "ejaculate_in_mouth.action.json",
       "guide_blowjob_with_hand.action.json",
       "lick_glans.action.json",
@@ -51,8 +44,6 @@
       "lick_testicles_lying_close.action.json",
       "lick_testicles_sensually.action.json",
       "lick_testicles_sitting_close.action.json",
-      "nuzzle_penis_through_clothing.action.json",
-      "nuzzle_penis_through_clothing_sitting_close.action.json",
       "pull_own_penis_out_of_mouth.action.json",
       "pull_penis_out_of_mouth.action.json",
       "pull_penis_out_of_mouth_revulsion.action.json",
@@ -66,9 +57,6 @@
       "take_penis_in_mouth_lying_close.action.json"
     ],
     "conditions": [
-      "event-is-action-breathe-teasingly-on-penis-lying-close.condition.json",
-      "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
-      "event-is-action-breathe-teasingly-on-penis.condition.json",
       "event-is-action-ejaculate-in-mouth.condition.json",
       "event-is-action-guide-blowjob-with-hand.condition.json",
       "event-is-action-lick-glans-lying-close.condition.json",
@@ -77,8 +65,6 @@
       "event-is-action-lick-testicles-lying-close.condition.json",
       "event-is-action-lick-testicles-sensually.condition.json",
       "event-is-action-lick-testicles-sitting-close.condition.json",
-      "event-is-action-nuzzle-penis-through-clothing-sitting-close.condition.json",
-      "event-is-action-nuzzle-penis-through-clothing.condition.json",
       "event-is-action-pull-own-penis-out-of-mouth.condition.json",
       "event-is-action-pull-penis-out-of-mouth-revulsion.condition.json",
       "event-is-action-pull-penis-out-of-mouth.condition.json",
@@ -92,9 +78,6 @@
       "event-is-action-take-penis-in-mouth.condition.json"
     ],
     "rules": [
-      "handle_breathe_teasingly_on_penis.rule.json",
-      "handle_breathe_teasingly_on_penis_lying_close.rule.json",
-      "handle_breathe_teasingly_on_penis_sitting_close.rule.json",
       "handle_ejaculate_in_mouth.rule.json",
       "handle_guide_blowjob_with_hand.rule.json",
       "handle_lick_glans.rule.json",
@@ -103,8 +86,6 @@
       "handle_lick_testicles_lying_close.rule.json",
       "handle_lick_testicles_sensually.rule.json",
       "handle_lick_testicles_sitting_close.rule.json",
-      "handle_nuzzle_penis_through_clothing.rule.json",
-      "handle_nuzzle_penis_through_clothing_sitting_close.rule.json",
       "handle_pull_own_penis_out_of_mouth.rule.json",
       "handle_pull_penis_out_of_mouth.rule.json",
       "handle_pull_penis_out_of_mouth_revulsion.rule.json",

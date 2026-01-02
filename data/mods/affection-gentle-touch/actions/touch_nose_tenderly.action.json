@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection-gentle-touch:touch_nose_tenderly",
+  "name": "Touch nose tenderly",
+  "description": "Touch the tip of the target's nose in a tender gesture.",
+  "targets": "affection-gentle-touch:close_actors_with_nose_or_entity_kneeling_before_actor",
+  "required_components": {
+    "actor": ["personal-space-states:closeness"]
+  },
+  "template": "touch the tip of {target}'s nose tenderly",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#d4a5a5",
+    "textColor": "#1a0a0a",
+    "hoverBackgroundColor": "#e0b8b8",
+    "hoverTextColor": "#1a0a0a"
+  }
+}

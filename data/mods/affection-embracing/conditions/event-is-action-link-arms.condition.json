@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection-embracing:event-is-action-link-arms",
+  "description": "Checks if the event represents the link arms action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection-embracing:link_arms"
+    ]
+  }
+}

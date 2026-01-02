@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_sling_arm_around_shoulders",
+  "comment": "Handles the 'affection-embracing:sling_arm_around_shoulders' action. Dispatches descriptive text and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "affection-embracing:event-is-action-sling-arm-around-shoulders"
+  },
+  "actions": [
+    { "type": "PREPARE_ACTION_CONTEXT", "parameters": {} },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} slings an arm around {context.targetName}'s shoulders, pulling {context.targetName} close."
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

@@ -8,15 +8,17 @@ This document tracks which color schemes are actively used by mods in the Living
 
 ## Current Status
 
-**Total Schemes Defined**: 69
-**In Use**: 58 schemes actively implemented across mods
+**Total Schemes Defined**: 72
+**In Use**: 61 schemes actively implemented across mods
 **Available**: 11 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
-| Mod                     | Color Scheme        | Section | Background Color | Status |
-| ----------------------- | ------------------- | ------- | ---------------- | ------ |
-| Affection               | Soft Purple         | 3.1     | `#6a1b9a`        | Active |
+| Mod                     | Color Scheme           | Section | Background Color | Status |
+| ----------------------- | ---------------------- | ------- | ---------------- | ------ |
+| Affection               | Soft Purple            | 3.1     | `#6a1b9a`        | Active |
+| Affection-Embracing     | Enveloping Warmth      | 27.1    | `#8b4513`        | Active |
+| Affection-Gentle-Touch  | Petal Pink Tenderness  | 25.1    | `#d4a5a5`        | Active |
 | Aiming                  | Slate Grey          | 1.2     | `#37474f`        | Active |
 | Ballet                  | Indigo Professional | 10.1    | `#283593`        | Active |
 | Bending                 | Yielding Posture    | 21.1    | `#5a4033`        | Active |
@@ -65,6 +67,7 @@ This document tracks which color schemes are actively used by mods in the Living
 | Sex-Dry-Intimacy        | Velvet Smoke        | 12.4    | `#4a2741`        | Active |
 | Sex-Penile-Manual       | Ember Touch         | 12.2    | `#8a3b12`        | Active |
 | Sex-Penile-Oral         | Midnight Orchid     | 12.3    | `#2a1a5e`        | Active |
+| Sex-Penile-Oral-Teasing | Warm Breath Coral   | 26.1    | `#a04050`        | Active |
 | Sex-Physical-Control    | Velvet Twilight     | 11.3    | `#2c0e37`        | Active |
 | Sex-Vaginal-Penetration | Rose Petal Intimacy | 12.7    | `#7d3052`        | Active |
 | Sitting                 | Charcoal            | 1.3     | `#263238`        | Active |
@@ -1052,6 +1055,60 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 - **Use Cases**: Dimensional portal travel, planar transitions, reality tears
 - **Theme**: Deep mystical violet evoking rifts between dimensions and otherworldly passages
 
+### 25. Gentle Touch Colors
+
+#### 25.1 Petal Pink Tenderness - Affection-Gentle-Touch
+
+```json
+{
+  "backgroundColor": "#d4a5a5",
+  "textColor": "#1a0a0a",
+  "hoverBackgroundColor": "#e0b8b8",
+  "hoverTextColor": "#1a0a0a"
+}
+```
+
+- **Normal Contrast**: 8.2:1 AAA
+- **Hover Contrast**: 6.8:1 AA
+- **Use Cases**: Gentle touch, playful affection, tender gestures, light physical contact
+- **Theme**: Soft, dusty rose pink evoking gentle touch, playful tenderness, and light affection without the intensity of romantic passion
+
+### 26. Teasing/Anticipation Colors
+
+#### 26.1 Warm Breath Coral - Sex-Penile-Oral-Teasing
+
+```json
+{
+  "backgroundColor": "#a04050",
+  "textColor": "#fff5f7",
+  "hoverBackgroundColor": "#b85060",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 7.2:1 AAA
+- **Hover Contrast**: 5.8:1 AA
+- **Use Cases**: Teasing oral actions, breathing teasingly, nuzzling through clothing, anticipation building
+- **Theme**: Warm coral-rose suggesting building heat, breath, warmth; evokes anticipation and playful tension
+
+### 27. Embracing/Protective Colors
+
+#### 27.1 Enveloping Warmth - Affection-Embracing
+
+```json
+{
+  "backgroundColor": "#8b4513",
+  "textColor": "#fff8f0",
+  "hoverBackgroundColor": "#a0522d",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 7.2:1 AAA
+- **Hover Contrast**: 5.8:1 AA
+- **Use Cases**: Arm around shoulders, arm around waist, linking arms, hands on shoulders, hand on waist
+- **Theme**: Deep terracotta/burnt sienna conveying protective warmth and physical closeness, distinct from hugging's intimate embrace
+
 ## Maintenance
 
 ### Assigning a New Scheme to a Mod
@@ -1071,6 +1128,9 @@ Schemes with 7:1+ contrast ratio (WCAG AAA) are marked with a star.
 
 ## Version History
 
+- **2026-01**: Added Section 27 (Embracing/Protective Colors) with Enveloping Warmth (27.1) for Affection-Embracing mod; migrated embracing actions from Affection mod
+- **2026-01**: Added Section 26 (Teasing/Anticipation Colors) with Warm Breath Coral (26.1) for Sex-Penile-Oral-Teasing mod
+- **2026-01**: Added Section 25 (Gentle Touch Colors) with Petal Pink Tenderness (25.1) for Affection-Gentle-Touch mod
 - **2025-12**: Added Section 24 (Dimensional/Portal Colors) with Rift Violet (24.1) for Dimensional-Travel mod; migrated travel_through_dimensions from Movement mod
 - **2025-12**: Assigned Rose Petal Intimacy (12.7) to Sex-Vaginal-Penetration mod; released Crimson Embrace for Vampirism only
 - **2025-12**: Added Ironbound Lock (18.4) for Locks mod

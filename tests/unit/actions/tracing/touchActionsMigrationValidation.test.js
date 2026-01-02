@@ -8,20 +8,20 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 describe('INTMIG-003 Touch Actions Migration Validation', () => {
-  // Actions now split between affection and caressing mods after intimacy mod migration
+  // Actions now split between affection, affection-embracing, affection-gentle-touch, and caressing mods after migrations
   const ACTION_LOCATIONS = {
-    brush_hand: 'data/mods/affection/actions',
+    brush_hand: 'data/mods/affection-gentle-touch/actions',
     feel_arm_muscles: 'data/mods/caressing/actions',
     fondle_ass: 'data/mods/caressing/actions',
     massage_back: 'data/mods/affection/actions',
     massage_shoulders: 'data/mods/affection/actions',
-    place_hand_on_waist: 'data/mods/affection/actions',
+    place_hand_on_waist: 'data/mods/affection-embracing/actions',
   };
 
   const MIGRATED_ACTIONS = Object.keys(ACTION_LOCATIONS);
 
   const EXPECTED_TARGETS = {
-    brush_hand: 'affection:actors_with_hands_in_intimacy',
+    brush_hand: 'affection-gentle-touch:actors_with_hands_in_intimacy',
     feel_arm_muscles:
       'caressing:actors_with_muscular_arms_facing_each_other_or_behind_target',
     fondle_ass: {
@@ -38,7 +38,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         contextFrom: 'primary',
       },
     },
-    massage_back: 'affection:close_actors_facing_away',
+    massage_back: 'caressing-states:close_actors_facing_away',
     massage_shoulders:
       'personal-space-states:close_actors_or_entity_kneeling_before_actor',
     place_hand_on_waist: 'personal-space-states:close_actors',
@@ -157,10 +157,19 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
         // Required schema properties
         expect(content.id).toBeDefined();
-        // Action IDs now use the new mod names (affection or caressing)
-        const expectedMod = ACTION_LOCATIONS[actionName].includes('affection')
-          ? 'affection'
-          : 'caressing';
+        // Action IDs now use the new mod names (affection, affection-embracing, affection-gentle-touch, or caressing)
+        let expectedMod;
+        if (ACTION_LOCATIONS[actionName].includes('affection-gentle-touch')) {
+          expectedMod = 'affection-gentle-touch';
+        } else if (
+          ACTION_LOCATIONS[actionName].includes('affection-embracing')
+        ) {
+          expectedMod = 'affection-embracing';
+        } else if (ACTION_LOCATIONS[actionName].includes('affection')) {
+          expectedMod = 'affection';
+        } else {
+          expectedMod = 'caressing';
+        }
         expect(content.id).toBe(`${expectedMod}:${actionName}`);
         expect(content.name).toBeDefined();
         expect(content.description).toBeDefined();

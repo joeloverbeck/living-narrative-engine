@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection-gentle-touch:brush_hand",
+  "name": "Brush hand",
+  "description": "Brush someone's hand with your own in a gentle, intimate gesture",
+  "targets": "affection-gentle-touch:actors_with_hands_in_intimacy",
+  "required_components": {
+    "actor": ["personal-space-states:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "kissing:kissing",
+      "hugging-states:being_hugged",
+      "hugging-states:hugging"
+    ]
+  },
+  "template": "brush {target}'s hand with your own",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#d4a5a5",
+    "textColor": "#1a0a0a",
+    "hoverBackgroundColor": "#e0b8b8",
+    "hoverTextColor": "#1a0a0a"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral-teasing:nuzzle_penis_through_clothing",
+  "name": "Nuzzle Penis Through Clothing",
+  "description": "Nuzzle against the target's penis through their clothing while kneeling before them.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actor_kneeling_before_target_with_covered_penis",
+      "placeholder": "primary",
+      "description": "Person with clothed penis to nuzzle against"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item through which to nuzzle",
+      "contextFrom": "primary"
+    }
+  },
+  "required_components": {
+    "actor": ["personal-space-states:closeness", "deference-states:kneeling_before"]
+  },
+  "template": "nuzzle against {primary}'s penis through the {secondary}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#a04050",
+    "textColor": "#fff5f7",
+    "hoverBackgroundColor": "#b85060",
+    "hoverTextColor": "#ffffff"
+  }
+}

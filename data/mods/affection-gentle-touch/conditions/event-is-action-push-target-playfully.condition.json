@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection-gentle-touch:event-is-action-push-target-playfully",
+  "description": "Checks if the triggering event is for the 'affection-gentle-touch:push_target_playfully' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection-gentle-touch:push_target_playfully"
+    ]
+  }
+}

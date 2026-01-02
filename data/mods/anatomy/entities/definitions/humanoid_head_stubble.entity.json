@@ -19,7 +19,7 @@
     },
     "anatomy:part": {
       "subType": "head",
-      "hit_probability_weight": 18,
+      "hit_probability_weight": 15,
       "health_calculation_weight": 8
     },
     "anatomy:part_health": {

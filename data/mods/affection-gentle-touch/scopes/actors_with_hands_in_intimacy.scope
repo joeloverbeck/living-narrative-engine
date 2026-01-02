@@ -1,0 +1,9 @@
+// Scope for close partners who have hand anatomy available (case-insensitive subtype match)
+// Excludes incompatible kneeling height differences
+affection-gentle-touch:actors_with_hands_in_intimacy := actor.components.personal-space-states:closeness.partners[][{
+  "and": [
+    {"hasPartSubTypeContaining": [".", "hand", {"matchAtEnd": true}]},
+    {"!": {"condition_ref": "deference-states:entity-kneeling-before-actor"}},
+    {"!": {"condition_ref": "deference-states:actor-kneeling-before-entity"}}
+  ]
+}]

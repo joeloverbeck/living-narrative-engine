@@ -20,12 +20,12 @@ export const COMPONENT_IDS = Object.freeze({
 
 // Event IDs for damage simulator
 export const EVENT_IDS = Object.freeze({
-  EXECUTION_STARTED: 'damage-simulator:execution-started',
-  EXECUTION_COMPLETE: 'damage-simulator:execution-complete',
-  EXECUTION_ERROR: 'damage-simulator:execution-error',
-  SIMULATION_PROGRESS: 'damage-simulator:simulation-progress',
-  SIMULATION_COMPLETE: 'damage-simulator:simulation-complete',
-  SIMULATION_STOPPED: 'damage-simulator:simulation-stopped',
+  EXECUTION_STARTED: 'core:damage_simulator_execution_started',
+  EXECUTION_COMPLETE: 'core:damage_simulator_execution_complete',
+  EXECUTION_ERROR: 'core:damage_simulator_execution_error',
+  SIMULATION_PROGRESS: 'core:damage_simulator_simulation_progress',
+  SIMULATION_COMPLETE: 'core:damage_simulator_simulation_complete',
+  SIMULATION_STOPPED: 'core:damage_simulator_simulation_stopped',
   DAMAGE_APPLIED: 'anatomy:damage_applied',
 });
 

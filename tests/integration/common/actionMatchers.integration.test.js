@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../common/mods/ModEntityBuilder.js';
 import '../../common/actionMatchers.js'; // Auto-extends Jest
-import placeHandsOnShouldersAction from '../../../data/mods/affection/actions/place_hands_on_shoulders.action.json';
+import placeHandsOnShouldersAction from '../../../data/mods/affection-embracing/actions/place_hands_on_shoulders.action.json';
 import turnAroundAction from '../../../data/mods/physical-control/actions/turn_around.action.json';
 
 describe('actionMatchers integration - real action discovery', () => {
@@ -15,8 +15,8 @@ describe('actionMatchers integration - real action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'affection',
-      'affection:place_hands_on_shoulders'
+      'affection-embracing',
+      'affection-embracing:place_hands_on_shoulders'
     );
   });
 
@@ -73,7 +73,7 @@ describe('actionMatchers integration - real action discovery', () => {
       );
 
       // Use custom matcher
-      expect(actions).toHaveAction('affection:place_hands_on_shoulders');
+      expect(actions).toHaveAction('affection-embracing:place_hands_on_shoulders');
     });
 
     it('should fail with detailed message when action not discovered (missing closeness)', () => {
@@ -106,7 +106,7 @@ describe('actionMatchers integration - real action discovery', () => {
       expect(errorMessage).toBeDefined();
       expect(errorMessage).toContain('❌');
       expect(errorMessage).toContain(
-        "Action 'affection:place_hands_on_shoulders' was NOT discovered"
+        "Action 'affection-embracing:place_hands_on_shoulders' was NOT discovered"
       );
       expect(errorMessage).toContain('ComponentFilteringStage');
       expect(errorMessage).toContain('Actor missing required components');
@@ -130,7 +130,7 @@ describe('actionMatchers integration - real action discovery', () => {
       );
 
       // Should pass because action is NOT discovered
-      expect(actions).not.toHaveAction('affection:place_hands_on_shoulders');
+      expect(actions).not.toHaveAction('affection-embracing:place_hands_on_shoulders');
     });
   });
 
