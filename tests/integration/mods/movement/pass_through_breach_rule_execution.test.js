@@ -47,7 +47,7 @@ describe('movement:pass_through_breach rule execution', () => {
       name: 'Splintered Door',
       components: [
         { componentId: 'core:name', data: { text: 'Splintered Door' } },
-        { componentId: 'breaching:breached', data: {} },
+        { componentId: 'breaching-states:breached', data: {} },
       ],
     });
 

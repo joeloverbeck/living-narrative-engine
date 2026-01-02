@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "drinking-states",
+  "version": "1.0.0",
+  "name": "Drinking States",
+  "description": "State components for drinking mechanics. Separated from action mod to allow other mods to check drinkable state without requiring drinking actions.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "drinkable.component.json",
+      "empty.component.json"
+    ]
+  }
+}

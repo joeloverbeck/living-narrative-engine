@@ -115,7 +115,7 @@ describe('breaching:saw_through_barred_blocker_stage_two rule execution', () => 
       const breachedOp = criticalIf.parameters.then_actions.find(
         (action) =>
           action.type === 'ADD_COMPONENT' &&
-          action.parameters?.component_type === 'breaching:breached'
+          action.parameters?.component_type === 'breaching-states:breached'
       );
       expect(breachedOp).toBeDefined();
       expect(breachedOp.parameters.value).toEqual({});

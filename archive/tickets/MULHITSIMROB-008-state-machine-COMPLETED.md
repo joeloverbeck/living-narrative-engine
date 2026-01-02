@@ -4,6 +4,10 @@
 
 Replace implicit state tracking (`#isRunning`, `#shouldStop`) with an explicit state machine that enforces valid transitions and makes illegal states unrepresentable.
 
+## Status
+
+Completed
+
 ## Background
 
 The current `MultiHitSimulator` uses boolean flags (`#isRunning`, `#shouldStop`) to track state, which can lead to:
@@ -15,6 +19,10 @@ The current `MultiHitSimulator` uses boolean flags (`#isRunning`, `#shouldStop`)
 An explicit state machine makes states and transitions clear, testable, and self-documenting.
 
 **Reference**: `specs/multi-hit-simulator-robustness.md` lines 438-459
+
+**Note on current behavior**:
+- `setEntityConfig()` sets a usable `#config` without creating a `TargetSelector`; callers can still `run()` without calling `configure()`.
+- There is no public `reset()` or `destroy()` API today, so state transitions must align with the existing lifecycle methods.
 
 ## Files to Touch
 
@@ -51,16 +59,17 @@ const SimulationState = {
 ### Valid Transitions
 
 ```
-IDLE ─────────────→ CONFIGURED (via configure())
+IDLE ─────────────→ CONFIGURED (via configure() or setEntityConfig())
 CONFIGURED ────────→ RUNNING (via run())
-CONFIGURED ────────→ IDLE (via reset())
 RUNNING ───────────→ STOPPING (via stop())
 RUNNING ───────────→ COMPLETED (simulation finishes)
 RUNNING ───────────→ ERROR (exception during execution)
 STOPPING ──────────→ COMPLETED (graceful shutdown completes)
-COMPLETED ─────────→ IDLE (via reset())
-ERROR ─────────────→ IDLE (via reset())
-* ─────────────────→ IDLE (via destroy() or full reset)
+STOPPING ──────────→ ERROR (exception during graceful shutdown)
+COMPLETED ─────────→ RUNNING (via run(), config already set)
+COMPLETED ─────────→ CONFIGURED (via configure())
+ERROR ─────────────→ RUNNING (via run(), config already set)
+ERROR ─────────────→ CONFIGURED (via configure())
 ```
 
 ### SimulationStateMachine Class
@@ -82,11 +91,11 @@ const SimulationState = Object.freeze({
 
 const VALID_TRANSITIONS = Object.freeze({
   [SimulationState.IDLE]: [SimulationState.CONFIGURED],
-  [SimulationState.CONFIGURED]: [SimulationState.RUNNING, SimulationState.IDLE],
+  [SimulationState.CONFIGURED]: [SimulationState.RUNNING],
   [SimulationState.RUNNING]: [SimulationState.STOPPING, SimulationState.COMPLETED, SimulationState.ERROR],
-  [SimulationState.STOPPING]: [SimulationState.COMPLETED],
-  [SimulationState.COMPLETED]: [SimulationState.IDLE],
-  [SimulationState.ERROR]: [SimulationState.IDLE],
+  [SimulationState.STOPPING]: [SimulationState.COMPLETED, SimulationState.ERROR],
+  [SimulationState.COMPLETED]: [SimulationState.RUNNING, SimulationState.CONFIGURED],
+  [SimulationState.ERROR]: [SimulationState.RUNNING, SimulationState.CONFIGURED],
 });
 
 class SimulationStateMachine {
@@ -132,15 +141,6 @@ class SimulationStateMachine {
     return VALID_TRANSITIONS[this.#currentState]?.includes(newState) ?? false;
   }
 
-  /**
-   * Forces reset to IDLE (for cleanup/destroy scenarios).
-   */
-  forceReset() {
-    const previousState = this.#currentState;
-    this.#currentState = SimulationState.IDLE;
-    this.#onStateChange?.(previousState, SimulationState.IDLE);
-  }
-
   // Convenience state checks
   get isIdle() { return this.#currentState === SimulationState.IDLE; }
   get isConfigured() { return this.#currentState === SimulationState.CONFIGURED; }
@@ -172,15 +172,13 @@ class MultiHitSimulator {
   }
 
   configure(options) {
-    // Transition to CONFIGURED (valid from IDLE only)
-    if (this.#stateMachine.isIdle) {
-      // ... apply configuration
-      this.#stateMachine.transition(SimulationState.CONFIGURED);
-    } else if (this.#stateMachine.isConfigured) {
-      // Re-configure without state change (already configured)
-      // ... apply configuration
-    } else {
+    // Transition to CONFIGURED (valid from IDLE, COMPLETED, or ERROR)
+    if (this.#stateMachine.isRunning || this.#stateMachine.isStopping) {
       throw new Error('Cannot configure while simulation is active');
+    }
+    // ... apply configuration
+    if (!this.#stateMachine.isConfigured) {
+      this.#stateMachine.transition(SimulationState.CONFIGURED);
     }
   }
 
@@ -205,13 +203,8 @@ class MultiHitSimulator {
     }
   }
 
-  reset() {
-    this.#stateMachine.forceReset();
-    // ... reset other state
-  }
-
   // Replace boolean getters
-  get isRunning() {
+  isRunning() {
     return this.#stateMachine.isActive;
   }
 }
@@ -221,7 +214,7 @@ class MultiHitSimulator {
 
 ### Tests That Must Pass
 
-- [ ] All existing 94 MultiHitSimulator tests pass unchanged
+- [ ] All existing MultiHitSimulator unit tests pass unchanged
 - [ ] New SimulationStateMachine tests achieve 100% coverage
 - [ ] State machine enforces all valid transitions
 - [ ] Invalid transitions throw descriptive errors
@@ -263,11 +256,6 @@ describe('SimulationStateMachine', () => {
   describe('canTransition', () => {
     it('should return true for valid transitions');
     it('should return false for invalid transitions');
-  });
-
-  describe('forceReset', () => {
-    it('should reset to IDLE from any state');
-    it('should trigger onStateChange callback');
   });
 
   describe('state getters', () => {
@@ -354,6 +342,11 @@ Medium-Large - new class creation plus careful integration with existing code.
 
 ## Reference Files
 
-- Source: `src/domUI/damage-simulator/MultiHitSimulator.js` (lines 139-149 for current state tracking)
+- Source: `src/domUI/damage-simulator/MultiHitSimulator.js` (state integration)
+- New: `src/domUI/damage-simulator/SimulationStateMachine.js`
 - Spec: `specs/multi-hit-simulator-robustness.md` (lines 438-459)
 - Pattern: Consider XState concepts but implement simply without the library
+
+## Outcome
+
+Implemented `SimulationStateMachine` and wired `MultiHitSimulator` to use it in place of boolean flags. Added unit tests for state transitions and added guard tests for configure/stop behavior; no public API changes were required beyond enforcing the configure-while-running guard. The state machine now allows reruns after completion or error without requiring explicit reset methods, matching existing usage patterns.

@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "drinking:empty",
+  "id": "drinking-states:empty",
   "description": "Marker component indicating a liquid container has no remaining liquid. When this component is present, the container cannot be consumed from.",
   "dataSchema": {
     "type": "object",

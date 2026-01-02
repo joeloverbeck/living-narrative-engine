@@ -38,7 +38,7 @@
       "version": "^1.0.0"
     },
     {
-      "id": "weapons",
+      "id": "attack-states",
       "version": "^1.0.0"
     },
     {
@@ -47,9 +47,6 @@
     }
   ],
   "content": {
-    "macros": [
-      "handleBeakFumble.macro.json"
-    ],
     "actions": [
       "peck_target.action.json"
     ],
@@ -62,6 +59,7 @@
     ],
     "scopes": [
       "actor_beak_body_parts.scope"
-    ]
+    ],
+    "macros": []
   }
 }

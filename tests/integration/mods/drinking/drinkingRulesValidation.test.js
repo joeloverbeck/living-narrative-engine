@@ -49,7 +49,7 @@ function setupDrinkingScenario(
       liquidType: 'water',
       sealed: false,
     })
-    .withComponent('drinking:drinkable', {
+    .withComponent('drinking-states:drinkable', {
       servingSize: 100, // 100ml per sip
       flavorProfile: {
         primary: 'refreshing',

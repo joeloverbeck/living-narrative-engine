@@ -24,13 +24,14 @@
     {
       "id": "physical-control-states",
       "version": "1.0.0"
+    },
+    {
+      "id": "drinking-states",
+      "version": "1.0.0"
     }
   ],
   "content": {
-    "components": [
-      "drinkable.component.json",
-      "empty.component.json"
-    ],
+    "components": [],
     "actions": [
       "drink_entirely.action.json",
       "drink_from.action.json"

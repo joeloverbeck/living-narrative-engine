@@ -45,7 +45,7 @@ describe('breaching:saw_through_barred_blocker_stage_three rule execution', () =
     ifOp?.parameters?.then_actions?.find(
       (action) =>
         action.type === 'ADD_COMPONENT' &&
-        action.parameters?.component_type === 'breaching:breached'
+        action.parameters?.component_type === 'breaching-states:breached'
     );
 
   describe('Rule wiring', () => {

@@ -47,6 +47,12 @@ module.exports = {
           lines: 98,
           statements: 97,
         },
+        './src/domUI/damage-simulator/MultiHitSimulator.js': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
       },
     }),
 };

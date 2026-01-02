@@ -43,7 +43,7 @@ describe('drinking:drink_entirely Rule Execution', () => {
           flavorText: 'A glowing red liquid.',
         }
       );
-      fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
 
       // Give actor inventory with the container
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
@@ -67,10 +67,10 @@ describe('drinking:drink_entirely Rule Execution', () => {
 
       // Verify drinkable component was removed and empty component added
       expect(
-        fixture.entityManager.hasComponent(container.id, 'drinking:drinkable')
+        fixture.entityManager.hasComponent(container.id, 'drinking-states:drinkable')
       ).toBe(false);
       expect(
-        fixture.entityManager.hasComponent(container.id, 'drinking:empty')
+        fixture.entityManager.hasComponent(container.id, 'drinking-states:empty')
       ).toBe(true);
     });
 
@@ -93,7 +93,7 @@ describe('drinking:drink_entirely Rule Execution', () => {
           flavorText: 'A fine vintage.',
         }
       );
-      fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],
@@ -137,7 +137,7 @@ describe('drinking:drink_entirely Rule Execution', () => {
           flavorText: 'Just droplets.',
         }
       );
-      fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
 
       fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
         items: [container.id],

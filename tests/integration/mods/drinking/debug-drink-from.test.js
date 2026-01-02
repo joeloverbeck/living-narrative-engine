@@ -80,7 +80,7 @@ describe('Debug drink_from', () => {
         flavorText: 'Fresh spring water.',
       }
     );
-    fixture.entityManager.addComponent(container.id, 'drinking:drinkable', {});
+    fixture.entityManager.addComponent(container.id, 'drinking-states:drinkable', {});
     fixture.entityManager.addComponent(actor.id, 'inventory:inventory', {
       items: [container.id],
       maxWeightKg: 50,

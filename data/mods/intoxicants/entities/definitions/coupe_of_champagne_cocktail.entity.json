@@ -13,7 +13,7 @@
     "core:weight": {
       "weight": 0.3
     },
-    "drinking:drinkable": {},
+    "drinking-states:drinkable": {},
     "containers-core:liquid_container": {
       "currentVolumeMilliliters": 150,
       "maxCapacityMilliliters": 150,

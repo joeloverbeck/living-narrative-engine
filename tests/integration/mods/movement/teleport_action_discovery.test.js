@@ -69,7 +69,7 @@ describe('movement:teleport action discovery', () => {
       expect(passThroughBreachAction.id).toBe('movement:pass_through_breach');
       expect(passThroughBreachAction.generateCombinations).toBe(true);
       expect(passThroughBreachAction.targets.primary.scope).toBe(
-        'breaching:breached_blockers_at_location'
+        'breaching-states:breached_blockers_at_location'
       );
       expect(passThroughBreachAction.targets.secondary.scope).toBe(
         'movement:destinations_for_breached_blocker'

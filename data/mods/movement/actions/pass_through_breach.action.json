@@ -6,7 +6,7 @@
   "generateCombinations": true,
   "targets": {
     "primary": {
-      "scope": "breaching:breached_blockers_at_location",
+      "scope": "breaching-states:breached_blockers_at_location",
       "placeholder": "breachedBlocker",
       "description": "Breached blocker to pass through"
     },

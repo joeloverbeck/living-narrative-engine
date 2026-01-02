@@ -42,7 +42,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         isRefillable: true,
         flavorText: 'Smooth whiskey with a smoky finish.',
       });
-      fixture.entityManager.addComponent(bottle.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(bottle.id, 'drinking-states:drinkable', {});
       fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component from bottle (simulating it being picked up into inventory)
@@ -75,7 +75,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
 
       // Bottle should no longer be drinkable
       expect(
-        fixture.entityManager.hasComponent(bottle.id, 'drinking:drinkable')
+        fixture.entityManager.hasComponent(bottle.id, 'drinking-states:drinkable')
       ).toBe(false);
     });
 
@@ -101,7 +101,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         isRefillable: true,
         flavorText: 'The last drops of whiskey.',
       });
-      fixture.entityManager.addComponent(bottle.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(bottle.id, 'drinking-states:drinkable', {});
       fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component
@@ -145,7 +145,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         isRefillable: true,
         flavorText: 'A full bottle of premium whiskey.',
       });
-      fixture.entityManager.addComponent(bottle.id, 'drinking:drinkable', {});
+      fixture.entityManager.addComponent(bottle.id, 'drinking-states:drinkable', {});
       fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component
@@ -165,7 +165,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       );
       expect(liquidContainer.currentVolumeMilliliters).toBe(0);
       expect(
-        fixture.entityManager.hasComponent(bottle.id, 'drinking:drinkable')
+        fixture.entityManager.hasComponent(bottle.id, 'drinking-states:drinkable')
       ).toBe(false);
     });
   });
@@ -193,7 +193,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
         isRefillable: true,
         flavorText: '',
       });
-      fixture.entityManager.addComponent(bottle.id, 'drinking:empty', {});
+      fixture.entityManager.addComponent(bottle.id, 'drinking-states:empty', {});
       fixture.entityManager.addComponent(bottle.id, 'items-core:portable', {});
 
       // Remove position component

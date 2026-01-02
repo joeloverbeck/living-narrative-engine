@@ -7,6 +7,12 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import TargetSelector from './TargetSelector.js';
+import MultiHitSimulatorView from './MultiHitSimulatorView.js';
+import {
+  SimulationStateMachine,
+  SimulationState,
+} from './SimulationStateMachine.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -74,69 +80,6 @@ const TARGET_MODES = Object.freeze(['random', 'round-robin', 'focus']);
  */
 
 /**
- * Helper class for target selection across different modes
- */
-class TargetSelector {
-  /** @type {Array<{id: string, name: string, weight: number}>} */
-  #parts;
-
-  /** @type {string} */
-  #mode;
-
-  /** @type {string|null} */
-  #focusPartId;
-
-  /** @type {number} */
-  #currentIndex;
-
-  /**
-   * @param {Array<{id: string, name: string, weight: number}>} parts - Available target parts
-   * @param {string} mode - Targeting mode
-   * @param {string|null} focusPartId - Focus target part ID
-   */
-  constructor(parts, mode, focusPartId) {
-    this.#parts = parts;
-    this.#mode = mode;
-    this.#focusPartId = focusPartId;
-    this.#currentIndex = 0;
-  }
-
-  /**
-   * Get the next target part ID based on the targeting mode
-   * @returns {string|null} Part ID or null for weighted random
-   */
-  getNextTarget() {
-    if (this.#parts.length === 0) {
-      return null;
-    }
-
-    switch (this.#mode) {
-      case 'random':
-        return this.#parts[Math.floor(Math.random() * this.#parts.length)].id;
-
-      case 'round-robin': {
-        const part = this.#parts[this.#currentIndex];
-        this.#currentIndex = (this.#currentIndex + 1) % this.#parts.length;
-        return part.id;
-      }
-
-      case 'focus':
-        return this.#focusPartId;
-
-      // Note: No default case needed - configure() validates target modes
-      // and throws an error for unknown modes (line 258-259)
-    }
-  }
-
-  /**
-   * Reset the selector state (e.g., round-robin index)
-   */
-  reset() {
-    this.#currentIndex = 0;
-  }
-}
-
-/**
  * Multi-hit damage simulator component
  */
 class MultiHitSimulator {
@@ -155,11 +98,8 @@ class MultiHitSimulator {
   /** @type {SimulationConfig|null} */
   #config;
 
-  /** @type {boolean} */
-  #isRunning;
-
-  /** @type {boolean} */
-  #shouldStop;
+  /** @type {SimulationStateMachine} */
+  #stateMachine;
 
   /** @type {number|null} */
   #delayTimeout;
@@ -175,6 +115,9 @@ class MultiHitSimulator {
 
   /** @type {Array<{id: string, name: string, weight: number}>} */
   #targetableParts;
+
+  /** @type {MultiHitSimulatorView} */
+  #view;
 
   /**
    * Expose constants for testing and external use
@@ -209,9 +152,12 @@ class MultiHitSimulator {
     this.#eventBus = eventBus;
     this.#logger = logger;
 
+    this.#stateMachine = new SimulationStateMachine((prev, next) => {
+      this.#logger.debug(
+        `[MultiHitSimulator] State transition: ${prev} -> ${next}`
+      );
+    });
     this.#config = null;
-    this.#isRunning = false;
-    this.#shouldStop = false;
     this.#delayTimeout = null;
     this.#delayResolve = null;
     this.#targetSelector = null;
@@ -222,6 +168,7 @@ class MultiHitSimulator {
       percentComplete: 0,
       status: 'idle',
     };
+    this.#view = new MultiHitSimulatorView(containerElement, logger);
   }
 
   /**
@@ -231,6 +178,10 @@ class MultiHitSimulator {
    */
   configure(config) {
     this.#logger.debug('[MultiHitSimulator] Configuring simulation', config);
+
+    if (this.#stateMachine.isActive) {
+      throw new Error('Cannot configure while simulation is active');
+    }
 
     // Validate hit count
     if (
@@ -302,6 +253,10 @@ class MultiHitSimulator {
       targetMode: this.#config.targetMode,
       partsAvailable: this.#targetableParts.length,
     });
+
+    if (!this.#stateMachine.isConfigured) {
+      this.#stateMachine.transition(SimulationState.CONFIGURED);
+    }
   }
 
   /**
@@ -310,11 +265,15 @@ class MultiHitSimulator {
    * @throws {Error} If already running or not configured
    */
   async run() {
-    if (this.#isRunning) {
+    if (this.#stateMachine.isActive) {
       throw new Error('Simulation already running');
     }
 
     if (!this.#config) {
+      throw new Error('Simulation not configured');
+    }
+
+    if (!this.#stateMachine.canTransition(SimulationState.RUNNING)) {
       throw new Error('Simulation not configured');
     }
 
@@ -323,8 +282,7 @@ class MultiHitSimulator {
       targetMode: this.#config.targetMode,
     });
 
-    this.#isRunning = true;
-    this.#shouldStop = false;
+    this.#stateMachine.transition(SimulationState.RUNNING);
     this.#progress = {
       currentHit: 0,
       totalHits: this.#config.hitCount,
@@ -349,10 +307,12 @@ class MultiHitSimulator {
     };
 
     const startTime = Date.now();
+    let wasStopped = false;
 
     try {
       for (let i = 0; i < this.#config.hitCount; i++) {
-        if (this.#shouldStop) {
+        if (this.#stateMachine.isStopping) {
+          wasStopped = true;
           results.stoppedReason = 'user_stopped';
           this.#progress.status = 'stopping';
           this.#logger.info('[MultiHitSimulator] Simulation stopped by user', {
@@ -360,6 +320,11 @@ class MultiHitSimulator {
           });
           break;
         }
+
+        this.#assertInvariant(
+          this.#stateMachine.isRunning === true,
+          'state must be RUNNING during simulation loop'
+        );
 
         // Get next target
         const targetPartId = this.#targetSelector
@@ -381,7 +346,7 @@ class MultiHitSimulator {
           const firstResult = damageResult.results[0];
           results.totalDamage += firstResult.damageDealt || 0;
 
-          const hitPartId = firstResult.targetPartId || targetPartId || 'unknown';
+          const hitPartId = this.#resolvePartId(firstResult, targetPartId);
           results.partHitCounts[hitPartId] =
             (results.partHitCounts[hitPartId] || 0) + 1;
 
@@ -416,10 +381,13 @@ class MultiHitSimulator {
         }
       }
 
-      results.completed = !this.#shouldStop;
+      results.completed = !wasStopped;
       results.durationMs = Date.now() - startTime;
 
       this.#progress.status = 'completed';
+      if (this.#stateMachine.canTransition(SimulationState.COMPLETED)) {
+        this.#stateMachine.transition(SimulationState.COMPLETED);
+      }
 
       this.#logger.info('[MultiHitSimulator] Simulation complete', {
         completed: results.completed,
@@ -442,6 +410,10 @@ class MultiHitSimulator {
     } catch (error) {
       this.#logger.error('[MultiHitSimulator] Simulation error:', error);
 
+      if (this.#stateMachine.canTransition(SimulationState.ERROR)) {
+        this.#stateMachine.transition(SimulationState.ERROR);
+      }
+
       results.stoppedReason = `error: ${error.message}`;
       results.durationMs = Date.now() - startTime;
 
@@ -452,7 +424,6 @@ class MultiHitSimulator {
 
       throw error;
     } finally {
-      this.#isRunning = false;
       this.#updateControlsState();
     }
   }
@@ -462,7 +433,9 @@ class MultiHitSimulator {
    */
   stop() {
     this.#logger.debug('[MultiHitSimulator] Stop requested');
-    this.#shouldStop = true;
+    if (this.#stateMachine.canTransition(SimulationState.STOPPING)) {
+      this.#stateMachine.transition(SimulationState.STOPPING);
+    }
 
     if (this.#delayTimeout) {
       clearTimeout(this.#delayTimeout);
@@ -481,7 +454,7 @@ class MultiHitSimulator {
    * @returns {boolean} True if running
    */
   isRunning() {
-    return this.#isRunning;
+    return this.#stateMachine.isActive;
   }
 
   /**
@@ -501,159 +474,35 @@ class MultiHitSimulator {
   }
 
   /**
+   * Resolves the part ID from damage result or selector target.
+   * Fallback order: result.targetPartId > selectorTarget > 'unknown'
+   * @param {Object} result - Damage result object
+   * @param {string|null} selectorTarget - Target from TargetSelector
+   * @returns {string} Resolved part ID
+   */
+  #resolvePartId(result, selectorTarget) {
+    if (result?.targetPartId) return result.targetPartId;
+    if (selectorTarget) return selectorTarget;
+    return 'unknown';
+  }
+
+  /**
    * Render the simulator controls
    */
   render() {
     this.#logger.debug('[MultiHitSimulator] Rendering controls');
-
-    this.#containerElement.innerHTML = `
-      <div class="ds-multi-hit-simulator">
-        <h4>Multi-Hit Simulation</h4>
-
-        <!-- Configuration -->
-        <div class="ds-sim-config">
-          <div class="ds-form-group">
-            <label for="ds-hit-count">Number of Hits</label>
-            <input type="number" id="ds-hit-count"
-                   min="${DEFAULTS.MIN_HITS}"
-                   max="${DEFAULTS.MAX_HITS}"
-                   value="${DEFAULTS.HIT_COUNT}">
-          </div>
-
-          <div class="ds-form-group">
-            <label for="ds-hit-delay">Delay Between Hits</label>
-            <input type="range" id="ds-hit-delay-slider"
-                   min="${DEFAULTS.MIN_DELAY}"
-                   max="${DEFAULTS.MAX_DELAY}"
-                   value="${DEFAULTS.DELAY_MS}">
-            <span id="ds-hit-delay-value">${DEFAULTS.DELAY_MS}ms</span>
-          </div>
-
-          <fieldset class="ds-target-mode-fieldset">
-            <legend>Target Mode</legend>
-            <label>
-              <input type="radio" name="ds-sim-target-mode" value="random" checked>
-              Random (weighted)
-            </label>
-            <label>
-              <input type="radio" name="ds-sim-target-mode" value="round-robin">
-              Round-Robin
-            </label>
-            <label>
-              <input type="radio" name="ds-sim-target-mode" value="focus">
-              Focus Part:
-              <select id="ds-sim-focus-part" disabled>
-                <option value="">Select...</option>
-              </select>
-            </label>
-          </fieldset>
-        </div>
-
-        <!-- Controls -->
-        <div class="ds-sim-controls">
-          <button id="ds-sim-run-btn" class="ds-button ds-button--primary">&#9658; Run Simulation</button>
-          <button id="ds-sim-stop-btn" class="ds-button ds-button--danger" disabled>&#9632; Stop</button>
-        </div>
-
-        <!-- Progress -->
-        <div class="ds-sim-progress" hidden>
-          <div class="ds-progress-bar">
-            <div class="ds-progress-fill" style="width: 0%"></div>
-          </div>
-          <span class="ds-progress-text">0 / ${DEFAULTS.HIT_COUNT} hits</span>
-        </div>
-
-        <!-- Results -->
-        <div class="ds-sim-results" hidden>
-          <h5>Simulation Results</h5>
-          <div class="ds-results-grid">
-            <div class="ds-result-item">
-              <span class="ds-result-label">Hits Executed</span>
-              <span class="ds-result-value" id="ds-result-hits">--</span>
-            </div>
-            <div class="ds-result-item">
-              <span class="ds-result-label">Total Damage</span>
-              <span class="ds-result-value" id="ds-result-damage">--</span>
-            </div>
-            <div class="ds-result-item">
-              <span class="ds-result-label">Duration</span>
-              <span class="ds-result-value" id="ds-result-duration">--</span>
-            </div>
-            <div class="ds-result-item">
-              <span class="ds-result-label">Avg Damage/Hit</span>
-              <span class="ds-result-value" id="ds-result-avg">--</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    this.#bindEventListeners();
-  }
-
-  /**
-   * Bind event listeners to rendered elements
-   * @private
-   */
-  #bindEventListeners() {
-    const container = this.#containerElement;
-
-    // Delay slider value display
-    const delaySlider = container.querySelector('#ds-hit-delay-slider');
-    const delayValue = container.querySelector('#ds-hit-delay-value');
-    if (delaySlider && delayValue) {
-      delaySlider.addEventListener('input', (e) => {
-        delayValue.textContent = `${e.target.value}ms`;
-      });
-    }
-
-    // Target mode radio buttons
-    const targetModeRadios = container.querySelectorAll(
-      'input[name="ds-sim-target-mode"]'
-    );
-    const focusPartSelect = container.querySelector('#ds-sim-focus-part');
-
-    targetModeRadios.forEach((radio) => {
-      radio.addEventListener('change', (e) => {
-        if (focusPartSelect) {
-          focusPartSelect.disabled = e.target.value !== 'focus';
-        }
-      });
+    this.#view.render(DEFAULTS);
+    this.#view.bindEventListeners({
+      onRun: (config) => this.#handleRunRequest(config),
+      onStop: () => this.stop(),
     });
-
-    // Run button
-    const runBtn = container.querySelector('#ds-sim-run-btn');
-    if (runBtn) {
-      runBtn.addEventListener('click', () => this.#handleRunClick());
-    }
-
-    // Stop button
-    const stopBtn = container.querySelector('#ds-sim-stop-btn');
-    if (stopBtn) {
-      stopBtn.addEventListener('click', () => this.stop());
-    }
   }
 
   /**
-   * Handle run button click
+   * Handle run request from the view
    * @private
    */
-  async #handleRunClick() {
-    const container = this.#containerElement;
-
-    // Get configuration from UI
-    const hitCountInput = container.querySelector('#ds-hit-count');
-    const delaySlider = container.querySelector('#ds-hit-delay-slider');
-    const targetModeRadio = container.querySelector(
-      'input[name="ds-sim-target-mode"]:checked'
-    );
-    const focusPartSelect = container.querySelector('#ds-sim-focus-part');
-
-    if (!hitCountInput || !delaySlider || !targetModeRadio) {
-      this.#logger.error('[MultiHitSimulator] Missing UI elements');
-      return;
-    }
-
+  async #handleRunRequest(config) {
     // Validate we have an entity configured
     if (!this.#config?.entityId && !this.#targetableParts.length) {
       this.#logger.warn('[MultiHitSimulator] No entity configured');
@@ -663,20 +512,14 @@ class MultiHitSimulator {
     try {
       // Configure simulation
       this.configure({
-        hitCount: parseInt(hitCountInput.value, 10),
-        delayMs: parseInt(delaySlider.value, 10),
-        targetMode: targetModeRadio.value,
-        focusPartId: focusPartSelect?.value || null,
+        hitCount: config.hitCount,
+        delayMs: config.delayMs,
+        targetMode: config.targetMode,
+        focusPartId: config.focusPartId || null,
         damageEntry: this.#config?.damageEntry || { base_damage: 10 },
         multiplier: this.#config?.multiplier || 1,
         entityId: this.#config?.entityId || '',
       });
-
-      // Show progress, hide results
-      const progressEl = container.querySelector('.ds-sim-progress');
-      const resultsEl = container.querySelector('.ds-sim-results');
-      if (progressEl) progressEl.hidden = false;
-      if (resultsEl) resultsEl.hidden = true;
 
       // Update controls state
       this.#updateControlsState();
@@ -693,17 +536,7 @@ class MultiHitSimulator {
    * @private
    */
   #updateProgressDisplay() {
-    const container = this.#containerElement;
-    const progressFill = container.querySelector('.ds-progress-fill');
-    const progressText = container.querySelector('.ds-progress-text');
-
-    if (progressFill) {
-      progressFill.style.width = `${this.#progress.percentComplete}%`;
-    }
-
-    if (progressText) {
-      progressText.textContent = `${this.#progress.currentHit} / ${this.#progress.totalHits} hits`;
-    }
+    this.#view.updateProgress(this.#progress);
   }
 
   /**
@@ -712,29 +545,11 @@ class MultiHitSimulator {
    * @param {SimulationResult} results - Simulation results
    */
   #updateResultsDisplay(results) {
-    const container = this.#containerElement;
-    const resultsEl = container.querySelector('.ds-sim-results');
-
-    if (resultsEl) {
-      resultsEl.hidden = false;
-
-      const hitsEl = container.querySelector('#ds-result-hits');
-      const damageEl = container.querySelector('#ds-result-damage');
-      const durationEl = container.querySelector('#ds-result-duration');
-      const avgEl = container.querySelector('#ds-result-avg');
-
-      if (hitsEl) hitsEl.textContent = results.hitsExecuted.toString();
-      if (damageEl) damageEl.textContent = results.totalDamage.toFixed(1);
-      if (durationEl) durationEl.textContent = `${results.durationMs}ms`;
-      // Note: hitsExecuted is always >= 1 here because:
-      // 1. configure() validates hitCount >= 1
-      // 2. The loop increments hitsExecuted before stop is checked
-      // 3. This method is only called after successful loop completion
-      if (avgEl) {
-        const avg = results.totalDamage / results.hitsExecuted;
-        avgEl.textContent = avg.toFixed(2);
-      }
-    }
+    this.#assertInvariant(
+      results.hitsExecuted >= 1,
+      `hitsExecuted must be >= 1, got ${results.hitsExecuted}`
+    );
+    this.#view.updateResults(results);
   }
 
   /**
@@ -742,17 +557,7 @@ class MultiHitSimulator {
    * @private
    */
   #updateControlsState() {
-    const container = this.#containerElement;
-    const runBtn = container.querySelector('#ds-sim-run-btn');
-    const stopBtn = container.querySelector('#ds-sim-stop-btn');
-
-    if (runBtn) {
-      runBtn.disabled = this.#isRunning;
-    }
-
-    if (stopBtn) {
-      stopBtn.disabled = !this.#isRunning;
-    }
+    this.#view.updateControlsState(this.#stateMachine.isActive);
   }
 
   /**
@@ -767,9 +572,27 @@ class MultiHitSimulator {
       this.#delayTimeout = setTimeout(() => {
         this.#delayTimeout = null;
         this.#delayResolve = null;
+        this.#assertInvariant(
+          this.#delayTimeout === null && this.#delayResolve === null,
+          'delayTimeout and delayResolve must both be null after cleanup'
+        );
         resolve();
       }, ms);
     });
+  }
+
+  /**
+   * Assert invariants in non-production environments.
+   * @private
+   * @param {boolean} condition - Condition that must hold
+   * @param {string} message - Invariant description
+   */
+  #assertInvariant(condition, message) {
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+
+    console.assert(condition, `Invariant violation: ${message}`);
   }
 
   /**
@@ -785,6 +608,10 @@ class MultiHitSimulator {
       damageEntry,
       multiplier,
     });
+
+    if (this.#stateMachine.isActive) {
+      throw new Error('Cannot configure while simulation is active');
+    }
 
     // Initialize partial config
     this.#config = {
@@ -802,6 +629,10 @@ class MultiHitSimulator {
 
     // Update focus part dropdown
     this.#updateFocusPartOptions();
+
+    if (!this.#stateMachine.isConfigured) {
+      this.#stateMachine.transition(SimulationState.CONFIGURED);
+    }
   }
 
   /**
@@ -809,22 +640,7 @@ class MultiHitSimulator {
    * @private
    */
   #updateFocusPartOptions() {
-    const focusPartSelect = this.#containerElement.querySelector(
-      '#ds-sim-focus-part'
-    );
-
-    if (!focusPartSelect) return;
-
-    // Clear existing options
-    focusPartSelect.innerHTML = '<option value="">Select...</option>';
-
-    // Add options for each targetable part
-    for (const part of this.#targetableParts) {
-      const option = document.createElement('option');
-      option.value = part.id;
-      option.textContent = part.name;
-      focusPartSelect.appendChild(option);
-    }
+    this.#view.updateFocusPartOptions(this.#targetableParts);
   }
 }
 
