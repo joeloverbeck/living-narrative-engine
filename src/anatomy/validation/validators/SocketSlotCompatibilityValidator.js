@@ -320,7 +320,6 @@ function suggestHierarchicalSocketFix(
 export class SocketSlotCompatibilityValidator extends BaseValidator {
   #dataRegistry;
   #anatomyBlueprintRepository;
-  #logger;
   #logValidatorError;
 
   /**
@@ -368,7 +367,6 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
 
     this.#dataRegistry = dataRegistry;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
-    this.#logger = logger;
     this.#logValidatorError = createValidatorLogger({
       logger,
       validatorName: this.name,
@@ -429,4 +427,6 @@ export const __testables__ = {
   suggestSocketFix,
   validateStructureTemplateSockets,
   getRootEntityDefinition,
+  getStructureTemplate,
+  suggestHierarchicalSocketFix,
 };

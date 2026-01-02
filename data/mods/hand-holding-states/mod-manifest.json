@@ -9,8 +9,8 @@
   "dependencies": [],
   "content": {
     "components": [
-      "holding_hand.component.json",
-      "hand_held.component.json"
+      "hand_held.component.json",
+      "holding_hand.component.json"
     ]
   }
 }

@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_simulator_refresh_requested",
+  "description": "Fired when a user or system requests the damage simulator to refresh its current view.",
+  "payloadSchema": {
+    "type": "object",
+    "required": [],
+    "properties": {
+      "reason": {
+        "type": "string",
+        "description": "Optional reason for the refresh request."
+      }
+    },
+    "additionalProperties": false
+  }
+}

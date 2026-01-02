@@ -123,8 +123,8 @@ class TargetSelector {
       case 'focus':
         return this.#focusPartId;
 
-      default:
-        return null; // Use weighted random from execution service
+      // Note: No default case needed - configure() validates target modes
+      // and throws an error for unknown modes (line 258-259)
     }
   }
 
@@ -726,11 +726,12 @@ class MultiHitSimulator {
       if (hitsEl) hitsEl.textContent = results.hitsExecuted.toString();
       if (damageEl) damageEl.textContent = results.totalDamage.toFixed(1);
       if (durationEl) durationEl.textContent = `${results.durationMs}ms`;
+      // Note: hitsExecuted is always >= 1 here because:
+      // 1. configure() validates hitCount >= 1
+      // 2. The loop increments hitsExecuted before stop is checked
+      // 3. This method is only called after successful loop completion
       if (avgEl) {
-        const avg =
-          results.hitsExecuted > 0
-            ? results.totalDamage / results.hitsExecuted
-            : 0;
+        const avg = results.totalDamage / results.hitsExecuted;
         avgEl.textContent = avg.toFixed(2);
       }
     }

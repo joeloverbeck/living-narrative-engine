@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_simulator_entity_load_error",
+  "description": "Fired when the damage simulator encounters an error while loading an entity.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["definitionId", "error"],
+    "properties": {
+      "definitionId": {
+        "type": "string",
+        "description": "The definition ID of the entity that failed to load."
+      },
+      "error": {
+        "type": "string",
+        "description": "The error message describing what went wrong."
+      }
+    },
+    "additionalProperties": false
+  }
+}

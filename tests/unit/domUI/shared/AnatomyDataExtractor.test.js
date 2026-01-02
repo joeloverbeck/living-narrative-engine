@@ -69,7 +69,7 @@ describe('AnatomyDataExtractor', () => {
             getComponentData: (compId) => {
               if (compId === 'core:name') return { text: 'Torso' };
               if (compId === 'anatomy:part_health')
-                return { current: 100, max: 100 };
+                return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
               if (compId === 'anatomy:joint') return null;
               if (compId === 'anatomy:part') return { subType: 'torso' };
               return null;
@@ -77,7 +77,11 @@ describe('AnatomyDataExtractor', () => {
             getAllComponents: () => ({
               'core:name': { text: 'Torso' },
               'anatomy:part': { subType: 'torso' },
-              'anatomy:part_health': { current: 100, max: 100 },
+              'anatomy:part_health': {
+                currentHealth: 100,
+                maxHealth: 100,
+                state: 'healthy',
+              },
             }),
           };
         }
@@ -93,7 +97,11 @@ describe('AnatomyDataExtractor', () => {
         name: 'Torso',
         components: {
           'anatomy:part': { subType: 'torso' },
-          'anatomy:part_health': { current: 100, max: 100 },
+          'anatomy:part_health': {
+            currentHealth: 100,
+            maxHealth: 100,
+            state: 'healthy',
+          },
         },
         health: { current: 100, max: 100 },
         children: [],
@@ -167,22 +175,59 @@ describe('AnatomyDataExtractor', () => {
       // Arrange
       const bodyData = { root: 'arm-1', parts: {} };
 
+      // Use actual schema property names: currentHealth, maxHealth (not current, max)
       mockEntityManager.getEntityInstance.mockImplementation(() => ({
         getComponentData: (compId) => {
           if (compId === 'anatomy:part_health')
-            return { current: 75, max: 100 };
+            return { currentHealth: 75, maxHealth: 100, state: 'wounded' };
           return null;
         },
         getAllComponents: () => ({
-          'anatomy:part_health': { current: 75, max: 100 },
+          'anatomy:part_health': {
+            currentHealth: 75,
+            maxHealth: 100,
+            state: 'wounded',
+          },
         }),
       }));
 
       // Act
       const result = await extractor.extractHierarchy(bodyData);
 
-      // Assert
+      // Assert - extractor should normalize to current/max for UI consumption
       expect(result.health).toEqual({ current: 75, max: 100 });
+    });
+
+    it('should correctly extract currentHealth/maxHealth as current/max', async () => {
+      // Arrange - test with exact schema structure as defined in part_health.component.json
+      const bodyData = { root: 'test-part', parts: {} };
+
+      mockEntityManager.getEntityInstance.mockImplementation(() => ({
+        getComponentData: (compId) => {
+          if (compId === 'anatomy:part_health') {
+            // Real schema uses currentHealth/maxHealth/state (required fields)
+            return { currentHealth: 45, maxHealth: 100, state: 'injured' };
+          }
+          if (compId === 'core:name') return { text: 'Test Part' };
+          return null;
+        },
+        getAllComponents: () => ({
+          'core:name': { text: 'Test Part' },
+          'anatomy:part_health': {
+            currentHealth: 45,
+            maxHealth: 100,
+            state: 'injured',
+          },
+        }),
+      }));
+
+      // Act
+      const result = await extractor.extractHierarchy(bodyData);
+
+      // Assert - normalized health object for UI display
+      expect(result.health).not.toBeNull();
+      expect(result.health.current).toBe(45);
+      expect(result.health.max).toBe(100);
     });
 
     it('should filter mechanical components (exclude descriptors:*)', async () => {
@@ -463,23 +508,179 @@ describe('AnatomyDataExtractor', () => {
       expect(result.children).toEqual([]);
     });
 
-    it('should return null when bodyData.root is missing', async () => {
+    it('should throw when bodyData.root is missing', async () => {
+      // Act & Assert
+      await expect(extractor.extractHierarchy({ parts: {} })).rejects.toThrow(
+        'AnatomyDataExtractor: bodyData.root is required for hierarchy extraction'
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'AnatomyDataExtractor: Invalid bodyData - missing root property',
+        expect.objectContaining({ bodyData: { parts: {} } })
+      );
+    });
+
+    it('should throw when bodyData is null', async () => {
+      // Act & Assert
+      await expect(extractor.extractHierarchy(null)).rejects.toThrow(
+        'AnatomyDataExtractor: bodyData.root is required for hierarchy extraction'
+      );
+    });
+  });
+
+  describe('extractFromEntity', () => {
+    it('should extract anatomy data from entity with nested body structure', async () => {
+      // Arrange - realistic anatomy:body component structure
+      const rootEntityId = 'torso-1';
+      const mockEntity = {
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            // Actual structure from anatomy mod - nested body object
+            return {
+              recipeId: 'anatomy:human',
+              body: {
+                root: rootEntityId,
+                parts: { torso: rootEntityId },
+              },
+            };
+          }
+          if (componentId === 'core:name') return { text: 'Torso' };
+          if (componentId === 'anatomy:part_health')
+            return { currentHealth: 100, maxHealth: 100, state: 'healthy' };
+          if (componentId === 'anatomy:joint') return null;
+          return null;
+        }),
+        getAllComponents: jest.fn(() => ({
+          'core:name': { text: 'Torso' },
+          'anatomy:part_health': {
+            currentHealth: 100,
+            maxHealth: 100,
+            state: 'healthy',
+          },
+        })),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
       // Act
-      const result = await extractor.extractHierarchy({ parts: {} });
+      const result = await extractor.extractFromEntity('test-entity-id');
+
+      // Assert
+      expect(result).not.toBeNull();
+      expect(result.id).toBe(rootEntityId);
+      expect(result.name).toBe('Torso');
+    });
+
+    it('should return null when entityInstanceId is not provided', async () => {
+      // Act
+      const result = await extractor.extractFromEntity(null);
 
       // Assert
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'AnatomyDataExtractor: bodyData.root is required'
+        'AnatomyDataExtractor: entityInstanceId is required for extractFromEntity'
       );
     });
 
-    it('should return null when bodyData is null', async () => {
+    it('should return null when entity is not found', async () => {
+      // Arrange
+      mockEntityManager.getEntityInstance.mockResolvedValue(null);
+
       // Act
-      const result = await extractor.extractHierarchy(null);
+      const result = await extractor.extractFromEntity('non-existent-id');
 
       // Assert
       expect(result).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'AnatomyDataExtractor: Entity not found: non-existent-id'
+      );
+    });
+
+    it('should return null when entity has no anatomy:body component', async () => {
+      // Arrange
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        getComponentData: jest.fn().mockReturnValue(null),
+      });
+
+      // Act
+      const result = await extractor.extractFromEntity('entity-without-anatomy');
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('has no anatomy:body component')
+      );
+    });
+
+    it('should return null when anatomy:body.body is null (not yet generated)', async () => {
+      // Arrange - anatomy:body exists but body is null
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return {
+              recipeId: 'anatomy:human',
+              body: null, // Not yet generated
+            };
+          }
+          return null;
+        }),
+      });
+
+      // Act
+      const result = await extractor.extractFromEntity('entity-pending-generation');
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('anatomy:body.body is null')
+      );
+    });
+
+    it('should return null when anatomy:body.body is undefined', async () => {
+      // Arrange - anatomy:body exists but body property is missing
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return {
+              recipeId: 'anatomy:human',
+              // body property not present
+            };
+          }
+          return null;
+        }),
+      });
+
+      // Act
+      const result = await extractor.extractFromEntity('entity-missing-body');
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('anatomy:body.body is null')
+      );
+    });
+
+    it('should propagate errors from extractHierarchy', async () => {
+      // Arrange - body.root is missing which will cause extractHierarchy to throw
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return {
+              recipeId: 'anatomy:human',
+              body: {
+                // root is missing - invalid structure
+                parts: {},
+              },
+            };
+          }
+          return null;
+        }),
+      });
+
+      // Act & Assert
+      await expect(
+        extractor.extractFromEntity('entity-with-invalid-body')
+      ).rejects.toThrow('bodyData.root is required');
     });
   });
 
@@ -625,7 +826,11 @@ describe('AnatomyDataExtractor', () => {
       // Arrange - anatomy:joint should be preserved as it's mechanical info
       const components = {
         'anatomy:part': { subType: 'torso' },
-        'anatomy:part_health': { current: 100, max: 100 },
+        'anatomy:part_health': {
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+        },
         'anatomy:sockets': { slots: ['neck', 'waist'] },
         'anatomy:joint': { parentId: 'root', socketId: 'neck' },
       };

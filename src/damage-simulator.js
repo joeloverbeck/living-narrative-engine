@@ -102,6 +102,20 @@ async function initialize() {
             '[DamageSimulator] History log element not found, skipping history tracker'
           );
         }
+
+        // Initialize DamageAnalyticsPanel (Analytics Section)
+        const analyticsContainer = document.querySelector('#ds-analytics .ds-analytics-grid');
+        if (analyticsContainer) {
+          const analyticsPanelFactory = container.resolve(tokens.DamageAnalyticsPanel);
+          const analyticsPanel = analyticsPanelFactory(analyticsContainer);
+          damageSimulatorUI.setChildComponent('analytics', analyticsPanel);
+          analyticsPanel.render();
+          logger.info('[DamageSimulator] Analytics panel initialized');
+        } else {
+          logger.warn(
+            '[DamageSimulator] Analytics container not found, skipping analytics panel'
+          );
+        }
       },
     });
   } catch (error) {

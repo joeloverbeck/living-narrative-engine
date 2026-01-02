@@ -170,7 +170,7 @@ describe('DamageSimulatorUI', () => {
 
       expect(DamageSimulatorUI.UI_EVENTS).toBeDefined();
       expect(DamageSimulatorUI.UI_EVENTS.ENTITY_LOADED).toBe(
-        'damage-simulator:entity-loaded'
+        'core:damage_simulator_entity_loaded'
       );
     });
   });
@@ -264,7 +264,7 @@ describe('DamageSimulatorUI', () => {
 
       expect(damageSimulatorUI.getCurrentState()).toBe('loading');
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:entity-loading',
+        'core:damage_simulator_entity_loading',
         { definitionId: 'core:human' }
       );
 
@@ -275,12 +275,12 @@ describe('DamageSimulatorUI', () => {
       await damageSimulatorUI.handleEntitySelection('core:human');
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:entity-loading',
+        'core:damage_simulator_entity_loading',
         { definitionId: 'core:human' }
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:entity-loaded',
+        'core:damage_simulator_entity_loaded',
         expect.objectContaining({
           definitionId: 'core:human',
           instanceId: 'instance-123',
@@ -308,7 +308,7 @@ describe('DamageSimulatorUI', () => {
 
       expect(damageSimulatorUI.getCurrentState()).toBe('error');
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:entity-load-error',
+        'core:damage_simulator_entity_load_error',
         {
           definitionId: 'core:invalid',
           error: 'Failed to load entity',
@@ -381,11 +381,11 @@ describe('DamageSimulatorUI', () => {
         'instance-123'
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:refresh-requested',
+        'core:damage_simulator_refresh_requested',
         { instanceId: 'instance-123' }
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'damage-simulator:entity-loaded',
+        'core:damage_simulator_entity_loaded',
         expect.objectContaining({
           anatomyData: {
             bodyParts: [
