@@ -46,7 +46,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
           }
 
           const handHeldComponent =
-            actorEntity.components?.['hand-holding:hand_held'];
+            actorEntity.components?.['hand-holding-states:hand_held'];
           const holderId = handHeldComponent?.holding_entity_id;
           const closeness =
             actorEntity.components?.['personal-space-states:closeness']?.partners || [];
@@ -61,7 +61,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
           }
 
           const holderComponent =
-            holderEntity.components?.['hand-holding:holding_hand'];
+            holderEntity.components?.['hand-holding-states:holding_hand'];
           if (holderComponent?.held_entity_id !== actorId) {
             return { success: true, value: new Set() };
           }
@@ -108,10 +108,10 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
       );
       expect(withdrawAction.required_components.actor).toEqual([
         'personal-space-states:closeness',
-        'hand-holding:hand_held',
+        'hand-holding-states:hand_held',
       ]);
       expect(withdrawAction.required_components.primary).toEqual([
-        'hand-holding:holding_hand',
+        'hand-holding-states:holding_hand',
       ]);
     });
   });
@@ -119,11 +119,11 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
   describe('Action discovery scenarios', () => {
     it('is available only when both hand-holding components link the pair', () => {
       const scenario = testFixture.createCloseActors(['Riley', 'Sky']);
-      scenario.actor.components['hand-holding:hand_held'] = {
+      scenario.actor.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.target.id,
         consented: true,
       };
-      scenario.target.components['hand-holding:holding_hand'] = {
+      scenario.target.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.actor.id,
         initiated: true,
       };
@@ -142,11 +142,11 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
 
     it('disappears when the actor is no longer marked as hand_held', () => {
       const scenario = testFixture.createCloseActors(['Morgan', 'Tali']);
-      scenario.actor.components['hand-holding:hand_held'] = {
+      scenario.actor.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.target.id,
         consented: true,
       };
-      scenario.target.components['hand-holding:holding_hand'] = {
+      scenario.target.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.actor.id,
         initiated: true,
       };
@@ -161,7 +161,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
       let ids = availableActions.map((action) => action.id);
       expect(ids).toContain(ACTION_ID);
 
-      delete scenario.actor.components['hand-holding:hand_held'];
+      delete scenario.actor.components['hand-holding-states:hand_held'];
       testFixture.reset([room, scenario.actor, scenario.target]);
       configureActionDiscovery();
 
@@ -174,11 +174,11 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
 
     it('disappears when the target is no longer holding the actor', () => {
       const scenario = testFixture.createCloseActors(['Quinn', 'Uma']);
-      scenario.actor.components['hand-holding:hand_held'] = {
+      scenario.actor.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.target.id,
         consented: true,
       };
-      scenario.target.components['hand-holding:holding_hand'] = {
+      scenario.target.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.actor.id,
         initiated: true,
       };
@@ -193,7 +193,7 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
       let ids = availableActions.map((action) => action.id);
       expect(ids).toContain(ACTION_ID);
 
-      delete scenario.target.components['hand-holding:holding_hand'];
+      delete scenario.target.components['hand-holding-states:holding_hand'];
       testFixture.reset([room, scenario.actor, scenario.target]);
       configureActionDiscovery();
 
@@ -206,11 +206,11 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
 
     it('is hidden from other close actors who are not part of the linkage', () => {
       const scenario = testFixture.createCloseActors(['Ari', 'Blake']);
-      scenario.actor.components['hand-holding:hand_held'] = {
+      scenario.actor.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.target.id,
         consented: true,
       };
-      scenario.target.components['hand-holding:holding_hand'] = {
+      scenario.target.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.actor.id,
         initiated: true,
       };
@@ -229,11 +229,11 @@ describe('hand-holding:withdraw_hand_from_grasp action discovery', () => {
         scenario.actor.id
       );
 
-      thirdActor.actor.components['hand-holding:holding_hand'] = {
+      thirdActor.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: thirdActor.target.id,
         initiated: true,
       };
-      thirdActor.target.components['hand-holding:hand_held'] = {
+      thirdActor.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: thirdActor.actor.id,
         consented: true,
       };

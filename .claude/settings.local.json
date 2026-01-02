@@ -666,7 +666,9 @@
       "Bash(do echo \"=== Run $i ===\" NODE_ENV=test npx jest tests/performance/clothing/armorSystemPerformance.performance.test.js --testNamePattern=\"should have constant-time O\\\\\\(1\\\\\\) priority lookup\" --no-coverage --silent)",
       "Bash(timeout 30 npm run validate:operations:*)",
       "Skill(sc:design)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
     ],
     "deny": [],
     "ask": []

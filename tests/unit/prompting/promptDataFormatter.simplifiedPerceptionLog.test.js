@@ -176,7 +176,7 @@ describe('PromptDataFormatter - Simplified Perception Log Enhancement', () => {
         },
         {
           content: 'Bob arrives from the garden.',
-          type: 'character_enter',
+          type: 'movement.arrival',
         },
         {
           content: 'Carol leaves to go to the library.',

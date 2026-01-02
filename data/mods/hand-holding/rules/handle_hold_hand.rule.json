@@ -24,8 +24,8 @@
     {
       "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
       "parameters": {
-        "actor_component_type": "hand-holding:holding_hand",
-        "target_component_type": "hand-holding:hand_held",
+        "actor_component_type": "hand-holding-states:holding_hand",
+        "target_component_type": "hand-holding-states:hand_held",
         "actor_data": {
           "held_entity_id": "{event.payload.targetId}",
           "initiated": true
@@ -35,8 +35,8 @@
           "consented": true
         },
         "existing_component_types_to_clean": [
-          "hand-holding:holding_hand",
-          "hand-holding:hand_held"
+          "hand-holding-states:holding_hand",
+          "hand-holding-states:hand_held"
         ]
       }
     },

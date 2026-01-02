@@ -27,7 +27,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "hand-holding:hand_held",
+        "component_type": "hand-holding-states:hand_held",
         "result_variable": "actorHandHeldComponent"
       }
     },
@@ -35,7 +35,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "hand-holding:holding_hand",
+        "component_type": "hand-holding-states:holding_hand",
         "result_variable": "targetHoldingComponent"
       }
     },
@@ -65,14 +65,14 @@
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "hand-holding:hand_held"
+              "component_type": "hand-holding-states:hand_held"
             }
           },
           {
             "type": "REMOVE_COMPONENT",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "hand-holding:holding_hand"
+              "component_type": "hand-holding-states:holding_hand"
             }
           },
           {

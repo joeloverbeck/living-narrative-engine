@@ -534,7 +534,7 @@ describe('AutoMoveClosenessPartnersHandler - Bug Fix Verification', () => {
             location_id: 'dest',
             description_text:
               'Partner Name moves with Actor Name to Destination Location.',
-            perception_type: 'character_enter',
+            perception_type: 'movement.arrival',
             actor_id: 'partner1',
             target_id: 'actor1',
           }),

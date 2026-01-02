@@ -34,11 +34,11 @@ describe('hand-holding:squeeze_hand_reassuringly action integration', () => {
       location: 'garden',
     });
 
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -74,11 +74,11 @@ describe('hand-holding:squeeze_hand_reassuringly action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });

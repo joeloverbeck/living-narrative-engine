@@ -631,8 +631,9 @@ class DamageCapabilityComposer {
       default: {
         input = document.createElement('input');
         input.type = 'number';
-        if (field.min !== undefined) input.min = String(field.min);
-        if (field.step !== undefined) input.step = String(field.step);
+        // All number fields in EFFECT_CONFIGS have min and step defined
+        input.min = String(field.min);
+        input.step = String(field.step);
         input.value = String(field.defaultValue);
         break;
       }
@@ -854,12 +855,11 @@ class DamageCapabilityComposer {
    * @param {object} fieldMap - Map of config property to element ID
    */
   #updateEffectFromConfig(effectName, fieldMap) {
+    // effectConfig is guaranteed to exist - initialized from DEFAULT_CONFIG
     const effectConfig = this.#config[effectName];
-    if (!effectConfig) return;
 
-    // Find the effect configuration to get checkbox ID
+    // effectDef is guaranteed to exist - only called with hardcoded valid effect names
     const effectDef = EFFECT_CONFIGS.find((e) => e.name === effectName);
-    if (!effectDef) return;
 
     // Update checkbox
     const checkbox = this.#elements.get(effectDef.checkboxId);
@@ -955,35 +955,33 @@ class DamageCapabilityComposer {
    * @param {object} fieldMap - Map of config property to element ID
    */
   #updateEffectConfigFromForm(effectName, fieldMap) {
+    // effectDef is guaranteed to exist - only called with hardcoded valid effect names
     const effectDef = EFFECT_CONFIGS.find((e) => e.name === effectName);
-    if (!effectDef) return;
 
+    // Checkbox is guaranteed to exist - created during initialize()
     const checkbox = this.#elements.get(effectDef.checkboxId);
-    if (!this.#config[effectName]) {
-      this.#config[effectName] = {};
-    }
-
-    this.#config[effectName].enabled = checkbox ? checkbox.checked : false;
+    // Note: this.#config[effectName] is always populated from DEFAULT_CONFIG
+    // via constructor, reset(), or setConfiguration()
+    this.#config[effectName].enabled = checkbox.checked;
 
     for (const [configKey, elementId] of Object.entries(fieldMap)) {
+      // Element is guaranteed to exist - created during initialize()
       const element = this.#elements.get(elementId);
-      if (element) {
-        if (element.type === 'checkbox') {
-          this.#config[effectName][configKey] = element.checked;
-        } else if (element.tagName === 'SELECT') {
-          this.#config[effectName][configKey] = element.value;
+      if (element.type === 'checkbox') {
+        this.#config[effectName][configKey] = element.checked;
+      } else if (element.tagName === 'SELECT') {
+        this.#config[effectName][configKey] = element.value;
+      } else {
+        // Number or range
+        const parsed = parseFloat(element.value);
+        // For integer fields, ensure integer type
+        if (
+          configKey === 'baseDurationTurns' ||
+          configKey === 'durationTurns'
+        ) {
+          this.#config[effectName][configKey] = Math.round(parsed) || 1;
         } else {
-          // Number or range
-          const parsed = parseFloat(element.value);
-          // For integer fields, ensure integer type
-          if (
-            configKey === 'baseDurationTurns' ||
-            configKey === 'durationTurns'
-          ) {
-            this.#config[effectName][configKey] = Math.round(parsed) || 1;
-          } else {
-            this.#config[effectName][configKey] = parsed || 0;
-          }
+          this.#config[effectName][configKey] = parsed || 0;
         }
       }
     }
@@ -1110,8 +1108,8 @@ class DamageCapabilityComposer {
    * @param {string[]} errors - Error messages
    */
   #showValidationErrors(errors) {
+    // Container is guaranteed to exist - created during initialize()
     const container = this.#elements.get(ELEMENT_IDS.validationErrors);
-    if (!container) return;
 
     container.innerHTML = '';
 
@@ -1127,10 +1125,9 @@ class DamageCapabilityComposer {
    * @private
    */
   #clearValidationErrors() {
+    // Container is guaranteed to exist - created during initialize()
     const container = this.#elements.get(ELEMENT_IDS.validationErrors);
-    if (container) {
-      container.innerHTML = '';
-    }
+    container.innerHTML = '';
   }
 
   /**

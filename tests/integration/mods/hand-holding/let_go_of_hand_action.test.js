@@ -134,7 +134,7 @@ describe('hand-holding:let_go_of_hand action integration', () => {
 
           // For with_hands scope (hold_hand), check if target has their hand already held
           // Don't apply this check for base scope (let_go_of_hand needs target to have hand_held)
-          if (requireHands && partner.components?.['hand-holding:hand_held']) {
+          if (requireHands && partner.components?.['hand-holding-states:hand_held']) {
             return acc;
           }
 
@@ -169,11 +169,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
     const scenario = testFixture.createCloseActors(['Harper', 'Indigo'], {
       location: 'garden',
     });
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -214,20 +214,20 @@ describe('hand-holding:let_go_of_hand action integration', () => {
     );
 
     expect(
-      actorInstance.components['hand-holding:holding_hand']
+      actorInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
-    expect(targetInstance.components['hand-holding:hand_held']).toBeUndefined();
+    expect(targetInstance.components['hand-holding-states:hand_held']).toBeUndefined();
   });
 
   it('does not disturb other hand-holding relationships', async () => {
     const scenario = testFixture.createCloseActors(['Jordan', 'Kai'], {
       location: 'plaza',
     });
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -238,11 +238,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
       closeProximity: true,
       idPrefix: 'extra_',
     });
-    otherPair.actor.components['hand-holding:holding_hand'] = {
+    otherPair.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: otherPair.target.id,
       initiated: true,
     };
-    otherPair.target.components['hand-holding:hand_held'] = {
+    otherPair.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: otherPair.actor.id,
       consented: true,
     };
@@ -265,11 +265,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
       otherPair.target.id
     );
 
-    expect(otherActorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(otherActorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: otherPair.target.id,
       initiated: true,
     });
-    expect(otherTargetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(otherTargetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: otherPair.actor.id,
       consented: true,
     });
@@ -277,11 +277,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
 
   it('restores hold hand availability and hides let go after release', async () => {
     const scenario = testFixture.createCloseActors(['Noa', 'Parker']);
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -316,11 +316,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
 
   it('ignores attempt_action events for other hand-holding actions', async () => {
     const scenario = testFixture.createCloseActors(['Quinn', 'Rhea']);
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };
@@ -343,11 +343,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
@@ -360,11 +360,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
 
   it('does not clear components when entity references do not match', async () => {
     const scenario = testFixture.createCloseActors(['Sage', 'Tatum']);
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: 'hand-holding:someone_else',
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: 'hand-holding:different_actor',
       consented: true,
     };
@@ -384,11 +384,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: 'hand-holding:someone_else',
       initiated: true,
     });
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: 'hand-holding:different_actor',
       consented: true,
     });
@@ -396,11 +396,11 @@ describe('hand-holding:let_go_of_hand action integration', () => {
 
   it('cannot be executed twice in a row without re-establishing the hold', async () => {
     const scenario = testFixture.createCloseActors(['Uma', 'Vince']);
-    scenario.actor.components['hand-holding:holding_hand'] = {
+    scenario.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.target.id,
       initiated: true,
     };
-    scenario.target.components['hand-holding:hand_held'] = {
+    scenario.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.actor.id,
       consented: true,
     };

@@ -64,16 +64,16 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
             }
 
             const actorHoldingPartner =
-              actorEntity.components?.['hand-holding:holding_hand']
+              actorEntity.components?.['hand-holding-states:holding_hand']
                 ?.held_entity_id === partnerId;
             const actorHandHeldByPartner =
-              actorEntity.components?.['hand-holding:hand_held']
+              actorEntity.components?.['hand-holding-states:hand_held']
                 ?.holding_entity_id === partnerId;
             const partnerHoldingActor =
-              partner.components?.['hand-holding:holding_hand']
+              partner.components?.['hand-holding-states:holding_hand']
                 ?.held_entity_id === actorId;
             const partnerHandHeldByActor =
-              partner.components?.['hand-holding:hand_held']
+              partner.components?.['hand-holding-states:hand_held']
                 ?.holding_entity_id === actorId;
 
             if (
@@ -161,11 +161,11 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
 
     it('is available when the actor initiated the hand hold', () => {
       const scenario = testFixture.createCloseActors(['Maya', 'Noah']);
-      scenario.actor.components['hand-holding:holding_hand'] = {
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };
@@ -184,11 +184,11 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
 
     it('is available to the partner whose hand is being held', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      scenario.actor.components['hand-holding:holding_hand'] = {
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };
@@ -207,11 +207,11 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
 
     it('is not available when actors are not in closeness even with hand holding', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
-      scenario.actor.components['hand-holding:holding_hand'] = {
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };
@@ -232,11 +232,11 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
 
     it('is not available when the actor faces away from the target', () => {
       const scenario = testFixture.createCloseActors(['Chloe', 'Evan']);
-      scenario.actor.components['hand-holding:holding_hand'] = {
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };

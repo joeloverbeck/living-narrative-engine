@@ -9,11 +9,11 @@
   },
   "forbidden_components": {
     "actor": [
-      "hand-holding:holding_hand",
-      "hand-holding:hand_held",
+      "hand-holding-states:holding_hand",
+      "hand-holding-states:hand_held",
       "hugging-states:hugging"
     ],
-    "primary": ["hand-holding:hand_held"]
+    "primary": ["hand-holding-states:hand_held"]
   },
   "template": "hold {target}'s hand",
   "prerequisites": [],

@@ -34,6 +34,12 @@ describe('personal-space:step_back action discovery', () => {
       expect(stepBackAction.forbidden_components.actor).toContain(
         'biting-states:biting_neck'
       );
+      expect(stepBackAction.forbidden_components.actor).toContain(
+        'hand-holding-states:holding_hand'
+      );
+      expect(stepBackAction.forbidden_components.actor).toContain(
+        'hand-holding-states:hand_held'
+      );
     });
 
     it('should NOT appear when actor has fucking_anally component', () => {
@@ -43,6 +49,46 @@ describe('personal-space:step_back action discovery', () => {
       scenario.actor.components['sex-states:fucking_anally'] = {
         being_fucked_entity_id: 'other_entity',
         initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = actions.map((action) => action.id);
+
+      expect(ids).not.toContain('personal-space:step_back');
+    });
+
+    it('should NOT appear when actor has holding_hand component', () => {
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Alice is holding Bob's hand
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
+        held_entity_id: scenario.target.id,
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
+      const ids = actions.map((action) => action.id);
+
+      expect(ids).not.toContain('personal-space:step_back');
+    });
+
+    it('should NOT appear when actor has hand_held component', () => {
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Alice's hand is being held by Bob
+      scenario.actor.components['hand-holding-states:hand_held'] = {
+        holding_entity_id: scenario.target.id,
+        consented: true,
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');

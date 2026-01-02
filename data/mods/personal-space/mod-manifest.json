@@ -14,6 +14,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "hand-holding-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "recovery-states",
       "version": "^1.0.0"
     },

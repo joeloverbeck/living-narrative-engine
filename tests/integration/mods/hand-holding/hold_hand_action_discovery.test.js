@@ -106,7 +106,7 @@ describe('hand-holding:hold_hand action discovery', () => {
               return acc;
             }
 
-            if (partner.components?.['hand-holding:hand_held']) {
+            if (partner.components?.['hand-holding-states:hand_held']) {
               return acc;
             }
 
@@ -150,12 +150,12 @@ describe('hand-holding:hold_hand action discovery', () => {
         'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
       );
       expect(holdHandAction.forbidden_components.actor).toEqual([
-        'hand-holding:holding_hand',
-        'hand-holding:hand_held',
+        'hand-holding-states:holding_hand',
+        'hand-holding-states:hand_held',
         'hugging-states:hugging',
       ]);
       expect(holdHandAction.forbidden_components.primary).toEqual([
-        'hand-holding:hand_held',
+        'hand-holding-states:hand_held',
       ]);
     });
   });
@@ -189,11 +189,11 @@ describe('hand-holding:hold_hand action discovery', () => {
 
     it('is blocked when the actor already holds a hand and returns once released', () => {
       const scenario = testFixture.createCloseActors(['Nina', 'Owen']);
-      scenario.actor.components['hand-holding:holding_hand'] = {
+      scenario.actor.components['hand-holding-states:holding_hand'] = {
         held_entity_id: scenario.target.id,
         initiated: true,
       };
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: scenario.actor.id,
         consented: true,
       };
@@ -214,8 +214,8 @@ describe('hand-holding:hold_hand action discovery', () => {
       let ids = availableActions.map((action) => action.id);
       expect(ids).not.toContain(ACTION_ID);
 
-      delete scenario.actor.components['hand-holding:holding_hand'];
-      delete scenario.target.components['hand-holding:hand_held'];
+      delete scenario.actor.components['hand-holding-states:holding_hand'];
+      delete scenario.target.components['hand-holding-states:hand_held'];
       testFixture.reset([
         room,
         scenario.actor,
@@ -233,7 +233,7 @@ describe('hand-holding:hold_hand action discovery', () => {
 
     it('is blocked when the target already has their hand held', () => {
       const scenario = testFixture.createCloseActors(['Ivy', 'Liam']);
-      scenario.target.components['hand-holding:hand_held'] = {
+      scenario.target.components['hand-holding-states:hand_held'] = {
         holding_entity_id: 'someone_else',
         consented: true,
       };
@@ -252,7 +252,7 @@ describe('hand-holding:hold_hand action discovery', () => {
 
     it('is blocked when the actor has their hand held by someone else', () => {
       const scenario = testFixture.createCloseActors(['Marla', 'Iker']);
-      scenario.actor.components['hand-holding:hand_held'] = {
+      scenario.actor.components['hand-holding-states:hand_held'] = {
         holding_entity_id: 'someone_else',
         consented: true,
       };

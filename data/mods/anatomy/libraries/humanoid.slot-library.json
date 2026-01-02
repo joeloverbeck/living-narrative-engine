@@ -195,10 +195,6 @@
         "right_ass"
       ],
       "allowedLayers": ["underwear", "base", "outer", "armor"]
-    },
-    "standard_back_accessory": {
-      "anatomySockets": ["upper_back", "lower_back"],
-      "allowedLayers": ["accessories", "armor"]
     }
   }
 }

@@ -18,7 +18,7 @@ import ActivityIndexManager from '../../../src/anatomy/services/activityIndexMan
 import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
 import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
 import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
-import holdingHandComponent from '../../../data/mods/hand-holding/components/holding_hand.component.json';
+import holdingHandComponent from '../../../data/mods/hand-holding-states/components/holding_hand.component.json';
 import sittingOnComponent from '../../../data/mods/sitting-states/components/sitting_on.component.json';
 import beingHuggedComponent from '../../../data/mods/hugging-states/components/being_hugged.component.json';
 import livingRoomSofaDefinition from '../../../data/mods/furniture/entities/definitions/living_room_sofa.entity.json';

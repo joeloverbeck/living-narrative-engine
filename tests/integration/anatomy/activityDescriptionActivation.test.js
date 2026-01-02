@@ -24,14 +24,14 @@ describe('Activity Description System Activation', () => {
       targetRole: 'followers',
     },
     {
-      mod: 'hand-holding',
+      mod: 'hand-holding-states',
       name: 'hand_held',
       expectedTemplate: 'hand is being held',
       priority: 65,
       targetRole: 'holding_entity_id',
     },
     {
-      mod: 'hand-holding',
+      mod: 'hand-holding-states',
       name: 'holding_hand',
       expectedTemplate: 'is holding',
       priority: 67,
