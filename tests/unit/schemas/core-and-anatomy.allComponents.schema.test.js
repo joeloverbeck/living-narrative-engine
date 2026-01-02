@@ -150,6 +150,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
       rules: [{ childSocketId: 'heart_socket', baseProbability: 0.3 }],
     },
     'anatomy:embedded': {},
+    'anatomy:has_rigid_structure': {},
     'anatomy:provides_hearing': {},
     'anatomy:provides_sight': {},
     'anatomy:provides_smell': {},
@@ -224,6 +225,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:dead': { vitalOrganDestroyed: 'heart' }, // Missing required causeOfDeath and deathTimestamp
     'anatomy:damage_propagation': { rules: 'not_an_array' }, // Invalid type
     'anatomy:embedded': { extra: true }, // additionalProperties: false
+    'anatomy:has_rigid_structure': { structureType: 'wood' },
     'anatomy:provides_hearing': { extra: true }, // additionalProperties: false
     'anatomy:provides_sight': { extra: true }, // additionalProperties: false
     'anatomy:provides_smell': { extra: true }, // additionalProperties: false

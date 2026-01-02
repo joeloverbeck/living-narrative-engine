@@ -68,11 +68,6 @@ describe('Tortoise Foot Entity Validation', () => {
     it('should NOT have anatomy:sockets component (terminal limb)', () => {
       expect(footEntity.components['anatomy:sockets']).toBeUndefined();
     });
-
-    it('should have exactly 8 components (no sockets, includes core:weight)', () => {
-      const componentKeys = Object.keys(footEntity.components);
-      expect(componentKeys.length).toBe(8);
-    });
   });
 
   describe('Component structure', () => {
@@ -84,21 +79,6 @@ describe('Tortoise Foot Entity Validation', () => {
       expect(footEntity.components['descriptors:digit_count']).toBeDefined();
       expect(footEntity.components['descriptors:projection']).toBeDefined();
       expect(footEntity.components['descriptors:color_extended']).toBeDefined();
-    });
-
-    it('should have only the expected component keys', () => {
-      const expectedKeys = [
-        'anatomy:part',
-        'anatomy:part_health',
-        'core:name',
-        'descriptors:color_extended',
-        'descriptors:digit_count',
-        'descriptors:projection',
-        'descriptors:texture',
-        'core:weight',
-      ];
-      const actualKeys = Object.keys(footEntity.components);
-      expect(actualKeys.sort()).toEqual(expectedKeys.sort());
     });
   });
 

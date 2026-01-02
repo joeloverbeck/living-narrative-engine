@@ -271,6 +271,118 @@ describe('WeaponPresetLoader', () => {
         expect.any(Error)
       );
     });
+
+    it('should handle null definitions in registry', () => {
+      mockDataRegistry.getAllEntityDefinitions.mockReturnValue([
+        null,
+        undefined,
+        createMockWeaponDef('fantasy:valid_weapon', 'valid weapon', [
+          { name: 'slashing', amount: 10, penetration: 0.2 },
+        ]),
+      ]);
+      loader.clearCache();
+
+      const presets = loader.getAvailablePresets();
+
+      // Should filter out null/undefined and only return valid weapon
+      expect(presets).toHaveLength(1);
+      expect(presets[0].id).toBe('fantasy:valid_weapon');
+    });
+
+    it('should handle definitions without components property', () => {
+      mockDataRegistry.getAllEntityDefinitions.mockReturnValue([
+        { id: 'test:no_components' }, // Missing components entirely
+        { id: 'test:null_components', components: null }, // null components
+        createMockWeaponDef('fantasy:valid_weapon', 'valid weapon', [
+          { name: 'piercing', amount: 15, penetration: 0.4 },
+        ]),
+      ]);
+      loader.clearCache();
+
+      const presets = loader.getAvailablePresets();
+
+      expect(presets).toHaveLength(1);
+      expect(presets[0].id).toBe('fantasy:valid_weapon');
+    });
+
+    it('should handle errors during preset extraction gracefully', () => {
+      // Create a malformed definition that will cause extraction to throw
+      const malformedDef = {
+        id: 'test:malformed',
+        components: {
+          'weapons:weapon': {},
+          'damage-types:damage_capabilities': {
+            // Make entries a getter that throws
+            get entries() {
+              throw new Error('Cannot access entries');
+            },
+          },
+        },
+      };
+
+      mockDataRegistry.getAllEntityDefinitions.mockReturnValue([
+        malformedDef,
+        createMockWeaponDef('fantasy:valid_weapon', 'valid weapon', [
+          { name: 'blunt', amount: 12, penetration: 0.1 },
+        ]),
+      ]);
+      loader.clearCache();
+
+      const presets = loader.getAvailablePresets();
+
+      // Should log warning and skip malformed, but still return valid
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error extracting preset from definition'),
+        'test:malformed',
+        expect.any(Error)
+      );
+      expect(presets).toHaveLength(1);
+      expect(presets[0].id).toBe('fantasy:valid_weapon');
+    });
+
+    it('should handle damage_capabilities without entries property', () => {
+      mockDataRegistry.getAllEntityDefinitions.mockReturnValue([
+        {
+          id: 'test:no_entries_property',
+          components: {
+            'weapons:weapon': {},
+            'damage-types:damage_capabilities': {
+              // Missing entries property entirely
+              someOtherProp: 'value',
+            },
+          },
+        },
+      ]);
+      loader.clearCache();
+
+      const presets = loader.getAvailablePresets();
+
+      // Should treat missing entries as empty array and filter out
+      expect(presets).toHaveLength(0);
+    });
+
+    it('should use "unknown" when damage entry name is missing', () => {
+      mockDataRegistry.getAllEntityDefinitions.mockReturnValue([
+        {
+          id: 'test:no_entry_name',
+          components: {
+            'core:name': { text: 'nameless damage weapon' },
+            'weapons:weapon': {},
+            'damage-types:damage_capabilities': {
+              entries: [
+                { amount: 10, penetration: 0.2 }, // Missing name property
+              ],
+            },
+          },
+        },
+      ]);
+      loader.clearCache();
+
+      const presets = loader.getAvailablePresets();
+
+      expect(presets).toHaveLength(1);
+      expect(presets[0].damageType).toBe('unknown');
+    });
   });
 
   describe('loadPreset', () => {
@@ -335,6 +447,40 @@ describe('WeaponPresetLoader', () => {
         expect.stringContaining('Loaded preset successfully'),
         'fantasy:vespera_rapier',
         'piercing'
+      );
+    });
+
+    it('should handle errors thrown during preset loading gracefully', () => {
+      // Make the event dispatch throw an error during the successful loading path
+      const throwingEventBus = {
+        dispatch: jest.fn().mockImplementation((eventType) => {
+          if (eventType === PRESET_EVENTS.PRESET_LOADED) {
+            throw new Error('Event dispatch failed');
+          }
+        }),
+      };
+
+      const errorLoader = new WeaponPresetLoader({
+        dataRegistry: mockDataRegistry,
+        eventBus: throwingEventBus,
+        logger: mockLogger,
+      });
+
+      const result = errorLoader.loadPreset('fantasy:vespera_rapier');
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error loading preset'),
+        'fantasy:vespera_rapier',
+        expect.any(Error)
+      );
+      // The error event should be dispatched with the error message
+      expect(throwingEventBus.dispatch).toHaveBeenCalledWith(
+        PRESET_EVENTS.PRESET_LOAD_ERROR,
+        expect.objectContaining({
+          weaponDefId: 'fantasy:vespera_rapier',
+          error: 'Event dispatch failed',
+        })
       );
     });
   });

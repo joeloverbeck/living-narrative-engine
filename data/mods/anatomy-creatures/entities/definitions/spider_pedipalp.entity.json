@@ -8,6 +8,9 @@
       "hit_probability_weight": 2,
       "health_calculation_weight": 1
     },
+    "anatomy:has_rigid_structure": {
+      "structureType": "chitin"
+    },
     "anatomy:part_health": {
       "currentHealth": 15,
       "maxHealth": 15,

@@ -545,6 +545,60 @@ describe('DamageHistoryTracker', () => {
     });
   });
 
+  describe('clear button click handler', () => {
+    it('should call clearHistory and render when clear button is clicked', () => {
+      // Create a mock button that captures the click handler
+      let capturedClickHandler;
+      const mockClearBtn = {
+        addEventListener: jest.fn((event, handler) => {
+          if (event === 'click') {
+            capturedClickHandler = handler;
+          }
+        }),
+      };
+
+      // Set up querySelector to return the mock button
+      const localMockContainer = {
+        innerHTML: '',
+        appendChild: jest.fn(),
+        querySelector: jest.fn((selector) => {
+          if (selector === '#clear-history-btn') {
+            return mockClearBtn;
+          }
+          return null;
+        }),
+      };
+
+      const tracker = new DamageHistoryTracker({
+        containerElement: localMockContainer,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      // Add an entry so there's data to clear
+      tracker.record({ success: true, damageDealt: 10, targetPartName: 'Head' });
+      expect(tracker.getEntries()).toHaveLength(1);
+
+      // Trigger render which calls #attachEventListeners
+      tracker.render();
+
+      // Verify event listener was attached
+      expect(mockClearBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+
+      // Simulate the click by calling the captured handler
+      expect(capturedClickHandler).toBeDefined();
+      capturedClickHandler();
+
+      // Verify clearHistory was called (entries cleared)
+      expect(tracker.getEntries()).toHaveLength(0);
+
+      // Verify render was called (innerHTML updated to empty state)
+      expect(localMockContainer.innerHTML).toContain('No damage applied yet');
+
+      tracker.destroy();
+    });
+  });
+
   describe('XSS prevention', () => {
     it('should escape HTML in part names', () => {
       damageHistoryTracker.record({
@@ -569,6 +623,48 @@ describe('DamageHistoryTracker', () => {
 
       const html = mockContainerElement.innerHTML;
       expect(html).not.toContain('<img');
+    });
+
+  });
+
+  describe('edge cases', () => {
+    it('should default empty severity to unknown', () => {
+      damageHistoryTracker.record({
+        success: true,
+        damageDealt: 10,
+        severity: '', // Empty string - falsy, should default to 'unknown'
+      });
+
+      const entries = damageHistoryTracker.getEntries();
+      expect(entries[0].severity).toBe('unknown');
+    });
+
+    it('should handle non-function unsubscribers gracefully during destroy', () => {
+      // Create a tracker with mocked subscribe that returns non-function
+      const localMockEventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn().mockReturnValue('not-a-function'), // Return non-function
+      };
+
+      const tracker = new DamageHistoryTracker({
+        containerElement: mockContainerElement,
+        eventBus: localMockEventBus,
+        logger: mockLogger,
+      });
+
+      // Should not throw when destroy is called with non-function unsubscribers
+      expect(() => tracker.destroy()).not.toThrow();
+    });
+
+    it('should handle null damageDealt in statistics calculation', () => {
+      damageHistoryTracker.record({
+        success: true,
+        damageDealt: null, // Null damage
+      });
+
+      const stats = damageHistoryTracker.getStatistics();
+      expect(stats.totalDamage).toBe(0);
+      expect(stats.hitCount).toBe(1);
     });
   });
 });

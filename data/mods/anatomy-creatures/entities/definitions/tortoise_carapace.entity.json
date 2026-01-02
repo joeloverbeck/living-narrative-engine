@@ -8,6 +8,9 @@
       "hit_probability_weight": 32,
       "health_calculation_weight": 10
     },
+    "anatomy:has_rigid_structure": {
+      "structureType": "shell"
+    },
     "anatomy:part_health": {
       "currentHealth": 100,
       "maxHealth": 100,

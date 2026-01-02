@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:has_rigid_structure",
+  "description": "Marks a body part as containing rigid internal structure (bones, cartilage, carapace, etc.) that can be fractured under sufficient trauma.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "structureType": {
+        "type": "string",
+        "enum": ["bone", "cartilage", "chitin", "carapace", "exoskeleton", "shell"],
+        "description": "The type of rigid structure. Used for narrative purposes.",
+        "default": "bone"
+      }
+    },
+    "additionalProperties": false
+  }
+}

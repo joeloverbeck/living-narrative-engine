@@ -13,6 +13,9 @@
       "maxHealth": 12,
       "state": "healthy"
     },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
+    },
     "anatomy:vital_organ": {
       "organType": "spine",
       "healthCapThreshold": 20,

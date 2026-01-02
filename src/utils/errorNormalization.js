@@ -44,7 +44,13 @@ export function safeAugmentError(error, propName, value) {
     /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (error))[
       propName
     ] = value;
-    return true;
+    // Verify assignment succeeded (handles silent failures like __proto__ on frozen objects)
+    return (
+      Object.prototype.hasOwnProperty.call(error, propName) &&
+      /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (error))[
+        propName
+      ] === value
+    );
   } catch {
     return false;
   }

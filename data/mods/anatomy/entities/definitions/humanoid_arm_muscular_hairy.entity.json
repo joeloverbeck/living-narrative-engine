@@ -47,6 +47,9 @@
           }
         }
       ]
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

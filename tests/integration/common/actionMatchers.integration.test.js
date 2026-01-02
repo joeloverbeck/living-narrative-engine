@@ -97,7 +97,7 @@ describe('actionMatchers integration - real action discovery', () => {
 
       let errorMessage;
       try {
-        expect(actions).toHaveAction('affection:place_hands_on_shoulders');
+        expect(actions).toHaveAction('affection-embracing:place_hands_on_shoulders');
       } catch (err) {
         errorMessage = err.message;
       }
@@ -250,7 +250,7 @@ describe('actionMatchers integration - real action discovery', () => {
       // Should list actual actions (at least one should be present)
       const hasActionList =
         errorMessage.includes('physical-control:turn_around') ||
-        errorMessage.includes('affection:place_hands_on_shoulders');
+        errorMessage.includes('affection-embracing:place_hands_on_shoulders');
       expect(hasActionList).toBe(true);
     });
   });
@@ -294,7 +294,7 @@ describe('actionMatchers integration - real action discovery', () => {
       );
 
       // Check for presence of specific action that should be discovered
-      expect(actions).toHaveAction('affection:place_hands_on_shoulders');
+      expect(actions).toHaveAction('affection-embracing:place_hands_on_shoulders');
 
       // Verify action count is reasonable (at least 1)
       expect(actions.length).toBeGreaterThan(0);

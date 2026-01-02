@@ -485,6 +485,22 @@
   border-bottom: none;
 }
 
+/* Status Column in Hits Table */
+.ds-status-cell {
+  text-align: center;
+  min-width: 60px;
+}
+
+.ds-status-cell .ds-part-effects {
+  display: inline-flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.ds-status-cell .ds-effect {
+  font-size: 12px;
+}
+
 /* Critical Part Highlighting */
 .ds-critical-part {
   font-weight: 600;

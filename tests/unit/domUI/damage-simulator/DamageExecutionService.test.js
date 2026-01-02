@@ -276,6 +276,37 @@ describe('DamageExecutionService', () => {
       });
     });
 
+    it('should fallback to partId when partType is missing in damage event', async () => {
+      // Test the FALSE branch of: payload.partType || payload.partId
+      let eventHandler;
+      mockEventBus.subscribe.mockImplementation((eventType, handler) => {
+        eventHandler = handler;
+        return () => {};
+      });
+
+      mockOperationInterpreter.execute.mockImplementation(() => {
+        eventHandler({
+          payload: {
+            partId: 'arm-456',
+            // partType is missing/undefined
+            amount: 15,
+            damageType: 'bludgeoning',
+            severity: 'minor',
+          },
+        });
+        return Promise.resolve();
+      });
+
+      const result = await damageExecutionService.applyDamage({
+        entityId,
+        damageEntry,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].targetPartName).toBe('arm-456');
+    });
+
     it('should emit execution started event', async () => {
       await damageExecutionService.applyDamage({
         entityId,
@@ -380,6 +411,19 @@ describe('DamageExecutionService', () => {
       expect(unsubscribeMock).toHaveBeenCalledTimes(1);
     });
 
+    it('should handle non-function unsubscribe return value gracefully', async () => {
+      // Test the FALSE branch of: if (typeof unsubscribe === 'function')
+      mockEventBus.subscribe.mockReturnValue(null);
+
+      const result = await damageExecutionService.applyDamage({
+        entityId,
+        damageEntry,
+      });
+
+      // Should still complete successfully without calling unsubscribe
+      expect(result.success).toBe(true);
+    });
+
     it('should handle sync operation interpreter results', async () => {
       mockOperationInterpreter.execute.mockReturnValue(undefined);
 
@@ -426,6 +470,74 @@ describe('DamageExecutionService', () => {
       // Despite null actor, no error should be logged because suppressPerceptibleEvents
       // prevents the code path that would check for actor/target location
       expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('should build entity context with components when entity has getComponentIds', async () => {
+      const mockEntity = {
+        id: 'entity-123',
+        getComponentIds: jest.fn().mockReturnValue(['comp:a', 'comp:b']),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockEntityManager.getComponentData.mockImplementation((entId, compId) => {
+        if (compId === 'comp:a') return { value: 'a' };
+        if (compId === 'comp:b') return { value: 'b' };
+        return null;
+      });
+
+      await damageExecutionService.applyDamage({
+        entityId: 'entity-123',
+        damageEntry,
+      });
+
+      const executionContext = mockOperationInterpreter.execute.mock.calls[0][1];
+      expect(executionContext.evaluationContext.target).toEqual({
+        id: 'entity-123',
+        components: {
+          'comp:a': { value: 'a' },
+          'comp:b': { value: 'b' },
+        },
+      });
+    });
+
+    it('should build entity context with empty components when entity lacks getComponentIds', async () => {
+      const mockEntity = {
+        id: 'entity-456',
+        // No getComponentIds method - tests the FALSE branch of the ternary
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      await damageExecutionService.applyDamage({
+        entityId: 'entity-456',
+        damageEntry,
+      });
+
+      const executionContext = mockOperationInterpreter.execute.mock.calls[0][1];
+      expect(executionContext.evaluationContext.target).toEqual({
+        id: 'entity-456',
+        components: {},
+      });
+    });
+
+    it('should handle entity with empty component list', async () => {
+      const mockEntity = {
+        id: 'entity-789',
+        getComponentIds: jest.fn().mockReturnValue([]),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      await damageExecutionService.applyDamage({
+        entityId: 'entity-789',
+        damageEntry,
+      });
+
+      const executionContext = mockOperationInterpreter.execute.mock.calls[0][1];
+      expect(executionContext.evaluationContext.target).toEqual({
+        id: 'entity-789',
+        components: {},
+      });
     });
   });
 
@@ -530,6 +642,56 @@ describe('DamageExecutionService', () => {
       const parts = damageExecutionService.getTargetableParts('entity-123');
 
       expect(parts[0].weight).toBe(1);
+    });
+
+    it('should skip parts with no part data', () => {
+      // Test the FALSE branch of: if (partData)
+      mockEntityManager.getEntityInstance.mockReturnValue({ id: 'entity-123' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === DamageExecutionService.COMPONENT_IDS.BODY) {
+            return { parts: ['part-head', 'part-missing', 'part-arm'] };
+          }
+          // Return null for part-missing to test the falsy branch
+          if (entityId === 'part-missing') {
+            return null;
+          }
+          if (componentId === DamageExecutionService.COMPONENT_IDS.PART) {
+            return { subType: 'head', targetWeight: 2 };
+          }
+          if (componentId === DamageExecutionService.COMPONENT_IDS.NAME) {
+            return { name: 'Head' };
+          }
+          return null;
+        }
+      );
+
+      const parts = damageExecutionService.getTargetableParts('entity-123');
+
+      // Should only have 2 parts (part-head and part-arm), not part-missing
+      expect(parts.length).toBe(2);
+      expect(parts.map((p) => p.id)).toEqual(['part-head', 'part-arm']);
+    });
+
+    it('should fallback to partId when name and subType are missing', () => {
+      mockEntityManager.getEntityInstance.mockReturnValue({ id: 'entity-123' });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === DamageExecutionService.COMPONENT_IDS.BODY) {
+            return { parts: ['part-xyz'] };
+          }
+          if (componentId === DamageExecutionService.COMPONENT_IDS.PART) {
+            // No subType property
+            return { targetWeight: 1 };
+          }
+          // No name component
+          return null;
+        }
+      );
+
+      const parts = damageExecutionService.getTargetableParts('entity-123');
+
+      expect(parts[0].name).toBe('part-xyz');
     });
   });
 

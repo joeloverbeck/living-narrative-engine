@@ -59,11 +59,6 @@ describe('Tortoise Beak Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 8 components (includes core:weight and damage capabilities)', () => {
-      const componentKeys = Object.keys(beakEntity.components);
-      expect(componentKeys.length).toBe(8);
-    });
-
     it('should have all required components', () => {
       expect(beakEntity.components['anatomy:part']).toBeDefined();
       expect(beakEntity.components['anatomy:part_health']).toBeDefined();

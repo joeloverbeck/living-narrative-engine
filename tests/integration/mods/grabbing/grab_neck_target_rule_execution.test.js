@@ -59,7 +59,7 @@ describe('grabbing:grab_neck_target rule execution', () => {
       .asActor()
       .atLocation(ROOM_ID)
       .withLocationComponent(ROOM_ID)
-      .withComponent('skills:melee_skill', { value: 15 })
+      .withComponent('skills:grappling_skill', { value: 15 })
       .withGrabbingHands(1)
       .closeToEntity(targetId);
 

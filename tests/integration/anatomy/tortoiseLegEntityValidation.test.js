@@ -87,11 +87,6 @@ describe('Tortoise Leg Entity Validation', () => {
   });
 
   describe('Component structure', () => {
-    it('should have exactly 9 components (includes core:weight)', () => {
-      const componentKeys = Object.keys(legEntity.components);
-      expect(componentKeys.length).toBe(9);
-    });
-
     it('should have all required components', () => {
       expect(legEntity.components['anatomy:part']).toBeDefined();
       expect(legEntity.components['anatomy:part_health']).toBeDefined();

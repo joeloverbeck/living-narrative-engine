@@ -955,4 +955,197 @@ describe('HierarchicalAnatomyRenderer', () => {
       expect(mockContainer.querySelector('.ds-effect-poisoned')).not.toBeNull();
     });
   });
+
+  describe('DOM Manipulation Edge Cases', () => {
+    it('should handle missing healthBarFill element gracefully during update', () => {
+      const rootNode = createMockNode({
+        health: { current: 100, max: 100 },
+      });
+      renderer.render(rootNode);
+
+      // Remove healthBarFill element to simulate external DOM manipulation
+      const healthBarFill = mockContainer.querySelector('.ds-health-bar-fill');
+      healthBarFill.remove();
+
+      // Should not throw when updating
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          health: { current: 50, max: 100 },
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle missing healthText element gracefully during update', () => {
+      const rootNode = createMockNode({
+        health: { current: 100, max: 100 },
+      });
+      renderer.render(rootNode);
+
+      // Remove healthText element to simulate external DOM manipulation
+      const healthText = mockContainer.querySelector('.ds-part-card-health');
+      healthText.remove();
+
+      // Should not throw when updating
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          health: { current: 50, max: 100 },
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle missing childrenContainer gracefully on expand click', () => {
+      const rootNode = createMockNode({
+        children: [createMockNode({ id: 'child' })],
+      });
+      renderer.render(rootNode);
+
+      // Remove childrenContainer to simulate external DOM manipulation
+      const childrenContainer = mockContainer.querySelector('.ds-part-children');
+      childrenContainer.remove();
+
+      const expandButton = mockContainer.querySelector('.ds-part-expand');
+
+      // Should not throw when clicking expand with missing children container
+      expect(() => {
+        expandButton.click();
+      }).not.toThrow();
+    });
+
+    it('should handle oxygen with max <= 0', () => {
+      const rootNode = createMockNode({
+        components: {
+          'breathing-states:respiratory_organ': {
+            oxygenCapacity: 0,
+            currentOxygen: 0,
+          },
+        },
+      });
+      renderer.render(rootNode);
+
+      const oxygenFill = mockContainer.querySelector('.ds-oxygen-fill');
+      expect(oxygenFill.style.width).toBe('0%');
+    });
+
+    it('should handle missing oxygenFill element gracefully during update', () => {
+      const rootNode = createMockNode({
+        components: {
+          'breathing-states:respiratory_organ': {
+            oxygenCapacity: 10,
+            currentOxygen: 10,
+          },
+        },
+      });
+      renderer.render(rootNode);
+
+      // Remove oxygenFill element to simulate external DOM manipulation
+      const oxygenFill = mockContainer.querySelector('.ds-oxygen-fill');
+      oxygenFill.remove();
+
+      // Should not throw when updating
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          components: {
+            'breathing-states:respiratory_organ': {
+              oxygenCapacity: 10,
+              currentOxygen: 5,
+            },
+          },
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle missing oxygenText element gracefully during update', () => {
+      const rootNode = createMockNode({
+        components: {
+          'breathing-states:respiratory_organ': {
+            oxygenCapacity: 10,
+            currentOxygen: 10,
+          },
+        },
+      });
+      renderer.render(rootNode);
+
+      // Remove oxygenText element to simulate external DOM manipulation
+      const oxygenText = mockContainer.querySelector('.ds-oxygen-text');
+      oxygenText.remove();
+
+      // Should not throw when updating
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          components: {
+            'breathing-states:respiratory_organ': {
+              oxygenCapacity: 10,
+              currentOxygen: 5,
+            },
+          },
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle missing all insertion targets when adding oxygen section', () => {
+      const rootNode = createMockNode({
+        health: { current: 100, max: 100 },
+        components: {
+          'anatomy:part': { type: 'organ' },
+        },
+      });
+      renderer.render(rootNode);
+
+      // Remove all potential insertion targets
+      const header = mockContainer.querySelector('.ds-part-card-header');
+      const healthBar = mockContainer.querySelector('.ds-health-bar');
+      const healthText = mockContainer.querySelector('.ds-part-card-health');
+      header.remove();
+      healthBar.remove();
+      healthText.remove();
+
+      // Should not throw when trying to add oxygen section
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          components: {
+            'anatomy:part': { type: 'organ' },
+            'breathing-states:respiratory_organ': {
+              oxygenCapacity: 10,
+              currentOxygen: 8,
+            },
+          },
+        });
+      }).not.toThrow();
+
+      // Oxygen section should not be added (no insertion point found)
+      expect(mockContainer.querySelector('.ds-part-oxygen')).toBeNull();
+    });
+
+    it('should handle missing all insertion targets when adding effects section', () => {
+      const rootNode = createMockNode({
+        health: { current: 100, max: 100 },
+        components: {
+          'anatomy:part': { type: 'limb' },
+        },
+      });
+      renderer.render(rootNode);
+
+      // Remove all potential insertion targets
+      const header = mockContainer.querySelector('.ds-part-card-header');
+      const healthBar = mockContainer.querySelector('.ds-health-bar');
+      const healthText = mockContainer.querySelector('.ds-part-card-health');
+      header.remove();
+      healthBar.remove();
+      healthText.remove();
+
+      // Should not throw when trying to add effects section
+      expect(() => {
+        renderer.updatePart('test-part-id', {
+          components: {
+            'anatomy:part': { type: 'limb' },
+            'anatomy:bleeding': { severity: 'minor', remainingTurns: 2 },
+          },
+        });
+      }).not.toThrow();
+
+      // Effects section should not be added (no insertion point found)
+      expect(mockContainer.querySelector('.ds-part-effects')).toBeNull();
+    });
+
+  });
 });

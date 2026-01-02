@@ -25,6 +25,9 @@
     "descriptors:texture": {
       "texture": "scarred"
     },
-    "anatomy:provides_smell": {}
+    "anatomy:provides_smell": {},
+    "anatomy:has_rigid_structure": {
+      "structureType": "cartilage"
+    }
   }
 }

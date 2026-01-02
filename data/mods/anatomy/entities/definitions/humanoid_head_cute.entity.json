@@ -83,6 +83,9 @@
     },
     "descriptors:facial_aesthetic": {
       "value": "cute"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

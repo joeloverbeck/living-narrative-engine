@@ -32,6 +32,7 @@
       "dismembered.component.json",
       "dying.component.json",
       "embedded.component.json",
+      "has_rigid_structure.component.json",
       "fractured.component.json",
       "joint.component.json",
       "part.component.json",

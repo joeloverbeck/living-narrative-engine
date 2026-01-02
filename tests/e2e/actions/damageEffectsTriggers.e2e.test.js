@@ -141,6 +141,7 @@ const createCombatants = ({
       maxHealth: partMaxHealth,
       status: 'healthy',
     })
+    .withComponent('anatomy:has_rigid_structure', { structureType: 'bone' })
     .build();
 
   const target = new ModEntityBuilder(`${weaponId}-target`)

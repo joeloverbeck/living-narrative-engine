@@ -37,6 +37,9 @@
     },
     "descriptors:length_category": {
       "length": "long"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

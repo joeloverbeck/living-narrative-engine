@@ -40,6 +40,9 @@
     },
     "descriptors:firmness": {
       "firmness": "soft"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

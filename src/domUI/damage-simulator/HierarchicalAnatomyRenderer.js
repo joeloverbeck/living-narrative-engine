@@ -7,6 +7,13 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import {
+  EFFECT_COMPONENTS,
+  EFFECT_CSS_CLASSES,
+  EFFECT_EMOJIS,
+  formatEffectTooltip,
+  getActiveEffects,
+} from './statusEffectUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -41,13 +48,6 @@ const CSS_CLASSES = Object.freeze({
   oxygenBar: 'ds-oxygen-bar',
   oxygenFill: 'ds-oxygen-fill',
   oxygenText: 'ds-oxygen-text',
-  // Status effects
-  partEffects: 'ds-part-effects',
-  effect: 'ds-effect',
-  effectBleeding: 'ds-effect-bleeding',
-  effectBurning: 'ds-effect-burning',
-  effectPoisoned: 'ds-effect-poisoned',
-  effectFractured: 'ds-effect-fractured',
 });
 
 /**
@@ -55,28 +55,6 @@ const CSS_CLASSES = Object.freeze({
  * @readonly
  */
 const RESPIRATORY_COMPONENT = 'breathing-states:respiratory_organ';
-
-/**
- * Status effect component mappings
- * @readonly
- */
-const EFFECT_COMPONENTS = Object.freeze({
-  bleeding: 'anatomy:bleeding',
-  burning: 'anatomy:burning',
-  poisoned: 'anatomy:poisoned',
-  fractured: 'anatomy:fractured',
-});
-
-/**
- * Emoji display for each effect type
- * @readonly
- */
-const EFFECT_EMOJIS = Object.freeze({
-  bleeding: '🩸',
-  burning: '🔥',
-  poisoned: '☠️',
-  fractured: '🦴',
-});
 
 /**
  * Health thresholds for color coding
@@ -155,9 +133,7 @@ class HierarchicalAnatomyRenderer {
 
     // Render root node and children recursively
     const rootElement = this.#renderNode(hierarchyData, 0);
-    if (rootElement) {
-      this.#containerElement.appendChild(rootElement);
-    }
+    this.#containerElement.appendChild(rootElement);
 
     this.#logger.info(
       `[HierarchicalAnatomyRenderer] Rendered ${this.#partElements.size} parts`
@@ -214,7 +190,7 @@ class HierarchicalAnatomyRenderer {
       this.#updateOxygenDisplay(element, oxygenData);
 
       // Update effects display
-      const effects = this.#getActiveEffects(partData.components);
+      const effects = getActiveEffects(partData.components);
       this.#updateEffectsDisplay(element, effects);
     }
 
@@ -277,7 +253,7 @@ class HierarchicalAnatomyRenderer {
     }
 
     // Status effects (if any effect components exist)
-    const effects = this.#getActiveEffects(node.components);
+    const effects = getActiveEffects(node.components);
     if (effects.length > 0) {
       const effectsSection = this.#renderEffectsSection(effects);
       card.appendChild(effectsSection);
@@ -347,7 +323,6 @@ class HierarchicalAnatomyRenderer {
   #handleExpandClick(event, node) {
     event.stopPropagation();
     const card = this.#partElements.get(node.id);
-    if (!card) return;
 
     const childrenContainer = card.querySelector(`.${CSS_CLASSES.partChildren}`);
     const expandIcon = card.querySelector(`.${CSS_CLASSES.partExpand}`);
@@ -356,9 +331,7 @@ class HierarchicalAnatomyRenderer {
       const isExpanded = card.getAttribute('aria-expanded') === 'true';
       card.setAttribute('aria-expanded', String(!isExpanded));
       childrenContainer.style.display = isExpanded ? 'none' : 'block';
-      if (expandIcon) {
-        expandIcon.textContent = isExpanded ? '▶' : '▼';
-      }
+      expandIcon.textContent = isExpanded ? '▶' : '▼';
     }
   }
 
@@ -578,7 +551,7 @@ class HierarchicalAnatomyRenderer {
    * @returns {number} Percentage (0-100)
    */
   #calculateOxygenPercentage(oxygenData) {
-    if (!oxygenData || oxygenData.max <= 0) return 0;
+    if (oxygenData.max <= 0) return 0;
     return Math.min(100, Math.max(0, (oxygenData.current / oxygenData.max) * 100));
   }
 
@@ -635,29 +608,6 @@ class HierarchicalAnatomyRenderer {
   }
 
   /**
-   * Get active status effects from components.
-   * @private
-   * @param {{[key: string]: object}} components - Components map
-   * @returns {Array<{type: string, data: object}>} Active effects
-   */
-  #getActiveEffects(components) {
-    if (!components || typeof components !== 'object') {
-      return [];
-    }
-
-    const effects = [];
-    for (const [effectType, componentId] of Object.entries(EFFECT_COMPONENTS)) {
-      if (components[componentId]) {
-        effects.push({
-          type: effectType,
-          data: components[componentId],
-        });
-      }
-    }
-    return effects;
-  }
-
-  /**
    * Render status effects section.
    * @private
    * @param {Array<{type: string, data: object}>} effects - Active effects
@@ -665,65 +615,17 @@ class HierarchicalAnatomyRenderer {
    */
   #renderEffectsSection(effects) {
     const section = document.createElement('div');
-    section.className = CSS_CLASSES.partEffects;
+    section.className = EFFECT_CSS_CLASSES.container;
 
     for (const effect of effects) {
       const effectBadge = document.createElement('span');
-      effectBadge.className = `${CSS_CLASSES.effect} ${CSS_CLASSES[`effect${this.#capitalize(effect.type)}`]}`;
+      effectBadge.className = `${EFFECT_CSS_CLASSES.base} ${EFFECT_CSS_CLASSES[effect.type]}`;
       effectBadge.textContent = EFFECT_EMOJIS[effect.type];
-      effectBadge.setAttribute('title', this.#formatEffectTooltip(effect.type, effect.data));
+      effectBadge.setAttribute('title', formatEffectTooltip(effect.type, effect.data));
       section.appendChild(effectBadge);
     }
 
     return section;
-  }
-
-  /**
-   * Capitalize first letter of a string.
-   * @private
-   * @param {string} str - String to capitalize
-   * @returns {string} Capitalized string
-   */
-  #capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  /**
-   * Format tooltip text for a status effect.
-   * @private
-   * @param {string} effectType - Effect type (bleeding, burning, etc.)
-   * @param {object} effectData - Effect component data
-   * @returns {string} Formatted tooltip string
-   */
-  #formatEffectTooltip(effectType, effectData) {
-    const displayName = this.#capitalize(effectType);
-
-    switch (effectType) {
-      case 'bleeding': {
-        const severity = effectData.severity || 'unknown';
-        const turns = effectData.remainingTurns;
-        return turns !== undefined
-          ? `${displayName} (${severity}, ${turns} turns)`
-          : `${displayName} (${severity})`;
-      }
-      case 'burning': {
-        const turns = effectData.remainingTurns;
-        const stacks = effectData.stackedCount;
-        const parts = [displayName];
-        if (turns !== undefined) parts.push(`${turns} turns`);
-        if (stacks !== undefined && stacks > 1) parts.push(`x${stacks}`);
-        return parts.length > 1 ? `${parts[0]} (${parts.slice(1).join(', ')})` : displayName;
-      }
-      case 'poisoned': {
-        const turns = effectData.remainingTurns;
-        return turns !== undefined ? `${displayName} (${turns} turns)` : displayName;
-      }
-      case 'fractured':
-        // Fractured has NO duration - just show the name
-        return displayName;
-      default:
-        return displayName;
-    }
   }
 
   /**
@@ -733,7 +635,7 @@ class HierarchicalAnatomyRenderer {
    * @param {Array<{type: string, data: object}>} effects - New effects list
    */
   #updateEffectsDisplay(element, effects) {
-    const existingSection = element.querySelector(`.${CSS_CLASSES.partEffects}`);
+    const existingSection = element.querySelector(`.${EFFECT_CSS_CLASSES.container}`);
 
     if (effects.length === 0) {
       // Remove effects section if no effects

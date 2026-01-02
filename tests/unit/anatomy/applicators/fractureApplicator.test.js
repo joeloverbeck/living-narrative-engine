@@ -8,6 +8,7 @@ import FractureApplicator, {
   FRACTURED_COMPONENT_ID,
   STUNNED_COMPONENT_ID,
   FRACTURED_EVENT,
+  HAS_RIGID_STRUCTURE_COMPONENT_ID,
   DEFAULT_THRESHOLD_FRACTION,
   DEFAULT_STUN_DURATION,
 } from '../../../../src/anatomy/applicators/fractureApplicator.js';
@@ -28,6 +29,7 @@ describe('FractureApplicator', () => {
 
     mockEntityManager = {
       addComponent: jest.fn().mockResolvedValue(undefined),
+      hasComponent: jest.fn().mockReturnValue(true),
     };
 
     mockDispatchStrategy = {
@@ -56,6 +58,15 @@ describe('FractureApplicator', () => {
         new FractureApplicator({
           logger: mockLogger,
           entityManager: null,
+        });
+      }).toThrow();
+    });
+
+    it('validates entityManager has required methods', () => {
+      expect(() => {
+        new FractureApplicator({
+          logger: mockLogger,
+          entityManager: { addComponent: jest.fn() },
         });
       }).toThrow();
     });
@@ -146,6 +157,46 @@ describe('FractureApplicator', () => {
     });
   });
 
+  describe('hasRigidStructure()', () => {
+    it('returns true when part has the rigid structure component', () => {
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      expect(applicator.hasRigidStructure('part-1')).toBe(true);
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'part-1',
+        HAS_RIGID_STRUCTURE_COMPONENT_ID
+      );
+    });
+
+    it('returns false when part lacks the rigid structure component', () => {
+      mockEntityManager.hasComponent.mockReturnValue(false);
+
+      expect(applicator.hasRigidStructure('part-1')).toBe(false);
+    });
+
+    it('returns false and logs warning when entityManager throws', () => {
+      mockEntityManager.hasComponent.mockImplementation(() => {
+        throw new Error('boom');
+      });
+
+      expect(applicator.hasRigidStructure('part-1')).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error checking rigid structure')
+      );
+    });
+
+    it('returns false and logs warning when entityManager throws non-Error', () => {
+      mockEntityManager.hasComponent.mockImplementation(() => {
+        throw 'string error';
+      });
+
+      expect(applicator.hasRigidStructure('part-1')).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error checking rigid structure')
+      );
+    });
+  });
+
   describe('apply()', () => {
     const baseParams = {
       entityId: 'entity-1',
@@ -173,6 +224,7 @@ describe('FractureApplicator', () => {
 
       expect(result).toEqual({ triggered: false, stunApplied: false });
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
     });
 
     it('returns { triggered: false, stunApplied: false } when damageEntryConfig is null', async () => {
@@ -182,6 +234,35 @@ describe('FractureApplicator', () => {
       });
 
       expect(result).toEqual({ triggered: false, stunApplied: false });
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+    });
+
+    it('returns { triggered: false, stunApplied: false } when part lacks rigid structure', async () => {
+      mockEntityManager.hasComponent.mockReturnValue(false);
+
+      const result = await applicator.apply({
+        ...baseParams,
+        damageAmount: 60,
+        maxHealth: 100,
+      });
+
+      expect(result).toEqual({ triggered: false, stunApplied: false });
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+      expect(mockDispatchStrategy.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('logs debug when skipping fracture due to missing rigid structure', async () => {
+      mockEntityManager.hasComponent.mockReturnValue(false);
+
+      await applicator.apply({
+        ...baseParams,
+        damageAmount: 60,
+        maxHealth: 100,
+      });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('lacks rigid structure')
+      );
     });
 
     it('returns { triggered: false, stunApplied: false } when damage below threshold (default 0.5)', async () => {
@@ -495,6 +576,12 @@ describe('FractureApplicator', () => {
 
     it('exports FRACTURED_EVENT', () => {
       expect(FRACTURED_EVENT).toBe('anatomy:fractured');
+    });
+
+    it('exports HAS_RIGID_STRUCTURE_COMPONENT_ID', () => {
+      expect(HAS_RIGID_STRUCTURE_COMPONENT_ID).toBe(
+        'anatomy:has_rigid_structure'
+      );
     });
 
     it('exports DEFAULT_THRESHOLD_FRACTION', () => {

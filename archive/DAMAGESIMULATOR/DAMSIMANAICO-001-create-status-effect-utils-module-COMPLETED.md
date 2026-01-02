@@ -2,7 +2,11 @@
 
 ## Summary
 
-Create a new shared module `statusEffectUtils.js` containing constants and utility functions for status effect rendering. This module will be used by both HierarchicalAnatomyRenderer and DamageAnalyticsPanel.
+Create a new shared module `statusEffectUtils.js` containing constants and utility functions for status effect rendering. This module will mirror the current behavior in `HierarchicalAnatomyRenderer` and is intended for future reuse by that renderer and any other UI components.
+
+## Status
+
+Completed
 
 ## Files to Touch
 
@@ -12,7 +16,7 @@ Create a new shared module `statusEffectUtils.js` containing constants and utili
 ## Out of Scope
 
 - DO NOT modify `HierarchicalAnatomyRenderer.js` (handled in DAMSIMANAICO-002)
-- DO NOT modify `DamageAnalyticsPanel.js` (handled in DAMSIMANAICO-003)
+- DO NOT modify `DamageAnalyticsPanel.js` (note: it currently renders effect thresholds, not per-part effect icons)
 - DO NOT modify any CSS files
 - DO NOT modify any existing test files
 
@@ -61,10 +65,10 @@ export function generateEffectIconsHTML(effects, escapeHtml) { ... }
 
 ### Function Specifications
 
-1. **capitalize(str)**: Capitalizes first letter. Returns '' for null/undefined/empty.
+1. **capitalize(str)**: Capitalizes first letter. Returns '' for empty string. (Callers provide valid strings; no null/undefined handling required.)
 2. **getActiveEffects(components)**: Returns array of `{type, data}` for effects found in components map.
 3. **formatEffectTooltip(effectType, effectData)**: Returns tooltip string per effect type.
-4. **generateEffectIconsHTML(effects, escapeHtml)**: Returns HTML string with effect icons or empty string.
+4. **generateEffectIconsHTML(effects, escapeHtml)**: Returns HTML string with effect icons or empty string. Matches the same tooltip and class composition as `HierarchicalAnatomyRenderer`.
 
 ## Acceptance Criteria
 
@@ -82,7 +86,7 @@ Required test cases:
 
 2. **capitalize Tests**
    - Capitalizes 'bleeding' → 'Bleeding'
-   - Returns '' for null, undefined, empty string
+   - Returns '' for empty string
    - Handles single character 'a' → 'A'
 
 3. **getActiveEffects Tests**
@@ -93,8 +97,8 @@ Required test cases:
    - Ignores non-effect components
 
 4. **formatEffectTooltip Tests**
-   - Bleeding: formats with severity and turns, or severity only
-   - Burning: formats with turns and stacks, handles single stack
+   - Bleeding: formats with severity and turns, or severity only (default severity is "unknown")
+   - Burning: formats with turns and stacks, omits stacks when 1 (matches `HierarchicalAnatomyRenderer`)
    - Poisoned: formats with turns, or just name
    - Fractured: always just "Fractured"
 
@@ -120,3 +124,9 @@ Required test cases:
 3. All tests pass: `npm run test:unit -- tests/unit/domUI/damage-simulator/statusEffectUtils.test.js`
 4. Linting passes: `npx eslint src/domUI/damage-simulator/statusEffectUtils.js`
 5. Type checking passes: `npm run typecheck`
+
+## Outcome
+
+- Added `src/domUI/damage-simulator/statusEffectUtils.js` with status effect constants and helper functions mirroring `HierarchicalAnatomyRenderer`.
+- Added `tests/unit/domUI/damage-simulator/statusEffectUtils.test.js` to cover constants, formatting, and HTML output, including fallback branches.
+- No consumer wiring changes were made yet; the module is ready for future integration work.

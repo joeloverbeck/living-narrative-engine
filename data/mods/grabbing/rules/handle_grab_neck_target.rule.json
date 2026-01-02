@@ -25,7 +25,7 @@
     {
       "type": "RESOLVE_OUTCOME",
       "parameters": {
-        "actor_skill_component": "skills:melee_skill",
+        "actor_skill_component": "skills:grappling_skill",
         "target_skill_component": "skills:mobility_skill",
         "actor_skill_default": 10,
         "target_skill_default": 0,

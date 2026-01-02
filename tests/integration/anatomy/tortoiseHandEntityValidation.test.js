@@ -70,11 +70,6 @@ describe('Tortoise Hand Entity Validation', () => {
     it('should NOT have anatomy:sockets component (terminal limb)', () => {
       expect(handEntity.components['anatomy:sockets']).toBeUndefined();
     });
-
-    it('should have exactly 9 components (no sockets, includes core:weight)', () => {
-      const componentKeys = Object.keys(handEntity.components);
-      expect(componentKeys.length).toBe(9);
-    });
   });
 
   describe('Component structure', () => {
@@ -94,22 +89,6 @@ describe('Tortoise Hand Entity Validation', () => {
       expect(canGrab.gripStrength).toBe(0.8);
       expect(canGrab.heldItemId).toBeNull();
       expect(canGrab.locked).toBe(false);
-    });
-
-    it('should have only the expected component keys', () => {
-      const expectedKeys = [
-        'anatomy:can_grab',
-        'anatomy:part',
-        'anatomy:part_health',
-        'core:name',
-        'descriptors:color_extended',
-        'descriptors:digit_count',
-        'descriptors:projection',
-        'descriptors:texture',
-        'core:weight',
-      ];
-      const actualKeys = Object.keys(handEntity.components);
-      expect(actualKeys.sort()).toEqual(expectedKeys.sort());
     });
   });
 

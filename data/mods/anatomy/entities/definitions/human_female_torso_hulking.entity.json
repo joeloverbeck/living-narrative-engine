@@ -182,6 +182,9 @@
     },
     "descriptors:firmness": {
       "firmness": "firm"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

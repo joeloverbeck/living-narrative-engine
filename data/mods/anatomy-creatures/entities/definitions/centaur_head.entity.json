@@ -13,6 +13,9 @@
       "maxHealth": 40,
       "state": "healthy"
     },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
+    },
     "core:name": {
       "text": "head"
     },
