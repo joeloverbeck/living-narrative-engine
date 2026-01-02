@@ -133,7 +133,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
 
           // For with_hands scope (hold_hand), check if target has their hand already held
           // Don't apply this check for base scope (let_go_of_hand needs target to have hand_held)
-          if (requireHands && partner.components?.['hand-holding:hand_held']) {
+          if (requireHands && partner.components?.['hand-holding-states:hand_held']) {
             return acc;
           }
 
@@ -173,7 +173,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const handHeldComponent =
-          actorEntity.components?.['hand-holding:hand_held'];
+          actorEntity.components?.['hand-holding-states:hand_held'];
         const holderId = handHeldComponent?.holding_entity_id;
         const closeness =
           actorEntity.components?.['personal-space-states:closeness']?.partners || [];
@@ -188,7 +188,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const holderComponent =
-          holderEntity.components?.['hand-holding:holding_hand'];
+          holderEntity.components?.['hand-holding-states:holding_hand'];
         if (holderComponent?.held_entity_id !== actorId) {
           return { success: true, value: new Set() };
         }
@@ -218,11 +218,11 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
 
   const seedLinkedHandHoldingPair = (names, options = {}) => {
     const scenario = testFixture.createCloseActors(names, options);
-    scenario.actor.components['hand-holding:hand_held'] = {
+    scenario.actor.components['hand-holding-states:hand_held'] = {
       holding_entity_id: scenario.target.id,
       consented: true,
     };
-    scenario.target.components['hand-holding:holding_hand'] = {
+    scenario.target.components['hand-holding-states:holding_hand'] = {
       held_entity_id: scenario.actor.id,
       initiated: true,
     };
@@ -269,9 +269,9 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:hand_held']).toBeUndefined();
+    expect(actorInstance.components['hand-holding-states:hand_held']).toBeUndefined();
     expect(
-      targetInstance.components['hand-holding:holding_hand']
+      targetInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
   });
 
@@ -285,11 +285,11 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
       closeProximity: true,
       idPrefix: 'extra_',
     });
-    otherPair.actor.components['hand-holding:holding_hand'] = {
+    otherPair.actor.components['hand-holding-states:holding_hand'] = {
       held_entity_id: otherPair.target.id,
       initiated: true,
     };
-    otherPair.target.components['hand-holding:hand_held'] = {
+    otherPair.target.components['hand-holding-states:hand_held'] = {
       holding_entity_id: otherPair.actor.id,
       consented: true,
     };
@@ -312,11 +312,11 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
       otherPair.target.id
     );
 
-    expect(untouchedHolder.components['hand-holding:holding_hand']).toEqual({
+    expect(untouchedHolder.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: otherPair.target.id,
       initiated: true,
     });
-    expect(untouchedHeld.components['hand-holding:hand_held']).toEqual({
+    expect(untouchedHeld.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: otherPair.actor.id,
       consented: true,
     });
@@ -359,7 +359,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
     const room = ModEntityScenarios.createRoom('room1', 'Test Room');
 
     // Break linkage from the target side before execution
-    delete scenario.target.components['hand-holding:holding_hand'];
+    delete scenario.target.components['hand-holding-states:holding_hand'];
 
     testFixture.reset([room, scenario.actor, scenario.target]);
 
@@ -385,7 +385,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
     const actorInstance = testFixture.entityManager.getEntityInstance(
       scenario.actor.id
     );
-    expect(actorInstance.components['hand-holding:hand_held']).toEqual({
+    expect(actorInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.target.id,
       consented: true,
     });

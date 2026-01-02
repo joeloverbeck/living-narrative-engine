@@ -22,13 +22,13 @@ describe('Activity Metadata Schema Validation', () => {
       priority: 58,
     },
     {
-      mod: 'hand-holding',
+      mod: 'hand-holding-states',
       name: 'hand_held',
       targetRole: 'holding_entity_id',
       priority: 65,
     },
     {
-      mod: 'hand-holding',
+      mod: 'hand-holding-states',
       name: 'holding_hand',
       targetRole: 'held_entity_id',
       priority: 67,

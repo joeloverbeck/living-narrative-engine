@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:floral_pink_double_bed",
+  "description": "A double bed with a wooden frame and pale-pink floral bedding",
+  "components": {
+    "core:name": {
+      "text": "Double Bed"
+    },
+    "core:description": {
+      "text": "A double bed raised slightly on a simple wooden frame. It's neatly made with layered bedding: a pale-pink quilt decorated with floral patterns covers the mattress, complemented by matching pillows arranged against the headboard. A folded blanket lies squarely across the foot of the bed."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/floral_pink_double_bed.png",
+      "altText": "A neatly made double bed with a wooden frame and pale-pink floral bedding"
+    },
+    "lying:allows_lying_on": {},
+    "sitting:allows_sitting": {
+      "spots": [null, null, null, null]
+    },
+    "bending:allows_bending_over": {}
+  }
+}

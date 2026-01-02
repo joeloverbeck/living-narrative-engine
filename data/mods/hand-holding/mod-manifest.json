@@ -10,6 +10,10 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
+      "id": "hand-holding-states",
+      "version": "^1.0.0"
+    },
+    {
       "id": "hugging-states",
       "version": "^1.0.0"
     },
@@ -30,10 +34,7 @@
       "warm_hands_between_yours.action.json",
       "withdraw_hand_from_grasp.action.json"
     ],
-    "components": [
-      "hand_held.component.json",
-      "holding_hand.component.json"
-    ],
+    "components": [],
     "conditions": [
       "actors-are-holding-hands.condition.json",
       "event-is-action-hold-hand.condition.json",

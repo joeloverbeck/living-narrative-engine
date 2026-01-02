@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "hand-holding-states",
+  "version": "1.0.0",
+  "name": "Hand-Holding States",
+  "description": "State components for hand-holding mechanics.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [],
+  "content": {
+    "components": [
+      "holding_hand.component.json",
+      "hand_held.component.json"
+    ]
+  }
+}

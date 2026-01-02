@@ -172,7 +172,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
           locationId: destinationId,
           descriptionText: message,
           timestamp: new Date().toISOString(),
-          perceptionType: 'character_enter',
+          perceptionType: 'movement.arrival',
           actorId: followerId,
           targetId: leaderId,
           involvedEntities: [],

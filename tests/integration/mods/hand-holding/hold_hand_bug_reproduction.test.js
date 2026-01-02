@@ -47,16 +47,16 @@ describe('hold_hand Action - Bug Reproduction', () => {
       scenario.target.id
     );
 
-    expect(actorEntity.components['hand-holding:holding_hand']).toBeDefined();
-    expect(targetEntity.components['hand-holding:hand_held']).toBeDefined();
+    expect(actorEntity.components['hand-holding-states:holding_hand']).toBeDefined();
+    expect(targetEntity.components['hand-holding-states:hand_held']).toBeDefined();
 
     const actorHoldingData =
-      actorEntity.components['hand-holding:holding_hand'];
+      actorEntity.components['hand-holding-states:holding_hand'];
     expect(actorHoldingData.held_entity_id).toBe(scenario.target.id);
     expect(actorHoldingData.initiated).toBe(true);
 
     const targetHandHeldData =
-      targetEntity.components['hand-holding:hand_held'];
+      targetEntity.components['hand-holding-states:hand_held'];
     expect(targetHandHeldData.holding_entity_id).toBe(scenario.actor.id);
     expect(targetHandHeldData.consented).toBe(true);
   });

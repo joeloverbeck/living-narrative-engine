@@ -62,11 +62,11 @@ describe('hand-holding:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
@@ -114,7 +114,7 @@ describe('hand-holding:hold_hand action integration', () => {
     });
 
     // Actor has stale hand_held component from previous interaction
-    scenario.actor.components['hand-holding:hand_held'] = {
+    scenario.actor.components['hand-holding-states:hand_held'] = {
       holding_entity_id: 'old_partner',
       consented: false,
     };
@@ -135,17 +135,17 @@ describe('hand-holding:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:hand_held']).toEqual({
+    expect(actorInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: 'old_partner',
       consented: false,
     });
     expect(
-      actorInstance.components['hand-holding:holding_hand']
+      actorInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
     expect(
-      targetInstance.components['hand-holding:holding_hand']
+      targetInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
-    expect(targetInstance.components['hand-holding:hand_held']).toBeUndefined();
+    expect(targetInstance.components['hand-holding-states:hand_held']).toBeUndefined();
   });
 
   it('prevents repeated attempts to hold hands while already connected', async () => {
@@ -171,11 +171,11 @@ describe('hand-holding:hold_hand action integration', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
@@ -208,7 +208,7 @@ describe('hand-holding:hold_hand action integration', () => {
       initiated: true,
     });
     expect(
-      actorInstance.components['hand-holding:holding_hand']
+      actorInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
   });
 

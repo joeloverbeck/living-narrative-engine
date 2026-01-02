@@ -35,6 +35,7 @@
       "definitions": [
         "bar_stools.entity.json",
         "coffee_table_rectangular_wood.entity.json",
+        "floral_pink_double_bed.entity.json",
         "four_poster_bed.entity.json",
         "living_room_sofa.entity.json",
         "lounge_sofa.entity.json",

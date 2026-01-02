@@ -6,12 +6,12 @@
     "or": [
       {
         "!!": [
-          { "var": "actor.components.hand-holding:holding_hand.held_entity_id" }
+          { "var": "actor.components.hand-holding-states:holding_hand.held_entity_id" }
         ]
       },
       {
         "!!": [
-          { "var": "actor.components.hand-holding:hand_held.holding_entity_id" }
+          { "var": "actor.components.hand-holding-states:hand_held.holding_entity_id" }
         ]
       }
     ]

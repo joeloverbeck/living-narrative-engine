@@ -32,14 +32,14 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
 
     // Verify clean state - NO hand-holding components
     expect(
-      scenario.actor.components['hand-holding:holding_hand']
+      scenario.actor.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
-    expect(scenario.actor.components['hand-holding:hand_held']).toBeUndefined();
+    expect(scenario.actor.components['hand-holding-states:hand_held']).toBeUndefined();
     expect(
-      scenario.target.components['hand-holding:holding_hand']
+      scenario.target.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
     expect(
-      scenario.target.components['hand-holding:hand_held']
+      scenario.target.components['hand-holding-states:hand_held']
     ).toBeUndefined();
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -60,17 +60,17 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
       scenario.target.id
     );
 
-    expect(actorInstance.components['hand-holding:holding_hand']).toEqual({
+    expect(actorInstance.components['hand-holding-states:holding_hand']).toEqual({
       held_entity_id: scenario.target.id,
       initiated: true,
     });
-    expect(actorInstance.components['hand-holding:hand_held']).toBeUndefined();
-    expect(targetInstance.components['hand-holding:hand_held']).toEqual({
+    expect(actorInstance.components['hand-holding-states:hand_held']).toBeUndefined();
+    expect(targetInstance.components['hand-holding-states:hand_held']).toEqual({
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
     expect(
-      targetInstance.components['hand-holding:holding_hand']
+      targetInstance.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
   });
 
@@ -81,14 +81,14 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
 
     // Ensure clean state
     expect(
-      scenario.actor.components['hand-holding:holding_hand']
+      scenario.actor.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
-    expect(scenario.actor.components['hand-holding:hand_held']).toBeUndefined();
+    expect(scenario.actor.components['hand-holding-states:hand_held']).toBeUndefined();
     expect(
-      scenario.target.components['hand-holding:holding_hand']
+      scenario.target.components['hand-holding-states:holding_hand']
     ).toBeUndefined();
     expect(
-      scenario.target.components['hand-holding:hand_held']
+      scenario.target.components['hand-holding-states:hand_held']
     ).toBeUndefined();
 
     // Execute action - should not throw

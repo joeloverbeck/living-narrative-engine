@@ -421,7 +421,7 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
           parameters: {
             location_id: destinationId,
             description_text: messageText,
-            perception_type: 'character_enter',
+            perception_type: 'movement.arrival',
             actor_id: partnerId,
             target_id: actorId,
             involved_entities: [],

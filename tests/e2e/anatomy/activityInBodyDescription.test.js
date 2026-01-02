@@ -16,8 +16,8 @@ describe('Activity Integration in Body Descriptions', () => {
     const components = [
       { mod: 'companionship', name: 'following' },
       { mod: 'companionship', name: 'leading' },
-      { mod: 'hand-holding', name: 'hand_held' },
-      { mod: 'hand-holding', name: 'holding_hand' },
+      { mod: 'hand-holding-states', name: 'hand_held' },
+      { mod: 'hand-holding-states', name: 'holding_hand' },
       { mod: 'kissing', name: 'kissing' },
       { mod: 'biting-states', name: 'being_bitten_in_neck' },
       { mod: 'hugging-states', name: 'being_hugged' },
@@ -229,7 +229,7 @@ describe('Activity Integration in Body Descriptions', () => {
       const activityComponents = [
         { id: 'straddling-states:straddling_waist', priority: 82 },
         { id: 'kissing:kissing', priority: 72 },
-        { id: 'hand-holding:holding_hand', priority: 67 },
+        { id: 'hand-holding-states:holding_hand', priority: 67 },
       ];
 
       // Sort by priority (highest first) as ActivityDescriptionService would
@@ -240,7 +240,7 @@ describe('Activity Integration in Body Descriptions', () => {
       // Verify expected ordering
       expect(sorted[0].id).toBe('straddling-states:straddling_waist');
       expect(sorted[1].id).toBe('kissing:kissing');
-      expect(sorted[2].id).toBe('hand-holding:holding_hand');
+      expect(sorted[2].id).toBe('hand-holding-states:holding_hand');
 
       // Verify priorities descend monotonically
       for (let i = 1; i < sorted.length; i++) {

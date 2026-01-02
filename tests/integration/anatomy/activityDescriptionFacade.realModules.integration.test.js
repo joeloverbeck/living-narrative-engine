@@ -12,7 +12,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import { AnatomyFormattingService } from '../../../src/services/anatomyFormattingService.js';
 import EventBus from '../../../src/events/eventBus.js';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
-import handHoldingComponent from '../../../data/mods/hand-holding/components/holding_hand.component.json';
+import handHoldingComponent from '../../../data/mods/hand-holding-states/components/holding_hand.component.json';
 import closenessComponent from '../../../data/mods/personal-space-states/components/closeness.component.json';
 
 const FINAL_MOD_ORDER_KEY = 'final_mod_order';

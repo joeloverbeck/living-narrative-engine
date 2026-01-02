@@ -1,20 +1,21 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "hand-holding:holding_hand",
-  "description": "Marks an actor who is actively holding another entity's hand.",
+  "id": "hand-holding-states:hand_held",
+  "description": "Marks an entity whose hand is currently being held by another actor.",
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["held_entity_id", "initiated"],
+    "required": ["holding_entity_id"],
     "properties": {
-      "held_entity_id": {
+      "holding_entity_id": {
         "type": "string",
-        "description": "The ID of the entity whose hand is being held",
+        "description": "The ID of the entity that is holding this actor's hand",
         "pattern": "^([a-zA-Z0-9_]+:[a-zA-Z0-9_-]+|[a-zA-Z0-9_]+)$"
       },
-      "initiated": {
+      "consented": {
         "type": "boolean",
-        "description": "Whether this entity initiated the hand-holding interaction"
+        "description": "Whether this entity actively consented to the hand-holding interaction",
+        "default": true
       },
       "activityMetadata": {
         "type": "object",
@@ -28,20 +29,20 @@
           },
           "template": {
             "type": "string",
-            "default": "{actor} is holding {target}'s hand",
+            "default": "{actor}'s hand is being held by {target}",
             "description": "Template string with placeholders: {actor} for the entity with this component, {target} for the entity referenced by targetRole property"
           },
           "targetRole": {
             "type": "string",
-            "default": "held_entity_id",
-            "description": "Property name in this component's data containing the target entity ID. Defaults to 'held_entity_id' for the entity whose hand is held."
+            "default": "holding_entity_id",
+            "description": "Property name in this component's data containing the target entity ID. Defaults to 'holding_entity_id' for the entity holding the hand."
           },
           "priority": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "default": 67,
-            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Active role priority (67) slightly higher than passive 'hand_held' to prefer initiator's perspective."
+            "default": 65,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Moderate-high priority (65) for intimate physical contact with good visibility."
           }
         }
       }

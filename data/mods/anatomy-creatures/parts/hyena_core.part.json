@@ -124,9 +124,6 @@
     },
     "torso_lower": {
       "$use": "standard_torso_lower"
-    },
-    "back_accessory": {
-      "$use": "standard_back_accessory"
     }
   }
 }

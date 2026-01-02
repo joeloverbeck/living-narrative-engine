@@ -6,9 +6,11 @@
     "clothing:wearable": {
       "layer": "accessories",
       "equipmentSlots": {
-        "primary": "back"
+        "primary": "torso_upper"
       },
-      "allowedLayers": ["accessories"]
+      "allowedLayers": [
+        "accessories"
+      ]
     },
     "core:material": {
       "material": "nylon"
@@ -26,15 +28,13 @@
       "texture": "patched"
     },
     "clothing:coverage_mapping": {
-      "covers": ["back"],
+      "covers": [
+        "torso_upper"
+      ],
       "coveragePriority": "accessories"
     },
     "items-core:item": {},
     "items-core:portable": {},
-    "items-core:container": {
-      "maxWeight": 15,
-      "maxVolume": 35
-    },
     "core:weight": {
       "weight": 0.85
     }

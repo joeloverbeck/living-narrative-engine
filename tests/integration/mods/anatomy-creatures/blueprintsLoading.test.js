@@ -53,7 +53,6 @@ describe('anatomy-creatures blueprints', () => {
 
     it('preserves clothingSlotMappings structure', () => {
       const blueprint = loadBlueprint('ermine_folk_female.blueprint.json');
-      expect(blueprint.clothingSlotMappings).toHaveProperty('back_accessory');
       expect(blueprint.clothingSlotMappings).toHaveProperty('tail_accessory');
       expect(blueprint.clothingSlotMappings).toHaveProperty('torso_lower');
       expect(blueprint.clothingSlotMappings).toHaveProperty('full_body');
@@ -99,7 +98,6 @@ describe('anatomy-creatures blueprints', () => {
 
     it('preserves clothingSlotMappings structure', () => {
       const blueprint = loadBlueprint('toad_folk_male.blueprint.json');
-      expect(blueprint.clothingSlotMappings).toHaveProperty('back_accessory');
       expect(blueprint.clothingSlotMappings).toHaveProperty('torso_lower');
       expect(blueprint.clothingSlotMappings).toHaveProperty('full_body');
       expect(blueprint.clothingSlotMappings).toHaveProperty('torso_upper');
@@ -154,7 +152,6 @@ describe('anatomy-creatures blueprints', () => {
 
     it('preserves clothingSlotMappings structure', () => {
       const blueprint = loadBlueprint('cat_girl.blueprint.json');
-      expect(blueprint.clothingSlotMappings).toHaveProperty('back_accessory');
       expect(blueprint.clothingSlotMappings).toHaveProperty('tail_accessory');
       expect(blueprint.clothingSlotMappings).toHaveProperty('torso_lower');
       expect(blueprint.clothingSlotMappings).toHaveProperty('full_body');
