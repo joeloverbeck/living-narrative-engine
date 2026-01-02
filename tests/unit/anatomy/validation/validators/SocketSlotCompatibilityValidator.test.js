@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   SocketSlotCompatibilityValidator,
+  validateSocketSlotCompatibility,
   __testables__,
 } from '../../../../../src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js';
 import { createTestBed } from '../../../../common/testBed.js';
@@ -349,6 +350,47 @@ describe('SocketSlotCompatibilityValidator', () => {
       ]);
     });
 
+    it('validates slots from older format when additionalSlots is undefined', async () => {
+      const blueprint = {
+        id: 'anatomy:test_blueprint',
+        root: 'anatomy:test_root',
+        slots: {
+          torso: { socket: 'torso_socket' },
+        },
+      };
+      const { validator } = createValidator({ blueprint });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.passed).toContainEqual({
+        message: 'All 1 slot socket references valid',
+        check: 'socket_slot_compatibility',
+      });
+    });
+
+    it('combines both slots and additionalSlots for validation', async () => {
+      const blueprint = {
+        id: 'anatomy:test_blueprint',
+        root: 'anatomy:test_root',
+        slots: {
+          torso: { socket: 'torso_socket' },
+        },
+        additionalSlots: {
+          arm: { socket: 'arm_socket' },
+        },
+      };
+      const { validator } = createValidator({ blueprint });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.passed).toContainEqual({
+        message: 'All 2 slot socket references valid',
+        check: 'socket_slot_compatibility',
+      });
+    });
+
     it('uses legacy get() lookup when getEntityDefinition is unavailable', async () => {
       const { validator, dataRegistry } = createValidator({
         useLegacyRegistry: true,
@@ -368,6 +410,9 @@ describe('SocketSlotCompatibilityValidator', () => {
       findSimilarSocketName,
       suggestSocketFix,
       validateStructureTemplateSockets,
+      getRootEntityDefinition,
+      getStructureTemplate,
+      suggestHierarchicalSocketFix,
     } = __testables__;
 
     it('findSimilarSocketName returns null when requested socket is missing', () => {
@@ -388,12 +433,226 @@ describe('SocketSlotCompatibilityValidator', () => {
       );
     });
 
+    it('suggestSocketFix uses buildEntityDefinitionPath when entitySourceFile is undefined', () => {
+      const availableSockets = new Map([['torso', {}]]);
+      const suggestion = suggestSocketFix(
+        'leg',
+        availableSockets,
+        'core:entity',
+        undefined
+      );
+
+      expect(suggestion).toBe(
+        "Add socket 'leg' to entity file 'data/mods/*/entities/definitions/entity.entity.json' or use one of: [torso]"
+      );
+    });
+
+    it('suggestSocketFix builds path correctly when rootEntityId has no colon', () => {
+      const availableSockets = new Map([['torso', {}]]);
+      const suggestion = suggestSocketFix(
+        'leg',
+        availableSockets,
+        'simple_entity_id',
+        undefined
+      );
+
+      expect(suggestion).toBe(
+        "Add socket 'leg' to entity file 'data/mods/*/entities/definitions/simple_entity_id.entity.json' or use one of: [torso]"
+      );
+    });
+
     it('validateStructureTemplateSockets currently returns an empty list', () => {
       expect(
         validateStructureTemplateSockets({ id: 'bp' }, new Map(), {
           id: 'entity',
         })
       ).toEqual([]);
+    });
+
+    describe('getRootEntityDefinition edge cases', () => {
+      it('returns undefined when dataRegistry is null', () => {
+        const result = getRootEntityDefinition(null, 'some:entity');
+        expect(result).toBeUndefined();
+      });
+
+      it('returns undefined when dataRegistry is undefined', () => {
+        const result = getRootEntityDefinition(undefined, 'some:entity');
+        expect(result).toBeUndefined();
+      });
+
+      it('returns undefined when registry has no lookup methods', () => {
+        const registryWithoutMethods = { someOtherProperty: true };
+        const result = getRootEntityDefinition(
+          registryWithoutMethods,
+          'some:entity'
+        );
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('getStructureTemplate', () => {
+      it('returns undefined when dataRegistry is null', async () => {
+        const result = await getStructureTemplate(null, 'template:id');
+        expect(result).toBeUndefined();
+      });
+
+      it('returns undefined when dataRegistry is undefined', async () => {
+        const result = await getStructureTemplate(undefined, 'template:id');
+        expect(result).toBeUndefined();
+      });
+
+      it('calls get() with anatomyStructureTemplates key', async () => {
+        const mockTemplate = { id: 'template:test', topology: {} };
+        const mockRegistry = {
+          get: jest.fn().mockReturnValue(mockTemplate),
+        };
+        const result = await getStructureTemplate(mockRegistry, 'template:id');
+        expect(mockRegistry.get).toHaveBeenCalledWith(
+          'anatomyStructureTemplates',
+          'template:id'
+        );
+        expect(result).toEqual(mockTemplate);
+      });
+
+      it('returns undefined when registry has no get method', async () => {
+        const registryWithoutGet = { someOtherMethod: jest.fn() };
+        const result = await getStructureTemplate(
+          registryWithoutGet,
+          'template:id'
+        );
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('suggestHierarchicalSocketFix', () => {
+      it('returns parent slot not found message when no sockets have matching parent', () => {
+        const hierarchicalSockets = new Map([
+          ['socket1', { id: 'socket1', parent: 'other_parent' }],
+        ]);
+        const blueprint = { structureTemplate: 'structure:demo' };
+
+        const result = suggestHierarchicalSocketFix(
+          'missing',
+          'nonexistent_parent',
+          hierarchicalSockets,
+          blueprint
+        );
+
+        expect(result).toContain("Parent slot 'nonexistent_parent' not found");
+        expect(result).toContain('structure:demo');
+      });
+
+      it('suggests similar socket name when typo detected', () => {
+        const hierarchicalSockets = new Map([
+          ['left_eye', { id: 'left_eye', parent: 'head' }],
+          ['right_eye', { id: 'right_eye', parent: 'head' }],
+        ]);
+        const blueprint = { structureTemplate: 'structure:humanoid' };
+
+        const result = suggestHierarchicalSocketFix(
+          'left_ey',
+          'head',
+          hierarchicalSockets,
+          blueprint
+        );
+
+        expect(result).toContain("Did you mean 'left_eye'");
+        expect(result).toContain('Available on parent');
+      });
+
+      it('lists available sockets when no similar name found', () => {
+        const hierarchicalSockets = new Map([
+          ['socket_a', { id: 'socket_a', parent: 'slot1' }],
+          ['socket_b', { id: 'socket_b', parent: 'slot1' }],
+        ]);
+        const blueprint = { structureTemplate: 'structure:test' };
+
+        const result = suggestHierarchicalSocketFix(
+          'completely_different',
+          'slot1',
+          hierarchicalSockets,
+          blueprint
+        );
+
+        expect(result).toContain("Add socket 'completely_different'");
+        expect(result).toContain('socket_a');
+        expect(result).toContain('socket_b');
+      });
+    });
+  });
+
+  describe('validateSocketSlotCompatibility function', () => {
+    it('returns empty array when blueprint is null', async () => {
+      const registry = { getEntityDefinition: jest.fn() };
+      const result = await validateSocketSlotCompatibility(null, registry);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when blueprint is undefined', async () => {
+      const registry = { getEntityDefinition: jest.fn() };
+      const result = await validateSocketSlotCompatibility(undefined, registry);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when dataRegistry is null', async () => {
+      const blueprint = createBlueprint();
+      const result = await validateSocketSlotCompatibility(blueprint, null);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when dataRegistry is undefined', async () => {
+      const blueprint = createBlueprint();
+      const result = await validateSocketSlotCompatibility(
+        blueprint,
+        undefined
+      );
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('performValidation - hierarchical socket validation', () => {
+    it('reports SOCKET_NOT_FOUND_ON_PARENT when parent slot socket is missing', async () => {
+      const testBed = createTestBed();
+      const logger = testBed.createMockLogger();
+
+      const blueprint = createBlueprint({
+        additionalSlots: {
+          head: { socket: 'head_socket' },
+          left_eye: { socket: 'missing_eye_socket', parent: 'head' },
+        },
+      });
+      const entityDef = createEntityDefinition({
+        components: {
+          'anatomy:sockets': {
+            sockets: [{ id: 'head_socket' }],
+          },
+        },
+      });
+
+      const anatomyBlueprintRepository = {
+        getBlueprint: jest.fn().mockResolvedValue(blueprint),
+      };
+      const dataRegistry = {
+        getEntityDefinition: jest.fn().mockReturnValue(entityDef),
+      };
+
+      const validator = new SocketSlotCompatibilityValidator({
+        logger,
+        dataRegistry,
+        anatomyBlueprintRepository,
+      });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          type: 'SOCKET_NOT_FOUND_ON_PARENT',
+          slotName: 'left_eye',
+          socketId: 'missing_eye_socket',
+          parentSlot: 'head',
+        })
+      );
+      expect(result.errors[0].fix).toBeDefined();
     });
   });
 });

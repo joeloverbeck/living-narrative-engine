@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_simulator_entity_loaded",
+  "description": "Fired when the damage simulator has successfully loaded an entity and its anatomy data.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["definitionId"],
+    "properties": {
+      "definitionId": {
+        "type": "string",
+        "description": "The definition ID of the entity that was loaded."
+      },
+      "hasAnatomyData": {
+        "type": "boolean",
+        "description": "Whether the entity has valid anatomy data."
+      },
+      "instanceId": {
+        "type": "string",
+        "description": "The instance ID of the loaded entity."
+      },
+      "anatomyData": {
+        "type": ["object", "null"],
+        "description": "The extracted anatomy hierarchy tree, or null if no anatomy data."
+      }
+    },
+    "additionalProperties": false
+  }
+}

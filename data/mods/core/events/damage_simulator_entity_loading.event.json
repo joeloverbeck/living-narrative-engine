@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_simulator_entity_loading",
+  "description": "Fired when the damage simulator begins loading an entity for visualization.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["definitionId"],
+    "properties": {
+      "definitionId": {
+        "type": "string",
+        "description": "The definition ID of the entity being loaded."
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -69,12 +69,13 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * Event types for analytics panel.
+ * These must match the event types emitted by DamageSimulatorUI.js
  *
  * @readonly
  */
 const EVENTS = Object.freeze({
   CONFIG_CHANGED: 'damage-composer:config-changed',
-  ENTITY_LOADED: 'damage-simulator:entity-loaded',
+  ENTITY_LOADED: 'core:damage_simulator_entity_loaded',
 });
 
 /**
@@ -177,12 +178,13 @@ class DamageAnalyticsPanel {
     this.#unsubscribers.push(unsubConfigChanged);
 
     // Subscribe to entity loaded events
+    // DamageSimulatorUI.js emits 'instanceId' (not 'entityId') in the payload
     const unsubEntityLoaded = this.#eventBus.subscribe(
       EVENTS.ENTITY_LOADED,
       (event) => {
-        const { entityId, anatomyData } = event.payload || {};
-        if (entityId && anatomyData) {
-          this.setEntity(entityId, anatomyData);
+        const { instanceId, anatomyData } = event.payload || {};
+        if (instanceId && anatomyData) {
+          this.setEntity(instanceId, anatomyData);
           this.render();
         }
       }

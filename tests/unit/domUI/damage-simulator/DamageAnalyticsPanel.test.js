@@ -223,7 +223,7 @@ describe('DamageAnalyticsPanel', () => {
       // Simulate entity loaded event
       entityLoadedHandler({
         payload: {
-          entityId: 'new-entity',
+          instanceId: 'new-entity',
           anatomyData: {
             parts: [{ id: 'part-chest', name: 'Chest', currentHealth: 80, maxHealth: 80 }],
           },
@@ -697,7 +697,7 @@ describe('DamageAnalyticsPanel', () => {
     it('should expose EVENTS constant', () => {
       expect(DamageAnalyticsPanel.EVENTS).toBeDefined();
       expect(DamageAnalyticsPanel.EVENTS.CONFIG_CHANGED).toBe('damage-composer:config-changed');
-      expect(DamageAnalyticsPanel.EVENTS.ENTITY_LOADED).toBe('damage-simulator:entity-loaded');
+      expect(DamageAnalyticsPanel.EVENTS.ENTITY_LOADED).toBe('core:damage_simulator_entity_loaded');
     });
 
     it('should expose CRITICAL_PARTS constant', () => {

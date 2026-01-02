@@ -44,10 +44,10 @@ const UI_STATES = Object.freeze({
  * @readonly
  */
 const UI_EVENTS = Object.freeze({
-  ENTITY_LOADING: 'damage-simulator:entity-loading',
-  ENTITY_LOADED: 'damage-simulator:entity-loaded',
-  ENTITY_LOAD_ERROR: 'damage-simulator:entity-load-error',
-  REFRESH_REQUESTED: 'damage-simulator:refresh-requested',
+  ENTITY_LOADING: 'core:damage_simulator_entity_loading',
+  ENTITY_LOADED: 'core:damage_simulator_entity_loaded',
+  ENTITY_LOAD_ERROR: 'core:damage_simulator_entity_load_error',
+  REFRESH_REQUESTED: 'core:damage_simulator_refresh_requested',
 });
 
 /**

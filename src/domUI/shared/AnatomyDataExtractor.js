@@ -73,21 +73,30 @@ class AnatomyDataExtractor {
       }
 
       // eslint-disable-next-line mod-architecture/no-hardcoded-mod-references -- Service explicitly works with anatomy mod components
-      const bodyData = entity.getComponentData('anatomy:body');
-      if (!bodyData) {
+      const bodyComponent = entity.getComponentData('anatomy:body');
+      if (!bodyComponent) {
         this.#logger.debug(
           `AnatomyDataExtractor: Entity ${entityInstanceId} has no anatomy:body component`
         );
         return null;
       }
 
-      return this.extractHierarchy(bodyData);
+      // Extract the nested body structure (can be null if not yet generated)
+      const bodyData = bodyComponent.body;
+      if (!bodyData) {
+        this.#logger.debug(
+          `AnatomyDataExtractor: Entity ${entityInstanceId} anatomy:body.body is null (not yet generated)`
+        );
+        return null;
+      }
+
+      return await this.extractHierarchy(bodyData);
     } catch (error) {
       this.#logger.error(
         `AnatomyDataExtractor: Failed to extract from entity ${entityInstanceId}:`,
         error
       );
-      return null;
+      throw error;
     }
   }
 
@@ -98,12 +107,19 @@ class AnatomyDataExtractor {
    * @param {object} bodyData - The anatomy:body component data
    * @param {string} bodyData.root - Root part entity ID
    * @param {{[key: string]: string}} [bodyData.parts] - Named parts mapping
-   * @returns {Promise<AnatomyTreeNode|null>} Tree structure or null if extraction fails
+   * @returns {Promise<AnatomyTreeNode|null>} Tree structure or null if root entity not found
+   * @throws {Error} If bodyData.root is missing or falsy
    */
   async extractHierarchy(bodyData) {
     if (!bodyData?.root) {
-      this.#logger.warn('AnatomyDataExtractor: bodyData.root is required');
-      return null;
+      const error = new Error(
+        'AnatomyDataExtractor: bodyData.root is required for hierarchy extraction'
+      );
+      this.#logger.error(
+        'AnatomyDataExtractor: Invalid bodyData - missing root property',
+        { bodyData }
+      );
+      throw error;
     }
 
     this.#logger.debug('AnatomyDataExtractor: Extracting hierarchy', {
@@ -286,7 +302,7 @@ class AnatomyDataExtractor {
       // eslint-disable-next-line mod-architecture/no-hardcoded-mod-references -- Service explicitly works with anatomy mod components
       const healthComponent = entity.getComponentData('anatomy:part_health');
       const health = healthComponent
-        ? { current: healthComponent.current, max: healthComponent.max }
+        ? { current: healthComponent.currentHealth, max: healthComponent.maxHealth }
         : null;
 
       // Get all components and filter to mechanical only

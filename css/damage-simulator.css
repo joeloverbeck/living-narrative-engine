@@ -65,8 +65,8 @@
 .ds-content-grid {
   display: flex;
   flex: 1;
-  overflow: hidden;
   min-height: 300px;
+  /* Removed overflow: hidden to allow child panel scrolling */
 }
 
 /* Panel Base Styles */
@@ -95,6 +95,8 @@
   flex: 2;
   background: var(--panel-bg-color);
   border-right: 1px solid var(--border-color-subtle);
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
 }
 
 .ds-anatomy-tree {
