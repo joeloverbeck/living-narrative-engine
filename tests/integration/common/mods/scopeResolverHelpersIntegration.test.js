@@ -252,11 +252,11 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
 
   it('should register all 14 new TEAOUTTHR-006 positioning scopes', () => {
     const newScopes = [
-      'personal-space:close_actors',
-      'personal-space:close_actors_facing_each_other',
+      'personal-space-states:close_actors',
+      'personal-space-states:close_actors_facing_each_other',
       'sitting:actors_both_sitting_close',
       'sitting:actors_sitting_close',
-      'personal-space:close_actors_or_entity_kneeling_before_actor',
+      'personal-space-states:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'deference-states:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
@@ -265,7 +265,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
       'bending:surface_im_bending_over',
-      'facing-states:actors_im_facing_away_from',
+      'personal-space-states:actors_im_facing_away_from',
     ];
 
     newScopes.forEach((scopeName) => {
@@ -283,11 +283,11 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     testFixture.reset([scenario.actor, scenario.target]);
 
     const scopesToTest = [
-      'personal-space:close_actors',
-      'personal-space:close_actors_facing_each_other',
+      'personal-space-states:close_actors',
+      'personal-space-states:close_actors_facing_each_other',
       'sitting:actors_both_sitting_close',
       'sitting:actors_sitting_close',
-      'personal-space:close_actors_or_entity_kneeling_before_actor',
+      'personal-space-states:close_actors_or_entity_kneeling_before_actor',
       'straddling:actor_im_straddling',
       'deference-states:entity_actor_is_kneeling_before',
       'personal-space:actors_sitting_with_space_to_right',
@@ -296,7 +296,7 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
       'lying:furniture_im_lying_on',
       'sitting:furniture_im_sitting_on',
       'bending:surface_im_bending_over',
-      'facing-states:actors_im_facing_away_from',
+      'personal-space-states:actors_im_facing_away_from',
     ];
 
     scopesToTest.forEach((scopeName) => {

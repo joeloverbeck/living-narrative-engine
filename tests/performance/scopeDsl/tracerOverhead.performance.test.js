@@ -14,7 +14,7 @@ describe('Tracer Performance Overhead', () => {
     testBed = await ScopeTracingTestBed.create();
 
     // Register scope for tracing
-    await testBed.registerCustomScope('personal-space', 'close_actors');
+    await testBed.registerCustomScope('personal-space-states', 'close_actors');
   });
 
   afterEach(() => {
@@ -30,13 +30,13 @@ describe('Tracer Performance Overhead', () => {
     // Warmup both paths to stabilize JIT before measurement
     // Path 1: No tracer
     for (let i = 0; i < 500; i++) {
-      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space-states:close_actors', actorEntity);
     }
     // Path 2: Disabled tracer (needs its own warmup for fair comparison)
     testBed.scopeTracer.disable();
     for (let i = 0; i < 500; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'personal-space:close_actors',
+        'personal-space-states:close_actors',
         actorEntity
       );
     }
@@ -44,7 +44,7 @@ describe('Tracer Performance Overhead', () => {
     // Baseline: no tracer injected
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testBed.resolveSyncNoTracer('personal-space:close_actors', actorEntity);
+      testBed.resolveSyncNoTracer('personal-space-states:close_actors', actorEntity);
     }
     const duration1 = performance.now() - start1;
 
@@ -52,7 +52,7 @@ describe('Tracer Performance Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'personal-space:close_actors',
+        'personal-space-states:close_actors',
         actorEntity
       );
     }
@@ -101,7 +101,7 @@ describe('Tracer Performance Overhead', () => {
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'personal-space:close_actors',
+        'personal-space-states:close_actors',
         actorEntity
       );
     }
@@ -112,7 +112,7 @@ describe('Tracer Performance Overhead', () => {
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
       testBed.testEnv.unifiedScopeResolver.resolveSync(
-        'personal-space:close_actors',
+        'personal-space-states:close_actors',
         actorEntity
       );
       testBed.clearScopeTrace();
@@ -156,7 +156,7 @@ describe('Tracer Performance Overhead', () => {
 
     const start = performance.now();
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'personal-space:close_actors',
+      'personal-space-states:close_actors',
       actorEntity
     );
     const duration = performance.now() - start;
@@ -188,7 +188,7 @@ describe('Tracer Performance Overhead', () => {
 
     // Generate trace data
     testBed.testEnv.unifiedScopeResolver.resolveSync(
-      'personal-space:close_actors',
+      'personal-space-states:close_actors',
       actorEntity
     );
 

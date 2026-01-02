@@ -72,7 +72,7 @@ describe('Turn Around to Face Action Discovery', () => {
     // Load the scope file
     const scopePath = path.join(
       process.cwd(),
-      'data/mods/facing-states/scopes/actors_im_facing_away_from.scope'
+      'data/mods/personal-space-states/scopes/actors_im_facing_away_from.scope'
     );
     const scopeContent = fs.readFileSync(scopePath, 'utf-8');
     const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
@@ -301,7 +301,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -357,7 +357,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob, charlie]) };
           }
           return { success: true, value: new Set() };
@@ -411,7 +411,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -449,7 +449,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -479,7 +479,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope, context) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             // Check which actor is requesting
             if (context?.actor?.id === alice) {
               return { success: true, value: new Set([bob]) };
@@ -533,7 +533,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'facing-states:actors_im_facing_away_from') {
+          if (scope === 'personal-space-states:actors_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };

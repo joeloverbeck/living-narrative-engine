@@ -88,7 +88,7 @@ describe('hugging:release_hug action discovery', () => {
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
           scopeName ===
-          'personal-space:close_actors_facing_each_other_or_behind_target'
+          'personal-space-states:close_actors_facing_each_other_or_behind_target'
         ) {
           const actorId = context?.actor?.id;
           return { success: true, value: resolveClosePartners(actorId) };

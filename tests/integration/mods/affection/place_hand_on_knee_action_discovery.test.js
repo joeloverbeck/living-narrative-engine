@@ -32,7 +32,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
       scopeResolver.__placeHandOnKneeOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
-          scopeName === 'personal-space:close_actors' ||
+          scopeName === 'personal-space-states:close_actors' ||
           scopeName === 'sitting:actors_sitting_close'
         ) {
           const actorId = context?.actor?.id;
@@ -65,7 +65,7 @@ describe('affection:place_hand_on_knee action discovery', () => {
               return acc;
             }
 
-            if (scopeName === 'personal-space:close_actors') {
+            if (scopeName === 'personal-space-states:close_actors') {
               acc.add(partnerId);
               return acc;
             }

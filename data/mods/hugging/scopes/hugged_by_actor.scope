@@ -1,5 +1,5 @@
 // Scope restricting potential targets to those currently being hugged by the acting entity
-hugging:hugged_by_actor := personal-space:close_actors_facing_each_other_or_behind_target[{
+hugging:hugged_by_actor := personal-space-states:close_actors_facing_each_other_or_behind_target[{
   "and": [
     {"!!": {"var": "actor.components.hugging-states:hugging"}},
     {"!!": {"var": "entity.components.hugging-states:being_hugged"}},

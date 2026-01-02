@@ -549,9 +549,9 @@ export class ScopeResolverHelpers {
       ),
 
       // Violence mod scopes - complex closeness + facing logic
-      'personal-space:close_actors_facing_each_other_or_behind_target':
+      'personal-space-states:close_actors_facing_each_other_or_behind_target':
         this.createArrayFilterResolver(
-          'personal-space:close_actors_facing_each_other_or_behind_target',
+          'personal-space-states:close_actors_facing_each_other_or_behind_target',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
@@ -620,8 +620,8 @@ export class ScopeResolverHelpers {
       // HIGH PRIORITY SCOPES (Phase 1)
 
       // "close actors" - Base closeness without kneeling filters
-      'personal-space:close_actors': this.createArrayFilterResolver(
-        'personal-space:close_actors',
+      'personal-space-states:close_actors': this.createArrayFilterResolver(
+        'personal-space-states:close_actors',
         {
           getArray: (actor, context, em) => {
             const closeness = em.getComponentData(
@@ -650,9 +650,9 @@ export class ScopeResolverHelpers {
       ),
 
       // "close actors facing each other" - Mutual facing validation
-      'personal-space:close_actors_facing_each_other':
+      'personal-space-states:close_actors_facing_each_other':
         this.createArrayFilterResolver(
-          'personal-space:close_actors_facing_each_other',
+          'personal-space-states:close_actors_facing_each_other',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
@@ -718,9 +718,9 @@ export class ScopeResolverHelpers {
       ),
 
       // "close actors or entity kneeling before actor" - Complex closeness with kneeling union
-      'personal-space:close_actors_or_entity_kneeling_before_actor':
+      'personal-space-states:close_actors_or_entity_kneeling_before_actor':
         this.createArrayFilterResolver(
-          'personal-space:close_actors_or_entity_kneeling_before_actor',
+          'personal-space-states:close_actors_or_entity_kneeling_before_actor',
           {
             getArray: (actor, context, em) => {
               const closeness = em.getComponentData(
@@ -916,8 +916,8 @@ export class ScopeResolverHelpers {
       ),
 
       // "actors im facing away from" - Facing-away targets in closeness
-      'facing-states:actors_im_facing_away_from': this.createArrayFilterResolver(
-        'facing-states:actors_im_facing_away_from',
+      'personal-space-states:actors_im_facing_away_from': this.createArrayFilterResolver(
+        'personal-space-states:actors_im_facing_away_from',
         {
           getArray: (actor, context, em) => {
             const facingAway = em.getComponentData(

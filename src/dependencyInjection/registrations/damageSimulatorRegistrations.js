@@ -128,6 +128,7 @@ export function registerDamageSimulatorComponents(container) {
           containerElement,
           eventBus: c.resolve(tokens.IValidatedEventDispatcher),
           logger: c.resolve(tokens.ILogger),
+          hitProbabilityCalculator: c.resolve(tokens.HitProbabilityCalculator),
         });
     },
     { lifecycle: 'singletonFactory' },

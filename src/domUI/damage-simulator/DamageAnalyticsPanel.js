@@ -13,6 +13,27 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
+ * @typedef {object} HitProbabilityCalculator
+ * @property {function(AnatomyPart[]): PartProbability[]} calculateProbabilities - Calculate probability distribution for parts.
+ * @property {function(PartProbability[]): VisualizationData} getVisualizationData - Generate visualization data from probabilities.
+ */
+
+/**
+ * @typedef {object} PartProbability
+ * @property {string} partId - Entity ID of the part.
+ * @property {string} partName - Human-readable part name.
+ * @property {number} probability - Probability percentage (0-100).
+ * @property {string} tier - Probability tier ('high', 'medium', 'low', 'none').
+ */
+
+/**
+ * @typedef {object} VisualizationData
+ * @property {Array<{partId: string, label: string, percentage: number, barWidth: number, colorClass: string}>} bars - Bar chart data for visualization.
+ * @property {number} maxProbability - Highest probability value.
+ * @property {number} totalParts - Number of parts in distribution.
+ */
+
+/**
  * @typedef {object} PartAnalytics
  * @property {string} partId - Entity ID of the part
  * @property {string} partName - Human-readable part name
@@ -124,6 +145,9 @@ class DamageAnalyticsPanel {
   /** @type {boolean} */
   #isCollapsed = false;
 
+  /** @type {HitProbabilityCalculator|null} */
+  #hitProbabilityCalculator = null;
+
   /**
    * Expose constants for testing and external use
    */
@@ -138,8 +162,9 @@ class DamageAnalyticsPanel {
    * @param {HTMLElement} dependencies.containerElement - DOM element to render into.
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher.
    * @param {ILogger} dependencies.logger - Logger instance.
+   * @param {HitProbabilityCalculator|null} [dependencies.hitProbabilityCalculator] - Optional hit probability calculator.
    */
-  constructor({ containerElement, eventBus, logger }) {
+  constructor({ containerElement, eventBus, logger, hitProbabilityCalculator = null }) {
     validateDependency(containerElement, 'HTMLElement', console, {
       requiredMethods: ['appendChild', 'querySelector'],
     });
@@ -153,6 +178,7 @@ class DamageAnalyticsPanel {
     this.#containerElement = containerElement;
     this.#eventBus = eventBus;
     this.#logger = logger;
+    this.#hitProbabilityCalculator = hitProbabilityCalculator;
 
     this.#subscribeToEvents();
     this.#logger.debug('[DamageAnalyticsPanel] Initialized');
@@ -255,6 +281,7 @@ class DamageAnalyticsPanel {
    */
   #generateContentHTML(analytics) {
     const hitsTableHTML = this.#generateHitsTableHTML(analytics.parts);
+    const hitProbabilityHTML = this.#generateHitProbabilityHTML(analytics.parts);
     const effectsHTML = this.#generateEffectsHTML(analytics.effectThresholds);
     const aggregateHTML = this.#generateAggregateHTML(analytics.aggregate);
 
@@ -263,6 +290,12 @@ class DamageAnalyticsPanel {
       <section class="ds-analytics-section">
         <h4>Hits to Destroy</h4>
         ${hitsTableHTML}
+      </section>
+
+      <!-- Hit Probability Section -->
+      <section class="ds-analytics-section">
+        <h4>Hit Probability</h4>
+        ${hitProbabilityHTML}
       </section>
 
       <!-- Effect Triggers Section -->
@@ -292,13 +325,16 @@ class DamageAnalyticsPanel {
 
     const rowsHTML = parts.map((part) => {
       const criticalClass = part.isCritical ? 'ds-critical-part' : '';
-      const hitsDisplay = part.hitsToDestroy === Infinity ? '∞' : part.hitsToDestroy;
+      // Handle null values when no damage config is set
+      const hitsDisplay =
+        part.hitsToDestroy === null ? '—' : part.hitsToDestroy === Infinity ? '∞' : part.hitsToDestroy;
+      const damageDisplay = part.effectiveDamage === null ? '—' : part.effectiveDamage.toFixed(1);
 
       return `
         <tr class="${criticalClass}">
           <td>${this.#escapeHtml(part.partName)}</td>
           <td>${part.currentHealth}/${part.maxHealth}</td>
-          <td>${part.effectiveDamage.toFixed(1)}</td>
+          <td>${damageDisplay}</td>
           <td>${hitsDisplay}</td>
         </tr>
       `;
@@ -319,6 +355,49 @@ class DamageAnalyticsPanel {
         </tbody>
       </table>
     `;
+  }
+
+  /**
+   * Generate HTML for hit probability visualization.
+   *
+   * @private
+   * @param {PartAnalytics[]} parts - Part analytics data with component info.
+   * @returns {string} HTML for the probability chart.
+   */
+  #generateHitProbabilityHTML(parts) {
+    if (!this.#hitProbabilityCalculator || parts.length === 0) {
+      return '<p class="ds-no-data">Hit probability data not available.</p>';
+    }
+
+    // Transform parts to format expected by HitProbabilityCalculator
+    const partsWithComponents = parts.map((part) => ({
+      id: part.partId,
+      name: part.partName,
+      component: this.#anatomyData?.parts?.find((p) => p.id === part.partId) || null,
+    }));
+
+    const probabilities = this.#hitProbabilityCalculator.calculateProbabilities(partsWithComponents);
+    const vizData = this.#hitProbabilityCalculator.getVisualizationData(probabilities);
+
+    if (vizData.bars.length === 0) {
+      return '<p class="ds-no-data">No probability data calculated.</p>';
+    }
+
+    const barsHTML = vizData.bars
+      .map(
+        (bar) => `
+      <div class="ds-prob-bar-row">
+        <span class="ds-prob-label">${this.#escapeHtml(bar.label)}</span>
+        <div class="ds-prob-bar-container">
+          <div class="ds-prob-bar ${bar.colorClass}" style="width: ${bar.barWidth}%"></div>
+        </div>
+        <span class="ds-prob-value">${bar.percentage.toFixed(1)}%</span>
+      </div>
+    `
+      )
+      .join('');
+
+    return `<div class="ds-prob-chart">${barsHTML}</div>`;
   }
 
   /**
@@ -485,10 +564,17 @@ class DamageAnalyticsPanel {
       totalParts: 0,
     };
 
-    if (this.#anatomyData?.parts && this.#damageEntry) {
+    // Fix Issue 1: Show anatomy data even without damage config
+    // Only require anatomy data, damage calculations are conditional
+    if (this.#anatomyData?.parts) {
+      const hasDamageConfig = !!this.#damageEntry;
+
       for (const part of this.#anatomyData.parts) {
-        const effectiveDamage = this.#calculateEffectiveDamage(part);
-        const hitsToDestroy = this.#calculateHitsToDestroy(part.currentHealth, effectiveDamage);
+        // Only calculate damage metrics if damage config exists
+        const effectiveDamage = hasDamageConfig ? this.#calculateEffectiveDamage(part) : null;
+        const hitsToDestroy = hasDamageConfig
+          ? this.#calculateHitsToDestroy(part.currentHealth, effectiveDamage)
+          : null;
         const isCritical = this.#isCriticalPart(part.name);
 
         parts.push({
@@ -501,8 +587,8 @@ class DamageAnalyticsPanel {
           isCritical,
         });
 
-        // Update aggregate stats (only for finite values)
-        if (hitsToDestroy !== Infinity) {
+        // Update aggregate stats (only for finite values when damage config exists)
+        if (hasDamageConfig && hitsToDestroy !== null && hitsToDestroy !== Infinity) {
           aggregate.minHits = Math.min(aggregate.minHits, hitsToDestroy);
           aggregate.maxHits = Math.max(aggregate.maxHits, hitsToDestroy);
         }
@@ -510,18 +596,20 @@ class DamageAnalyticsPanel {
 
       aggregate.totalParts = parts.length;
 
-      // Calculate average (exclude Infinity values)
-      const finiteParts = parts.filter((p) => p.hitsToDestroy !== Infinity);
-      if (finiteParts.length > 0) {
-        const sum = finiteParts.reduce((acc, p) => acc + p.hitsToDestroy, 0);
-        aggregate.averageHits = sum / finiteParts.length;
-      } else {
-        aggregate.averageHits = Infinity;
-      }
+      // Calculate average (exclude null/Infinity values)
+      if (hasDamageConfig) {
+        const finiteParts = parts.filter((p) => p.hitsToDestroy !== null && p.hitsToDestroy !== Infinity);
+        if (finiteParts.length > 0) {
+          const sum = finiteParts.reduce((acc, p) => acc + p.hitsToDestroy, 0);
+          aggregate.averageHits = sum / finiteParts.length;
+        } else {
+          aggregate.averageHits = Infinity;
+        }
 
-      // If no finite values, reset min/max
-      if (aggregate.minHits === Infinity && aggregate.maxHits === 0) {
-        aggregate.maxHits = Infinity;
+        // If no finite values, reset min/max
+        if (aggregate.minHits === Infinity && aggregate.maxHits === 0) {
+          aggregate.maxHits = Infinity;
+        }
       }
     }
 

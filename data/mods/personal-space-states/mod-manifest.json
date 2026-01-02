@@ -3,13 +3,34 @@
   "id": "personal-space-states",
   "version": "1.0.0",
   "name": "Personal Space States",
-  "description": "State components for personal space and closeness relationships between actors.",
+  "description": "State components and scopes for personal space and closeness relationships between actors.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "facing-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "bending-states",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "components": [
       "closeness.component.json"
+    ],
+    "scopes": [
+      "actors_im_facing_away_from.scope",
+      "close_actors.scope",
+      "close_actors_facing_each_other.scope",
+      "close_actors_facing_each_other_or_behind_target.scope",
+      "close_actors_facing_each_other_or_behind_target_with_hands.scope",
+      "close_actors_or_entity_kneeling_before_actor.scope"
     ]
   }
 }

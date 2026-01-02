@@ -7,7 +7,11 @@
 import ModDependencyError from '../errors/modDependencyError.js';
 import { CORE_MOD_ID } from '../constants/core.js';
 import { assertIsLogger, assertIsMap } from '../utils/argValidation.js';
-import { buildDependencyGraph, createMinHeap } from '../utils/graphUtils.js';
+import {
+  buildDependencyGraph,
+  createMinHeap,
+  extractCyclePath,
+} from '../utils/graphUtils.js';
 
 /*─────────────────────────────────────────────────────────────────────────*/
 /* ModLoadOrderResolver Class                                              */
@@ -101,9 +105,12 @@ export default class ModLoadOrderResolver {
 
     /* 5 – Cycle detection */
     if (sorted.length < nodes.size) {
-      const cycle = [...nodes].filter((n) => inDeg.get(n) > 0);
+      const cycleNodes = new Set([...nodes].filter((n) => inDeg.get(n) > 0));
+      const { cycle, involvedNodes } = extractCyclePath(edges, cycleNodes);
       throw new ModDependencyError(
-        `DEPENDENCY_CYCLE: Cyclic dependency detected among mods: ${cycle.join(', ')}`
+        `DEPENDENCY_CYCLE: Circular dependency detected:\n` +
+          `  ${cycle.join(' → ')}\n\n` +
+          `All ${involvedNodes.length} mods affected: ${involvedNodes.join(', ')}`
       );
     }
 
