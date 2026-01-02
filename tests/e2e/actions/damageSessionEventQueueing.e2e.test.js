@@ -100,7 +100,8 @@ const createCombatants = ({
       currentHealth: partHealth,
       maxHealth: partMaxHealth,
       status: 'healthy',
-    });
+    })
+    .withComponent('anatomy:has_rigid_structure', { structureType: 'bone' });
 
   if (vitalOrganType) {
     part.withComponent('anatomy:vital_organ', { organType: vitalOrganType });

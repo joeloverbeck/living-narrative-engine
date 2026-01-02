@@ -139,6 +139,177 @@ describe('DamageAnalyticsPanel', () => {
       expect(html).toContain('Head');
       expect(html).toContain('Left Arm');
     });
+
+    it('should render status column header in hits table', () => {
+      const anatomyData = {
+        parts: [{ id: 'part-head', name: 'Head', currentHealth: 100, maxHealth: 100 }],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('<th>Status</th>');
+    });
+
+    it('should render status icon with escaped tooltip for active effects', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-head',
+            name: 'Head',
+            currentHealth: 100,
+            maxHealth: 100,
+            components: {
+              'anatomy:bleeding': { severity: '<script>', remainingTurns: 3 },
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('ds-effect-bleeding');
+      expect(html).toContain('🩸');
+      expect(html).toContain('&lt;script&gt;');
+      expect(html).not.toContain('<script>');
+    });
+
+    it('should display dash in status column when no effects are present', () => {
+      const anatomyData = {
+        parts: [{ id: 'part-head', name: 'Head', currentHealth: 100, maxHealth: 100 }],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('ds-status-cell">—');
+    });
+
+    it('should display burning effect icon', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-1',
+            name: 'Torso',
+            currentHealth: 80,
+            maxHealth: 100,
+            components: {
+              'anatomy:burning': { remainingTurns: 2, stackedCount: 3 },
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('🔥');
+      expect(html).toContain('ds-effect-burning');
+    });
+
+    it('should display poisoned effect icon', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-1',
+            name: 'Arm',
+            currentHealth: 60,
+            maxHealth: 100,
+            components: {
+              'anatomy:poisoned': { remainingTurns: 5 },
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('☠️');
+      expect(html).toContain('ds-effect-poisoned');
+    });
+
+    it('should display fractured effect icon', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-1',
+            name: 'Leg',
+            currentHealth: 40,
+            maxHealth: 100,
+            components: {
+              'anatomy:fractured': { sourceDamageType: 'blunt' },
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('🦴');
+      expect(html).toContain('ds-effect-fractured');
+    });
+
+    it('should display multiple effects on the same part', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-1',
+            name: 'Torso',
+            currentHealth: 50,
+            maxHealth: 100,
+            components: {
+              'anatomy:bleeding': { severity: 'minor' },
+              'anatomy:burning': { remainingTurns: 1 },
+              'anatomy:poisoned': { remainingTurns: 4 },
+              'anatomy:fractured': {},
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      expect(html).toContain('🩸');
+      expect(html).toContain('🔥');
+      expect(html).toContain('☠️');
+      expect(html).toContain('🦴');
+    });
+
+    it('should maintain correct column order', () => {
+      const anatomyData = {
+        parts: [{ id: 'part-1', name: 'Head', currentHealth: 100, maxHealth: 100, components: {} }],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.render();
+
+      const html = mockContainerElement.innerHTML;
+      const headerMatch = html.match(/<thead>[\s\S]*?<\/thead>/);
+      expect(headerMatch).not.toBeNull();
+
+      const headers = headerMatch[0];
+      const partIndex = headers.indexOf('Part');
+      const healthIndex = headers.indexOf('Health');
+      const statusIndex = headers.indexOf('Status');
+      const effDamageIndex = headers.indexOf('Eff. Damage');
+      const hitsIndex = headers.indexOf('Hits');
+
+      expect(partIndex).toBeLessThan(healthIndex);
+      expect(healthIndex).toBeLessThan(statusIndex);
+      expect(statusIndex).toBeLessThan(effDamageIndex);
+      expect(effDamageIndex).toBeLessThan(hitsIndex);
+    });
   });
 
   describe('display hits-to-destroy for each part', () => {
@@ -557,6 +728,30 @@ describe('DamageAnalyticsPanel', () => {
 
       expect(analytics.parts).toHaveLength(0);
       expect(analytics.aggregate.totalParts).toBe(0);
+    });
+
+    it('should include components in part analytics data', () => {
+      const anatomyData = {
+        parts: [
+          {
+            id: 'part-head',
+            name: 'Head',
+            currentHealth: 100,
+            maxHealth: 100,
+            components: {
+              'anatomy:burning': { remainingTurns: 2 },
+            },
+          },
+        ],
+      };
+
+      damageAnalyticsPanel.setEntity('entity-1', anatomyData);
+      damageAnalyticsPanel.updateDamageConfig({ amount: 10, damageType: 'slashing' });
+
+      const analytics = damageAnalyticsPanel.getAnalytics();
+      expect(analytics.parts[0].components).toEqual({
+        'anatomy:burning': { remainingTurns: 2 },
+      });
     });
   });
 

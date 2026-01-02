@@ -22,6 +22,9 @@
     "anatomy:provides_smell": {},
     "descriptors:size_category": {
       "size": "medium"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "cartilage"
     }
   }
 }

@@ -89,6 +89,9 @@
     },
     "descriptors:skin_condition": {
       "conditions": ["sleep-hollowed"]
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

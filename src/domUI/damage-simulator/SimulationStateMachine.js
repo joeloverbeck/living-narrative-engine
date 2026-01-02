@@ -50,7 +50,7 @@ class SimulationStateMachine {
    * @throws {Error} If transition is invalid
    */
   transition(newState) {
-    const validNextStates = VALID_TRANSITIONS[this.#currentState] || [];
+    const validNextStates = VALID_TRANSITIONS[this.#currentState];
     if (!validNextStates.includes(newState)) {
       throw new Error(
         `Invalid state transition: ${this.#currentState} -> ${newState}. ` +
@@ -68,7 +68,7 @@ class SimulationStateMachine {
    * @returns {boolean}
    */
   canTransition(newState) {
-    return VALID_TRANSITIONS[this.#currentState]?.includes(newState) ?? false;
+    return VALID_TRANSITIONS[this.#currentState].includes(newState);
   }
 
   // Convenience state checks

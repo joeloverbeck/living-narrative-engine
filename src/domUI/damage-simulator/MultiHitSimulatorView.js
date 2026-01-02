@@ -263,7 +263,6 @@ class MultiHitSimulatorView {
    */
   async #handleRunClick() {
     const container = this.#containerElement;
-    if (!container || !container.querySelector) return;
 
     // Get configuration from UI
     const hitCountInput = container.querySelector('#ds-hit-count');

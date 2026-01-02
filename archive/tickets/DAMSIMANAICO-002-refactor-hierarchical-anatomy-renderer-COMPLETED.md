@@ -4,6 +4,10 @@
 
 Refactor HierarchicalAnatomyRenderer to import and use the shared `statusEffectUtils.js` module instead of local definitions. Remove duplicated code while maintaining backward compatibility.
 
+## Status
+
+Completed
+
 ## Prerequisites
 
 - DAMSIMANAICO-001 must be completed (statusEffectUtils.js exists)
@@ -17,7 +21,7 @@ Refactor HierarchicalAnatomyRenderer to import and use the shared `statusEffectU
 - DO NOT modify `statusEffectUtils.js`
 - DO NOT modify `DamageAnalyticsPanel.js`
 - DO NOT modify any CSS files
-- DO NOT add new tests (existing tests must continue to pass)
+- Only add/adjust tests if the refactor exposes an invariant or edge case that is not currently covered
 
 ## Implementation Details
 
@@ -47,12 +51,12 @@ import {
 
 4. **Update CSS_CLASSES Constant**:
    - Remove these properties from local `CSS_CLASSES`:
+     - `partEffects`
      - `effect`
      - `effectBleeding`
      - `effectBurning`
      - `effectPoisoned`
      - `effectFractured`
-     - `partEffects`
 
 5. **Update #renderEffectsSection Method** (approximately lines 665-678):
 
@@ -77,6 +81,7 @@ import {
    - Replace `this.#getActiveEffects(...)` with `getActiveEffects(...)`
    - Replace `this.#formatEffectTooltip(...)` with `formatEffectTooltip(...)`
    - Replace `this.#capitalize(...)` with `capitalize(...)`
+   - Update any selectors/queries that referenced `CSS_CLASSES.partEffects` to use `EFFECT_CSS_CLASSES.container`
 
 7. **Maintain Static Exports** for backward compatibility:
 
@@ -125,3 +130,7 @@ npm run typecheck
 5. All existing tests pass without modification
 6. Linting passes
 7. Type checking passes
+
+## Outcome
+
+Moved HierarchicalAnatomyRenderer's status effect constants and helpers to the shared module and updated effect rendering/selectors to use shared CSS class mappings; no public API changes were required beyond retaining static constants as previously planned.

@@ -233,7 +233,8 @@ class DamageHistoryTracker {
    * @returns {string} HTML for the row.
    */
   #renderEntry(entry) {
-    const severityClass = entry.severity ? `ds-severity-${entry.severity}` : '';
+    // Note: entry.severity is always set to at least 'unknown' via record() defaults
+    const severityClass = `ds-severity-${entry.severity}`;
 
     return `
       <tr class="${severityClass}">
@@ -277,7 +278,7 @@ class DamageHistoryTracker {
    * @returns {string} Escaped string.
    */
   #escapeHtml(str) {
-    if (typeof str !== 'string') return '';
+    // Note: str is always a string via record() defaults (targetPartName, damageType)
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;

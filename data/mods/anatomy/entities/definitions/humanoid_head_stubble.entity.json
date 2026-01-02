@@ -83,6 +83,9 @@
     },
     "descriptors:facial_hair": {
       "style": "stubble"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

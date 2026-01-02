@@ -192,6 +192,16 @@ describe('SimulationStateMachine', () => {
   });
 
   describe('state getters', () => {
+    it('should correctly report isConfigured for CONFIGURED', () => {
+      const machine = new SimulationStateMachine();
+
+      expect(machine.isConfigured).toBe(false);
+
+      machine.transition(SimulationState.CONFIGURED);
+
+      expect(machine.isConfigured).toBe(true);
+    });
+
     it('should correctly report isRunning and isActive for RUNNING', () => {
       const machine = new SimulationStateMachine();
 

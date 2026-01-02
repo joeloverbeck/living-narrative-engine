@@ -29,6 +29,12 @@ describe('MultiHitSimulatorView', () => {
     expect(view).toBeInstanceOf(MultiHitSimulatorView);
   });
 
+  it('should use console as default logger when none provided', () => {
+    const container = document.createElement('div');
+    const view = new MultiHitSimulatorView(container); // No logger passed
+    expect(view).toBeInstanceOf(MultiHitSimulatorView);
+  });
+
   it('should handle null container gracefully', () => {
     const { view } = createView(null);
     expect(() => view.render(defaults)).not.toThrow();
@@ -99,6 +105,42 @@ describe('MultiHitSimulatorView', () => {
       expect(delayValue.textContent).toBe('250ms');
     });
 
+    it('should not bind delay slider listener when slider or value display is missing', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-hit-delay-slider').remove();
+
+      expect(() =>
+        view.bindEventListeners({ onRun: jest.fn(), onStop: jest.fn() })
+      ).not.toThrow();
+    });
+
+    it('should not bind run button listener when run button is missing', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-sim-run-btn').remove();
+
+      expect(() =>
+        view.bindEventListeners({ onRun: jest.fn(), onStop: jest.fn() })
+      ).not.toThrow();
+    });
+
+    it('should not bind stop button listener when stop button is missing', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-sim-stop-btn').remove();
+
+      expect(() =>
+        view.bindEventListeners({ onRun: jest.fn(), onStop: jest.fn() })
+      ).not.toThrow();
+    });
+
     it('should toggle focus select when target mode changes', () => {
       const container = document.createElement('div');
       const { view } = createView(container);
@@ -138,6 +180,19 @@ describe('MultiHitSimulatorView', () => {
       }).not.toThrow();
     });
 
+    it('should not throw when onStop handler is not provided', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      view.bindEventListeners({ onRun: jest.fn() }); // No onStop
+
+      const stopBtn = container.querySelector('#ds-sim-stop-btn');
+      stopBtn.disabled = false;
+
+      expect(() => stopBtn.click()).not.toThrow();
+    });
+
     it('should log and skip run when required elements are missing', () => {
       const container = document.createElement('div');
       const { view, logger } = createView(container);
@@ -170,6 +225,63 @@ describe('MultiHitSimulatorView', () => {
 
       expect(() => {
         container.querySelector('#ds-sim-run-btn').click();
+      }).not.toThrow();
+    });
+
+    it('should not throw when logger lacks error method on missing UI elements', () => {
+      const container = document.createElement('div');
+      const malformedLogger = {}; // No error method
+      const view = new MultiHitSimulatorView(container, malformedLogger);
+      const onRun = jest.fn();
+
+      view.render(defaults);
+      container.querySelector('#ds-hit-count').remove();
+      view.bindEventListeners({ onRun });
+
+      expect(() => container.querySelector('#ds-sim-run-btn').click()).not.toThrow();
+      expect(onRun).not.toHaveBeenCalled();
+    });
+
+    it('should not throw when logger.error is not a function', () => {
+      const container = document.createElement('div');
+      const badLogger = { error: 'not a function' };
+      const view = new MultiHitSimulatorView(container, badLogger);
+      const onRun = jest.fn();
+
+      view.render(defaults);
+      container.querySelector('#ds-hit-count').remove();
+      view.bindEventListeners({ onRun });
+
+      expect(() => container.querySelector('#ds-sim-run-btn').click()).not.toThrow();
+    });
+
+    it('should not throw when onRun handler is not provided', async () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      view.bindEventListeners({ onStop: jest.fn() }); // No onRun
+
+      container.querySelector('#ds-hit-count').value = '1';
+      container.querySelector('#ds-hit-delay-slider').value = '0';
+
+      expect(() => container.querySelector('#ds-sim-run-btn').click()).not.toThrow();
+      await Promise.resolve(); // Allow async handler to complete
+    });
+
+    it('should not throw when no handlers provided at all', async () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      view.bindEventListeners({}); // Empty handlers
+
+      container.querySelector('#ds-hit-count').value = '1';
+      container.querySelector('#ds-hit-delay-slider').value = '0';
+
+      expect(() => {
+        container.querySelector('#ds-sim-run-btn').click();
+        container.querySelector('#ds-sim-stop-btn').click();
       }).not.toThrow();
     });
   });
@@ -255,6 +367,39 @@ describe('MultiHitSimulatorView', () => {
         });
       }).not.toThrow();
     });
+
+    it('should handle missing results container', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('.ds-sim-results').remove();
+
+      expect(() => {
+        view.updateResults({
+          hitsExecuted: 2,
+          totalDamage: 20,
+          durationMs: 100,
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle missing hits and duration elements', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-result-hits').remove();
+      container.querySelector('#ds-result-duration').remove();
+
+      expect(() => {
+        view.updateResults({
+          hitsExecuted: 2,
+          totalDamage: 20,
+          durationMs: 100,
+        });
+      }).not.toThrow();
+    });
   });
 
   describe('updateControlsState', () => {
@@ -271,6 +416,26 @@ describe('MultiHitSimulatorView', () => {
       view.updateControlsState(false);
       expect(container.querySelector('#ds-sim-run-btn').disabled).toBe(false);
       expect(container.querySelector('#ds-sim-stop-btn').disabled).toBe(true);
+    });
+
+    it('should handle missing run button', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-sim-run-btn').remove();
+
+      expect(() => view.updateControlsState(true)).not.toThrow();
+    });
+
+    it('should handle missing stop button', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+      container.querySelector('#ds-sim-stop-btn').remove();
+
+      expect(() => view.updateControlsState(false)).not.toThrow();
     });
   });
 
@@ -299,6 +464,20 @@ describe('MultiHitSimulatorView', () => {
       container.querySelector('#ds-sim-focus-part').remove();
 
       expect(() => view.updateFocusPartOptions([])).not.toThrow();
+    });
+
+    it('should handle null or undefined parts gracefully', () => {
+      const container = document.createElement('div');
+      const { view } = createView(container);
+
+      view.render(defaults);
+
+      expect(() => view.updateFocusPartOptions(null)).not.toThrow();
+      expect(() => view.updateFocusPartOptions(undefined)).not.toThrow();
+
+      // Verify only default option remains
+      const options = container.querySelectorAll('#ds-sim-focus-part option');
+      expect(options.length).toBe(1);
     });
   });
 });

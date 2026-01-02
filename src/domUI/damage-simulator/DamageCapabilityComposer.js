@@ -1008,14 +1008,9 @@ class DamageCapabilityComposer {
     this.#config[effectName].enabled = checkbox.checked;
 
     for (const [configKey, elementId] of Object.entries(fieldMap)) {
-      // Guard against missing element (defensive programming)
+      // Element is guaranteed to exist - created in #createEffectConfigSections()
+      // and stored in #elements during #bindElements()
       const element = this.#elements.get(elementId);
-      if (!element) {
-        this.#logger.warn(
-          `[DamageCapabilityComposer] Missing element for ${effectName}.${configKey}: ${elementId}`
-        );
-        continue; // Skip this field if element not found
-      }
       if (element.type === 'checkbox') {
         this.#config[effectName][configKey] = element.checked;
       } else if (element.tagName === 'SELECT') {

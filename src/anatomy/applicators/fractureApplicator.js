@@ -52,6 +52,13 @@ const STUNNED_COMPONENT_ID = 'anatomy:stunned';
 const FRACTURED_EVENT = 'anatomy:fractured';
 
 /**
+ * Component ID indicating a body part has rigid structure that can fracture.
+ *
+ * @type {string}
+ */
+const HAS_RIGID_STRUCTURE_COMPONENT_ID = 'anatomy:has_rigid_structure';
+
+/**
  * Default threshold fraction for fracture (50% of max health).
  *
  * @type {number}
@@ -90,7 +97,7 @@ class FractureApplicator {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['addComponent'],
+      requiredMethods: ['addComponent', 'hasComponent'],
     });
 
     this.#logger = logger;
@@ -121,6 +128,27 @@ class FractureApplicator {
     const threshold = effectiveThreshold * maxHealth;
 
     return damageAmount >= threshold;
+  }
+
+  /**
+   * Check if a part has rigid structure (bones, carapace, etc.) that can fracture.
+   *
+   * @param {string} partId - The part entity ID to check
+   * @returns {boolean} True if the part has the anatomy:has_rigid_structure component
+   */
+  hasRigidStructure(partId) {
+    try {
+      return this.#entityManager.hasComponent(
+        partId,
+        HAS_RIGID_STRUCTURE_COMPONENT_ID
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.#logger.warn(
+        `FractureApplicator: Error checking rigid structure for ${partId}: ${message}`
+      );
+      return false;
+    }
   }
 
   /**
@@ -172,6 +200,14 @@ class FractureApplicator {
   }) {
     // Check if fracture is enabled in config
     if (!damageEntryConfig?.enabled) {
+      return { triggered: false, stunApplied: false };
+    }
+
+    // Check if part has rigid structure that can fracture
+    if (!this.hasRigidStructure(partId)) {
+      this.#logger.debug(
+        `FractureApplicator: Part ${partId} lacks rigid structure, skipping fracture.`
+      );
       return { triggered: false, stunApplied: false };
     }
 
@@ -250,6 +286,7 @@ export {
   FRACTURED_COMPONENT_ID,
   STUNNED_COMPONENT_ID,
   FRACTURED_EVENT,
+  HAS_RIGID_STRUCTURE_COMPONENT_ID,
   DEFAULT_THRESHOLD_FRACTION,
   DEFAULT_STUN_DURATION,
 };

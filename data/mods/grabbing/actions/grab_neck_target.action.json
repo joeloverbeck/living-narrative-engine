@@ -5,7 +5,7 @@
   "description": "Attempt to grab someone's neck to physically control them",
   "template": "grab {target}'s neck ({chance}% chance)",
   "required_components": {
-    "actor": ["personal-space-states:closeness", "skills:melee_skill"]
+    "actor": ["personal-space-states:closeness", "skills:grappling_skill"]
   },
   "forbidden_components": {
     "actor": [
@@ -33,7 +33,7 @@
     "enabled": true,
     "contestType": "opposed",
     "actorSkill": {
-      "component": "skills:melee_skill",
+      "component": "skills:grappling_skill",
       "property": "value",
       "default": 10
     },

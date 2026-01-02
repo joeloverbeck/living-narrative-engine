@@ -4,6 +4,12 @@
 
 Add a "Status" column to the HITS TO DESTROY table in DamageAnalyticsPanel. The column displays status effect icons (bleeding, burning, poisoned, fractured) using the shared statusEffectUtils module.
 
+## Assumptions Reassessed
+
+- DamageAnalyticsPanel already computes `hitProbability` and renders nullable values as dashes; PartAnalytics JSDoc must reflect nullability and the existing hitProbability field.
+- Anatomy parts already carry `components` from both flat and tree formats, but analytics output currently drops them; the Status column needs analytics to include `components`.
+- Tests will need targeted updates/additions for the new column; blocking test edits would prevent validation.
+
 ## Prerequisites
 
 - DAMSIMANAICO-001 must be completed (statusEffectUtils.js exists)
@@ -11,13 +17,14 @@ Add a "Status" column to the HITS TO DESTROY table in DamageAnalyticsPanel. The 
 ## Files to Touch
 
 - `src/domUI/damage-simulator/DamageAnalyticsPanel.js` (MODIFY)
+- `tests/unit/domUI/damage-simulator/DamageAnalyticsPanel.test.js` (MODIFY)
 
 ## Out of Scope
 
 - DO NOT modify `statusEffectUtils.js`
 - DO NOT modify `HierarchicalAnatomyRenderer.js`
 - DO NOT modify any CSS files (handled in DAMSIMANAICO-004)
-- DO NOT modify test files (handled in DAMSIMANAICO-005)
+- Avoid unrelated test changes; add/adjust tests only to cover the new Status column behavior.
 
 ## Implementation Details
 
@@ -111,7 +118,7 @@ parts.push({
 
 Run: `npm run test:unit -- tests/unit/domUI/damage-simulator/DamageAnalyticsPanel.test.js`
 
-All existing tests must pass. Some tests may need adjustment if they check specific HTML structure:
+All existing tests must pass. Some tests may need adjustment or additions if they check specific HTML structure:
 - Tests checking for table headers should still pass (new column added)
 - Tests checking for specific cell content should still pass (cells preserved)
 
@@ -149,6 +156,15 @@ npm run typecheck
 3. Row generation includes status cell with effect icons
 4. getAnalytics() returns components in part data
 5. JSDoc type updated
-6. All existing tests pass
-7. Linting passes
-8. Type checking passes
+6. Status column tests added/updated to cover icons, dashes, and escaping
+7. All existing tests pass
+8. Linting passes
+9. Type checking passes
+
+## Status
+
+Completed
+
+## Outcome
+
+Added the Status column with effect icons and tooltip escaping, updated analytics output to include components, and extended unit tests to validate header/emoji/dash behavior instead of leaving tests untouched.

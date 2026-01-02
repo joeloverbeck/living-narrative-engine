@@ -37,6 +37,9 @@
       "maxHealth": 15,
       "state": "healthy"
     },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
+    },
     "anatomy:sockets": {
       "sockets": [
         {

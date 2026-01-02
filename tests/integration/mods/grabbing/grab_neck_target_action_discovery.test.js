@@ -43,7 +43,7 @@ describe('grabbing:grab_neck_target action discovery', () => {
       .atLocation(ROOM_ID)
       .withLocationComponent(ROOM_ID)
       .asActor()
-      .withComponent('skills:melee_skill', { value: 10 })
+      .withComponent('skills:grappling_skill', { value: 10 })
       .withGrabbingHands(1)
       .closeToEntity(targetId);
 
@@ -96,11 +96,11 @@ describe('grabbing:grab_neck_target action discovery', () => {
       );
     });
 
-    it('requires actor closeness + melee skill and uses the grabbing color palette', () => {
+    it('requires actor closeness + grappling skill and uses the grabbing color palette', () => {
       expect(grabNeckTargetAction.required_components.actor).toEqual(
         expect.arrayContaining([
           'personal-space-states:closeness',
-          'skills:melee_skill',
+          'skills:grappling_skill',
         ])
       );
       expect(grabNeckTargetAction.visual).toEqual({
@@ -116,7 +116,7 @@ describe('grabbing:grab_neck_target action discovery', () => {
       expect(grabNeckTargetAction.chanceBased.enabled).toBe(true);
       expect(grabNeckTargetAction.chanceBased.contestType).toBe('opposed');
       expect(grabNeckTargetAction.chanceBased.actorSkill.component).toBe(
-        'skills:melee_skill'
+        'skills:grappling_skill'
       );
       expect(grabNeckTargetAction.chanceBased.targetSkill.component).toBe(
         'skills:mobility_skill'
@@ -209,10 +209,10 @@ describe('grabbing:grab_neck_target action discovery', () => {
       expect(getActionIds(actor.id)).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actor lacks melee skill', () => {
+    it('is not available when actor lacks grappling skill', () => {
       const { actor } = setupScenario({
         actorCustomizer: ({ actor }) => {
-          delete actor.components['skills:melee_skill'];
+          delete actor.components['skills:grappling_skill'];
         },
       });
       configureActionDiscovery();

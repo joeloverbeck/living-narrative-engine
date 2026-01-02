@@ -34,6 +34,9 @@
     },
     "descriptors:build": {
       "build": "athletic"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

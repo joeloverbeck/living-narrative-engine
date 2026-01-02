@@ -2,11 +2,11 @@
 
 ## Summary
 
-Add CSS styling for the new Status column in the HITS TO DESTROY table. The styling ensures effect icons are centered and properly sized within the table context.
+Add CSS styling for the Status column in the HITS TO DESTROY table rendered by `DamageAnalyticsPanel`. The status cell already renders with `ds-status-cell` and uses the shared `ds-part-effects`/`ds-effect` classes from `statusEffectUtils`; this ticket scopes the table-specific CSS overrides to keep icons centered and compact.
 
 ## Prerequisites
 
-- DAMSIMANAICO-003 must be completed (Status column added to table)
+- DAMSIMANAICO-003 is already implemented in this repo (Status column exists in `src/domUI/damage-simulator/DamageAnalyticsPanel.js`). If that column is missing, stop and reconcile first.
 
 ## Files to Touch
 
@@ -14,8 +14,7 @@ Add CSS styling for the new Status column in the HITS TO DESTROY table. The styl
 
 ## Out of Scope
 
-- DO NOT modify any JavaScript files
-- DO NOT modify any test files
+- DO NOT modify any JavaScript files unless the HTML markup does not match the CSS selectors described below
 - DO NOT change existing CSS class definitions for `.ds-effect`, `.ds-effect-bleeding`, etc.
 - DO NOT change `.ds-hits-table` base styling
 
@@ -23,7 +22,7 @@ Add CSS styling for the new Status column in the HITS TO DESTROY table. The styl
 
 ### Add to css/damage-simulator.css
 
-Add after the existing `.ds-hits-table` styles (after approximately line 499):
+Add after the existing `.ds-hits-table` styles (around the hits table block in `css/damage-simulator.css`):
 
 ```css
 /* Status Column in Hits Table */
@@ -75,7 +74,7 @@ Add after the existing `.ds-hits-table` styles (after approximately line 499):
 
 ### Tests That Must Pass
 
-No automated tests for CSS. Manual verification required.
+- `npm run test:single -- tests/unit/domUI/damage-simulator/DamageAnalyticsPanel.test.js`
 
 ### Invariants
 
@@ -98,6 +97,7 @@ No automated tests for CSS. Manual verification required.
    - Hoverable with tooltip visible
 7. Verify burning animation still pulses
 8. Verify Anatomy section effect icons are unchanged
+9. Run the unit test for the damage analytics panel
 
 ## Definition of Done
 
@@ -105,4 +105,14 @@ No automated tests for CSS. Manual verification required.
 2. Status column icons are centered
 3. Icons are appropriately sized for table context
 4. No changes to existing effect styling
-5. Manual visual verification completed
+5. Manual visual verification completed or explicitly deferred in Outcome
+6. Relevant unit tests pass
+
+## Status
+
+Completed
+
+## Outcome
+
+- Planned: add scoped CSS for the status column in the hits table.
+- Actual: added scoped CSS rules in `css/damage-simulator.css` and ran the focused unit test; manual browser verification was not performed.

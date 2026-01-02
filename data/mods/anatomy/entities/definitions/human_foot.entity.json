@@ -18,6 +18,9 @@
     },
     "core:weight": {
       "weight": 1.2
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

@@ -83,6 +83,9 @@
     },
     "descriptors:facial_hair": {
       "style": "mustache"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

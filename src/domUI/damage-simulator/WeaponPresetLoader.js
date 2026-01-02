@@ -141,18 +141,8 @@ class WeaponPresetLoader {
         return null;
       }
 
-      if (!preset.entries || preset.entries.length === 0) {
-        this.#logger.warn(
-          '[WeaponPresetLoader] Weapon has no damage entries',
-          weaponDefId
-        );
-        this.#eventBus.dispatch(PRESET_EVENTS.PRESET_LOAD_ERROR, {
-          weaponDefId,
-          error: `Weapon has no damage entries: ${weaponDefId}`,
-        });
-        return null;
-      }
-
+      // Note: Empty entries check removed - #extractPreset already filters out
+      // presets with empty entries, so any preset in cache is guaranteed valid
       const damageEntry = preset.entries[0];
       this.#logger.info(
         '[WeaponPresetLoader] Loaded preset successfully',

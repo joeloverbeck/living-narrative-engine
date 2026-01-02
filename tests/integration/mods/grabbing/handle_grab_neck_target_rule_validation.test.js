@@ -38,7 +38,7 @@ describe('handle_grab_neck_target rule', () => {
     );
   });
 
-  it('sets up names, position lookup, and outcome resolution for melee vs mobility', () => {
+  it('sets up names, position lookup, and outcome resolution for grappling vs mobility', () => {
     const getNameOps = handleGrabNeckTargetRule.actions.filter(
       (op) => op.type === 'GET_NAME'
     );
@@ -64,7 +64,7 @@ describe('handle_grab_neck_target rule', () => {
     );
     expect(resolveOutcome).toBeDefined();
     expect(resolveOutcome.parameters.actor_skill_component).toBe(
-      'skills:melee_skill'
+      'skills:grappling_skill'
     );
     expect(resolveOutcome.parameters.target_skill_component).toBe(
       'skills:mobility_skill'

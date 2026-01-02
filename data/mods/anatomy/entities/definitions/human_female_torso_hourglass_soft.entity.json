@@ -182,6 +182,9 @@
     },
     "descriptors:build": {
       "build": "hourglass"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

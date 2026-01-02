@@ -26,6 +26,9 @@
     },
     "descriptors:texture": {
       "texture": "scarred"
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

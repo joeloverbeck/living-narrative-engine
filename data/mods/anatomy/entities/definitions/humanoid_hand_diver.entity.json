@@ -38,6 +38,9 @@
     "descriptors:professional_markers": {
       "profession": "diver",
       "markers": ["rope-calluses"]
+    },
+    "anatomy:has_rigid_structure": {
+      "structureType": "bone"
     }
   }
 }

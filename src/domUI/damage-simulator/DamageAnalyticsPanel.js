@@ -8,6 +8,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { getActiveEffects, generateEffectIconsHTML } from './statusEffectUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -39,9 +40,11 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {string} partName - Human-readable part name
  * @property {number} currentHealth - Current health value
  * @property {number} maxHealth - Maximum health value
- * @property {number} hitsToDestroy - Calculated hits needed
- * @property {number} effectiveDamage - Damage after penetration/resistance
+ * @property {number|null} hitsToDestroy - Calculated hits needed
+ * @property {number|null} effectiveDamage - Damage after penetration/resistance
  * @property {boolean} isCritical - Whether this is a critical part
+ * @property {number} hitProbability - Hit probability percentage
+ * @property {{[key: string]: object}} components - Component map for status effects
  */
 
 /**
@@ -396,11 +399,14 @@ class DamageAnalyticsPanel {
       const hitsDisplay =
         part.hitsToDestroy === null ? '—' : part.hitsToDestroy === Infinity ? '∞' : part.hitsToDestroy;
       const damageDisplay = part.effectiveDamage === null ? '—' : part.effectiveDamage.toFixed(1);
+      const effects = getActiveEffects(part.components);
+      const statusHTML = generateEffectIconsHTML(effects, this.#escapeHtml.bind(this));
 
       return `
         <tr class="${criticalClass}">
           <td>${this.#escapeHtml(part.partName)}</td>
           <td>${part.currentHealth}/${part.maxHealth}</td>
+          <td class="ds-status-cell">${statusHTML || '—'}</td>
           <td>${damageDisplay}</td>
           <td>${hitsDisplay}</td>
         </tr>
@@ -413,6 +419,7 @@ class DamageAnalyticsPanel {
           <tr>
             <th>Part</th>
             <th>Health</th>
+            <th>Status</th>
             <th>Eff. Damage</th>
             <th>Hits</th>
           </tr>
@@ -676,6 +683,7 @@ class DamageAnalyticsPanel {
           effectiveDamage,
           isCritical,
           hitProbability: probabilitiesMap.get(part.id) ?? 0,
+          components: part.components || {},
         });
 
         // Update aggregate stats (only for finite values when damage config exists)
