@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection-embracing:event-is-action-place-hand-on-waist",
+  "description": "Checks if the event represents the place hand on waist action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection-embracing:place_hand_on_waist"
+    ]
+  }
+}

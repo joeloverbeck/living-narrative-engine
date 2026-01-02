@@ -9,9 +9,9 @@ import {
   buildBreatheTeasinglyOnPenisSittingCloseScenario,
   installSittingCloseCoveredPenisScopeOverride,
 } from '../../common/mods/sex/breatheTeasinglyOnPenisSittingCloseFixtures.js';
-import nuzzlePenisThroughClothingSittingCloseAction from '../../../data/mods/sex-penile-oral/actions/nuzzle_penis_through_clothing_sitting_close.action.json';
+import nuzzlePenisThroughClothingSittingCloseAction from '../../../data/mods/sex-penile-oral-teasing/actions/nuzzle_penis_through_clothing_sitting_close.action.json';
 
-const ACTION_ID = 'sex-penile-oral:nuzzle_penis_through_clothing_sitting_close';
+const ACTION_ID = 'sex-penile-oral-teasing:nuzzle_penis_through_clothing_sitting_close';
 
 /**
  * @description Registers the seated clothed nuzzle action for discovery.
@@ -23,12 +23,12 @@ function configureActionDiscovery(fixture) {
   ]);
 }
 
-describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action discovery', () => {
+describe('sex-penile-oral-teasing:nuzzle_penis_through_clothing_sitting_close action discovery', () => {
   let testFixture;
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('sex-penile-oral-teasing', ACTION_ID);
     restoreScopeResolver =
       installSittingCloseCoveredPenisScopeOverride(testFixture);
   });

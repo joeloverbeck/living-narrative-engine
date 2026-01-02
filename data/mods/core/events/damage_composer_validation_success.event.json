@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_composer_validation_success",
+  "description": "Fired when damage configuration validation succeeds in the damage capability composer.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["entry"],
+    "properties": {
+      "entry": {
+        "type": "object",
+        "description": "The validated damage capability entry."
+      }
+    },
+    "additionalProperties": false
+  }
+}

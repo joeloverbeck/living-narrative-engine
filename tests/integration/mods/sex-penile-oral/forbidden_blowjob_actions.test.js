@@ -9,8 +9,8 @@ import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import { createMockLogger } from '../../../common/mockFactories/index.js';
 
 // Import all actions that should be forbidden during blowjob
-import breatheTeasinglyOnPenisAction from '../../../../data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis.action.json';
-import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex-penile-oral/actions/breathe_teasingly_on_penis_sitting_close.action.json';
+import breatheTeasinglyOnPenisAction from '../../../../data/mods/sex-penile-oral-teasing/actions/breathe_teasingly_on_penis.action.json';
+import breatheTeasinglyOnPenisSittingCloseAction from '../../../../data/mods/sex-penile-oral-teasing/actions/breathe_teasingly_on_penis_sitting_close.action.json';
 import lickTesticlesSensuallyAction from '../../../../data/mods/sex-penile-oral/actions/lick_testicles_sensually.action.json';
 import lickTesticlesSittingCloseAction from '../../../../data/mods/sex-penile-oral/actions/lick_testicles_sitting_close.action.json';
 import suckleTesticleAction from '../../../../data/mods/sex-penile-oral/actions/suckle_testicle.action.json';
@@ -18,12 +18,12 @@ import suckleTesticleSittingCloseAction from '../../../../data/mods/sex-penile-o
 
 const TEST_ACTIONS = [
   {
-    id: 'sex-penile-oral:breathe_teasingly_on_penis',
+    id: 'sex-penile-oral-teasing:breathe_teasingly_on_penis',
     action: breatheTeasinglyOnPenisAction,
     description: 'breathe teasingly on penis (kneeling)',
   },
   {
-    id: 'sex-penile-oral:breathe_teasingly_on_penis_sitting_close',
+    id: 'sex-penile-oral-teasing:breathe_teasingly_on_penis_sitting_close',
     action: breatheTeasinglyOnPenisSittingCloseAction,
     description: 'breathe teasingly on penis (sitting close)',
   },

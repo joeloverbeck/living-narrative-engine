@@ -5,7 +5,7 @@
   "description": "Press your penis against the target's ass through their clothing.",
   "targets": {
     "primary": {
-      "scope": "caressing:close_actors_facing_away",
+      "scope": "caressing-states:close_actors_facing_away",
       "placeholder": "primary",
       "description": "Person whose ass to press against"
     },

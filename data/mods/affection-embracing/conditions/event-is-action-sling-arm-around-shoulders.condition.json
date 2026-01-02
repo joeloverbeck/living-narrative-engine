@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "affection-embracing:event-is-action-sling-arm-around-shoulders",
+  "description": "Checks if the event represents the sling arm around shoulders action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection-embracing:sling_arm_around_shoulders"
+    ]
+  }
+}

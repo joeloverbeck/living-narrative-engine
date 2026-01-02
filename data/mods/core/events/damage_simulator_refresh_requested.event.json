@@ -9,6 +9,10 @@
       "reason": {
         "type": "string",
         "description": "Optional reason for the refresh request."
+      },
+      "instanceId": {
+        "type": "string",
+        "description": "The instance ID of the entity to refresh."
       }
     },
     "additionalProperties": false

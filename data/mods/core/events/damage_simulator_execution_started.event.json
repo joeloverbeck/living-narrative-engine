@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_simulator_execution_started",
+  "description": "Fired when damage execution begins in the damage simulator.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["entityId", "damageEntry"],
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The ID of the entity receiving damage."
+      },
+      "damageEntry": {
+        "type": "object",
+        "description": "The damage entry being applied."
+      },
+      "multiplier": {
+        "type": "number",
+        "description": "Optional damage multiplier."
+      },
+      "targetPartId": {
+        "type": ["string", "null"],
+        "description": "The ID of the specific body part being targeted, or null for random targeting."
+      }
+    },
+    "additionalProperties": false
+  }
+}

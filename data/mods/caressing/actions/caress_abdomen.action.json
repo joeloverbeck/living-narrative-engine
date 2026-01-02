@@ -5,7 +5,7 @@
   "description": "Sensually caress the target's abdomen over their clothing.",
   "targets": {
     "primary": {
-      "scope": "caressing:close_actors_facing_away",
+      "scope": "caressing-states:close_actors_facing_away",
       "placeholder": "primary",
       "description": "Person whose abdomen to caress"
     },

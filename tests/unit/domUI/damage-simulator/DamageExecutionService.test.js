@@ -390,6 +390,43 @@ describe('DamageExecutionService', () => {
 
       expect(result.success).toBe(true);
     });
+
+    it('should include suppressPerceptibleEvents in execution context', async () => {
+      await damageExecutionService.applyDamage({
+        entityId,
+        damageEntry,
+      });
+
+      // Verify the execution context passed to operationInterpreter.execute
+      const executionContext = mockOperationInterpreter.execute.mock.calls[0][1];
+      expect(executionContext).toHaveProperty(
+        'suppressPerceptibleEvents',
+        true
+      );
+    });
+
+    it('should prevent perceptible event dispatch errors with suppressPerceptibleEvents', async () => {
+      // This test documents the fix for the damage simulator error:
+      // "APPLY_DAMAGE: Cannot dispatch perceptible event - no location found"
+      // By setting suppressPerceptibleEvents: true, the damage resolution service
+      // skips the perceptible event dispatch entirely.
+      await damageExecutionService.applyDamage({
+        entityId,
+        damageEntry,
+      });
+
+      const executionContext = mockOperationInterpreter.execute.mock.calls[0][1];
+
+      // The suppressPerceptibleEvents flag should be true
+      expect(executionContext.suppressPerceptibleEvents).toBe(true);
+
+      // The actor should be null (simulator context has no actor)
+      expect(executionContext.evaluationContext.actor).toBeNull();
+
+      // Despite null actor, no error should be logged because suppressPerceptibleEvents
+      // prevents the code path that would check for actor/target location
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
   });
 
   describe('getTargetableParts', () => {

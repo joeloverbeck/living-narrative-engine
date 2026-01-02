@@ -564,12 +564,14 @@ class DeathConditionMonitor {
    * @returns {string} HTML string
    */
   #renderDeathAlert(summary) {
+    // Note: deathCause is always set when isDead or isInDanger is true
+    // because these flags are derived from destroyed/critical organs which have partName
     if (summary.isDead) {
       return `
         <div class="ds-death-alert" role="alert">
           <span class="ds-alert-icon">☠️</span>
           <span class="ds-alert-text">ENTITY IS DEAD</span>
-          <span class="ds-death-cause">Cause: ${this.#escapeHtml(summary.deathCause || 'Unknown')} destruction</span>
+          <span class="ds-death-cause">Cause: ${this.#escapeHtml(summary.deathCause)} destruction</span>
         </div>
       `;
     }
@@ -579,7 +581,7 @@ class DeathConditionMonitor {
         <div class="ds-dying-alert" role="alert">
           <span class="ds-alert-icon">💀</span>
           <span class="ds-alert-text">CRITICAL CONDITION</span>
-          <span class="ds-death-cause">${this.#escapeHtml(summary.deathCause || 'Vital organ')} at critical health</span>
+          <span class="ds-death-cause">${this.#escapeHtml(summary.deathCause)} at critical health</span>
         </div>
       `;
     }

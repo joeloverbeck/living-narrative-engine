@@ -12,7 +12,7 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  * @type {string}
  */
 export const BREATHE_TEASINGLY_ON_PENIS_SITTING_CLOSE_ACTION_ID =
-  'sex-penile-oral:breathe_teasingly_on_penis_sitting_close';
+  'sex-penile-oral-teasing:breathe_teasingly_on_penis_sitting_close';
 
 /**
  * Default actor identifier used in seated teasing scenarios.

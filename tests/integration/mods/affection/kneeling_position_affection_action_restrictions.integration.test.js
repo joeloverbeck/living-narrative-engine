@@ -39,11 +39,11 @@ import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 
 // Import action definitions
 import hugTightAction from '../../../../data/mods/hugging/actions/hug_tight.action.json';
-import linkArmsAction from '../../../../data/mods/affection/actions/link_arms.action.json';
-import placeHandOnWaistAction from '../../../../data/mods/affection/actions/place_hand_on_waist.action.json';
+import linkArmsAction from '../../../../data/mods/affection-embracing/actions/link_arms.action.json';
+import placeHandOnWaistAction from '../../../../data/mods/affection-embracing/actions/place_hand_on_waist.action.json';
 import restHeadOnShoulderAction from '../../../../data/mods/affection/actions/rest_head_on_shoulder.action.json';
-import slingArmAroundShouldersAction from '../../../../data/mods/affection/actions/sling_arm_around_shoulders.action.json';
-import wrapArmAroundWaistAction from '../../../../data/mods/affection/actions/wrap_arm_around_waist.action.json';
+import slingArmAroundShouldersAction from '../../../../data/mods/affection-embracing/actions/sling_arm_around_shoulders.action.json';
+import wrapArmAroundWaistAction from '../../../../data/mods/affection-embracing/actions/wrap_arm_around_waist.action.json';
 
 /**
  * Creates a mock body graph service for anatomy-related conditions

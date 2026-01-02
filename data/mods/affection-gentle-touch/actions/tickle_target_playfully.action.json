@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "affection-gentle-touch:tickle_target_playfully",
+  "name": "Tickle target playfully",
+  "description": "Lightly tickle the target in a playful, affectionate gesture.",
+  "targets": "personal-space-states:close_actors_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["personal-space-states:closeness"]
+  },
+  "template": "tickle {target}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#d4a5a5",
+    "textColor": "#1a0a0a",
+    "hoverBackgroundColor": "#e0b8b8",
+    "hoverTextColor": "#1a0a0a"
+  }
+}

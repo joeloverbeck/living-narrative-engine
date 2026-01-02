@@ -95,7 +95,7 @@
   flex: 2;
   background: var(--panel-bg-color);
   border-right: 1px solid var(--border-color-subtle);
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 100px);
   overflow-y: auto;
 }
 
@@ -323,8 +323,15 @@
 }
 
 @keyframes ds-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Hierarchy Indentation */
@@ -354,7 +361,7 @@
 
 .ds-analytics-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* grid-template-columns: 1fr 1fr; */
   gap: var(--spacing-lg);
 }
 
@@ -412,6 +419,33 @@
 
 .ds-analytics-section:first-of-type {
   border-top: none;
+}
+
+/* Analytics Panel - Two Column Layout */
+.ds-analytics-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+}
+
+.ds-analytics-content .ds-analytics-section {
+  border-top: none;
+  padding: 0;
+}
+
+/* Effect Triggers + Aggregate row below main columns */
+.ds-analytics-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid var(--border-color-subtle);
+}
+
+.ds-analytics-bottom-row .ds-analytics-section {
+  border-top: none;
+  padding-top: var(--spacing-md);
 }
 
 .ds-analytics-section h4 {
@@ -536,7 +570,7 @@
 #ds-history {
   background: var(--secondary-bg-color);
   border-top: 1px solid var(--border-color-subtle);
-  max-height: 150px;
+  max-height: 450px;
 }
 
 .ds-history-log {
@@ -562,7 +596,7 @@
 }
 
 .ds-history-table-container {
-  max-height: 200px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
@@ -669,7 +703,7 @@ tr.ds-severity-severe {
   transform: rotate(-90deg);
 }
 
-.ds-collapsible.collapsed > *:not(h2) {
+.ds-collapsible.collapsed>*:not(h2) {
   display: none;
 }
 
@@ -930,10 +964,12 @@ tr.ds-severity-severe {
 }
 
 @keyframes pulse-border {
+
   0%,
   100% {
     border-left-color: var(--color-danger);
   }
+
   50% {
     border-left-color: #ff6666;
   }
@@ -991,10 +1027,12 @@ tr.ds-severity-severe {
 }
 
 @keyframes pulse-bar {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -1037,10 +1075,12 @@ tr.ds-severity-severe {
 }
 
 @keyframes flash {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -1078,10 +1118,12 @@ tr.ds-severity-severe {
 }
 
 @keyframes pulse-alert {
+
   0%,
   100% {
     background: #3a2a10;
   }
+
   50% {
     background: #4a3a20;
   }
@@ -1308,9 +1350,12 @@ tr.ds-severity-severe {
 }
 
 @keyframes progress-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }

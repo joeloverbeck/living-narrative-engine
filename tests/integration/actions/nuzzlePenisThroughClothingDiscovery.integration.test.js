@@ -19,7 +19,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Import actual action and scope files
-import nuzzlePenisThroughClothingAction from '../../../data/mods/sex-penile-oral/actions/nuzzle_penis_through_clothing.action.json';
+import nuzzlePenisThroughClothingAction from '../../../data/mods/sex-penile-oral-teasing/actions/nuzzle_penis_through_clothing.action.json';
 const nuzzlePenisScopeContent = fs.readFileSync(
   path.resolve(
     process.cwd(),

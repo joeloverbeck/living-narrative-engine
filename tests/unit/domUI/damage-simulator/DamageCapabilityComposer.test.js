@@ -87,7 +87,7 @@ describe('DamageCapabilityComposer', () => {
 
     // Mock schema validator - valid by default
     mockSchemaValidator = {
-      validate: jest.fn().mockReturnValue({ valid: true, errors: null }),
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
     };
 
     // Mock event bus
@@ -299,7 +299,7 @@ describe('DamageCapabilityComposer', () => {
     it('should dispatch validation-error when config is invalid', () => {
       // Configure schema validator to return invalid
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'Invalid field' }],
       });
 
@@ -341,7 +341,7 @@ describe('DamageCapabilityComposer', () => {
     it('should show validation errors for invalid config', () => {
       // Configure schema validator to return invalid
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'amount must be a number' }],
       });
 
@@ -437,7 +437,7 @@ describe('DamageCapabilityComposer', () => {
 
     it('should throw error when configuration is invalid', () => {
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'Invalid configuration' }],
       });
 
@@ -633,7 +633,7 @@ describe('DamageCapabilityComposer', () => {
     it('should clear validation errors on reset', () => {
       // Force validation error
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'Error' }],
       });
 
@@ -646,7 +646,7 @@ describe('DamageCapabilityComposer', () => {
       expect(composer.getValidationErrors().length).toBeGreaterThan(0);
 
       // Reset validator to valid state and reset composer
-      mockSchemaValidator.validate.mockReturnValue({ valid: true, errors: null });
+      mockSchemaValidator.validate.mockReturnValue({ isValid: true, errors: null });
       composer.reset();
 
       expect(composer.getValidationErrors()).toEqual([]);
@@ -685,7 +685,7 @@ describe('DamageCapabilityComposer', () => {
 
     it('should return false when configuration is invalid', () => {
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'Test error' }],
       });
 
@@ -723,7 +723,7 @@ describe('DamageCapabilityComposer', () => {
     it('should expose COMPOSER_EVENTS constant', () => {
       expect(DamageCapabilityComposer.COMPOSER_EVENTS).toBeDefined();
       expect(DamageCapabilityComposer.COMPOSER_EVENTS.CONFIG_CHANGED).toBe(
-        'damage-composer:config-changed'
+        'core:damage_composer_config_changed'
       );
     });
 
@@ -1586,7 +1586,7 @@ describe('DamageCapabilityComposer', () => {
 
       // Configure schema validator to return invalid with null/undefined errors
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: null, // This triggers the || [] fallback at line 1085
       });
 
@@ -1599,7 +1599,7 @@ describe('DamageCapabilityComposer', () => {
 
       // Should have empty errors array (from fallback at line 1085)
       expect(composer.getValidationErrors()).toEqual([]);
-      // isValid() returns false because validator returned valid: false
+      // isValid() returns false because validator returned isValid: false
       expect(composer.isValid()).toBe(false);
     });
 
@@ -1614,7 +1614,7 @@ describe('DamageCapabilityComposer', () => {
 
       // Configure schema validator to return multiple errors
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [
           { message: 'Error 1' },
           { message: 'Error 2' },
@@ -1674,7 +1674,7 @@ describe('DamageCapabilityComposer', () => {
 
       // Mock schema validator to return invalid
       mockSchemaValidator.validate.mockReturnValue({
-        valid: false,
+        isValid: false,
         errors: [{ message: 'Test error' }],
       });
 
@@ -1851,6 +1851,90 @@ describe('DamageCapabilityComposer', () => {
 
       // Should fallback to 1
       expect(composer.getDamageMultiplier()).toBe(1);
+    });
+  });
+
+  describe('Uninitialized component behavior (regression tests)', () => {
+    it('should throw clear error when getDamageEntry called before initialize', () => {
+      const uninitComposer = new DamageCapabilityComposer({
+        containerElement: mockContainer,
+        schemaValidator: mockSchemaValidator,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      // getDamageEntry before initialize() should fail gracefully with clear error
+      expect(() => uninitComposer.getDamageEntry()).toThrow(
+        'DamageCapabilityComposer must be initialized before calling getDamageEntry()'
+      );
+    });
+
+    it('should handle getDamageMultiplier when not initialized', () => {
+      const uninitComposer = new DamageCapabilityComposer({
+        containerElement: mockContainer,
+        schemaValidator: mockSchemaValidator,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      // Should return default value even without initialization
+      expect(uninitComposer.getDamageMultiplier()).toBe(1);
+    });
+
+    it('should handle isValid when not initialized', () => {
+      const uninitComposer = new DamageCapabilityComposer({
+        containerElement: mockContainer,
+        schemaValidator: mockSchemaValidator,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      // isValid validates the config, not initialization state.
+      // With valid mock validator, default config is valid, so isValid returns true.
+      // This is acceptable since getDamageEntry() is what guards against uninitialized use.
+      expect(uninitComposer.isValid()).toBe(true);
+    });
+
+    it('should show meaningful validation error message instead of undefined', () => {
+      composer = new DamageCapabilityComposer({
+        containerElement: mockContainer,
+        schemaValidator: mockSchemaValidator,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+      composer.initialize();
+
+      // Mock validation failure with null errors
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: null,
+      });
+
+      // Should throw with meaningful error message, not "undefined"
+      expect(() => composer.getDamageEntry()).toThrow(
+        'Invalid damage configuration: Unknown validation error'
+      );
+    });
+
+    it('should show meaningful validation error message with empty errors array', () => {
+      composer = new DamageCapabilityComposer({
+        containerElement: mockContainer,
+        schemaValidator: mockSchemaValidator,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+      composer.initialize();
+
+      // Mock validation failure with empty errors array
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [],
+      });
+
+      // Should throw with meaningful error message, not empty string
+      expect(() => composer.getDamageEntry()).toThrow(
+        'Invalid damage configuration: Unknown validation error'
+      );
     });
   });
 });

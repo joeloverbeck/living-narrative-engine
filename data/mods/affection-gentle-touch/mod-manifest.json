@@ -1,0 +1,61 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "affection-gentle-touch",
+  "version": "1.0.0",
+  "name": "Affection - Gentle Touch",
+  "description": "Gentle, playful touch actions for showing tender affection.",
+  "actionPurpose": "Express gentle, playful physical contact that conveys tenderness and affection through light touches and caring gestures.",
+  "actionConsiderWhen": "Showing tender affection, playful interaction, gentle comfort, or expressing care through light physical contact.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "facing-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "kissing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [],
+    "actions": [
+      "brush_hand.action.json",
+      "pat_head_affectionately.action.json",
+      "push_target_playfully.action.json",
+      "tickle_target_playfully.action.json",
+      "touch_nose_tenderly.action.json"
+    ],
+    "rules": [
+      "handle_brush_hand.rule.json",
+      "handle_pat_head_affectionately.rule.json",
+      "handle_push_target_playfully.rule.json",
+      "handle_tickle_target_playfully.rule.json",
+      "handle_touch_nose_tenderly.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-brush-hand.condition.json",
+      "event-is-action-pat-head-affectionately.condition.json",
+      "event-is-action-push-target-playfully.condition.json",
+      "event-is-action-tickle-target-playfully.condition.json",
+      "event-is-action-touch-nose-tenderly.condition.json"
+    ],
+    "scopes": [
+      "actors_with_hands_in_intimacy.scope",
+      "close_actors_with_nose_or_entity_kneeling_before_actor.scope"
+    ]
+  }
+}

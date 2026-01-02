@@ -10,39 +10,7 @@
   "gameVersion": ">=0.0.1",
   "dependencies": [
     {
-      "id": "facing-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "deference-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "straddling-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "hugging-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "sex-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "bending-states",
-      "version": "^1.0.0"
-    },
-    {
       "id": "biting-states",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "sitting",
-      "version": "^1.0.0"
-    },
-    {
-      "id": "kissing",
       "version": "^1.0.0"
     },
     {
@@ -50,7 +18,31 @@
       "version": "^1.0.0"
     },
     {
+      "id": "deference-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "facing-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "hugging-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "kissing",
+      "version": "^1.0.0"
+    },
+    {
       "id": "personal-space-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sex-states",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting",
       "version": "^1.0.0"
     }
   ],
@@ -58,82 +50,47 @@
     "components": [],
     "actions": [
       "brush_hair_behind_ear.action.json",
-      "brush_hand.action.json",
-      "link_arms.action.json",
       "massage_back.action.json",
       "massage_shoulders.action.json",
       "pat_ass_affectionately.action.json",
-      "pat_head_affectionately.action.json",
       "place_hand_on_knee.action.json",
-      "place_hand_on_waist.action.json",
       "place_hands_on_flat_chest.action.json",
-      "place_hands_on_shoulders.action.json",
-      "push_target_playfully.action.json",
       "rest_head_against_chest.action.json",
       "rest_head_against_flat_chest.action.json",
       "rest_head_on_shoulder.action.json",
-      "ruffle_hair_playfully.action.json",
-      "sling_arm_around_shoulders.action.json",
-      "tickle_target_playfully.action.json",
-      "touch_nose_tenderly.action.json",
-      "wrap_arm_around_waist.action.json"
+      "ruffle_hair_playfully.action.json"
     ],
     "rules": [
-      "brush_hand.rule.json",
       "handle_brush_hair_behind_ear.rule.json",
-      "handle_link_arms.rule.json",
       "handle_massage_shoulders.rule.json",
       "handle_pat_ass_affectionately.rule.json",
-      "handle_pat_head_affectionately.rule.json",
       "handle_place_hands_on_flat_chest.rule.json",
-      "handle_push_target_playfully.rule.json",
       "handle_rest_head_against_chest.rule.json",
       "handle_rest_head_against_flat_chest.rule.json",
       "handle_rest_head_on_shoulder.rule.json",
       "handle_ruffle_hair_playfully.rule.json",
-      "handle_tickle_target_playfully.rule.json",
-      "handle_touch_nose_tenderly.rule.json",
       "massage_back.rule.json",
-      "place_hand_on_knee.rule.json",
-      "place_hand_on_waist.rule.json",
-      "place_hands_on_shoulders.rule.json",
-      "sling_arm_around_shoulders.rule.json",
-      "wrap_arm_around_waist.rule.json"
+      "place_hand_on_knee.rule.json"
     ],
     "conditions": [
       "event-is-action-brush-hair-behind-ear.condition.json",
-      "event-is-action-brush-hand.condition.json",
-      "event-is-action-link-arms.condition.json",
       "event-is-action-massage-back.condition.json",
       "event-is-action-massage-shoulders.condition.json",
       "event-is-action-pat-ass-affectionately.condition.json",
-      "event-is-action-pat-head-affectionately.condition.json",
       "event-is-action-place-hand-on-knee.condition.json",
-      "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-place-hands-on-flat-chest.condition.json",
-      "event-is-action-place-hands-on-shoulders.condition.json",
-      "event-is-action-push-target-playfully.condition.json",
       "event-is-action-rest-head-against-chest.condition.json",
       "event-is-action-rest-head-against-flat-chest.condition.json",
       "event-is-action-rest-head-on-shoulder.condition.json",
-      "event-is-action-ruffle-hair-playfully.condition.json",
-      "event-is-action-sling-arm-around-shoulders.condition.json",
-      "event-is-action-tickle-target-playfully.condition.json",
-      "event-is-action-touch-nose-tenderly.condition.json",
-      "event-is-action-wrap-arm-around-waist.condition.json"
+      "event-is-action-ruffle-hair-playfully.condition.json"
     ],
     "scopes": [
-      "actors_with_arm_subtypes_facing_each_other_or_behind_target.scope",
       "actors_with_arms_facing_each_other.scope",
       "actors_with_arms_facing_each_other_or_behind_target.scope",
       "actors_with_arms_in_intimacy.scope",
       "actors_with_breasts_facing_each_other.scope",
-      "actors_with_hands_in_intimacy.scope",
       "actors_without_breasts_facing_each_other.scope",
-      "close_actors_facing_away.scope",
-      "close_actors_facing_each_other.scope",
-      "close_actors_with_hair_or_entity_kneeling_before_actor.scope",
-      "close_actors_with_nose_or_entity_kneeling_before_actor.scope"
+      "close_actors_with_hair_or_entity_kneeling_before_actor.scope"
     ]
   }
 }

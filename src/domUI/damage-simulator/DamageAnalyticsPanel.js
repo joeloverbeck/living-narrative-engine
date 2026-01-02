@@ -89,6 +89,15 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
+ * @typedef {object} AnatomyTreeNode
+ * @property {string} id - The part entity ID
+ * @property {string} name - Human-readable part name
+ * @property {{[key: string]: object}} [components] - Mechanical components
+ * @property {{current: number, max: number}|null} [health] - Health data from anatomy:part_health
+ * @property {AnatomyTreeNode[]} [children] - Child nodes in the hierarchy
+ */
+
+/**
  * Event types for analytics panel.
  * These must match the event types emitted by DamageSimulatorUI.js
  *
@@ -222,11 +231,63 @@ class DamageAnalyticsPanel {
    * Set the current entity for analysis.
    *
    * @param {string} entityId - Entity identifier.
-   * @param {AnatomyData} anatomyData - Anatomy data from extractor.
+   * @param {AnatomyData|AnatomyTreeNode} anatomyData - Anatomy data from extractor (tree or flat format).
    */
   setEntity(entityId, anatomyData) {
-    this.#anatomyData = anatomyData;
+    this.#anatomyData = this.#normalizeAnatomyData(anatomyData);
     this.#logger.debug(`[DamageAnalyticsPanel] Entity set: ${entityId}`);
+  }
+
+  /**
+   * Normalize anatomy data to expected flat structure.
+   * Handles both tree format (from AnatomyDataExtractor) and pre-flattened format.
+   *
+   * @private
+   * @param {AnatomyTreeNode|AnatomyData|null|undefined} anatomyData - Raw or extracted data.
+   * @returns {AnatomyData} Normalized structure with flat parts array.
+   */
+  #normalizeAnatomyData(anatomyData) {
+    if (!anatomyData) return { parts: [] };
+
+    // Already in expected format with parts array
+    if (anatomyData.parts && Array.isArray(anatomyData.parts)) {
+      return anatomyData;
+    }
+
+    // Tree format from AnatomyDataExtractor - flatten it
+    // Tree nodes have 'id', 'children', and nested 'health' object
+    if (anatomyData.id && anatomyData.children !== undefined) {
+      const parts = [];
+      this.#flattenTree(anatomyData, parts);
+      return { parts };
+    }
+
+    return { parts: [] };
+  }
+
+  /**
+   * Recursively flatten a tree node into a parts array.
+   *
+   * @private
+   * @param {AnatomyTreeNode} node - Tree node to flatten.
+   * @param {AnatomyPart[]} parts - Accumulator for flattened parts.
+   */
+  #flattenTree(node, parts) {
+    if (!node) return;
+
+    parts.push({
+      id: node.id,
+      name: node.name,
+      currentHealth: node.health?.current ?? 0,
+      maxHealth: node.health?.max ?? 0,
+      components: node.components || {},
+    });
+
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        this.#flattenTree(child, parts);
+      }
+    }
   }
 
   /**
@@ -286,28 +347,34 @@ class DamageAnalyticsPanel {
     const aggregateHTML = this.#generateAggregateHTML(analytics.aggregate);
 
     return `
-      <!-- Hits to Destroy Section -->
-      <section class="ds-analytics-section">
-        <h4>Hits to Destroy</h4>
-        ${hitsTableHTML}
-      </section>
+      <!-- Main Analytics Grid - Two Column Layout -->
+      <div class="ds-analytics-content">
+        <!-- Hits to Destroy Section (Left Column) -->
+        <section class="ds-analytics-section">
+          <h4>Hits to Destroy</h4>
+          ${hitsTableHTML}
+        </section>
 
-      <!-- Hit Probability Section -->
-      <section class="ds-analytics-section">
-        <h4>Hit Probability</h4>
-        ${hitProbabilityHTML}
-      </section>
+        <!-- Hit Probability Section (Right Column) -->
+        <section class="ds-analytics-section">
+          <h4>Hit Probability</h4>
+          ${hitProbabilityHTML}
+        </section>
+      </div>
 
-      <!-- Effect Triggers Section -->
-      <section class="ds-analytics-section">
-        <h4>Effect Triggers</h4>
-        ${effectsHTML}
-      </section>
+      <!-- Bottom Row - Effect Triggers and Aggregate Stats -->
+      <div class="ds-analytics-bottom-row">
+        <!-- Effect Triggers Section -->
+        <section class="ds-analytics-section">
+          <h4>Effect Triggers</h4>
+          ${effectsHTML}
+        </section>
 
-      <!-- Aggregate Stats Section -->
-      <section class="ds-analytics-section ds-aggregate-stats">
-        ${aggregateHTML}
-      </section>
+        <!-- Aggregate Stats Section -->
+        <section class="ds-analytics-section ds-aggregate-stats">
+          ${aggregateHTML}
+        </section>
+      </div>
     `;
   }
 
@@ -370,11 +437,20 @@ class DamageAnalyticsPanel {
     }
 
     // Transform parts to format expected by HitProbabilityCalculator
-    const partsWithComponents = parts.map((part) => ({
-      id: part.partId,
-      name: part.partName,
-      component: this.#anatomyData?.parts?.find((p) => p.id === part.partId) || null,
-    }));
+    // Extract the 'anatomy:part' component from the nested components object
+    // The anatomyData.parts contains AnatomyPart objects with structure:
+    // { id, name, currentHealth, maxHealth, components: { 'anatomy:part': {...}, ... } }
+    // HitProbabilityCalculator expects component to be the 'anatomy:part' object directly
+    const partsWithComponents = parts.map((part) => {
+      const anatomyPart = this.#anatomyData?.parts?.find(
+        (p) => p.id === part.partId
+      );
+      return {
+        id: part.partId,
+        name: part.partName,
+        component: anatomyPart?.components?.['anatomy:part'] || null,
+      };
+    });
 
     const probabilities = this.#hitProbabilityCalculator.calculateProbabilities(partsWithComponents);
     const vizData = this.#hitProbabilityCalculator.getVisualizationData(probabilities);
@@ -408,10 +484,6 @@ class DamageAnalyticsPanel {
    * @returns {string} HTML for the effects list.
    */
   #generateEffectsHTML(effects) {
-    if (effects.length === 0) {
-      return '<p class="ds-no-data">No effect thresholds defined.</p>';
-    }
-
     const itemsHTML = effects.map((effect) => `
       <li class="ds-effect-item">
         <span class="ds-effect-name">${this.#escapeHtml(effect.effectType)}</span>
@@ -503,8 +575,8 @@ class DamageAnalyticsPanel {
    * @returns {number} Effective damage amount.
    */
   #calculateEffectiveDamage(part) {
-    if (!this.#damageEntry) return 0;
-
+    // Note: This method is only called when hasDamageConfig is true (line 658),
+    // which means this.#damageEntry is guaranteed to exist at call time.
     const baseDamage = this.#damageEntry.amount * this.#multiplier;
     const penetration = this.#damageEntry.penetration ?? 0;
     const resistance = part.resistance ?? 0;
@@ -569,6 +641,24 @@ class DamageAnalyticsPanel {
     if (this.#anatomyData?.parts) {
       const hasDamageConfig = !!this.#damageEntry;
 
+      // Calculate hit probabilities if calculator is available
+      let probabilitiesMap = new Map();
+      if (this.#hitProbabilityCalculator) {
+        // Transform parts to format expected by HitProbabilityCalculator
+        // Extract the 'anatomy:part' component from the nested components object
+        const partsWithComponents = this.#anatomyData.parts.map((part) => ({
+          id: part.id,
+          name: part.name,
+          component: part.components?.['anatomy:part'] || null,
+        }));
+        const probabilities =
+          this.#hitProbabilityCalculator.calculateProbabilities(partsWithComponents);
+        // Create a map for quick lookup by part ID
+        for (const prob of probabilities) {
+          probabilitiesMap.set(prob.partId, prob.probability);
+        }
+      }
+
       for (const part of this.#anatomyData.parts) {
         // Only calculate damage metrics if damage config exists
         const effectiveDamage = hasDamageConfig ? this.#calculateEffectiveDamage(part) : null;
@@ -585,6 +675,7 @@ class DamageAnalyticsPanel {
           hitsToDestroy,
           effectiveDamage,
           isCritical,
+          hitProbability: probabilitiesMap.get(part.id) ?? 0,
         });
 
         // Update aggregate stats (only for finite values when damage config exists)

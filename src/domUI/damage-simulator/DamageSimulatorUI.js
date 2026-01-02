@@ -263,6 +263,9 @@ class DamageSimulatorUI {
 
     this.#currentEntityData.anatomyData = anatomyData;
 
+    // Re-render anatomy tree with updated data
+    this.#renderAnatomy(anatomyData);
+
     this.#emitEvent(UI_EVENTS.ENTITY_LOADED, {
       definitionId: this.#currentEntityData.definitionId,
       instanceId: this.#currentEntityData.instanceId,

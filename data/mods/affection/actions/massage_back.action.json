@@ -3,7 +3,7 @@
   "id": "affection:massage_back",
   "name": "Massage Back",
   "description": "Gently massage the target's back.",
-  "targets": "affection:close_actors_facing_away",
+  "targets": "caressing-states:close_actors_facing_away",
   "required_components": {
     "actor": ["personal-space-states:closeness"]
   },

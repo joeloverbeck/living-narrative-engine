@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral-teasing:breathe_teasingly_on_penis_sitting_close",
+  "name": "Breathe Teasingly on Penis (Sitting Close)",
+  "description": "Lean in from your shared seat to breathe teasingly on your partner's exposed penis.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_sitting_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Seated partner with an exposed penis"
+    }
+  },
+  "required_components": {
+    "actor": ["sitting-states:sitting_on", "personal-space-states:closeness"],
+    "primary": ["sitting-states:sitting_on", "personal-space-states:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["sex-states:giving_blowjob"]
+  },
+  "template": "breathe teasingly on {primary}'s penis",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#a04050",
+    "textColor": "#fff5f7",
+    "hoverBackgroundColor": "#b85060",
+    "hoverTextColor": "#ffffff"
+  }
+}

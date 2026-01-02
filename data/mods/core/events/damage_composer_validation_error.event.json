@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:damage_composer_validation_error",
+  "description": "Fired when damage configuration validation fails in the damage capability composer.",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["errors"],
+    "properties": {
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of validation error messages."
+      }
+    },
+    "additionalProperties": false
+  }
+}

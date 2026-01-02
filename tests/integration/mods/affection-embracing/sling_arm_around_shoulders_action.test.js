@@ -1,0 +1,108 @@
+/**
+ * @file Integration tests for the affection-embracing:sling_arm_around_shoulders action and rule.
+ * @description Tests the rule execution after the sling_arm_around_shoulders action is performed.
+ */
+
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import slingArmAroundShouldersRule from '../../../../data/mods/affection-embracing/rules/sling_arm_around_shoulders.rule.json';
+import eventIsActionSlingArmAroundShoulders from '../../../../data/mods/affection-embracing/conditions/event-is-action-sling-arm-around-shoulders.condition.json';
+
+describe('affection-embracing:sling_arm_around_shoulders action integration', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'affection-embracing',
+      'affection-embracing:sling_arm_around_shoulders',
+      slingArmAroundShouldersRule,
+      eventIsActionSlingArmAroundShoulders
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('successfully executes sling arm around shoulders action between close actors', async () => {
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1',
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toContain('arm');
+    expect(successEvent.payload.message).toContain('shoulder');
+  });
+
+  it('handles multiple close actors correctly', async () => {
+    const scenario = testFixture.createMultiActorScenario(
+      ['Alice', 'Bob', 'Charlie'],
+      {
+        location: 'room1',
+      }
+    );
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const perceptibleEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+    expect(perceptibleEvent).toBeDefined();
+  });
+
+  it('validates perceptible event message matches action success message', async () => {
+    const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
+      location: 'library',
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    const perceptibleEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+
+    expect(successEvent).toBeDefined();
+    expect(perceptibleEvent).toBeDefined();
+
+    // Both should have the same descriptive message
+    expect(successEvent.payload.message).toBe(
+      perceptibleEvent.payload.descriptionText
+    );
+  });
+
+  it('rejects the action when the actor is being hugged', async () => {
+    const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+
+    const actor = new ModEntityBuilder('actor1')
+      .withName('Alice')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('personal-space-states:closeness', { partners: ['target1'] })
+      .withComponent('hugging-states:being_hugged', {
+        hugging_entity_id: 'target1',
+      })
+      .build();
+
+    const target = new ModEntityBuilder('target1')
+      .withName('Bob')
+      .atLocation('room1')
+      .asActor()
+      .withComponent('personal-space-states:closeness', { partners: ['actor1'] })
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await expect(
+      testFixture.executeAction(actor.id, target.id)
+    ).rejects.toThrow(/forbidden component.*hugging-states:being_hugged/i);
+  });
+});

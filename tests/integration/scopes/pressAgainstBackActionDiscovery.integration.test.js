@@ -43,7 +43,7 @@ import path from 'path';
 const closeActorsFacingAwayScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/caressing/scopes/close_actors_facing_away.scope'
+    '../../../data/mods/caressing-states/scopes/close_actors_facing_away.scope'
   ),
   'utf8'
 );
@@ -140,8 +140,8 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'caressing:close_actors_facing_away': scopeDefinitions.get(
-        'caressing:close_actors_facing_away'
+      'caressing-states:close_actors_facing_away': scopeDefinitions.get(
+        'caressing-states:close_actors_facing_away'
       ),
     });
 

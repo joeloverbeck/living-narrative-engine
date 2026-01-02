@@ -37,7 +37,7 @@ describe('core:action_success event schema', () => {
 
     const basePayload = {
       eventName: 'core:action_success',
-      actionId: 'affection:tickle_target_playfully',
+      actionId: 'affection-gentle-touch:tickle_target_playfully',
       actorId: 'actor-123',
       targetId: 'target-456',
       success: true,
