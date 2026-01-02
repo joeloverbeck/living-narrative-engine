@@ -6,12 +6,7 @@
   "description": "Inventory component for carrying items and item transfer events",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "personal-space",
-      "version": "1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "inventory.component.json"
@@ -25,8 +20,7 @@
     "rules": [],
     "conditions": [],
     "scopes": [
-      "actor_inventory_items.scope",
-      "close_actors_with_inventory.scope"
+      "actor_inventory_items.scope"
     ],
     "entities": {
       "definitions": [],

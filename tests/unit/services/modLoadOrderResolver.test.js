@@ -157,7 +157,8 @@ describe('ModLoadOrderResolver – resolution logic', () => {
     } catch (e) {
       expect(e.message).toMatch(/A/);
       expect(e.message).toMatch(/B/);
-      expect(e.message).toContain('Cyclic dependency');
+      expect(e.message).toContain('DEPENDENCY_CYCLE');
+      expect(e.message).toContain('Circular dependency detected');
     }
   });
 

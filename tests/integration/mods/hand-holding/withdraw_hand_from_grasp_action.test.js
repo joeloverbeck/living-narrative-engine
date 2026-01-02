@@ -91,13 +91,13 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
       // Handle both the base scope and the with_hands variant
       if (
         scopeName ===
-          'personal-space:close_actors_facing_each_other_or_behind_target' ||
+          'personal-space-states:close_actors_facing_each_other_or_behind_target' ||
         scopeName ===
-          'personal-space:close_actors_facing_each_other_or_behind_target_with_hands'
+          'personal-space-states:close_actors_facing_each_other_or_behind_target_with_hands'
       ) {
         const requireHands =
           scopeName ===
-          'personal-space:close_actors_facing_each_other_or_behind_target_with_hands';
+          'personal-space-states:close_actors_facing_each_other_or_behind_target_with_hands';
 
         const actorId = context?.actor?.id;
         if (!actorId) {

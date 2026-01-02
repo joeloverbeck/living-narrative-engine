@@ -18,7 +18,7 @@ describe('physical-control:turn_around action', () => {
 
     it('uses physical-control:close_actors_facing_each_other_or_behind_target scope', () => {
       expect(turnAroundAction.targets.primary.scope).toBe(
-        'personal-space:close_actors_facing_each_other_or_behind_target'
+        'personal-space-states:close_actors_facing_each_other_or_behind_target'
       );
     });
 

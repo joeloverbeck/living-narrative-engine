@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for inventory scopes
- * @description Tests the actor_inventory_items and close_actors_with_inventory scopes
+ * @description Tests the actor_inventory_items scope
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -43,19 +43,8 @@ describe('Inventory - Inventory Scopes Integration', () => {
       'utf8'
     ).trim();
 
-    const closeActorsWithInventoryScope = readFileSync(
-      new URL(
-        '../../../../data/mods/inventory/scopes/close_actors_with_inventory.scope',
-        import.meta.url
-      ),
-      'utf8'
-    ).trim();
-
     const scopeDefinitions = {
       'inventory:actor_inventory_items': actorInventoryScope,
-      'personal-space:close_actors':
-        'personal-space:close_actors := actor.components.personal-space-states:closeness.partners[]',
-      'inventory:close_actors_with_inventory': closeActorsWithInventoryScope,
     };
 
     const parsedScopes = {};
@@ -250,152 +239,6 @@ describe('Inventory - Inventory Scopes Integration', () => {
       };
 
       const scopeDef = scopeRegistry.getScope('inventory:actor_inventory_items');
-      const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
-      const result = scopeEngine.resolve(ast, actor, runtimeCtx);
-
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(0);
-    });
-  });
-
-  describe('close_actors_with_inventory scope', () => {
-    it('should return only nearby actors with inventory', () => {
-      entityManager = new SimpleEntityManager([
-        {
-          id: 'test:actor1',
-          components: {
-            'core:actor': { name: 'Actor 1' },
-            'personal-space-states:closeness': {
-              partners: ['test:actor2', 'test:actor3', 'test:actor4'],
-            },
-          },
-        },
-        {
-          id: 'test:actor2',
-          components: {
-            'core:actor': { name: 'Actor 2' },
-            'inventory:inventory': {
-              items: [],
-              capacity: { maxWeight: 50, maxItems: 10 },
-            },
-          },
-        },
-        {
-          id: 'test:actor3',
-          components: {
-            'core:actor': { name: 'Actor 3' },
-            'inventory:inventory': {
-              items: [],
-              capacity: { maxWeight: 30, maxItems: 5 },
-            },
-          },
-        },
-        {
-          id: 'test:actor4',
-          components: {
-            'core:actor': { name: 'Actor 4' },
-          },
-        },
-      ]);
-
-      const actor = entityManager.getEntityInstance('test:actor1');
-      const runtimeCtx = {
-        entityManager,
-        logger,
-        actor,
-        jsonLogicEval,
-      };
-
-      const scopeDef = scopeRegistry.getScope(
-        'inventory:close_actors_with_inventory'
-      );
-      const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
-      const result = scopeEngine.resolve(ast, actor, runtimeCtx);
-
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(2);
-      expect(result.has('test:actor2')).toBe(true);
-      expect(result.has('test:actor3')).toBe(true);
-      expect(result.has('test:actor4')).toBe(false);
-    });
-
-    it('should not include actors not in closeness circle', () => {
-      entityManager = new SimpleEntityManager([
-        {
-          id: 'test:actor1',
-          components: {
-            'core:actor': { name: 'Actor 1' },
-            'personal-space-states:closeness': {
-              partners: ['test:actor2'],
-            },
-          },
-        },
-        {
-          id: 'test:actor2',
-          components: {
-            'core:actor': { name: 'Actor 2' },
-            'inventory:inventory': {
-              items: [],
-              capacity: { maxWeight: 50, maxItems: 10 },
-            },
-          },
-        },
-        {
-          id: 'test:actor3',
-          components: {
-            'core:actor': { name: 'Actor 3' },
-            'inventory:inventory': {
-              items: [],
-              capacity: { maxWeight: 50, maxItems: 10 },
-            },
-          },
-        },
-      ]);
-
-      const actor = entityManager.getEntityInstance('test:actor1');
-      const runtimeCtx = {
-        entityManager,
-        logger,
-        actor,
-        jsonLogicEval,
-      };
-
-      const scopeDef = scopeRegistry.getScope(
-        'inventory:close_actors_with_inventory'
-      );
-      const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
-      const result = scopeEngine.resolve(ast, actor, runtimeCtx);
-
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(1);
-      expect(result.has('test:actor2')).toBe(true);
-      expect(result.has('test:actor3')).toBe(false);
-    });
-
-    it('should return empty set when no closeness partners exist', () => {
-      entityManager = new SimpleEntityManager([
-        {
-          id: 'test:actor1',
-          components: {
-            'core:actor': { name: 'Actor 1' },
-            'personal-space-states:closeness': {
-              partners: [],
-            },
-          },
-        },
-      ]);
-
-      const actor = entityManager.getEntityInstance('test:actor1');
-      const runtimeCtx = {
-        entityManager,
-        logger,
-        actor,
-        jsonLogicEval,
-      };
-
-      const scopeDef = scopeRegistry.getScope(
-        'inventory:close_actors_with_inventory'
-      );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor, runtimeCtx);
 

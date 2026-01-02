@@ -28,7 +28,7 @@
       "failure_message": "You need a free hand to grab someone's neck."
     }
   ],
-  "targets": "personal-space:close_actors_facing_each_other_or_behind_target",
+  "targets": "personal-space-states:close_actors_facing_each_other_or_behind_target",
   "chanceBased": {
     "enabled": true,
     "contestType": "opposed",

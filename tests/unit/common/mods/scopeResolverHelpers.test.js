@@ -569,16 +569,16 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
   });
 
   describe('High Priority Scopes', () => {
-    it('should register personal-space:close_actors', () => {
+    it('should register personal-space-states:close_actors', () => {
       expect(
-        mockTestEnv._registeredResolvers.has('personal-space:close_actors')
+        mockTestEnv._registeredResolvers.has('personal-space-states:close_actors')
       ).toBe(true);
     });
 
-    it('should register personal-space:close_actors_facing_each_other', () => {
+    it('should register personal-space-states:close_actors_facing_each_other', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'personal-space:close_actors_facing_each_other'
+          'personal-space-states:close_actors_facing_each_other'
         )
       ).toBe(true);
     });
@@ -597,10 +597,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register personal-space:close_actors_or_entity_kneeling_before_actor', () => {
+    it('should register personal-space-states:close_actors_or_entity_kneeling_before_actor', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'personal-space:close_actors_or_entity_kneeling_before_actor'
+          'personal-space-states:close_actors_or_entity_kneeling_before_actor'
         )
       ).toBe(true);
     });
@@ -669,10 +669,10 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
       ).toBe(true);
     });
 
-    it('should register facing-states:actors_im_facing_away_from', () => {
+    it('should register personal-space-states:actors_im_facing_away_from', () => {
       expect(
         mockTestEnv._registeredResolvers.has(
-          'facing-states:actors_im_facing_away_from'
+          'personal-space-states:actors_im_facing_away_from'
         )
       ).toBe(true);
     });
@@ -680,13 +680,14 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
 
   it('should have 19+ total positioning-related scopes registered', () => {
     // Count all positioning-related scopes across multiple namespaces
-    // (positioning, sitting, straddling, personal-space)
+    // (positioning, sitting, straddling, personal-space, personal-space-states)
     // Note: Some scopes were migrated to domain-specific mods (e.g., biting-states)
     const positioningRelatedPrefixes = [
       'positioning:',
       'sitting:',
       'straddling:',
       'personal-space:',
+      'personal-space-states:',
     ];
     const positioningScopes = Array.from(
       mockTestEnv._registeredResolvers.keys()

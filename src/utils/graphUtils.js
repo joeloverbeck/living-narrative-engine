@@ -138,6 +138,84 @@ export function buildDependencyGraph(requestedIds, manifestsMap) {
 }
 
 /**
+ * Extracts an actual cycle path from nodes known to be in a cycle.
+ * Uses DFS to trace the dependency graph and find the first cycle.
+ *
+ * @param {Map<string, Set<string>>} edges - The adjacency list (from → Set of destinations).
+ * @param {Set<string>} cycleNodes - The set of nodes known to be involved in cycles.
+ * @returns {{cycle: string[], involvedNodes: string[]}} The first cycle found as an array
+ *   ending with the first node repeated (e.g., ['A', 'B', 'A']), plus all involved nodes.
+ */
+export function extractCyclePath(edges, cycleNodes) {
+  if (!cycleNodes || cycleNodes.size === 0) {
+    return { cycle: [], involvedNodes: [] };
+  }
+
+  const involvedNodes = [...cycleNodes];
+
+  // Build a filtered subgraph containing only cycle nodes
+  const subgraph = new Map();
+  for (const node of cycleNodes) {
+    const neighbors = edges.get(node);
+    if (neighbors) {
+      const filteredNeighbors = new Set(
+        [...neighbors].filter((n) => cycleNodes.has(n))
+      );
+      if (filteredNeighbors.size > 0) {
+        subgraph.set(node, filteredNeighbors);
+      }
+    }
+  }
+
+  // DFS to find a cycle
+  const visited = new Set();
+  const inPath = new Set();
+  const pathArr = [];
+
+  /**
+   * @param {string} node
+   * @returns {string[]|null}
+   */
+  function dfs(node) {
+    if (inPath.has(node)) {
+      // Found cycle - extract it
+      const cycleStart = pathArr.indexOf(node);
+      return pathArr.slice(cycleStart).concat([node]);
+    }
+    if (visited.has(node)) return null;
+
+    const neighbors = subgraph.get(node);
+    if (!neighbors || neighbors.size === 0) return null;
+
+    visited.add(node);
+    inPath.add(node);
+    pathArr.push(node);
+
+    for (const next of neighbors) {
+      const cycle = dfs(next);
+      if (cycle) return cycle;
+    }
+
+    pathArr.pop();
+    inPath.delete(node);
+    return null;
+  }
+
+  // Try to find a cycle starting from each node
+  for (const startNode of cycleNodes) {
+    if (!visited.has(startNode)) {
+      const cycle = dfs(startNode);
+      if (cycle) {
+        return { cycle, involvedNodes };
+      }
+    }
+  }
+
+  // Fallback if no cycle found (shouldn't happen if cycleNodes is correct)
+  return { cycle: involvedNodes.slice(0, 2).concat([involvedNodes[0]]), involvedNodes };
+}
+
+/**
  * Creates a minimal heap data structure for stable sorting.
  *
  * @param {(value: any) => number} keyFn - Function returning the priority for a value.

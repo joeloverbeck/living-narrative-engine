@@ -92,7 +92,7 @@ describe('grabbing:grab_neck_target action discovery', () => {
         "grab {target}'s neck ({chance}% chance)"
       );
       expect(grabNeckTargetAction.targets).toBe(
-        'personal-space:close_actors_facing_each_other_or_behind_target'
+        'personal-space-states:close_actors_facing_each_other_or_behind_target'
       );
     });
 

@@ -78,7 +78,7 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
     const scopePaths = [
       'data/mods/core/scopes/actors_in_location.scope',
       'data/mods/facing-states/scopes/actors_in_location_facing.scope',
-      'data/mods/personal-space/scopes/close_actors_facing_each_other_or_behind_target.scope',
+      'data/mods/personal-space-states/scopes/close_actors_facing_each_other_or_behind_target.scope',
     ];
 
     const parsedScopes = [];

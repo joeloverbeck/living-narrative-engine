@@ -6,12 +6,7 @@
   "description": "State components for facing direction tracking. Separated from positioning mod to allow other mods to check facing state without circular dependencies.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
-  "dependencies": [
-    {
-      "id": "personal-space-states",
-      "version": "^1.0.0"
-    }
-  ],
+  "dependencies": [],
   "content": {
     "components": [
       "facing_away.component.json"
@@ -25,7 +20,6 @@
       "entity-not-in-facing-away.condition.json"
     ],
     "scopes": [
-      "actors_im_facing_away_from.scope",
       "actors_in_location_facing.scope"
     ],
     "events": [

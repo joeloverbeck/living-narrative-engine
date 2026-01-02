@@ -172,6 +172,93 @@ function createLLMStub(defaultResponse) {
  */
 
 /**
+ * Module-level cache for preloaded mod environments.
+ * Used to share expensive mod loading across tests in the same file.
+ * Key: JSON-stringified mods array, Value: cached registry data snapshot
+ * @type {Map<string, {registrySnapshot: Map<string, Map<string, any>>}>}
+ */
+const modEnvironmentCache = new Map();
+
+/**
+ * Preloads mod data that can be shared across multiple test environments.
+ * This avoids repeated filesystem I/O for the same mods.
+ *
+ * Call this in beforeAll() and pass the result to createE2ETestEnvironment()
+ * via the preloadedModEnvironment option.
+ *
+ * @param {string[]} mods - Which mods to preload
+ * @param {string} [worldName='testworld'] - World name for mod loading context
+ * @returns {Promise<{registrySnapshot: Map<string, Map<string, any>>}>} Cached mod environment
+ * @example
+ * let cachedModEnv;
+ * beforeAll(async () => {
+ *   cachedModEnv = await preloadModEnvironment(['core']);
+ * });
+ * beforeEach(async () => {
+ *   env = await createE2ETestEnvironment({
+ *     loadMods: true,
+ *     mods: ['core'],
+ *     preloadedModEnvironment: cachedModEnv,
+ *   });
+ * });
+ */
+export async function preloadModEnvironment(mods, worldName = 'testworld') {
+  const cacheKey = JSON.stringify(mods.slice().sort());
+
+  // Return cached if available
+  if (modEnvironmentCache.has(cacheKey)) {
+    return modEnvironmentCache.get(cacheKey);
+  }
+
+  // Track original fetch for cleanup
+  const originalFetch = globalThis.fetch;
+
+  // Create temporary container to load mods
+  const tempContainer = new AppContainer();
+  await configureContainer(tempContainer, {
+    outputDiv: globalThis.document?.createElement('div') || { innerHTML: '' },
+    inputElement:
+      globalThis.document?.createElement('input') || { value: '' },
+    titleElement:
+      globalThis.document?.createElement('h1') || { textContent: '' },
+    document: globalThis.document || {},
+  });
+
+  // Patch global.fetch with test-isolated fetcher
+  globalThis.fetch = createTestIsolatedFetch(mods);
+
+  try {
+    const modsLoader = tempContainer.resolve(tokens.ModsLoader);
+    await modsLoader.loadMods(worldName, mods);
+
+    // Capture registry data snapshot
+    const registry = tempContainer.resolve(tokens.IDataRegistry);
+    const registrySnapshot = new Map();
+
+    // Copy all registry stores
+    if (registry._stores) {
+      for (const [storeKey, storeMap] of registry._stores.entries()) {
+        registrySnapshot.set(storeKey, new Map(storeMap));
+      }
+    }
+
+    const cachedEnv = { registrySnapshot };
+    modEnvironmentCache.set(cacheKey, cachedEnv);
+    return cachedEnv;
+  } finally {
+    globalThis.fetch = originalFetch;
+    tempContainer.cleanup();
+  }
+}
+
+/**
+ * Clears the mod environment cache. Call in afterAll() if needed.
+ */
+export function clearModEnvironmentCache() {
+  modEnvironmentCache.clear();
+}
+
+/**
  * Creates an e2e test environment with production container.
  * The environment uses real DI container with all production registrations,
  * but stubs external dependencies like LLM adapters by default.
@@ -186,6 +273,7 @@ function createLLMStub(defaultResponse) {
  * @param {boolean} [options.loadMods=false] - Whether to load real mods from filesystem
  * @param {string[]} [options.mods=['core']] - Which mods to load (requires loadMods=true)
  * @param {string} [options.worldName='testworld'] - World name for mod loading context
+ * @param {object} [options.preloadedModEnvironment] - Cached mod environment from preloadModEnvironment()
  * @returns {Promise<E2ETestEnvironment>} The test environment
  * @example
  * // Basic usage with mock helpers
@@ -197,6 +285,20 @@ function createLLMStub(defaultResponse) {
  *   loadMods: true,
  *   mods: ['core', 'positioning'],
  *   stubLLM: true
+ * });
+ *
+ * @example
+ * // Optimized: Shared mod loading across tests
+ * let cachedModEnv;
+ * beforeAll(async () => {
+ *   cachedModEnv = await preloadModEnvironment(['core']);
+ * });
+ * beforeEach(async () => {
+ *   env = await createE2ETestEnvironment({
+ *     loadMods: true,
+ *     mods: ['core'],
+ *     preloadedModEnvironment: cachedModEnv,
+ *   });
  * });
  *
  * try {
@@ -213,6 +315,7 @@ export async function createE2ETestEnvironment(options = {}) {
     loadMods = false,
     mods = ['core'],
     worldName = 'testworld',
+    preloadedModEnvironment = null,
   } = options;
 
   // Track original fetch for cleanup
@@ -239,19 +342,31 @@ export async function createE2ETestEnvironment(options = {}) {
 
   // Optionally load real mods from filesystem for true e2e testing
   if (loadMods) {
-    // Patch global.fetch with test-isolated fetcher
-    // This intercepts game.json requests to return test config
-    // while allowing all other file reads to proceed normally.
-    // No file system modifications - safe even if tests crash.
-    globalThis.fetch = createTestIsolatedFetch(mods);
+    // Use preloaded mod environment if available (significantly faster)
+    if (preloadedModEnvironment?.registrySnapshot) {
+      // Restore registry data from snapshot
+      const registry = container.resolve(tokens.IDataRegistry);
+      for (const [storeKey, storeMap] of preloadedModEnvironment.registrySnapshot.entries()) {
+        for (const [itemKey, itemValue] of storeMap.entries()) {
+          registry.store(storeKey, itemKey, itemValue);
+        }
+      }
+    } else {
+      // Fallback: Load mods from filesystem (slower, for backward compatibility)
+      // Patch global.fetch with test-isolated fetcher
+      // This intercepts game.json requests to return test config
+      // while allowing all other file reads to proceed normally.
+      // No file system modifications - safe even if tests crash.
+      globalThis.fetch = createTestIsolatedFetch(mods);
 
-    try {
-      // ModsLoader is already registered by configureContainer via baseContainerConfig
-      const modsLoader = container.resolve(tokens.ModsLoader);
-      await modsLoader.loadMods(worldName, mods);
-    } finally {
-      // Restore original fetch
-      globalThis.fetch = originalFetch;
+      try {
+        // ModsLoader is already registered by configureContainer via baseContainerConfig
+        const modsLoader = container.resolve(tokens.ModsLoader);
+        await modsLoader.loadMods(worldName, mods);
+      } finally {
+        // Restore original fetch
+        globalThis.fetch = originalFetch;
+      }
     }
   }
 

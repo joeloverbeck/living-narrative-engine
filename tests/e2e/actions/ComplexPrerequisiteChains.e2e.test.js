@@ -14,7 +14,13 @@
  * @see tests/e2e/common/e2eTestContainer.js
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { createE2ETestEnvironment } from '../common/e2eTestContainer.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';

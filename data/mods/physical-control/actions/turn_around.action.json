@@ -5,7 +5,7 @@
   "description": "Turn the target around or have them face you again.",
   "targets": {
     "primary": {
-      "scope": "personal-space:close_actors_facing_each_other_or_behind_target",
+      "scope": "personal-space-states:close_actors_facing_each_other_or_behind_target",
       "placeholder": "target",
       "description": "Actor to turn around"
     }
