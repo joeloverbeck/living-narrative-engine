@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:fractured",
+  "description": "Dispatched when a body part fractures due to damage exceeding the fracture threshold. Fires after the fractured component is added.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected by fracture"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the fractured body part"
+      },
+      "damageTypeId": {
+        "type": "string",
+        "description": "Type of damage that caused the fracture (e.g., 'bludgeoning', 'crushing')"
+      },
+      "stunApplied": {
+        "type": "boolean",
+        "description": "Whether stun was also applied as a secondary effect"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when fracture occurred"
+      }
+    },
+    "required": ["entityId", "partId", "damageTypeId", "stunApplied", "timestamp"],
+    "additionalProperties": false
+  }
+}

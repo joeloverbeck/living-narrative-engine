@@ -40,6 +40,7 @@ export function registerDamageSimulatorComponents(container) {
         recipeSelectorService: c.resolve(tokens.IRecipeSelectorService),
         entityLoadingService: c.resolve(tokens.IEntityLoadingService),
         anatomyDataExtractor: c.resolve(tokens.IAnatomyDataExtractor),
+        injuryAggregationService: c.resolve(tokens.InjuryAggregationService),
         eventBus: c.resolve(tokens.IValidatedEventDispatcher),
         logger: c.resolve(tokens.ILogger),
       }),

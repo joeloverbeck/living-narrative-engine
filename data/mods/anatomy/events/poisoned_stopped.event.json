@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:poisoned_stopped",
+  "description": "Dispatched when a poison effect ends on a body part or entity. Fires after the poisoned component is removed.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected. Present when scope is 'entity'."
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the body part where poisoning stopped. Present when scope is 'part'."
+      },
+      "scope": {
+        "type": "string",
+        "enum": ["part", "entity"],
+        "description": "Whether poison was on a specific part or the whole entity"
+      },
+      "reason": {
+        "type": "string",
+        "enum": ["duration_expired", "cured", "part_destroyed"],
+        "description": "Why the poison effect ended"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when poisoning stopped"
+      }
+    },
+    "required": ["scope", "reason", "timestamp"],
+    "additionalProperties": false
+  }
+}

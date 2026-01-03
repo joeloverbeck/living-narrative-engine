@@ -1404,4 +1404,46 @@ describe('InjuryAggregationService', () => {
       });
     });
   });
+
+  describe('calculateOverallHealth', () => {
+    it('should return 100 for empty partInfos array', () => {
+      const result = service.calculateOverallHealth([]);
+
+      expect(result).toBe(100);
+    });
+
+    it('should calculate weighted average correctly', () => {
+      const parts = [
+        { healthPercentage: 80, healthCalculationWeight: 2 },
+        { healthPercentage: 60, healthCalculationWeight: 1 },
+      ];
+
+      const result = service.calculateOverallHealth(parts);
+
+      expect(result).toBe(73);
+    });
+
+    it('should apply vital organ caps when threshold met', () => {
+      const parts = [
+        { healthPercentage: 50, healthCalculationWeight: 1 },
+        {
+          healthPercentage: 10,
+          healthCalculationWeight: 1,
+          vitalOrganCap: { threshold: 20, capValue: 25 },
+        },
+      ];
+
+      const result = service.calculateOverallHealth(parts);
+
+      expect(result).toBe(25);
+    });
+
+    it('should use default weight of 1 when not specified', () => {
+      const parts = [{ healthPercentage: 100 }, { healthPercentage: 50 }];
+
+      const result = service.calculateOverallHealth(parts);
+
+      expect(result).toBe(75);
+    });
+  });
 });

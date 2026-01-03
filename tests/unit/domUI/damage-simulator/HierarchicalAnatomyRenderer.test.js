@@ -251,6 +251,50 @@ describe('HierarchicalAnatomyRenderer', () => {
     });
   });
 
+  describe('Overall Health', () => {
+    it('should render overall health header when setOverallHealth is called', () => {
+      const rootNode = createMockNode();
+      renderer.setOverallHealth(80);
+      renderer.render(rootNode);
+
+      const header = mockContainer.querySelector('.ds-overall-health-header');
+      expect(header).not.toBeNull();
+
+      const text = mockContainer.querySelector('.ds-overall-health-text');
+      expect(text.textContent).toBe('80%');
+    });
+
+    it('should position overall health header above first anatomy card', () => {
+      const rootNode = createMockNode();
+      renderer.setOverallHealth(80);
+      renderer.render(rootNode);
+
+      const firstChild = mockContainer.firstElementChild;
+      expect(firstChild.classList.contains('ds-overall-health-header')).toBe(true);
+    });
+
+    it('should apply health bar class based on overall health percentage', () => {
+      const rootNode = createMockNode();
+      renderer.setOverallHealth(50);
+      renderer.render(rootNode);
+
+      const fill = mockContainer.querySelector('.ds-overall-health-header .ds-health-bar-fill');
+      expect(fill.classList.contains('ds-health-bar-fill--damaged')).toBe(true);
+    });
+
+    it('should update overall health on re-render', () => {
+      const rootNode = createMockNode();
+      renderer.setOverallHealth(100);
+      renderer.render(rootNode);
+
+      renderer.setOverallHealth(50);
+      renderer.render(rootNode);
+
+      const fill = mockContainer.querySelector('.ds-overall-health-header .ds-health-bar-fill');
+      expect(fill.style.width).toBe('50%');
+    });
+  });
+
   describe('clear()', () => {
     it('should remove all content from container', () => {
       const rootNode = createMockNode();

@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:bleeding_stopped",
+  "description": "Dispatched when a bleeding effect ends on a body part. Fires after the bleeding component is removed.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the body part where bleeding stopped"
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["minor", "moderate", "severe", "critical"],
+        "description": "Severity level of the bleeding effect that stopped"
+      },
+      "reason": {
+        "type": "string",
+        "enum": ["duration_expired", "healed", "part_destroyed"],
+        "description": "Why the bleeding effect ended"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when bleeding stopped"
+      }
+    },
+    "required": ["entityId", "partId", "severity", "reason", "timestamp"],
+    "additionalProperties": false
+  }
+}

@@ -24,6 +24,26 @@
             "blunt": 0.5,
             "slashing": 0.6
           }
+        },
+        {
+          "childSocketId": "lung_left_socket",
+          "baseProbability": 0.25,
+          "damageFraction": 0.4,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.4,
+            "slashing": 0.7
+          }
+        },
+        {
+          "childSocketId": "lung_right_socket",
+          "baseProbability": 0.25,
+          "damageFraction": 0.4,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.4,
+            "slashing": 0.7
+          }
         }
       ]
     },

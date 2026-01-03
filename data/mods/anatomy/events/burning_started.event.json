@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:burning_started",
+  "description": "Dispatched when a burning effect is applied to a body part. Fires after the burning component is added.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected by burning"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the burning body part"
+      },
+      "stackedCount": {
+        "type": "integer",
+        "description": "Number of burn stacks applied"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when burning started"
+      }
+    },
+    "required": ["entityId", "partId", "stackedCount", "timestamp"],
+    "additionalProperties": false
+  }
+}

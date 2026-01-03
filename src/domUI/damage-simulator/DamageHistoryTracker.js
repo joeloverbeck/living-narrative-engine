@@ -44,8 +44,8 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @readonly
  */
 const EVENTS = Object.freeze({
-  EXECUTION_COMPLETE: 'damage-simulator:execution-complete',
-  ENTITY_LOADING: 'damage-simulator:entity-loading',
+  EXECUTION_COMPLETE: 'core:damage_simulator_execution_complete',
+  ENTITY_LOADING: 'core:damage_simulator_entity_loading',
 });
 
 /**

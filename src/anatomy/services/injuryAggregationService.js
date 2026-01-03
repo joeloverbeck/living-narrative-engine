@@ -162,7 +162,7 @@ class InjuryAggregationService extends BaseService {
     );
 
     // Calculate weighted overall health
-    const overallHealthPercentage = this.#calculateOverallHealth(allPartInfos);
+    const overallHealthPercentage = this.calculateOverallHealth(allPartInfos);
 
     /** @type {InjurySummaryDTO} */
     const summary = {
@@ -546,9 +546,8 @@ class InjuryAggregationService extends BaseService {
    *
    * @param {InjuredPartInfo[]} partInfos - Array of part info objects
    * @returns {number} Overall health percentage (0-100)
-   * @private
    */
-  #calculateOverallHealth(partInfos) {
+  calculateOverallHealth(partInfos) {
     if (partInfos.length === 0) {
       return 100;
     }

@@ -102,12 +102,13 @@ import { getActiveEffects, generateEffectIconsHTML } from './statusEffectUtils.j
 
 /**
  * Event types for analytics panel.
- * These must match the event types emitted by DamageSimulatorUI.js
+ * CONFIG_CHANGED must match DamageCapabilityComposer.COMPOSER_EVENTS.CONFIG_CHANGED
+ * ENTITY_LOADED must match DamageSimulatorUI.UI_EVENTS.ENTITY_LOADED
  *
  * @readonly
  */
 const EVENTS = Object.freeze({
-  CONFIG_CHANGED: 'damage-composer:config-changed',
+  CONFIG_CHANGED: 'core:damage_composer_config_changed',
   ENTITY_LOADED: 'core:damage_simulator_entity_loaded',
 });
 
@@ -160,6 +161,9 @@ class DamageAnalyticsPanel {
   /** @type {HitProbabilityCalculator|null} */
   #hitProbabilityCalculator = null;
 
+  /** @type {number|null} */
+  #overallHealthPercent = null;
+
   /**
    * Expose constants for testing and external use
    */
@@ -202,12 +206,22 @@ class DamageAnalyticsPanel {
    * @private
    */
   #subscribeToEvents() {
-    // Subscribe to damage config changes
+    // Subscribe to damage config changes from DamageCapabilityComposer
+    // The composer sends { config, multiplier, isValid } where config contains:
+    // - name: damage type name (e.g., 'slashing')
+    // - amount: base damage amount
+    // - penetration: armor penetration value
     const unsubConfigChanged = this.#eventBus.subscribe(
       EVENTS.CONFIG_CHANGED,
       (event) => {
-        const { damageEntry, multiplier } = event.payload || {};
-        if (damageEntry) {
+        const { config, multiplier } = event.payload || {};
+        if (config) {
+          // Transform config to damageEntry format expected by updateDamageConfig
+          const damageEntry = {
+            amount: config.amount,
+            damageType: config.name,
+            penetration: config.penetration ?? 0,
+          };
           this.updateDamageConfig(damageEntry, multiplier ?? 1);
           this.render();
         }
@@ -306,6 +320,22 @@ class DamageAnalyticsPanel {
   }
 
   /**
+   * Set the overall health percentage to display.
+   *
+   * @param {number} percent - Health percentage (0-100).
+   */
+  setOverallHealth(percent) {
+    if (!Number.isFinite(percent)) {
+      this.#overallHealthPercent = null;
+      this.#updateHealthBarDisplay();
+      return;
+    }
+
+    this.#overallHealthPercent = Math.max(0, Math.min(100, Math.round(percent)));
+    this.#updateHealthBarDisplay();
+  }
+
+  /**
    * Render the analytics display.
    */
   render() {
@@ -354,7 +384,10 @@ class DamageAnalyticsPanel {
       <div class="ds-analytics-content">
         <!-- Hits to Destroy Section (Left Column) -->
         <section class="ds-analytics-section">
-          <h4>Hits to Destroy</h4>
+          <div class="ds-analytics-section-header" style="display:flex; align-items:center; justify-content:space-between; gap: 12px;">
+            <h4>Hits to Destroy</h4>
+            ${this.#generateInlineHealthBarHTML()}
+          </div>
           ${hitsTableHTML}
         </section>
 
@@ -531,6 +564,75 @@ class DamageAnalyticsPanel {
         <span class="ds-stat-value" id="total-parts">${aggregate.totalParts}</span>
       </div>
     `;
+  }
+
+  /**
+   * Create the inline health bar HTML for the section header.
+   *
+   * @private
+   * @returns {string}
+   */
+  #generateInlineHealthBarHTML() {
+    if (this.#overallHealthPercent === null) {
+      return '';
+    }
+
+    return `
+      <div class="ds-overall-health-inline" id="analytics-overall-health">
+        <span class="ds-overall-health-label">Overall:</span>
+        <div class="ds-overall-health-bar">
+          <div class="ds-health-bar">
+            <div class="ds-health-bar-fill ${this.#getHealthClass(this.#overallHealthPercent)}"
+              style="width: ${this.#overallHealthPercent}%"></div>
+          </div>
+          <span class="ds-overall-health-text">${this.#overallHealthPercent}%</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Update the health bar display if it exists.
+   *
+   * @private
+   */
+  #updateHealthBarDisplay() {
+    const healthBar = this.#containerElement.querySelector('#analytics-overall-health');
+    if (!healthBar) {
+      if (this.#overallHealthPercent !== null && this.#containerElement.innerHTML) {
+        this.render();
+      }
+      return;
+    }
+
+    if (this.#overallHealthPercent === null) {
+      healthBar.remove();
+      return;
+    }
+
+    const fill = healthBar.querySelector('.ds-health-bar-fill');
+    const text = healthBar.querySelector('.ds-overall-health-text');
+
+    if (fill) {
+      fill.className = `ds-health-bar-fill ${this.#getHealthClass(this.#overallHealthPercent)}`;
+      fill.style.width = `${this.#overallHealthPercent}%`;
+    }
+    if (text) {
+      text.textContent = `${this.#overallHealthPercent}%`;
+    }
+  }
+
+  /**
+   * Get CSS class for health percentage.
+   *
+   * @private
+   * @param {number} percent
+   * @returns {string}
+   */
+  #getHealthClass(percent) {
+    if (percent > 66) return 'ds-health-bar-fill--healthy';
+    if (percent > 33) return 'ds-health-bar-fill--damaged';
+    return 'ds-health-bar-fill--critical';
   }
 
   /**
@@ -731,6 +833,7 @@ class DamageAnalyticsPanel {
     this.#unsubscribers = [];
     this.#anatomyData = null;
     this.#damageEntry = null;
+    this.#overallHealthPercent = null;
     this.#logger.debug('[DamageAnalyticsPanel] Destroyed');
   }
 }

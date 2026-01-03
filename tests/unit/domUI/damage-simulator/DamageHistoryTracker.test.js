@@ -533,10 +533,10 @@ describe('DamageHistoryTracker', () => {
     it('should expose EVENTS', () => {
       expect(DamageHistoryTracker.EVENTS).toBeDefined();
       expect(DamageHistoryTracker.EVENTS.EXECUTION_COMPLETE).toBe(
-        'damage-simulator:execution-complete'
+        'core:damage_simulator_execution_complete'
       );
       expect(DamageHistoryTracker.EVENTS.ENTITY_LOADING).toBe(
-        'damage-simulator:entity-loading'
+        'core:damage_simulator_entity_loading'
       );
     });
 

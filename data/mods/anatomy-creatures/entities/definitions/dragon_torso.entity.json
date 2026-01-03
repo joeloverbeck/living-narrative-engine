@@ -3,6 +3,30 @@
   "id": "anatomy-creatures:dragon_torso",
   "description": "A powerful dragon torso for quadrupedal flyers",
   "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "lung_left_socket",
+          "baseProbability": 0.25,
+          "damageFraction": 0.4,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.4,
+            "slashing": 0.7
+          }
+        },
+        {
+          "childSocketId": "lung_right_socket",
+          "baseProbability": 0.25,
+          "damageFraction": 0.4,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.4,
+            "slashing": 0.7
+          }
+        }
+      ]
+    },
     "anatomy:part": {
       "subType": "dragon_torso",
       "hit_probability_weight": 40,
