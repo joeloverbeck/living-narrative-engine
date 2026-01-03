@@ -551,15 +551,15 @@ class DamageAnalyticsPanel {
     const maxDisplay = aggregate.maxHits === Infinity ? '∞' : aggregate.maxHits;
 
     return `
-      <div class="ds-stat">
-        <span class="ds-stat-label">Avg Hits</span>
+      <div class="ds-stat ds-stat--with-tooltip" title="Average number of hits needed to destroy any body part with current damage settings">
+        <span class="ds-stat-label">Avg Hits to Destroy</span>
         <span class="ds-stat-value" id="avg-hits">${avgDisplay}</span>
       </div>
-      <div class="ds-stat">
-        <span class="ds-stat-label">Min/Max</span>
+      <div class="ds-stat ds-stat--with-tooltip" title="Minimum/maximum hits needed: weakest part / toughest part">
+        <span class="ds-stat-label">Hits Range</span>
         <span class="ds-stat-value" id="min-max-hits">${minDisplay}/${maxDisplay}</span>
       </div>
-      <div class="ds-stat">
+      <div class="ds-stat ds-stat--with-tooltip" title="Total body parts analyzed">
         <span class="ds-stat-label">Parts</span>
         <span class="ds-stat-value" id="total-parts">${aggregate.totalParts}</span>
       </div>

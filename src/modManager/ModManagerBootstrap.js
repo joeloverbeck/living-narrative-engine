@@ -16,6 +16,10 @@ import ModListView from './views/ModListView.js';
 import SummaryPanelView from './views/SummaryPanelView.js';
 import WorldListView from './views/WorldListView.js';
 import ModCardComponent from './components/ModCardComponent.js';
+import SearchFilterView from './views/SearchFilterView.js';
+import SaveFeedbackAnimator from './animations/SaveFeedbackAnimator.js';
+import ConflictShakeAnimator from './animations/ConflictShakeAnimator.js';
+import CascadeAnimator from './animations/CascadeAnimator.js';
 
 /**
  * Bootstraps the Mod Manager application with lightweight dependency injection
@@ -28,6 +32,10 @@ export class ModManagerBootstrap {
   #summaryPanelView;
   #worldListView;
   #modCardComponent;
+  #searchFilterView;
+  #saveAnimator;
+  #conflictAnimator;
+  #cascadeAnimator;
   #backButtonHandler;
   #navigationHandler;
 
@@ -124,6 +132,15 @@ export class ModManagerBootstrap {
     this.#container.set('modStatisticsService', modStatisticsService);
     this.#container.set('worldDiscoveryService', worldDiscoveryService);
     this.#container.set('configPersistenceService', configPersistenceService);
+
+    // Create and register animators
+    this.#saveAnimator = new SaveFeedbackAnimator({ logger: this.#logger });
+    this.#conflictAnimator = new ConflictShakeAnimator({ logger: this.#logger });
+    this.#cascadeAnimator = new CascadeAnimator({ logger: this.#logger });
+
+    this.#container.set('saveAnimator', this.#saveAnimator);
+    this.#container.set('conflictAnimator', this.#conflictAnimator);
+    this.#container.set('cascadeAnimator', this.#cascadeAnimator);
   }
 
   /**
@@ -160,6 +177,8 @@ export class ModManagerBootstrap {
     const summaryPanelContainer =
       /** @type {HTMLElement|null} */ (document.querySelector('.summary-panel'));
     const worldListContainer = document.getElementById('world-list');
+    const searchFilterContainer =
+      /** @type {HTMLElement|null} */ (document.querySelector('.search-container'));
 
     // Create ModListView
     if (modListContainer) {
@@ -187,6 +206,48 @@ export class ModManagerBootstrap {
         logger: this.#logger,
         onWorldSelect: (worldId) => this.#controller.selectWorld(worldId),
       });
+    }
+
+    // Create SearchFilterView
+    if (searchFilterContainer) {
+      this.#searchFilterView = new SearchFilterView({
+        container: searchFilterContainer,
+        logger: this.#logger,
+        onSearchChange: (query) => {
+          this.#controller.setSearchQuery(query);
+          this.#renderFilteredModList();
+        },
+        onFilterChange: (filter) => {
+          this.#controller.setFilterCategory(filter);
+          this.#renderFilteredModList();
+        },
+        debounceMs: 300,
+      });
+    }
+  }
+
+  /**
+   * Re-render mod list with current filter/search applied
+   */
+  #renderFilteredModList() {
+    if (!this.#modListView) return;
+
+    const state = this.#controller.getState();
+    const filteredMods = this.#controller.getFilteredMods();
+
+    this.#modListView.render({
+      mods: filteredMods,
+      getModDisplayInfo: (modId) => this.#controller.getModDisplayInfo(modId),
+      getModName: (modId) => this.#controller.getModName(modId),
+      isLoading: state.isLoading,
+    });
+
+    // Update results count in search view
+    if (this.#searchFilterView) {
+      this.#searchFilterView.updateResultsCount(
+        filteredMods.length,
+        state.availableMods?.length || 0
+      );
     }
   }
 
@@ -349,6 +410,20 @@ export class ModManagerBootstrap {
     }
     if (this.#worldListView?.destroy) {
       this.#worldListView.destroy();
+    }
+    if (this.#searchFilterView?.destroy) {
+      this.#searchFilterView.destroy();
+    }
+
+    // Destroy animators
+    if (this.#saveAnimator?.destroy) {
+      this.#saveAnimator.destroy();
+    }
+    if (this.#conflictAnimator?.destroy) {
+      this.#conflictAnimator.destroy();
+    }
+    if (this.#cascadeAnimator?.destroy) {
+      this.#cascadeAnimator.destroy();
     }
 
     // Remove navigation handlers

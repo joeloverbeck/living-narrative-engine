@@ -123,10 +123,19 @@ class DismemberedBodyPartSpawner extends BaseService {
    * @param {string} event.payload.partId - The dismembered body part entity ID
    * @param {string|null} [event.payload.partType] - Type of body part (e.g., 'arm', 'leg')
    * @param {string|null} [event.payload.orientation] - Orientation of the part (e.g., 'left', 'right')
+   * @param {boolean} [event.payload.suppressBodyPartSpawning] - If true, skip spawning (e.g., in damage simulator)
    * @private
    */
   async #handleDismemberment({ payload }) {
-    const { entityId, partId, partType, orientation } = payload;
+    const { entityId, partId, partType, orientation, suppressBodyPartSpawning } = payload;
+
+    // Skip spawning if suppressed (e.g., in damage simulator mode)
+    if (suppressBodyPartSpawning) {
+      this.#logger.debug(
+        `DismemberedBodyPartSpawner: Skipping spawn for ${partId} (suppressBodyPartSpawning=true)`
+      );
+      return;
+    }
 
     this.#logger.debug(
       `Handling dismemberment: entity=${entityId}, part=${partId}, type=${partType}, orientation=${orientation}`

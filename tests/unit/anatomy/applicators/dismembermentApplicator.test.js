@@ -376,6 +376,50 @@ describe('DismembermentApplicator', () => {
         expect.stringContaining('dismembered by piercing damage')
       );
     });
+
+    describe('suppressBodyPartSpawning flag', () => {
+      it('includes suppressBodyPartSpawning=true in event payload when provided', async () => {
+        await applicator.apply({
+          ...baseParams,
+          suppressBodyPartSpawning: true,
+        });
+
+        expect(mockDispatchStrategy.dispatch).toHaveBeenCalledWith(
+          DISMEMBERED_EVENT,
+          expect.objectContaining({
+            suppressBodyPartSpawning: true,
+          }),
+          baseParams.sessionContext
+        );
+      });
+
+      it('includes suppressBodyPartSpawning=false in event payload when explicitly provided', async () => {
+        await applicator.apply({
+          ...baseParams,
+          suppressBodyPartSpawning: false,
+        });
+
+        expect(mockDispatchStrategy.dispatch).toHaveBeenCalledWith(
+          DISMEMBERED_EVENT,
+          expect.objectContaining({
+            suppressBodyPartSpawning: false,
+          }),
+          baseParams.sessionContext
+        );
+      });
+
+      it('defaults suppressBodyPartSpawning to false in event payload when not provided', async () => {
+        await applicator.apply(baseParams);
+
+        expect(mockDispatchStrategy.dispatch).toHaveBeenCalledWith(
+          DISMEMBERED_EVENT,
+          expect.objectContaining({
+            suppressBodyPartSpawning: false,
+          }),
+          baseParams.sessionContext
+        );
+      });
+    });
   });
 
   describe('exported constants', () => {
