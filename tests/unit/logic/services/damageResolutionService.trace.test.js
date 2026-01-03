@@ -21,6 +21,7 @@ describe('DamageResolutionService Tracing', () => {
   /** @type {jest.Mocked<any>} */ let damageTypeEffectsService;
   /** @type {jest.Mocked<any>} */ let damagePropagationService;
   /** @type {jest.Mocked<any>} */ let deathCheckService;
+  /** @type {jest.Mocked<any>} */ let cascadeDestructionService;
 
   const createService = () => {
     const log = {
@@ -72,6 +73,14 @@ describe('DamageResolutionService Tracing', () => {
       compose: jest.fn().mockReturnValue('Ouch!'),
     };
 
+    cascadeDestructionService = {
+      executeCascade: jest.fn().mockResolvedValue({
+        destroyedPartIds: [],
+        destroyedParts: [],
+        vitalOrganDestroyed: false,
+      }),
+    };
+
     return new DamageResolutionService({
       logger: log,
       entityManager,
@@ -81,6 +90,7 @@ describe('DamageResolutionService Tracing', () => {
       deathCheckService,
       damageAccumulator,
       damageNarrativeComposer,
+      cascadeDestructionService,
     });
   };
 

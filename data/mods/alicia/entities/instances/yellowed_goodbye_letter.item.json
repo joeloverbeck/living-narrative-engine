@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "alicia:yellowed_goodbye_letter_instance",
+  "definitionId": "alicia:yellowed_goodbye_letter",
+  "componentOverrides": {}
+}

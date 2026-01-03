@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "alicia:alicia_western_desk",
+  "description": "Simple wooden desk in Alicia Western's patient room at Stella Maris",
+  "components": {
+    "core:name": {
+      "text": "wooden desk"
+    },
+    "core:description": {
+      "text": "A simple wooden desk with a worn finish, the kind found in every patient room at Stella Maris. One drawer pulls out stiffly, its brass handle tarnished with age. The surface shows ring marks from years of water glasses and coffee cups. It's the sort of institutional furniture that has witnessed countless private moments—letters written, journals kept, decisions made in solitude."
+    },
+    "items-core:item": {},
+    "items-core:openable": {},
+    "containers-core:container": {
+      "contents": ["alicia:unfinished_goodbye_letter_instance"],
+      "capacity": {
+        "maxWeight": 15.0,
+        "maxItems": 8
+      },
+      "isOpen": false,
+      "requiresKey": false
+    }
+  }
+}

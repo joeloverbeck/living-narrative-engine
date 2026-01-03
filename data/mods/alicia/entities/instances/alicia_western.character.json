@@ -1,0 +1,17 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:alicia_western_instance",
+    "definitionId": "alicia:alicia_western",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "alicia:patient_room_instance"
+        },
+        "inventory:inventory": {
+            "items": [],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

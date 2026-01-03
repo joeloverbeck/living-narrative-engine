@@ -1,0 +1,21 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:jon_urena_daydream_instance",
+    "definitionId": "alicia:jon_urena_daydream",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "alicia:sanatorium_corridor_instance"
+        },
+        "inventory:inventory": {
+            "items": [
+                "alicia:yellowed_goodbye_letter_instance",
+                "alicia:bobby_western_photo_1_instance",
+                "alicia:bobby_western_photo_2_instance"
+            ],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

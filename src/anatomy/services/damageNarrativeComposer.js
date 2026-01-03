@@ -55,9 +55,10 @@ class DamageNarrativeComposer extends BaseService {
    * Composes a unified narrative from damage entries.
    *
    * @param {DamageEntry[]} entries - All damage entries from the sequence
+   * @param {Array} [cascadeDestructions] - Cascade destruction events
    * @returns {string} Composed narrative text
    */
-  compose(entries) {
+  compose(entries, cascadeDestructions = []) {
     if (!entries || entries.length === 0) {
       this.#logger.warn(
         'DamageNarrativeComposer.compose called with empty entries'
@@ -86,6 +87,10 @@ class DamageNarrativeComposer extends BaseService {
       segments.push(
         this.#composePropagationSegment(primaryEntry, propagatedEntries)
       );
+    }
+
+    for (const cascadeEntry of cascadeDestructions) {
+      segments.push(this.#composeCascadeSegment(cascadeEntry));
     }
 
     return segments.join(' ');
@@ -207,6 +212,27 @@ class DamageNarrativeComposer extends BaseService {
   }
 
   /**
+   * Composes a narrative segment for cascade destruction.
+   *
+   * @param {object} cascadeEntry - Cascade destruction data
+   * @returns {string} Formatted cascade narrative segment
+   * @private
+   */
+  #composeCascadeSegment(cascadeEntry) {
+    const partNames = cascadeEntry.destroyedParts.map((part) =>
+      this.#formatPartName(part.partType, part.orientation)
+    );
+    const formattedList = this.#formatPartList(partNames);
+    const sourceName = this.#formatPartName(
+      cascadeEntry.sourcePartType,
+      cascadeEntry.sourceOrientation
+    );
+    const verb = partNames.length === 1 ? 'is' : 'are';
+
+    return `As ${cascadeEntry.entityPossessive} ${sourceName} collapses, ${formattedList} ${verb} destroyed.`;
+  }
+
+  /**
    * Formats a list of part names with "and" conjunction.
    *
    * @param {string[]} partNames - Array of part names
@@ -272,7 +298,7 @@ class DamageNarrativeComposer extends BaseService {
    * Formats a damage descriptor with severity qualifier when applicable.
    *
    * @param {string} damageType - The damage type (e.g., 'piercing')
-   * @param {string} [severity='standard'] - Severity classification
+   * @param {string} [severity] - Severity classification
    * @returns {string} Descriptor including the trailing "damage" noun
    * @private
    */

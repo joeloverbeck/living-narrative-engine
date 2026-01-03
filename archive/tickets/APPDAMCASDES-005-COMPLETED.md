@@ -2,7 +2,9 @@
 
 **Title:** Wire CascadeDestructionService into Damage Resolution Flow
 
-**Summary:** Integrate the cascade destruction logic into the main damage resolution pipeline, calling the service when a part is destroyed.
+**Summary:** Integrate the cascade destruction logic into the main damage resolution pipeline, calling the service when a part is destroyed and feeding cascade entries into narrative composition.
+
+**Status:** Completed
 
 ## Files to Modify
 
@@ -42,14 +44,7 @@ Add private field:
 #cascadeDestructionService;
 ```
 
-Add validation:
-
-```javascript
-validateDependency(cascadeDestructionService, 'CascadeDestructionService', logger, {
-  requiredMethods: ['executeCascade'],
-});
-this.#cascadeDestructionService = cascadeDestructionService;
-```
+Note: `DamageResolutionService` currently does not validate dependencies via `validateDependency`, so keep consistent and only assign the dependency (allowing a fallback stub if needed for non-DI usage).
 
 ### Integration Point (~line 321)
 
@@ -62,10 +57,9 @@ if (newHealth <= 0 && previousHealth > 0) {
   });
 
   // NEW: Cascade destruction for children
-  const cascadeResult = this.#cascadeDestructionService.executeCascade(
+  const cascadeResult = await this.#cascadeDestructionService.executeCascade(
     partId,
-    ownerEntityId || entityId,
-    { damageSession: session }
+    ownerEntityId || entityId
   );
 
   if (cascadeResult.destroyedPartIds.length > 0 && session) {
@@ -123,7 +117,7 @@ registrar.singletonFactory(tokens.DamageResolutionService, (c) => {
 ### Invariants
 
 - Cascade only triggers on transition to 0 health (`newHealth <= 0 && previousHealth > 0`)
-- Cascade happens synchronously within resolve() flow
+- Cascade happens asynchronously but is awaited within resolve() flow
 - Existing damage propagation logic unchanged
 - Death check still runs after all damage (including cascade)
 - Session can be null (no cascade recording when no session)
@@ -162,3 +156,10 @@ npm run test:unit
 - Test updates should mock CascadeDestructionService for unit tests
 - Existing mocks need the new dependency added to constructor calls
 - The session parameter is optional in the service, handle null case
+
+## Outcome
+
+- Wired DamageResolutionService to await CascadeDestructionService on part-destroyed transitions and record cascades when present.
+- Passed finalized cascadeDestructions into the narrative composer; compose signature already supported this.
+- Kept dependency handling consistent with existing DamageResolutionService (no validateDependency addition) and used a no-op fallback for non-DI instantiations.
+- Updated DI registration and unit/integration test harnesses to supply CascadeDestructionService stubs where needed.

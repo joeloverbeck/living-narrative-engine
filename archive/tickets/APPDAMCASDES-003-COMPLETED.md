@@ -4,6 +4,8 @@
 
 **Summary:** Extend the DamageAccumulator service to track cascade destruction events within a damage session.
 
+**Status:** Completed
+
 ## Files to Modify
 
 - `src/anatomy/services/damageAccumulator.js`
@@ -26,7 +28,7 @@
 
 ### New Method
 
-Add after the `recordEffect` method:
+Add after the `recordEffect` method (mirroring existing guard/logging patterns):
 
 ```javascript
 /**
@@ -41,6 +43,20 @@ Add after the `recordEffect` method:
  * @param {string} cascadeEntry.entityPossessive - Possessive form of entity name
  */
 recordCascadeDestruction(session, cascadeEntry) {
+  if (!session) {
+    this.#logger.error(
+      'DamageAccumulator.recordCascadeDestruction called without session'
+    );
+    return;
+  }
+
+  if (!cascadeEntry) {
+    this.#logger.warn(
+      'DamageAccumulator.recordCascadeDestruction called without cascadeEntry'
+    );
+    return;
+  }
+
   if (!session.cascadeDestructions) {
     session.cascadeDestructions = [];
   }
@@ -62,7 +78,9 @@ finalize(session) {
   return {
     entries,
     pendingEvents,
-    cascadeDestructions: session.cascadeDestructions || [],  // NEW field
+    cascadeDestructions: session.cascadeDestructions
+      ? [...session.cascadeDestructions]
+      : [], // NEW field
   };
 }
 ```
@@ -74,10 +92,12 @@ finalize(session) {
 1. `recordCascadeDestruction should initialize cascadeDestructions array if not present`
 2. `recordCascadeDestruction should append cascade entry with timestamp`
 3. `recordCascadeDestruction should preserve existing cascade entries`
-4. `finalize should return cascadeDestructions array (empty if none recorded)`
-5. `finalize should return cascadeDestructions with recorded entries`
-6. `finalize should preserve existing entries and pendingEvents behavior`
-7. All existing DamageAccumulator tests continue to pass unchanged
+4. `recordCascadeDestruction should log error when session is null`
+5. `recordCascadeDestruction should log warning when cascadeEntry is missing`
+6. `finalize should return cascadeDestructions array (empty if none recorded)`
+7. `finalize should return cascadeDestructions with recorded entries`
+8. `finalize should preserve existing entries and pendingEvents behavior`
+9. All existing DamageAccumulator tests continue to pass unchanged
 
 ### Invariants
 
@@ -86,6 +106,12 @@ finalize(session) {
 - Timestamps use Date.now() for consistency with other session data
 - Method signature matches project conventions (session first, data second)
 - No changes to existing recordDamage, recordEffect, or other methods
+- finalize() returns copies of arrays (entries, pendingEvents, cascadeDestructions)
+
+## Assumptions (Updated)
+
+- DamageAccumulator methods log and return early on invalid arguments (session/data), so recordCascadeDestruction should follow the same pattern.
+- finalize() returns copies of session arrays to avoid mutating session state.
 
 ## Dependencies
 
@@ -110,3 +136,8 @@ npm run typecheck
 - This is a pure addition - existing tests should pass without modification
 - Can be implemented in parallel with APPDAMCASDES-002 and APPDAMCASDES-004
 - The cascadeDestructions array follows the same pattern as existing session arrays
+- Update JSDoc typedefs for DamageSession and FinalizedResult to include cascadeDestructions
+
+## Outcome
+
+Added recordCascadeDestruction with guard logging and timestamps, updated finalize to return cascadeDestructions copies (including null-session behavior), and extended unit tests to cover cascade destruction recording and finalize output. This expanded the scope slightly from the initial method sketch to align with existing guard/logging and copy semantics.

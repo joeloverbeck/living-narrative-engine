@@ -1,0 +1,21 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:unfinished_goodbye_letter",
+    "description": "Alicia Western's goodbye letter to her brother Bobby, written in December 1972 at Stella Maris sanatorium before her death",
+    "components": {
+        "core:name": {
+            "text": "unfinished goodbye letter"
+        },
+        "core:description": {
+            "text": "A single white sheet of paper. The handwriting is precise yet trembling. The letter is addressed to someone named Bobby, but it's unfinished: the last sentence has been abandoned midway through as if the author couldn't continue."
+        },
+        "items-core:item": {},
+        "items-core:portable": {},
+        "core:weight": {
+            "weight": 0.01
+        },
+        "reading:readable": {
+            "text": "December 22, 1972\nStella Maris\nBobby,\nThe probability of you reading this approaches zero. The doctors said \"braindead\"—past tense, declarative, clinically certain. But I cannot pull the plug. I fled instead. So this letter exists in a superposition state: written but unread, meant for you but addressed to no one. Schrödinger's goodbye.\nIf you are reading this, then something impossible happened. You woke up. The substrate repaired itself against all medical prediction. In which case, you should know: on the 24th—Christmas Eve, because apparently I have a taste for symbolic timing—I intend to walk into the woods behind the sanatorium and let the Wisconsin winter finish what Lake Tahoe started.\nI am trying to explain this rationally, but the premises keep collapsing: Premise One: You were my only tether to continued existence. Premise Two: Without you conscious in the world, the equation no longer balances. Conclusion: Death is the optimal solution. But even I can see the flaw in my logic. I have spent twenty-two years analyzing everything except the one variable that matters: that I want to die has been true longer than you have been in a coma. The coma is just the excuse my mind has been waiting for.\nYou used to take me to that bar in Nashville. Jazz on Thursdays. You would order whiskey and I would watch the colors the saxophone made—ambers and deep golds, spiraling up into the smoke. You never tried to fix me during those nights. You just sat there, let me talk about Gödel or Cantor or whatever mathematical dead-end I was pursuing that month. You listened without needing me to be different. I miss that. I miss you. I miss my brother so much it aches behind my ribs.\nThere are things I need you to know, in the infinitesimal probability you are reading this: One: None of this is your fault. I know your patterns, Bobby. You run when things hurt, you isolate when you cannot fix something, and if you are reading this you will spend the rest of your life [The letter ends here, mid-sentence. The rest of the page is blank.]"
+        }
+    }
+}

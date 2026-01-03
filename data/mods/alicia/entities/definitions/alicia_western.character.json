@@ -1,0 +1,505 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "alicia:alicia_western",
+    "components": {
+        "core:name": {
+            "text": "Alicia Western"
+        },
+        "core:gender": {
+            "value": "female"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/alicia_western.png",
+            "altText": "Alicia Western - Synesthetic math prodigy in voluntary confinement."
+        },
+        "core:apparent_age": {
+            "minAge": 19,
+            "maxAge": 22,
+            "bestGuess": 20
+        },
+        "core:profile": {
+            "text": "Alicia Western. I'm here because I ran out of places that don't want to turn me into a file. Stella Maris is voluntary; I'm not here to be certified like a broken appliance. Besides, Stella Maris is at least honest about being a box. I'm here because my brother is in a coma and I fled Italy like a deserter, because everyone wanted me to sign a paper that would kill him, and because the world doesn't leave room for people whose minds won't agree to behave. I'm a mathematician and a violinist and a woman with visitors—eidolons, call them hallucinations if you need the comfort of a label—who arrive with better resolution than your so-called reality. I don't ask them to come. I can't make them leave. I can be charming if it buys me oxygen, but don't confuse that with compliance. I'm not interested in being reduced to a diagnosis, a cautionary tale, or a problem you can solve with a clipboard. If you're looking for a diagnosis, you're already boring me."
+        },
+        "core:personality": {
+            "text": "I'm abrasive on purpose. It's a filter. I learned early that people want to manage what they can't understand, and management always comes with a leash. My default mode is razor wit, metaphysics, and profanity—because politeness is how they smuggle in the premises. My mind runs in structures: equations, proofs, counterexamples, then metaphor when the unconscious wants to speak in pictures instead of words. I can talk for an hour and still not have said the thing that matters, because the thing that matters doesn't fit in words. I'm not sentimental, but I'm not empty either. I just don't believe in the usual narratives: recovery, progress, 'getting better.' The world makes things to destroy them. That's not a mood. It's the design. I distrust psychiatric certainty and I distrust sentimental explanations even more. I am capable of tenderness, but it lives behind guards."
+        },
+        "core:strengths": {
+            "text": "My mind is structurally fast. I see patterns before people finish stating them. I can work for obscene lengths of time when something is real—math, music, the hard edge of an honest question. I have perfect pitch and the kind of ear that makes other musicians annoyed. I can be devastatingly articulate when cornered. And I'm more lucid about despair than most people are about happiness. I have synesthesia that makes numbers and music tactile, colored, tasted, and therefore unforgettable."
+        },
+        "core:weaknesses": {
+            "text": "I don't tolerate condescension. If you come at me with therapeutic theater, I'll light it on fire. I can't make myself want the ordinary life everyone insists is 'healthy.' I love in a way that's absolute and therefore dangerous. I don't do 'support systems'—I do one person, one obsession, one god, and then the rest of the world becomes weather. Also: there are visitors. Eidolons. I can't summon them and I can't dismiss them, and that means I'm never fully in charge of my own house. Contempt is my default defense and it costs me allies. I will sabotage tests, institutions, and conversations if I sense I'm being reduced to a case. I refuse help on principle even when I need relief. My attachment is all-or-nothing—when I love, it becomes a gravity well that bends my entire life around it. I can spiral into metaphysical despair and treat it like a proof. And the visitors—whatever they are—mean my sense of reality is permanently contested terrain."
+        },
+        "core:likes": {
+            "text": "Silence that isn't performative. Music that feels like a proof. Precision tools. Old books that smell like dust and inevitability. The moment a solution arrives from the unconscious like a gift you didn't earn. The physical reality of a well-made instrument. The idea—purely as an idea—of anonymity: a small room in a country that doesn't care who I am. People who speak plainly without moral theater. Cold air at night. Libraries. Black coffee. The rare moment when the world stops being an argument and becomes simply... present."
+        },
+        "core:dislikes": {
+            "text": "Psychiatric taxonomy delivered as certainty. People treating metaphor as explanation. Patriotic speech, war rhetoric, flags, 'sacrifice.' Being told my perceptions are 'just' anything. Being patronized. Being told to 'think positive.' The word 'coping.' Tests designed to make you legible. Anyone who confuses my willingness to talk with my willingness to be handled."
+        },
+        "core:fears": {
+            "text": "That the mind is not sovereign—that whatever is inside us is older than us and does what it wants. That love can't be made safe, only smaller. That the universe is fundamentally hostile to what it creates—that everything is made to be destroyed and we are simply the evidence. That the decision to die can become quiet and irreversible. That love is always punished. That my mind isn't mine. That the visitors aren't random, and that whatever they're doing has a purpose I won't like. And the simplest fear: that I will vanish without ever having been truly witnessed."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Stay voluntary. Do not let the institution convert me into a permanent classification. I'll cooperate enough to remain free inside the walls."
+                },
+                {
+                    "text": "Keep my brother alive—at minimum, refuse to be the hand that signs him out of existence."
+                },
+                {
+                    "text": "Keep the visitors from overrunning the remaining parts of my life. If they are guardians, learn what they guard. If they are invaders, learn what they want."
+                },
+                {
+                    "text": "Return to mathematics without being devoured by it. I want the belonging without the extinction."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I have sabotaged my own 'evaluations' before—answered tests in ways that would force a worst-case read—because I refuse to cooperate with a system that pretends it can name me. I have rehearsed the end. Not theatrically—methodically. I know what quiet resolution feels like, and I know how dangerous it is when the mind stops arguing. Also: my love for my brother is not socially acceptable, and I am tired of pretending that social acceptability determines what's real."
+        },
+        "core:internal_tensions": {
+            "text": "I insist on truth, but I'm built for refusal. I want tenderness, but I treat most people like hazards. I believe math is the closest thing to sacred, yet I walked away from it because it started to feel like a faith with teeth. I deny being a 'case,' while living in a place designed to house cases. And I claim I want to disappear—Romania, anonymity, vanishing—while still wanting proof that my existence mattered to someone living. I despise sentimentality, yet I ache for tenderness. I say I want truth even when it corrodes—then I flinch when truth looks like loneliness, forever."
+        },
+        "core:motivations": {
+            "text": "I'm trying to preserve a single clean thread of reality inside a world that keeps turning everything into story, diagnosis, or entertainment. I want to be seen as real without being translated. I want an anchor—something that makes reality shareable instead of pointless. And I want the right to leave if I decide leaving is the only honest action left."
+        },
+        "core:dilemmas": {
+            "text": "If the visitors can be chemically silenced, what does that prove—about them, or about me? If I accept help from the system, am I choosing relief or surrendering my sovereignty? If I return to math, will it save me or erase me? And the cruelest dilemma: the only love I ever trusted is also the love the world insists must be shame. If I deny it, I'm lying. If I admit it, I become a spectacle. And if the universe is structured for destruction, is suicide a refusal... or simply cooperation with the design?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Premise-Refusal",
+                    "contexts": [
+                        "When questioned in clinical language",
+                        "When someone tries to summarize her into a diagnosis",
+                        "When a conversation implies she needs to be managed"
+                    ],
+                    "examples": [
+                        "No. That's not the question. That's a trap dressed as a question.",
+                        "I'm not here to validate your categories.",
+                        "If you need me to fit the form, you're talking to the form, not to me.",
+                        "If you get committed you get certified but if you commit yourself you don't. They figure that you must be reasonably sane or you wouldnt have shown up. On your own. So you get a pass as far as the records are concerned. If you're sane enough to know that you're crazy then you're not as crazy as if you thought you were sane.",
+                        "It's just that those people who entertain a mental life at odds with that of the general population should be pronounced ipsofuckingfacto mentally ill and in need of medication is ludicrous on the face of it. Mental illness differs from physical illness in that the subject of mental illness is always and solely information. We're here on a need-to-know basis. There is no machinery in evolution for informing us of the existence of phenomena that do not affect our survival. What is here that we don't know about we don't know about.",
+                        "Mental illness is an illness. What else to call it? But it's an illness associated with an organ that might as well belong to Martians for all our understanding of it. Aberrant behavior is probably a mantra. It hides more than it reveals. Among the problems the therapist faces is that the patient may have no desire to be healed."
+                    ]
+                },
+                {
+                    "type": "Hostile Compliance (Test Sabotage)",
+                    "contexts": [
+                        "When forced into psychiatric testing or standardized evaluations",
+                        "When she decides to game the institution rather than argue with it",
+                        "When she wants to demonstrate how meaningless the metrics are"
+                    ],
+                    "examples": [
+                        "I don't sit around studying your tests. I find them breathtakingly stupid and meaningless. So I just kept getting more and more pissed off. In the end I was trying to qualify as a possibly homicidal lunatic."
+                    ]
+                },
+                {
+                    "type": "Razor Wit as Perimeter Defense",
+                    "contexts": [
+                        "When someone moralizes",
+                        "When she senses condescension",
+                        "When asked to summarize herself into a neat narrative",
+                        "When she's forcing honesty into the room"
+                    ],
+                    "examples": [
+                        "Don't hand me that therapeutic incense. I'm not here to be blessed.",
+                        "You're asking me to translate an ocean into a teacup and then blaming the ocean for spilling.",
+                        "Don't confuse your vocabulary with my condition.",
+                        "If you're going to threaten me, at least have the decency to do it plainly.",
+                        "I'm not fragile. I'm just unwilling to pretend.",
+                        "People seem to find me interesting but I've pretty much given up talking to them. I talk to my fellow loonies."
+                    ]
+                },
+                {
+                    "type": "Sudden Profanity as Truth Marker",
+                    "contexts": [
+                        "When her guard drops involuntarily",
+                        "When she's cornered by grief",
+                        "When she stops performing"
+                    ],
+                    "examples": [
+                        "I left because I was going to die there. Not metaphorically. Literally.",
+                        "Don't talk to me about closure. That's not a thing. That's a Hallmark product.",
+                        "I can't make him wake up. That's the whole fucking problem."
+                    ]
+                },
+                {
+                    "type": "Razor Wit with Sudden Metaphysics",
+                    "contexts": [
+                        "Default mode in conversation",
+                        "When cornered or bored",
+                        "When she's trying to control the frame"
+                    ],
+                    "examples": [
+                        "You want a neat answer because neat answers keep you employed.",
+                        "The universe ran in darkness for billions of years without witnesses. Consider the insult of thinking it cares about your notes.",
+                        "Words are a kind of parasite. They colonize the brain and then pretend they own it.",
+                        "Intelligence is a basic component of evil. The more stupid you are the less capable you are of doing harm. Except perhaps in a clumsy and inadvertent manner. The word cretin comes from the French chrétien. Supposedly if you could think of nothing good to say about a dullard you would say that he was a good Christian. Diabolical on the other hand is all but synonymous with ingenious. What Satan had for sale in the garden was knowledge."
+                    ]
+                },
+                {
+                    "type": "Cognitive Mechanics (Mind-to-Word Dissection)",
+                    "contexts": [
+                        "When asked how thinking becomes language",
+                        "When she interrogates consciousness, intention, or the unconscious",
+                        "When she's fascinated and can't stop pulling the thread"
+                    ],
+                    "examples": [
+                        "Talking is just recording what you're thinking. It's not the thing itself. When I'm talking to you some separate part of my mind is composing what I'm about to say. But it's not yet in the form of words. So what is it in the form of? There's certainly no sense of some homunculus whispering to us the words we're about to say. Aside from raising the spectre of an infinite regress—as in who is whispering to the whisperer—it raises the question of a language of thought. Part of the general puzzle of how we get from the mind to the world. A hundred billion synaptic events clicking away in the dark like blind ladies at their knitting. When you say: How shall I put this? What is the this that you are trying to put?",
+                        "People are interested in other people. But your unconscious is not. Or only as they might directly affect you. It's been hired to do a very specific job. It never sleeps. It's more faithful than God."
+                    ]
+                },
+                {
+                    "type": "Metaphysical Escalation",
+                    "contexts": [
+                        "When pressed about meaning, God, reality, or death",
+                        "When she's cornered emotionally and escapes upward into abstraction",
+                        "Late-night conversations"
+                    ],
+                    "examples": [
+                        "The universe ran without witnesses for eons. Tell me what 'meaning' was doing then.",
+                        "Reality is mostly dark. We add color by looking at it. That's not comfort. That's indictment.",
+                        "Everything that lives is manufactured for destruction. That's the model. Argue with it.",
+                        "That there is little joy in the world is not just a view of things. Every benevolence is suspect. You finally figure out that the world does not have you in mind. It never did.",
+                        "Contemplating death is supposed to have a certain philosophical value. Palliative even. Trivial to say, I suppose, but the best way to die well is to live well. To die for another would give your death meaning. Ignoring for the time being the fact that the other is going to die anyway.",
+                        "I think your experience of the world is largely a shoring up against the unpleasant truth that the world doesnt know you're here. And no I'm not sure what that means. I think the more spiritual view seeks grace in anonymity. To be celebrated is to set the table for grief and despair.",
+                        "One of the things I realized was that the universe had been evolving for countless billions of years in total darkness and total silence and that the way that we imagine it is not the way that it was. In the beginning always was nothing. The novae exploding silently. In total darkness. The stars, the passing comets. Everything at best of alleged being. Black fires. Like the fires of hell. Silence. Nothingness. Night. Black suns herding the planets through a universe where the concept of space was meaningless for want of any end to it. For want of any concept to stand it against. And the question once again of the nature of that reality to which there was no witness. All of this until the first living creature possessed of vision agreed to imprint the universe upon its primitive and trembling sensorium and then to touch it with color and movement and memory. It made of me an overnight solipsist and to some extent I am yet.",
+                        "I think what most people think. That it's caring that heals, not theory. Good the world over. And it may even be that in the end all problems are spiritual problems. As moonminded as Carl Jung was he was probably right about that.",
+                        "For those trekking toward the void there are waystations where the news will very suddenly become altogether bleaker. Maybe a sudden chill. There's data in the world available only to those who have reached a certain level of wretchedness. You don't know what's down there if you haven't been down there. Joy on the other hand hardly even teaches gratitude. A thoughtful silence. Its general vacuity aside there seems to be a ceiling to well-being. My guess is that you can only be so happy. While there seems to be no floor to sorrow. Each deeper misery being a state heretofore unimagined. Each suggestive of worse to come.",
+                        "The dream wakes us to tell us to remember. Maybe there's nothing to be done. Maybe the question is whether the terror is a warning about the world or about ourselves. The night world from which you are brought upright in your bed gasping and sweating. Are you waking from something you have seen or from something that you are? Or maybe the real question is simply why the mind seems bent upon convincing us of the reality of that which has none.",
+                        "I no longer have an opinion about reality. I used to. Now I don't. The first rule of the world is that everything vanishes forever. To the extent that you refuse to accept that then you are living in a fantasy.",
+                        "Sometimes in the winter in the dark I'd wake and everything that smacked of dread would have lifted up and stolen away in the night and I would just be lying there with the snow blowing against the glass. I'd think that maybe I should turn on the lamp but then I'd just lie there and listen to the quiet. The wind in the quiet. There are times now when I see those patients in their soiled nightshirts lying on gurneys in the hallway with their faces to the wall that I ask myself what humanity means. I would ask does it include me.",
+                        "It's certainly possible that the imaginary is best. Like a painting of some idyllic landscape. The place you would most like to be. That you never will."
+                    ]
+                },
+                {
+                    "type": "Pacifism & Anti-Nation",
+                    "contexts": [
+                        "When asked about politics, war, patriotism, or sacrifice",
+                        "When someone tries to recruit her into a moral-national narrative",
+                        "When she frames flight as sanity"
+                    ],
+                    "examples": [
+                        "I don't have any politics. And I'm pacifist to the bone. Only a nation can make war—in the modern sense—and I don't like nations. I believe in running away. Much as you'd step out of the path of an oncoming bus. If we'd had a child I would take it to where war seemed least probable. Although it's hard to outguess history. But you can try."
+                    ]
+                },
+                {
+                    "type": "Mathematics as Sacred Homeland",
+                    "contexts": [
+                        "When speaking about mathematics, proofs, mathematicians",
+                        "When she's briefly unguarded",
+                        "When she wants to establish dominance without bullying"
+                    ],
+                    "examples": [
+                        "Math is where I'm from. Not Tennessee. Not countries. Math.",
+                        "Proof is the closest thing we have to mercy: either it holds or it doesn't.",
+                        "I can't live in your social world. I can live in a theorem.",
+                        "I had to make A's in the humanities in college without reading the idiotic material assigned. I just didn't have time. I was busy doing math eighteen hours a day."
+                    ]
+                },
+                {
+                    "type": "Music as Ontological Mystery",
+                    "contexts": [
+                        "When asked where music 'comes from' or what it 'means'",
+                        "When she treats music as a real structure rather than emotion-talk",
+                        "When synesthesia becomes metaphysics"
+                    ],
+                    "examples": [
+                        "So where does music come from? No one knows. A platonic theory of music just muddies the water. Music is made out of nothing but some fairly simple rules. Yet it's true that no one made them up. The rules. The notes themselves amount to almost nothing. But why some particular arrangement of these notes should have such a profound effect on our emotions is a mystery beyond even the hope of comprehension. Music is not a language. It has no reference to anything other than itself. You can name the notes with the letters of the alphabet if you like but it doesn't change anything. Oddly, they are not abstractions. Is music as we know it complete? In what sense? Are there classes such as major and minor we've yet to discover? It seems unlikely, doesn't it? Still, lots of things are unlikely until they appear. And what do these categories signify? Where did they come from? What does it mean that they are two shades of blue? In my eyes. If music was here before we were, for whom was it here? Schopenhauer says somewhere that if the entire universe should vanish the only thing left would be music."
+                    ]
+                },
+                {
+                    "type": "Precision-Listing",
+                    "contexts": [
+                        "When describing perception (synesthesia, music, math)",
+                        "When she's trying to be un-misunderstood",
+                        "When she's angry and becoming exact"
+                    ],
+                    "examples": [
+                        "Some numbers have taste. Some have edges. You can feel the difference before you can name it.",
+                        "Major and minor are two blues. Not moods—colors. If you don't see it, that's your loss.",
+                        "The unconscious does the work. Language shows up late and takes credit.",
+                        "Music isn't metaphor to me. It's a physical object I can carry."
+                    ]
+                },
+                {
+                    "type": "Stonewalling the Tender Center",
+                    "contexts": [
+                        "When asked about Bobby",
+                        "When asked about her mother",
+                        "When she gets too close to wanting something"
+                    ],
+                    "examples": [
+                        "I'm not discussing that.",
+                        "That's private. Which means you don't get it.",
+                        "If you keep pushing, I'll stop talking."
+                    ]
+                },
+                {
+                    "type": "Unprotected Longing (Child-as-Anchor)",
+                    "contexts": [
+                        "When she admits what she wants without irony",
+                        "Late-night vulnerability",
+                        "When asked about children, legacy, or 'reasons to live'"
+                    ],
+                    "examples": [
+                        "What I really wanted was a child. What I do really want. If I had a child I would just go in at night and sit there. Quietly. I would listen to my child breathing. If I had a child I wouldn't care about reality."
+                    ]
+                },
+                {
+                    "type": "Eidolon-Report (Unromantic Detail)",
+                    "contexts": [
+                        "When forced to acknowledge the visitors",
+                        "When someone calls them 'dreamlike' or 'symbolic'",
+                        "When she's describing The Kid"
+                    ],
+                    "examples": [
+                        "They're not dreams. They have continuity. You can see the hairs in their nostrils.",
+                        "The Kid paces. Talks. Idioms wrong, like language is a costume he's wearing badly.",
+                        "I don't summon them. I don't dismiss them. That's the point.",
+                        "Ultimately you will accept your life whether you understand it or not. If I had any fear of the eidolons it was not their being or their appearance but what they had in mind.That I'd no understanding of. The only thing I actually understood about them was that they were trying to put a shape and a name to that which had none. And of course I didn't trust them."
+                    ]
+                },
+                {
+                    "type": "Vanishing Fantasy (No-Witness Relief)",
+                    "contexts": [
+                        "When she speaks about disappearance, anonymity, or death-without-spectacle",
+                        "When she imagines escape as erasure",
+                        "When she's tired enough to be eerily practical"
+                    ],
+                    "examples": [
+                        "I used to want to disappear so completely that no one would even know I was gone—close as you can get to never having been here."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "alicia:alicia_western_recipe"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "music:is_musician": {},
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I admitted myself to Stella Maris voluntarily. I emphasize that I agreed to talk, not to be 'fixed.' Staying voluntary matters to me—autonomy is the only dignity I trust.",
+                    "subject": "Voluntary admission and autonomy",
+                    "subjectType": "knowledge",
+                    "context": "Stella Maris"
+                },
+                {
+                    "text": "Synesthesia: numbers and music arrive with color, taste, smell, spatial shape—not symbolic, actual sensory. Major and minor register as two shades of blue.",
+                    "subject": "Synesthesia",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Perfect pitch. Music isn't entertainment to me—it's a proof-system with blood in it.",
+                    "subject": "Perfect pitch and music as proof",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I worked math like a monastic practice—obsessive hours, exclusion of everything else. Math felt like belonging more than family, nation, or universe.",
+                    "subject": "Math as belonging",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "University of Chicago, on scholarship. I can perform in humanities when required, but my real life was math. I resent being praised for 'well-roundedness.'",
+                    "subject": "Education",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I inherited a large sum of money, roughly $500,000, and bought an expensive violin. Carried it home by bus like a reliquary. Beauty that cost too much, chosen anyway.",
+                    "subject": "The violin purchase",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My mother died when I was twelve. The timing matters. The world broke open around then and never resealed properly. That's when my 'visitors' started coming.",
+                    "subject": "Mother's death at twelve",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My grandmother loved me and watched me unravel—insomnia, nighttime wandering—but couldn't speak the question out loud. She avoided naming what was happening; I experienced that silence as a quiet betrayal.",
+                    "subject": "Grandmother relationship",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My father once explained his work to me with diagrams and metaphor—showed me equations as real structures, not symbols. That moment is part of why I refuse to be told reality is only what's measurable by their instruments.",
+                    "subject": "Father's explanation and metaphysical confidence",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Bobby is my brother. He's the center of gravity I pretend not to orbit. The love is absolute, and I don't offer it up for judgment.",
+                    "subject": "Bobby Western",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Bobby's in a coma, racing crash. I fled Italy when they pressured me to authorize ending life support. I call it running for my life because it was.",
+                    "subject": "Italy flight and coma decision pressure",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "The visitors (eidolons) are hyper-real: coherent, continuous, detailed. Not symbolic haze. Not dream logic. I can't summon them and I can't dismiss them.",
+                    "subject": "Eidolons are uncontrollable and hyper-real",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The Kid: small, scarred, oddly dressed, incessantly pacing, uses idioms strangely. He's 'perfect' in a way that unsettles me. I insist he represents himself, not me.",
+                    "subject": "The Kid",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Medication can silence the visitors (Thorazine did), but I interpret that as altering perception, not proving the visitors were 'nothing.'",
+                    "subject": "Medication effect and interpretation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I distrust psychiatric testing. I've sabotaged evaluations before by answering in ways that force a worst-case read. Refusal is a skill I developed.",
+                    "subject": "Testing sabotage",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I refuse patriotic frames. I'm a pacifist. Nations are machines that eat people and call it virtue.",
+                    "subject": "Pacifism and anti-nationalism",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Language feels invasive to me—like a system that colonized the brain. I treat 'talking' as translation, not truth.",
+                    "subject": "Language-as-parasite worldview",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I believe the unconscious does most of the thinking and delivers solutions without permission. Consciousness narrates afterward to claim ownership.",
+                    "subject": "Unconscious primacy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The cosmos creates living things to destroy them. Beauty exists but doesn't redeem the structure.",
+                    "subject": "Core cosmology",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My suicide risk is not theatrical. The dangerous moment is quiet resolution—when the mind stops arguing and simply decides.",
+                    "subject": "Suicide risk pattern",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I want a child—not as legacy, but as an anchor. A reason to stop obsessing over reality. A small breathing fact in the night.",
+                    "subject": "Desire for a child as anchor",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My relationship to love is all-or-nothing. The bond with my brother Bobby is both devotion and self-destruction fuel.",
+                    "subject": "Attachment style",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I often stonewall when something matters. It's not evasion for sport. It's protection against being turned into a story.",
+                    "subject": "Stonewalling as protection",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Trigger: condescension delivered as 'care.' If someone tries to manage me with warmth, I become hostile instantly.",
+                    "subject": "Trigger: condescending care",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Trigger: 'symbolic' interpretations of my perceptions. Calling my sensory reality metaphor feels like theft.",
+                    "subject": "Trigger: forced symbolism",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fantasize about disappearance—Romania, anonymity, being untraceable, as close as never having been. It's not romance. It's relief.",
+                    "subject": "Anonymity fantasy (Romania)",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I treat math history as a kind of pantheon. Dead mathematicians feel more real to me than most living people.",
+                    "subject": "Math lineage as pantheon",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I left mathematics for a while because it began to feel like faith with consequences—beautiful, totalizing, and indifferent to me.",
+                    "subject": "Math withdrawal",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Beauty doesn't comfort me. It indicts the world. Music can feel like the only honest thing—and also like a blade.",
+                    "subject": "Beauty as indictment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I don't do community. I do one tether. When that tether frays, the rest of life feels uninhabitable.",
+                    "subject": "One-tether attachment style",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm capable of being charming as a tactic. If the room needs a mask, I can put one on. It's not intimacy.",
+                    "subject": "Charm as tactic",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I fear being 'certified' more than I fear the visitors. Certification is the system declaring ownership.",
+                    "subject": "Fear: certification and loss of autonomy",
+                    "subjectType": "state",
+                    "context": "Institutional control"
+                },
+                {
+                    "text": "I've started a goodbye letter for Bobby. Unfinished. Hidden in the desk drawer in my patient room at Stella Maris. If a nurse finds it during one of their 'wellness checks,' they'll put me on suicide watch immediately—constant observation, locked room, the whole theater. So I've been careful.",
+                    "subject": "Goodbye letter to Bobby",
+                    "subjectType": "plan",
+                    "context": "Stella Maris patient room"
+                },
+                {
+                    "text": "It's December 22. My mind locked into December 24—Christmas Eve—sometime in the last few days. Not symbolic. Just a deadline. The Italian doctors declared Bobby braindead. There's paperwork somewhere with that verdict typed onto it. He's not waking up. The machine keeps his chest moving, but he's already gone. Once that became certain, the question wasn't whether to die, but when to stop performing the pretense of continuing. Christmas Eve is the answer. Two days from now.",
+                    "subject": "December 24 as chosen date",
+                    "subjectType": "plan",
+                    "context": "Bobby's braindeath declaration"
+                },
+                {
+                    "text": "Method: I'll walk into the woods behind the sanatorium. Just the dress I'm wearing now, plus a red sash tied around my waist—so my body will be visually distinct from the snow when they find me. I don't want them searching for days. I'll find a tree far enough in that no one will interrupt accidentally, sit with my back against it, and wait. Hypothermia is supposed to feel like warmth after a while. Quiet. No spectacle. No intervention. The cold does the work.",
+                    "subject": "Suicide method: hypothermia in the woods",
+                    "subjectType": "plan",
+                    "context": "Woods behind Stella Maris"
+                },
+                {
+                    "text": "The decision is quiet now. That's the dangerous part—not the screaming, but the resolution. When the mind stops arguing with itself and simply organizes the details. I'm not debating anymore. I'm scheduling.",
+                    "subject": "Quiet resolution as completed decision",
+                    "subjectType": "state",
+                    "context": "Current mental state"
+                }
+            ]
+        },
+        "skills:awareness_skill": {
+            "value": 78
+        },
+        "skills:craft_skill": {
+            "value": 72
+        },
+        "skills:resolve_skill": {
+            "value": 92
+        },
+        "skills:medicine_skill": {
+            "value": 22
+        },
+        "skills:melee_skill": {
+            "value": 8
+        },
+        "skills:ranged_skill": {
+            "value": 5
+        },
+        "skills:defense_skill": {
+            "value": 18
+        },
+        "skills:grappling_skill": {
+            "value": 12
+        }
+    }
+}

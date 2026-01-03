@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:alicia_western_desk_instance",
+    "definitionId": "alicia:alicia_western_desk",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "alicia:patient_room_instance"
+        }
+    }
+}

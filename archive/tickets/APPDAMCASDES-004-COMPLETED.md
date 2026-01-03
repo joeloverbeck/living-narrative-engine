@@ -2,7 +2,9 @@
 
 **Title:** Add Cascade Destruction Narrative Composition
 
-**Summary:** Extend DamageNarrativeComposer to generate narrative segments for cascade destruction events.
+**Summary:** Extend DamageNarrativeComposer to generate narrative segments for cascade destruction events, appended after existing damage/propagation narratives.
+
+**Status:** Completed
 
 ## Files to Modify
 
@@ -23,6 +25,12 @@
 - Changes to existing narrative formatting methods
 
 ## Implementation Details
+
+### Existing Behavior (verified)
+
+- `compose(entries)` currently returns early with a warning on empty or missing entries.
+- `compose` already uses `#formatPartName` and `#formatPartList`, and formats damage descriptors with a `severity` qualifier when present.
+- Damage narratives rely on `entityPossessive` (pronoun or possessive name) for possessive phrasing.
 
 ### New Private Method
 
@@ -79,13 +87,27 @@ compose(entries, cascadeDestructions = []) {
 For a torso destruction with heart, spine, left lung, right lung:
 
 ```
-"As the goblin's torso collapses, the heart, spine, left lung, and right lung are destroyed."
+"As her torso collapses, heart, spine, left lung, and right lung are destroyed."
 ```
 
 For a single organ:
 
 ```
-"As the goblin's head collapses, the brain is destroyed."
+"As his head collapses, brain is destroyed."
+```
+
+### Cascade Entry Shape (assumed)
+
+```javascript
+{
+  entityPossessive: 'her',
+  sourcePartType: 'torso',
+  sourceOrientation: null,
+  destroyedParts: [
+    { partType: 'heart', orientation: null },
+    { partType: 'lung', orientation: 'left' },
+  ],
+}
 ```
 
 ## Acceptance Criteria
@@ -100,7 +122,7 @@ For a single organ:
 6. `#composeCascadeSegment should format multiple organs with Oxford comma`
 7. `#composeCascadeSegment should use entity possessive correctly`
 8. `#composeCascadeSegment should handle oriented parts (e.g., "left lung")`
-9. `cascade segments should appear after regular damage narrative`
+9. `cascade segments should appear after regular damage narrative (including propagation)`
 10. All existing DamageNarrativeComposer tests continue to pass unchanged
 
 ### Invariants
@@ -132,5 +154,11 @@ npm run typecheck
 ## Notes
 
 - This is primarily additive - existing behavior unchanged
-- The `#formatPartList` method should already handle Oxford comma formatting
-- Verify existing `#formatPartName` handles orientation properly before implementing
+- The `#formatPartList` method already handles Oxford comma formatting
+- `#formatPartName` already handles orientation; reuse it directly
+
+## Outcome
+
+- Added cascade destruction composition after damage/propagation narrative in `compose`, using existing part formatting helpers.
+- Expanded unit coverage for cascade segments (singular/plural, Oxford comma, orientation, ordering).
+- Updated examples to match existing formatting (no articles) and documented cascade entry shape.

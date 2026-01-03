@@ -1,0 +1,18 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:bobby_western_photo_1",
+    "description": "A photo of Bobby Western posing with salvage diving gear, from '81.",
+    "components": {
+      "core:name": {
+        "text": "photo #1"
+      },
+      "core:description": {
+        "text": "The photo depicts a group of men standing on the bank of a river. The men are wearing salvage-diving gear. One of them is Bobby Western, looking like he's in his mid-thirties. Although this is a work photo, he looks haunted, as if he was doing his best to look normal even though a current of despair bubbled inside him. Someone wrote '81 in a corner."
+      },
+      "items-core:item": {},
+      "items-core:portable": {},
+      "core:weight": {
+        "weight": 0.02
+      }
+    }
+  }

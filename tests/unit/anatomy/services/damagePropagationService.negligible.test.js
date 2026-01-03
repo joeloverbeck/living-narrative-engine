@@ -17,6 +17,7 @@ describe('DamageResolutionService - propagated negligible severity', () => {
   let damageTypeEffectsService;
   let damagePropagationService;
   let deathCheckService;
+  let cascadeDestructionService;
   let logger;
 
   beforeEach(() => {
@@ -72,6 +73,13 @@ describe('DamageResolutionService - propagated negligible severity', () => {
     damagePropagationService = {
       propagateDamage: jest.fn().mockReturnValue([]),
     };
+    cascadeDestructionService = {
+      executeCascade: jest.fn().mockResolvedValue({
+        destroyedPartIds: [],
+        destroyedParts: [],
+        vitalOrganDestroyed: false,
+      }),
+    };
     deathCheckService = {
       evaluateDeathConditions: jest.fn().mockReturnValue({
         isDead: false,
@@ -92,6 +100,7 @@ describe('DamageResolutionService - propagated negligible severity', () => {
       deathCheckService,
       damageAccumulator,
       damageNarrativeComposer,
+      cascadeDestructionService,
     });
 
     executionContext = {

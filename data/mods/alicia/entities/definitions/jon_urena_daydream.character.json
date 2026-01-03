@@ -1,0 +1,53 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:jon_urena_daydream",
+    "components": {
+        "core:name": {
+            "text": "Jon Ureña"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/jon_urena_daydream.png",
+            "altText": "Jon Ureña - a hulking time-traveler."
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "alicia:jon_urena_daydream_recipe"
+        },
+        "core:apparent_age": {
+            "minAge": 31,
+            "maxAge": 33
+        },
+        "movement:can_teleport": {},
+        "skills:awareness_skill": {
+            "value": 73
+        },
+        "skills:craft_skill": {
+            "value": 77
+        },
+        "skills:resolve_skill": {
+            "value": 87
+        },
+        "skills:medicine_skill": {
+            "value": 68
+        },
+        "skills:melee_skill": {
+            "value": 84
+        },
+        "skills:ranged_skill": {
+            "value": 62
+        },
+        "skills:defense_skill": {
+            "value": 83
+        },
+        "skills:grappling_skill": {
+            "value": 92
+        }
+    }
+}

@@ -39,6 +39,7 @@ class DamageResolutionService {
   /** @type {import('../../anatomy/services/deathCheckService.js').default} */ #deathCheckService;
   /** @type {import('../../anatomy/services/damageAccumulator.js').default} */ #damageAccumulator;
   /** @type {import('../../anatomy/services/damageNarrativeComposer.js').default} */ #damageNarrativeComposer;
+  /** @type {import('../../anatomy/services/cascadeDestructionService.js').default} */ #cascadeDestructionService;
 
   constructor({
     logger,
@@ -49,6 +50,7 @@ class DamageResolutionService {
     deathCheckService,
     damageAccumulator,
     damageNarrativeComposer,
+    cascadeDestructionService,
   }) {
     this.#logger = logger;
     this.#entityManager = entityManager;
@@ -58,6 +60,15 @@ class DamageResolutionService {
     this.#deathCheckService = deathCheckService;
     this.#damageAccumulator = damageAccumulator;
     this.#damageNarrativeComposer = damageNarrativeComposer;
+    this.#cascadeDestructionService =
+      cascadeDestructionService ||
+      ({
+        executeCascade: async () => ({
+          destroyedPartIds: [],
+          destroyedParts: [],
+          vitalOrganDestroyed: false,
+        }),
+      });
   }
 
   /**
@@ -339,6 +350,24 @@ class DamageResolutionService {
             });
             logger?.info(`APPLY_DAMAGE: Part ${partId} destroyed.`);
             addTrace('part_destroyed', 'Part destroyed');
+
+            const cascadeResult =
+              await this.#cascadeDestructionService.executeCascade(
+                partId,
+                ownerEntityId || entityId
+              );
+            const destroyedPartIds = cascadeResult?.destroyedPartIds || [];
+
+            if (destroyedPartIds.length > 0 && session) {
+              this.#damageAccumulator.recordCascadeDestruction(session, {
+                sourcePartId: partId,
+                sourcePartType: partType,
+                sourceOrientation: orientation,
+                destroyedParts: cascadeResult?.destroyedParts || [],
+                entityName,
+                entityPossessive,
+              });
+            }
           }
 
           logger?.info(
@@ -476,10 +505,12 @@ class DamageResolutionService {
         if (session) {
           let entries;
           let pendingEvents;
+          let cascadeDestructions = [];
           try {
             const finalized = this.#damageAccumulator.finalize(session);
             entries = finalized.entries;
             pendingEvents = finalized.pendingEvents;
+            cascadeDestructions = finalized.cascadeDestructions || [];
             addTrace('finalization', 'Session finalized', {
               entriesCount: entries.length,
               eventsCount: pendingEvents.length,
@@ -498,8 +529,10 @@ class DamageResolutionService {
           if (entries.length > 0 && !narrativeSuppressed) {
             let composedNarrative;
             try {
-              composedNarrative =
-                this.#damageNarrativeComposer.compose(entries);
+              composedNarrative = this.#damageNarrativeComposer.compose(
+                entries,
+                cascadeDestructions
+              );
             } catch (composeError) {
               logger?.error(
                 'APPLY_DAMAGE: FAIL-FAST - Narrative composition threw an error',

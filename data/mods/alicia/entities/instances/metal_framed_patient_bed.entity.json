@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:metal_framed_patient_bed_instance",
+    "definitionId": "furniture:metal_framed_patient_bed",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "alicia:patient_room_instance"
+        }
+    }
+}
