@@ -140,6 +140,7 @@ class DismembermentApplicator {
    * @param {DismemberConfig} [params.damageEntryConfig] - Config from damageEntry.dismember
    * @param {IEventDispatchStrategy} params.dispatchStrategy - Strategy for event dispatch
    * @param {object} [params.sessionContext] - Session context for dispatch strategy
+   * @param {boolean} [params.suppressBodyPartSpawning=false] - If true, suppresses body part spawning (e.g., in damage simulator)
    * @returns {Promise<{triggered: boolean}>} Whether dismemberment was triggered
    */
   async apply({
@@ -158,6 +159,7 @@ class DismembermentApplicator {
     damageEntryConfig,
     dispatchStrategy,
     sessionContext,
+    suppressBodyPartSpawning = false,
   }) {
     // Check if dismemberment is enabled in config
     if (!damageEntryConfig?.enabled) {
@@ -203,6 +205,7 @@ class DismembermentApplicator {
       partType,
       orientation,
       damageTypeId,
+      suppressBodyPartSpawning,
       timestamp: Date.now(),
     };
 

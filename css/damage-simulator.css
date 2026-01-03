@@ -410,6 +410,11 @@
   opacity: 0.8;
 }
 
+.ds-effect-dismembered {
+  filter: grayscale(50%);
+  opacity: 0.7;
+}
+
 @keyframes ds-pulse {
 
   0%,
@@ -659,6 +664,27 @@
   font-size: 18px;
   font-weight: bold;
   color: var(--accent-color, #4a9eff);
+}
+
+/* Tooltip enhancement for stats */
+.ds-stat--with-tooltip {
+  cursor: help;
+  position: relative;
+}
+
+.ds-stat--with-tooltip:hover {
+  background: var(--secondary-bg-color);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Enhanced native tooltip styling via title attribute */
+.ds-stat--with-tooltip[title] {
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.ds-stat--with-tooltip .ds-stat-label {
+  border-bottom: 1px dotted var(--secondary-text-color);
 }
 
 /* No Data Message */

@@ -196,6 +196,9 @@ class DamageTypeEffectsService extends BaseService {
       damageEntry.severity ??
       classifyDamageSeverity(amount, maxHealth);
 
+    // Extract flag to suppress body part spawning (e.g., in damage simulator)
+    const suppressBodyPartSpawning = executionContext?.suppressPerceptibleEvents ?? false;
+
     const effectDefinitions = {
       dismember: this.#effectDefinitionResolver.resolveEffectDefinition('dismember'),
       fracture: this.#effectDefinitionResolver.resolveEffectDefinition('fracture'),
@@ -238,6 +241,7 @@ class DamageTypeEffectsService extends BaseService {
           damageEntryConfig: damageEntry.dismember,
           dispatchStrategy,
           sessionContext: damageSession,
+          suppressBodyPartSpawning,
         });
         if (result.triggered) {
           addTrace('effect_dismember', 'Dismemberment applied');

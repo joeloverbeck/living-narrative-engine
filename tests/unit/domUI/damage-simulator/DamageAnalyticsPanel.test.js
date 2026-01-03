@@ -753,8 +753,8 @@ describe('DamageAnalyticsPanel', () => {
       damageAnalyticsPanel.render();
 
       const html = mockContainerElement.innerHTML;
-      expect(html).toContain('Avg Hits');
-      expect(html).toContain('Min/Max');
+      expect(html).toContain('Avg Hits to Destroy');
+      expect(html).toContain('Hits Range');
       expect(html).toContain('Parts');
     });
   });

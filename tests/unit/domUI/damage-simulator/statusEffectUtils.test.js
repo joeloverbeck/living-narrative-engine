@@ -22,6 +22,7 @@ describe('statusEffectUtils', () => {
         burning: 'anatomy:burning',
         poisoned: 'anatomy:poisoned',
         fractured: 'anatomy:fractured',
+        dismembered: 'anatomy:dismembered',
       });
     });
 
@@ -31,6 +32,7 @@ describe('statusEffectUtils', () => {
         burning: '🔥',
         poisoned: '☠️',
         fractured: '🦴',
+        dismembered: '✂️',
       });
     });
 
@@ -42,6 +44,7 @@ describe('statusEffectUtils', () => {
         burning: 'ds-effect-burning',
         poisoned: 'ds-effect-poisoned',
         fractured: 'ds-effect-fractured',
+        dismembered: 'ds-effect-dismembered',
       });
     });
 
@@ -96,6 +99,16 @@ describe('statusEffectUtils', () => {
       expect(getActiveEffects(components)).toEqual([
         { type: 'bleeding', data: components['anatomy:bleeding'] },
         { type: 'poisoned', data: components['anatomy:poisoned'] },
+      ]);
+    });
+
+    it('extracts dismembered effect', () => {
+      const components = {
+        'anatomy:dismembered': { sourceDamageType: 'slashing' },
+        'anatomy:part': {},
+      };
+      expect(getActiveEffects(components)).toEqual([
+        { type: 'dismembered', data: components['anatomy:dismembered'] },
       ]);
     });
 
@@ -159,6 +172,16 @@ describe('statusEffectUtils', () => {
       expect(formatEffectTooltip('fractured', {})).toBe('Fractured');
     });
 
+    it('formats dismembered with name only', () => {
+      expect(formatEffectTooltip('dismembered', {})).toBe('Dismembered');
+    });
+
+    it('formats dismembered ignoring extra data', () => {
+      expect(
+        formatEffectTooltip('dismembered', { sourceDamageType: 'slashing' })
+      ).toBe('Dismembered');
+    });
+
     it('falls back to display name for unknown effects', () => {
       expect(formatEffectTooltip('stunned', {})).toBe('Stunned');
     });
@@ -211,6 +234,24 @@ describe('statusEffectUtils', () => {
       expect(html).toContain('Burning (1 turns, x2)');
       expect(html).toContain('ds-effect ds-effect-fractured');
       expect(html).toContain('Fractured');
+    });
+
+    it('generates HTML for dismembered effect', () => {
+      const html = generateEffectIconsHTML(
+        [
+          {
+            type: 'dismembered',
+            data: { sourceDamageType: 'slashing' },
+          },
+        ],
+        escapeHtml
+      );
+
+      expect(html).toBe(
+        '<div class="ds-part-effects">' +
+          '<span class="ds-effect ds-effect-dismembered" title="Dismembered">✂️</span>' +
+          '</div>'
+      );
     });
 
     it('escapes tooltip content', () => {

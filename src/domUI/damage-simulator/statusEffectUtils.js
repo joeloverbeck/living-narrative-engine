@@ -9,6 +9,7 @@ export const EFFECT_COMPONENTS = Object.freeze({
   burning: 'anatomy:burning',
   poisoned: 'anatomy:poisoned',
   fractured: 'anatomy:fractured',
+  dismembered: 'anatomy:dismembered',
 });
 /* eslint-enable mod-architecture/no-hardcoded-mod-references */
 
@@ -17,6 +18,7 @@ export const EFFECT_EMOJIS = Object.freeze({
   burning: '🔥',
   poisoned: '☠️',
   fractured: '🦴',
+  dismembered: '✂️',
 });
 
 export const EFFECT_CSS_CLASSES = Object.freeze({
@@ -26,6 +28,7 @@ export const EFFECT_CSS_CLASSES = Object.freeze({
   burning: 'ds-effect-burning',
   poisoned: 'ds-effect-poisoned',
   fractured: 'ds-effect-fractured',
+  dismembered: 'ds-effect-dismembered',
 });
 
 /**
@@ -99,6 +102,8 @@ export function formatEffectTooltip(effectType, effectData) {
       return turns !== undefined ? `${displayName} (${turns} turns)` : displayName;
     }
     case 'fractured':
+      return displayName;
+    case 'dismembered':
       return displayName;
     default:
       return displayName;

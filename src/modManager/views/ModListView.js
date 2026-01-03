@@ -147,7 +147,7 @@ export class ModListView {
    * @param {object} options Render options
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} options.mods Mods to display, in UI order
    * @param {(modId: string) => ModDisplayInfo} options.getModDisplayInfo Resolver for per-mod display state
-   * @param {((modId: string) => string)|null} [options.getModName=null] Optional resolver for mod ID to name
+   * @param {((modId: string) => string)|null} [options.getModName] Optional resolver for mod ID to name
    * @param {boolean} options.isLoading Loading state toggle
    */
   render({ mods, getModDisplayInfo, getModName = null, isLoading }) {
@@ -225,13 +225,25 @@ export class ModListView {
   }
 
   /**
+   * Get the DOM element for a specific mod card
+   *
+   * @param {string} modId Mod ID to find
+   * @returns {HTMLElement|null} Card element or null if not found
+   */
+  getCardElement(modId) {
+    return /** @type {HTMLElement|null} */ (
+      this.#listElement.querySelector(`[data-mod-id="${modId}"]`)
+    );
+  }
+
+  /**
    * Highlight a specific mod card (for cascade animation)
    *
    * @param {string} modId Mod ID to highlight
    * @param {'activating'|'deactivating'} type Highlight animation type
    */
   highlightMod(modId, type) {
-    const card = this.#listElement.querySelector(`[data-mod-id="${modId}"]`);
+    const card = this.getCardElement(modId);
     if (!card) return;
 
     card.classList.add(`mod-card--${type}`);
@@ -250,7 +262,7 @@ export class ModListView {
    * @param {string} modId Mod ID to scroll to
    */
   scrollToMod(modId) {
-    const card = this.#listElement.querySelector(`[data-mod-id="${modId}"]`);
+    const card = this.getCardElement(modId);
     if (!card) return;
 
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });

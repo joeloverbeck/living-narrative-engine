@@ -995,5 +995,111 @@ describe('DismemberedBodyPartSpawner', () => {
         expect(dispatchCall[1].timestamp).toBeLessThanOrEqual(afterTime);
       });
     });
+
+    describe('suppressBodyPartSpawning flag', () => {
+      beforeEach(() => {
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:part') {
+              return { definitionId: 'anatomy:human_arm' };
+            }
+            if (componentId === 'core:position') {
+              return { locationId: 'location-1' };
+            }
+            if (componentId === 'core:name') {
+              return { text: 'TestChar' };
+            }
+            return null;
+          }
+        );
+        mockGameDataRepository.getEntityDefinition.mockReturnValue({
+          id: 'anatomy:human_arm',
+          components: {
+            'anatomy:part': { subType: 'arm' },
+            'core:weight': { weight: 4.0 },
+          },
+        });
+      });
+
+      it('should skip spawning silently when suppressBodyPartSpawning is true', async () => {
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+            suppressBodyPartSpawning: true,
+          })
+        );
+
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).not.toHaveBeenCalled();
+        expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
+          'anatomy:body_part_spawned',
+          expect.anything()
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Skipping spawn')
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('suppressBodyPartSpawning=true')
+        );
+      });
+
+      it('should proceed with spawning when suppressBodyPartSpawning is false', async () => {
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+            suppressBodyPartSpawning: false,
+          })
+        );
+
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalled();
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:body_part_spawned',
+          expect.anything()
+        );
+      });
+
+      it('should proceed with spawning when suppressBodyPartSpawning is undefined', async () => {
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+          })
+        );
+
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalled();
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:body_part_spawned',
+          expect.anything()
+        );
+      });
+
+      it('should not log warning or error when suppressing spawning', async () => {
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+            suppressBodyPartSpawning: true,
+          })
+        );
+
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+    });
   });
 });
