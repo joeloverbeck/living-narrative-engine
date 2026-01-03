@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:patient_room",
+    "components": {
+        "core:name": {
+            "text": "patient room"
+        },
+        "core:description": {
+            "text": "A small institutional room presents pale green walls and a beige vinyl tile floor with a square grid. A single metal-framed bed stands centered along the back wall, its tubular rails unpainted and dull. The mattress carries a muted striped cover; one flat white pillow rests near the headboard. Above, a rectangular fluorescent fixture runs parallel to the bed and provides even, cool light. Below the window sits a cast-iron radiator with exposed valves and feet. Next to the bed, a beige metal nightstand with a single drawer and cabinet door sits flush to the wall. The right wall holds a plain wood-veneer door with a metal latch plate. Dark base trim runs the perimeter of the room. The ceiling appears acoustic, divided into rectangular panels. The space is narrow and symmetrical."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/patient_room.png",
+            "altText": "A patient room at a sanatorium."
+        },
+        "locations:exits": [
+            {
+                "direction": "into the corridor",
+                "target": "alicia:sanatorium_corridor_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

@@ -1,0 +1,155 @@
+{
+    "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+    "recipeId": "alicia:alicia_western_recipe",
+    "blueprintId": "anatomy:human_female",
+    "bodyDescriptors": {
+        "build": "slim",
+        "composition": "underweight",
+        "height": "average",
+        "skinColor": "fair"
+    },
+    "slots": {
+        "torso": {
+            "partType": "torso",
+            "preferId": "anatomy:human_female_torso",
+            "properties": {
+                "descriptors:build": {
+                    "build": "slim"
+                }
+            }
+        },
+        "head": {
+            "partType": "head",
+            "preferId": "anatomy:humanoid_head"
+        },
+        "nose": {
+            "partType": "nose",
+            "preferId": "anatomy:humanoid_nose",
+            "properties": {
+                "descriptors:size_category": {
+                    "size": "small"
+                }
+            }
+        },
+        "left_eye": {
+            "partType": "eye",
+            "properties": {
+                "descriptors:color_basic": {
+                    "color": "blue"
+                },
+                "descriptors:shape_eye": {
+                    "shape": "round"
+                }
+            }
+        },
+        "right_eye": {
+            "partType": "eye",
+            "properties": {
+                "descriptors:color_basic": {
+                    "color": "blue"
+                },
+                "descriptors:shape_eye": {
+                    "shape": "round"
+                }
+            }
+        },
+        "hair": {
+            "partType": "hair",
+            "properties": {
+                "descriptors:color_extended": {
+                    "color": "blonde"
+                },
+                "descriptors:length_hair": {
+                    "length": "long"
+                },
+                "descriptors:hair_style": {
+                    "style": "straight"
+                }
+            }
+        }
+    },
+    "patterns": [
+        {
+            "matches": [
+                "left_arm",
+                "right_arm"
+            ],
+            "partType": "arm",
+            "preferId": "anatomy:humanoid_arm",
+            "properties": {
+                "descriptors:build": {
+                    "build": "slim"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_hand",
+                "right_hand"
+            ],
+            "partType": "hand",
+            "preferId": "anatomy:humanoid_hand_gardener"
+        },
+        {
+            "matches": [
+                "left_leg",
+                "right_leg"
+            ],
+            "partType": "leg",
+            "preferId": "anatomy:human_leg",
+            "properties": {
+                "descriptors:build": {
+                    "build": "slim"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_breast",
+                "right_breast"
+            ],
+            "partType": "breast",
+            "properties": {
+                "descriptors:size_specific": {
+                    "size": "C-cup"
+                },
+                "descriptors:firmness": {
+                    "firmness": "soft"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_ass",
+                "right_ass"
+            ],
+            "partType": "ass_cheek",
+            "properties": {
+                "descriptors:projection": {
+                    "projection": "bubbly"
+                },
+                "descriptors:size_category": {
+                    "size": "small"
+                }
+            }
+        }
+    ],
+    "clothingEntities": [
+        {
+            "entityId": "underwear:cream_cotton_soft_cup_bralette",
+            "equip": true
+        },
+        {
+            "entityId": "underwear:cream_cotton_high_rise_briefs",
+            "equip": true
+        },
+        {
+            "entityId": "base-clothing:white_cotton_shift_dress",
+            "equip": true
+        },
+        {
+            "entityId": "underwear:white_terry_lined_grip_socks",
+            "equip": true
+        }
+    ]
+}

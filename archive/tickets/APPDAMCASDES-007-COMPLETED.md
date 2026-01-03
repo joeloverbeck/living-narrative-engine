@@ -2,7 +2,9 @@
 
 **Title:** Create E2E Tests and Architecture Documentation
 
-**Summary:** Create end-to-end tests for the full cascade flow and document the architecture in a comprehensive report.
+**Summary:** Add the missing end-to-end test for the full cascade flow and document the architecture in a comprehensive report.
+
+**Status:** Completed
 
 ## Files to Create
 
@@ -15,11 +17,8 @@
 
 ## Out of Scope
 
-- Any source code changes
-- Unit test modifications
-- Integration test modifications
-- Code refactoring or improvements
-- Performance optimizations
+- Changes to existing cascade implementation (already present)
+- Refactoring or performance optimizations
 
 ## E2E Test Scenarios
 
@@ -50,13 +49,13 @@ describe('Event ordering', () => {
     // Capture all events during damage resolution
 
     // Verify order:
-    // 1. DAMAGE_APPLIED (to torso)
-    // 2. PART_DESTROYED (torso - primary)
-    // 3. PART_DESTROYED (heart - cascaded, with cascadedFrom field)
-    // 4. PART_DESTROYED (spine - cascaded)
-    // 5. PART_DESTROYED (lungs - cascaded)
-    // 6. CASCADE_DESTRUCTION (summary event)
-    // 7. DEATH_OCCURRED (vital organ destroyed)
+    // 1. PART_DESTROYED (torso - primary)
+    // 2. PART_DESTROYED (heart - cascaded)
+    // 3. PART_DESTROYED (spine - cascaded)
+    // 4. PART_DESTROYED (lungs - cascaded)
+    // 5. CASCADE_DESTRUCTION (summary event)
+    // 6. DAMAGE_APPLIED (queued, dispatched after session finalization)
+    // 7. DEATH_OCCURRED (finalized after queued events)
   });
 });
 ```
@@ -70,7 +69,7 @@ describe('Narrative composition', () => {
 
     // Verify narrative output includes:
     // - Regular damage narrative
-    // - Cascade narrative: "As the [entity]'s torso collapses, the heart, spine, left lung, and right lung are destroyed."
+    // - Cascade narrative: "As their torso collapses, heart, spine, left lung, and right lung are destroyed."
     // - Death narrative (if applicable)
   });
 });
@@ -156,24 +155,19 @@ Attack Applied
 
 ### 3. Implementation Summary
 
-- Files created:
+- Existing implementation already in repo:
   - `src/anatomy/services/cascadeDestructionService.js`
   - `tests/unit/anatomy/services/cascadeDestructionService.test.js`
   - `tests/integration/anatomy/cascadeDestruction.integration.test.js`
-  - `tests/e2e/actions/cascadeDestructionFlow.e2e.test.js`
-
-- Files modified:
   - `src/anatomy/services/damageAccumulator.js`
   - `src/anatomy/services/damageNarrativeComposer.js`
   - `src/logic/services/damageResolutionService.js`
   - `src/dependencyInjection/tokens/tokens-core.js`
   - `src/dependencyInjection/registrations/worldAndEntityRegistrations.js`
 
-- Key design decisions:
-  - Cascade is synchronous within damage resolution flow
-  - Uses existing BodyGraphService.getAllDescendants()
-  - New event type for cascade summary
-  - Backward compatible API changes
+- This ticket delivers:
+  - `tests/e2e/actions/cascadeDestructionFlow.e2e.test.js`
+  - `reports/cascade-destruction-architecture-analysis.md`
 
 ### 4. Backward Compatibility
 
@@ -188,10 +182,10 @@ Attack Applied
 
 ### 5. Testing Coverage
 
-- Unit tests: 9 test cases for CascadeDestructionService
-- Integration tests: 6 test scenarios
-- E2E tests: 3 test scenarios
-- Coverage metrics: [to be filled after implementation]
+- Unit tests: already present for CascadeDestructionService
+- Integration tests: already present for cascade destruction flow
+- E2E tests: add 3 scenarios in this ticket
+- Coverage metrics: update after test run
 
 ## Acceptance Criteria
 
@@ -212,7 +206,7 @@ Attack Applied
 
 - E2E tests use full application bootstrap
 - Report is accurate to final implementation
-- No new source code changes in this ticket
+- No changes to cascade implementation in this ticket
 - Report follows project documentation style
 
 ## Dependencies
@@ -225,7 +219,7 @@ Attack Applied
 
 ```bash
 # Run E2E tests
-npm run test:e2e -- tests/e2e/actions/cascadeDestructionFlow.e2e.test.js
+npm run test:e2e -- --runInBand tests/e2e/actions/cascadeDestructionFlow.e2e.test.js
 
 # Lint the test file
 npx eslint tests/e2e/actions/cascadeDestructionFlow.e2e.test.js
@@ -243,3 +237,9 @@ npm run test:ci
 - Report should be written last, after implementation is complete
 - Use actual metrics from test runs in the report
 - Keep diagrams simple but accurate
+
+## Outcome
+
+- Updated assumptions to match existing cascade implementation and actual event ordering.
+- Added E2E cascade destruction flow coverage and the architecture report.
+- No changes to cascade implementation or APIs.

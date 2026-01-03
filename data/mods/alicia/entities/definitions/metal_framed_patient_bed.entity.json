@@ -1,0 +1,27 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:metal_framed_patient_bed",
+    "description": "A weathered park bench with two seating positions, worn smooth by years of use",
+    "components": {
+        "core:name": {
+            "text": "metal-framed patient bed"
+        },
+        "core:description": {
+            "text": "A single metal-framed bed stands centered along the back wall, its tubular rails unpainted and dull."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/metal_framed_patient_bed.png",
+            "altText": "A single metal-framed bed stands centered along the back wall, its tubular rails unpainted and dull."
+        },
+        "lying:allows_lying_on": {},
+        "sitting:allows_sitting": {
+            "spots": [
+                null,
+                null,
+                null,
+                null
+            ]
+        },
+        "bending:allows_bending_over": {}
+    }
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "alicia",
+  "version": "1.0.0",
+  "name": "alicia",
+  "description": "Contains the Alicia Western scenario.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "furniture",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "accessories",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "base-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "underwear",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "inventory",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "music",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "sitting",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [],
+    "components": [],
+    "conditions": [],
+    "entities": {
+      "definitions": [
+        "alicia_western.character.json",
+        "alicia_western_desk.entity.json",
+        "bobby_western_photo_1.entity.json",
+        "bobby_western_photo_2.entity.json",
+        "jon_urena_daydream.character.json",
+        "metal_framed_patient_bed.entity.json",
+        "patient_room.location.json",
+        "sanatorium_corridor.location.json",
+        "unfinished_goodbye_letter.json",
+        "yellowed_goodbye_letter.item.json"
+      ],
+      "instances": [
+        "alicia_western.character.json",
+        "alicia_western_desk.entity.json",
+        "bobby_western_photo_1.entity.json",
+        "bobby_western_photo_2.entity.json",
+        "jon_urena_daydream.character.json",
+        "metal_framed_patient_bed.entity.json",
+        "patient_room.location.json",
+        "sanatorium_corridor.location.json",
+        "unfinished_goodbye_letter.json",
+        "yellowed_goodbye_letter.item.json"
+      ]
+    },
+    "events": [],
+    "macros": [],
+    "portraits": [
+      "alicia_western.png",
+      "jon_urena_daydream.png",
+      "patient_room.png",
+      "sanatorium_corridor.png"
+    ],
+    "rules": [],
+    "worlds": [
+      "alicia.world.json"
+    ],
+    "recipes": [
+      "alicia_western.recipe.json",
+      "jon_urena_daydream.recipe.json"
+    ]
+  }
+}

@@ -417,6 +417,186 @@ describe('DamageNarrativeComposer', () => {
       });
     });
 
+    describe('cascade destruction', () => {
+      it('should accept optional cascadeDestructions parameter', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'torso-id',
+            partType: 'torso',
+            orientation: null,
+            damageType: 'bludgeoning',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+        ];
+        const cascadeDestructions = [
+          {
+            entityPossessive: 'her',
+            sourcePartType: 'torso',
+            sourceOrientation: null,
+            destroyedParts: [{ partType: 'heart', orientation: null }],
+          },
+        ];
+
+        const result = composer.compose(entries, cascadeDestructions);
+
+        expect(result).toBe(
+          "Rill's torso suffers bludgeoning damage. As her torso collapses, heart is destroyed."
+        );
+      });
+
+      it('should allow undefined cascadeDestructions (backward compatible)', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'torso-id',
+            partType: 'torso',
+            orientation: null,
+            damageType: 'bludgeoning',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+        ];
+
+        const result = composer.compose(entries, undefined);
+
+        expect(result).toBe("Rill's torso suffers bludgeoning damage.");
+      });
+
+      it('should allow empty cascadeDestructions array', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'torso-id',
+            partType: 'torso',
+            orientation: null,
+            damageType: 'bludgeoning',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+        ];
+
+        const result = composer.compose(entries, []);
+
+        expect(result).toBe("Rill's torso suffers bludgeoning damage.");
+      });
+
+      it('should format two destroyed parts with plural verb', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'torso-id',
+            partType: 'torso',
+            orientation: null,
+            damageType: 'bludgeoning',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+        ];
+        const cascadeDestructions = [
+          {
+            entityPossessive: 'her',
+            sourcePartType: 'torso',
+            sourceOrientation: null,
+            destroyedParts: [
+              { partType: 'heart', orientation: null },
+              { partType: 'lung', orientation: 'left' },
+            ],
+          },
+        ];
+
+        const result = composer.compose(entries, cascadeDestructions);
+
+        expect(result).toBe(
+          "Rill's torso suffers bludgeoning damage. As her torso collapses, heart and left lung are destroyed."
+        );
+      });
+
+      it('should format multiple destroyed parts with Oxford comma', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'torso-id',
+            partType: 'torso',
+            orientation: null,
+            damageType: 'bludgeoning',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+        ];
+        const cascadeDestructions = [
+          {
+            entityPossessive: 'her',
+            sourcePartType: 'torso',
+            sourceOrientation: null,
+            destroyedParts: [
+              { partType: 'heart', orientation: null },
+              { partType: 'lung', orientation: 'left' },
+              { partType: 'lung', orientation: 'right' },
+            ],
+          },
+        ];
+
+        const result = composer.compose(entries, cascadeDestructions);
+
+        expect(result).toBe(
+          "Rill's torso suffers bludgeoning damage. As her torso collapses, heart, left lung, and right lung are destroyed."
+        );
+      });
+
+      it('should append cascade segments after propagation narrative', () => {
+        const entries = [
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'head-id',
+            partType: 'head',
+            orientation: null,
+            damageType: 'piercing',
+            propagatedFrom: null,
+            effectsTriggered: [],
+          },
+          {
+            entityId: 'entity-1',
+            entityName: 'Rill',
+            entityPossessive: 'her',
+            partId: 'brain-id',
+            partType: 'brain',
+            orientation: null,
+            damageType: 'piercing',
+            propagatedFrom: 'head-id',
+            effectsTriggered: [],
+          },
+        ];
+        const cascadeDestructions = [
+          {
+            entityPossessive: 'her',
+            sourcePartType: 'head',
+            sourceOrientation: null,
+            destroyedParts: [{ partType: 'brain', orientation: null }],
+          },
+        ];
+
+        const result = composer.compose(entries, cascadeDestructions);
+
+        expect(result).toBe(
+          "Rill's head suffers piercing damage. As a result, her brain suffers piercing damage. As her head collapses, brain is destroyed."
+        );
+      });
+    });
+
     describe('part list formatting', () => {
       it('should format two parts with "and"', () => {
         const entries = [

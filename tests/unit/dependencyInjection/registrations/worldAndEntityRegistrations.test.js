@@ -64,6 +64,7 @@ import EquipmentDescriptionService from '../../../../src/clothing/services/equip
 import { ClothingInstantiationService } from '../../../../src/clothing/services/clothingInstantiationService.js';
 import { ClothingAccessibilityService } from '../../../../src/clothing/services/clothingAccessibilityService.js';
 import { AnatomyInitializationService } from '../../../../src/anatomy/anatomyInitializationService.js';
+import CascadeDestructionService from '../../../../src/anatomy/services/cascadeDestructionService.js';
 import HypoxiaTickSystem from '../../../../src/breathing/services/hypoxiaTickSystem.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
@@ -576,6 +577,12 @@ describe('registerWorldAndEntity', () => {
       lifecycle: 'singletonFactory',
       deps: undefined,
       tags: INITIALIZABLE,
+    },
+    {
+      token: tokens.CascadeDestructionService,
+      Class: CascadeDestructionService,
+      lifecycle: 'singletonFactory',
+      deps: undefined,
     },
   ];
 

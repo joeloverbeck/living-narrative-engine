@@ -104,6 +104,7 @@ import InjuryAggregationService from '../../anatomy/services/injuryAggregationSe
 import OxygenAggregationService from '../../anatomy/services/oxygenAggregationService.js';
 import InjuryNarrativeFormatterService from '../../anatomy/services/injuryNarrativeFormatterService.js';
 import DeathCheckService from '../../anatomy/services/deathCheckService.js';
+import CascadeDestructionService from '../../anatomy/services/cascadeDestructionService.js';
 import DismemberedBodyPartSpawner from '../../anatomy/services/dismemberedBodyPartSpawner.js';
 import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
@@ -1155,6 +1156,21 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register CascadeDestructionService
+  registrar.singletonFactory(tokens.CascadeDestructionService, (c) => {
+    return new CascadeDestructionService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.CascadeDestructionService
+    )}.`
+  );
+
   // Register DamageResolutionService
   registrar.singletonFactory(tokens.DamageResolutionService, (c) => {
     return new DamageResolutionService({
@@ -1166,6 +1182,7 @@ export function registerWorldAndEntity(container) {
       deathCheckService: c.resolve(tokens.DeathCheckService),
       damageAccumulator: c.resolve(tokens.DamageAccumulator),
       damageNarrativeComposer: c.resolve(tokens.DamageNarrativeComposer),
+      cascadeDestructionService: c.resolve(tokens.CascadeDestructionService),
     });
   });
   logger.debug(

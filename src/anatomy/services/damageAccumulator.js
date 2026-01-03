@@ -32,6 +32,7 @@ import { BaseService } from '../../utils/serviceBase.js';
  * @property {string} entityId - The primary target entity ID
  * @property {DamageEntry[]} entries - All damage entries accumulated
  * @property {QueuedEvent[]} pendingEvents - Events to dispatch after composition
+ * @property {object[]} [cascadeDestructions] - Cascade destruction entries
  * @property {number} createdAt - Timestamp when session was created
  */
 
@@ -39,6 +40,7 @@ import { BaseService } from '../../utils/serviceBase.js';
  * @typedef {object} FinalizedResult
  * @property {DamageEntry[]} entries - All accumulated damage entries
  * @property {QueuedEvent[]} pendingEvents - Events to dispatch
+ * @property {object[]} cascadeDestructions - Cascade destruction entries
  */
 
 /**
@@ -169,6 +171,43 @@ class DamageAccumulator extends BaseService {
   }
 
   /**
+   * Records a cascade destruction event in the session.
+   *
+   * @param {DamageSession} session - The active damage session
+   * @param {object} cascadeEntry - Cascade destruction data
+   * @param {string} cascadeEntry.sourcePartId - ID of destroyed parent part
+   * @param {string} cascadeEntry.sourcePartType - Type of destroyed parent part
+   * @param {string} [cascadeEntry.sourceOrientation] - Orientation of parent part
+   * @param {Array} cascadeEntry.destroyedParts - Array of destroyed child parts
+   * @param {string} cascadeEntry.entityName - Name of the entity
+   * @param {string} cascadeEntry.entityPossessive - Possessive form of entity name
+   */
+  recordCascadeDestruction(session, cascadeEntry) {
+    if (!session) {
+      this.#logger.error(
+        'DamageAccumulator.recordCascadeDestruction called without session'
+      );
+      return;
+    }
+
+    if (!cascadeEntry) {
+      this.#logger.warn(
+        'DamageAccumulator.recordCascadeDestruction called without cascadeEntry'
+      );
+      return;
+    }
+
+    if (!session.cascadeDestructions) {
+      session.cascadeDestructions = [];
+    }
+
+    session.cascadeDestructions.push({
+      ...cascadeEntry,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
    * Queues an event to be dispatched after the damage sequence completes.
    * This preserves backwards compatibility with existing event listeners.
    *
@@ -212,6 +251,7 @@ class DamageAccumulator extends BaseService {
       return {
         entries: [],
         pendingEvents: [],
+        cascadeDestructions: [],
       };
     }
 
@@ -224,6 +264,9 @@ class DamageAccumulator extends BaseService {
     return {
       entries: [...session.entries],
       pendingEvents: [...session.pendingEvents],
+      cascadeDestructions: session.cascadeDestructions
+        ? [...session.cascadeDestructions]
+        : [],
     };
   }
 

@@ -1,0 +1,161 @@
+{
+    "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+    "recipeId": "alicia:jon_urena_daydream_recipe",
+    "blueprintId": "anatomy:human_male",
+    "bodyDescriptors": {
+        "build": "hulking",
+        "hairDensity": "hairy",
+        "composition": "lean",
+        "height": "very-tall",
+        "skinColor": "white"
+    },
+    "slots": {
+        "torso": {
+            "partType": "torso",
+            "properties": {
+                "descriptors:build": {
+                    "build": "hulking"
+                },
+                "descriptors:body_hair": {
+                    "hairDensity": "hairy"
+                }
+            }
+        },
+        "head": {
+            "partType": "head",
+            "preferId": "anatomy:humanoid_head_bearded"
+        },
+        "hair": {
+            "partType": "hair",
+            "properties": {
+                "descriptors:color_basic": {
+                    "color": "brown"
+                },
+                "descriptors:length_hair": {
+                    "length": "short"
+                },
+                "descriptors:hair_style": {
+                    "style": "wavy"
+                }
+            }
+        },
+        "penis": {
+            "partType": "penis",
+            "properties": {
+                "descriptors:build": {
+                    "build": "thick"
+                },
+                "descriptors:size_category": {
+                    "size": "large"
+                },
+                "descriptors:weight_feel": {
+                    "weight": "meaty"
+                }
+            }
+        }
+    },
+    "patterns": [
+        {
+            "matches": [
+                "left_arm",
+                "right_arm"
+            ],
+            "partType": "arm",
+            "properties": {
+                "descriptors:build": {
+                    "build": "hulking"
+                },
+                "descriptors:body_hair": {
+                    "hairDensity": "hairy"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_hand",
+                "right_hand"
+            ],
+            "partType": "hand",
+            "preferId": "anatomy:humanoid_hand_gardener"
+        },
+        {
+            "matches": [
+                "left_leg",
+                "right_leg"
+            ],
+            "partType": "leg",
+            "properties": {
+                "descriptors:build": {
+                    "build": "hulking"
+                },
+                "descriptors:body_hair": {
+                    "hairDensity": "hairy"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_eye",
+                "right_eye"
+            ],
+            "partType": "eye",
+            "properties": {
+                "descriptors:color_basic": {
+                    "color": "brown"
+                },
+                "descriptors:shape_eye": {
+                    "shape": "almond"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_testicle",
+                "right_testicle"
+            ],
+            "partType": "testicle",
+            "properties": {
+                "descriptors:build": {
+                    "build": "thick"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_ass",
+                "right_ass"
+            ],
+            "partType": "ass_cheek",
+            "properties": {
+                "descriptors:firmness": {
+                    "firmness": "firm"
+                },
+                "descriptors:build": {
+                    "build": "thick"
+                }
+            }
+        }
+    ],
+    "clothingEntities": [
+        {
+            "entityId": "base-clothing:charcoal_wool_tshirt",
+            "equip": true
+        },
+        {
+            "entityId": "base-clothing:dark_indigo_denim_jeans",
+            "equip": true
+        },
+        {
+            "entityId": "base-clothing:sand_suede_chukka_boots",
+            "equip": true
+        },
+        {
+            "entityId": "accessories:dark_brown_leather_belt",
+            "equip": true
+        },
+        {
+            "entityId": "underwear:fitted_navy_cotton_boxer_briefs",
+            "equip": true
+        }
+    ]
+}

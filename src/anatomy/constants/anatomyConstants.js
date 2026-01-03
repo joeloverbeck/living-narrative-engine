@@ -8,6 +8,16 @@
 export const LIMB_DETACHED_EVENT_ID = 'anatomy:limb_detached';
 
 /**
+ * Event dispatched when a body part is destroyed
+ */
+export const PART_DESTROYED_EVENT_ID = 'anatomy:part_destroyed';
+
+/**
+ * Event dispatched after cascading destruction completes
+ */
+export const CASCADE_DESTRUCTION_EVENT_ID = 'anatomy:cascade_destruction';
+
+/**
  * Maximum depth for recursive operations to prevent stack overflow
  */
 export const MAX_RECURSION_DEPTH = 100;
@@ -49,6 +59,8 @@ export const ANATOMY_CLOTHING_CACHE_CONFIG = {
  */
 export const ANATOMY_CONSTANTS = {
   LIMB_DETACHED_EVENT_ID,
+  PART_DESTROYED_EVENT_ID,
+  CASCADE_DESTRUCTION_EVENT_ID,
   MAX_RECURSION_DEPTH,
   DEFAULT_MAX_PATH_LENGTH,
   ANATOMY_CLOTHING_CACHE_CONFIG,

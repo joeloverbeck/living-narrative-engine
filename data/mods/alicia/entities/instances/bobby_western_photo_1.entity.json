@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:bobby_western_photo_1_instance",
+    "definitionId": "alicia:bobby_western_photo_1",
+    "componentOverrides": {}
+}

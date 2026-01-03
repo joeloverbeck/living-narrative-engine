@@ -24,6 +24,7 @@ describe('DamageResolutionService', () => {
   /** @type {jest.Mocked<any>} */ let damageTypeEffectsService;
   /** @type {jest.Mocked<any>} */ let damagePropagationService;
   /** @type {jest.Mocked<any>} */ let deathCheckService;
+  /** @type {jest.Mocked<any>} */ let cascadeDestructionService;
   /** @type {jest.Mocked<any>} */ let callTracker;
   /** @type {jest.Mocked<any>} */ let logger;
 
@@ -77,10 +78,20 @@ describe('DamageResolutionService', () => {
           ...baseSession,
           entries: [],
           pendingEvents: [],
+          cascadeDestructions: [],
         })),
       recordDamage: jest.fn().mockImplementation((session, entry) => {
         session.entries.push(entry);
       }),
+      recordCascadeDestruction: jest
+        .fn()
+        .mockImplementation((session, cascadeEntry) => {
+          if (!session) return;
+          if (!session.cascadeDestructions) {
+            session.cascadeDestructions = [];
+          }
+          session.cascadeDestructions.push(cascadeEntry);
+        }),
       recordEffect: jest.fn(),
       queueEvent: jest
         .fn()
@@ -90,11 +101,20 @@ describe('DamageResolutionService', () => {
       finalize: jest.fn().mockImplementation((session) => ({
         entries: [...(session?.entries || [])],
         pendingEvents: [...(session?.pendingEvents || [])],
+        cascadeDestructions: [...(session?.cascadeDestructions || [])],
       })),
     };
 
     damageNarrativeComposer = {
       compose: jest.fn().mockReturnValue('composed narrative'),
+    };
+
+    cascadeDestructionService = {
+      executeCascade: jest.fn().mockResolvedValue({
+        destroyedPartIds: [],
+        destroyedParts: [],
+        vitalOrganDestroyed: false,
+      }),
     };
 
     return new DamageResolutionService({
@@ -106,6 +126,7 @@ describe('DamageResolutionService', () => {
       deathCheckService,
       damageAccumulator,
       damageNarrativeComposer,
+      cascadeDestructionService,
     });
   };
 
@@ -516,6 +537,158 @@ describe('DamageResolutionService', () => {
       );
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Part part-1 destroyed')
+      );
+    });
+
+    it('calls executeCascade when part health transitions to 0', async () => {
+      seedComponentData({
+        partHealth: { currentHealth: 5, maxHealth: 10, state: 'wounded' },
+      });
+
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 10 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(cascadeDestructionService.executeCascade).toHaveBeenCalledWith(
+        'part-1',
+        'entity-1'
+      );
+    });
+
+    it('does not call executeCascade when part is damaged but not destroyed', async () => {
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 1 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(cascadeDestructionService.executeCascade).not.toHaveBeenCalled();
+    });
+
+    it('does not call executeCascade when part was already at 0 health', async () => {
+      seedComponentData({
+        partHealth: { currentHealth: 0, maxHealth: 10, state: 'destroyed' },
+      });
+
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 5 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(cascadeDestructionService.executeCascade).not.toHaveBeenCalled();
+    });
+
+    it('records cascade destruction when children are destroyed', async () => {
+      cascadeDestructionService.executeCascade.mockResolvedValue({
+        destroyedPartIds: ['child-1'],
+        destroyedParts: [
+          {
+            partEntityId: 'child-1',
+            partType: 'arm',
+            orientation: 'left',
+            previousHealth: 3,
+            maxHealth: 10,
+          },
+        ],
+        vitalOrganDestroyed: false,
+      });
+
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 10 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(damageAccumulator.recordCascadeDestruction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          sourcePartId: 'part-1',
+          sourcePartType: 'torso',
+          sourceOrientation: null,
+          destroyedParts: [
+            expect.objectContaining({ partEntityId: 'child-1' }),
+          ],
+          entityName: 'Target',
+          entityPossessive: 'their',
+        })
+      );
+    });
+
+    it('does not record cascade destruction when no children are destroyed', async () => {
+      cascadeDestructionService.executeCascade.mockResolvedValue({
+        destroyedPartIds: [],
+        destroyedParts: [],
+        vitalOrganDestroyed: false,
+      });
+
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 10 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(damageAccumulator.recordCascadeDestruction).not.toHaveBeenCalled();
+    });
+
+    it('passes cascade destructions to the narrative composer', async () => {
+      cascadeDestructionService.executeCascade.mockResolvedValue({
+        destroyedPartIds: ['child-1'],
+        destroyedParts: [{ partEntityId: 'child-1', partType: 'arm' }],
+        vitalOrganDestroyed: false,
+      });
+
+      await service.resolve({
+        entityId: 'entity-1',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 10 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      const composeArgs = damageNarrativeComposer.compose.mock.calls[0];
+      expect(composeArgs[1]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ sourcePartId: 'part-1' }),
+        ])
+      );
+    });
+
+    it('passes ownerEntityId to executeCascade when available', async () => {
+      seedComponentData({
+        partHealth: { currentHealth: 5, maxHealth: 10, state: 'wounded' },
+      });
+
+      await service.resolve({
+        entityId: 'entity-2',
+        partId: 'part-1',
+        finalDamageEntry: { name: 'slashing', amount: 10 },
+        executionContext,
+        isTopLevel: true,
+        applyDamage: jest.fn(),
+      });
+
+      expect(cascadeDestructionService.executeCascade).toHaveBeenCalledWith(
+        'part-1',
+        'entity-1'
       );
     });
   });

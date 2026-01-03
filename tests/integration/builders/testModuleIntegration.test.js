@@ -7,8 +7,8 @@ import {
   describe,
   it,
   expect,
-  beforeEach,
   afterEach,
+  afterAll,
   jest,
 } from '@jest/globals';
 import {
@@ -16,6 +16,7 @@ import {
   TestScenarioPresets,
   createTestModules,
 } from '../../common/testing/builders/index.js';
+import { releaseSharedContainer } from '../../common/testing/builders/sharedContainerFactory.js';
 
 describe('Test Module Pattern Integration', () => {
   let testEnv;
@@ -75,8 +76,17 @@ describe('Test Module Pattern Integration', () => {
   });
 
   describe('Scenario Presets', () => {
+    const CONTAINER_KEY = 'scenario-presets';
+
+    afterAll(async () => {
+      await releaseSharedContainer(CONTAINER_KEY);
+    });
+
     it('should create a combat scenario', async () => {
-      testEnv = await TestModuleBuilder.scenarios.combat().build();
+      testEnv = await TestModuleBuilder.scenarios
+        .combat()
+        .withSharedContainer(CONTAINER_KEY)
+        .build();
 
       expect(testEnv).toBeDefined();
       expect(testEnv.config.actors).toContainEqual(
@@ -87,7 +97,10 @@ describe('Test Module Pattern Integration', () => {
     });
 
     it('should create a social interaction scenario', async () => {
-      testEnv = await TestModuleBuilder.scenarios.socialInteraction().build();
+      testEnv = await TestModuleBuilder.scenarios
+        .socialInteraction()
+        .withSharedContainer(CONTAINER_KEY)
+        .build();
 
       expect(testEnv).toBeDefined();
       expect(testEnv.config.actors).toContainEqual(
@@ -116,10 +129,17 @@ describe('Test Module Pattern Integration', () => {
   });
 
   describe('Integration with Facades', () => {
+    const CONTAINER_KEY = 'facades-tests';
+
+    afterAll(async () => {
+      await releaseSharedContainer(CONTAINER_KEY);
+    });
+
     it('should create facades when using custom facade configuration', async () => {
       // Test validates that TestModuleBuilder creates facades internally,
       // not that it uses external mock facades
       testEnv = await TestModuleBuilder.forTurnExecution()
+        .withSharedContainer(CONTAINER_KEY)
         .withCustomFacades({
           llm: {
             llmAdapter: {
@@ -139,6 +159,7 @@ describe('Test Module Pattern Integration', () => {
 
     it('should support performance tracking', async () => {
       testEnv = await TestModuleBuilder.forTurnExecution()
+        .withSharedContainer(CONTAINER_KEY)
         .withTestActors(['ai-actor'])
         .withPerformanceTracking({
           thresholds: { turnExecution: 100 },
@@ -151,6 +172,7 @@ describe('Test Module Pattern Integration', () => {
 
     it('should support event capture', async () => {
       testEnv = await TestModuleBuilder.forTurnExecution()
+        .withSharedContainer(CONTAINER_KEY)
         .withTestActors(['ai-actor'])
         .withEventCapture(['AI_DECISION_MADE', 'ACTION_EXECUTED'])
         .build();
@@ -213,10 +235,17 @@ describe('Test Module Pattern Integration', () => {
   });
 
   describe('createTestModules Factory', () => {
+    const CONTAINER_KEY = 'factory-tests';
+
+    afterAll(async () => {
+      await releaseSharedContainer(CONTAINER_KEY);
+    });
+
     it('should create test modules with jest mocking', async () => {
-      const { forTurnExecution, scenarios } = createTestModules(jest.fn);
+      const { forTurnExecution } = createTestModules(jest.fn);
 
       testEnv = await forTurnExecution()
+        .withSharedContainer(CONTAINER_KEY)
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor'])
         .build();

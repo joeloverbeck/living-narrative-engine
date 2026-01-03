@@ -1,0 +1,38 @@
+{
+    "$schema": "http://example.com/schemas/world.schema.json",
+    "id": "alicia:alicia",
+    "name": "Alicia Western Scenario",
+    "description": "A self-contained game world encompassing locations and characters in my daydream about Alicia Western.",
+    "instances": [
+        {
+            "instanceId": "alicia:patient_room_instance"
+        },
+        {
+            "instanceId": "alicia:sanatorium_corridor_instance"
+        },
+        {
+            "instanceId": "alicia:metal_framed_patient_bed_instance"
+        },
+        {
+            "instanceId": "alicia:alicia_western_desk_instance"
+        },
+        {
+            "instanceId": "alicia:yellowed_goodbye_letter_instance"
+        },
+        {
+            "instanceId": "alicia:unfinished_goodbye_letter_instance"
+        },
+        {
+            "instanceId": "alicia:bobby_western_photo_1_instance"
+        },
+        {
+            "instanceId": "alicia:bobby_western_photo_2_instance"
+        },
+        {
+            "instanceId": "alicia:jon_urena_daydream_instance"
+        },
+        {
+            "instanceId": "alicia:alicia_western_instance"
+        }
+    ]
+}

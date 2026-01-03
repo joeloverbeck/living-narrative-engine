@@ -4,6 +4,8 @@
 
 **Summary:** Create the new `CascadeDestructionService` class that handles cascading destruction of child body parts when a parent part is destroyed.
 
+**Status:** Completed
+
 ## Files to Create
 
 - `src/anatomy/services/cascadeDestructionService.js`
@@ -32,12 +34,14 @@
 // - entityManager: IEntityManager
 // - bodyGraphService: BodyGraphService
 // - safeEventDispatcher: ISafeEventDispatcher
+//
+// Use BaseService._init for dependency validation (project standard).
 ```
 
 ### Main Method Signature
 
 ```javascript
-executeCascade(destroyedPartId, ownerEntityId, options = {})
+async executeCascade(destroyedPartId, ownerEntityId, options = {})
 // Returns: { destroyedPartIds: string[], destroyedParts: object[], vitalOrganDestroyed: boolean }
 ```
 
@@ -47,16 +51,14 @@ executeCascade(destroyedPartId, ownerEntityId, options = {})
 2. Filter to parts with `currentHealth > 0`
 3. For each part:
    - Set health to 0 via EntityManager
-   - Dispatch `PART_DESTROYED_EVENT` with `cascadedFrom` field
-4. Dispatch `CASCADE_DESTRUCTION_EVENT` with all destroyed parts
+   - Dispatch `anatomy:part_destroyed` with schema-compatible payload (entityId, partId, timestamp)
+4. Dispatch `anatomy:cascade_destruction` with all destroyed parts (include `cascadedFrom`)
 5. Return result with destroyed parts info and vital organ flag
 
 ### Key Imports
 
 ```javascript
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import { PART_HEALTH_COMPONENT_ID } from '../constants/anatomyConstants.js';
-import { PART_DESTROYED_EVENT, CASCADE_DESTRUCTION_EVENT } from '../../constants/eventIds.js';
+import { BaseService } from '../../utils/serviceBase.js';
 ```
 
 ## Acceptance Criteria
@@ -66,12 +68,12 @@ import { PART_DESTROYED_EVENT, CASCADE_DESTRUCTION_EVENT } from '../../constants
 1. `should return empty result when part has no descendants`
 2. `should destroy all living descendants when parent destroyed`
 3. `should skip descendants already at 0 health`
-4. `should dispatch PART_DESTROYED_EVENT for each destroyed child with cascadedFrom field`
-5. `should dispatch CASCADE_DESTRUCTION_EVENT with all destroyed parts`
+4. `should dispatch anatomy:part_destroyed for each destroyed child (schema-compatible payload)`
+5. `should dispatch anatomy:cascade_destruction with all destroyed parts and cascadedFrom`
 6. `should correctly traverse multi-level hierarchy (grandchildren)`
 7. `should identify vital organ destruction correctly`
 8. `should handle entity with no health component gracefully`
-9. `should use validateDependency for all constructor parameters`
+9. `should validate all constructor parameters via BaseService._init`
 
 ### Invariants
 
@@ -79,7 +81,7 @@ import { PART_DESTROYED_EVENT, CASCADE_DESTRUCTION_EVENT } from '../../constants
 - All events dispatched via ISafeEventDispatcher
 - No direct mutation of components (uses EntityManager)
 - Logging follows project conventions (debug/info/error levels)
-- Method is synchronous (no async/await needed for this ticket)
+- Method is async to accommodate EntityManager mutations and SafeEventDispatcher
 
 ## Dependencies
 
@@ -98,3 +100,7 @@ npx eslint src/anatomy/services/cascadeDestructionService.js
 # Type check
 npm run typecheck
 ```
+
+## Outcome
+
+Implemented CascadeDestructionService using BaseService dependency validation, schema-compatible `anatomy:part_destroyed` dispatches, and a new `anatomy:cascade_destruction` payload that carries cascadedFrom plus destroyed part details. The service now runs async to await component mutations, includes a `suppressEvents` option, and skips descendants without health components instead of throwing.

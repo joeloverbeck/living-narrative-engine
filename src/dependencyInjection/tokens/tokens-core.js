@@ -89,6 +89,7 @@ export const coreTokens = freeze({
   FractureApplicator: 'FractureApplicator',
   BleedApplicator: 'BleedApplicator',
   BurnApplicator: 'BurnApplicator',
+  CascadeDestructionService: 'CascadeDestructionService',
   PoisonApplicator: 'PoisonApplicator',
   DamageTypeEffectsService: 'DamageTypeEffectsService',
   DamagePropagationService: 'DamagePropagationService',

@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:sanatorium_corridor",
+    "components": {
+        "core:name": {
+            "text": "sanatorium corridor"
+        },
+        "core:description": {
+            "text": "The corridor runs straight to a pair of double doors with wired glass panes and a red 'EXIT' sign above. Fluorescent troffers sit in a drop ceiling of off-white acoustic tiles, casting cool, even light. The walls are painted in a two-tone hospital scheme: pale mint on top, darker green on the lower half, separated by a crisp horizontal line. Doors line both sides, steel and painted to match the darker green, each with a narrow wired-glass vision panel and brushed metal kick plates. On the left wall, a cork-framed bulletin board hangs empty. Below it, a stainless-steel gurney with a flat green vinyl pad rests against the wall; its casters show grime and wear. On the right, an old cast-iron radiator runs a short length of the wall, paint slightly rough from age. Small wall plates and call buttons punctuate the corridor at regular intervals. The floor is beige VCT tile laid in a square grid, dull with age and marked by faint scuffs and cleaning swirls. The space is orderly, static, and silent; no personal items, no signage beyond the exit, no people. The materials, colors, and fixtures indicate institutional design from the mid-to-late twentieth century, preserved without recent renovation."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/sanatorium_corridor.png",
+            "altText": "A corridor at a sanatorium."
+        },
+        "locations:exits": [
+            {
+                "direction": "into Alicia Western's patient room",
+                "target": "alicia:patient_room_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

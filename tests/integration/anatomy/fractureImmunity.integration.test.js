@@ -176,6 +176,13 @@ async function createDamageHarness() {
     }),
     finalizeDeathFromEvaluation: jest.fn(),
   };
+  const cascadeDestructionService = {
+    executeCascade: jest.fn().mockResolvedValue({
+      destroyedPartIds: [],
+      destroyedParts: [],
+      vitalOrganDestroyed: false,
+    }),
+  };
 
   const jsonLogicService = new JsonLogicEvaluationService({
     logger,
@@ -195,6 +202,7 @@ async function createDamageHarness() {
     deathCheckService,
     damageAccumulator,
     damageNarrativeComposer,
+    cascadeDestructionService,
   });
 
   const applyDamageHandler = new ApplyDamageHandler({

@@ -4,6 +4,8 @@
 
 **Summary:** Add DI token and factory registration for the new CascadeDestructionService.
 
+**Status:** Completed
+
 ## Files to Modify
 
 - `src/dependencyInjection/tokens/tokens-core.js` (add token)
@@ -18,7 +20,6 @@
 - CascadeDestructionService implementation (ticket APPDAMCASDES-001)
 - Updating DamageResolutionService registration (ticket APPDAMCASDES-005)
 - Any other service registrations
-- Test files
 - Any changes to existing service implementations
 
 ## Implementation Details
@@ -39,7 +40,7 @@ Add import at top of file:
 import CascadeDestructionService from '../../anatomy/services/cascadeDestructionService.js';
 ```
 
-Add factory registration after DeathCheckService (~line 1156):
+Add factory registration after DeathCheckService and before DamageResolutionService:
 
 ```javascript
 registrar.singletonFactory(tokens.CascadeDestructionService, (c) => {
@@ -59,6 +60,7 @@ registrar.singletonFactory(tokens.CascadeDestructionService, (c) => {
 1. All existing DI container tests must continue to pass
 2. `npm run typecheck` passes
 3. Container can resolve `CascadeDestructionService` token successfully
+4. `worldAndEntityRegistrations` unit test coverage includes the new registration
 
 ### Invariants
 
@@ -67,6 +69,12 @@ registrar.singletonFactory(tokens.CascadeDestructionService, (c) => {
 - Import path is correct relative to registrations file
 - All dependencies are resolvable tokens that already exist
 - Registration order follows convention (after related anatomy services)
+
+## Assumptions (Updated)
+
+- `CascadeDestructionService` exists at `src/anatomy/services/cascadeDestructionService.js`.
+- Constructor dependencies are `{ logger, entityManager, bodyGraphService, safeEventDispatcher }`.
+- The unit DI coverage lives in `tests/unit/dependencyInjection/registrations/worldAndEntityRegistrations.test.js` and should reflect new registrations.
 
 ## Dependencies
 
@@ -90,3 +98,7 @@ npm run typecheck
 
 - This ticket is intentionally small to keep the diff reviewable
 - Can be implemented in parallel with APPDAMCASDES-003 (DamageAccumulator)
+
+## Outcome
+
+Added the CascadeDestructionService token, registered it in worldAndEntityRegistrations with existing dependencies, and extended the worldAndEntityRegistrations unit suite to assert the new singleton registration (expanding scope beyond the original "no tests" assumption).

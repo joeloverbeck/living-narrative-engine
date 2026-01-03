@@ -1,0 +1,18 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "alicia:bobby_western_photo_2",
+    "description": "A photo of Bobby Western posing with Jon Ureña in Formentera.",
+    "components": {
+        "core:name": {
+            "text": "photo #2"
+        },
+        "core:description": {
+            "text": "The photo depicts two people: one, Jon Ureña, about a head taller, and significantly wider, than the man beside him: Bobby Western, looking as if he's in his early sixties. Bobby's hair has gone white, and his face is etched with decades of grief. Although his expression is blank, you can tell he's containing a pain that never goes away. Both are posing for the camera, standing in what looks like a Mediterranean beach."
+        },
+        "items-core:item": {},
+        "items-core:portable": {},
+        "core:weight": {
+            "weight": 0.02
+        }
+    }
+}

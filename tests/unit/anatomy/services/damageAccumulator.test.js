@@ -216,6 +216,96 @@ describe('DamageAccumulator', () => {
     });
   });
 
+  describe('recordCascadeDestruction', () => {
+    it('should initialize cascadeDestructions array if not present', () => {
+      const session = accumulator.createSession('entity-123');
+
+      accumulator.recordCascadeDestruction(session, {
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+      });
+
+      expect(session.cascadeDestructions).toHaveLength(1);
+    });
+
+    it('should append cascade entry with timestamp', () => {
+      const session = accumulator.createSession('entity-123');
+      jest.spyOn(Date, 'now').mockReturnValue(123);
+
+      accumulator.recordCascadeDestruction(session, {
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [{ partId: 'eye-part-id', partType: 'eye' }],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+      });
+
+      expect(session.cascadeDestructions[0]).toMatchObject({
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [{ partId: 'eye-part-id', partType: 'eye' }],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+        timestamp: 123,
+      });
+      Date.now.mockRestore();
+    });
+
+    it('should preserve existing cascade entries', () => {
+      const session = accumulator.createSession('entity-123');
+      session.cascadeDestructions = [
+        {
+          sourcePartId: 'arm-part-id',
+          sourcePartType: 'arm',
+          destroyedParts: [],
+          entityName: 'Rill',
+          entityPossessive: 'her',
+          timestamp: 111,
+        },
+      ];
+
+      accumulator.recordCascadeDestruction(session, {
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+      });
+
+      expect(session.cascadeDestructions).toHaveLength(2);
+      expect(session.cascadeDestructions[0].sourcePartId).toBe('arm-part-id');
+    });
+
+    it('should log error when session is null', () => {
+      accumulator.recordCascadeDestruction(null, {
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('recordCascadeDestruction called without session')
+      );
+    });
+
+    it('should log warning when cascadeEntry is missing', () => {
+      const session = accumulator.createSession('entity-123');
+
+      accumulator.recordCascadeDestruction(session, null);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'recordCascadeDestruction called without cascadeEntry'
+        )
+      );
+    });
+  });
+
   describe('queueEvent', () => {
     it('should add event to pendingEvents', () => {
       const session = accumulator.createSession('entity-123');
@@ -269,6 +359,7 @@ describe('DamageAccumulator', () => {
 
       expect(result.entries).toHaveLength(1);
       expect(result.pendingEvents).toHaveLength(1);
+      expect(result.cascadeDestructions).toEqual([]);
     });
 
     it('should return copies of arrays', () => {
@@ -277,16 +368,28 @@ describe('DamageAccumulator', () => {
         partId: 'part-1',
         effectsTriggered: [],
       });
+      session.cascadeDestructions = [
+        {
+          sourcePartId: 'head-part-id',
+          sourcePartType: 'head',
+          destroyedParts: [],
+          entityName: 'Rill',
+          entityPossessive: 'her',
+          timestamp: 111,
+        },
+      ];
 
       const result = accumulator.finalize(session);
 
       // Modify the returned arrays
       result.entries.push({ fake: true });
       result.pendingEvents.push({ fake: true });
+      result.cascadeDestructions.push({ fake: true });
 
       // Original session should be unaffected
       expect(session.entries).toHaveLength(1);
       expect(session.pendingEvents).toHaveLength(0);
+      expect(session.cascadeDestructions).toHaveLength(1);
     });
 
     it('should return empty arrays when session is null', () => {
@@ -294,6 +397,7 @@ describe('DamageAccumulator', () => {
 
       expect(result.entries).toEqual([]);
       expect(result.pendingEvents).toEqual([]);
+      expect(result.cascadeDestructions).toEqual([]);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('finalize called without session')
       );
@@ -307,6 +411,24 @@ describe('DamageAccumulator', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Finalizing session')
       );
+    });
+
+    it('should return cascadeDestructions with recorded entries', () => {
+      const session = accumulator.createSession('entity-123');
+      const cascadeEntry = {
+        sourcePartId: 'head-part-id',
+        sourcePartType: 'head',
+        destroyedParts: [{ partId: 'eye-part-id', partType: 'eye' }],
+        entityName: 'Rill',
+        entityPossessive: 'her',
+      };
+
+      accumulator.recordCascadeDestruction(session, cascadeEntry);
+
+      const result = accumulator.finalize(session);
+
+      expect(result.cascadeDestructions).toHaveLength(1);
+      expect(result.cascadeDestructions[0]).toMatchObject(cascadeEntry);
     });
   });
 

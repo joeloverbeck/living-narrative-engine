@@ -48,6 +48,7 @@ export const APPARENT_AGE_COMPONENT_ID = 'core:apparent_age';
 export const ANATOMY_BODY_COMPONENT_ID = 'anatomy:body';
 export const ANATOMY_PART_COMPONENT_ID = 'anatomy:part';
 export const ANATOMY_PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
+export const ANATOMY_VITAL_ORGAN_COMPONENT_ID = 'anatomy:vital_organ';
 export const ANATOMY_SOCKETS_COMPONENT_ID = 'anatomy:sockets';
 
 // Container components
