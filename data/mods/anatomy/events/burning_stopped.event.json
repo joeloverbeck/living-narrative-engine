@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:burning_stopped",
+  "description": "Dispatched when a burning effect ends on a body part. Fires after the burning component is removed.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected"
+      },
+      "partId": {
+        "type": "string",
+        "description": "Entity ID of the body part where burning stopped"
+      },
+      "reason": {
+        "type": "string",
+        "enum": ["duration_expired", "extinguished", "part_destroyed"],
+        "description": "Why the burning effect ended"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when burning stopped"
+      }
+    },
+    "required": ["entityId", "partId", "reason", "timestamp"],
+    "additionalProperties": false
+  }
+}

@@ -11,10 +11,23 @@ describe('DamageSimulatorUI', () => {
   let mockRecipeSelectorService;
   let mockEntityLoadingService;
   let mockAnatomyDataExtractor;
+  let mockInjuryAggregationService;
   let mockEventBus;
   let damageSimulatorUI;
   let getElementByIdSpy;
   let mockElements;
+  let baseAnatomyData;
+
+  const createMockAnatomyNode = (overrides = {}) => ({
+    id: 'root-part',
+    name: 'Root Part',
+    components: {
+      'anatomy:part': { health_calculation_weight: 1 },
+    },
+    health: { current: 100, max: 100 },
+    children: [],
+    ...overrides,
+  });
 
   const createMockElement = (id) => {
     const element = document.createElement('div');
@@ -52,10 +65,14 @@ describe('DamageSimulatorUI', () => {
     };
 
     // Mock anatomy data extractor
+    baseAnatomyData = createMockAnatomyNode();
     mockAnatomyDataExtractor = {
-      extractFromEntity: jest.fn().mockResolvedValue({
-        bodyParts: [{ id: 'head', name: 'Head' }],
-      }),
+      extractFromEntity: jest.fn().mockResolvedValue(baseAnatomyData),
+    };
+
+    // Mock injury aggregation service
+    mockInjuryAggregationService = {
+      calculateOverallHealth: jest.fn().mockReturnValue(100),
     };
 
     // Mock event bus
@@ -105,6 +122,7 @@ describe('DamageSimulatorUI', () => {
           new DamageSimulatorUI({
             entityLoadingService: mockEntityLoadingService,
             anatomyDataExtractor: mockAnatomyDataExtractor,
+            injuryAggregationService: mockInjuryAggregationService,
             eventBus: mockEventBus,
             logger: mockLogger,
           })
@@ -116,11 +134,37 @@ describe('DamageSimulatorUI', () => {
           new DamageSimulatorUI({
             recipeSelectorService: mockRecipeSelectorService,
             anatomyDataExtractor: mockAnatomyDataExtractor,
+            injuryAggregationService: mockInjuryAggregationService,
             eventBus: mockEventBus,
             logger: mockLogger,
           })
       ).toThrow();
 
+
+      // Missing injuryAggregationService
+      expect(
+        () =>
+          new DamageSimulatorUI({
+            recipeSelectorService: mockRecipeSelectorService,
+            entityLoadingService: mockEntityLoadingService,
+            anatomyDataExtractor: mockAnatomyDataExtractor,
+            eventBus: mockEventBus,
+            logger: mockLogger,
+          })
+      ).toThrow();
+
+      // Missing injuryAggregationService.calculateOverallHealth
+      expect(
+        () =>
+          new DamageSimulatorUI({
+            recipeSelectorService: mockRecipeSelectorService,
+            entityLoadingService: mockEntityLoadingService,
+            anatomyDataExtractor: mockAnatomyDataExtractor,
+            injuryAggregationService: {},
+            eventBus: mockEventBus,
+            logger: mockLogger,
+          })
+      ).toThrow();
       // Missing anatomyDataExtractor
       expect(
         () =>
@@ -139,6 +183,7 @@ describe('DamageSimulatorUI', () => {
             recipeSelectorService: mockRecipeSelectorService,
             entityLoadingService: mockEntityLoadingService,
             anatomyDataExtractor: mockAnatomyDataExtractor,
+            injuryAggregationService: mockInjuryAggregationService,
             logger: mockLogger,
           })
       ).toThrow();
@@ -150,6 +195,7 @@ describe('DamageSimulatorUI', () => {
             recipeSelectorService: mockRecipeSelectorService,
             entityLoadingService: mockEntityLoadingService,
             anatomyDataExtractor: mockAnatomyDataExtractor,
+            injuryAggregationService: mockInjuryAggregationService,
             eventBus: mockEventBus,
           })
       ).toThrow();
@@ -160,6 +206,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -193,6 +240,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -257,6 +305,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -308,7 +357,7 @@ describe('DamageSimulatorUI', () => {
       expect(damageSimulatorUI.getCurrentEntityData()).toEqual({
         definitionId: 'core:human',
         instanceId: 'instance-123',
-        anatomyData: { bodyParts: [{ id: 'head', name: 'Head' }] },
+        anatomyData: baseAnatomyData,
       });
     });
 
@@ -348,6 +397,53 @@ describe('DamageSimulatorUI', () => {
       expect(damageSimulatorUI.getCurrentState()).toBe('idle');
       expect(damageSimulatorUI.getCurrentEntityData()).toBeNull();
     });
+
+    it('should calculate overall health and set it on the anatomy renderer', async () => {
+      const mockAnatomyRenderer = {
+        render: jest.fn(),
+        clear: jest.fn(),
+        setOverallHealth: jest.fn(),
+      };
+      damageSimulatorUI.setChildComponent('anatomyRenderer', mockAnatomyRenderer);
+
+      const anatomyData = createMockAnatomyNode({
+        health: { current: 50, max: 100 },
+        components: { 'anatomy:part': { health_calculation_weight: 2 } },
+        children: [
+          createMockAnatomyNode({
+            id: 'brain',
+            components: {
+              'anatomy:part': { health_calculation_weight: 1 },
+              'anatomy:vital_organ': {
+                healthCapThreshold: 10,
+                healthCapValue: 25,
+              },
+            },
+            health: { current: 100, max: 100 },
+          }),
+        ],
+      });
+      mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue(anatomyData);
+      mockInjuryAggregationService.calculateOverallHealth.mockReturnValue(88);
+
+      await damageSimulatorUI.handleEntitySelection('core:human');
+
+      expect(mockInjuryAggregationService.calculateOverallHealth).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            healthPercentage: 50,
+            healthCalculationWeight: 2,
+            vitalOrganCap: null,
+          }),
+          expect.objectContaining({
+            healthPercentage: 100,
+            healthCalculationWeight: 1,
+            vitalOrganCap: { threshold: 10, capValue: 25 },
+          }),
+        ])
+      );
+      expect(mockAnatomyRenderer.setOverallHealth).toHaveBeenCalledWith(88);
+    });
   });
 
   describe('refreshAnatomyDisplay()', () => {
@@ -356,6 +452,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -380,12 +477,14 @@ describe('DamageSimulatorUI', () => {
       mockAnatomyDataExtractor.extractFromEntity.mockClear();
 
       // Updated anatomy data
-      mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue({
-        bodyParts: [
-          { id: 'head', name: 'Head' },
-          { id: 'arm', name: 'Arm' },
-        ],
-      });
+      mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue(
+        createMockAnatomyNode({
+          children: [
+            createMockAnatomyNode({ id: 'head', name: 'Head' }),
+            createMockAnatomyNode({ id: 'arm', name: 'Arm' }),
+          ],
+        })
+      );
 
       await damageSimulatorUI.refreshAnatomyDisplay();
 
@@ -399,12 +498,7 @@ describe('DamageSimulatorUI', () => {
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'core:damage_simulator_entity_loaded',
         expect.objectContaining({
-          anatomyData: {
-            bodyParts: [
-              { id: 'head', name: 'Head' },
-              { id: 'arm', name: 'Arm' },
-            ],
-          },
+          anatomyData: expect.any(Object),
         })
       );
     });
@@ -414,17 +508,29 @@ describe('DamageSimulatorUI', () => {
       await damageSimulatorUI.handleEntitySelection('core:human');
 
       // Setup mock anatomy renderer
-      const mockAnatomyRenderer = { render: jest.fn(), clear: jest.fn() };
+      const mockAnatomyRenderer = {
+        render: jest.fn(),
+        clear: jest.fn(),
+        setOverallHealth: jest.fn(),
+      };
       damageSimulatorUI.setChildComponent('anatomyRenderer', mockAnatomyRenderer);
       mockAnatomyRenderer.render.mockClear(); // Clear initial render call from handleEntitySelection
 
       // Updated anatomy data with modified health
-      const updatedAnatomyData = {
-        bodyParts: [
-          { id: 'head', name: 'Head', health: 50 },
-          { id: 'arm', name: 'Arm', health: 80 },
+      const updatedAnatomyData = createMockAnatomyNode({
+        children: [
+          createMockAnatomyNode({
+            id: 'head',
+            name: 'Head',
+            health: { current: 50, max: 100 },
+          }),
+          createMockAnatomyNode({
+            id: 'arm',
+            name: 'Arm',
+            health: { current: 80, max: 100 },
+          }),
         ],
-      };
+      });
       mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue(updatedAnatomyData);
 
       // Act
@@ -434,6 +540,28 @@ describe('DamageSimulatorUI', () => {
       expect(mockAnatomyRenderer.render).toHaveBeenCalledTimes(1);
       expect(mockAnatomyRenderer.render).toHaveBeenCalledWith(updatedAnatomyData);
     });
+
+    it('should update overall health when anatomy data refreshes', async () => {
+      await damageSimulatorUI.handleEntitySelection('core:human');
+
+      const mockAnatomyRenderer = {
+        render: jest.fn(),
+        clear: jest.fn(),
+        setOverallHealth: jest.fn(),
+      };
+      damageSimulatorUI.setChildComponent('anatomyRenderer', mockAnatomyRenderer);
+      mockAnatomyRenderer.render.mockClear();
+
+      const updatedAnatomyData = createMockAnatomyNode({
+        health: { current: 30, max: 100 },
+      });
+      mockAnatomyDataExtractor.extractFromEntity.mockResolvedValue(updatedAnatomyData);
+      mockInjuryAggregationService.calculateOverallHealth.mockReturnValue(30);
+
+      await damageSimulatorUI.refreshAnatomyDisplay();
+
+      expect(mockAnatomyRenderer.setOverallHealth).toHaveBeenCalledWith(30);
+    });
   });
 
   describe('Child Component Management', () => {
@@ -442,6 +570,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -487,6 +616,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -503,6 +633,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -523,6 +654,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -552,6 +684,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -612,6 +745,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -762,6 +896,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -937,6 +1072,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1019,6 +1155,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1099,6 +1236,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1122,6 +1260,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1205,6 +1344,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1241,6 +1381,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1274,6 +1415,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1301,6 +1443,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1319,6 +1462,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1337,6 +1481,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });
@@ -1357,6 +1502,7 @@ describe('DamageSimulatorUI', () => {
         recipeSelectorService: mockRecipeSelectorService,
         entityLoadingService: mockEntityLoadingService,
         anatomyDataExtractor: mockAnatomyDataExtractor,
+        injuryAggregationService: mockInjuryAggregationService,
         eventBus: mockEventBus,
         logger: mockLogger,
       });

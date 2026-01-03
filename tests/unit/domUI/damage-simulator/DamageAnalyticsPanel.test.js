@@ -312,6 +312,62 @@ describe('DamageAnalyticsPanel', () => {
     });
   });
 
+  describe('overall health bar', () => {
+    it('should render overall health bar in the Hits to Destroy header row', () => {
+      const container = document.createElement('div');
+      const panel = new DamageAnalyticsPanel({
+        containerElement: container,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      panel.setOverallHealth(80);
+      panel.render();
+
+      const header = container.querySelector('.ds-analytics-section-header');
+      const healthBar = header?.querySelector('#analytics-overall-health');
+      expect(healthBar).not.toBeNull();
+
+      panel.destroy();
+    });
+
+    it('should apply the correct health class based on percent', () => {
+      const container = document.createElement('div');
+      const panel = new DamageAnalyticsPanel({
+        containerElement: container,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      panel.setOverallHealth(80);
+      panel.render();
+
+      const fill = container.querySelector('.ds-health-bar-fill');
+      expect(fill.classList.contains('ds-health-bar-fill--healthy')).toBe(true);
+
+      panel.destroy();
+    });
+
+    it('should update health bar after render when setOverallHealth changes', () => {
+      const container = document.createElement('div');
+      const panel = new DamageAnalyticsPanel({
+        containerElement: container,
+        eventBus: mockEventBus,
+        logger: mockLogger,
+      });
+
+      panel.setOverallHealth(100);
+      panel.render();
+      panel.setOverallHealth(30);
+
+      const fill = container.querySelector('.ds-health-bar-fill');
+      expect(fill.style.width).toBe('30%');
+      expect(fill.classList.contains('ds-health-bar-fill--critical')).toBe(true);
+
+      panel.destroy();
+    });
+  });
+
   describe('display hits-to-destroy for each part', () => {
     it('should display hits-to-destroy for each part', () => {
       const anatomyData = {
@@ -357,11 +413,12 @@ describe('DamageAnalyticsPanel', () => {
       };
       panel.setEntity('entity-1', anatomyData);
 
-      // Simulate config changed event
+      // Simulate config changed event (uses config format from DamageCapabilityComposer)
       configChangedHandler({
         payload: {
-          damageEntry: { amount: 25, damageType: 'piercing' },
+          config: { amount: 25, name: 'piercing', penetration: 0 },
           multiplier: 2,
+          isValid: true,
         },
       });
 
@@ -891,7 +948,8 @@ describe('DamageAnalyticsPanel', () => {
   describe('Static constants', () => {
     it('should expose EVENTS constant', () => {
       expect(DamageAnalyticsPanel.EVENTS).toBeDefined();
-      expect(DamageAnalyticsPanel.EVENTS.CONFIG_CHANGED).toBe('damage-composer:config-changed');
+      // Must match DamageCapabilityComposer.COMPOSER_EVENTS.CONFIG_CHANGED
+      expect(DamageAnalyticsPanel.EVENTS.CONFIG_CHANGED).toBe('core:damage_composer_config_changed');
       expect(DamageAnalyticsPanel.EVENTS.ENTITY_LOADED).toBe('core:damage_simulator_entity_loaded');
     });
 
@@ -1592,12 +1650,13 @@ describe('DamageAnalyticsPanel', () => {
       panel.setEntity('entity-1', anatomyData);
 
       // Simulate the event handler being called directly with payload that has no multiplier
-      // This exercises the `multiplier ?? 1` branch at line 208
+      // This exercises the `multiplier ?? 1` branch at line 221
       configChangedCallback({
         type: DamageAnalyticsPanel.EVENTS.CONFIG_CHANGED,
         payload: {
-          damageEntry: { amount: 10, damageType: 'slashing' },
+          config: { amount: 10, name: 'slashing', penetration: 0 },
           // multiplier is undefined - should default to 1 via ?? operator
+          isValid: true,
         },
       });
 
@@ -1744,7 +1803,8 @@ describe('DamageAnalyticsPanel', () => {
 
       // Since hasDamageConfig is false, #calculateEffectiveDamage returns null via ternary
       // But we still call getAnalytics which internally calls the method conditionally
-      const analytics = damageAnalyticsPanel.getAnalytics();
+      const analyticsWithoutDamage = damageAnalyticsPanel.getAnalytics();
+      expect(analyticsWithoutDamage.parts[0].effectiveDamage).toBeNull();
 
       // effectiveDamage should be null (not 0) because hasDamageConfig is false
       // The 'if (!this.#damageEntry) return 0' branch is only hit when hasDamageConfig is true

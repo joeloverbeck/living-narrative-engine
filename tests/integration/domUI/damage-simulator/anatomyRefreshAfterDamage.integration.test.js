@@ -18,6 +18,7 @@ describe('Anatomy Refresh After Damage - Integration', () => {
   let mockRecipeSelectorService;
   let mockEntityLoadingService;
   let mockAnatomyDataExtractor;
+  let mockInjuryAggregationService;
   let mockEventBus;
   let mockAnatomyRenderer;
   let mockExecutionService;
@@ -83,6 +84,10 @@ describe('Anatomy Refresh After Damage - Integration', () => {
       }),
     };
 
+    mockInjuryAggregationService = {
+      calculateOverallHealth: jest.fn().mockReturnValue(100),
+    };
+
     mockEventBus = {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
@@ -140,6 +145,7 @@ describe('Anatomy Refresh After Damage - Integration', () => {
       recipeSelectorService: mockRecipeSelectorService,
       entityLoadingService: mockEntityLoadingService,
       anatomyDataExtractor: mockAnatomyDataExtractor,
+      injuryAggregationService: mockInjuryAggregationService,
       eventBus: mockEventBus,
       logger: mockLogger,
     });

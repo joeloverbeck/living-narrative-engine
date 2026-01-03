@@ -255,6 +255,94 @@
   background: #f44336;
 }
 
+/* ============================================
+   Overall Health Bar - Compact inline version
+   Used in Anatomy panel header and Analytics "Hits to Destroy" section header
+   ============================================ */
+
+/* Container for the overall health header in Anatomy panel */
+.ds-overall-health-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+  margin-bottom: var(--spacing-sm, 0.5rem);
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  background: var(--surface-color-subtle, rgba(0, 0, 0, 0.05));
+  border-radius: var(--border-radius-sm, 4px);
+}
+
+/* Inline container for health bar + text */
+.ds-overall-health-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.25rem);
+}
+
+/* Compact health bar width for inline display */
+.ds-overall-health-bar .ds-health-bar {
+  width: 100px;
+  height: 6px;
+}
+
+/* Percentage text styling */
+.ds-overall-health-text {
+  font-size: var(--font-size-small, 0.875rem);
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+  color: var(--primary-text-color, #333);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Overall:" label styling */
+.ds-overall-health-label {
+  font-size: var(--font-size-small, 0.875rem);
+  color: var(--secondary-text-color, #666);
+  margin-right: var(--spacing-xs, 0.25rem);
+}
+
+/* Inline placement for Analytics "Hits to Destroy" section header */
+.ds-overall-health-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.25rem);
+  margin-left: auto;
+  margin-right: var(--spacing-sm, 0.5rem);
+}
+
+/* Analytics section header flex layout to accommodate health bar */
+.ds-analytics-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 1rem);
+  flex-wrap: nowrap;
+}
+
+.ds-analytics-section-header h4 {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Responsive adjustments for smaller screens
+   ============================================ */
+
+@media (max-width: 600px) {
+  .ds-overall-health-bar .ds-health-bar {
+    width: 80px;
+  }
+
+  .ds-overall-health-text {
+    min-width: 35px;
+    font-size: var(--font-size-xs, 0.75rem);
+  }
+
+  .ds-overall-health-label {
+    display: none;
+  }
+}
+
 /* Status Effects */
 .ds-status-effects {
   display: flex;

@@ -48,6 +48,10 @@ const CSS_CLASSES = Object.freeze({
   oxygenBar: 'ds-oxygen-bar',
   oxygenFill: 'ds-oxygen-fill',
   oxygenText: 'ds-oxygen-text',
+  overallHealthHeader: 'ds-overall-health-header',
+  overallHealthLabel: 'ds-overall-health-label',
+  overallHealthBar: 'ds-overall-health-bar',
+  overallHealthText: 'ds-overall-health-text',
 });
 
 /**
@@ -78,6 +82,9 @@ class HierarchicalAnatomyRenderer {
   /** @type {Map<string, HTMLElement>} */
   #partElements;
 
+  /** @type {number|null} */
+  #overallHealthPercent;
+
   /**
    * Expose constants for testing
    */
@@ -105,6 +112,22 @@ class HierarchicalAnatomyRenderer {
     this.#containerElement = containerElement;
     this.#logger = logger;
     this.#partElements = new Map();
+    this.#overallHealthPercent = null;
+  }
+
+  /**
+   * Set the overall health percentage to display.
+   *
+   * @param {number} percent - Health percentage (0-100)
+   */
+  setOverallHealth(percent) {
+    if (!Number.isFinite(percent)) {
+      this.#overallHealthPercent = null;
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    this.#overallHealthPercent = clamped;
   }
 
   /**
@@ -131,6 +154,11 @@ class HierarchicalAnatomyRenderer {
     this.#containerElement.setAttribute('role', 'tree');
     this.#containerElement.setAttribute('aria-label', 'Body parts hierarchy');
 
+    if (this.#overallHealthPercent !== null) {
+      const healthHeader = this.#createOverallHealthHeader();
+      this.#containerElement.appendChild(healthHeader);
+    }
+
     // Render root node and children recursively
     const rootElement = this.#renderNode(hierarchyData, 0);
     this.#containerElement.appendChild(rootElement);
@@ -138,6 +166,43 @@ class HierarchicalAnatomyRenderer {
     this.#logger.info(
       `[HierarchicalAnatomyRenderer] Rendered ${this.#partElements.size} parts`
     );
+  }
+
+  /**
+   * Create the overall health bar header element.
+   * @private
+   * @returns {HTMLElement}
+   */
+  #createOverallHealthHeader() {
+    const header = document.createElement('div');
+    header.className = CSS_CLASSES.overallHealthHeader;
+
+    const label = document.createElement('span');
+    label.className = CSS_CLASSES.overallHealthLabel;
+    label.textContent = 'Overall:';
+
+    const barContainer = document.createElement('div');
+    barContainer.className = CSS_CLASSES.overallHealthBar;
+
+    const bar = document.createElement('div');
+    bar.className = CSS_CLASSES.healthBar;
+
+    const fill = document.createElement('div');
+    fill.className = CSS_CLASSES.healthBarFill;
+    fill.style.width = `${this.#overallHealthPercent}%`;
+    this.#updateHealthBarColor(fill, this.#overallHealthPercent);
+
+    const text = document.createElement('span');
+    text.className = CSS_CLASSES.overallHealthText;
+    text.textContent = `${this.#overallHealthPercent}%`;
+
+    bar.appendChild(fill);
+    barContainer.appendChild(bar);
+    barContainer.appendChild(text);
+    header.appendChild(label);
+    header.appendChild(barContainer);
+
+    return header;
   }
 
   /**

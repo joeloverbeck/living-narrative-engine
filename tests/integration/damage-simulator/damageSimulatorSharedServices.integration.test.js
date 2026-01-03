@@ -65,6 +65,9 @@ describe('Damage Simulator Shared Services Integration', () => {
         dispatch: () => {},
         subscribe: () => ({ unsubscribe: () => {} }),
       });
+      container.register(tokens.InjuryAggregationService, {
+        calculateOverallHealth: () => 100,
+      });
       container.register(tokens.IEntityManager, {
         getEntity: () => null,
         createEntity: () => 'test-entity',
@@ -206,6 +209,9 @@ describe('Damage Simulator Shared Services Integration', () => {
       });
       container.register(tokens.ISchemaValidator, {
         validate: () => ({ valid: true }),
+      });
+      container.register(tokens.InjuryAggregationService, {
+        calculateOverallHealth: () => 100,
       });
       container.register(tokens.OperationInterpreter, {
         execute: () => Promise.resolve({}),

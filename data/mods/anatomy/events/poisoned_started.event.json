@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../schemas/event.schema.json",
+  "id": "anatomy:poisoned_started",
+  "description": "Dispatched when a poison effect is applied to a body part or entity. Fires after the poisoned component is added.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "Entity ID of the character affected by poisoning"
+      },
+      "partId": {
+        "type": ["string", "null"],
+        "description": "Entity ID of the poisoned body part. Null or omitted when scope is 'entity'."
+      },
+      "scope": {
+        "type": "string",
+        "enum": ["part", "entity"],
+        "description": "Whether poison was applied to a specific part or the whole entity"
+      },
+      "timestamp": {
+        "type": "integer",
+        "description": "Unix timestamp when poisoning started"
+      }
+    },
+    "required": ["entityId", "scope", "timestamp"],
+    "additionalProperties": false
+  }
+}

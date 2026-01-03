@@ -12,6 +12,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../shared/RecipeSelectorService.js').default} RecipeSelectorService */
 /** @typedef {import('../shared/EntityLoadingService.js').default} EntityLoadingService */
 /** @typedef {import('../../anatomy/anatomyDataExtractor.js').default} AnatomyDataExtractor */
+/** @typedef {import('../../anatomy/services/injuryAggregationService.js').default} InjuryAggregationService */
 
 /**
  * Required DOM element IDs from HTML structure
@@ -64,6 +65,9 @@ class DamageSimulatorUI {
   /** @type {AnatomyDataExtractor} */
   #anatomyDataExtractor;
 
+  /** @type {InjuryAggregationService} */
+  #injuryAggregationService;
+
   /** @type {ISafeEventDispatcher} */
   #eventBus;
 
@@ -94,6 +98,7 @@ class DamageSimulatorUI {
    * @param {RecipeSelectorService} dependencies.recipeSelectorService
    * @param {EntityLoadingService} dependencies.entityLoadingService
    * @param {AnatomyDataExtractor} dependencies.anatomyDataExtractor
+   * @param {InjuryAggregationService} dependencies.injuryAggregationService
    * @param {ISafeEventDispatcher} dependencies.eventBus
    * @param {ILogger} dependencies.logger
    */
@@ -101,6 +106,7 @@ class DamageSimulatorUI {
     recipeSelectorService,
     entityLoadingService,
     anatomyDataExtractor,
+    injuryAggregationService,
     eventBus,
     logger,
   }) {
@@ -116,6 +122,12 @@ class DamageSimulatorUI {
     validateDependency(anatomyDataExtractor, 'IAnatomyDataExtractor', console, {
       requiredMethods: ['extractFromEntity'],
     });
+    validateDependency(
+      injuryAggregationService,
+      'InjuryAggregationService',
+      console,
+      { requiredMethods: ['calculateOverallHealth'] }
+    );
     validateDependency(eventBus, 'IEventBus', console, {
       requiredMethods: ['dispatch', 'subscribe'],
     });
@@ -126,6 +138,7 @@ class DamageSimulatorUI {
     this.#recipeSelectorService = recipeSelectorService;
     this.#entityLoadingService = entityLoadingService;
     this.#anatomyDataExtractor = anatomyDataExtractor;
+    this.#injuryAggregationService = injuryAggregationService;
     this.#eventBus = eventBus;
     this.#logger = logger;
 
@@ -616,13 +629,124 @@ class DamageSimulatorUI {
    */
   #renderAnatomy(anatomyData) {
     const renderer = this.#childComponents.get('anatomyRenderer');
+    const analyticsPanel = this.#childComponents.get('analytics');
+    const shouldSetOverallHealth =
+      (renderer && typeof renderer.setOverallHealth === 'function') ||
+      (analyticsPanel && typeof analyticsPanel.setOverallHealth === 'function');
+    let overallHealth = null;
+
+    if (shouldSetOverallHealth) {
+      const partInfos = this.#buildPartInfosFromHierarchy(anatomyData);
+      overallHealth =
+        this.#injuryAggregationService.calculateOverallHealth(partInfos);
+    }
+
     if (renderer) {
+      if (typeof renderer.setOverallHealth === 'function') {
+        renderer.setOverallHealth(overallHealth);
+      }
       renderer.render(anatomyData);
     } else {
       this.#logger.debug(
         '[DamageSimulatorUI] No anatomyRenderer child component set'
       );
     }
+
+    if (analyticsPanel && typeof analyticsPanel.setOverallHealth === 'function') {
+      analyticsPanel.setOverallHealth(overallHealth);
+    }
+  }
+
+  /**
+   * Convert hierarchy nodes to partInfos format for overall health calculation.
+   * @private
+   * @param {Object|null} anatomyData
+   * @returns {Array<{healthPercentage: number, healthCalculationWeight: number, vitalOrganCap: {threshold: number, capValue: number}|null}>}
+   */
+  #buildPartInfosFromHierarchy(anatomyData) {
+    if (!anatomyData || typeof anatomyData !== 'object') {
+      return [];
+    }
+
+    const partInfos = [];
+    const stack = [anatomyData];
+
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node || typeof node !== 'object') {
+        continue;
+      }
+
+      const health = node.health;
+      if (health) {
+        const healthPercentage = this.#calculateHealthPercentage(health);
+        const partComponent = node.components?.['anatomy:part'];
+        const vitalComponent = node.components?.['anatomy:vital_organ'];
+
+        partInfos.push({
+          healthPercentage,
+          healthCalculationWeight: this.#getHealthCalculationWeight(partComponent),
+          vitalOrganCap: this.#getVitalOrganCap(vitalComponent),
+        });
+      }
+
+      if (Array.isArray(node.children)) {
+        for (const child of node.children) {
+          stack.push(child);
+        }
+      }
+    }
+
+    return partInfos;
+  }
+
+  /**
+   * Calculate health percentage from node health data.
+   * @private
+   * @param {{current: number, max: number}} health
+   * @returns {number}
+   */
+  #calculateHealthPercentage(health) {
+    if (!health || health.max <= 0) {
+      return 0;
+    }
+
+    const percentage = (health.current / health.max) * 100;
+    return Math.round(Math.max(0, Math.min(100, percentage)));
+  }
+
+  /**
+   * Extract health calculation weight from anatomy:part data.
+   * @private
+   * @param {object|undefined} partComponent
+   * @returns {number}
+   */
+  #getHealthCalculationWeight(partComponent) {
+    const weight = partComponent?.health_calculation_weight;
+    return typeof weight === 'number' && weight >= 0 ? weight : 1;
+  }
+
+  /**
+   * Extract vital organ cap data when anatomy:vital_organ is present.
+   * @private
+   * @param {object|undefined} vitalComponent
+   * @returns {{threshold: number, capValue: number}|null}
+   */
+  #getVitalOrganCap(vitalComponent) {
+    if (!vitalComponent) {
+      return null;
+    }
+
+    return {
+      threshold:
+        typeof vitalComponent.healthCapThreshold === 'number'
+          ? vitalComponent.healthCapThreshold
+          : 20,
+      capValue:
+        typeof vitalComponent.healthCapValue === 'number'
+          ? vitalComponent.healthCapValue
+          : 30,
+    };
   }
 
   /**
