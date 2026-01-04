@@ -1611,6 +1611,36 @@ class BaseModTestFixture {
       throw new Error('ModTestFixture: Test environment not initialized');
     }
 
+    // ENTIDAPI-003: Validate equipment component has content
+    if (componentId === 'clothing:equipment' && componentData?.equipped) {
+      const slots = Object.keys(componentData.equipped);
+      const emptySlots = slots.filter((slot) => {
+        const slotData = componentData.equipped[slot];
+        return !slotData || Object.keys(slotData).length === 0;
+      });
+      if (emptySlots.length === slots.length && slots.length > 0) {
+        console.warn(
+          `[ModTestFixture] Equipment modification has all empty slots (${slots.join(', ')}). ` +
+            `This usually indicates incorrect entity ID usage (e.g., using .id on a string from createEntity()).`
+        );
+      }
+      // Also check for undefined values in nested slot data
+      for (const slot of slots) {
+        const slotData = componentData.equipped[slot];
+        if (slotData && typeof slotData === 'object') {
+          const undefinedLayers = Object.entries(slotData)
+            .filter(([, v]) => v === undefined)
+            .map(([k]) => k);
+          if (undefinedLayers.length > 0) {
+            console.warn(
+              `[ModTestFixture] Equipment slot '${slot}' has undefined layer values: ${undefinedLayers.join(', ')}. ` +
+                `createEntity() returns a string ID, not an object - don't use .id on it.`
+            );
+          }
+        }
+      }
+    }
+
     return await this.testEnv.entityManager.addComponent(
       entityId,
       componentId,
@@ -1652,18 +1682,38 @@ class BaseModTestFixture {
 
   /**
    * Cleans up the test environment.
+   * Wraps each cleanup step in try-catch to ensure all steps execute
+   * even if earlier steps fail.
    */
   cleanup() {
+    const errors = [];
+
     this.disableDiagnostics();
 
     // Clear tracer to prevent memory leaks
-    if (this.scopeTracer) {
-      this.scopeTracer.clear();
-      this.scopeTracer.disable();
+    try {
+      if (this.scopeTracer) {
+        this.scopeTracer.clear();
+        this.scopeTracer.disable();
+      }
+    } catch (err) {
+      errors.push({ step: 'scopeTracer.clear', error: err });
     }
 
-    if (this.testEnv) {
-      this.testEnv.cleanup();
+    try {
+      if (this.testEnv) {
+        this.testEnv.cleanup();
+      }
+    } catch (err) {
+      errors.push({ step: 'testEnv.cleanup', error: err });
+    }
+
+    // Report aggregated errors
+    if (errors.length > 0) {
+      const message = errors
+        .map((e) => `${e.step}: ${e.error.message}`)
+        .join('\n');
+      console.error(`Cleanup encountered ${errors.length} error(s):\n${message}`);
     }
   }
 
@@ -1953,6 +2003,37 @@ export class ModActionTestFixture extends BaseModTestFixture {
   }
 
   /**
+   * Validates entity components against action's forbidden_components.
+   * Logs warnings if conflicts are detected (opt-out via validateConflicts: false).
+   *
+   * @param {object} entity - The entity to validate
+   * @param {object} options - Options including validateConflicts flag
+   * @param {string} methodName - Name of the calling method for warning context
+   * @private
+   */
+  #validateComponentConflicts(entity, options = {}, methodName = 'unknown') {
+    if (options.validateConflicts === false) return;
+    if (!this._actionDefinition) return;
+
+    const forbiddenActor =
+      this._actionDefinition.forbidden_components?.actor || [];
+    const entityComponents = Object.keys(entity.components || {});
+
+    const conflicts = entityComponents.filter((c) =>
+      forbiddenActor.includes(c)
+    );
+
+    for (const conflict of conflicts) {
+      console.warn(
+        `[ModTestFixture Warning] Entity '${entity.id}' has component '${conflict}' ` +
+          `which is in forbidden_components.actor for action '${this._actionDefinition.id || this.actionId}'.\n` +
+          `This may cause the action to be unavailable in tests.\n` +
+          `To disable this warning, use: ${methodName}([...], { validateConflicts: false })`
+      );
+    }
+  }
+
+  /**
    * Creates a standard actor-target setup for the action.
    *
    * @param {Array<string>} [names] - Names for actor and target
@@ -1979,6 +2060,18 @@ export class ModActionTestFixture extends BaseModTestFixture {
     if (mergedOptions.includeRoom !== false) {
       entities.unshift(ModEntityScenarios.createRoom('room1', 'Test Room'));
     }
+
+    // Validate component conflicts with action's forbidden_components
+    this.#validateComponentConflicts(
+      scenario.actor,
+      mergedOptions,
+      'createStandardActorTarget'
+    );
+    this.#validateComponentConflicts(
+      scenario.target,
+      mergedOptions,
+      'createStandardActorTarget'
+    );
 
     this.reset(entities);
     return scenario;

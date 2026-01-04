@@ -1190,23 +1190,49 @@ export class ScopeResolverHelpers {
           currentEntityManager
         );
 
+        // DIAGNOSTIC: Trace the resolver execution
+        console.log('[RESOLVER clothing:topmost_clothing] Starting resolution:', {
+          actorEntityId,
+          hasEntityManager: !!currentEntityManager,
+          contextActorId: context?.actor?.id,
+        });
+
         if (!actorEntityId) {
+          console.log('[RESOLVER clothing:topmost_clothing] No actorEntityId, returning empty');
           return { success: true, value: new Set() };
         }
 
         try {
+          // Check equipment directly from entityManager
+          const equipment = currentEntityManager.getComponentData(
+            actorEntityId,
+            'clothing:equipment'
+          );
+          console.log('[RESOLVER clothing:topmost_clothing] Equipment from entityManager:', {
+            actorEntityId,
+            equipment: equipment ? JSON.stringify(equipment) : 'null',
+          });
+
+          console.log('[RESOLVER clothing:topmost_clothing] About to create ClothingAccessibilityService');
           // Create ClothingAccessibilityService with CURRENT entityManager
+          // Note: entitiesGateway is not available in testEnv, pass null
           const clothingService = new ClothingAccessibilityService({
             logger,
             entityManager: currentEntityManager,
-            entitiesGateway: testEnv.entitiesGateway || null,
+            entitiesGateway: null,
           });
+          console.log('[RESOLVER clothing:topmost_clothing] ClothingAccessibilityService created');
 
+          console.log('[RESOLVER clothing:topmost_clothing] About to call getAccessibleItems');
           // Use ClothingAccessibilityService to get accessible items
           const accessibleItems = clothingService.getAccessibleItems(
             actorEntityId,
             { mode: 'topmost', context: 'removal' }
           );
+
+          console.log('[RESOLVER clothing:topmost_clothing] ClothingAccessibilityService returned:', {
+            accessibleItems,
+          });
 
           // Convert array to Set
           return {
@@ -1214,6 +1240,8 @@ export class ScopeResolverHelpers {
             value: new Set(accessibleItems),
           };
         } catch (error) {
+          console.log('[RESOLVER clothing:topmost_clothing] CAUGHT ERROR:', error.message);
+          console.log('[RESOLVER clothing:topmost_clothing] Error stack:', error.stack);
           logger.warn('Failed to resolve clothing:topmost_clothing scope', {
             actorId: actorEntityId,
             error: error.message,
@@ -1383,12 +1411,13 @@ export class ScopeResolverHelpers {
         location: locationEntity, // Required for scopes starting with `location.*`
         get container() {
           // Prefer a real container if the test environment exposes one
-          if (testEnv.container && typeof testEnv.container.resolve === 'function') {
+          // Use 'in' check to avoid triggering strict proxy errors on testEnv
+          if ('container' in testEnv && testEnv.container && typeof testEnv.container.resolve === 'function') {
             return testEnv.container;
           }
 
           // Fallback: synthesize a minimal container that can serve BodyGraphService
-          if (testEnv.bodyGraphService) {
+          if ('bodyGraphService' in testEnv && testEnv.bodyGraphService) {
             return {
               resolve: (token) =>
                 token === coreTokens.BodyGraphService ? testEnv.bodyGraphService : undefined,

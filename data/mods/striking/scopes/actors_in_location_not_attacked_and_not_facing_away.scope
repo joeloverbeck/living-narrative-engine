@@ -1,0 +1,10 @@
+// For sucker_punch_target - combines not-attacked check with facing_away filter
+striking:actors_in_location_not_attacked_and_not_facing_away := entities(core:position)[][{
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-current-actor" },
+    { "condition_ref": "core:entity-has-actor-component" },
+    { "condition_ref": "attack-states:entity-not-attacked-by-actor" },
+    { "!": { "condition_ref": "facing-states:entity-in-facing-away" } }
+  ]
+}]

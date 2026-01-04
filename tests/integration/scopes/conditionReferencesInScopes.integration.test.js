@@ -7,6 +7,7 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 
 describe('Condition References in Scope DSL Integration Tests', () => {
   let gameDataRepository;
@@ -227,7 +228,7 @@ describe('Condition References in Scope DSL Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    test('should handle missing condition_ref gracefully', () => {
+    test('should throw ScopeResolutionError for missing condition_ref (fail-fast)', () => {
       // Arrange
       const dslExpression =
         'entities(core:person)[{"condition_ref": "core:nonexistent-condition"}]';
@@ -251,16 +252,10 @@ describe('Condition References in Scope DSL Integration Tests', () => {
       };
 
       // Act & Assert
-      // The JsonLogicEvaluationService should handle missing conditions gracefully
-      // by returning a safe default (false), so no entities should match
-      const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(0); // No entities should match due to failed condition resolution
-
-      // Verify error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Could not resolve condition_ref')
-      );
+      // The system now throws ScopeResolutionError for missing conditions (fail-fast methodology)
+      expect(() =>
+        scopeEngine.resolve(ast, actorEntity, runtimeCtx)
+      ).toThrow(ScopeResolutionError);
     });
   });
 });

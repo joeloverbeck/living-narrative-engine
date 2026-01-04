@@ -580,6 +580,223 @@ describe('ActionIndex', () => {
     });
   });
 
+  describe('getCandidateActionsWithDiagnostics', () => {
+    let diagnosticActionIndex;
+
+    beforeEach(() => {
+      diagnosticActionIndex = new ActionIndex({ logger, entityManager });
+      const actionDefinitions = [
+        {
+          id: 'core:speak',
+          name: 'Speak',
+          // No requirements
+        },
+        {
+          id: 'positioning:stand',
+          name: 'Stand',
+          // No requirements
+        },
+        {
+          id: 'personal-space:get_close',
+          name: 'Get Close',
+          forbidden_components: {
+            actor: ['personal-space-states:closeness'],
+          },
+        },
+        {
+          id: 'combat:attack',
+          name: 'Attack',
+          required_components: { actor: ['core:combat'] },
+          forbidden_components: {
+            actor: ['status:paralyzed'],
+          },
+        },
+        {
+          id: 'movement:run',
+          name: 'Run',
+          forbidden_components: {
+            actor: ['status:exhausted', 'status:sitting'],
+          },
+        },
+      ];
+      diagnosticActionIndex.buildIndex(actionDefinitions);
+    });
+
+    it('should have getCandidateActionsWithDiagnostics method callable', () => {
+      expect(typeof diagnosticActionIndex.getCandidateActionsWithDiagnostics).toBe('function');
+    });
+
+    it('should return {candidates: [], rejected: []} structure', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      expect(result).toHaveProperty('candidates');
+      expect(result).toHaveProperty('rejected');
+      expect(Array.isArray(result.candidates)).toBe(true);
+      expect(Array.isArray(result.rejected)).toBe(true);
+    });
+
+    it('should include actionId in each rejection', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      expect(result.rejected.length).toBeGreaterThan(0);
+      for (const rejection of result.rejected) {
+        expect(rejection).toHaveProperty('actionId');
+        expect(typeof rejection.actionId).toBe('string');
+      }
+    });
+
+    it('should include reason in each rejection', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      expect(result.rejected.length).toBeGreaterThan(0);
+      for (const rejection of result.rejected) {
+        expect(rejection).toHaveProperty('reason');
+        expect(rejection.reason).toBe('FORBIDDEN_COMPONENT');
+      }
+    });
+
+    it('should include forbiddenComponents in each rejection', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      const getCloseRejection = result.rejected.find(
+        (r) => r.actionId === 'personal-space:get_close'
+      );
+      expect(getCloseRejection).toBeDefined();
+      expect(getCloseRejection.forbiddenComponents).toEqual([
+        'personal-space-states:closeness',
+      ]);
+    });
+
+    it('should include actorHasComponents in each rejection', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+        'core:basic',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      const getCloseRejection = result.rejected.find(
+        (r) => r.actionId === 'personal-space:get_close'
+      );
+      expect(getCloseRejection).toBeDefined();
+      expect(getCloseRejection.actorHasComponents).toEqual([
+        'personal-space-states:closeness',
+      ]);
+    });
+
+    it('should maintain original getCandidateActions behavior unchanged', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+      ]);
+
+      const originalResult = diagnosticActionIndex.getCandidateActions(actorEntity);
+      const diagnosticResult = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      expect(Array.isArray(originalResult)).toBe(true);
+      expect(diagnosticResult.candidates.map((a) => a.id).sort()).toEqual(
+        originalResult.map((a) => a.id).sort()
+      );
+    });
+
+    it('should have same filtering logic in diagnostic method as original', () => {
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+        'status:paralyzed',
+      ]);
+
+      const originalResult = diagnosticActionIndex.getCandidateActions(actorEntity);
+      const diagnosticResult = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      // Both should exclude combat:attack due to status:paralyzed
+      expect(originalResult.map((a) => a.id)).not.toContain('combat:attack');
+      expect(diagnosticResult.candidates.map((a) => a.id)).not.toContain('combat:attack');
+      expect(diagnosticResult.rejected.map((r) => r.actionId)).toContain('combat:attack');
+    });
+
+    it('should return empty rejected array when all actions pass', () => {
+      const actorEntity = { id: 'clean-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue(['core:basic']);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      expect(result.rejected).toEqual([]);
+      expect(result.candidates.length).toBeGreaterThan(0);
+    });
+
+    it('should track multiple rejections', () => {
+      const actorEntity = { id: 'multi-forbidden-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+        'status:paralyzed',
+        'status:exhausted',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      // Should have rejections for: get_close (closeness), attack (paralyzed), run (exhausted)
+      expect(result.rejected.length).toBe(3);
+      expect(result.rejected.map((r) => r.actionId).sort()).toEqual([
+        'combat:attack',
+        'movement:run',
+        'personal-space:get_close',
+      ]);
+    });
+
+    it('should return empty arrays for null entity', () => {
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(null);
+
+      expect(result.candidates).toEqual([]);
+      expect(result.rejected).toEqual([]);
+    });
+
+    it('should return empty arrays for entity without id', () => {
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics({});
+
+      expect(result.candidates).toEqual([]);
+      expect(result.rejected).toEqual([]);
+    });
+
+    it('should match example output format from ticket', () => {
+      const actorEntity = { id: 'example-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'personal-space-states:closeness',
+      ]);
+
+      const result = diagnosticActionIndex.getCandidateActionsWithDiagnostics(actorEntity);
+
+      // Verify structure matches ticket example
+      expect(result.candidates.every((c) => c.id)).toBe(true);
+      expect(result.rejected.length).toBe(1);
+      expect(result.rejected[0]).toEqual({
+        actionId: 'personal-space:get_close',
+        reason: 'FORBIDDEN_COMPONENT',
+        forbiddenComponents: ['personal-space-states:closeness'],
+        actorHasComponents: ['personal-space-states:closeness'],
+      });
+    });
+  });
+
   describe('forbidden components', () => {
     it('should build index with forbidden components', () => {
       const actionDefinitions = [
@@ -739,7 +956,7 @@ describe('ActionIndex', () => {
         success: jest.fn(),
       };
 
-      const candidates = actionIndex.getCandidateActions(actorEntity, trace);
+      actionIndex.getCandidateActions(actorEntity, trace);
 
       // Verify trace messages
       expect(trace.info).toHaveBeenCalledWith(

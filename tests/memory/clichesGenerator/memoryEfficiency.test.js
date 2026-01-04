@@ -412,8 +412,9 @@ describe('Clichés Generator - Memory Tests', () => {
     it('should clean up DOM references properly', async () => {
       // Create multiple DOM elements
       const elementsCreated = [];
+      const ELEMENT_COUNT = 20;
 
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < ELEMENT_COUNT; i++) {
         const div = document.createElement('div');
         div.id = `cliche-element-${i}`;
         div.innerHTML = `<span>Cliche content ${i}</span>`;
@@ -421,7 +422,8 @@ describe('Clichés Generator - Memory Tests', () => {
         elementsCreated.push(div);
       }
 
-      const memoryWithDOM = process.memoryUsage().heapUsed;
+      // Verify elements were created
+      expect(document.body.children.length).toBe(ELEMENT_COUNT);
 
       // Clean up DOM
       elementsCreated.forEach((element) => {
@@ -429,18 +431,16 @@ describe('Clichés Generator - Memory Tests', () => {
       });
       elementsCreated.length = 0;
 
+      // Verify elements removed BEFORE testBed cleanup
+      expect(document.body.children.length).toBe(0);
+
       // Also clean up test bed DOM
       await testBed.cleanup();
 
-      // Force garbage collection
-      if (global.gc) global.gc();
-
-      const memoryAfterCleanup = process.memoryUsage().heapUsed;
-
-      // DOM cleanup should free memory
-      expect(memoryAfterCleanup).toBeLessThanOrEqual(memoryWithDOM);
-
-      // Verify DOM is actually cleaned
+      // Behavioral assertion - DOM is clean
+      // NOTE: Memory assertions removed - GC timing is non-deterministic.
+      // global.gc() is a hint, not a guarantee, and cleanup operations
+      // themselves allocate memory (clearing mocks, string operations).
       expect(document.body.innerHTML).toBe('');
     });
 

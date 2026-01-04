@@ -32,6 +32,7 @@ import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import {
   RESPIRATORY_ORGAN_COMPONENT_ID,
   ANATOMY_PART_COMPONENT_ID as PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID as PART_HEALTH_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { OXYGEN_DEPLETED_EVENT_ID as OXYGEN_DEPLETED_EVENT } from '../../constants/eventIds.js';
 
@@ -181,6 +182,15 @@ class DepleteOxygenHandler extends BaseOperationHandler {
         );
 
         if (partComponent?.ownerEntityId === targetEntityId) {
+          const healthData = this.#entityManager.getComponentData(
+            organEntityId,
+            PART_HEALTH_COMPONENT_ID
+          );
+
+          if (healthData && healthData.currentHealth <= 0) {
+            continue;
+          }
+
           const organData = this.#entityManager.getComponentData(
             organEntityId,
             RESPIRATORY_ORGAN_COMPONENT_ID

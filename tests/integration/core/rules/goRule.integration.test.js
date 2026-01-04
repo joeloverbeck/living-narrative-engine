@@ -124,11 +124,22 @@ describe('core_handle_go rule integration', () => {
       actions: expandMacros(goRule.actions, macroRegistry, null),
     };
 
+    // Define the anatomy:actor-can-move condition for prerequisite evaluation
+    const actorCanMoveCondition = {
+      id: 'anatomy:actor-can-move',
+      description: 'Checks if the actor has functioning legs capable of movement',
+      logic: {
+        hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false],
+      },
+    };
+
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'movement:event-is-action-go' ? eventIsActionGo : undefined
-      ),
+      getConditionDefinition: jest.fn((id) => {
+        if (id === 'movement:event-is-action-go') return eventIsActionGo;
+        if (id === 'anatomy:actor-can-move') return actorCanMoveCondition;
+        return undefined;
+      }),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events
         const commonEvents = {

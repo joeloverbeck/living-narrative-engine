@@ -98,6 +98,7 @@ describe('Complex Blocking Scenarios', () => {
     });
 
     // Set up equipment state with all items equipped
+    // Note: fixture.createEntity() returns entity ID string directly
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_upper: {
@@ -120,7 +121,7 @@ describe('Complex Blocking Scenarios', () => {
     // Check removable items via scope resolution
     let removableItems = getRemovableItems(actor.id);
 
-    // Assert: Pants blocked by both items
+    // Assert: Pants blocked by both items (service returns entity IDs)
     expect(removableItems).toContain(belt);
     expect(removableItems).toContain(suspenders);
     expect(removableItems).not.toContain(pants);
@@ -140,7 +141,7 @@ describe('Complex Blocking Scenarios', () => {
 
     removableItems = getRemovableItems(actor.id);
 
-    // Assert: Pants still blocked by suspenders
+    // Assert: Pants still blocked by suspenders (service returns entity IDs)
     expect(removableItems).not.toContain(belt);
     expect(removableItems).toContain(suspenders);
     expect(removableItems).not.toContain(pants);
@@ -157,7 +158,7 @@ describe('Complex Blocking Scenarios', () => {
 
     removableItems = getRemovableItems(actor.id);
 
-    // Assert: Pants now unblocked
+    // Assert: Pants now unblocked (service returns entity IDs)
     expect(removableItems).not.toContain(belt);
     expect(removableItems).not.toContain(suspenders);
     expect(removableItems).toContain(pants);
@@ -220,6 +221,7 @@ describe('Complex Blocking Scenarios', () => {
     });
 
     // Set up equipment state with layered clothing
+    // Note: fixture.createEntity() returns entity ID string directly
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_upper: {
@@ -240,7 +242,7 @@ describe('Complex Blocking Scenarios', () => {
     // Check removable items via scope resolution
     const removableItems = getRemovableItems(actor.id);
 
-    // Assert: Only armor removable
+    // Assert: Only armor removable (service returns entity IDs)
     expect(removableItems).toContain(armor);
     expect(removableItems).not.toContain(shirt);
     expect(removableItems).not.toContain(undershirt);
@@ -297,6 +299,7 @@ describe('Complex Blocking Scenarios', () => {
     });
 
     // Set up equipment state with ring and artifact glove
+    // Note: fixture.createEntity() returns entity ID string directly
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         hands: {
@@ -314,11 +317,12 @@ describe('Complex Blocking Scenarios', () => {
     // Check removable items via scope resolution
     let removableItems = getRemovableItems(actor.id);
 
-    // Assert: Artifact glove blocked by cursed ring
+    // Assert: Artifact glove blocked by cursed ring (service returns entity IDs)
     expect(removableItems).toContain(cursedRing);
     expect(removableItems).not.toContain(artifactGlove);
 
     // Add regular glove to equipment (different hand or slot)
+    // Note: fixture.createEntity() returns entity ID string directly
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         hands: {
@@ -335,7 +339,7 @@ describe('Complex Blocking Scenarios', () => {
 
     removableItems = getRemovableItems(actor.id);
 
-    // Regular glove not blocked (not in blocksRemovalOf list)
+    // Regular glove not blocked (not in blocksRemovalOf list) - service returns entity IDs
     expect(removableItems).toContain(regularGlove);
     expect(removableItems).not.toContain(artifactGlove);
   });

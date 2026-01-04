@@ -19,8 +19,18 @@ export const ENTITY_CACHE_SIZE_LIMIT = CACHE_SIZE_LIMIT;
 let cacheHits = 0;
 let cacheMisses = 0;
 
+// Diagnostic tracking state (SCODSLROB-005)
+let cacheEvictions = 0;
+let cacheInvalidations = 0;
+const cacheTimestamps = new Map(); // cacheKey -> timestamp when cached
+
 const fallbackWarningTimestamps = new Map();
 const FALLBACK_WARN_THROTTLE_MS = 60000;
+
+// Cache staleness warning state (SCODSLROB-004)
+let eventBusConnected = false;
+let stalenessWarningLastLogged = 0;
+const STALENESS_WARNING_THROTTLE_MS = 60000; // 1 minute
 
 // Event bus instance for automatic cache invalidation
 let eventBusInstance = null;
@@ -34,6 +44,13 @@ export function clearEntityCache() {
   entityCache.clear();
   cacheHits = 0;
   cacheMisses = 0;
+  // Reset diagnostic state (SCODSLROB-005)
+  cacheTimestamps.clear();
+  cacheEvictions = 0;
+  cacheInvalidations = 0;
+  // Reset warning throttle so it warns again after cache clear
+  stalenessWarningLastLogged = 0;
+  // Note: Do NOT reset eventBusConnected - that reflects actual setup state
 }
 
 /**
@@ -47,7 +64,81 @@ export function invalidateEntityCache(entityId) {
   const cacheKey = `entity_${entityId}`;
   if (entityCache.has(cacheKey)) {
     entityCache.delete(cacheKey);
+    cacheTimestamps.delete(cacheKey);
+    cacheInvalidations++;
   }
+}
+
+// ============================================================================
+// Cache Diagnostic API (SCODSLROB-005)
+// ============================================================================
+
+/**
+ * Returns cache statistics for diagnostic purposes.
+ *
+ * @returns {{size: number, hits: number, misses: number, evictions: number, invalidations: number, isEventBusConnected: boolean, hitRate: number}} Cache statistics
+ */
+export function getCacheStatistics() {
+  const total = cacheHits + cacheMisses;
+  return {
+    size: entityCache.size,
+    hits: cacheHits,
+    misses: cacheMisses,
+    evictions: cacheEvictions,
+    invalidations: cacheInvalidations,
+    isEventBusConnected: eventBusConnected,
+    hitRate: total > 0 ? cacheHits / total : 0,
+  };
+}
+
+/**
+ * Validates a cache entry against the current entity state.
+ *
+ * @param {string} entityId - Entity instance ID to validate
+ * @param {object} [entityManager] - Optional entity manager to check current state
+ * @returns {{cached: boolean, stale: boolean|null, age: number|null}} Validation result
+ */
+export function validateCacheEntry(entityId, entityManager) {
+  const cacheKey = `entity_${entityId}`;
+
+  if (!entityCache.has(cacheKey)) {
+    return { cached: false, stale: null, age: null };
+  }
+
+  const cachedData = entityCache.get(cacheKey);
+  const cachedAt = cacheTimestamps.get(cacheKey);
+  const age = cachedAt ? Date.now() - cachedAt : null;
+
+  // Check for staleness if entityManager provided
+  let stale = false;
+  if (entityManager) {
+    const currentEntity = entityManager.getEntity?.(entityId);
+    if (currentEntity) {
+      const currentComponents = Object.keys(currentEntity.components || {});
+      const cachedComponents = Object.keys(cachedData?.components || cachedData || {});
+      stale =
+        currentComponents.length !== cachedComponents.length ||
+        !currentComponents.every((k) => cachedComponents.includes(k));
+    }
+  }
+
+  return { cached: true, stale, age };
+}
+
+/**
+ * Returns a snapshot of the current cache state for diagnostic purposes.
+ *
+ * @returns {Map<string, {data: object, cachedAt: number|null}>} Snapshot of cache state
+ */
+export function getCacheSnapshot() {
+  const snapshot = new Map();
+  for (const [key, value] of entityCache.entries()) {
+    snapshot.set(key, {
+      data: { ...value }, // Shallow copy
+      cachedAt: cacheTimestamps.get(key) || null,
+    });
+  }
+  return snapshot;
 }
 
 /**
@@ -63,6 +154,7 @@ export function setupEntityCacheInvalidation(eventBus) {
   }
 
   eventBusInstance = eventBus;
+  eventBusConnected = true;
 
   // Listen for batch component additions (most common during operations like dropItemAtLocation)
   eventBus.subscribe(COMPONENTS_BATCH_ADDED_ID, (event) => {
@@ -88,6 +180,24 @@ export function setupEntityCacheInvalidation(eventBus) {
       invalidateEntityCache(event.payload.entity.id);
     }
   });
+}
+
+/**
+ * Emits a warning if the entity cache is being used without EventBus invalidation setup.
+ * Throttled to once per minute to avoid spam.
+ */
+function warnIfEventBusNotConnected() {
+  if (!eventBusConnected) {
+    const now = Date.now();
+    if (now - stalenessWarningLastLogged > STALENESS_WARNING_THROTTLE_MS) {
+      stalenessWarningLastLogged = now;
+      console.warn(
+        '[SCOPE_4001] Entity cache in use without EventBus invalidation setup. ' +
+          'Call setupEntityCacheInvalidation(eventBus) to enable automatic invalidation. ' +
+          'Stale cache entries may cause incorrect scope resolution.'
+      );
+    }
+  }
 }
 
 /**
@@ -131,9 +241,11 @@ function evictCacheEntries(cacheEventsHandler, logger) {
   for (const key of entityCache.keys()) {
     if (deleted >= entriesToDelete) break;
     entityCache.delete(key);
+    cacheTimestamps.delete(key);
     notifyCacheEvent(cacheEventsHandler, 'evict', key, logger);
     deleted++;
   }
+  cacheEvictions += deleted;
 }
 
 /**
@@ -322,6 +434,7 @@ export function createEvaluationContext(
       entity = entityCache.get(cacheKey);
       cacheHits++;
       notifyCacheEvent(cacheEventsHandler, 'hit', cacheKey, runtimeLogger);
+      warnIfEventBusNotConnected();
 
       if (trace && cacheHits % 1000 === 0) {
         trace.addLog(
@@ -337,6 +450,15 @@ export function createEvaluationContext(
       // Try as entity first (primary path)
       entity = gateway.getEntityInstance(item);
       let resolvedHow = null;
+
+      // DIAGNOSTIC: Log entity resolution
+      console.log('[DIAGNOSTIC entityHelpers] getEntityInstance called:', {
+        item,
+        gotEntity: !!entity,
+        entityId: entity?.id,
+        entityHasComponents: !!entity?.components,
+        componentKeys: entity ? Object.keys(entity.components || {}) : [],
+      });
 
       if (entity) {
         resolvedHow = 'resolved as entity';
@@ -360,6 +482,7 @@ export function createEvaluationContext(
       // Cache the result (with simple LRU eviction)
       evictCacheEntries(cacheEventsHandler, runtimeLogger);
       entityCache.set(cacheKey, entity);
+      cacheTimestamps.set(cacheKey, Date.now());
 
       // Log how the entity was resolved
     }
@@ -372,6 +495,7 @@ export function createEvaluationContext(
         entity = entityCache.get(cacheKey);
         cacheHits++;
         notifyCacheEvent(cacheEventsHandler, 'hit', cacheKey, runtimeLogger);
+        warnIfEventBusNotConnected();
       } else {
         cacheMisses++;
         notifyCacheEvent(cacheEventsHandler, 'miss', cacheKey, runtimeLogger);
@@ -400,6 +524,7 @@ export function createEvaluationContext(
         // Cache the result (with simple LRU eviction)
         evictCacheEntries(cacheEventsHandler, runtimeLogger);
         entityCache.set(cacheKey, entity);
+        cacheTimestamps.set(cacheKey, Date.now());
       }
     } else {
       // No ID property - keep as-is (backwards compatibility)

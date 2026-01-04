@@ -35,7 +35,7 @@
       "description": "Arm to punch with"
     },
     "secondary": {
-      "scope": "core:actors_in_location",
+      "scope": "striking:actors_in_location_not_facing_away",
       "placeholder": "target",
       "description": "Target to punch"
     }

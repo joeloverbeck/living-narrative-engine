@@ -13,6 +13,15 @@ import {
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
+ * @typedef {Object} TargetRequiredValidationResult
+ * @property {boolean} valid
+ * @property {string} [reason]
+ * @property {Object} [details] - Only present when includeDetails: true
+ * @property {Array<{entityId: string, requiredComponentsMissing: string[]}>} [details.rejectedEntities]
+ * @property {string} [details.targetRole]
+ */
+
+/**
  * @class TargetRequiredComponentsValidator
  * @description Validates target entities have required components.
  * Supports both legacy single-target and multi-target formats.
@@ -38,7 +47,9 @@ class TargetRequiredComponentsValidator {
    *
    * @param {object} actionDef - Action definition with required_components
    * @param {object} targetEntities - Resolved target entities map
-   * @returns {{valid: boolean, reason?: string}} Validation result
+   * @param {Object} [options] - Validation options
+   * @param {boolean} [options.includeDetails=false] - Include detailed rejection info
+   * @returns {TargetRequiredValidationResult} Validation result
    * @example
    * // Action with primary target requirements
    * const actionDef = {
@@ -53,13 +64,19 @@ class TargetRequiredComponentsValidator {
    * const result = validator.validateTargetRequirements(actionDef, targetEntities);
    * // { valid: true }
    */
-  validateTargetRequirements(actionDef, targetEntities) {
+  validateTargetRequirements(actionDef, targetEntities, options = {}) {
+    const { includeDetails = false } = options;
+
     // No required_components defined - always valid
     if (!actionDef.required_components) {
-      return { valid: true };
+      return includeDetails
+        ? { valid: true, details: { rejectedEntities: [] } }
+        : { valid: true };
     }
 
     const requirements = actionDef.required_components;
+    const allRejectedEntities = [];
+    let firstFailureResult = null;
 
     // Check legacy single-target format
     if (
@@ -69,10 +86,19 @@ class TargetRequiredComponentsValidator {
       const result = this.#validateTargetRole(
         LEGACY_TARGET_ROLE,
         requirements[LEGACY_TARGET_ROLE],
-        targetEntities
+        targetEntities,
+        includeDetails
       );
       if (!result.valid) {
-        return result;
+        if (!includeDetails) {
+          return result;
+        }
+        if (!firstFailureResult) {
+          firstFailureResult = result;
+        }
+        if (result.details?.rejectedEntities) {
+          allRejectedEntities.push(...result.details.rejectedEntities);
+        }
       }
     }
 
@@ -82,12 +108,36 @@ class TargetRequiredComponentsValidator {
         const result = this.#validateTargetRole(
           role,
           requirements[role],
-          targetEntities
+          targetEntities,
+          includeDetails
         );
         if (!result.valid) {
-          return result;
+          if (!includeDetails) {
+            return result;
+          }
+          if (!firstFailureResult) {
+            firstFailureResult = result;
+          }
+          if (result.details?.rejectedEntities) {
+            allRejectedEntities.push(...result.details.rejectedEntities);
+          }
         }
       }
+    }
+
+    // Return with details if requested
+    if (includeDetails) {
+      if (firstFailureResult) {
+        return {
+          valid: false,
+          reason: firstFailureResult.reason,
+          details: {
+            targetRole: firstFailureResult.details?.targetRole,
+            rejectedEntities: allRejectedEntities,
+          },
+        };
+      }
+      return { valid: true, details: { rejectedEntities: [] } };
     }
 
     return { valid: true };
@@ -100,16 +150,23 @@ class TargetRequiredComponentsValidator {
    * @param {string} role - Target role (target, primary, secondary, tertiary)
    * @param {string[]} requiredComponents - Required component IDs
    * @param {object} targetEntities - Resolved target entities map
-   * @returns {{valid: boolean, reason?: string}} Validation result with optional failure reason
+   * @param {boolean} includeDetails - Whether to include detailed rejection info
+   * @returns {{valid: boolean, reason?: string, details?: object}} Validation result with optional failure reason and details
    */
-  #validateTargetRole(role, requiredComponents, targetEntities) {
+  #validateTargetRole(role, requiredComponents, targetEntities, includeDetails) {
+    const rejectedEntities = [];
+
     // Guard: Check if targetEntities itself is null/undefined first
     if (targetEntities === null || targetEntities === undefined) {
       this.#logger.debug(`No target entities provided for ${role} validation`);
-      return {
+      const result = {
         valid: false,
         reason: `No target entities available for ${role} validation`,
       };
+      if (includeDetails) {
+        result.details = { targetRole: role, rejectedEntities: [] };
+      }
+      return result;
     }
 
     // No target entity for this role
@@ -117,10 +174,14 @@ class TargetRequiredComponentsValidator {
       this.#logger.debug(
         `No ${role} target entity found for required components validation`
       );
-      return {
+      const result = {
         valid: false,
         reason: `No ${role} target available for validation`,
       };
+      if (includeDetails) {
+        result.details = { targetRole: role, rejectedEntities: [] };
+      }
+      return result;
     }
 
     const targetCandidates = Array.isArray(targetEntities[role])
@@ -131,10 +192,14 @@ class TargetRequiredComponentsValidator {
       this.#logger.debug(
         `Empty ${role} target array for required components validation`
       );
-      return {
+      const result = {
         valid: false,
         reason: `No ${role} target available for validation`,
       };
+      if (includeDetails) {
+        result.details = { targetRole: role, rejectedEntities: [] };
+      }
+      return result;
     }
 
     let hasValidCandidate = false;
@@ -186,9 +251,22 @@ class TargetRequiredComponentsValidator {
         return false;
       };
 
-      const missingComponentId = requiredComponents.find(
-        (componentId) => !hasComponent(componentId)
-      );
+      // Collect missing components based on mode
+      let missingComponentId = null;
+      let allMissingComponents = [];
+
+      if (includeDetails) {
+        // Collect ALL missing components for detailed output
+        allMissingComponents = requiredComponents.filter(
+          (componentId) => !hasComponent(componentId)
+        );
+        missingComponentId = allMissingComponents[0] || null;
+      } else {
+        // Original behavior: find first missing component
+        missingComponentId = requiredComponents.find(
+          (componentId) => !hasComponent(componentId)
+        );
+      }
 
       if (missingComponentId) {
         const entityId = targetEntity.id || 'unknown';
@@ -196,6 +274,14 @@ class TargetRequiredComponentsValidator {
           `Target entity ${entityId} missing required component: ${missingComponentId}`
         );
         lastFailureReason = `Target (${role}) must have component: ${missingComponentId}`;
+
+        // Track rejected entity when includeDetails is true
+        if (includeDetails) {
+          rejectedEntities.push({
+            entityId,
+            requiredComponentsMissing: allMissingComponents,
+          });
+        }
         continue;
       }
 
@@ -204,13 +290,21 @@ class TargetRequiredComponentsValidator {
     }
 
     if (hasValidCandidate) {
-      return { valid: true };
+      const result = { valid: true };
+      if (includeDetails) {
+        result.details = { targetRole: role, rejectedEntities: [] };
+      }
+      return result;
     }
 
-    return {
+    const result = {
       valid: false,
       reason: lastFailureReason,
     };
+    if (includeDetails) {
+      result.details = { targetRole: role, rejectedEntities };
+    }
+    return result;
   }
 }
 

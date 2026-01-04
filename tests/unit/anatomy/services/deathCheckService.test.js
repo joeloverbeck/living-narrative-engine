@@ -40,6 +40,7 @@ describe('DeathCheckService', () => {
 
     mockBodyGraphService = {
       getAllDescendants: jest.fn().mockReturnValue([]),
+      getAllParts: jest.fn().mockReturnValue([]),
     };
 
     service = new DeathCheckService({
@@ -197,6 +198,22 @@ describe('DeathCheckService', () => {
 
     it('should throw if bodyGraphService missing getAllDescendants method', () => {
       const invalidBodyGraphService = {};
+      expect(
+        () =>
+          new DeathCheckService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            eventBus: mockEventBus,
+            injuryAggregationService: mockInjuryAggregationService,
+            bodyGraphService: invalidBodyGraphService,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if bodyGraphService missing getAllParts method', () => {
+      const invalidBodyGraphService = {
+        getAllDescendants: jest.fn(),
+      };
       expect(
         () =>
           new DeathCheckService({
@@ -428,6 +445,190 @@ describe('DeathCheckService', () => {
         expect(result.isDead).toBe(true);
         expect(result.deathInfo.vitalOrganDestroyed).toBe('kidney');
         expect(result.deathInfo.killedBy).toBe('killer-1');
+      });
+    });
+
+    describe('collective vital organ destruction', () => {
+      const setupCollectiveLungs = ({
+        leftHealth,
+        rightHealth,
+        destroyedParts,
+      }) => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return {
+                organType: 'lung',
+                requiresAllDestroyed: true,
+              };
+            }
+            if (entityId === 'lung-left' && componentId === 'anatomy:part_health') {
+              return { currentHealth: leftHealth };
+            }
+            if (entityId === 'lung-right' && componentId === 'anatomy:part_health') {
+              return { currentHealth: rightHealth };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockBodyGraphService.getAllParts.mockReturnValue([
+          'lung-left',
+          'lung-right',
+        ]);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts,
+          isDying: false,
+          isDead: false,
+        });
+      };
+
+      it('should not trigger death when only one collective organ is destroyed', () => {
+        setupCollectiveLungs({
+          leftHealth: 0,
+          rightHealth: 10,
+          destroyedParts: [
+            { partEntityId: 'lung-left', state: 'destroyed' },
+          ],
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+
+      it('should trigger death when all collective organs are destroyed', () => {
+        setupCollectiveLungs({
+          leftHealth: 0,
+          rightHealth: 0,
+          destroyedParts: [
+            { partEntityId: 'lung-left', state: 'destroyed' },
+            { partEntityId: 'lung-right', state: 'destroyed' },
+          ],
+        });
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.causeOfDeath).toBe('vital_organ_destroyed');
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('lung');
+        expect(result.deathInfo.killedBy).toBe('killer-1');
+      });
+
+      it('should trigger death when actor has only one lung entity that is destroyed', () => {
+        // Edge case: Actor with single lung (unusual anatomy)
+        // When that single lung is destroyed, death should be triggered
+        // because all respiratory organs (1 of 1) are destroyed
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              entityId === 'lung-single' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            if (
+              entityId === 'lung-single' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return {
+                organType: 'lung',
+                requiresAllDestroyed: true,
+              };
+            }
+            if (entityId === 'lung-single' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 0 }; // Destroyed
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'One-Lunged Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockBodyGraphService.getAllParts.mockReturnValue(['lung-single']);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'One-Lunged Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [{ partEntityId: 'lung-single', state: 'destroyed' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.causeOfDeath).toBe('vital_organ_destroyed');
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('lung');
+      });
+
+      it('should return no death when actor has no body data', () => {
+        // Edge case: Entity without anatomy:body component
+        // Should handle gracefully without error
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return null; // No body data
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Bodiless Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Bodiless Entity',
+          overallHealthPercentage: 100,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
       });
     });
 
@@ -1559,6 +1760,76 @@ describe('DeathCheckService', () => {
         })
       );
     });
+
+    it('should generate appropriate message for respiratory organ collective destruction', () => {
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:dead') return false;
+          if (componentId === 'anatomy:dying') return false;
+          if (
+            (entityId === 'lung-left' || entityId === 'lung-right') &&
+            componentId === 'anatomy:vital_organ'
+          ) {
+            return true;
+          }
+          return false;
+        }
+      );
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+            return { body: { root: 'torso' } };
+          }
+          if (
+            (entityId === 'lung-left' || entityId === 'lung-right') &&
+            componentId === 'anatomy:vital_organ'
+          ) {
+            return {
+              organType: 'respiratory',
+              killOnDestroy: true,
+              requiresAllDestroyed: true,
+            };
+          }
+          if (
+            (entityId === 'lung-left' || entityId === 'lung-right') &&
+            componentId === 'anatomy:part_health'
+          ) {
+            return { currentHealth: 0 };
+          }
+          if (entityId === 'entity-1' && componentId === 'core:name') {
+            return { text: 'Test Entity' };
+          }
+          return null;
+        }
+      );
+
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'lung-left',
+        'lung-right',
+      ]);
+
+      mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+        entityId: 'entity-1',
+        entityName: 'Test Entity',
+        overallHealthPercentage: 50,
+        destroyedParts: [
+          { partEntityId: 'lung-left', state: 'destroyed' },
+          { partEntityId: 'lung-right', state: 'destroyed' },
+        ],
+        isDying: false,
+        isDead: false,
+      });
+
+      service.checkDeathConditions('entity-1');
+
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'anatomy:entity_died',
+        expect.objectContaining({
+          finalMessage: expect.stringContaining('suffocates'),
+        })
+      );
+    });
   });
 
   describe('entity name handling', () => {
@@ -1769,6 +2040,76 @@ describe('DeathCheckService', () => {
       });
     });
 
+    describe('when collective vital organs are all destroyed', () => {
+      beforeEach(() => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return {
+                organType: 'lung',
+                requiresAllDestroyed: true,
+              };
+            }
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:part_health'
+            ) {
+              return { currentHealth: 0 };
+            }
+            return null;
+          }
+        );
+
+        mockBodyGraphService.getAllParts.mockReturnValue([
+          'lung-left',
+          'lung-right',
+        ]);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'lung-left', state: 'destroyed' },
+            { partEntityId: 'lung-right', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+      });
+
+      it('should return shouldFinalize true with vital organ info', () => {
+        const result = service.evaluateDeathConditions('entity-1', 'killer-1');
+
+        expect(result.shouldFinalize).toBe(true);
+        expect(result.finalizationParams).toEqual({
+          entityId: 'entity-1',
+          causeOfDeath: 'vital_organ_destroyed',
+          damageCauserId: 'killer-1',
+          vitalOrganDestroyed: 'lung',
+        });
+      });
+    });
+
     describe('when critical health causes dying state', () => {
       beforeEach(() => {
         mockEntityManager.hasComponent.mockReturnValue(false);
@@ -1954,6 +2295,611 @@ describe('DeathCheckService', () => {
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           'DeathCheckService: finalizeDeathFromEvaluation called with invalid or non-finalizable evaluation'
+        );
+      });
+    });
+  });
+
+  describe('coverage gaps', () => {
+    describe('Line 297 - evaluateDeathConditions with already dying entity and critical health', () => {
+      it('should return isDying true with shouldFinalize false when entity is already in dying state with critical health', () => {
+        // Setup: entity is already dying AND has critical health
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return true;
+            return false;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 5, // Critical health < 10%
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.evaluateDeathConditions('entity-1');
+
+        expect(result).toEqual({
+          isDead: false,
+          isDying: true,
+          shouldFinalize: false,
+          finalizationParams: null,
+          deathInfo: null,
+        });
+
+        // Should NOT add dying component since already dying
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+          'entity-1',
+          'anatomy:dying',
+          expect.anything()
+        );
+      });
+    });
+
+    describe('Line 423 - #checkVitalOrganDestruction with null summary or no destroyedParts', () => {
+      it('should return isDead false when aggregateInjuries returns null summary', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            return false;
+          }
+        );
+
+        // Return null from aggregateInjuries
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue(null);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+
+      it('should return isDead false when aggregateInjuries returns summary with null destroyedParts', () => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: null, // Explicitly null
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+    });
+
+    describe('Line 493 - #checkPartForVitalOrgan with null vitalOrganData after hasComponent returns true', () => {
+      it('should not trigger death when getComponentData returns null for vital organ after hasComponent returns true', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            // hasComponent returns true for vital organ
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        // But getComponentData returns null (edge case, inconsistent state)
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return null; // Line 493: null vitalOrganData
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'destroyed-part-1', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue([]);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should NOT die because vitalOrganData is null
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+    });
+
+    describe('Line 549 - #checkCollectiveVitalOrganDestruction with missing requiresAllDestroyed', () => {
+      it('should skip parts without requiresAllDestroyed property in collective check', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            if (entityId === 'part-1' && componentId === 'anatomy:vital_organ') {
+              // Line 549: missing requiresAllDestroyed (or false), should be skipped
+              return {
+                organType: 'lung',
+                // requiresAllDestroyed is not present
+                killOnDestroy: true,
+              };
+            }
+            if (entityId === 'part-1' && componentId === 'anatomy:part_health') {
+              return { currentHealth: 0 };
+            }
+            return null;
+          }
+        );
+
+        mockBodyGraphService.getAllParts.mockReturnValue(['part-1']);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should NOT die because the organ doesn't have requiresAllDestroyed: true
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+    });
+
+    describe('Line 560 - #checkCollectiveVitalOrganDestruction with killOnDestroy false', () => {
+      it('should skip collective organs with killOnDestroy false', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return {
+                organType: 'lung',
+                requiresAllDestroyed: true, // Collective organ
+                killOnDestroy: false, // Line 560: killOnDestroy is false
+              };
+            }
+            if (
+              (entityId === 'lung-left' || entityId === 'lung-right') &&
+              componentId === 'anatomy:part_health'
+            ) {
+              return { currentHealth: 0 }; // Both destroyed
+            }
+            return null;
+          }
+        );
+
+        mockBodyGraphService.getAllParts.mockReturnValue([
+          'lung-left',
+          'lung-right',
+        ]);
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'lung-left', state: 'destroyed' },
+            { partEntityId: 'lung-right', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should NOT die because killOnDestroy is false
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+    });
+
+    describe('Lines 589-592 - #checkCollectiveVitalOrganDestruction error handling', () => {
+      it('should log warning and return null when getAllParts throws error', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'entity-1' && componentId === 'anatomy:body') {
+              return { body: { root: 'root-1' } };
+            }
+            return null;
+          }
+        );
+
+        // Lines 589-592: getAllParts throws error
+        mockBodyGraphService.getAllParts.mockImplementation(() => {
+          throw new Error('Body graph failure');
+        });
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should NOT die, error should be caught
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+
+        // Should log warning
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to check collective vital organ destruction'
+          )
+        );
+      });
+    });
+
+    describe('Line 608 - #checkOverallHealthCritical with null summary', () => {
+      it('should return isDying false when aggregateInjuries returns null for health check', () => {
+        mockEntityManager.hasComponent.mockReturnValue(false);
+
+        // First call for vital organ check returns null
+        // Second call for health check also returns null
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue(null);
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should NOT enter dying state when summary is null
+        expect(result.isDead).toBe(false);
+        expect(result.isDying).toBe(false);
+      });
+    });
+
+    describe('Line 666 - perceptible event dispatch with position', () => {
+      it('should dispatch core:perceptible_event when entity has position with locationId', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            // Line 666: Entity has position with locationId
+            if (entityId === 'entity-1' && componentId === 'core:position') {
+              return { locationId: 'location-1' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'destroyed-part-1', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+
+        service.checkDeathConditions('entity-1', 'killer-1');
+
+        // Should dispatch core:perceptible_event
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:perceptible_event',
+          expect.objectContaining({
+            eventName: 'core:perceptible_event',
+            locationId: 'location-1',
+            perceptionType: 'entity_died',
+            actorId: 'entity-1',
+          })
+        );
+      });
+
+      it('should NOT dispatch core:perceptible_event when entity has no position', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return { organType: 'brain' };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            // No position data returned
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'destroyed-part-1', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+
+        service.checkDeathConditions('entity-1', 'killer-1');
+
+        // Should NOT dispatch core:perceptible_event
+        expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
+          'core:perceptible_event',
+          expect.anything()
+        );
+      });
+    });
+
+    describe('Line 765 - default death message fallback', () => {
+      it('should use fallback message for unknown causeOfDeath', () => {
+        // We need to test finalizeDeathFromEvaluation with an unusual causeOfDeath
+        const evaluation = {
+          shouldFinalize: true,
+          finalizationParams: {
+            entityId: 'entity-1',
+            causeOfDeath: 'unknown_cause', // Not 'vital_organ_destroyed' or 'bleeding_out'
+            damageCauserId: null,
+            vitalOrganDestroyed: null,
+          },
+        };
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        service.finalizeDeathFromEvaluation(evaluation);
+
+        // Line 765: Should use fallback message
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:entity_died',
+          expect.objectContaining({
+            finalMessage: 'Test Entity falls dead from their injuries.',
+          })
+        );
+      });
+
+      it('should use fallback message when causeOfDeath is completely undefined', () => {
+        const evaluation = {
+          shouldFinalize: true,
+          finalizationParams: {
+            entityId: 'entity-1',
+            causeOfDeath: undefined, // Undefined cause
+            damageCauserId: null,
+            vitalOrganDestroyed: null,
+          },
+        };
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Mysterious Entity' };
+            }
+            return null;
+          }
+        );
+
+        service.finalizeDeathFromEvaluation(evaluation);
+
+        // Should use fallback message
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'anatomy:entity_died',
+          expect.objectContaining({
+            finalMessage: 'Mysterious Entity falls dead from their injuries.',
+          })
+        );
+      });
+    });
+
+    describe('Line 509 - organType fallback to unknown in checkPartForVitalOrgan', () => {
+      it('should use "unknown" as organType when vitalOrganData.organType is undefined', () => {
+        // Setup: destroyed vital organ with killOnDestroy but no organType
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            if (componentId === 'anatomy:vital_organ') return true;
+            if (componentId === 'anatomy:part_health') return true;
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:vital_organ') {
+              // No organType property - should fall back to 'unknown'
+              return {
+                killOnDestroy: true,
+                // organType is intentionally missing
+              };
+            }
+            if (componentId === 'anatomy:part_health') {
+              return { destroyed: true };
+            }
+            if (componentId === 'core:name') {
+              return { name: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 100,
+          destroyedParts: [{ partEntityId: 'part-1', partName: 'Some Organ' }],
+          isDying: false,
+          isDead: false,
+        });
+
+        mockBodyGraphService.getAllDescendants.mockReturnValue(
+          new Set(['part-1'])
+        );
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should trigger death with 'unknown' organ type
+        expect(result).toEqual(
+          expect.objectContaining({
+            isDead: true,
+            deathInfo: expect.objectContaining({
+              causeOfDeath: 'vital_organ_destroyed',
+              vitalOrganDestroyed: 'unknown',
+            }),
+          })
+        );
+      });
+    });
+
+    describe('Line 563 - organType fallback to unknown in checkCollectiveVitalOrganDestruction', () => {
+      it('should use "unknown" as organType when collective vital organ has no organType', () => {
+        // Setup: collective vital organ with requiresAllDestroyed but no organType
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (componentId === 'anatomy:dying') return false;
+            if (componentId === 'anatomy:vital_organ') return true;
+            if (componentId === 'anatomy:part_health') return true;
+            if (componentId === 'anatomy:body') return true;
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:body') {
+              return { rootPartEntityId: 'root-part' };
+            }
+            if (componentId === 'anatomy:vital_organ') {
+              // requiresAllDestroyed but no organType
+              return {
+                requiresAllDestroyed: true,
+                killOnDestroy: true,
+                // organType is intentionally missing - will fall back to 'unknown'
+              };
+            }
+            if (componentId === 'anatomy:part_health') {
+              // Use currentHealth <= 0 to mark as destroyed (line 576)
+              return { currentHealth: 0 };
+            }
+            if (componentId === 'core:name') {
+              return { name: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 100,
+          destroyedParts: [],
+          isDying: false,
+          isDead: false,
+        });
+
+        // Single collective organ that is destroyed
+        mockBodyGraphService.getAllParts.mockReturnValue(
+          new Set(['collective-organ-1'])
+        );
+
+        const result = service.checkDeathConditions('entity-1');
+
+        // Should trigger death from collective organs with 'unknown' type
+        expect(result).toEqual(
+          expect.objectContaining({
+            isDead: true,
+            deathInfo: expect.objectContaining({
+              causeOfDeath: 'vital_organ_destroyed',
+              vitalOrganDestroyed: 'unknown',
+            }),
+          })
         );
       });
     });

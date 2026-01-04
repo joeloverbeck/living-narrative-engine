@@ -266,11 +266,13 @@ describe('TargetComponentValidationStage - additional coverage', () => {
     expect(pruner.prune).toHaveBeenCalledTimes(1);
     expect(validator.validateTargetComponents).toHaveBeenCalledWith(
       validatedActionDef,
-      expect.objectContaining({ primary: expect.any(Array) })
+      expect.objectContaining({ primary: expect.any(Array) }),
+      {} // Empty options when no action-aware trace
     );
     expect(requiredValidator.validateTargetRequirements).toHaveBeenCalledWith(
       validatedActionDef,
-      expect.any(Object)
+      expect.any(Object),
+      {} // Empty options when no action-aware trace
     );
     expect(logger.debug).toHaveBeenCalledWith(
       "Skipping validation for action 'skip-action' based on configuration"

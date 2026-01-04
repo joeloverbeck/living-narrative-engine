@@ -162,10 +162,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionContext} [baseContext] - The current action context.
    * @param {object} [options] - Optional settings.
    * @param {boolean} [options.trace] - If true, generates a detailed trace of the discovery process.
+   * @param {boolean} [options.diagnostics] - If true, returns diagnostic data about rejected actions.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>} The discovered actions result.
    */
   async getValidActions(actorEntity, baseContext = {}, options = {}) {
-    const { trace: shouldTrace = false } = options;
+    const { trace: shouldTrace = false, diagnostics: shouldDiagnostics = false } = options;
+
+    // If diagnostics requested, force trace creation to capture stage data
+    const forceTrace = shouldDiagnostics || shouldTrace;
     const source = 'ActionDiscoveryService.getValidActions';
 
     // Validate actor entity first
@@ -177,7 +181,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     }
 
     // Create appropriate trace based on tracing configuration
-    const trace = shouldTrace
+    // Force trace creation when diagnostics is requested to capture stage data
+    const trace = forceTrace
       ? await this.#createTraceContext(actorEntity.id, baseContext, options)
       : null;
 
@@ -209,7 +214,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
             actorEntity,
             baseContext,
             trace,
-            shouldTrace
+            shouldTrace,
+            shouldDiagnostics
           );
         },
         {
@@ -224,7 +230,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       actorEntity,
       baseContext,
       trace,
-      shouldTrace
+      shouldTrace,
+      shouldDiagnostics
     );
   }
 
@@ -236,9 +243,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionContext} baseContext - The current action context.
    * @param {TraceContext|null} trace - Optional tracing instance.
    * @param {boolean} shouldTrace - Whether tracing is enabled.
+   * @param {boolean} shouldDiagnostics - Whether diagnostics are requested.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>} The discovered actions result.
    */
-  async #getValidActionsInternal(actorEntity, baseContext, trace, shouldTrace) {
+  async #getValidActionsInternal(actorEntity, baseContext, trace, shouldTrace, shouldDiagnostics = false) {
     const SOURCE = 'getValidActions';
 
     if (
@@ -275,43 +283,58 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       trace?.getTracedActions &&
       typeof trace.getTracedActions === 'function'
     ) {
-      const tracedActions = trace.getTracedActions();
-      const tracingSummary = trace.getTracingSummary?.() || {};
+      try {
+        const tracedActions = trace.getTracedActions();
+        const tracingSummary = trace.getTracingSummary?.() || {};
 
-      this.#logger.debug(
-        `Action discovery completed for actor ${actorEntity.id} with action tracing`,
-        {
-          actorId: actorEntity.id,
-          actionCount: result.actions?.length || 0,
-          errorCount: result.errors?.length || 0,
-          tracedActionCount: tracedActions.size,
-          totalStagesTracked: tracingSummary.totalStagesTracked || 0,
-          sessionDuration: tracingSummary.sessionDuration || 0,
-        }
-      );
-
-      // Write discovery trace to output service if available
-      if (this.#actionTraceOutputService && tracedActions.size > 0) {
         this.#logger.debug(
-          `Writing discovery trace for actor ${actorEntity.id}`,
+          `Action discovery completed for actor ${actorEntity.id} with action tracing`,
           {
             actorId: actorEntity.id,
+            actionCount: result.actions?.length || 0,
+            errorCount: result.errors?.length || 0,
             tracedActionCount: tracedActions.size,
+            totalStagesTracked: tracingSummary.totalStagesTracked || 0,
+            sessionDuration: tracingSummary.sessionDuration || 0,
           }
         );
 
-        // Fire and forget - don't wait for trace writing
-        this.#actionTraceOutputService.writeTrace(trace).catch((writeError) => {
-          this.#logger.warn('Failed to write discovery trace', {
-            error: writeError.message,
-            actorId: actorEntity.id,
+        // Write discovery trace to output service if available
+        if (this.#actionTraceOutputService && tracedActions.size > 0) {
+          this.#logger.debug(
+            `Writing discovery trace for actor ${actorEntity.id}`,
+            {
+              actorId: actorEntity.id,
+              tracedActionCount: tracedActions.size,
+            }
+          );
+
+          // Fire and forget - don't wait for trace writing
+          this.#actionTraceOutputService.writeTrace(trace).catch((writeError) => {
+            this.#logger.warn('Failed to write discovery trace', {
+              error: writeError.message,
+              actorId: actorEntity.id,
+            });
           });
+        }
+      } catch (telemetryError) {
+        this.#logger.warn('Failed to process trace telemetry', {
+          error: telemetryError.message,
+          actorId: actorEntity.id,
         });
       }
     } else {
       this.#logger.debug(
         `Finished action discovery for actor ${actorEntity.id}. Found ${result.actions.length} actions.`
       );
+    }
+
+    // Return diagnostics alongside result when requested
+    if (shouldDiagnostics && trace?.getTracedActions) {
+      return {
+        ...result,
+        diagnostics: this.#aggregateDiagnostics(trace),
+      };
     }
 
     return result;
@@ -437,5 +460,66 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       hasFilter: !!this.#actionTraceFilter,
       hasFactory: !!this.#actionAwareTraceFactory,
     };
+  }
+
+  /**
+   * Aggregates diagnostic data from trace for client consumption.
+   * Extracts rejection and failure info captured by pipeline stages.
+   *
+   * @private
+   * @param {object} trace - The trace object with getTracedActions method
+   * @returns {import('../interfaces/IActionDiscoveryService.js').ActionDiscoveryDiagnostics}
+   */
+  #aggregateDiagnostics(trace) {
+    const diagnostics = {
+      componentFiltering: { rejectedActions: [] },
+      targetValidation: { validationFailures: [] },
+      scopeResolution: { errors: [] },
+    };
+
+    if (!trace?.getTracedActions) {
+      return diagnostics;
+    }
+
+    try {
+      const tracedActions = trace.getTracedActions();
+
+      // tracedActions is a Map<actionId, { category: data }>
+      for (const [actionId, stageDataByCategory] of tracedActions) {
+        // ComponentFilteringStage uses 'stage' as key with 'component_filtering_rejections' category
+        if (actionId === 'stage' && stageDataByCategory.component_filtering_rejections) {
+          const rejection = stageDataByCategory.component_filtering_rejections;
+          if (rejection.diagnostics?.rejectedActions) {
+            diagnostics.componentFiltering.rejectedActions.push(
+              ...rejection.diagnostics.rejectedActions
+            );
+          }
+        }
+
+        // TargetComponentValidationStage uses actual actionId with 'target_validation_failure' category
+        if (stageDataByCategory.target_validation_failure) {
+          const failure = stageDataByCategory.target_validation_failure;
+          if (failure.diagnostics?.validationFailures) {
+            diagnostics.targetValidation.validationFailures.push(
+              ...failure.diagnostics.validationFailures
+            );
+          }
+        }
+
+        // Scope evaluation errors from FilterResolver (category: 'scope_evaluation')
+        if (stageDataByCategory.scope_evaluation?.error) {
+          diagnostics.scopeResolution.errors.push({
+            actionId,
+            ...stageDataByCategory.scope_evaluation.error,
+          });
+        }
+      }
+    } catch (error) {
+      this.#logger.warn('Failed to aggregate diagnostics from trace', {
+        error: error.message,
+      });
+    }
+
+    return diagnostics;
   }
 }

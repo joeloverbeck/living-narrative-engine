@@ -1,0 +1,11 @@
+// Scope for actors in the same location that the actor is facing away from
+// Unlike personal-space-states:actors_im_facing_away_from, this does NOT require closeness
+// Used by turn_around_to_face action which should work regardless of closeness
+facing-states:actors_in_location_im_facing_away_from := entities(core:position)[][{
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-current-actor" },
+    { "condition_ref": "core:entity-has-actor-component" },
+    { "condition_ref": "facing-states:entity-in-facing-away" }
+  ]
+}]

@@ -105,15 +105,38 @@ describe('ComponentFilteringStage integration', () => {
     );
     expect(candidateIds).toEqual(['core:rest', 'core:stealth_move']);
 
-    expect(trace.captureActionData).toHaveBeenCalledTimes(4);
+    expect(trace.captureActionData).toHaveBeenCalledTimes(5);
     expect(trace.success).toHaveBeenCalledWith(
       'Component filtering completed: 2 candidates',
       'ComponentFilteringStage.execute',
       { candidateCount: 2 }
     );
 
-    const [firstCall, secondCall, thirdCall, fourthCall] = capturePayloads;
+    const [
+      firstCall,
+      secondCall,
+      thirdCall,
+      fourthCall,
+      fifthCall,
+    ] = capturePayloads;
     expect(firstCall).toMatchObject({
+      type: 'component_filtering_rejections',
+      id: 'stage',
+      payload: {
+        stageName: 'ComponentFilteringStage',
+        diagnostics: {
+          rejectedActions: [
+            {
+              actionId: 'core:heavy_attack',
+              reason: 'FORBIDDEN_COMPONENT',
+              forbiddenComponents: ['status:injured'],
+              actorHasComponents: ['status:injured'],
+            },
+          ],
+        },
+      },
+    });
+    expect(secondCall).toMatchObject({
       type: 'component_filtering',
       id: 'core:rest',
       payload: {
@@ -129,7 +152,7 @@ describe('ComponentFilteringStage integration', () => {
         forbiddenComponentsPresent: [],
       },
     });
-    expect(secondCall).toMatchObject({
+    expect(thirdCall).toMatchObject({
       type: 'stage_performance',
       id: 'core:rest',
       payload: {
@@ -138,7 +161,7 @@ describe('ComponentFilteringStage integration', () => {
         stageName: 'ComponentFiltering',
       },
     });
-    expect(thirdCall).toMatchObject({
+    expect(fourthCall).toMatchObject({
       type: 'component_filtering',
       id: 'core:stealth_move',
       payload: {
@@ -149,7 +172,7 @@ describe('ComponentFilteringStage integration', () => {
         forbiddenComponentsPresent: [],
       },
     });
-    expect(fourthCall.type).toBe('stage_performance');
+    expect(fifthCall.type).toBe('stage_performance');
     expect(logger.debug).toHaveBeenCalledWith(
       'Found 2 candidate actions for actor actor-1'
     );
@@ -263,9 +286,15 @@ describe('ComponentFilteringStage integration', () => {
       });
 
     const actionIndex = {
-      getCandidateActions: jest.fn(() => [
-        { id: 'core:ritual', required_components: { actor: ['skill:arcana'] } },
-      ]),
+      getCandidateActionsWithDiagnostics: jest.fn(() => ({
+        candidates: [
+          {
+            id: 'core:ritual',
+            required_components: { actor: ['skill:arcana'] },
+          },
+        ],
+        rejected: [],
+      })),
     };
 
     const stage = new ComponentFilteringStage(

@@ -451,6 +451,7 @@ describe('filterResolver integration coverage', () => {
       locationProvider,
     });
 
+    // ACTDISDIAFAIFAS-002b: Error message now preserves original condition_ref error
     expect(() =>
       filterResolver.resolve(
         {
@@ -464,6 +465,6 @@ describe('filterResolver integration coverage', () => {
           runtimeCtx,
         }
       )
-    ).toThrow(/Filter logic evaluation failed/);
+    ).toThrow(/Could not resolve condition_ref/);
   });
 });

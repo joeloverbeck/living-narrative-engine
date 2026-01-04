@@ -5,6 +5,8 @@ import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
 import * as environmentUtils from '../utils/environmentUtils.js';
+import { ScopeResolutionError } from '../scopeDsl/errors/scopeResolutionError.js';
+import { getSuggestions } from '../utils/conditionSuggestionService.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -316,12 +318,42 @@ class JsonLogicEvaluationService extends BaseService {
     try {
       return resolveConditionRefs(rule, this.#gameDataRepository, this.#logger);
     } catch (err) {
-      if (
-        err.message.startsWith('Circular condition_ref detected') ||
-        err.message.startsWith('Could not resolve condition_ref')
-      ) {
+      if (err.message.startsWith('Circular condition_ref detected')) {
+        // Log and throw for circular refs (fail-fast per INV-EVAL-2)
         this.#logger.error(err.message);
-        return { '==': [true, false] };
+        throw err;
+      }
+      if (err.message.startsWith('Could not resolve condition_ref')) {
+        // Extract condition name from error message and throw with context
+        const match = err.message.match(/condition_ref '([^']+)'/);
+        const conditionRef = match ? match[1] : 'unknown';
+
+        // Get available condition IDs for suggestions (ACTDISDIAFAIFAS-002b)
+        let suggestions = [];
+        try {
+          const allConditions =
+            this.#gameDataRepository.getAllConditionDefinitions?.() ?? [];
+          const conditionIds = allConditions.map((c) => c.id).filter(Boolean);
+          suggestions = getSuggestions(conditionRef, conditionIds);
+        } catch {
+          // Suggestions are best-effort; don't fail if unavailable
+        }
+
+        const suggestionText = suggestions.length
+          ? ` Did you mean: ${suggestions.join(', ')}?`
+          : '';
+
+        throw new ScopeResolutionError(
+          `Condition reference '${conditionRef}' not found.${suggestionText}`,
+          {
+            phase: 'condition_resolution',
+            conditionId: conditionRef,
+            parameters: { conditionRef },
+            suggestions,
+            hint: 'Check that the condition is defined in your mod and the ID is correct',
+            originalError: err,
+          }
+        );
       }
       throw err;
     }

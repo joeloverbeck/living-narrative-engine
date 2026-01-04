@@ -249,7 +249,7 @@ describe('Error Message Validation', () => {
       expect(result).toEqual(new Set(['item1', 'item3']));
     });
 
-    it('should handle filter evaluation errors gracefully', () => {
+    it('should gracefully skip entities on non-condition_ref filter evaluation errors', () => {
       const ast = parseDslExpression(
         'entities(core:item)[][{"invalid": "logic"}]'
       );
@@ -270,9 +270,11 @@ describe('Error Message Validation', () => {
         logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
       };
 
-      // Should handle JSON Logic errors gracefully
+      // Non-condition_ref errors gracefully skip items to support heterogeneous collections
+      // (e.g., inventory with mixed item types where some items lack filter-referenced components)
+      // Only condition_ref errors (configuration bugs) fail-fast per INV-EVAL-1
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      expect(result).toEqual(new Set()); // No items pass due to evaluation errors
+      expect(result.size).toBe(0);
     });
   });
 

@@ -287,25 +287,19 @@ export class SummaryPanelView {
     const countValue = this.#countElement.querySelector(
       '.summary-panel__stat-value'
     );
-    if (countValue) {
-      countValue.textContent = String(activeCount);
-    }
+    countValue.textContent = String(activeCount);
 
     // Update explicit count
     const explicitValue = this.#explicitCountElement.querySelector(
       '.summary-panel__stat-value'
     );
-    if (explicitValue) {
-      explicitValue.textContent = String(explicitCount);
-    }
+    explicitValue.textContent = String(explicitCount);
 
     // Update dependency count
     const dependencyValue = this.#dependencyCountElement.querySelector(
       '.summary-panel__stat-value'
     );
-    if (dependencyValue) {
-      dependencyValue.textContent = String(dependencyCount);
-    }
+    dependencyValue.textContent = String(dependencyCount);
 
     // Update hotspots section
     this.#renderHotspotsSection(hotspots);
@@ -422,9 +416,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#hotspotsSection.appendChild(header);
@@ -555,9 +547,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#healthSection.appendChild(header);
@@ -650,9 +640,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#depthSection.appendChild(header);
@@ -751,9 +739,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#footprintSection.appendChild(header);
@@ -862,9 +848,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#profileSection.appendChild(header);
@@ -874,6 +858,7 @@ export class SummaryPanelView {
 
   /**
    * Render fragility warnings section
+   *
    * @param {object|null} fragilityAnalysis - From ModStatisticsService.getSingleParentDependencies()
    * @param {Array<{modId: string, singleDependent: string, status: string}>} [fragilityAnalysis.atRiskMods]
    * @param {number} [fragilityAnalysis.totalAtRisk]
@@ -963,9 +948,7 @@ export class SummaryPanelView {
       header.setAttribute('aria-expanded', String(!isExpanded));
       content.classList.toggle('summary-panel__section-content--collapsed');
       const toggle = header.querySelector('.summary-panel__section-toggle');
-      if (toggle) {
-        toggle.textContent = isExpanded ? '▶' : '▼';
-      }
+      toggle.textContent = isExpanded ? '▶' : '▼';
     });
 
     this.#fragilitySection.appendChild(header);
@@ -1016,13 +999,13 @@ export class SummaryPanelView {
     if (isSaving) {
       this.#saveButton.classList.add('summary-panel__save-button--saving');
       this.#saveButton.setAttribute('aria-busy', 'true');
-      if (textElement) textElement.textContent = 'Saving...';
-      if (iconElement) iconElement.textContent = '⏳';
+      textElement.textContent = 'Saving...';
+      iconElement.textContent = '⏳';
     } else {
       this.#saveButton.classList.remove('summary-panel__save-button--saving');
       this.#saveButton.removeAttribute('aria-busy');
-      if (textElement) textElement.textContent = 'Save Configuration';
-      if (iconElement) iconElement.textContent = '💾';
+      textElement.textContent = 'Save Configuration';
+      iconElement.textContent = '💾';
     }
   }
 
@@ -1034,14 +1017,14 @@ export class SummaryPanelView {
     const iconElement = this.#saveButton.querySelector('.save-button__icon');
 
     this.#saveButton.classList.add('summary-panel__save-button--success');
-    if (textElement) textElement.textContent = 'Saved!';
-    if (iconElement) iconElement.textContent = '✅';
+    textElement.textContent = 'Saved!';
+    iconElement.textContent = '✅';
 
     // Reset after delay
     setTimeout(() => {
       this.#saveButton.classList.remove('summary-panel__save-button--success');
-      if (textElement) textElement.textContent = 'Save Configuration';
-      if (iconElement) iconElement.textContent = '💾';
+      textElement.textContent = 'Save Configuration';
+      iconElement.textContent = '💾';
     }, 2000);
   }
 
@@ -1055,14 +1038,14 @@ export class SummaryPanelView {
     const iconElement = this.#saveButton.querySelector('.save-button__icon');
 
     this.#saveButton.classList.add('summary-panel__save-button--error');
-    if (textElement) textElement.textContent = 'Save Failed';
-    if (iconElement) iconElement.textContent = '❌';
+    textElement.textContent = 'Save Failed';
+    iconElement.textContent = '❌';
 
     // Reset after delay
     setTimeout(() => {
       this.#saveButton.classList.remove('summary-panel__save-button--error');
-      if (textElement) textElement.textContent = 'Save Configuration';
-      if (iconElement) iconElement.textContent = '💾';
+      textElement.textContent = 'Save Configuration';
+      iconElement.textContent = '💾';
     }, 3000);
 
     this.#logger.error('Save error displayed', { message });

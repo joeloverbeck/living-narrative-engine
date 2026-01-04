@@ -667,18 +667,20 @@ describe('JsonLogicEvaluationService', () => {
       );
     });
 
-    test('should allow condition_ref as it is whitelisted', () => {
+    test('should allow condition_ref as it is whitelisted (validation passes, resolution throws per INV-EVAL-2)', () => {
       const ruleWithConditionRef = {
         condition_ref: 'some_condition_id',
       };
 
       const context = { actor: { id: 'test' } };
 
-      // Even though the condition_ref won't resolve (mock returns null),
-      // the validation should pass
-      const result = service.evaluate(ruleWithConditionRef, context);
+      // Validation should pass (condition_ref is whitelisted), but resolution
+      // now throws ScopeResolutionError per INV-EVAL-2 fail-fast behavior
+      expect(() => service.evaluate(ruleWithConditionRef, context)).toThrow(
+        /Condition reference.*not found/
+      );
 
-      // Check that validation didn't fail
+      // Check that validation didn't fail (no validation error logs)
       const validationErrorCalls = mockLogger.error.mock.calls.filter(
         (call) => call[0] && call[0].includes('JSON Logic validation failed')
       );
@@ -1163,10 +1165,11 @@ describe('JsonLogicEvaluationService', () => {
       // Verify fallback repository is set
       const rule = { condition_ref: 'test_condition' };
       const context = { value: 1 };
-      const result = service.evaluate(rule, context);
 
-      // Should return false as condition_ref can't be resolved
-      expect(result).toBe(false);
+      // Per INV-EVAL-2, unresolved condition_ref throws ScopeResolutionError (fail-fast)
+      expect(() => service.evaluate(rule, context)).toThrow(
+        /Condition reference.*not found/
+      );
     });
   });
 
@@ -1218,16 +1221,176 @@ describe('JsonLogicEvaluationService', () => {
       });
     });
 
-    test('should handle circular condition_ref errors', () => {
+    test('should throw on circular condition_ref errors (INV-EVAL-2 fail-fast)', () => {
       const rule = { condition_ref: 'circular_ref' };
       const context = { value: 1 };
 
-      const result = service.evaluate(rule, context);
-
-      expect(result).toBe(false);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'JsonLogicEvaluationService: Circular condition_ref detected: circular_ref'
+      // Per INV-EVAL-2, circular condition_refs throw (fail-fast behavior)
+      expect(() => service.evaluate(rule, context)).toThrow(
+        'Circular condition_ref detected: circular_ref'
       );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Circular condition_ref detected: circular_ref')
+      );
+    });
+  });
+
+  // ACTDISDIAFAIFAS-002b: Tests for condition_ref suggestion functionality
+  describe('Condition ref suggestion integration (ACTDISDIAFAIFAS-002b)', () => {
+    test('should include suggestions in error when condition_ref not found and similar conditions exist', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        getAllConditionDefinitions: jest.fn().mockReturnValue([
+          { id: 'core:actor' },
+          { id: 'core:target' },
+          { id: 'positioning:close' },
+        ]),
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'core:actorr' }; // Typo in condition ID
+      const context = { value: 1 };
+
+      expect(() => service.evaluate(rule, context)).toThrow(/Did you mean:/);
+      expect(() => service.evaluate(rule, context)).toThrow(/core:actor/);
+    });
+
+    test('should include conditionId in error context', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        getAllConditionDefinitions: jest.fn().mockReturnValue([
+          { id: 'core:actor' },
+        ]),
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'core:missing_condition' };
+      const context = { value: 1 };
+
+      try {
+        service.evaluate(rule, context);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error.context.conditionId).toBe('core:missing_condition');
+        expect(error.context.phase).toBe('condition_resolution');
+      }
+    });
+
+    test('should include suggestions array in error context', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        getAllConditionDefinitions: jest.fn().mockReturnValue([
+          { id: 'positioning:closeness' },
+          { id: 'positioning:close' },
+          { id: 'core:distance' },
+        ]),
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'positioning:clos' }; // Partial match
+      const context = { value: 1 };
+
+      try {
+        service.evaluate(rule, context);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(Array.isArray(error.context.suggestions)).toBe(true);
+        // Same namespace should be prioritized
+        expect(error.context.suggestions[0]).toMatch(/^positioning:/);
+      }
+    });
+
+    test('should handle empty suggestions gracefully when no similar conditions exist', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        getAllConditionDefinitions: jest.fn().mockReturnValue([
+          { id: 'completely:different' },
+          { id: 'unrelated:condition' },
+        ]),
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'xyzzy:unknown' };
+      const context = { value: 1 };
+
+      try {
+        service.evaluate(rule, context);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        // Should not fail, but may have empty suggestions
+        expect(error.context.suggestions).toBeDefined();
+        expect(error.message).toContain("Condition reference 'xyzzy:unknown' not found");
+      }
+    });
+
+    test('should not fail when getAllConditionDefinitions is unavailable', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        // getAllConditionDefinitions is NOT provided
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'missing:condition' };
+      const context = { value: 1 };
+
+      // Should still throw, just without suggestions
+      expect(() => service.evaluate(rule, context)).toThrow(
+        /Condition reference.*not found/
+      );
+    });
+
+    test('should include hint in error context', () => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+        getAllConditionDefinitions: jest.fn().mockReturnValue([]),
+      };
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'test:missing' };
+      const context = { value: 1 };
+
+      try {
+        service.evaluate(rule, context);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error.context.hint).toContain('condition is defined');
+      }
     });
   });
 

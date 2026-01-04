@@ -606,6 +606,201 @@ describe('ScopeResolutionError', () => {
     });
   });
 
+  describe('Diagnostic context getters (ACTDISDIAFAIFAS-002)', () => {
+    describe('conditionId getter', () => {
+      it('should return conditionId when provided', () => {
+        const error = new ScopeResolutionError('Test error', {
+          conditionId: 'core:is_standing',
+        });
+
+        expect(error.conditionId).toBe('core:is_standing');
+      });
+
+      it('should return undefined when conditionId not provided', () => {
+        const error = new ScopeResolutionError('Test error');
+
+        expect(error.conditionId).toBeUndefined();
+      });
+    });
+
+    describe('modSource getter', () => {
+      it('should return modSource when provided', () => {
+        const error = new ScopeResolutionError('Test error', {
+          modSource: 'positioning',
+        });
+
+        expect(error.modSource).toBe('positioning');
+      });
+
+      it('should return undefined when modSource not provided', () => {
+        const error = new ScopeResolutionError('Test error', {});
+
+        expect(error.modSource).toBeUndefined();
+      });
+    });
+
+    describe('parentContext getter', () => {
+      it('should return parentContext when provided', () => {
+        const error = new ScopeResolutionError('Test error', {
+          parentContext: 'positioning:sit_down',
+        });
+
+        expect(error.parentContext).toBe('positioning:sit_down');
+      });
+
+      it('should return undefined when parentContext not provided', () => {
+        const error = new ScopeResolutionError('Test error');
+
+        expect(error.parentContext).toBeUndefined();
+      });
+    });
+
+    describe('suggestions getter', () => {
+      it('should return suggestions array when provided', () => {
+        const suggestions = ['core:is_standing', 'core:is_sitting'];
+        const error = new ScopeResolutionError('Test error', {
+          suggestions,
+        });
+
+        expect(error.suggestions).toEqual(['core:is_standing', 'core:is_sitting']);
+      });
+
+      it('should return empty array when empty suggestions provided', () => {
+        const error = new ScopeResolutionError('Test error', {
+          suggestions: [],
+        });
+
+        expect(error.suggestions).toEqual([]);
+      });
+
+      it('should return undefined when suggestions not provided', () => {
+        const error = new ScopeResolutionError('Test error');
+
+        expect(error.suggestions).toBeUndefined();
+      });
+    });
+
+    describe('resolutionChain getter', () => {
+      it('should return resolutionChain array when provided', () => {
+        const chain = ['scope:filter', 'condition_ref:core:missing'];
+        const error = new ScopeResolutionError('Test error', {
+          resolutionChain: chain,
+        });
+
+        expect(error.resolutionChain).toEqual([
+          'scope:filter',
+          'condition_ref:core:missing',
+        ]);
+      });
+
+      it('should return undefined when resolutionChain not provided', () => {
+        const error = new ScopeResolutionError('Test error', {});
+
+        expect(error.resolutionChain).toBeUndefined();
+      });
+    });
+
+    describe('constructor accepts all new context properties', () => {
+      it('should accept all diagnostic context properties at once', () => {
+        const error = new ScopeResolutionError('Condition not found', {
+          conditionId: 'core:missing_condition',
+          modSource: 'positioning',
+          parentContext: 'positioning:sit_down',
+          suggestions: ['core:is_standing', 'core:is_sitting'],
+          resolutionChain: ['scope:filter', 'condition_ref:core:missing_condition'],
+        });
+
+        expect(error.conditionId).toBe('core:missing_condition');
+        expect(error.modSource).toBe('positioning');
+        expect(error.parentContext).toBe('positioning:sit_down');
+        expect(error.suggestions).toEqual(['core:is_standing', 'core:is_sitting']);
+        expect(error.resolutionChain).toEqual([
+          'scope:filter',
+          'condition_ref:core:missing_condition',
+        ]);
+      });
+    });
+
+    describe('backward compatibility', () => {
+      it('should still work with message only (no context)', () => {
+        const error = new ScopeResolutionError('Simple error');
+
+        expect(error.message).toBe('Simple error');
+        expect(error.conditionId).toBeUndefined();
+        expect(error.modSource).toBeUndefined();
+        expect(error.parentContext).toBeUndefined();
+        expect(error.suggestions).toBeUndefined();
+        expect(error.resolutionChain).toBeUndefined();
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toBeInstanceOf(BaseError);
+      });
+
+      it('should preserve existing context properties alongside new ones', () => {
+        const error = new ScopeResolutionError('Mixed context', {
+          scopeName: 'personal-space:close_actors',
+          phase: 'filter evaluation',
+          conditionId: 'core:is_standing',
+          modSource: 'positioning',
+        });
+
+        // Existing properties
+        expect(error.context.scopeName).toBe('personal-space:close_actors');
+        expect(error.context.phase).toBe('filter evaluation');
+
+        // New getter properties
+        expect(error.conditionId).toBe('core:is_standing');
+        expect(error.modSource).toBe('positioning');
+      });
+    });
+
+    describe('JSON serialization includes new properties', () => {
+      it('should include all new context properties in toJSON()', () => {
+        const error = new ScopeResolutionError('Test error', {
+          conditionId: 'core:is_standing',
+          modSource: 'positioning',
+          parentContext: 'positioning:sit_down',
+          suggestions: ['core:is_sitting'],
+          resolutionChain: ['scope:filter'],
+        });
+
+        const json = error.toJSON();
+
+        expect(json.context.conditionId).toBe('core:is_standing');
+        expect(json.context.modSource).toBe('positioning');
+        expect(json.context.parentContext).toBe('positioning:sit_down');
+        expect(json.context.suggestions).toEqual(['core:is_sitting']);
+        expect(json.context.resolutionChain).toEqual(['scope:filter']);
+      });
+
+      it('should survive JSON stringify round-trip with new properties', () => {
+        const error = new ScopeResolutionError('Test error', {
+          conditionId: 'core:is_standing',
+          modSource: 'positioning',
+          suggestions: ['core:is_sitting', 'core:is_lying'],
+        });
+
+        const stringified = JSON.stringify(error.toJSON());
+        const parsed = JSON.parse(stringified);
+
+        expect(parsed.context.conditionId).toBe('core:is_standing');
+        expect(parsed.context.modSource).toBe('positioning');
+        expect(parsed.context.suggestions).toEqual(['core:is_sitting', 'core:is_lying']);
+      });
+    });
+
+    describe('properties are optional and return undefined', () => {
+      it('should not throw when accessing missing properties', () => {
+        const error = new ScopeResolutionError('Test error');
+
+        expect(() => error.conditionId).not.toThrow();
+        expect(() => error.modSource).not.toThrow();
+        expect(() => error.parentContext).not.toThrow();
+        expect(() => error.suggestions).not.toThrow();
+        expect(() => error.resolutionChain).not.toThrow();
+      });
+    });
+  });
+
   describe('Real-world usage scenarios', () => {
     it('should create comprehensive error for scope resolution failure', () => {
       const originalError = new Error(

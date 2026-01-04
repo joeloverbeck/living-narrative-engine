@@ -24,6 +24,12 @@
       "respirationType": "pulmonary",
       "oxygenCapacity": 8,
       "currentOxygen": 8
+    },
+    "anatomy:vital_organ": {
+      "organType": "respiratory",
+      "killOnDestroy": true,
+      "requiresAllDestroyed": true,
+      "deathMessage": "suffocated as both feline lungs failed"
     }
   }
 }

@@ -1,13 +1,19 @@
-// Scope for actors in the same location who are NOT facing away from the current actor
+// Scope for actors in the same location with bidirectional facing validation
 // Used by actions where the actor wants to position themselves relative to targets
-// This scope filters out any actors who are facing away from the current actor
+// This scope filters out:
+// 1. Actors who are facing away from the current actor (target facing away)
+// 2. Actors that the current actor is facing away from (actor facing away)
+// Both checks are required for actions like place_yourself_behind
 maneuvering:actors_in_location_not_facing_away_from_actor := entities(core:position)[][{
   "and": [
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" },
+    { "condition_ref": "facing-states:entity-not-facing-away-from-actor" },
     {
-      "condition_ref": "facing-states:entity-not-facing-away-from-actor"
+      "!": {
+        "condition_ref": "facing-states:entity-in-facing-away"
+      }
     }
   ]
 }]

@@ -10,6 +10,7 @@ import jsonLogic from 'json-logic-js';
 import JsonLogicEvaluationService, {
   evaluateConditionWithLogging,
 } from '../../../src/logic/jsonLogicEvaluationService.js';
+import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import * as environmentUtils from '../../../src/utils/environmentUtils.js';
@@ -384,14 +385,15 @@ describe('JsonLogicEvaluationService real module integration', () => {
     ).toBe(true);
   });
 
-  it('falls back to a false condition when circular condition_refs are detected', () => {
+  it('throws an error when circular condition_refs are detected (fail-fast)', () => {
     storeCondition('cond:A', { condition_ref: 'cond:B' });
     storeCondition('cond:B', { condition_ref: 'cond:A' });
 
     logger.error.mockClear();
-    const result = service.evaluate({ condition_ref: 'cond:A' }, {});
 
-    expect(result).toBe(false);
+    expect(() => service.evaluate({ condition_ref: 'cond:A' }, {})).toThrow(
+      'Circular condition_ref detected'
+    );
     expect(
       logger.error.mock.calls.some(
         ([message]) =>
@@ -401,18 +403,12 @@ describe('JsonLogicEvaluationService real module integration', () => {
     ).toBe(true);
   });
 
-  it('falls back gracefully when condition definitions are missing', () => {
+  it('throws ScopeResolutionError when condition definitions are missing (fail-fast)', () => {
     logger.error.mockClear();
-    const result = service.evaluate({ condition_ref: 'cond:missing' }, {});
 
-    expect(result).toBe(false);
-    expect(
-      logger.error.mock.calls.some(
-        ([message]) =>
-          typeof message === 'string' &&
-          message.includes('Could not resolve condition_ref')
-      )
-    ).toBe(true);
+    expect(() =>
+      service.evaluate({ condition_ref: 'cond:missing' }, {})
+    ).toThrow(ScopeResolutionError);
   });
 
   it('supports registering and removing custom operations', () => {

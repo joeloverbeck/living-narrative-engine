@@ -20,7 +20,8 @@
       "entity-not-in-facing-away.condition.json"
     ],
     "scopes": [
-      "actors_in_location_facing.scope"
+      "actors_in_location_facing.scope",
+      "actors_in_location_im_facing_away_from.scope"
     ],
     "events": [
       "actor_faced_everyone.event.json",

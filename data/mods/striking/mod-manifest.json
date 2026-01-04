@@ -52,6 +52,10 @@
     {
       "id": "liquids-states",
       "version": "^1.0.0"
+    },
+    {
+      "id": "facing-states",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -75,7 +79,9 @@
       "event-is-action-sucker-punch-target.condition.json"
     ],
     "scopes": [
-      "actor_arm_body_parts.scope"
+      "actor_arm_body_parts.scope",
+      "actors_in_location_not_attacked_and_not_facing_away.scope",
+      "actors_in_location_not_facing_away.scope"
     ]
   }
 }

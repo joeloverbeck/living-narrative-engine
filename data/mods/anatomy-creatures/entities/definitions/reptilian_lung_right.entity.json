@@ -24,6 +24,12 @@
       "respirationType": "pulmonary",
       "oxygenCapacity": 20,
       "currentOxygen": 20
+    },
+    "anatomy:vital_organ": {
+      "organType": "respiratory",
+      "killOnDestroy": true,
+      "requiresAllDestroyed": true,
+      "deathMessage": "suffocated as both massive lungs failed"
     }
   }
 }

@@ -12,6 +12,7 @@ const DYING_COMPONENT_ID = 'anatomy:dying';
 const DEAD_COMPONENT_ID = 'anatomy:dead';
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const POSITION_COMPONENT_ID = 'core:position';
+const BODY_COMPONENT_ID = 'anatomy:body';
 
 // --- Threshold Constants ---
 const CRITICAL_HEALTH_THRESHOLD = 10; // Below 10% triggers dying state
@@ -105,7 +106,7 @@ class DeathCheckService extends BaseService {
       },
       bodyGraphService: {
         value: bodyGraphService,
-        requiredMethods: ['getAllDescendants'],
+        requiredMethods: ['getAllDescendants', 'getAllParts'],
       },
     });
     this.#entityManager = entityManager;
@@ -153,6 +154,29 @@ class DeathCheckService extends BaseService {
         deathInfo: {
           causeOfDeath: 'vital_organ_destroyed',
           vitalOrganDestroyed: vitalOrganInfo.organType,
+          killedBy: damageCauserId,
+        },
+      };
+    }
+
+    const collectiveDeathInfo =
+      this.#checkCollectiveVitalOrganDestruction(entityId);
+    if (collectiveDeathInfo) {
+      this.#logger.info(
+        `Entity ${entityId} died from collective vital organ destruction: ${collectiveDeathInfo.organType}`
+      );
+      this.#finalizeDeath(
+        entityId,
+        'vital_organ_destroyed',
+        damageCauserId,
+        collectiveDeathInfo.organType
+      );
+      return {
+        isDead: true,
+        isDying: false,
+        deathInfo: {
+          causeOfDeath: 'vital_organ_destroyed',
+          vitalOrganDestroyed: collectiveDeathInfo.organType,
           killedBy: damageCauserId,
         },
       };
@@ -224,6 +248,30 @@ class DeathCheckService extends BaseService {
         deathInfo: {
           causeOfDeath: 'vital_organ_destroyed',
           vitalOrganDestroyed: vitalOrganInfo.organType,
+          killedBy: damageCauserId,
+        },
+      };
+    }
+
+    const collectiveDeathInfo =
+      this.#checkCollectiveVitalOrganDestruction(entityId);
+    if (collectiveDeathInfo) {
+      this.#logger.info(
+        `Entity ${entityId} will die from collective vital organ destruction: ${collectiveDeathInfo.organType}`
+      );
+      return {
+        isDead: false, // Not yet dead, will be after finalization
+        isDying: false,
+        shouldFinalize: true,
+        finalizationParams: {
+          entityId,
+          causeOfDeath: 'vital_organ_destroyed',
+          damageCauserId,
+          vitalOrganDestroyed: collectiveDeathInfo.organType,
+        },
+        deathInfo: {
+          causeOfDeath: 'vital_organ_destroyed',
+          vitalOrganDestroyed: collectiveDeathInfo.organType,
           killedBy: damageCauserId,
         },
       };
@@ -445,6 +493,10 @@ class DeathCheckService extends BaseService {
       return null;
     }
 
+    if (vitalOrganData.requiresAllDestroyed === true) {
+      return null;
+    }
+
     // Data-driven: only organs with killOnDestroy enabled trigger immediate death
     const killOnDestroy =
       vitalOrganData.killOnDestroy === false
@@ -462,6 +514,83 @@ class DeathCheckService extends BaseService {
     }
 
     return null;
+  }
+
+  /**
+   * Checks if all organs of a collective vital organ type are destroyed.
+   *
+   * @param {string} entityId - Entity to check
+   * @returns {{organType: string, destroyedCount: number}|null} Death info if all collective organs destroyed
+   * @private
+   */
+  #checkCollectiveVitalOrganDestruction(entityId) {
+    try {
+      const bodyData = this.#entityManager.getComponentData(
+        entityId,
+        BODY_COMPONENT_ID
+      );
+      if (!bodyData) {
+        return null;
+      }
+
+      const partEntityIds = this.#bodyGraphService.getAllParts(
+        bodyData,
+        entityId
+      );
+      const collectiveOrgans = new Map();
+
+      for (const partEntityId of partEntityIds) {
+        const vitalOrganData = this.#entityManager.getComponentData(
+          partEntityId,
+          VITAL_ORGAN_COMPONENT_ID
+        );
+
+        if (!vitalOrganData || !vitalOrganData.requiresAllDestroyed) {
+          continue;
+        }
+
+        const killOnDestroy =
+          vitalOrganData.killOnDestroy === false
+            ? false
+            : vitalOrganData.killOnDestroy === true
+              ? true
+              : DEFAULT_KILL_ON_DESTROY;
+
+        if (!killOnDestroy) {
+          continue;
+        }
+
+        const organType = vitalOrganData.organType || 'unknown';
+        const healthData = this.#entityManager.getComponentData(
+          partEntityId,
+          PART_HEALTH_COMPONENT_ID
+        );
+
+        if (!collectiveOrgans.has(organType)) {
+          collectiveOrgans.set(organType, { total: 0, destroyed: 0 });
+        }
+
+        const entry = collectiveOrgans.get(organType);
+        entry.total += 1;
+
+        if (!healthData || healthData.currentHealth <= 0) {
+          entry.destroyed += 1;
+        }
+      }
+
+      for (const [organType, stats] of collectiveOrgans) {
+        if (stats.total > 0 && stats.destroyed === stats.total) {
+          return { organType, destroyedCount: stats.destroyed };
+        }
+      }
+
+      return null;
+    } catch (err) {
+      this.#logger.warn(
+        `Failed to check collective vital organ destruction for ${entityId}: ${err.message}`
+      );
+      return null;
+    }
   }
 
   /**
@@ -621,6 +750,8 @@ class DeathCheckService extends BaseService {
           return `${entityName}'s heart has stopped - they are dead.`;
         case 'spine':
           return `${entityName} collapses as their spine is destroyed.`;
+        case 'respiratory':
+          return `${entityName} suffocates as all respiratory organs fail.`;
         default:
           return `${entityName} dies from catastrophic organ failure.`;
       }

@@ -6,6 +6,20 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 
+/**
+ * @typedef {object} ActionRejection
+ * @property {string} actionId - The rejected action ID
+ * @property {string} reason - Human-readable reason (e.g., 'FORBIDDEN_COMPONENT')
+ * @property {string[]} forbiddenComponents - Action's forbidden_components.actor list
+ * @property {string[]} actorHasComponents - Which forbidden components actor has
+ */
+
+/**
+ * @typedef {object} CandidateActionsWithDiagnostics
+ * @property {ActionDefinition[]} candidates - Actions that passed filtering
+ * @property {ActionRejection[]} rejected - Actions that were filtered out
+ */
+
 export class ActionIndex {
   /** @type {ILogger} */
   #logger;
@@ -144,7 +158,7 @@ export class ActionIndex {
    * Used by GOAP refinement to fetch concrete actions during execution.
    *
    * @param {string} actionId - Namespaced action id.
-   * @returns {ActionDefinition|null}
+   * @returns {ActionDefinition|null} The action definition or null if not found.
    */
   getActionById(actionId) {
     if (typeof actionId !== 'string' || !actionId.trim()) {
@@ -158,16 +172,18 @@ export class ActionIndex {
   }
 
   /**
-   * Retrieves a pre-filtered list of candidate actions for a given actor
-   * based on the components they possess.
+   * Internal method that performs filtering and returns both candidates and rejections.
+   * This is the shared logic used by both getCandidateActions and getCandidateActionsWithDiagnostics.
    *
    * @param {Entity} actorEntity The entity that could perform an action.
    * @param {TraceContext} [trace] The TraceContext object that contains the logs of the action discovery process.
-   * @returns {ActionDefinition[]} A unique list of candidate action definitions.
+   * @returns {CandidateActionsWithDiagnostics} Object containing candidates and rejected actions with reasons.
    */
-  getCandidateActions(actorEntity, trace = null) {
+  #getCandidatesWithRejections(actorEntity, trace = null) {
     const source = 'ActionIndex.getCandidateActions';
-    if (!actorEntity || !actorEntity.id) return [];
+    if (!actorEntity || !actorEntity.id) {
+      return { candidates: [], rejected: [] };
+    }
 
     const actorComponentTypes =
       this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
@@ -196,6 +212,10 @@ export class ActionIndex {
       }
     }
 
+    // Track rejections for forbidden components
+    /** @type {ActionRejection[]} */
+    const rejected = [];
+
     // Filter out actions with forbidden components
     const forbiddenCandidates = new Set();
     for (const componentType of actorComponentTypes) {
@@ -212,9 +232,23 @@ export class ActionIndex {
       }
     }
 
-    // Remove forbidden actions from candidates
+    // Remove forbidden actions from candidates and build rejection info
     for (const forbiddenAction of forbiddenCandidates) {
       candidateSet.delete(forbiddenAction);
+
+      // Calculate which forbidden components the actor has
+      const actionForbiddenComponents =
+        forbiddenAction.forbidden_components?.actor || [];
+      const actorHasForbidden = actorComponentTypes.filter((c) =>
+        actionForbiddenComponents.includes(c)
+      );
+
+      rejected.push({
+        actionId: forbiddenAction.id,
+        reason: 'FORBIDDEN_COMPONENT',
+        forbiddenComponents: actionForbiddenComponents,
+        actorHasComponents: actorHasForbidden,
+      });
     }
 
     if (forbiddenCandidates.size > 0) {
@@ -267,10 +301,42 @@ export class ActionIndex {
       { actionIds: candidates.map((a) => a.id) }
     );
 
+    return { candidates, rejected };
+  }
+
+  /**
+   * Retrieves a pre-filtered list of candidate actions for a given actor
+   * based on the components they possess.
+   *
+   * @param {Entity} actorEntity The entity that could perform an action.
+   * @param {TraceContext} [trace] The TraceContext object that contains the logs of the action discovery process.
+   * @returns {ActionDefinition[]} A unique list of candidate action definitions.
+   */
+  getCandidateActions(actorEntity, trace = null) {
+    const result = this.#getCandidatesWithRejections(actorEntity, trace);
+
     this.#logger.debug(
-      `ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`
+      `ActionIndex: Retrieved ${result.candidates.length} candidate actions for actor ${actorEntity?.id ?? 'unknown'}.`
     );
 
-    return candidates;
+    return result.candidates;
+  }
+
+  /**
+   * Retrieves candidate actions with diagnostic information about rejections.
+   * Use this method when you need to understand why actions were filtered out.
+   *
+   * @param {Entity} actorEntity The entity that could perform an action.
+   * @param {TraceContext} [trace] The TraceContext object that contains the logs of the action discovery process.
+   * @returns {CandidateActionsWithDiagnostics} Object containing candidates and rejected actions with reasons.
+   */
+  getCandidateActionsWithDiagnostics(actorEntity, trace = null) {
+    const result = this.#getCandidatesWithRejections(actorEntity, trace);
+
+    this.#logger.debug(
+      `ActionIndex: Retrieved ${result.candidates.length} candidate actions (${result.rejected.length} rejected) for actor ${actorEntity?.id ?? 'unknown'}.`
+    );
+
+    return result;
   }
 }

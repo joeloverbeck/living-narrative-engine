@@ -449,6 +449,15 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
           }
           return false;
         }),
+        refreshElement: jest.fn((key) => {
+          // Re-query and update the cached element
+          const element = resolveDomElement(key);
+          if (element) {
+            storeElement(key, element);
+            return true;
+          }
+          return false;
+        }),
       };
     }
 
@@ -475,6 +484,8 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       this.mocks.asyncUtilitiesToolkit = (() => {
         const activeTimeouts = new Set();
         const activeIntervals = new Set();
+        const activeAnimationFrames = new Set();
+        let animationFrameId = 0;
 
         return {
           setTimeout: jest.fn((callback, delay) => {
@@ -495,16 +506,25 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
             global.clearInterval(id);
             activeIntervals.delete(id);
           }),
+          requestAnimationFrame: jest.fn((callback) => {
+            const id = ++animationFrameId;
+            activeAnimationFrames.add(id);
+            return id;
+          }),
+          cancelAnimationFrame: jest.fn((id) => {
+            activeAnimationFrames.delete(id);
+          }),
           getTimerStats: jest.fn().mockReturnValue({
             timeouts: { count: activeTimeouts.size },
             intervals: { count: activeIntervals.size },
-            animationFrames: { count: 0 },
+            animationFrames: { count: activeAnimationFrames.size },
           }),
           clearAllTimers: jest.fn(() => {
             activeTimeouts.forEach((id) => global.clearTimeout(id));
             activeIntervals.forEach((id) => global.clearInterval(id));
             activeTimeouts.clear();
             activeIntervals.clear();
+            activeAnimationFrames.clear();
           }),
         };
       })();
@@ -515,6 +535,9 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       this.mocks.performanceMonitor = {
         configure: jest.fn(),
         clearData: jest.fn(),
+        mark: jest.fn(() => Date.now()),
+        measure: jest.fn(() => ({ duration: 0 })),
+        getMeasurements: jest.fn(() => new Map()),
       };
     }
 
@@ -523,6 +546,10 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       this.mocks.memoryManager = {
         setContextName: jest.fn(),
         clear: jest.fn(),
+        setWeakReference: jest.fn(),
+        getWeakReference: jest.fn(),
+        trackWeakly: jest.fn(),
+        isWeaklyTracked: jest.fn(() => false),
       };
     }
 

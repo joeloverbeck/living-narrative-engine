@@ -3,7 +3,7 @@
     "id": "alicia:jon_urena_daydream",
     "components": {
         "core:name": {
-            "text": "Jon Ureña"
+            "text": "stranger"
         },
         "core:portrait": {
             "imagePath": "portraits/jon_urena_daydream.png",
@@ -19,6 +19,9 @@
         },
         "anatomy:body": {
             "recipeId": "alicia:jon_urena_daydream_recipe"
+        },
+        "core:gender": {
+            "value": "male"
         },
         "core:apparent_age": {
             "minAge": 31,

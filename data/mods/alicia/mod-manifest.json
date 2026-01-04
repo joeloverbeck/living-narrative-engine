@@ -50,6 +50,30 @@
     {
       "id": "skills",
       "version": "^1.0.0"
+    },
+    {
+      "id": "bending",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "containers-core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items-core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "locations",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "lying",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "reading",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -86,7 +110,9 @@
     "macros": [],
     "portraits": [
       "alicia_western.png",
+      "alicia_western_old.png",
       "jon_urena_daydream.png",
+      "jon_urena_daydream_old.png",
       "patient_room.png",
       "sanatorium_corridor.png"
     ],

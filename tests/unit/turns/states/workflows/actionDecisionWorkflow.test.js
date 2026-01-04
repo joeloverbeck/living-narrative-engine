@@ -1116,9 +1116,10 @@ describe('ActionDecisionWorkflow.run', () => {
     );
     const warnMessages = vedLogger.warn.mock.calls.map(([msg]) => msg);
     expect(warnMessages.length).toBeLessThanOrEqual(1);
-    if (warnMessages.length) {
-      expect(warnMessages[0]).toContain('core:display_speech');
-    }
+    // If there's a warning, it should be about core:display_speech
+    expect(
+      warnMessages.length === 0 || warnMessages[0].includes('core:display_speech')
+    ).toBe(true);
     expect(vedLogger.error).not.toHaveBeenCalled();
   });
 });
@@ -1442,23 +1443,9 @@ describe('ActionDecisionWorkflow Coverage', () => {
   });
 
   test('_findCompositeForIndex handles fallback logic', async () => {
-    // Test fallback to index-1
-    const actions = [{ index: 1, actionId: 'act1' }];
-    // We need to trick _findCompositeForIndex.
-    // It looks for candidate?.index === index.
-    // If we pass index 2, find returns undefined.
-    // Then it tries actions[index-1] -> actions[1] -> undefined.
-    // If we pass index 1, find returns match.
-
-    // The fallback `actions[index-1]` is array index access.
-    // If we have actions = [A, B] (indices 1, 2).
-    // If we request index 1: find returns A.
-    // If we request index 0 (invalid?): find undefined. actions[-1] undefined.
-    // If we request index 1 but 'index' prop is missing on objects?
-    // actions = [ { actionId: 'A' } ] (no index prop).
-    // request index 1. find undefined. actions[0] -> A.
-    // This confirms the fallback relies on array position matching 1-based index.
-
+    // Test fallback to index-1 (array position matching 1-based index)
+    // When 'index' property is missing on objects, find returns undefined,
+    // then it tries actions[index-1] as a fallback.
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: {},
@@ -1566,7 +1553,8 @@ describe('ActionDecisionWorkflow Coverage', () => {
 
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     await workflow.run();
-    // Should not throw
+    // Should not throw - verify workflow completed
+    expect(state._recordDecision).toHaveBeenCalled();
   });
 
   test('_emitSuggestedActionEvent handles undefined extractedData', async () => {
@@ -1888,5 +1876,433 @@ describe('ActionDecisionWorkflow Coverage', () => {
       expect.objectContaining({ suggestedActionDescriptor: null }),
       expect.anything()
     );
+  });
+
+  test('run() generic error includes cause (line 108)', async () => {
+    // Trigger a generic error (not AbortError) in _decideAction
+    const originalError = new Error('original cause');
+    state._decideAction.mockRejectedValue(originalError);
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Verify the error passed to endTurn has a cause property
+    expect(ctx.endTurn).toHaveBeenCalledWith(expect.any(Error));
+    const endErr = ctx.endTurn.mock.calls[0][0];
+    expect(endErr.cause).toBe(originalError);
+    expect(endErr.message).toContain('original cause');
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  test('_dispatchLLMDialogPreview returns early when no dispatcher (line 234)', async () => {
+    // Make getSafeEventDispatcher return null (no dispatcher available)
+    ctx.getSafeEventDispatcher = () => null;
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: { speech: 'hello', thoughts: 'thinking' },
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Should still complete, but previewDisplayed should be false
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ previewDisplayed: false })
+    );
+  });
+
+  test('_dispatchLLMDialogPreview catches speech dispatch error and returns false/false (lines 246-250)', async () => {
+    // Speech dispatch fails, should return { speech: false, thought: false }
+    const dispatch = jest.fn().mockRejectedValue(new Error('speech dispatch failed'));
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: { speech: 'hello', thoughts: 'thinking' },
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Should log warning about speech dispatch failure
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to dispatch LLM preview speech bubble')
+    );
+
+    // previewDisplayed should be false since dispatch failed
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ previewDisplayed: false })
+    );
+  });
+
+  test('_dispatchLLMDialogPreview catches thought dispatch error (lines 255-259)', async () => {
+    // Only thoughts (no speech) and thought dispatch fails
+    const dispatch = jest.fn().mockRejectedValue(new Error('thought dispatch failed'));
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: { thoughts: 'thinking only' }, // No speech
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Should log warning about thought dispatch failure
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to dispatch LLM preview thought bubble')
+    );
+
+    // previewDisplayed should be false
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ previewDisplayed: false })
+    );
+  });
+
+  test('_buildActionForIndex returns fallback when factory.create missing (line 339)', async () => {
+    // Strategy has turnActionFactory but no create method
+    strategy.turnActionFactory = {}; // No create method
+
+    const fallbackAction = { actionDefinitionId: 'fallback', commandString: 'fallback' };
+    state._decideAction.mockResolvedValue({
+      action: fallbackAction,
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Should use the fallback action since factory.create doesn't exist
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ actionDefinitionId: 'fallback' }),
+      expect.anything()
+    );
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'fallback',
+      expect.objectContaining({ actionDefinitionId: 'fallback' })
+    );
+  });
+
+  test('noop policy throws when prompt eventually rejects (line 359)', async () => {
+    jest.useFakeTimers();
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5,
+      policy: 'noop',
+      waitActionHints: [],
+    });
+
+    // Prompt will reject after timeout
+    let rejectPrompt;
+    const promptPromise = new Promise((_, reject) => {
+      rejectPrompt = reject;
+    });
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => promptPromise),
+    });
+    ctx.cancelActivePrompt = jest.fn();
+
+    const fallbackAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+    state._decideAction.mockResolvedValue({
+      action: fallbackAction,
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+
+    // First, let the timeout fire (noop policy waits)
+    await jest.runAllTimersAsync();
+    expect(ctx.requestProcessingCommandStateTransition).not.toHaveBeenCalled();
+
+    // Now reject the prompt
+    rejectPrompt(new Error('prompt rejected'));
+    await runPromise;
+
+    jest.useRealTimers();
+
+    // Error should propagate and trigger endTurn
+    expect(ctx.endTurn).toHaveBeenCalledWith(expect.any(Error));
+    const endErr = ctx.endTurn.mock.calls[0][0];
+    expect(endErr.message).toContain('prompt rejected');
+  });
+
+  test('fallbackSubmission logs error when error is provided (lines 411-417)', async () => {
+    // This is already partially tested, but let's make it explicit
+    timeoutConfigSpy.mockReturnValue({ enabled: false });
+
+    const promptError = new Error('explicit prompt error');
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockRejectedValue(promptError),
+    });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Verify the specific error is logged
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Prompt submission failed'),
+      promptError
+    );
+
+    // Should still use fallback and complete successfully
+    expect(state._recordDecision).toHaveBeenCalled();
+  });
+
+  test('error wins race against timeout (lines 495-499)', async () => {
+    // Timeout enabled, but error happens before timeout
+    jest.useFakeTimers();
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 10000, // Long timeout
+      policy: 'autoAccept',
+      waitActionHints: [],
+    });
+
+    // Prompt rejects immediately
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockRejectedValue(new Error('immediate error')),
+    });
+    ctx.cancelActivePrompt = jest.fn();
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    jest.useRealTimers();
+
+    // Error should trigger fallbackSubmission, not timeout policy
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Prompt submission failed'),
+      expect.any(Error)
+    );
+
+    // cancelActivePrompt should NOT be called (timeout didn't win)
+    expect(ctx.cancelActivePrompt).not.toHaveBeenCalled();
+
+    // Should still complete with fallback
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        resolvedByTimeout: false,
+        timeoutPolicy: null,
+      })
+    );
+  });
+
+  test('_setPendingFlag returns early when setAwaitingExternalEvent is not a function (line 128)', async () => {
+    // Need LLM provider to trigger pending flag logic
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      { index: 1, actionId: 'act1', description: 'One', commandString: 'cmd1' },
+    ];
+
+    // Remove the function to trigger early return
+    ctx.setAwaitingExternalEvent = undefined;
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue({ actionDefinitionId: 'act1', commandString: 'cmd1' }),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // Should complete without error - the early return is exercised
+    expect(state._recordDecision).toHaveBeenCalled();
+  });
+
+  test('_cancelPrompt catches error when cancelActivePrompt throws (line 166)', async () => {
+    jest.useFakeTimers();
+
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5,
+      policy: 'autoAccept',
+      waitActionHints: [],
+    });
+
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      { index: 1, actionId: 'act1', description: 'One', commandString: 'cmd1' },
+    ];
+
+    const cancelError = new Error('cancel failed');
+    ctx.cancelActivePrompt = jest.fn().mockImplementation(() => {
+      throw cancelError;
+    });
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => new Promise(() => {})), // Never resolves
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue({ actionDefinitionId: 'act1', commandString: 'cmd1' }),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+
+    // Fast-forward to trigger timeout + cancellation attempt
+    await jest.runAllTimersAsync();
+    await runPromise;
+
+    // Verify cancel was attempted and failed
+    expect(ctx.cancelActivePrompt).toHaveBeenCalled();
+    // Should log the warning
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to cancel prompt after timeout')
+    );
+    // Should still complete despite cancel error
+    expect(state._recordDecision).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+
+  test('prompt success wins race against timeout (line 499)', async () => {
+    jest.useFakeTimers();
+
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 5000,
+      policy: 'autoAccept',
+      waitActionHints: [],
+    });
+
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      { index: 1, actionId: 'act1', description: 'One', commandString: 'cmd1' },
+      { index: 2, actionId: 'act2', description: 'Two', commandString: 'cmd2' },
+    ];
+
+    let resolvePrompt;
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn(() => new Promise((resolve) => {
+        resolvePrompt = resolve;
+      })),
+    });
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.cancelActivePrompt = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue({ actionDefinitionId: 'act2', commandString: 'cmd2' }),
+      },
+    };
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1', commandString: 'cmd1' },
+      extractedData: { speech: 'hi' },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    const runPromise = workflow.run();
+
+    // Wait a tick for the prompt to be set up
+    await jest.advanceTimersByTimeAsync(10);
+
+    // Prompt succeeds before timeout
+    resolvePrompt({ chosenIndex: 2 });
+    await jest.runAllTimersAsync();
+    await runPromise;
+
+    // cancelActivePrompt should NOT be called (prompt won the race)
+    expect(ctx.cancelActivePrompt).not.toHaveBeenCalled();
+    // Should use prompt result, not timeout
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        resolvedByTimeout: false,
+      })
+    );
+
+    jest.useRealTimers();
   });
 });

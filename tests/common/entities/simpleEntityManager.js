@@ -222,12 +222,43 @@ export default class SimpleEntityManager {
     // Clear cache first to ensure fresh data is returned
     this.entityInstanceCache.delete(id);
 
+    // ENTIDAPI-001: Detect undefined values that will be stripped during cloning
+    if (data && typeof data === 'object') {
+      const undefinedKeys = Object.entries(data)
+        .filter(([, v]) => v === undefined)
+        .map(([k]) => k);
+      if (undefinedKeys.length > 0) {
+        console.warn(
+          `[SimpleEntityManager] addComponent: Data for ${type} contains undefined values ` +
+            `that will be stripped during cloning: ${undefinedKeys.join(', ')}. ` +
+            `This usually indicates incorrect entity ID usage (e.g., using .id on a string from createEntity()).`
+        );
+      }
+    }
+
     let ent = this.entitiesMap.get(id);
     if (!ent) {
       ent = { id, components: {} };
       this.entitiesMap.set(id, ent);
     }
-    ent.components[type] = deepClone(data);
+
+    const cloned = deepClone(data);
+
+    // ENTIDAPI-002: Property count validation after deepClone
+    if (data && typeof data === 'object') {
+      const sourceKeys = Object.keys(data).length;
+      const clonedKeys = Object.keys(cloned).length;
+      if (sourceKeys !== clonedKeys) {
+        const lostKeys = Object.keys(data).filter((k) => !(k in cloned));
+        console.error(
+          `[SimpleEntityManager] DATA LOSS DETECTED in addComponent: ${type} had ${sourceKeys} properties, ` +
+            `clone has ${clonedKeys}. Lost: ${lostKeys.join(', ')}. ` +
+            `This may indicate undefined values or non-serializable data.`
+        );
+      }
+    }
+
+    ent.components[type] = cloned;
 
     return Promise.resolve(true);
   }

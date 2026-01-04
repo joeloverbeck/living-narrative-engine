@@ -79,9 +79,9 @@ describe('striking:punch_target action discovery', () => {
         'Arm to punch with'
       );
 
-      // Secondary target is the victim
+      // Secondary target is the victim (filtered to exclude targets actor is facing away from)
       expect(punchTargetAction.targets.secondary.scope).toBe(
-        'core:actors_in_location'
+        'striking:actors_in_location_not_facing_away'
       );
       expect(punchTargetAction.targets.secondary.placeholder).toBe('target');
       expect(punchTargetAction.targets.secondary.description).toBe(

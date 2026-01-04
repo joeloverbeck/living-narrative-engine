@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import createFilterResolver from '../../../../src/scopeDsl/nodes/filterResolver.js';
 import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
+import { ScopeResolutionError } from '../../../../src/scopeDsl/errors/scopeResolutionError.js';
 
 const ACTOR_ENTITY = {
   id: 'actor-1',
@@ -38,7 +39,16 @@ function createCommonContext(overrides = {}) {
 function createCommonDeps(overrides = {}) {
   const logicEval = overrides.logicEval || {
     evaluate: jest.fn(() => {
-      throw new Error('Could not resolve condition_ref: missing predicate');
+      // Simulates what jsonLogicEvaluationService.js now throws with ACTDISDIAFAIFAS-002b changes
+      throw new ScopeResolutionError(
+        "Condition reference 'missing:predicate' not found. Did you mean: core:actor, core:target?",
+        {
+          phase: 'condition_resolution',
+          conditionId: 'missing:predicate',
+          suggestions: ['core:actor', 'core:target'],
+          hint: 'Check that the condition is defined in your mod and the ID is correct',
+        }
+      );
     }),
   };
 
@@ -87,8 +97,12 @@ describe('filterResolver condition_ref error handling', () => {
     expect(errorHandler.handleError).toHaveBeenCalledTimes(1);
     const [handledError, handledCtx, resolverName, code] =
       errorHandler.handleError.mock.calls[0];
-    expect(handledError).toBeInstanceOf(Error);
-    expect(handledError.message).toContain('Filter logic evaluation failed');
+    expect(handledError).toBeInstanceOf(ScopeResolutionError);
+    // ACTDISDIAFAIFAS-002b: Error message now preserves original with suggestions
+    expect(handledError.message).toContain("Condition reference 'missing:predicate' not found");
+    expect(handledError.message).toContain('Did you mean:');
+    // Suggestions are preserved from the original error
+    expect(handledError.context.suggestions).toEqual(['core:actor', 'core:target']);
     expect(handledCtx).toBe(ctx);
     expect(resolverName).toBe('FilterResolver');
     expect(code).toBe(ErrorCodes.RESOLUTION_FAILED_GENERIC);
@@ -99,10 +113,12 @@ describe('filterResolver condition_ref error handling', () => {
     const resolver = createFilterResolver(deps);
     const ctx = createCommonContext();
 
+    // ACTDISDIAFAIFAS-002b: Error message now preserves original with suggestions
     expect(() => resolver.resolve(baseNode, ctx)).toThrow(
-      /Filter logic evaluation failed/
+      /Condition reference.*not found/
     );
-    expect(deps.logicEval.evaluate).toHaveBeenCalledTimes(1);
+    expect(() => resolver.resolve(baseNode, ctx)).toThrow(/Did you mean:/);
+    expect(deps.logicEval.evaluate).toHaveBeenCalledTimes(2); // Called twice due to two throws above
   });
 
   it('records evaluation metadata when trace context is provided', () => {
@@ -209,7 +225,7 @@ describe('filterResolver condition_ref error handling', () => {
     );
   });
 
-  it('continues processing when evaluation throws non condition_ref errors', () => {
+  it('gracefully skips items when evaluation throws non-condition_ref errors', () => {
     const logicEval = {
       evaluate: jest.fn(() => {
         throw new Error('Unexpected evaluation failure');
@@ -220,9 +236,129 @@ describe('filterResolver condition_ref error handling', () => {
     const resolver = createFilterResolver(deps);
     const ctx = createCommonContext();
 
+    // Non-condition_ref errors gracefully skip items to support heterogeneous collections
+    // (e.g., inventory with mixed item types where some items lack filter-referenced components)
+    // Only condition_ref errors (configuration bugs) fail-fast per INV-EVAL-1
     const result = resolver.resolve(baseNode, ctx);
-
     expect(result.size).toBe(0);
     expect(logicEval.evaluate).toHaveBeenCalledTimes(1);
+  });
+
+  // ACTDISDIAFAIFAS-002b: New tests for suggestion functionality
+  describe('condition_ref suggestion integration (ACTDISDIAFAIFAS-002b)', () => {
+    it('preserves suggestions array when condition_ref error includes suggestions', () => {
+      const errorHandler = {
+        handleError: jest.fn(),
+        getErrorBuffer: jest.fn(() => []),
+      };
+
+      const logicEval = {
+        evaluate: jest.fn(() => {
+          throw new ScopeResolutionError(
+            "Condition reference 'core:actorr' not found. Did you mean: core:actor, core:target?",
+            {
+              phase: 'condition_resolution',
+              conditionId: 'core:actorr',
+              suggestions: ['core:actor', 'core:target'],
+            }
+          );
+        }),
+      };
+
+      const deps = createCommonDeps({ logicEval, errorHandler });
+      const resolver = createFilterResolver(deps);
+      const ctx = createCommonContext();
+
+      resolver.resolve(baseNode, ctx);
+
+      const [handledError] = errorHandler.handleError.mock.calls[0];
+      expect(handledError.context.suggestions).toEqual(['core:actor', 'core:target']);
+      expect(handledError.context.conditionId).toBe('core:actorr');
+    });
+
+    it('handles empty suggestions array gracefully', () => {
+      const errorHandler = {
+        handleError: jest.fn(),
+        getErrorBuffer: jest.fn(() => []),
+      };
+
+      const logicEval = {
+        evaluate: jest.fn(() => {
+          throw new ScopeResolutionError(
+            "Condition reference 'xyzzy:unknown' not found.",
+            {
+              phase: 'condition_resolution',
+              conditionId: 'xyzzy:unknown',
+              suggestions: [],
+            }
+          );
+        }),
+      };
+
+      const deps = createCommonDeps({ logicEval, errorHandler });
+      const resolver = createFilterResolver(deps);
+      const ctx = createCommonContext();
+
+      resolver.resolve(baseNode, ctx);
+
+      const [handledError] = errorHandler.handleError.mock.calls[0];
+      expect(handledError.context.suggestions).toEqual([]);
+      expect(handledError.message).not.toContain('Did you mean');
+    });
+
+    it('preserves conditionId in wrapped error context', () => {
+      const logicEval = {
+        evaluate: jest.fn(() => {
+          throw new ScopeResolutionError(
+            "Condition reference 'positioning:closeness' not found.",
+            {
+              phase: 'condition_resolution',
+              conditionId: 'positioning:closeness',
+              suggestions: ['positioning:close'],
+            }
+          );
+        }),
+      };
+
+      const deps = createCommonDeps({ logicEval });
+      const resolver = createFilterResolver(deps);
+      const ctx = createCommonContext();
+
+      try {
+        resolver.resolve(baseNode, ctx);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ScopeResolutionError);
+        expect(error.context.conditionId).toBe('positioning:closeness');
+        expect(error.context.suggestions).toEqual(['positioning:close']);
+      }
+    });
+
+    it('preserves hint from original error', () => {
+      const logicEval = {
+        evaluate: jest.fn(() => {
+          throw new ScopeResolutionError(
+            "Condition reference 'test:missing' not found.",
+            {
+              phase: 'condition_resolution',
+              conditionId: 'test:missing',
+              suggestions: [],
+              hint: 'Check that the condition is defined in your mod and the ID is correct',
+            }
+          );
+        }),
+      };
+
+      const deps = createCommonDeps({ logicEval });
+      const resolver = createFilterResolver(deps);
+      const ctx = createCommonContext();
+
+      try {
+        resolver.resolve(baseNode, ctx);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error.context.hint).toContain('Check that');
+      }
+    });
   });
 });

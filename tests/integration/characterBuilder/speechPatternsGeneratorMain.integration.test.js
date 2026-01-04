@@ -11,7 +11,17 @@ const MODULE_PATH = '../../../src/speech-patterns-generator-main.js';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
-const importEntrypointWithForcedAutoInit = async () => import(MODULE_PATH);
+/**
+ * Import the entrypoint module with forced auto-initialization.
+ * This sets `globalThis.__LNE_FORCE_AUTO_INIT__` to bypass the test
+ * environment check in `shouldAutoInitializeDom()`.
+ *
+ * @returns {Promise<object>} The imported module
+ */
+const importEntrypointWithForcedAutoInit = async () => {
+  globalThis.__LNE_FORCE_AUTO_INIT__ = true;
+  return import(MODULE_PATH);
+};
 
 describe('speech-patterns-generator main entrypoint integration', () => {
   let readyStateValue;
@@ -40,6 +50,8 @@ describe('speech-patterns-generator main entrypoint integration', () => {
   afterEach(() => {
     jest.restoreAllMocks();
     document.body.innerHTML = '';
+    // Clean up auto-init override flag set by importEntrypointWithForcedAutoInit
+    delete globalThis.__LNE_FORCE_AUTO_INIT__;
 
     if (originalReadyDescriptor) {
       Object.defineProperty(document, 'readyState', originalReadyDescriptor);

@@ -43,18 +43,34 @@ export class TargetComponentValidator {
   }
 
   /**
+   * @typedef {Object} TargetComponentValidationResult
+   * @property {boolean} valid
+   * @property {string} [reason]
+   * @property {object} [filteredTargets]
+   * @property {Array<{role: string, targetId: string|null, component: string|null}>} [removedTargets]
+   * @property {Object} [details] - Only present when includeDetails: true
+   * @property {Array<{entityId: string, forbiddenComponentsPresent: string[]}>} [details.rejectedEntities]
+   * @property {string} [details.targetRole]
+   */
+
+  /**
    * Validates target entities against forbidden component constraints
    *
    * @param {object} actionDef - Action definition with forbidden_components
    * @param {object} targetEntities - Object with target entities by role
-   * @returns {{valid: boolean, reason?: string, filteredTargets?: object|null, removedTargets?: Array<object>}} Validation result
+   * @param {Object} [options] - Validation options
+   * @param {boolean} [options.includeDetails=false] - Include detailed rejection info
+   * @returns {TargetComponentValidationResult} Validation result
    */
-  validateTargetComponents(actionDef, targetEntities) {
+  validateTargetComponents(actionDef, targetEntities, options = {}) {
     const startTime = performance.now();
+    const { includeDetails = false } = options;
 
     // If no forbidden_components defined, validation passes
     if (!actionDef.forbidden_components) {
-      return { valid: true };
+      return includeDetails
+        ? { valid: true, details: { rejectedEntities: [] } }
+        : { valid: true };
     }
 
     // Handle null/undefined target entities gracefully
@@ -62,7 +78,9 @@ export class TargetComponentValidator {
       this.#logger.debug(
         `No target entities provided for action '${actionDef.id}', validation passes`
       );
-      return { valid: true };
+      return includeDetails
+        ? { valid: true, details: { rejectedEntities: [] } }
+        : { valid: true };
     }
 
     let result;
@@ -80,13 +98,23 @@ export class TargetComponentValidator {
 
     if (hasMultiTargetRoles || hasActorAndTarget) {
       // Use multi-target validation (handles both actor and all target roles)
-      result = this.#validateMultiTargetFormat(actionDef, targetEntities);
+      result = this.#validateMultiTargetFormat(
+        actionDef,
+        targetEntities,
+        includeDetails
+      );
     } else if (actionDef.forbidden_components.target) {
       // Pure legacy single-target format (ONLY has .target, no .actor)
-      result = this.#validateLegacyFormat(actionDef, targetEntities);
+      result = this.#validateLegacyFormat(
+        actionDef,
+        targetEntities,
+        includeDetails
+      );
     } else {
       // No target validation needed (only actor forbidden components or none)
-      return { valid: true };
+      return includeDetails
+        ? { valid: true, details: { rejectedEntities: [] } }
+        : { valid: true };
     }
 
     // Log performance metrics in debug mode
@@ -105,9 +133,13 @@ export class TargetComponentValidator {
    *
    * @param {Entity|object} entity - Entity to validate
    * @param {Array<string>} forbiddenComponents - List of forbidden component IDs
-   * @returns {{valid: boolean, component?: string}} Validation result
+   * @param {Object} [options] - Validation options
+   * @param {boolean} [options.includeAllForbidden=false] - If true, collect all forbidden components instead of stopping at first
+   * @returns {{valid: boolean, component?: string, forbiddenComponentsPresent?: string[]}} Validation result
    */
-  validateEntityComponents(entity, forbiddenComponents) {
+  validateEntityComponents(entity, forbiddenComponents, options = {}) {
+    const { includeAllForbidden = false } = options;
+
     // Handle empty forbidden components list
     if (!forbiddenComponents || forbiddenComponents.length === 0) {
       return { valid: true };
@@ -145,12 +177,30 @@ export class TargetComponentValidator {
     }
 
     // Check for forbidden components
-    for (const component of entityComponents) {
-      if (forbiddenSet.has(component)) {
+    if (includeAllForbidden) {
+      // Collect ALL forbidden components
+      const forbiddenFound = [];
+      for (const component of entityComponents) {
+        if (forbiddenSet.has(component)) {
+          forbiddenFound.push(component);
+        }
+      }
+      if (forbiddenFound.length > 0) {
         return {
           valid: false,
-          component,
+          component: forbiddenFound[0], // Backward compat
+          forbiddenComponentsPresent: forbiddenFound,
         };
+      }
+    } else {
+      // Original behavior: return on first match
+      for (const component of entityComponents) {
+        if (forbiddenSet.has(component)) {
+          return {
+            valid: false,
+            component,
+          };
+        }
       }
     }
 
@@ -163,9 +213,10 @@ export class TargetComponentValidator {
    * @private
    * @param {object} actionDef - Action definition
    * @param {object} targetEntities - Target entities
+   * @param {boolean} includeDetails - Whether to include detailed rejection info
    * @returns {object} Validation result
    */
-  #validateLegacyFormat(actionDef, targetEntities) {
+  #validateLegacyFormat(actionDef, targetEntities, includeDetails) {
     const forbiddenComponents = actionDef.forbidden_components.target;
     const targetEntity = targetEntities.target;
     const filteredTargets = { ...targetEntities };
@@ -173,12 +224,15 @@ export class TargetComponentValidator {
 
     // No target entity means validation passes
     if (!targetEntity) {
-      return { valid: true };
+      return includeDetails
+        ? { valid: true, details: { rejectedEntities: [], targetRole: 'target' } }
+        : { valid: true };
     }
 
     const validation = this.validateEntityComponents(
       targetEntity,
-      forbiddenComponents
+      forbiddenComponents,
+      { includeAllForbidden: includeDetails }
     );
 
     if (!validation.valid) {
@@ -195,15 +249,32 @@ export class TargetComponentValidator {
         component: validation.component || null,
       });
 
-      return {
+      const result = {
         valid: false,
         reason,
         filteredTargets,
         removedTargets,
       };
+
+      if (includeDetails) {
+        result.details = {
+          targetRole: 'target',
+          rejectedEntities: [
+            {
+              entityId: targetEntity.id || 'unknown',
+              forbiddenComponentsPresent:
+                validation.forbiddenComponentsPresent || [validation.component],
+            },
+          ],
+        };
+      }
+
+      return result;
     }
 
-    return { valid: true };
+    return includeDetails
+      ? { valid: true, details: { rejectedEntities: [], targetRole: 'target' } }
+      : { valid: true };
   }
 
   /**
@@ -212,15 +283,18 @@ export class TargetComponentValidator {
    * @private
    * @param {object} actionDef - Action definition
    * @param {object} targetEntities - Target entities by role
+   * @param {boolean} includeDetails - Whether to include detailed rejection info
    * @returns {object} Validation result
    */
-  #validateMultiTargetFormat(actionDef, targetEntities) {
+  #validateMultiTargetFormat(actionDef, targetEntities, includeDetails) {
     const forbiddenConfig = actionDef.forbidden_components;
     const targetRoles = ALL_TARGET_ROLES;
     const filteredTargets = { ...targetEntities };
     const removedTargets = [];
+    const rejectedEntities = []; // For detailed output
     let hasRemovals = false;
     let firstFailureReason = null;
+    let firstFailureRole = null;
 
     // Check each target role
     for (const role of targetRoles) {
@@ -268,7 +342,8 @@ export class TargetComponentValidator {
 
         const validation = this.validateEntityComponents(
           entity,
-          forbiddenComponents
+          forbiddenComponents,
+          { includeAllForbidden: includeDetails }
         );
 
         if (!validation.valid) {
@@ -284,6 +359,16 @@ export class TargetComponentValidator {
             targetId: entity.id || null,
             component: validation.component || null,
           });
+
+          // Collect detailed rejection info
+          if (includeDetails) {
+            rejectedEntities.push({
+              entityId: entity.id || 'unknown',
+              forbiddenComponentsPresent:
+                validation.forbiddenComponentsPresent || [validation.component],
+            });
+          }
+
           continue;
         }
 
@@ -298,26 +383,46 @@ export class TargetComponentValidator {
       }
 
       if (validCandidates.length === 0 && targetCandidates.length > 0) {
-        firstFailureReason =
-          firstFailureReason ||
-          lastInvalidReason ||
-          `Action '${actionDef.id}' cannot be performed: ${role} target lacks eligible candidates after forbidden component filtering`;
+        if (!firstFailureReason) {
+          firstFailureReason =
+            lastInvalidReason ||
+            `Action '${actionDef.id}' cannot be performed: ${role} target lacks eligible candidates after forbidden component filtering`;
+          firstFailureRole = role;
+        }
       }
     }
 
     if (hasRemovals && removedTargets.length > 0) {
-      return {
+      const result = {
         valid: !firstFailureReason,
         reason: firstFailureReason || undefined,
         filteredTargets,
         removedTargets,
       };
+
+      if (includeDetails) {
+        result.details = {
+          targetRole: firstFailureRole || removedTargets[0]?.role || null,
+          rejectedEntities,
+        };
+      }
+
+      return result;
     }
 
-    return {
+    const result = {
       valid: !firstFailureReason,
       reason: firstFailureReason || undefined,
     };
+
+    if (includeDetails) {
+      result.details = {
+        targetRole: firstFailureRole || null,
+        rejectedEntities,
+      };
+    }
+
+    return result;
   }
 }
 

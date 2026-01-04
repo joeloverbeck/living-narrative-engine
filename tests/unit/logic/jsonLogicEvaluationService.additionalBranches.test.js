@@ -11,6 +11,7 @@ import JsonLogicEvaluationService, {
 } from '../../../src/logic/jsonLogicEvaluationService.js';
 import { createMockLogger } from '../testUtils.js';
 import * as resolver from '../../../src/utils/conditionRefResolver.js';
+import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 import jsonLogic from 'json-logic-js';
 
 // Mock for conditionRefResolver
@@ -45,13 +46,15 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     );
   });
 
-  test('returns false when condition_ref cannot be resolved', () => {
+  test('throws ScopeResolutionError when condition_ref cannot be resolved (INV-EVAL-2)', () => {
     resolver.resolveConditionRefs.mockImplementation(() => {
-      throw new Error('Could not resolve condition_ref "foo"');
+      throw new Error("Could not resolve condition_ref 'foo'");
     });
-    expect(service.evaluate({ condition_ref: 'foo' }, {})).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Could not resolve condition_ref')
+    expect(() => service.evaluate({ condition_ref: 'foo' }, {})).toThrow(
+      ScopeResolutionError
+    );
+    expect(() => service.evaluate({ condition_ref: 'foo' }, {})).toThrow(
+      /Condition reference 'foo' not found/
     );
   });
 
