@@ -184,7 +184,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       const testData = await ModTestFixture.forAction(
         'exercise',
-        'show_off_biceps'
+        'exercise:show_off_biceps'
       );
       expect(testData.actionFile).toBeDefined();
 
@@ -657,8 +657,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
     });
 
-    it('should validate positioning category file naming patterns', async () => {
-      // Positioning actions follow naming: positioning_<action>_action.js
+    it('should validate sitting category file naming patterns', async () => {
+      // Sitting actions follow naming: sitting_<action>_action.js
       // ModTestFixture uses readFile directly, not access
       // Clear any previous mocks
       fs.promises.readFile.mockClear();
@@ -703,8 +703,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         );
 
       const testData = await ModTestFixture.forAction(
-        'positioning',
-        'sit_on_chair'
+        'sitting',
+        'sitting:sit_down'
       );
       expect(testData.actionFile).toBeDefined();
 
@@ -720,8 +720,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         'exercise',
         'striking',
         'affection',
-        'sex',
-        'positioning',
+        'sex-core',
+        'sitting',
       ];
       const factoryResults = {};
 
@@ -750,9 +750,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const expectedCapabilities = {
         exercise: { hasAddComponent: true, minHandlers: 10 },
         striking: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
-        sex: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
+        'sex-core': { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
         affection: { hasAddComponent: true, minHandlers: 14 }, // Uses component mutations
-        positioning: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
+        sitting: { hasAddComponent: true, minHandlers: 20 }, // Uses perception logging (extended set)
       };
 
       Object.entries(expectedCapabilities).forEach(
@@ -866,8 +866,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         'exercise',
         'striking',
         'affection',
-        'sex',
-        'positioning',
+        'sex-core',
+        'sitting',
       ];
 
       // Clear any previous mocks and reset
@@ -929,9 +929,39 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       const loadPromises = testCategories.map(async (category) => {
+        // Create mock rule and condition objects (not strings) to bypass file existence validation
+        // If passed as objects, forAction uses them directly without file reading
+        const mockRuleFile = {
+          $schema: 'schema://living-narrative-engine/rule.schema.json',
+          rule_id: `handle_${category}_test_action`,
+          event_type: 'core:attempt_action',
+          condition: {
+            condition_ref: `${category}:event-is-action-test-action`,
+          },
+          actions: [
+            {
+              type: 'LOG_MESSAGE',
+              parameters: {
+                message: `Test ${category} Action`,
+              },
+            },
+          ],
+        };
+        const mockConditionFile = {
+          $schema: 'schema://living-narrative-engine/condition.schema.json',
+          id: `${category}:event-is-action-test-action`,
+          description: `Matches the ${category} test action.`,
+          logic: {
+            '==': [{ var: 'event.payload.actionId' }, `${category}:test_action`],
+          },
+        };
+        // Pass mock objects directly to bypass existsSync validation
         const testData = await ModTestFixture.forAction(
           category,
-          'test_action'
+          `${category}:test_action`,
+          mockRuleFile,
+          mockConditionFile,
+          { skipValidation: true }
         );
         expect(testData.actionFile).toBeDefined();
 

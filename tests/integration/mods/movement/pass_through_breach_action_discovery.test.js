@@ -174,7 +174,7 @@ describe('movement:pass_through_breach action discovery', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('movement', 'pass_through_breach');
+    fixture = await ModTestFixture.forAction('movement', 'movement:pass_through_breach');
     fixture.testEnv.actionIndex.buildIndex([passThroughBreachAction]);
     registerPassThroughBreachResolvers(fixture);
   });

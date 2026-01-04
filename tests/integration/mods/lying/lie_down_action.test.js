@@ -42,7 +42,7 @@ describe('lying:lie_down action rule execution', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('lying', 'lie_down');
+    testFixture = await ModTestFixture.forAction('lying', 'lying:lie_down');
   });
 
   afterEach(() => {

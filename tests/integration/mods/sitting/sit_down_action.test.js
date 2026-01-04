@@ -10,7 +10,7 @@ describe('sitting:sit_down action forbidden state enforcement', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sitting', 'sit_down');
+    testFixture = await ModTestFixture.forAction('sitting', 'sitting:sit_down');
   });
 
   afterEach(() => {

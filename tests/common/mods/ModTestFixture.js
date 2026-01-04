@@ -26,8 +26,9 @@ import handleThrowHitMacro from '../../../data/mods/ranged/macros/handleThrowHit
 import handleThrowFumbleMacro from '../../../data/mods/ranged/macros/handleThrowFumble.macro.json';
 import handleThrowMissMacro from '../../../data/mods/ranged/macros/handleThrowMiss.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { promises as fs } from 'fs';
+import { promises as fs, existsSync, readdirSync, statSync } from 'fs';
 import { resolve } from 'path';
+import { findSimilar } from '../../../src/utils/suggestionUtils.js';
 
 import { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
 import { ModEntityBuilder, ModEntityScenarios } from './ModEntityBuilder.js';
@@ -374,6 +375,67 @@ export class ModTestFixture {
     try {
       // Validate options
       this._validateForActionOptions(options);
+
+      // Early validation: mod/action existence (only when files will be auto-loaded)
+      // Skip if both rule and condition files are provided (mock data scenario)
+      const needsAutoLoad = !ruleFile || !conditionFile;
+      if (needsAutoLoad) {
+        // Validate action ID format
+        if (!actionId.includes(':')) {
+          const suggestion = `${modId}:${actionId}`;
+          throw new Error(
+            `Invalid action ID format: '${actionId}'. ` +
+              `Action IDs must be namespaced (e.g., 'mod:action-name'). ` +
+              `Did you mean '${suggestion}'?`
+          );
+        }
+
+        // Validate mod exists
+        const modPath = `data/mods/${modId}`;
+        if (!existsSync(modPath)) {
+          const availableMods = readdirSync('data/mods').filter((d) => {
+            try {
+              return statSync(`data/mods/${d}`).isDirectory();
+            } catch {
+              return false;
+            }
+          });
+          const suggestions = findSimilar(modId, availableMods, {
+            maxDistance: 3,
+            maxSuggestions: 3,
+          });
+          throw new Error(
+            `Mod '${modId}' not found at ${modPath}. ` +
+              (suggestions.length
+                ? `Did you mean: ${suggestions.join(', ')}?`
+                : `Available mods: ${availableMods.slice(0, 5).join(', ')}${availableMods.length > 5 ? '...' : ''}`)
+          );
+        }
+
+        // Validate action file exists
+        const actionFile = `data/mods/${modId}/actions/${actionId.split(':')[1]}.action.json`;
+        if (!existsSync(actionFile)) {
+          const actionsDir = `data/mods/${modId}/actions`;
+          let availableActions = [];
+          if (existsSync(actionsDir)) {
+            availableActions = readdirSync(actionsDir)
+              .filter((f) => f.endsWith('.action.json'))
+              .map((f) => `${modId}:${f.replace('.action.json', '')}`);
+          }
+          const suggestions = findSimilar(actionId, availableActions, {
+            maxDistance: 5,
+            maxSuggestions: 3,
+          });
+          throw new Error(
+            `Action '${actionId}' not found at ${actionFile}. ` +
+              (suggestions.length
+                ? `Did you mean: ${suggestions.join(', ')}?`
+                : availableActions.length
+                  ? `Available actions in '${modId}': ${availableActions.slice(0, 5).join(', ')}${availableActions.length > 5 ? '...' : ''}`
+                  : `No actions found in mod '${modId}'.`)
+          );
+        }
+      }
 
       const {
         skipValidation = false,
@@ -998,6 +1060,12 @@ export class ModTestFixture {
  * Base class for mod test fixtures.
  */
 class BaseModTestFixture {
+  /** @type {Map<string, (context: object) => Set<string>>} */
+  #scopeMocks = new Map();
+
+  /** @type {((name: string, context: object) => Set<string>)|null} */
+  #originalResolveSync = null;
+
   constructor(modId, options = {}) {
     this.modId = modId;
     this.options = options;
@@ -1005,6 +1073,92 @@ class BaseModTestFixture {
     this.diagnostics = null; // Will be created on demand
     this.scopeTracer = new ScopeEvaluationTracer();
     this.defaultEntityOptions = {};
+  }
+
+  /**
+   * Mock a scope resolver to return specific results.
+   *
+   * @param {string} scopeName - Full scope name (e.g., 'positioning:close_actors')
+   * @param {Set<string>|((context: object) => Set<string>)} resolverOrResult - Either:
+   *   - A Set of entity IDs to return
+   *   - A function (context) => Set<string> for dynamic resolution
+   *
+   * @example
+   * // Static result
+   * fixture.mockScope('my:scope', new Set(['entity-1', 'entity-2']));
+   *
+   * @example
+   * // Dynamic resolver
+   * fixture.mockScope('my:scope', (context) => {
+   *   return new Set([context.actor.id]);
+   * });
+   */
+  mockScope(scopeName, resolverOrResult) {
+    if (!scopeName || typeof scopeName !== 'string') {
+      throw new Error('mockScope: scopeName must be a non-empty string');
+    }
+
+    // Store original resolver on first mock
+    if (!this.#originalResolveSync) {
+      this.#originalResolveSync =
+        this.testEnv.unifiedScopeResolver.resolveSync.bind(
+          this.testEnv.unifiedScopeResolver
+        );
+    }
+
+    // Normalize to function
+    const resolver =
+      typeof resolverOrResult === 'function'
+        ? resolverOrResult
+        : () => resolverOrResult;
+
+    this.#scopeMocks.set(scopeName, resolver);
+
+    // Install intercepting resolver
+    const mocks = this.#scopeMocks;
+    const original = this.#originalResolveSync;
+
+    this.testEnv.unifiedScopeResolver.resolveSync = function (name, context) {
+      if (mocks.has(name)) {
+        const mockResult = mocks.get(name)(context);
+        // Ensure result is a Set
+        return mockResult instanceof Set ? mockResult : new Set(mockResult);
+      }
+      return original(name, context);
+    };
+  }
+
+  /**
+   * Clear all scope mocks and restore original resolver.
+   *
+   * Called automatically by cleanup(), but can be called manually
+   * to restore original behavior mid-test.
+   */
+  clearScopeMocks() {
+    if (this.#originalResolveSync) {
+      this.testEnv.unifiedScopeResolver.resolveSync = this.#originalResolveSync;
+      this.#originalResolveSync = null;
+    }
+    this.#scopeMocks.clear();
+  }
+
+  /**
+   * Check if a scope is currently mocked.
+   *
+   * @param {string} scopeName - Scope name to check
+   * @returns {boolean} True if scope has an active mock
+   */
+  isScopeMocked(scopeName) {
+    return this.#scopeMocks.has(scopeName);
+  }
+
+  /**
+   * Get list of currently mocked scope names.
+   *
+   * @returns {string[]} Array of mocked scope names
+   */
+  getMockedScopes() {
+    return Array.from(this.#scopeMocks.keys());
   }
 
   /**
@@ -1688,6 +1842,13 @@ class BaseModTestFixture {
   cleanup() {
     const errors = [];
 
+    // Clear scope mocks first (restore original resolver)
+    try {
+      this.clearScopeMocks();
+    } catch (err) {
+      errors.push({ step: 'clearScopeMocks', error: err });
+    }
+
     this.disableDiagnostics();
 
     // Clear tracer to prevent memory leaks
@@ -1898,6 +2059,9 @@ class BaseModTestFixture {
  * Test fixture specialized for mod actions.
  */
 export class ModActionTestFixture extends BaseModTestFixture {
+  /** @type {Set<string>} */
+  #registeredConditions = new Set();
+
   constructor(modId, actionId, ruleFile, conditionFile, options = {}) {
     super(modId, options);
     this.actionId = actionId;
@@ -1986,6 +2150,82 @@ export class ModActionTestFixture extends BaseModTestFixture {
      * @private
      */
     this._suppressHints = false;
+  }
+
+  /**
+   * Register a condition for use in rules during testing.
+   * This is the preferred way to add test conditions.
+   *
+   * @param {string} conditionId - Full condition ID (e.g., 'test:my-condition')
+   * @param {object} definition - Condition definition object
+   * @param {object} definition.logic - JSON Logic expression
+   * @param {string} [definition.description] - Human-readable description
+   * @throws {Error} If conditionId invalid or definition missing logic
+   * @example
+   * fixture.registerCondition('test:is-actor', {
+   *   logic: { '==': [{ var: 'entity.type' }, 'actor'] },
+   *   description: 'Checks if entity is an actor'
+   * });
+   */
+  registerCondition(conditionId, definition) {
+    if (!conditionId || typeof conditionId !== 'string') {
+      throw new Error('registerCondition: conditionId must be a non-empty string');
+    }
+    if (!definition || typeof definition !== 'object') {
+      throw new Error(`registerCondition: definition for '${conditionId}' must be an object`);
+    }
+    if (!('logic' in definition)) {
+      throw new Error(
+        `Condition '${conditionId}' must have a 'logic' property. Received: ${JSON.stringify(Object.keys(definition))}`
+      );
+    }
+
+    // Use existing _loadedConditions mechanism (already wired to dataRegistry override)
+    this._loadedConditions.set(conditionId, definition);
+    this.#registeredConditions.add(conditionId);
+
+    // ALSO write to testEnv._loadedConditions if it exists
+    // This ensures compatibility with ScopeResolverHelpers._loadConditionsIntoRegistry()
+    // which sets up its own override checking testEnv._loadedConditions (a different Map)
+    if (this.testEnv._loadedConditions) {
+      this.testEnv._loadedConditions.set(conditionId, definition);
+    }
+  }
+
+  /**
+   * Clear all conditions registered via registerCondition().
+   * Called automatically by cleanup().
+   *
+   * @returns {void}
+   */
+  clearRegisteredConditions() {
+    for (const conditionId of this.#registeredConditions) {
+      this._loadedConditions.delete(conditionId);
+      // Also clean up from testEnv._loadedConditions if it exists
+      if (this.testEnv._loadedConditions) {
+        this.testEnv._loadedConditions.delete(conditionId);
+      }
+    }
+    this.#registeredConditions.clear();
+  }
+
+  /**
+   * Check if a condition was registered via registerCondition().
+   *
+   * @param {string} conditionId - The condition ID to check
+   * @returns {boolean} True if condition was registered via API
+   */
+  isConditionRegistered(conditionId) {
+    return this.#registeredConditions.has(conditionId);
+  }
+
+  /**
+   * Get list of conditions registered via registerCondition().
+   *
+   * @returns {string[]} Array of registered condition IDs
+   */
+  getRegisteredConditions() {
+    return Array.from(this.#registeredConditions);
   }
 
   /**
@@ -3106,6 +3346,15 @@ beforeEach(async () => {
       this.testEnv.entityManager,
       { [fullScopeName]: resolver }
     );
+  }
+
+  /**
+   * @override
+   * Extended cleanup that also clears registered conditions.
+   */
+  cleanup() {
+    this.clearRegisteredConditions();
+    super.cleanup();
   }
 }
 

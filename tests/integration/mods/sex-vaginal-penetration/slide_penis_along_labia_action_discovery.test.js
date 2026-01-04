@@ -352,7 +352,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
+      'sex-vaginal-penetration',
       'sex-vaginal-penetration:slide_penis_along_labia'
     );
 

@@ -11,7 +11,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { promises as fs } from 'fs';
+import { promises as fs, existsSync } from 'fs';
 import {
   ModTestFixture,
   ModActionTestFixture,
@@ -25,8 +25,10 @@ jest.mock('fs', () => ({
     readdir: jest.fn().mockResolvedValue([]),
   },
   // Sync APIs are used by ModTestHandlerFactory during environment setup
+  // and by early validation in ModTestFixture.forAction()
   existsSync: jest.fn().mockReturnValue(false),
   readdirSync: jest.fn().mockReturnValue([]),
+  statSync: jest.fn().mockReturnValue({ isDirectory: () => true }),
   readFileSync: jest.fn().mockReturnValue('{}'),
 }));
 
@@ -303,6 +305,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should auto-load files when not provided', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
@@ -350,6 +355,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should auto-load only missing files', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       // When only condition needs to be loaded, mock only condition file attempts
       // The production code will try multiple paths for the condition file
       fs.readFile
@@ -373,6 +381,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should throw descriptive error when auto-loading fails', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile.mockRejectedValue(new Error('Files not found'));
 
       await expect(
@@ -405,6 +416,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should auto-load files when not provided', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
@@ -420,6 +434,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should throw descriptive error when auto-loading fails', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile.mockRejectedValue(new Error('Files not found'));
 
       await expect(
@@ -438,6 +455,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     const mockConditionFile = { id: 'test:condition' };
 
     it('should create fixture with auto-loaded files', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile
         .mockResolvedValueOnce(JSON.stringify(mockRuleFile))
         .mockResolvedValueOnce(JSON.stringify(mockConditionFile));
@@ -453,6 +473,9 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should throw clear error when files missing', async () => {
+      // Mock existsSync to pass early validation (mod and action file exist)
+      existsSync.mockReturnValue(true);
+
       fs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
       await expect(

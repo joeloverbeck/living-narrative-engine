@@ -16,7 +16,7 @@ describe('bending:bend_over action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'bending',
       'bending:bend_over'
     );
   });

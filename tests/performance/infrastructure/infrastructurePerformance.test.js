@@ -156,11 +156,15 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
    * @param root0.ruleContent
    * @param root0.conditionContent
    * @param root0.failInitialRuleReads
+   * @param root0.modId
+   * @param root0.actionId
    */
   function configureMockModFiles({
     ruleContent = defaultRuleContent,
     conditionContent = defaultConditionContent,
     failInitialRuleReads = 0,
+    modId = null,
+    actionId = null,
   } = {}) {
     let ruleAttempts = 0;
 
@@ -183,6 +187,36 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         `Unexpected file read during performance test: ${filePath}`
       );
     });
+
+    if (modId) {
+      const normalizedModPath = `data/mods/${modId}`;
+      const normalizedActionsPath = `data/mods/${modId}/actions/`;
+      const actionName = actionId ? actionId.split(':')[1] : null;
+      const normalizedActionFile = actionName
+        ? `${normalizedActionsPath}${actionName}.action.json`
+        : null;
+      fs.existsSync.mockImplementation((filePath) => {
+        const normalizedPath = String(filePath).replace(/\\/g, '/');
+
+        if (normalizedPath === normalizedModPath) {
+          return true;
+        }
+
+        if (normalizedActionFile && normalizedPath === normalizedActionFile) {
+          return true;
+        }
+
+        if (
+          !normalizedActionFile &&
+          normalizedPath.startsWith(normalizedActionsPath) &&
+          normalizedPath.endsWith('.action.json')
+        ) {
+          return true;
+        }
+
+        return false;
+      });
+    }
   }
 
   describe('ModTestHandlerFactory Performance Baselines', () => {
@@ -307,6 +341,8 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       // Mock successful file loading
       fs.promises.access.mockResolvedValue();
       configureMockModFiles({
+        modId: 'test',
+        actionId: 'test:action',
         ruleContent: {
           rule_id: 'test:action_rule',
           event_type: 'core:attempt_action',
@@ -319,7 +355,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
       const stats = await performanceTest(
         async () => {
-          return await ModTestFixture.forAction('test', 'action');
+          return await ModTestFixture.forAction('test', 'test:action');
         },
         {
           operation: 'ModTestFixture.forAction',
@@ -339,6 +375,8 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       // Mock file reads to trigger fallback behavior
       configureMockModFiles({
         failInitialRuleReads: 2,
+        modId: 'fallback',
+        actionId: 'fallback:test',
         ruleContent: {
           rule_id: 'fallback:test_rule',
           event_type: 'core:attempt_action',
@@ -351,7 +389,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
 
       const stats = await performanceTest(
         async () => {
-          return await ModTestFixture.forAction('fallback', 'test');
+          return await ModTestFixture.forAction('fallback', 'fallback:test');
         },
         {
           operation: 'ModTestFixture.forAction with fallbacks',
@@ -645,6 +683,8 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       // Mock file loading for realistic workflow
       fs.promises.access.mockResolvedValue();
       configureMockModFiles({
+        modId: 'performance',
+        actionId: 'performance:workflow_test',
         ruleContent: {
           rule_id: 'performance:workflow_test_rule',
           event_type: 'core:attempt_action',
@@ -660,7 +700,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
           // Step 1: Load test data
           const testData = await ModTestFixture.forAction(
             'performance',
-            'workflow_test'
+            'performance:workflow_test'
           );
 
           // Step 2: Create handlers
@@ -725,6 +765,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     it('should handle concurrent operations within performance baseline', async () => {
       fs.promises.access.mockResolvedValue();
       configureMockModFiles({
+        modId: 'concurrent',
         ruleContent: {
           rule_id: 'concurrent:test_rule',
           event_type: 'core:attempt_action',
@@ -739,7 +780,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         async () => {
           const concurrentOps = Array.from({ length: 5 }, (_, i) => {
             return Promise.all([
-              ModTestFixture.forAction('concurrent', `test_${i}`),
+              ModTestFixture.forAction('concurrent', `concurrent:test_${i}`),
               ModTestHandlerFactory.createStandardHandlers(
                 entityManager,
                 eventBus,

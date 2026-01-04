@@ -12,7 +12,7 @@ describe('bending:bend_over - lying_down forbidden component', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'bending',
       'bending:bend_over'
     );
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);

@@ -1,6 +1,13 @@
 /**
- * @file Helper for creating system logic test environments
- * @description Provides a standardized way to set up test environments for rule integration tests
+ * @file Test Environment Factory for Mod Integration Testing
+ *
+ * Provides factory functions to create test environments (`testEnv`) for
+ * testing mod rules, actions, and conditions. The `testEnv` object provides
+ * access to all core engine services needed for integration testing.
+ *
+ * @module tests/common/engine/systemLogicTestEnv
+ * @see tests/common/mods/ModTestFixture.js - High-level test fixture factory
+ * @see specs/test-infrastructure-robustness.md - API specification
  */
 /* eslint-env jest */
 /* global jest */
@@ -31,6 +38,72 @@ import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { TestEnvPropertyError } from '../errors/testEnvPropertyError.js';
+
+/**
+ * Test environment object providing access to engine services.
+ *
+ * @typedef {Object} TestEnv
+ *
+ * @property {EventBus} eventBus - Central event dispatch system.
+ *   Use `eventBus.dispatch({ type, payload })` to trigger events.
+ *
+ * @property {any[]} events - Array of all dispatched events.
+ *   Useful for assertions: `expect(events).toContainEqual({ type: 'MY_EVENT', ... })`
+ *
+ * @property {OperationRegistry} operationRegistry - Registry of operation handlers.
+ *   Access registered handlers for direct testing.
+ *
+ * @property {OperationInterpreter} operationInterpreter - Executes operation sequences.
+ *   Use for testing operation execution without full rule context.
+ *
+ * @property {JsonLogicEvaluationService} jsonLogic - JSON Logic evaluation service.
+ *   Evaluates conditions: `jsonLogic.evaluate(logic, context)`
+ *
+ * @property {SystemLogicInterpreter} systemLogicInterpreter - Rule execution engine.
+ *   Processes rules in response to events.
+ *
+ * @property {SystemLogicInterpreter} systemLogicOrchestrator - Alias for systemLogicInterpreter.
+ *   Provided for backward compatibility.
+ *
+ * @property {BodyGraphService} bodyGraphService - Body graph operations.
+ *   Access and manipulate character body structures.
+ *
+ * @property {EntityManager} entityManager - Entity CRUD operations.
+ *   Create, read, update, delete entities and components.
+ *
+ * @property {ActionIndex} actionIndex - Action lookup and discovery.
+ *   Query available actions for actors.
+ *
+ * @property {Object} handlers - Custom operation handler instances.
+ *   Access to currently registered handler objects.
+ *
+ * @property {UnifiedScopeResolver} unifiedScopeResolver - Scope resolution service.
+ *   Resolves scope DSL expressions: `unifiedScopeResolver.resolveSync(scopeName, context)`
+ *
+ * @property {Logger} logger - Logging interface.
+ *   Logs at debug/info/warn/error levels.
+ *
+ * @property {DataRegistry} dataRegistry - Centralized data access.
+ *   Access loaded mods, actions, conditions, scopes.
+ *
+ * @property {PrerequisiteService} prerequisiteService - Prerequisite evaluation.
+ *   Checks if action prerequisites are satisfied.
+ *
+ * @property {Function} createHandlers - Factory function for creating handlers.
+ *   Creates new handler instances with current configuration.
+ *
+ * @property {Function} cleanup - Release all resources.
+ *   Call in afterEach() to prevent test pollution.
+ *
+ * @property {Function} initializeEnv - Re-initialize the environment.
+ *   Reset to clean state without creating new instance.
+ *
+ * @property {Function} validateRule - Validate rule JSON against schema.
+ *   Returns validation errors or null if valid.
+ *
+ * @property {Function} hasValidation - Check if validation is enabled.
+ *   Returns true if schema validation is active.
+ */
 
 /**
  * Properties that Jest/Node internals may access without throwing.
@@ -112,21 +185,28 @@ function wrapWithStrictProxy(testEnv) {
  * @param {boolean} [options.useAdapterEntityManager] - Use TestEntityManagerAdapter for production API compatibility
  * @param {import('ajv').default|null} [options.schemaValidator] - Optional AJV instance for rule validation (SCHVALTESINT-003)
  * @param {boolean} [options.validateOnSetup] - Validate rules on setup when schemaValidator is provided
- * @returns {{
- *   eventBus: import('../../../src/events/eventBus.js').default,
- *   events: any[],
- *   operationRegistry: OperationRegistry,
- *   operationInterpreter: OperationInterpreter,
- *   jsonLogic: JsonLogicEvaluationService,
- *   systemLogicInterpreter: SystemLogicInterpreter,
- *   entityManager: SimpleEntityManager,
- *   logger: any,
- *   dataRegistry: any,
- *   cleanup: () => void,
- *   initializeEnv: (entities: Array<{id:string,components:object}>) => any,
- *   validateRule: (ruleData: object) => void,
- *   hasValidation: () => boolean
- * }} Base environment pieces used for tests.
+ * @returns {TestEnv} Configured test environment
+ *
+ * @example
+ * // Basic usage
+ * const testEnv = createBaseRuleEnvironment({ createHandlers, entities: [], rules: [] });
+ * const entity = testEnv.entityManager.createEntity('test-entity');
+ *
+ * @example
+ * // With initial entities
+ * const testEnv = createBaseRuleEnvironment({
+ *   createHandlers,
+ *   entities: [
+ *     { id: 'actor-1', components: { 'core:actor': {} } }
+ *   ],
+ *   rules: []
+ * });
+ *
+ * @example
+ * // Accessing scope resolver (note: NOT scopeResolver)
+ * const result = testEnv.unifiedScopeResolver.resolveSync('my:scope', {
+ *   actor: testEnv.entityManager.getEntity('actor-1')
+ * });
  */
 export function createBaseRuleEnvironment({
   createHandlers,
@@ -1470,12 +1550,18 @@ export function createBaseRuleEnvironment({
 /**
  * Resets an existing rule test environment.
  *
- * @description Shuts down the current interpreter and reinitializes core
- * components using the provided entities.
- * @param {ReturnType<typeof createBaseRuleEnvironment>} env - Environment to
- *   reset
- * @param {Array<{id:string,components:object}>} newEntities - Entities to load
+ * Shuts down the current interpreter and reinitializes core
+ * components using the provided entities. Preserves scope resolver overrides.
+ *
+ * @param {TestEnv} env - Environment to reset
+ * @param {Array<{id:string,components:object}>} [newEntities=[]] - Entities to load
  *   after reset
+ *
+ * @example
+ * // Reset with new entities
+ * resetRuleEnvironment(testEnv, [
+ *   { id: 'fresh-actor', components: { 'core:actor': {} } }
+ * ]);
  */
 export function resetRuleEnvironment(env, newEntities = []) {
   env.cleanup();
@@ -1511,8 +1597,10 @@ export function resetRuleEnvironment(env, newEntities = []) {
 }
 
 /**
- * Helper function to create a properly formatted attempt_action event payload
- * that meets schema requirements and supports both legacy and multi-target formats.
+ * Creates a properly formatted attempt_action event payload.
+ *
+ * Supports both legacy single-target format and multi-target formats,
+ * meeting schema requirements for action event dispatch.
  *
  * @param {object} params - Event parameters
  * @param {string} params.actorId - The acting entity ID
@@ -1521,6 +1609,25 @@ export function resetRuleEnvironment(env, newEntities = []) {
  * @param {object} [params.targets] - Multi-target format targets
  * @param {string} [params.originalInput] - Original input (defaults to generated)
  * @returns {object} Properly formatted event payload
+ *
+ * @example
+ * // Legacy single-target format
+ * const payload = createAttemptActionPayload({
+ *   actorId: 'actor-1',
+ *   actionId: 'mod:attack',
+ *   targetId: 'enemy-1'
+ * });
+ *
+ * @example
+ * // Multi-target format
+ * const payload = createAttemptActionPayload({
+ *   actorId: 'actor-1',
+ *   actionId: 'mod:give_item',
+ *   targets: {
+ *     primary: 'recipient-1',
+ *     secondary: 'item-1'
+ *   }
+ * });
  */
 export function createAttemptActionPayload({
   actorId,
@@ -1557,7 +1664,10 @@ export function createAttemptActionPayload({
 }
 
 /**
- * Creates a complete test environment for system logic rule testing.
+ * Creates an enhanced rule testing environment with convenience methods.
+ *
+ * Extends {@link createBaseRuleEnvironment} with additional helper methods
+ * for common testing scenarios such as action dispatch and environment reset.
  *
  * @param {object} options - Configuration options
  * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
@@ -1572,7 +1682,19 @@ export function createAttemptActionPayload({
  * @param {() => object} [options.createDataRegistry] - Data registry factory
  * @param {object} [options.eventBus] - Event bus instance to use
  * @param {() => object} [options.createEventBus] - Event bus factory
- * @returns {object} Test environment with all components and cleanup function
+ * @returns {TestEnv} Enhanced test environment with convenience methods
+ *
+ * @example
+ * // Dispatch action and check events
+ * const testEnv = createRuleTestEnvironment({ createHandlers, entities, rules });
+ * await testEnv.dispatchAction({ actorId: 'actor-1', actionId: 'mod:action', targetId: 'target-1' });
+ * expect(testEnv.events).toContainEqual(
+ *   expect.objectContaining({ type: 'ACTION_COMPLETED' })
+ * );
+ *
+ * @example
+ * // Reset environment between tests
+ * testEnv.reset([{ id: 'new-actor', components: { 'core:actor': {} } }]);
  */
 export function createRuleTestEnvironment(options) {
   const env = createBaseRuleEnvironment(options);
@@ -1888,29 +2010,19 @@ export function createRuleTestEnvironment(options) {
           continue;
         }
 
-        // DIAGNOSTIC: Log scope resolution result
-        console.log('[DIAGNOSTIC validateAction] scope resolution result:', {
-          scopeName,
-          actionId,
-          targetKey: key,
-          resultType: result ? (result instanceof Set ? 'Set' : typeof result) : 'undefined',
-          resultSuccess: result?.success,
-          resultError: result?.error,
-          resultValue: result instanceof Set ? Array.from(result).slice(0, 5) : (result?.value ? Array.from(result.value).slice(0, 5) : null),
-          resultSize: result instanceof Set ? result.size : (result?.value?.size || 0),
-          resultKeys: result && typeof result === 'object' && !(result instanceof Set) ? Object.keys(result) : [],
-          caughtError: caughtError?.message,
-          actorId: resolutionContext.actorEntity?.id,
-        });
+        // Handle both raw Set (from resolveSync) and wrapped {success, value} format (legacy)
+        // resolveSync returns a raw Set, but some mocks may return wrapped format
+        const resultSet = result instanceof Set ? result : result?.value;
+        const isEmpty = !resultSet || resultSet.size === 0;
 
-        if (!result?.success || !result.value || result.value.size === 0) {
+        if (isEmpty) {
           env.logger.debug(
             `Action ${actionId} has no valid ${key} targets for scope ${scopeName}`
           );
           continue;
         }
 
-        for (const entityId of result.value) {
+        for (const entityId of resultSet) {
           const resolvedTarget = createResolvedTarget(entityId);
           if (!resolvedTarget) {
             continue;

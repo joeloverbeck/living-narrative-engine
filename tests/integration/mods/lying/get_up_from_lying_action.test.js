@@ -46,7 +46,7 @@ describe('lying:get_up_from_lying action rule execution', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'lying',
-      'get_up_from_lying'
+      'lying:get_up_from_lying'
     );
   });
 

@@ -1,6 +1,6 @@
 # TESINFROB-003: mockScope() Helper Method
 
-**Priority**: Medium | **Effort**: Medium
+**Priority**: Medium | **Effort**: Medium | **Status**: ✅ COMPLETED
 
 ## Description
 
@@ -18,7 +18,50 @@ Add `mockScope()` and `clearScopeMocks()` methods to `ModTestFixture` classes to
 - **DO NOT** change factory method signatures (`forAction`, `forRule`, etc.)
 - **DO NOT** modify existing scenario builder methods
 
-## Implementation Details
+## Outcome
+
+### What Was Changed
+
+1. **Added scope mocking methods to `BaseModTestFixture`** in `tests/common/mods/ModTestFixture.js`:
+   - Added `#scopeMocks` private field (`Map<string, (context: object) => Set<string>>`)
+   - Added `#originalResolveSync` private field for storing original resolver
+   - Added `mockScope(scopeName, resolverOrResult)` method
+   - Added `clearScopeMocks()` method
+   - Added `isScopeMocked(scopeName)` method
+   - Added `getMockedScopes()` method
+
+2. **Integrated cleanup** - Added `clearScopeMocks()` call in `cleanup()` method with error-resilient try-catch pattern (consistent with existing cleanup pattern)
+
+3. **Created comprehensive test file** at `tests/unit/common/mods/ModTestFixture.scopeMocking.test.js` with 12 tests:
+   - should mock scope with resolver function
+   - should mock scope with result Set shorthand
+   - should allow multiple scope mocks
+   - should fall through to original for non-mocked scopes
+   - should clean up mocks on fixture.cleanup()
+   - should clean up mocks on clearScopeMocks()
+   - should handle mocking same scope twice (overwrites)
+   - should throw for invalid scopeName
+   - should report mocked scopes via getMockedScopes()
+   - should pass context to resolver function (bonus test)
+   - should convert array results to Set (bonus test)
+   - should restore original resolver after clearScopeMocks (bonus test)
+
+### Differences from Original Plan
+
+- **JSDoc types refined**: Used more specific type annotations (`(context: object) => Set<string>`) instead of generic `Function` to satisfy linting rules
+- **Additional tests**: Added 3 bonus tests beyond the minimum specified in the ticket to ensure robust coverage
+- **Test import path**: Used relative import `'../../../common/mods/ModTestFixture.js'` instead of absolute path from ticket example
+
+### Verification
+
+All tests pass:
+- 12 new tests in `ModTestFixture.scopeMocking.test.js` ✅
+- 262 total tests across all ModTestFixture test files ✅
+- No regressions detected ✅
+
+---
+
+## Original Implementation Details
 
 ### 1. Add scope mocking to BaseModTestFixture
 

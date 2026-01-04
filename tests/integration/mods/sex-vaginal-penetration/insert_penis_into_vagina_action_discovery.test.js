@@ -357,7 +357,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
+      'sex-vaginal-penetration',
       'sex-vaginal-penetration:insert_penis_into_vagina'
     );
 

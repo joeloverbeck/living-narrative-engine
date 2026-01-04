@@ -702,7 +702,7 @@ describe('facing:turn_your_back forbidden component enforcement', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'facing',
-      'turn_your_back'
+      'facing:turn_your_back'
     );
   });
 

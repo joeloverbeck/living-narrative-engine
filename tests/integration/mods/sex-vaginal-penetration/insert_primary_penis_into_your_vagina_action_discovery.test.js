@@ -330,7 +330,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'sex',
+      'sex-vaginal-penetration',
       'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
     );
 

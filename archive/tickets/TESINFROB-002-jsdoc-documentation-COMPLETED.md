@@ -1,6 +1,19 @@
 # TESINFROB-002: JSDoc Documentation for testEnv API
 
-**Priority**: High | **Effort**: Small
+**Priority**: High | **Effort**: Small | **Status**: ✅ COMPLETED
+
+## Corrections Applied (2026-01-04)
+
+The following discrepancies with actual code were corrected before implementation:
+
+1. **`events` type**: Changed from `Array<Object>` to `any[]` (matches actual code)
+2. **Missing properties added to typedef**:
+   - `systemLogicOrchestrator` (backward compatibility alias)
+   - `bodyGraphService` (body graph operations)
+   - `handlers` (custom handler instances)
+   - `createHandlers` (handler factory function)
+   - `hasValidation()` (validation check function)
+3. **`RuleTestEnvExtensions` reference**: Removed non-existent type from `createRuleTestEnvironment` return type
 
 ## Description
 
@@ -48,7 +61,7 @@ At the top of `systemLogicTestEnv.js`:
  * @property {EventBus} eventBus - Central event dispatch system.
  *   Use `eventBus.dispatch({ type, payload })` to trigger events.
  *
- * @property {Array<Object>} events - Array of all dispatched events.
+ * @property {any[]} events - Array of all dispatched events.
  *   Useful for assertions: `expect(events).toContainEqual({ type: 'MY_EVENT', ... })`
  *
  * @property {OperationRegistry} operationRegistry - Registry of operation handlers.
@@ -81,6 +94,18 @@ At the top of `systemLogicTestEnv.js`:
  * @property {Logger} logger - Logging interface.
  *   Logs at debug/info/warn/error levels.
  *
+ * @property {SystemLogicInterpreter} systemLogicOrchestrator - Alias for systemLogicInterpreter.
+ *   Provided for backward compatibility.
+ *
+ * @property {BodyGraphService} bodyGraphService - Body graph operations.
+ *   Access and manipulate character body structures.
+ *
+ * @property {Object} handlers - Custom operation handler instances.
+ *   Access to currently registered handler objects.
+ *
+ * @property {Function} createHandlers - Factory function for creating handlers.
+ *   Creates new handler instances with current configuration.
+ *
  * @property {Function} cleanup - Release all resources.
  *   Call in afterEach() to prevent test pollution.
  *
@@ -89,6 +114,9 @@ At the top of `systemLogicTestEnv.js`:
  *
  * @property {Function} validateRule - Validate rule JSON against schema.
  *   Returns validation errors or null if valid.
+ *
+ * @property {Function} hasValidation - Check if validation is enabled.
+ *   Returns true if schema validation is active.
  */
 ```
 
@@ -137,7 +165,7 @@ export function createBaseRuleEnvironment(options = {}) {
  *
  * @param {Object} [options={}] - Configuration options (same as createBaseRuleEnvironment)
  *
- * @returns {TestEnv & RuleTestEnvExtensions} Enhanced test environment
+ * @returns {TestEnv} Enhanced test environment with convenience methods
  *
  * @example
  * // Dispatch action and check events
@@ -189,3 +217,32 @@ This ticket is documentation-only. The JSDoc comments enable:
 2. **Hover documentation** - Usage examples visible on hover
 3. **Error prevention** - Type hints help catch errors before runtime
 4. **Onboarding** - New developers can discover API without searching docs
+
+---
+
+## Outcome (2026-01-04)
+
+### What was planned
+Add comprehensive JSDoc documentation to `tests/common/engine/systemLogicTestEnv.js` based on the ticket specification.
+
+### What was actually done
+
+1. **Ticket corrections applied first** - Before implementation, discrepancies between the ticket and actual code were identified and corrected in the ticket itself (not the code), ensuring accurate documentation.
+
+2. **JSDoc additions to systemLogicTestEnv.js**:
+   - Enhanced file-level JSDoc with module description and cross-references
+   - Added comprehensive `TestEnv` typedef documenting all 18 properties
+   - Enhanced `createBaseRuleEnvironment` with detailed parameter docs and 3 usage examples
+   - Enhanced `createRuleTestEnvironment` with link to base function and usage example
+   - Enhanced `resetRuleEnvironment` with parameter docs and example
+   - Enhanced `createAttemptActionPayload` with parameter docs and 2 usage examples
+
+3. **Verification completed**:
+   - All unit tests passed (13 strictTestEnv tests)
+   - All integration tests passed (positioning: 153, items: 373)
+   - TypeScript type checking passed with no errors in modified file
+   - ESLint shows only pre-existing warnings consistent with codebase
+
+### Files modified
+- `tickets/TESINFROB-002-jsdoc-documentation.md` - Corrected assumptions, marked complete
+- `tests/common/engine/systemLogicTestEnv.js` - Added JSDoc documentation (no code changes)
