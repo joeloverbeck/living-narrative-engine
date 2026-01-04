@@ -5,7 +5,6 @@
 
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
-import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 
 describe('ScopeEngine - Comprehensive Coverage Tests', () => {
   let engine;
@@ -129,7 +128,7 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       expect(result).toEqual(new Set(['entity1']));
     });
 
-    test('should handle filter evaluation errors gracefully - lines 468-475', () => {
+    test('should gracefully skip entities on non-condition_ref filter evaluation errors', () => {
       // Target lines 468-475: when JSON Logic evaluation throws
       const ast = parseDslExpression(
         'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]'
@@ -149,10 +148,11 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         throw new Error('JSON Logic evaluation failed');
       });
 
-      // Filter resolver now handles evaluation errors gracefully
-      // Items that fail evaluation are simply excluded from results
+      // Non-condition_ref errors gracefully skip items to support heterogeneous collections
+      // (e.g., inventory with mixed item types where some items lack filter-referenced components)
+      // Only condition_ref errors (configuration bugs) fail-fast per INV-EVAL-1
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      expect(result).toEqual(new Set()); // No items pass due to evaluation errors
+      expect(result.size).toBe(0);
     });
 
     // Cycle detection is thoroughly tested in engine.test.js

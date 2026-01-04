@@ -76,10 +76,25 @@ export class ComponentFilteringStage extends PipelineStage {
       }
 
       // Get candidate actions from the index (ActionIndex does ALL the filtering)
-      const candidateActions = this.#actionIndex.getCandidateActions(
-        actor,
-        trace
-      );
+      // Use diagnostic method when action-aware tracing to capture rejection info
+      let candidateActions;
+      let rejectedActions = [];
+
+      if (isActionAwareTrace) {
+        const result = this.#actionIndex.getCandidateActionsWithDiagnostics(
+          actor,
+          trace
+        );
+        candidateActions = result.candidates;
+        rejectedActions = result.rejected;
+      } else {
+        candidateActions = this.#actionIndex.getCandidateActions(actor, trace);
+      }
+
+      // Capture rejection diagnostics if action-aware tracing is enabled
+      if (isActionAwareTrace && rejectedActions.length > 0) {
+        await this.#captureRejections(trace, rejectedActions);
+      }
 
       // TEMPORARY DIAGNOSTIC: Log filtering results
       this.#logger.debug('[DIAGNOSTIC] ComponentFilteringStage:', {
@@ -254,6 +269,43 @@ export class ComponentFilteringStage extends PipelineStage {
     } catch (error) {
       this.#logger.debug(
         `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Capture rejected actions data for diagnostics
+   *
+   * @private
+   * @param {import('../../tracing/actionAwareStructuredTrace.js').default} trace - The action-aware trace
+   * @param {Array<{actionId: string, reason: string, forbiddenComponents: string[], actorHasComponents: string[]}>} rejectedActions - Rejected actions info from ActionIndex
+   * @returns {Promise<void>}
+   */
+  async #captureRejections(trace, rejectedActions) {
+    if (!rejectedActions || rejectedActions.length === 0) {
+      return;
+    }
+
+    try {
+      await trace.captureActionData(
+        'component_filtering_rejections',
+        'stage',
+        {
+          stageName: 'ComponentFilteringStage',
+          diagnostics: {
+            rejectedActions: rejectedActions.map((r) => ({
+              actionId: r.actionId,
+              reason: r.reason,
+              forbiddenComponents: r.forbiddenComponents,
+              actorHasComponents: r.actorHasComponents,
+            })),
+          },
+          timestamp: Date.now(),
+        }
+      );
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to capture rejection diagnostics: ${error.message}`
       );
     }
   }

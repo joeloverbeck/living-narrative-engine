@@ -11,8 +11,9 @@
  * Test Scenarios:
  * 1. Successful action execution with complete trace capture
  * 2. Action failure with error classification and recovery
- * 3. Performance monitoring integration during action execution
- * 4. Queue processing with realistic load patterns
+ *
+ * Note: Performance tests (Scenario 3 and 4) have been extracted to:
+ * tests/performance/actions/tracing/actionExecutionTracingLoad.performance.test.js
  */
 
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
@@ -24,11 +25,8 @@ import {
   TEST_TURN_ACTIONS,
   EXPECTED_TRACE_STRUCTURES,
   TRACING_CONFIGS,
-  LOAD_SCENARIOS,
-  ERROR_SCENARIOS,
   PERFORMANCE_EXPECTATIONS,
   createTestAction,
-  generateLoadTestActions,
 } from './fixtures/tracingTestActions.js';
 
 /**
@@ -61,16 +59,14 @@ describe('Complete Action Execution Tracing E2E', () => {
   });
 
   afterEach(async () => {
-    // Validate memory usage hasn't grown excessively
+    // Validate memory usage hasn't grown excessively (performance environment only)
     if (
       startMemory &&
       typeof performance !== 'undefined' &&
       performance.memory
     ) {
-      const endMemory = performance.memory.usedJSHeapSize;
-      const memoryIncrease = endMemory - startMemory;
-
-      expect(memoryIncrease).toBeLessThan(
+      // eslint-disable-next-line jest/no-standalone-expect -- Memory validation in afterEach is valid pattern for E2E tests
+      expect(performance.memory.usedJSHeapSize - startMemory).toBeLessThan(
         PERFORMANCE_EXPECTATIONS.MEMORY_USAGE.maxIncrease
       );
     }
@@ -137,8 +133,9 @@ describe('Complete Action Execution Tracing E2E', () => {
       expect(trace.trace.phases).toBeInstanceOf(Array);
       expect(trace.trace.phases.length).toBeGreaterThan(0);
 
-      // Assert: Verify performance data
+      // Assert: Verify performance data (when available)
       if (trace.trace.performanceData) {
+        // eslint-disable-next-line jest/no-conditional-expect -- Performance data may not always be captured
         expect(trace.trace.performanceData.captureOverhead).toBeLessThan(
           PERFORMANCE_EXPECTATIONS.TRACE_CAPTURE_OVERHEAD.max
         );
@@ -162,7 +159,7 @@ describe('Complete Action Execution Tracing E2E', () => {
       });
 
       // Act: Execute complex action
-      const result = await testBed.executeActionWithTracing(actor, turnAction);
+      await testBed.executeActionWithTracing(actor, turnAction);
       await testBed.waitForTraceCompletion();
 
       // Assert: Verify complex trace data
@@ -351,330 +348,9 @@ describe('Complete Action Execution Tracing E2E', () => {
     });
   });
 
-  /**
-   * Test Scenario 3: Performance Monitoring Integration During Action Execution
-   *
-   * Validates performance monitoring and metrics collection:
-   * - Real-time performance monitoring
-   * - Threshold violation detection
-   * - Alert generation
-   * - Performance data correlation
-   */
-  describe('Scenario 3: Performance Monitoring Integration', () => {
-    test('should monitor performance and detect threshold violations', async () => {
-      // Arrange: Configure performance monitoring with strict thresholds
-      testBed.configureTracing(TRACING_CONFIGS.PERFORMANCE);
-
-      const actor = testBed.createTestActor('perf-actor');
-      const actions = [
-        createTestAction(TEST_ACTIONS.GO),
-        createTestAction(TEST_ACTIONS.ATTACK),
-        createTestAction(TEST_ACTIONS.COMPLEX_ACTION, {
-          parameters: TEST_TURN_ACTIONS.COMPLEX_PARAMETERS.parameters,
-        }),
-      ];
-
-      // Act: Execute actions and monitor performance
-      const results = [];
-      for (const action of actions) {
-        const result = await testBed.executeActionWithTracing(actor, action);
-        results.push(result);
-
-        // Small delay between actions to avoid overwhelming the system
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-
-      await testBed.waitForTraceCompletion();
-
-      // Assert: Verify performance metrics were collected
-      const performanceMetrics = testBed.getPerformanceMetrics();
-      expect(performanceMetrics).toBeDefined();
-      expect(performanceMetrics.executionTimes).toBeDefined();
-
-      // Verify execution times were recorded for each action
-      actions.forEach((action) => {
-        const durationKey = `${action.actionDefinitionId}-duration`;
-        expect(performanceMetrics.executionTimes[durationKey]).toBeDefined();
-        expect(performanceMetrics.executionTimes[durationKey]).toBeGreaterThan(
-          0
-        );
-      });
-
-      // Assert: Verify trace capture overhead is within limits
-      const traces = testBed.getCapturedTraces();
-      traces.forEach((traceData) => {
-        if (traceData.trace.performanceData) {
-          expect(traceData.trace.performanceData.captureOverhead).toBeLessThan(
-            PERFORMANCE_EXPECTATIONS.TRACE_CAPTURE_OVERHEAD.max
-          );
-        }
-      });
-
-      // Assert: Verify memory usage is tracked
-      if (performanceMetrics.memorySnapshots.length > 0) {
-        expect(performanceMetrics.memorySnapshots[0]).toMatchObject({
-          timestamp: expect.any(Number),
-          used: expect.any(Number),
-          total: expect.any(Number),
-        });
-      }
-    });
-
-    test('should generate alerts for performance threshold violations', async () => {
-      // Arrange: Configure with very strict thresholds to trigger alerts
-      testBed.configureTracing({
-        ...TRACING_CONFIGS.PERFORMANCE,
-        thresholds: {
-          actionExecution: 1, // 1ms - very strict
-          traceCapture: 0.1, // 0.1ms - extremely strict
-          queueProcessing: 5, // 5ms - strict
-        },
-      });
-
-      const actor = testBed.createTestActor('alert-actor');
-      const longAction = createTestAction(TEST_ACTIONS.LONG_OPERATION, {
-        parameters: { iterations: 1000, complexity: 'high' },
-      });
-
-      // Act: Execute action that should trigger alerts
-      await testBed.executeActionWithTracing(actor, longAction);
-      await testBed.waitForTraceCompletion();
-
-      // Assert: Verify alerts were generated
-      const performanceMetrics = testBed.getPerformanceMetrics();
-
-      // Check if any alerts were generated
-      if (performanceMetrics.alerts && performanceMetrics.alerts.length > 0) {
-        const alert = performanceMetrics.alerts[0];
-        expect(alert.type).toBe('alert');
-        expect(alert.timestamp).toBeGreaterThan(0);
-        expect(alert.data).toBeDefined();
-      }
-
-      // Even if no alerts were generated, verify the monitoring system is active
-      const traces = testBed.getCapturedTraces();
-      expect(traces.length).toBeGreaterThan(0);
-    });
-  });
-
-  /**
-   * Test Scenario 4: Queue Processing with Realistic Load Patterns
-   *
-   * Validates asynchronous trace processing and queue management:
-   * - Priority queue processing
-   * - Backpressure handling
-   * - Circuit breaker activation
-   * - Bulk trace processing
-   */
-  describe('Scenario 4: Queue Processing with Realistic Load Patterns', () => {
-    test('should process traces through priority queue under moderate load', async () => {
-      // Arrange: Configure queue processing with moderate load
-      testBed.configureTracing(TRACING_CONFIGS.DETAILED);
-
-      const actor = testBed.createTestActor('queue-actor');
-      const loadScenario = LOAD_SCENARIOS.MODERATE_LOAD;
-      const testActions = generateLoadTestActions(loadScenario);
-
-      // Act: Execute actions concurrently to test queue processing
-      const executionPromises = testActions.map(
-        (action, index) =>
-          new Promise(async (resolve) => {
-            // Stagger execution to create realistic load pattern
-            await new Promise((r) =>
-              setTimeout(r, index * loadScenario.actionDelay)
-            );
-
-            try {
-              const result = await testBed.executeActionWithTracing(
-                actor,
-                action
-              );
-              resolve({ success: true, result, action });
-            } catch (error) {
-              resolve({ success: false, error, action });
-            }
-          })
-      );
-
-      const results = await Promise.all(executionPromises);
-      await testBed.waitForTraceCompletion();
-
-      // Assert: Verify all actions were processed
-      expect(results).toHaveLength(loadScenario.actionCount);
-
-      const successfulResults = results.filter((r) => r.success);
-      expect(successfulResults.length).toBeGreaterThan(0);
-
-      // Assert: Verify traces were captured and processed
-      const capturedTraces = testBed.getCapturedTraces();
-      expect(capturedTraces.length).toBeGreaterThan(0);
-
-      // Verify queue processing performance
-      const performanceMetrics = testBed.getPerformanceMetrics();
-      if (performanceMetrics.executionTimes) {
-        const durations = Object.values(performanceMetrics.executionTimes)
-          .filter((value) => typeof value === 'number')
-          .filter((duration) => duration > 0);
-
-        expect(durations.length).toBeGreaterThan(0);
-
-        // Verify execution times are reasonable (note: no actual queue processing implemented)
-        const averageDuration =
-          durations.reduce((sum, d) => sum + d, 0) / durations.length;
-        expect(averageDuration).toBeLessThan(5000); // 5 second max per action is reasonable
-      }
-
-      // Note: File output validation removed as this functionality is not implemented
-      // The test validates in-memory trace data instead
-    });
-
-    test('should handle heavy load without losing traces', async () => {
-      // Arrange: Configure for heavy load testing
-      testBed.configureTracing({
-        ...TRACING_CONFIGS.DETAILED,
-        enableQueueProcessing: true,
-      });
-
-      const actor = testBed.createTestActor('heavy-load-actor');
-      const loadScenario = LOAD_SCENARIOS.HEAVY_LOAD;
-      const testActions = generateLoadTestActions(loadScenario);
-
-      // Record initial state
-      const initialTraceCount = testBed.getCapturedTraces().length;
-
-      // Act: Execute heavy load test
-      const batchSize = Math.ceil(
-        loadScenario.actionCount / loadScenario.concurrency
-      );
-      const batches = [];
-
-      for (let i = 0; i < loadScenario.concurrency; i++) {
-        const batchStart = i * batchSize;
-        const batchEnd = Math.min(batchStart + batchSize, testActions.length);
-        const batchActions = testActions.slice(batchStart, batchEnd);
-
-        const batchPromise = Promise.all(
-          batchActions.map(async (action) => {
-            try {
-              return await testBed.executeActionWithTracing(actor, action);
-            } catch (error) {
-              return { error, action };
-            }
-          })
-        );
-
-        batches.push(batchPromise);
-      }
-
-      const batchResults = await Promise.all(batches);
-      await testBed.waitForTraceCompletion();
-
-      // Assert: Verify all batches completed
-      expect(batchResults).toHaveLength(loadScenario.concurrency);
-
-      // Flatten results and count successful executions
-      const allResults = batchResults.flat();
-      const successfulResults = allResults.filter((result) => !result.error);
-
-      // Should have processed most actions successfully
-      expect(successfulResults.length).toBeGreaterThan(
-        loadScenario.actionCount * 0.8
-      ); // At least 80% success
-
-      // Assert: Verify trace integrity under load
-      const capturedTraces = testBed.getCapturedTraces();
-      const newTraces = capturedTraces.length - initialTraceCount;
-
-      // Should have captured traces for successful executions
-      expect(newTraces).toBeGreaterThan(0);
-      expect(newTraces).toBeLessThanOrEqual(successfulResults.length);
-
-      // Assert: Verify no data corruption under heavy load
-      const recentTraces = capturedTraces.slice(initialTraceCount);
-      recentTraces.forEach((trace) => {
-        expect(trace.trace).toMatchObject(
-          EXPECTED_TRACE_STRUCTURES.BASIC_TRACE
-        );
-        expect(trace.trace.actionId).toBeDefined();
-        expect(trace.trace.actorId).toBe(actor.id);
-        expect(trace.trace.duration).toBeGreaterThan(0);
-      });
-
-      // Assert: Verify memory usage remained reasonable
-      const performanceMetrics = testBed.getPerformanceMetrics();
-      if (performanceMetrics.memorySnapshots.length > 0) {
-        const memoryValues = performanceMetrics.memorySnapshots.map(
-          (snapshot) => snapshot.used
-        );
-        const maxMemory = Math.max(...memoryValues);
-        const minMemory = Math.min(...memoryValues);
-        const memoryIncrease = maxMemory - minMemory;
-
-        expect(memoryIncrease).toBeLessThan(
-          PERFORMANCE_EXPECTATIONS.MEMORY_USAGE.maxIncrease
-        );
-      }
-    });
-
-    test('should maintain trace ordering and consistency in concurrent scenarios', async () => {
-      // Arrange: Configure for ordering test
-      testBed.configureTracing(TRACING_CONFIGS.DETAILED);
-
-      const actor = testBed.createTestActor('ordering-actor');
-      const concurrentActionCount = 20;
-
-      // Create actions with specific ordering markers
-      const orderedActions = Array.from(
-        { length: concurrentActionCount },
-        (_, index) =>
-          createTestAction(TEST_ACTIONS.GO, {
-            commandString: `ordered-action-${index}`,
-            parameters: { order: index, timestamp: Date.now() + index },
-          })
-      );
-
-      // Act: Execute actions concurrently
-      const results = await Promise.all(
-        orderedActions.map((action) =>
-          testBed
-            .executeActionWithTracing(actor, action)
-            .catch((error) => ({ error, action }))
-        )
-      );
-
-      await testBed.waitForTraceCompletion();
-
-      // Assert: Verify all actions were processed
-      const successfulResults = results.filter((result) => !result.error);
-      expect(successfulResults.length).toBeGreaterThan(
-        concurrentActionCount * 0.9
-      ); // At least 90% success
-
-      // Assert: Verify trace data integrity
-      const capturedTraces = testBed.getCapturedTraces();
-      const actionTraces = capturedTraces.filter(
-        (trace) => trace.trace.actionId === TEST_ACTIONS.GO
-      );
-
-      expect(actionTraces.length).toBe(successfulResults.length);
-
-      // Verify each trace has consistent data
-      actionTraces.forEach((trace) => {
-        expect(trace.trace.isComplete).toBe(true);
-        expect(trace.trace.actorId).toBe(actor.id);
-        expect(trace.trace.duration).toBeGreaterThan(0);
-        expect(trace.writeData.parameters).toBeDefined();
-        expect(trace.writeData.parameters.order).toBeGreaterThanOrEqual(0);
-      });
-
-      // Assert: Verify no duplicate traces
-      const traceIds = actionTraces.map(
-        (trace) => `${trace.trace.actionId}-${trace.writeData.parameters.order}`
-      );
-      const uniqueTraceIds = new Set(traceIds);
-      expect(uniqueTraceIds.size).toBe(traceIds.length);
-    });
-  });
+  // Note: Performance Monitoring Integration (Scenario 3) and Queue Processing (Scenario 4)
+  // have been extracted to tests/performance/actions/tracing/actionExecutionTracingLoad.performance.test.js
+  // These are performance tests that should run with 'npm run test:performance'
 
   /**
    * Integration Tests: Cross-Scenario Validation
@@ -723,7 +399,6 @@ describe('Complete Action Execution Tracing E2E', () => {
 
       // Assert: Verify mixed results
       const successfulResults = results.filter((r) => r.success);
-      const failedResults = results.filter((r) => !r.success);
 
       expect(successfulResults.length).toBeGreaterThan(0);
       // Note: Mock facade may not generate failures, so we test what actually works

@@ -80,9 +80,9 @@ describe('striking:sucker_punch_target action discovery', () => {
         'Arm to punch with'
       );
 
-      // Secondary target is the victim (must not have been attacked by actor already)
+      // Secondary target is the victim (must not have been attacked by actor already and not facing away from)
       expect(suckerPunchTargetAction.targets.secondary.scope).toBe(
-        'attack-states:actors_in_location_not_attacked_by_actor'
+        'striking:actors_in_location_not_attacked_and_not_facing_away'
       );
       expect(suckerPunchTargetAction.targets.secondary.placeholder).toBe('target');
       expect(suckerPunchTargetAction.targets.secondary.description).toBe(

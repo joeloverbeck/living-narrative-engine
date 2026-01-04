@@ -856,4 +856,353 @@ describe('TargetComponentValidator', () => {
       );
     });
   });
+
+  describe('includeDetails option', () => {
+    describe('validateEntityComponents with includeAllForbidden', () => {
+      it('should return all forbidden components when includeAllForbidden is true', () => {
+        const entity = { id: 'entity-1' };
+        const forbiddenComponents = [
+          'core:forbidden1',
+          'core:forbidden2',
+          'core:forbidden3',
+        ];
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:actor',
+          'core:forbidden1',
+          'core:forbidden3',
+          'core:position',
+        ]);
+
+        const result = validator.validateEntityComponents(
+          entity,
+          forbiddenComponents,
+          { includeAllForbidden: true }
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.component).toBe('core:forbidden1'); // Backward compat
+        expect(result.forbiddenComponentsPresent).toEqual([
+          'core:forbidden1',
+          'core:forbidden3',
+        ]);
+      });
+
+      it('should return only first component when includeAllForbidden is false', () => {
+        const entity = { id: 'entity-1' };
+        const forbiddenComponents = ['core:forbidden1', 'core:forbidden2'];
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:actor',
+          'core:forbidden1',
+          'core:forbidden2',
+        ]);
+
+        const result = validator.validateEntityComponents(
+          entity,
+          forbiddenComponents,
+          { includeAllForbidden: false }
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.component).toBe('core:forbidden1');
+        expect(result.forbiddenComponentsPresent).toBeUndefined();
+      });
+
+      it('should default to false when options not provided', () => {
+        const entity = { id: 'entity-1' };
+        const forbiddenComponents = ['core:forbidden1', 'core:forbidden2'];
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden1',
+          'core:forbidden2',
+        ]);
+
+        const result = validator.validateEntityComponents(
+          entity,
+          forbiddenComponents
+        );
+
+        expect(result.forbiddenComponentsPresent).toBeUndefined();
+      });
+    });
+
+    describe('validateTargetComponents with includeDetails', () => {
+      it('should return details.rejectedEntities[] with entity IDs when includeDetails is true', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            target: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'entity-123' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden',
+        ]);
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.details).toBeDefined();
+        expect(result.details.rejectedEntities).toHaveLength(1);
+        expect(result.details.rejectedEntities[0].entityId).toBe('entity-123');
+      });
+
+      it('should include forbiddenComponentsPresent[] for each rejected entity', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            target: ['core:kneeling', 'core:sitting', 'core:lying'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'entity-123' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:kneeling',
+          'core:sitting',
+          'core:actor',
+        ]);
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.details.rejectedEntities[0].forbiddenComponentsPresent).toEqual([
+          'core:kneeling',
+          'core:sitting',
+        ]);
+      });
+
+      it('should include targetRole in details', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            primary: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          primary: { id: 'primary-entity' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden',
+        ]);
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.details.targetRole).toBe('primary');
+      });
+
+      it('should remain backward compatible - existing callers without options still work', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            target: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'entity-1' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden',
+        ]);
+
+        // Call without options (existing behavior)
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.reason).toBeDefined();
+        expect(result.details).toBeUndefined(); // No details when not requested
+      });
+
+      it('should only populate details when explicitly requested', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            target: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'entity-1' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden',
+        ]);
+
+        const resultWithoutDetails = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: false }
+        );
+
+        const resultWithDetails = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(resultWithoutDetails.details).toBeUndefined();
+        expect(resultWithDetails.details).toBeDefined();
+      });
+
+      it('should return empty rejectedEntities when validation passes', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            target: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          target: { id: 'entity-1' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:safe',
+        ]);
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.valid).toBe(true);
+        expect(result.details).toBeDefined();
+        expect(result.details.rejectedEntities).toEqual([]);
+      });
+
+      it('should track multiple rejected entities separately', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            primary: ['core:forbidden'],
+          },
+        };
+
+        const targetEntities = {
+          primary: [
+            { id: 'entity-1' },
+            { id: 'entity-2' },
+            { id: 'entity-3' },
+          ],
+        };
+
+        // All entities have forbidden component
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:forbidden',
+        ]);
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.details.rejectedEntities).toHaveLength(3);
+        expect(result.details.rejectedEntities.map((r) => r.entityId)).toEqual([
+          'entity-1',
+          'entity-2',
+          'entity-3',
+        ]);
+      });
+
+      it('should track all forbidden components for each rejected entity in multi-target format', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: {
+            primary: ['core:kneeling', 'core:sitting'],
+            secondary: ['core:lying', 'core:standing'],
+          },
+        };
+
+        const targetEntities = {
+          primary: { id: 'primary-entity' },
+          secondary: { id: 'secondary-entity' },
+        };
+
+        mockEntityManager.getAllComponentTypesForEntity
+          .mockReturnValueOnce(['core:kneeling', 'core:sitting']) // primary has both
+          .mockReturnValueOnce(['core:lying']); // secondary has one
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.details.rejectedEntities).toHaveLength(2);
+
+        const primaryRejection = result.details.rejectedEntities.find(
+          (r) => r.entityId === 'primary-entity'
+        );
+        expect(primaryRejection.forbiddenComponentsPresent).toEqual([
+          'core:kneeling',
+          'core:sitting',
+        ]);
+
+        const secondaryRejection = result.details.rejectedEntities.find(
+          (r) => r.entityId === 'secondary-entity'
+        );
+        expect(secondaryRejection.forbiddenComponentsPresent).toEqual([
+          'core:lying',
+        ]);
+      });
+
+      it('should return empty details for no forbidden_components when includeDetails is true', () => {
+        const actionDef = { id: 'test-action' };
+        const targetEntities = { target: { id: 'entity-1' } };
+
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities,
+          { includeDetails: true }
+        );
+
+        expect(result.valid).toBe(true);
+        expect(result.details).toEqual({ rejectedEntities: [] });
+      });
+
+      it('should return empty details for null targetEntities when includeDetails is true', () => {
+        const actionDef = {
+          id: 'test-action',
+          forbidden_components: { target: ['core:forbidden'] },
+        };
+
+        const result = validator.validateTargetComponents(actionDef, null, {
+          includeDetails: true,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.details).toEqual({ rejectedEntities: [] });
+      });
+    });
+  });
 });

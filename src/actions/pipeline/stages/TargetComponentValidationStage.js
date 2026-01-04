@@ -348,10 +348,14 @@ export class TargetComponentValidationStage extends PipelineStage {
       item.resolvedTargets = targetEntities;
 
       // Validate forbidden target components (apply strictness level)
+      const captureDetails = this.#shouldCaptureDetails(trace);
+      const validationOptions = captureDetails ? { includeDetails: true } : {};
+
       let forbiddenValidation =
         this.#targetComponentValidator.validateTargetComponents(
           actionDef,
-          targetEntities
+          targetEntities,
+          validationOptions
         );
 
       if (forbiddenValidation.filteredTargets) {
@@ -393,7 +397,8 @@ export class TargetComponentValidationStage extends PipelineStage {
       let requiredValidation =
         this.#targetRequiredComponentsValidator.validateTargetRequirements(
           actionDef,
-          targetEntities
+          targetEntities,
+          validationOptions
         );
 
       if (!requiredValidation.valid && removalReasons.length > 0) {
@@ -413,6 +418,26 @@ export class TargetComponentValidationStage extends PipelineStage {
                 ? forbiddenValidation.reason
                 : requiredValidation.reason,
             };
+
+      // Capture validation failures for diagnostics when trace enabled
+      if (captureDetails) {
+        if (!forbiddenValidation.valid && forbiddenValidation.details) {
+          await this.#captureValidationFailure(trace, {
+            actionId: actionDef.id,
+            targetRole: forbiddenValidation.details.targetRole || 'unknown',
+            validationType: 'forbidden_components',
+            rejectedEntities: forbiddenValidation.details.rejectedEntities || [],
+          });
+        }
+        if (!requiredValidation.valid && requiredValidation.details) {
+          await this.#captureValidationFailure(trace, {
+            actionId: actionDef.id,
+            targetRole: requiredValidation.details.targetRole || 'unknown',
+            validationType: 'required_components',
+            rejectedEntities: requiredValidation.details.rejectedEntities || [],
+          });
+        }
+      }
 
       const endTime = performance.now();
       const validationTime = endTime - startTime;
@@ -648,6 +673,60 @@ export class TargetComponentValidationStage extends PipelineStage {
       })),
       removalReasons: [...pruningResult.removalReasons],
     });
+  }
+
+  /**
+   * Checks if trace-level diagnostics should be captured.
+   *
+   * @private
+   * @param {any} trace - The trace object.
+   * @returns {boolean} True if details should be captured.
+   */
+  #shouldCaptureDetails(trace) {
+    return trace && typeof trace.captureActionData === 'function';
+  }
+
+  /**
+   * Captures validation failure diagnostics to the trace.
+   *
+   * @private
+   * @param {ActionAwareStructuredTrace} trace - The action-aware trace.
+   * @param {object} failureData - Validation failure details.
+   * @param {string} failureData.actionId - The action ID that failed validation.
+   * @param {string} failureData.targetRole - The target role that failed.
+   * @param {'forbidden_components'|'required_components'} failureData.validationType - Type of validation that failed.
+   * @param {Array<{entityId: string, forbiddenComponentsPresent?: string[], requiredComponentsMissing?: string[]}>} failureData.rejectedEntities - Entities that were rejected.
+   * @returns {Promise<void>}
+   */
+  async #captureValidationFailure(trace, failureData) {
+    if (!this.#shouldCaptureDetails(trace)) {
+      return;
+    }
+
+    try {
+      await trace.captureActionData(
+        'target_validation_failure',
+        failureData.actionId,
+        {
+          stageName: 'TargetComponentValidationStage',
+          diagnostics: {
+            validationFailures: [
+              {
+                actionId: failureData.actionId,
+                targetRole: failureData.targetRole,
+                validationType: failureData.validationType,
+                rejectedEntities: failureData.rejectedEntities,
+              },
+            ],
+          },
+          timestamp: Date.now(),
+        }
+      );
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to capture validation failure diagnostics for action '${failureData.actionId}': ${error.message}`
+      );
+    }
   }
 }
 

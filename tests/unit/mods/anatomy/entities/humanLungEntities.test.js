@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, test } from '@jest/globals';
 // --- Component schemas for validation ---
 import partComponent from '../../../../../data/mods/anatomy/components/part.component.json';
 import partHealthComponent from '../../../../../data/mods/anatomy/components/part_health.component.json';
+import vitalOrganComponent from '../../../../../data/mods/anatomy/components/vital_organ.component.json';
 import respiratoryOrganComponent from '../../../../../data/mods/breathing-states/components/respiratory_organ.component.json';
 import nameComponent from '../../../../../data/mods/core/components/name.component.json';
 import weightComponent from '../../../../../data/mods/core/components/weight.component.json';
@@ -33,6 +34,8 @@ describe('Human Lung Entities', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validateRespiratoryOrgan;
   /** @type {import('ajv').ValidateFunction} */
+  let validateVitalOrgan;
+  /** @type {import('ajv').ValidateFunction} */
   let validateName;
   /** @type {import('ajv').ValidateFunction} */
   let validateWeight;
@@ -47,6 +50,7 @@ describe('Human Lung Entities', () => {
     validatePart = ajv.compile(partComponent.dataSchema);
     validatePartHealth = ajv.compile(partHealthComponent.dataSchema);
     validateRespiratoryOrgan = ajv.compile(respiratoryOrganComponent.dataSchema);
+    validateVitalOrgan = ajv.compile(vitalOrganComponent.dataSchema);
     validateName = ajv.compile(nameComponent.dataSchema);
     validateWeight = ajv.compile(weightComponent.dataSchema);
   });
@@ -153,6 +157,24 @@ describe('Human Lung Entities', () => {
       const valid = validateRespiratoryOrgan(component);
       if (!valid) {
         console.error('Validation errors:', JSON.stringify(validateRespiratoryOrgan.errors, null, 2));
+      }
+      expect(valid).toBe(true);
+    });
+
+    test('should have anatomy:vital_organ component configured for respiratory organs', () => {
+      const component = humanLungLeft.components['anatomy:vital_organ'];
+      expect(component).toBeDefined();
+      expect(component.organType).toBe('respiratory');
+      expect(component.killOnDestroy).toBe(true);
+      expect(component.requiresAllDestroyed).toBe(true);
+      expect(component.deathMessage).toBe('suffocated as both lungs failed');
+    });
+
+    test('should pass anatomy:vital_organ schema validation', () => {
+      const component = humanLungLeft.components['anatomy:vital_organ'];
+      const valid = validateVitalOrgan(component);
+      if (!valid) {
+        console.error('Validation errors:', JSON.stringify(validateVitalOrgan.errors, null, 2));
       }
       expect(valid).toBe(true);
     });
@@ -263,16 +285,35 @@ describe('Human Lung Entities', () => {
       }
       expect(valid).toBe(true);
     });
+
+    test('should have anatomy:vital_organ component configured for respiratory organs', () => {
+      const component = humanLungRight.components['anatomy:vital_organ'];
+      expect(component).toBeDefined();
+      expect(component.organType).toBe('respiratory');
+      expect(component.killOnDestroy).toBe(true);
+      expect(component.requiresAllDestroyed).toBe(true);
+      expect(component.deathMessage).toBe('suffocated as both lungs failed');
+    });
+
+    test('should pass anatomy:vital_organ schema validation', () => {
+      const component = humanLungRight.components['anatomy:vital_organ'];
+      const valid = validateVitalOrgan(component);
+      if (!valid) {
+        console.error('Validation errors:', JSON.stringify(validateVitalOrgan.errors, null, 2));
+      }
+      expect(valid).toBe(true);
+    });
   });
 
   describe('Component Completeness', () => {
-    test('left lung should have all 5 required components', () => {
+    test('left lung should have all 6 required components', () => {
       const requiredComponents = [
         'core:name',
         'core:weight',
         'anatomy:part',
         'anatomy:part_health',
         'breathing-states:respiratory_organ',
+        'anatomy:vital_organ',
       ];
 
       for (const componentId of requiredComponents) {
@@ -280,13 +321,14 @@ describe('Human Lung Entities', () => {
       }
     });
 
-    test('right lung should have all 5 required components', () => {
+    test('right lung should have all 6 required components', () => {
       const requiredComponents = [
         'core:name',
         'core:weight',
         'anatomy:part',
         'anatomy:part_health',
         'breathing-states:respiratory_organ',
+        'anatomy:vital_organ',
       ];
 
       for (const componentId of requiredComponents) {
@@ -296,6 +338,12 @@ describe('Human Lung Entities', () => {
   });
 
   describe('Vital Organ Protection Pattern', () => {
+    test('both lungs should share identical vital_organ settings', () => {
+      expect(humanLungLeft.components['anatomy:vital_organ']).toEqual(
+        humanLungRight.components['anatomy:vital_organ']
+      );
+    });
+
     test('both lungs should follow protected organ pattern (hit_probability_weight = 0)', () => {
       expect(humanLungLeft.components['anatomy:part'].hit_probability_weight).toBe(0);
       expect(humanLungRight.components['anatomy:part'].hit_probability_weight).toBe(0);

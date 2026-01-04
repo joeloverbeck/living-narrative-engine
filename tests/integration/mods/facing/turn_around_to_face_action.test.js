@@ -1,7 +1,8 @@
 /**
  * @file Integration tests for the facing:turn_around_to_face action.
  * @description Tests basic action discovery - verifies the action appears when
- * the actor has the required components (closeness and facing_away).
+ * the actor has the required component (facing_away).
+ * Note: This action no longer requires closeness.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -34,7 +35,6 @@ import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionP
 import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
-import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import DefaultDslParser from '../../../../src/scopeDsl/parser/defaultDslParser.js';
 import { extractTargetIds } from '../../../common/actions/targetParamTestHelpers.js';
@@ -69,10 +69,10 @@ describe('Turn Around to Face Action Discovery', () => {
     // Set up scope registry and engine
     scopeRegistry = new ScopeRegistry();
 
-    // Load the scope file
+    // Load the scope file (now using facing-states mod, not personal-space-states)
     const scopePath = path.join(
       process.cwd(),
-      'data/mods/personal-space-states/scopes/actors_im_facing_away_from.scope'
+      'data/mods/facing-states/scopes/actors_in_location_im_facing_away_from.scope'
     );
     const scopeContent = fs.readFileSync(scopePath, 'utf-8');
     const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
@@ -92,26 +92,24 @@ describe('Turn Around to Face Action Discovery', () => {
       turnAroundToFaceAction
     );
 
-    // Store the condition definition in the data registry
-    const entityNotInFacingAwayCondition = {
-      id: 'facing-states:entity-not-in-facing-away',
+    // Store the condition definitions in the data registry
+    const entityInFacingAwayCondition = {
+      id: 'facing-states:entity-in-facing-away',
       description:
-        "Checks if the entity is not in the actor's facing_away_from array",
+        "Checks if the entity is in the actor's facing_away_from array",
       logic: {
-        not: {
-          in: [
-            { var: 'entity.id' },
-            {
-              var: 'actor.components.facing-states:facing_away.facing_away_from',
-            },
-          ],
-        },
+        in: [
+          { var: 'entity.id' },
+          {
+            var: 'actor.components.facing-states:facing_away.facing_away_from',
+          },
+        ],
       },
     };
     dataRegistry.store(
       'conditions',
-      entityNotInFacingAwayCondition.id,
-      entityNotInFacingAwayCondition
+      entityInFacingAwayCondition.id,
+      entityInFacingAwayCondition
     );
 
     gameDataRepository = new GameDataRepository(dataRegistry, logger);
@@ -224,7 +222,7 @@ describe('Turn Around to Face Action Discovery', () => {
       description: 'A test location',
     });
 
-    // Create test entities
+    // Create test entities with core:actor component (required by the scope)
     alice = 'alice-entity';
     entityManager.addComponent(alice, NAME_COMPONENT_ID, {
       name: 'Alice',
@@ -232,12 +230,14 @@ describe('Turn Around to Face Action Discovery', () => {
     entityManager.addComponent(alice, POSITION_COMPONENT_ID, {
       locationId: 'test-location',
     });
+    entityManager.addComponent(alice, 'core:actor', {});
 
     bob = 'bob-entity';
     entityManager.addComponent(bob, NAME_COMPONENT_ID, { name: 'Bob' });
     entityManager.addComponent(bob, POSITION_COMPONENT_ID, {
       locationId: 'test-location',
     });
+    entityManager.addComponent(bob, 'core:actor', {});
 
     charlie = 'charlie-entity';
     entityManager.addComponent(charlie, NAME_COMPONENT_ID, {
@@ -246,6 +246,7 @@ describe('Turn Around to Face Action Discovery', () => {
     entityManager.addComponent(charlie, POSITION_COMPONENT_ID, {
       locationId: 'test-location',
     });
+    entityManager.addComponent(charlie, 'core:actor', {});
 
     diana = 'diana-entity';
     entityManager.addComponent(diana, NAME_COMPONENT_ID, {
@@ -254,6 +255,7 @@ describe('Turn Around to Face Action Discovery', () => {
     entityManager.addComponent(diana, POSITION_COMPONENT_ID, {
       locationId: 'test-location',
     });
+    entityManager.addComponent(diana, 'core:actor', {});
   });
 
   afterEach(() => {
@@ -265,8 +267,8 @@ describe('Turn Around to Face Action Discovery', () => {
   });
 
   describe('Action Availability', () => {
-    it('should not show action when actor lacks required components', async () => {
-      // Alice has no intimacy components
+    it('should not show action when actor lacks required facing_away component', async () => {
+      // Alice has no facing_away component
       const aliceEntity = entityManager.getEntityInstance(alice);
       const result = await actionDiscoveryService.getValidActions(aliceEntity);
       const actions = result.actions;
@@ -277,45 +279,18 @@ describe('Turn Around to Face Action Discovery', () => {
       expect(turnAroundToFaceAction).toBeUndefined();
     });
 
-    it('should not show action when actor has closeness but no facing_away', async () => {
-      // Alice is in closeness with Bob but not facing away
-      entityManager.addComponent(alice, 'personal-space-states:closeness', {
-        partners: [bob],
-      });
-      entityManager.addComponent(bob, 'personal-space-states:closeness', {
-        partners: [alice],
-      });
-
-      const aliceEntity = entityManager.getEntityInstance(alice);
-      const result = await actionDiscoveryService.getValidActions(aliceEntity);
-      const actions = result.actions;
-
-      const turnAroundToFaceAction = actions.find(
-        (a) => a.id === 'facing:turn_around_to_face'
-      );
-      expect(turnAroundToFaceAction).toBeUndefined();
-    });
-
-    it('should show action when actor has both required components', async () => {
+    it('should show action when actor has facing_away component (no closeness required)', async () => {
       // Mock the unifiedScopeResolver to return Bob as a valid target
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
         });
 
-      // Set up closeness
-      entityManager.addComponent(alice, 'personal-space-states:closeness', {
-        partners: [bob],
-      });
-      entityManager.addComponent(bob, 'personal-space-states:closeness', {
-        partners: [alice],
-      });
-
-      // Alice is facing away from Bob
+      // Alice is facing away from Bob (NO closeness needed!)
       entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
@@ -336,28 +311,12 @@ describe('Turn Around to Face Action Discovery', () => {
   });
 
   describe('Scope Resolution', () => {
-    beforeEach(() => {
-      // Set up a complex closeness circle
-      entityManager.addComponent(alice, 'personal-space-states:closeness', {
-        partners: [bob, charlie, diana],
-      });
-      entityManager.addComponent(bob, 'personal-space-states:closeness', {
-        partners: [alice, charlie, diana],
-      });
-      entityManager.addComponent(charlie, 'personal-space-states:closeness', {
-        partners: [alice, bob, diana],
-      });
-      entityManager.addComponent(diana, 'personal-space-states:closeness', {
-        partners: [alice, bob, charlie],
-      });
-    });
-
     it('should only show entities that actor is facing away from', async () => {
       // Mock the unifiedScopeResolver to return Bob and Charlie as valid targets
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
             return { success: true, value: new Set([bob, charlie]) };
           }
           return { success: true, value: new Set() };
@@ -406,25 +365,26 @@ describe('Turn Around to Face Action Discovery', () => {
       expect(turnAroundActions).toHaveLength(0);
     });
 
-    it('should filter out entities not in closeness', async () => {
-      // Mock the unifiedScopeResolver to return only Bob (outsider filtered out)
+    it('should include entities NOT in closeness (new behavior)', async () => {
+      // Mock the unifiedScopeResolver to return both Bob and outsider
+      const outsider = 'outsider-entity';
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
-            return { success: true, value: new Set([bob]) };
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
+            return { success: true, value: new Set([bob, outsider]) };
           }
           return { success: true, value: new Set() };
         });
 
       // Create an entity outside closeness
-      const outsider = 'outsider-entity';
       entityManager.addComponent(outsider, NAME_COMPONENT_ID, {
         name: 'Outsider',
       });
       entityManager.addComponent(outsider, POSITION_COMPONENT_ID, {
         locationId: 'test-location',
       });
+      entityManager.addComponent(outsider, 'core:actor', {});
 
       // Alice is facing away from Bob and the outsider
       entityManager.addComponent(alice, 'facing-states:facing_away', {
@@ -435,13 +395,15 @@ describe('Turn Around to Face Action Discovery', () => {
       const result = await actionDiscoveryService.getValidActions(aliceEntity);
       const actions = result.actions;
 
-      // Only Bob should have an action (outsider not in closeness)
+      // Both Bob AND outsider should be valid targets (no closeness filter)
       const turnAroundActions = actions.filter(
         (a) => a.id === 'facing:turn_around_to_face'
       );
 
       expect(turnAroundActions).toHaveLength(1);
-      expect(extractTargetIds(turnAroundActions[0].params)).toContain(bob);
+      const targetIds = extractTargetIds(turnAroundActions[0].params);
+      expect(targetIds).toContain(bob);
+      expect(targetIds).toContain(outsider);
     });
 
     it('should handle single target in facing_away_from', async () => {
@@ -449,7 +411,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
@@ -479,7 +441,7 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope, context) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
             // Check which actor is requesting
             if (context?.actor?.id === alice) {
               return { success: true, value: new Set([bob]) };
@@ -490,15 +452,7 @@ describe('Turn Around to Face Action Discovery', () => {
           return { success: true, value: new Set() };
         });
 
-      // Set up closeness
-      entityManager.addComponent(alice, 'personal-space-states:closeness', {
-        partners: [bob],
-      });
-      entityManager.addComponent(bob, 'personal-space-states:closeness', {
-        partners: [alice],
-      });
-
-      // Both are facing away from each other
+      // Both are facing away from each other (no closeness required)
       entityManager.addComponent(alice, 'facing-states:facing_away', {
         facing_away_from: [bob],
       });
@@ -533,22 +487,11 @@ describe('Turn Around to Face Action Discovery', () => {
       mockUnifiedScopeResolver.resolve = jest
         .fn()
         .mockImplementation((scope) => {
-          if (scope === 'personal-space-states:actors_im_facing_away_from') {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
             return { success: true, value: new Set([bob]) };
           }
           return { success: true, value: new Set() };
         });
-
-      // Set up closeness for all
-      entityManager.addComponent(alice, 'personal-space-states:closeness', {
-        partners: [bob, charlie],
-      });
-      entityManager.addComponent(bob, 'personal-space-states:closeness', {
-        partners: [alice, charlie],
-      });
-      entityManager.addComponent(charlie, 'personal-space-states:closeness', {
-        partners: [alice, bob],
-      });
 
       // Alice faces away from Bob but faces Charlie
       entityManager.addComponent(alice, 'facing-states:facing_away', {
@@ -566,6 +509,48 @@ describe('Turn Around to Face Action Discovery', () => {
       // Only Bob should be a valid target
       expect(turnAroundActions).toHaveLength(1);
       expect(extractTargetIds(turnAroundActions[0].params)).toContain(bob);
+    });
+
+    it('should filter out entities in different locations', async () => {
+      // Create entity in different location
+      const remoteActor = 'remote-actor';
+      entityManager.addComponent(remoteActor, NAME_COMPONENT_ID, {
+        name: 'Remote',
+      });
+      entityManager.addComponent(remoteActor, POSITION_COMPONENT_ID, {
+        locationId: 'other-location', // Different location!
+      });
+      entityManager.addComponent(remoteActor, 'core:actor', {});
+
+      // Mock the unifiedScopeResolver to return only Bob (remote filtered by location)
+      mockUnifiedScopeResolver.resolve = jest
+        .fn()
+        .mockImplementation((scope) => {
+          if (scope === 'facing-states:actors_in_location_im_facing_away_from') {
+            // The scope should filter by location, so only Bob is returned
+            return { success: true, value: new Set([bob]) };
+          }
+          return { success: true, value: new Set() };
+        });
+
+      // Alice is facing away from both Bob and remoteActor
+      entityManager.addComponent(alice, 'facing-states:facing_away', {
+        facing_away_from: [bob, remoteActor],
+      });
+
+      const aliceEntity = entityManager.getEntityInstance(alice);
+      const result = await actionDiscoveryService.getValidActions(aliceEntity);
+      const actions = result.actions;
+
+      const turnAroundActions = actions.filter(
+        (a) => a.id === 'facing:turn_around_to_face'
+      );
+
+      // Only Bob should be a valid target (remoteActor in different location)
+      expect(turnAroundActions).toHaveLength(1);
+      const targetIds = extractTargetIds(turnAroundActions[0].params);
+      expect(targetIds).toContain(bob);
+      expect(targetIds).not.toContain(remoteActor);
     });
   });
 });

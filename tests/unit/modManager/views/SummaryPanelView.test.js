@@ -417,6 +417,27 @@ describe('SummaryPanelView', () => {
 
       expect(onSave).not.toHaveBeenCalled();
     });
+
+    it('should not trigger onSave when button is programmatically disabled then clicked via event dispatch', async () => {
+      // Render with enabled button
+      view.render({
+        loadOrder: ['core'],
+        activeCount: 1,
+        hasUnsavedChanges: true,
+        isSaving: false,
+        isLoading: false,
+      });
+
+      const saveButton = container.querySelector('.summary-panel__save-button');
+
+      // Manually disable the button then dispatch click event
+      // This tests the guard clause that prevents execution when button.disabled is true
+      saveButton.disabled = true;
+      saveButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      await Promise.resolve();
+      expect(onSave).not.toHaveBeenCalled();
+    });
   });
 
   describe('setSaving', () => {
@@ -1063,12 +1084,21 @@ describe('SummaryPanelView', () => {
         content.classList.contains('summary-panel__section-content--collapsed')
       ).toBe(false);
 
+      // First click: collapse (tests '▶' branch of toggle icon)
       header.click();
 
       expect(header.getAttribute('aria-expanded')).toBe('false');
       expect(
         content.classList.contains('summary-panel__section-content--collapsed')
       ).toBe(true);
+
+      // Second click: expand (tests '▼' branch of toggle icon)
+      header.click();
+
+      expect(header.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(false);
     });
 
     it('should default to null healthStatus (backward compatibility)', () => {
@@ -1240,6 +1270,30 @@ describe('SummaryPanelView', () => {
       expect(emptyMessage.textContent).toBe('No active mods');
     });
 
+    it('should handle depth analysis with maxDepth > 0 but empty deepestChain', () => {
+      // Edge case: depth exists but no chain data
+      view.render(
+        defaultRenderOptions({
+          maxDepth: 2,
+          deepestChain: [],
+          averageDepth: 1.5,
+        })
+      );
+
+      // Should show depth stats but no chain visualization
+      const depthValues = container.querySelectorAll(
+        '.summary-panel__depth-value'
+      );
+      expect(depthValues[0].textContent).toBe('2');
+      expect(depthValues[1].textContent).toBe('1.5');
+
+      // Chain section should not render when deepestChain is empty
+      const chainNodes = container.querySelectorAll(
+        '.summary-panel__depth-chain-mod'
+      );
+      expect(chainNodes).toHaveLength(0);
+    });
+
     it('should start collapsed', () => {
       view.render(
         defaultRenderOptions({
@@ -1275,9 +1329,18 @@ describe('SummaryPanelView', () => {
         h.textContent.includes('Dependency Depth')
       );
 
+      // Initially collapsed
+      expect(depthHeader.getAttribute('aria-expanded')).toBe('false');
+
+      // First click: expand (tests '▼' branch of toggle icon)
       depthHeader.click();
 
       expect(depthHeader.getAttribute('aria-expanded')).toBe('true');
+
+      // Second click: collapse (tests '▶' branch of toggle icon)
+      depthHeader.click();
+
+      expect(depthHeader.getAttribute('aria-expanded')).toBe('false');
     });
 
     it('should have correct BEM class structure', () => {
@@ -2146,13 +2209,21 @@ describe('SummaryPanelView', () => {
         content.classList.contains('summary-panel__section-content--collapsed')
       ).toBe(true);
 
-      // Click to expand
+      // First click: expand (tests '▼' branch of toggle icon)
       header.click();
 
       expect(header.getAttribute('aria-expanded')).toBe('true');
       expect(
         content.classList.contains('summary-panel__section-content--collapsed')
       ).toBe(false);
+
+      // Second click: collapse (tests '▶' branch of toggle icon)
+      header.click();
+
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(
+        content.classList.contains('summary-panel__section-content--collapsed')
+      ).toBe(true);
     });
 
     it('should display explanation text', () => {

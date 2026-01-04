@@ -7,13 +7,18 @@
     "properties": {
       "organType": {
         "type": "string",
-        "enum": ["brain", "heart", "spine"],
+        "enum": ["brain", "heart", "spine", "respiratory"],
         "description": "Category of vital organ for narrative purposes"
       },
       "killOnDestroy": {
         "type": "boolean",
         "description": "Whether destroying this organ causes immediate death",
         "default": true
+      },
+      "requiresAllDestroyed": {
+        "type": "boolean",
+        "description": "When true, ALL organs of this type must be destroyed for death (e.g., lungs). When false (default), destroying ANY organ of this type causes death.",
+        "default": false
       },
       "deathMessage": {
         "type": "string",

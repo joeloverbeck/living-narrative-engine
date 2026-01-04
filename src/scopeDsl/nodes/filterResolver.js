@@ -196,6 +196,13 @@ export default function createFilterResolver({
       const result = new Set();
       const filterEvaluations = []; // Collect detailed evaluation data for tracing
 
+      // DIAGNOSTIC: Log parentResult before filtering
+      console.log('[DIAGNOSTIC filterResolver] parentResult:', {
+        size: parentResult.size,
+        items: Array.from(parentResult).slice(0, 10),
+        logic: JSON.stringify(node.logic).slice(0, 200),
+      });
+
       for (const item of parentResult) {
         // Skip null or undefined items
         if (item === null || item === undefined) {
@@ -292,22 +299,30 @@ export default function createFilterResolver({
               result.add(item);
             }
           } catch (error) {
+            // Check if this is a condition resolution error (ScopeResolutionError from JsonLogicEvaluationService)
+            const isConditionResolutionError =
+              (error.name === 'ScopeResolutionError' &&
+                error.context?.phase === 'condition_resolution') ||
+              (error.message &&
+                error.message.includes('Could not resolve condition_ref'));
+
             // Re-throw errors for missing condition references
-            if (
-              error.message &&
-              error.message.includes('Could not resolve condition_ref')
-            ) {
-              // Wrap with ScopeResolutionError for better context
+            if (isConditionResolutionError) {
+              // Wrap with ScopeResolutionError for better context, preserving suggestions
               const wrappedError = new ScopeResolutionError(
-                'Filter logic evaluation failed',
+                error.message || 'Filter logic evaluation failed',
                 {
                   phase: 'filter evaluation',
+                  conditionId: error.conditionId || error.context?.conditionId,
+                  suggestions: error.suggestions || error.context?.suggestions,
                   parameters: {
                     entityId: typeof item === 'string' ? item : item?.id,
                     filterLogic: node.logic,
                     contextKeys: evalCtx ? Object.keys(evalCtx) : [],
                   },
-                  hint: 'Check that JSON Logic expression is valid and context has required fields',
+                  hint:
+                    error.context?.hint ||
+                    'Check that JSON Logic expression is valid and context has required fields',
                   originalError: error,
                 }
               );
@@ -322,8 +337,14 @@ export default function createFilterResolver({
               } else {
                 throw wrappedError;
               }
+            } else {
+              // Non-condition_ref errors: gracefully skip this item
+              // This handles heterogeneous collections (e.g., inventory with mixed item types)
+              // where some items may not have the components referenced in the filter logic.
+              // Treat as "item doesn't match filter" rather than a fatal error.
+              // Note: condition_ref errors (above) still fail-fast as they indicate config bugs.
+              continue;
             }
-            // Handle other errors gracefully - continue processing other items
           }
         }
       }

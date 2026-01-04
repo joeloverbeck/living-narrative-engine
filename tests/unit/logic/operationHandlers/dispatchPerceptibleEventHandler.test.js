@@ -424,6 +424,187 @@ describe('DispatchPerceptibleEventHandler', () => {
     });
   });
 
+  describe('Perception type validation and legacy support', () => {
+    test('should dispatch error with suggestion for invalid perception_type that has a near match', () => {
+      // Use a partial/substring match that should trigger a suggestion
+      // 'movement' as a category prefix will match 'movement.arrival' or similar
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Something happens.',
+          perception_type: 'movement', // Partial: should suggest 'movement.arrival' or similar
+          actor_id: 'npc:actor',
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringMatching(/Invalid perception_type.*Did you mean/),
+        })
+      );
+    });
+
+    test('should dispatch error without suggestion for completely invalid perception_type', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Something happens.',
+          perception_type: 'zzz_completely_invalid_no_match_xyz123',
+          actor_id: 'npc:actor',
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Invalid perception_type'),
+        })
+      );
+      // Verify no "Did you mean" suggestion is included
+      const [, payload] = dispatcher.dispatch.mock.calls[0];
+      expect(payload.message).not.toContain('Did you mean');
+    });
+
+    test('should log deprecation warning and remap legacy perception_type', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Actor performs a self-action.',
+          perception_type: 'action_self_general', // Legacy type
+          actor_id: 'npc:actor',
+        },
+        {}
+      );
+
+      // Should warn about deprecation
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Deprecated perception_type 'action_self_general' used")
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Please migrate to 'physical.self_action'")
+      );
+
+      // Should dispatch with the NEW type, not the legacy type
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          perceptionType: 'physical.self_action', // Remapped from legacy
+        })
+      );
+    });
+  });
+
+  describe('Edge cases for branch coverage', () => {
+    test('should handle non-object contextual_data (uses empty object)', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Event with primitive contextual_data.',
+          perception_type: 'physical.target_action',
+          actor_id: 'npc:actor',
+          contextual_data: 'not_an_object', // Not an object - should fall back to {}
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          contextualData: {
+            recipientIds: [],
+            excludedActorIds: [],
+          },
+        })
+      );
+    });
+
+    test('should use location_id as origin when origin_location_id is not provided', () => {
+      handler.execute(
+        {
+          location_id: 'loc:main',
+          description_text: 'Event without origin.',
+          perception_type: 'physical.self_action',
+          actor_id: 'npc:actor',
+          // No origin_location_id provided
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          locationId: 'loc:main',
+          originLocationId: 'loc:main', // Falls back to location_id
+        })
+      );
+    });
+
+    test('should use location_id as origin when origin_location_id is empty string', () => {
+      handler.execute(
+        {
+          location_id: 'loc:main',
+          description_text: 'Event with empty origin.',
+          perception_type: 'physical.self_action',
+          actor_id: 'npc:actor',
+          origin_location_id: '   ', // Empty/whitespace string
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          locationId: 'loc:main',
+          originLocationId: 'loc:main', // Falls back to location_id
+        })
+      );
+    });
+
+    test('should use explicit origin_location_id when provided', () => {
+      handler.execute(
+        {
+          location_id: 'loc:destination',
+          description_text: 'Event with explicit origin.',
+          perception_type: 'movement.arrival',
+          actor_id: 'npc:actor',
+          origin_location_id: 'loc:source',
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          locationId: 'loc:destination',
+          originLocationId: 'loc:source', // Uses provided origin
+        })
+      );
+    });
+
+    test('should handle non-array involved_entities (uses empty array)', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Event with invalid involved_entities.',
+          perception_type: 'physical.target_action',
+          actor_id: 'npc:actor',
+          involved_entities: 'not_an_array', // Not an array - should fall back to []
+        },
+        {}
+      );
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.objectContaining({
+          involvedEntities: [], // Falls back to empty array
+        })
+      );
+    });
+  });
+
   describe('Actor/target description pass-through', () => {
     test('should include actor_description in dispatched event', async () => {
       await handler.execute(

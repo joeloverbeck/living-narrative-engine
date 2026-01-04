@@ -39,6 +39,10 @@
                 }
             }
         },
+        "mouth": {
+            "partType": "mouth",
+            "preferId": "anatomy:humanoid_mouth"
+        },
         "penis": {
             "partType": "penis",
             "properties": {
@@ -76,7 +80,7 @@
                 "right_hand"
             ],
             "partType": "hand",
-            "preferId": "anatomy:humanoid_hand_gardener"
+            "preferId": "anatomy:human_hand"
         },
         {
             "matches": [

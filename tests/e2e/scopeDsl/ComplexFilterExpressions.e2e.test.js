@@ -677,18 +677,17 @@ describe('Complex Filter Expressions E2E', () => {
 
       scopeRegistry.initialize(malformedScopes);
 
-      // Should handle missing condition reference gracefully and return empty result
-      const result = await ScopeTestUtilities.resolveScopeE2E(
-        'test:invalid_condition_ref',
-        testActor,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
-
-      expect(result).toBeDefined();
-      expect(result instanceof Set).toBe(true);
-      // Should return empty set when condition reference cannot be resolved
-      expect(result.size).toBe(0);
+      // Should fail-fast with an error when condition reference cannot be resolved
+      // The fail-fast behavior (INV-EVAL-1) prevents silent failures in scope resolution
+      // ACTDISDIAFAIFAS-002b: Error message now includes "Condition reference 'X' not found" with suggestions
+      await expect(
+        ScopeTestUtilities.resolveScopeE2E(
+          'test:invalid_condition_ref',
+          testActor,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        )
+      ).rejects.toThrow(/Condition reference.*not found|SCOPE_3000|condition_ref/);
     });
 
     test('should handle missing services gracefully', async () => {

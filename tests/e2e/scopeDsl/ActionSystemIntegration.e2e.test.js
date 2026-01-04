@@ -332,9 +332,11 @@ describe('ScopeDsl Integration with Action System E2E', () => {
           }
         } catch (error) {
           // Some scopes might be empty in test environment, which is acceptable
+          // Also allow fail-fast filter evaluation errors (INV-EVAL-1 behavior)
           if (
             !error.message.includes('not found') &&
-            !error.message.includes('empty')
+            !error.message.includes('empty') &&
+            !error.message.includes('Filter evaluation failed')
           ) {
             throw error;
           }

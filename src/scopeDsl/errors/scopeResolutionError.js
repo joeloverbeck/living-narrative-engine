@@ -66,6 +66,53 @@ export class ScopeResolutionError extends BaseError {
     return false;
   }
 
+  // --- Diagnostic context getters (ACTDISDIAFAIFAS-002) ---
+
+  /**
+   * Returns the ID of the condition that failed resolution
+   *
+   * @returns {string|undefined} The condition ID, or undefined if not provided
+   */
+  get conditionId() {
+    return this.context.conditionId;
+  }
+
+  /**
+   * Returns the mod that referenced the problematic element
+   *
+   * @returns {string|undefined} The mod source ID, or undefined if not provided
+   */
+  get modSource() {
+    return this.context.modSource;
+  }
+
+  /**
+   * Returns the scope/action ID that triggered resolution
+   *
+   * @returns {string|undefined} The parent context ID, or undefined if not provided
+   */
+  get parentContext() {
+    return this.context.parentContext;
+  }
+
+  /**
+   * Returns an array of similar condition IDs as suggestions
+   *
+   * @returns {string[]|undefined} Array of similar IDs, or undefined if not provided
+   */
+  get suggestions() {
+    return this.context.suggestions;
+  }
+
+  /**
+   * Returns the path of resolution attempts
+   *
+   * @returns {string[]|undefined} Array representing the resolution chain, or undefined if not provided
+   */
+  get resolutionChain() {
+    return this.context.resolutionChain;
+  }
+
   /**
    * Formats a parameters object with proper indentation
    *

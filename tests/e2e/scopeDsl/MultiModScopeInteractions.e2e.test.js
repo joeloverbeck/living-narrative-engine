@@ -442,17 +442,17 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       );
       const gameContext = await createGameContext();
 
-      // Missing condition reference should return empty set when no entities match
-      // The filter with missing condition_ref won't be evaluated if no entities pass
-      // the initial entities(core:actor) filter
-      const brokenScopeResult = await ScopeTestUtilities.resolveScopeE2E(
-        'broken:scope',
-        playerEntity,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
-      expect(brokenScopeResult instanceof Set).toBe(true);
-      expect(brokenScopeResult.size).toBe(0); // No entities match, so condition_ref is never evaluated
+      // Missing condition reference should fail-fast with an error
+      // The fail-fast behavior (INV-EVAL-1) prevents silent failures in scope resolution
+      // ACTDISDIAFAIFAS-002b: Error message now includes "Condition reference 'X' not found" with suggestions
+      await expect(
+        ScopeTestUtilities.resolveScopeE2E(
+          'broken:scope',
+          playerEntity,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        )
+      ).rejects.toThrow(/Condition reference.*not found|SCOPE_3000|condition_ref/);
 
       // Missing component should return empty set or handle gracefully
       const missingComponentResult = await ScopeTestUtilities.resolveScopeE2E(

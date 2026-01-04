@@ -1,0 +1,15 @@
+// Scope for get_close action: actors in location who aren't wielding and whom actor is facing
+// Combines wielding check with unidirectional facing check (actor not facing away from target)
+personal-space:actors_in_location_not_wielding_and_facing := entities(core:position)[][{
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-current-actor" },
+    { "condition_ref": "core:entity-has-actor-component" },
+    { "condition_ref": "item-handling-states:entity-is-not-wielding" },
+    {
+      "!": {
+        "condition_ref": "facing-states:entity-in-facing-away"
+      }
+    }
+  ]
+}]

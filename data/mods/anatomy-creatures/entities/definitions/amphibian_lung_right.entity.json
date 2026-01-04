@@ -25,6 +25,12 @@
       "oxygenCapacity": 6,
       "currentOxygen": 6,
       "environmentCompatibility": ["air"]
+    },
+    "anatomy:vital_organ": {
+      "organType": "respiratory",
+      "killOnDestroy": true,
+      "requiresAllDestroyed": true,
+      "deathMessage": "suffocated as both amphibian lungs failed"
     }
   }
 }

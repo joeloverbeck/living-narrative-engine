@@ -66,6 +66,110 @@ describe('deepClone', () => {
     obj.self = obj;
     expect(() => deepClone(obj)).toThrow();
   });
+
+  // ENTIDAPI-004: Document undefined value handling behavior
+  describe('undefined value handling', () => {
+    it('should strip undefined values when JSON fallback is used', () => {
+      const original = global.structuredClone;
+      global.structuredClone = undefined;
+
+      const source = { a: 1, b: undefined, c: 2 };
+      const cloned = deepClone(source);
+
+      // JSON serialization strips undefined values - this is documented behavior
+      expect(cloned).toEqual({ a: 1, c: 2 });
+      expect(Object.keys(cloned).length).toBe(2);
+      expect('b' in cloned).toBe(false);
+
+      global.structuredClone = original;
+    });
+
+    it('should preserve undefined values when native structuredClone is used', () => {
+      // Test with a mock that mimics real structuredClone behavior
+      const original = global.structuredClone;
+      // Create a mock that preserves undefined like real structuredClone does
+      global.structuredClone = (obj) => {
+        // Real structuredClone preserves undefined - simulate with JSON but add undefined back
+        const result = {};
+        for (const key of Object.keys(obj)) {
+          result[key] = obj[key];
+        }
+        return result;
+      };
+
+      const source = { a: 1, b: undefined, c: 2 };
+      const cloned = deepClone(source);
+
+      // When structuredClone is available, undefined values are preserved
+      expect('b' in cloned).toBe(true);
+      expect(cloned.b).toBeUndefined();
+      expect(Object.keys(cloned).length).toBe(3);
+
+      global.structuredClone = original;
+    });
+
+    it('should document property count difference when undefined values are stripped', () => {
+      const original = global.structuredClone;
+      global.structuredClone = undefined;
+
+      const source = { a: 1, b: undefined, c: undefined, d: 2 };
+      const cloned = deepClone(source);
+
+      // This demonstrates the data loss scenario described in ENTIDAPI-001
+      const sourceKeys = Object.keys(source).length;
+      const clonedKeys = Object.keys(cloned).length;
+
+      expect(sourceKeys).toBe(4);
+      expect(clonedKeys).toBe(2);
+      expect(sourceKeys).not.toBe(clonedKeys); // Data loss occurred
+
+      global.structuredClone = original;
+    });
+
+    it('should strip nested undefined values in JSON fallback', () => {
+      const original = global.structuredClone;
+      global.structuredClone = undefined;
+
+      // This mimics the equipment component scenario from the bug
+      const source = {
+        equipped: {
+          torso: { base: 'shirt_id', accessories: undefined },
+          legs: { base: undefined },
+        },
+      };
+      const cloned = deepClone(source);
+
+      // Nested undefined values are stripped
+      expect(cloned.equipped.torso).toEqual({ base: 'shirt_id' });
+      expect('accessories' in cloned.equipped.torso).toBe(false);
+      expect(cloned.equipped.legs).toEqual({});
+
+      global.structuredClone = original;
+    });
+
+    it('should preserve string IDs correctly (common createEntity pattern)', () => {
+      const original = global.structuredClone;
+      global.structuredClone = undefined;
+
+      // This is the CORRECT pattern: using string IDs directly
+      const beltId = 'belt_entity_id'; // fixture.createEntity returns string
+      const pantsId = 'pants_entity_id';
+
+      const source = {
+        equipped: {
+          torso_lower: { accessories: beltId },
+          legs: { base: pantsId },
+        },
+      };
+      const cloned = deepClone(source);
+
+      // String IDs are preserved correctly
+      expect(cloned.equipped.torso_lower.accessories).toBe('belt_entity_id');
+      expect(cloned.equipped.legs.base).toBe('pants_entity_id');
+
+      global.structuredClone = original;
+    });
+  });
 });
 
 describe('freezeMap', () => {

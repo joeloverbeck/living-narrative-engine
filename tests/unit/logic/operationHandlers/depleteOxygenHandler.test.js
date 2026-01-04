@@ -19,6 +19,7 @@ import DepleteOxygenHandler from '../../../../src/logic/operationHandlers/deplet
 import {
   RESPIRATORY_ORGAN_COMPONENT_ID,
   ANATOMY_PART_COMPONENT_ID as PART_COMPONENT_ID,
+  ANATOMY_PART_HEALTH_COMPONENT_ID as PART_HEALTH_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { OXYGEN_DEPLETED_EVENT_ID as OXYGEN_DEPLETED_EVENT } from '../../../../src/constants/eventIds.js';
 
@@ -902,6 +903,49 @@ describe('DepleteOxygenHandler', () => {
         expect.stringContaining('no respiratory organs')
       );
       expect(em.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('skips organs with destroyed part health', async () => {
+      const organData = {
+        currentOxygen: 10,
+        oxygenCapacity: 100,
+        depletionRate: 5,
+      };
+
+      em.getEntitiesWithComponent.mockReturnValue([
+        { id: 'lung1' },
+        { id: 'lung2' },
+      ]);
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === PART_COMPONENT_ID) {
+          return { ownerEntityId: 'entity1' };
+        }
+        if (componentId === PART_HEALTH_COMPONENT_ID) {
+          if (entityId === 'lung1') {
+            return { currentHealth: 0 };
+          }
+          return { currentHealth: 5 };
+        }
+        if (componentId === RESPIRATORY_ORGAN_COMPONENT_ID) {
+          return organData;
+        }
+        return null;
+      });
+
+      await handler.execute(
+        { entityId: 'entity1', amount: 10 },
+        executionContext
+      );
+
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      expect(em.addComponent).toHaveBeenCalledWith(
+        'lung2',
+        RESPIRATORY_ORGAN_COMPONENT_ID,
+        expect.objectContaining({
+          currentOxygen: 0,
+        })
+      );
     });
 
     test('skips organs with part component but null organData', async () => {

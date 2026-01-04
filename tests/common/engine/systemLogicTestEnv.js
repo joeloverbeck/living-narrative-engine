@@ -22,11 +22,65 @@ import {
 } from '../mockFactories/index.js';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import { setupEntityCacheInvalidation } from '../../../src/scopeDsl/core/entityHelpers.js';
+import {
+  setupEntityCacheInvalidation,
+  clearEntityCache,
+} from '../../../src/scopeDsl/core/entityHelpers.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import { TestEnvPropertyError } from '../errors/testEnvPropertyError.js';
+
+/**
+ * Properties that Jest/Node internals may access without throwing.
+ * These are checked by Jest matchers, async utilities, and Node's util.inspect.
+ */
+const ALLOWED_UNDEFINED = [
+  'toJSON',
+  '$$typeof',
+  'asymmetricMatch',
+  'nodeType',
+  'then', // For Promise detection
+  'constructor',
+];
+
+/**
+ * Wraps a testEnv object with a strict proxy that throws descriptive errors
+ * when accessing undefined properties.
+ *
+ * @param {object} testEnv - The test environment object to wrap
+ * @returns {Proxy} Proxied testEnv that throws on undefined property access
+ */
+function wrapWithStrictProxy(testEnv) {
+  return new Proxy(testEnv, {
+    get(target, prop) {
+      // Allow symbols (Jest uses these)
+      if (typeof prop === 'symbol') {
+        return target[prop];
+      }
+
+      // Allow Jest/Node internals
+      if (ALLOWED_UNDEFINED.includes(prop)) {
+        return target[prop];
+      }
+
+      // Allow prototype chain access
+      if (prop in target) {
+        return target[prop];
+      }
+
+      // Allow underscore-prefixed properties for internal/dynamic use
+      // (e.g., _originalResolveSync, _registeredResolvers used by scopeResolverHelpers)
+      if (typeof prop === 'string' && prop.startsWith('_')) {
+        return target[prop];
+      }
+
+      // Throw descriptive error for undefined properties
+      throw new TestEnvPropertyError(prop, Object.keys(target));
+    },
+  });
+}
 
 /**
  * Creates base services needed for rule engine tests.
@@ -1304,6 +1358,8 @@ export function createBaseRuleEnvironment({
       operationInterpreter,
       systemLogicInterpreter: interpreter,
       bodyGraphService: mockBodyGraphService,
+      lightingStateService: mockLightingStateService,
+      jsonLogicCustomOperators,
       actionIndex,
       handlers,
       unifiedScopeResolver: simpleScopeResolver,
@@ -1330,7 +1386,7 @@ export function createBaseRuleEnvironment({
   // This ensures the entity cache is automatically cleared when components are added/removed
   setupEntityCacheInvalidation(bus);
 
-  return {
+  return wrapWithStrictProxy({
     eventBus: bus,
     events: bus.events,
     operationRegistry: init.operationRegistry,
@@ -1350,7 +1406,22 @@ export function createBaseRuleEnvironment({
     prerequisiteService,
     createHandlers,
     cleanup: () => {
-      interpreter.shutdown();
+      let cleanupError = null;
+
+      try {
+        interpreter.shutdown();
+      } catch (err) {
+        cleanupError = err;
+      }
+
+      // ALWAYS clear cache, even if interpreter shutdown fails
+      clearEntityCache();
+
+      if (cleanupError) {
+        console.error(
+          `Cleanup error (cache still cleared): ${cleanupError.message}`
+        );
+      }
     },
     initializeEnv,
 
@@ -1393,7 +1464,7 @@ export function createBaseRuleEnvironment({
     hasValidation() {
       return schemaValidator !== null;
     },
-  };
+  });
 }
 
 /**
@@ -1419,6 +1490,13 @@ export function resetRuleEnvironment(env, newEntities = []) {
   // NOTE: Do NOT update unifiedScopeResolver here - it has custom scope overrides
   // that must persist across resets. The overridden resolveSync method uses a getter
   // to dynamically access testEnv.entityManager, so it will use the new entity manager.
+
+  // Re-register JSON Logic custom operators with new entityManager
+  // The operators store entityManager as a private field at construction time,
+  // so we need to create a new instance with the new entityManager and re-register.
+  if (newEnv.jsonLogicCustomOperators && env.jsonLogic) {
+    newEnv.jsonLogicCustomOperators.registerOperators(env.jsonLogic);
+  }
 
   // Clear the event bus events array if it has a _clearHandlers method
   if (env.eventBus && typeof env.eventBus._clearHandlers === 'function') {
@@ -1796,17 +1874,34 @@ export function createRuleTestEnvironment(options) {
         );
 
         let result;
+        let caughtError = null;
         try {
           result = env.unifiedScopeResolver.resolveSync(
             scopeName,
             resolutionContext
           );
         } catch (error) {
+          caughtError = error;
           env.logger.debug(
             `Failed to resolve ${key} scope ${scopeName} for action ${actionId}: ${error.message}`
           );
           continue;
         }
+
+        // DIAGNOSTIC: Log scope resolution result
+        console.log('[DIAGNOSTIC validateAction] scope resolution result:', {
+          scopeName,
+          actionId,
+          targetKey: key,
+          resultType: result ? (result instanceof Set ? 'Set' : typeof result) : 'undefined',
+          resultSuccess: result?.success,
+          resultError: result?.error,
+          resultValue: result instanceof Set ? Array.from(result).slice(0, 5) : (result?.value ? Array.from(result.value).slice(0, 5) : null),
+          resultSize: result instanceof Set ? result.size : (result?.value?.size || 0),
+          resultKeys: result && typeof result === 'object' && !(result instanceof Set) ? Object.keys(result) : [],
+          caughtError: caughtError?.message,
+          actorId: resolutionContext.actorEntity?.id,
+        });
 
         if (!result?.success || !result.value || result.value.size === 0) {
           env.logger.debug(
@@ -1974,8 +2069,9 @@ export function createRuleTestEnvironment(options) {
       return [];
     }
 
-    const actorEntity = { id: actorId };
-    const candidates = env.actionIndex.getCandidateActions(actorEntity);
+    // Use full actor entity with components, not minimal { id } object
+    // This is required for scope resolution to access actor.components.*
+    const candidates = env.actionIndex.getCandidateActions(actor);
 
     // Filter candidates by scope validation
     return candidates.filter((action) =>

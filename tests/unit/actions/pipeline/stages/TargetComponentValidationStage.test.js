@@ -240,7 +240,8 @@ describe('TargetComponentValidationStage', () => {
         expect.objectContaining({
           primary: { id: 'primary-target' },
           secondary: { id: 'secondary-target' },
-        })
+        }),
+        {} // Empty options when no trace
       );
     });
 
@@ -424,7 +425,8 @@ describe('TargetComponentValidationStage', () => {
           primary: expect.objectContaining({
             id: 'target-1',
           }),
-        })
+        }),
+        {} // Empty options when no trace
       );
     });
 
@@ -497,7 +499,8 @@ describe('TargetComponentValidationStage', () => {
         action,
         expect.objectContaining({
           actor: context.actor,
-        })
+        }),
+        {} // Empty options when no trace
       );
     });
 
@@ -905,7 +908,8 @@ describe('TargetComponentValidationStage', () => {
         legacyAction,
         expect.objectContaining({
           target: { id: 'target-1' },
-        })
+        }),
+        {} // Empty options when no trace
       );
     });
 
@@ -966,7 +970,8 @@ describe('TargetComponentValidationStage', () => {
         actionWithResolvedTargets,
         expect.objectContaining({
           primary: { id: 'resolved-primary' },
-        })
+        }),
+        {} // Empty options when no trace
       );
     });
 
@@ -990,7 +995,370 @@ describe('TargetComponentValidationStage', () => {
         action,
         expect.objectContaining({
           target: { id: 'resolved-target' },
+        }),
+        {} // Empty options when no trace
+      );
+    });
+  });
+
+  describe('Diagnostics Mode (ACTDISDIAFAIFAS-007)', () => {
+    let mockActionAwareTrace;
+
+    beforeEach(() => {
+      // Create mock action-aware trace with captureActionData
+      mockActionAwareTrace = {
+        captureActionData: jest.fn().mockResolvedValue(undefined),
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        error: jest.fn(),
+      };
+    });
+
+    it('should request detailed rejection info from validators when trace enabled', async () => {
+      const action = {
+        id: 'test-action',
+        forbidden_components: { primary: ['forbidden-comp'] },
+        resolvedTargets: { primary: { id: 'target-1' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: true,
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true,
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify validator was called with includeDetails option
+      expect(mockValidator.validateTargetComponents).toHaveBeenCalledWith(
+        action,
+        expect.any(Object),
+        { includeDetails: true }
+      );
+      expect(mockRequiredValidator.validateTargetRequirements).toHaveBeenCalledWith(
+        action,
+        expect.any(Object),
+        { includeDetails: true }
+      );
+    });
+
+    it('should capture per-entity rejection details in trace output', async () => {
+      const action = {
+        id: 'positioning:kneel_before',
+        forbidden_components: { primary: ['positioning:kneeling'] },
+        resolvedTargets: { primary: { id: 'entity_123' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      // Simulate forbidden component validation failure with details
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: false,
+        reason: 'Target has forbidden component',
+        details: {
+          targetRole: 'primary',
+          rejectedEntities: [
+            {
+              entityId: 'entity_123',
+              forbiddenComponentsPresent: ['positioning:kneeling'],
+            },
+          ],
+        },
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: true,
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify captureActionData was called with diagnostics
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'positioning:kneel_before',
+        expect.objectContaining({
+          stageName: 'TargetComponentValidationStage',
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.arrayContaining([
+              expect.objectContaining({
+                actionId: 'positioning:kneel_before',
+                targetRole: 'primary',
+                validationType: 'forbidden_components',
+                rejectedEntities: expect.arrayContaining([
+                  expect.objectContaining({
+                    entityId: 'entity_123',
+                    forbiddenComponentsPresent: ['positioning:kneeling'],
+                  }),
+                ]),
+              }),
+            ]),
+          }),
         })
+      );
+    });
+
+    it('should include diagnostic data in error context', async () => {
+      const action = {
+        id: 'core:give_item',
+        required_components: { secondary: ['items:inventory'] },
+        resolvedTargets: { secondary: { id: 'entity_456' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      mockValidator.validateTargetComponents.mockReturnValue({ valid: true });
+      // Simulate required component validation failure with details
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: false,
+        reason: 'Target missing required component',
+        details: {
+          targetRole: 'secondary',
+          rejectedEntities: [
+            {
+              entityId: 'entity_456',
+              requiredComponentsMissing: ['items:inventory'],
+            },
+          ],
+        },
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify captureActionData was called with required_components failure
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'core:give_item',
+        expect.objectContaining({
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.arrayContaining([
+              expect.objectContaining({
+                validationType: 'required_components',
+                rejectedEntities: expect.arrayContaining([
+                  expect.objectContaining({
+                    entityId: 'entity_456',
+                    requiredComponentsMissing: ['items:inventory'],
+                  }),
+                ]),
+              }),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should skip detailed collection when diagnostics disabled (normal path)', async () => {
+      const action = {
+        id: 'test-action',
+        forbidden_components: { primary: ['comp'] },
+        resolvedTargets: { primary: { id: 'target-1' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = null; // No trace = diagnostics disabled
+
+      mockValidator.validateTargetComponents.mockReturnValue({ valid: true });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({ valid: true });
+
+      await stage.executeInternal(context);
+
+      // Verify validator was called WITHOUT includeDetails option
+      expect(mockValidator.validateTargetComponents).toHaveBeenCalledWith(
+        action,
+        expect.any(Object),
+        {} // Empty options object
+      );
+      expect(mockRequiredValidator.validateTargetRequirements).toHaveBeenCalledWith(
+        action,
+        expect.any(Object),
+        {} // Empty options object
+      );
+    });
+
+    it('should track both forbidden and required validation failures', async () => {
+      const action = {
+        id: 'complex-action',
+        forbidden_components: { primary: ['forbidden-comp'] },
+        required_components: { secondary: ['required-comp'] },
+        resolvedTargets: {
+          primary: { id: 'entity-1' },
+          secondary: { id: 'entity-2' },
+        },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      // Both validations fail
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: false,
+        reason: 'Has forbidden component',
+        details: {
+          targetRole: 'primary',
+          rejectedEntities: [
+            { entityId: 'entity-1', forbiddenComponentsPresent: ['forbidden-comp'] },
+          ],
+        },
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
+        valid: false,
+        reason: 'Missing required component',
+        details: {
+          targetRole: 'secondary',
+          rejectedEntities: [
+            { entityId: 'entity-2', requiredComponentsMissing: ['required-comp'] },
+          ],
+        },
+      });
+
+      await stage.executeInternal(context);
+
+      // Should capture both failures
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledTimes(2);
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'complex-action',
+        expect.objectContaining({
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.arrayContaining([
+              expect.objectContaining({
+                validationType: 'forbidden_components',
+              }),
+            ]),
+          }),
+        })
+      );
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'complex-action',
+        expect.objectContaining({
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.arrayContaining([
+              expect.objectContaining({
+                validationType: 'required_components',
+              }),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should validate multiple target roles with details (primary, secondary, tertiary)', async () => {
+      const action = {
+        id: 'multi-target-action',
+        forbidden_components: {
+          primary: ['comp-a'],
+          secondary: ['comp-b'],
+          tertiary: ['comp-c'],
+        },
+        resolvedTargets: {
+          primary: { id: 'entity-primary' },
+          secondary: { id: 'entity-secondary' },
+          tertiary: { id: 'entity-tertiary' },
+        },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: false,
+        reason: 'Secondary has forbidden component',
+        details: {
+          targetRole: 'secondary',
+          rejectedEntities: [
+            { entityId: 'entity-secondary', forbiddenComponentsPresent: ['comp-b'] },
+          ],
+        },
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({ valid: true });
+
+      await stage.executeInternal(context);
+
+      // Verify the multi-target role is properly tracked
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'multi-target-action',
+        expect.objectContaining({
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.arrayContaining([
+              expect.objectContaining({
+                targetRole: 'secondary',
+              }),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should follow existing trace data structure patterns', async () => {
+      const action = {
+        id: 'trace-pattern-action',
+        forbidden_components: { primary: ['comp'] },
+        resolvedTargets: { primary: { id: 'entity-1' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = mockActionAwareTrace;
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: false,
+        reason: 'Has forbidden component',
+        details: {
+          targetRole: 'primary',
+          rejectedEntities: [
+            { entityId: 'entity-1', forbiddenComponentsPresent: ['comp'] },
+          ],
+        },
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({ valid: true });
+
+      await stage.executeInternal(context);
+
+      // Verify trace data structure matches expected pattern from ticket
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'target_validation_failure',
+        'trace-pattern-action',
+        expect.objectContaining({
+          stageName: 'TargetComponentValidationStage',
+          diagnostics: expect.objectContaining({
+            validationFailures: expect.any(Array),
+          }),
+          timestamp: expect.any(Number),
+        })
+      );
+    });
+
+    it('should maintain backward compatibility with existing tests', async () => {
+      // This test verifies that existing functionality still works
+      const action = {
+        id: 'backward-compat-action',
+        forbidden_components: { primary: ['forbidden'] },
+        resolvedTargets: { primary: { id: 'target-1' } },
+      };
+
+      context.candidateActions = [action];
+      context.trace = null; // No trace
+
+      mockValidator.validateTargetComponents.mockReturnValue({
+        valid: false,
+        reason: 'Has forbidden component',
+      });
+      mockRequiredValidator.validateTargetRequirements.mockReturnValue({ valid: true });
+
+      const result = await stage.executeInternal(context);
+
+      // Existing behavior: action filtered out, result still successful
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions || []).toHaveLength(0);
+      // Debug log still called
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("filtered out")
       );
     });
   });

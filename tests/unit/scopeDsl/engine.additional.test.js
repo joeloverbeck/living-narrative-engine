@@ -3,11 +3,9 @@
  * @description Tests to improve coverage of src/scopeDsl/engine.js edge cases and error scenarios
  */
 
-import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { jest, describe, beforeEach, expect } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
-import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
-import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 import { createMockSpatialIndexManager } from '../../common/mockFactories/index.js';
 
 // Mock dependencies
@@ -467,7 +465,7 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
       expect(result).toEqual(new Set());
     });
 
-    test('should handle filter evaluation that throws exception', () => {
+    test('should gracefully skip entities on non-condition_ref filter evaluation errors', () => {
       const ast = parseDslExpression(
         'entities(core:item)[{"==": [{"var": "type"}, "weapon"]}]'
       );
@@ -484,10 +482,11 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
         throw new Error('JSON Logic evaluation failed');
       });
 
-      // Filter resolver now handles evaluation errors gracefully
-      // Items that fail evaluation are simply excluded from results
+      // Non-condition_ref errors gracefully skip items to support heterogeneous collections
+      // (e.g., inventory with mixed item types where some items lack filter-referenced components)
+      // Only condition_ref errors (configuration bugs) fail-fast per INV-EVAL-1
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      expect(result).toEqual(new Set()); // No items pass due to evaluation errors
+      expect(result.size).toBe(0);
     });
 
     test('should handle filter evaluation returning non-boolean', () => {

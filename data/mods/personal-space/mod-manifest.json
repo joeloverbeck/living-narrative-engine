@@ -110,6 +110,7 @@
       "step_back.rule.json"
     ],
     "scopes": [
+      "actors_in_location_not_wielding_and_facing.scope",
       "actors_sitting_with_space_to_right.scope",
       "furniture_actor_sitting_on.scope"
     ]

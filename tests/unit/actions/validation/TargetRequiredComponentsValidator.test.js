@@ -734,4 +734,224 @@ describe('TargetRequiredComponentsValidator', () => {
       expect(mockLogger.debug).toHaveBeenCalled();
     });
   });
+
+  describe('validateTargetRequirements - includeDetails option', () => {
+    it('should return details.rejectedEntities[] with entity IDs when includeDetails: true', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['personal-space-states:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          id: 'entity_456',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.details).toBeDefined();
+      expect(result.details.rejectedEntities).toBeInstanceOf(Array);
+      expect(result.details.rejectedEntities).toHaveLength(1);
+      expect(result.details.rejectedEntities[0].entityId).toBe('entity_456');
+    });
+
+    it('should include requiredComponentsMissing[] in each rejection', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          secondary: ['core:actor', 'positioning:standing'],
+        },
+      };
+      const targetEntities = {
+        secondary: {
+          id: 'entity_123',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.details.rejectedEntities[0].requiredComponentsMissing).toEqual([
+        'core:actor',
+        'positioning:standing',
+      ]);
+    });
+
+    it('should include targetRole in details', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          secondary: ['core:actor'],
+        },
+      };
+      const targetEntities = {
+        secondary: {
+          id: 'npc2',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.details.targetRole).toBe('secondary');
+    });
+
+    it('should be backward compatible without includeDetails option', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['personal-space-states:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          id: 'npc1',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities
+      );
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'Target (primary) must have component: personal-space-states:closeness',
+      });
+      expect(result.details).toBeUndefined();
+    });
+
+    it('should not include details when includeDetails is false', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['personal-space-states:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          id: 'npc1',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: false }
+      );
+
+      expect(result.details).toBeUndefined();
+    });
+
+    it('should return empty rejectedEntities when validation passes with includeDetails', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['personal-space-states:closeness'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          id: 'npc1',
+          components: { 'personal-space-states:closeness': {} },
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.details).toBeDefined();
+      expect(result.details.rejectedEntities).toEqual([]);
+    });
+
+    it('should track multiple missing components per entity', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          primary: ['sitting-states:sitting_on', 'personal-space-states:closeness', 'core:actor'],
+        },
+      };
+      const targetEntities = {
+        primary: {
+          id: 'entity_789',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.details.rejectedEntities[0].requiredComponentsMissing).toHaveLength(3);
+      expect(result.details.rejectedEntities[0].requiredComponentsMissing).toContain('sitting-states:sitting_on');
+      expect(result.details.rejectedEntities[0].requiredComponentsMissing).toContain('personal-space-states:closeness');
+      expect(result.details.rejectedEntities[0].requiredComponentsMissing).toContain('core:actor');
+    });
+
+    it('should include details for legacy target format', () => {
+      const actionDef = {
+        id: 'test:action',
+        required_components: {
+          target: ['personal-space-states:closeness'],
+        },
+      };
+      const targetEntities = {
+        target: {
+          id: 'legacy_target',
+          components: {},
+        },
+      };
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.details.targetRole).toBe('target');
+      expect(result.details.rejectedEntities[0].entityId).toBe('legacy_target');
+    });
+
+    it('should return empty rejectedEntities with details when no required_components defined', () => {
+      const actionDef = { id: 'test:action' };
+      const targetEntities = {};
+
+      const result = validator.validateTargetRequirements(
+        actionDef,
+        targetEntities,
+        { includeDetails: true }
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.details).toBeDefined();
+      expect(result.details.rejectedEntities).toEqual([]);
+    });
+  });
 });

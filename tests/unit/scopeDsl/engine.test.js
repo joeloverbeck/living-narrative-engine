@@ -357,7 +357,7 @@ describe('ScopeEngine', () => {
         expect(result).toEqual(new Set(['entity1', 'entity3']));
       });
 
-      test('throws JsonLogic evaluation errors immediately (fail-fast)', () => {
+      test('gracefully skips entities on non-condition_ref filter evaluation errors', () => {
         const ast = parseDslExpression(
           'entities(core:item)[][{"invalid": "logic"}]'
         );
@@ -374,10 +374,11 @@ describe('ScopeEngine', () => {
           id,
         }));
 
-        // Filter resolver now handles evaluation errors gracefully
-        // Items that fail evaluation are simply excluded from results
+        // Non-condition_ref errors gracefully skip items to support heterogeneous collections
+        // (e.g., inventory with mixed item types where some items lack filter-referenced components)
+        // Only condition_ref errors (configuration bugs) fail-fast per INV-EVAL-1
         const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-        expect(result).toEqual(new Set()); // No items pass due to evaluation errors
+        expect(result.size).toBe(0);
       });
     });
 
