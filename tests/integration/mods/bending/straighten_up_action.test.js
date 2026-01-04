@@ -109,7 +109,7 @@ describe('bending:straighten_up action integration', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'bending',
-      'straighten_up'
+      'bending:straighten_up'
     );
   });
 

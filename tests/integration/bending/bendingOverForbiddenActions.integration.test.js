@@ -30,9 +30,9 @@ describe('Bending Over - Forbidden Actions Bug', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Using positioning mod since bending_over is a positioning component
+    // Using bending mod since bending_over is a bending component
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'bending',
       'bending:bend_over'
     );
   });

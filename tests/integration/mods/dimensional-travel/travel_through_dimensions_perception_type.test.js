@@ -14,7 +14,7 @@ describe('travel_through_dimensions - perceptionType Validation', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'dimensional-travel',
-      'travel_through_dimensions'
+      'dimensional-travel:travel_through_dimensions'
     );
   });
 

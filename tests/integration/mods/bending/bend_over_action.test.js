@@ -160,7 +160,7 @@ describe('bending:bend_over action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('bending', 'bend_over');
+    testFixture = await ModTestFixture.forAction('bending', 'bending:bend_over');
   });
 
   afterEach(() => {

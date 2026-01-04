@@ -235,7 +235,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'maneuvering',
-      'place_yourself_behind'
+      'maneuvering:place_yourself_behind'
     );
   });
 

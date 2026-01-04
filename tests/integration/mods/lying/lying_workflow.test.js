@@ -11,7 +11,7 @@ describe('Complete Lying Workflow', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('lying', 'lie_down');
+    testFixture = await ModTestFixture.forAction('lying', 'lying:lie_down');
   });
 
   afterEach(() => {
@@ -57,7 +57,7 @@ describe('Complete Lying Workflow', () => {
       // Act 2: Get up (requires switching to get_up_from_lying action)
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, currentActor, bed]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
@@ -100,7 +100,7 @@ describe('Complete Lying Workflow', () => {
       // Get up (requires different fixture)
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       let currentActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
@@ -110,7 +110,7 @@ describe('Complete Lying Workflow', () => {
       // Lie on couch (requires lie_down fixture again)
       const lieDownFixture2 = await ModTestFixture.forAction(
         'lying',
-        'lie_down'
+        'lying:lie_down'
       );
       currentActor =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
@@ -158,7 +158,7 @@ describe('Complete Lying Workflow', () => {
       // Get up and verify state
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, currentActor, bed]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
@@ -192,7 +192,7 @@ describe('Complete Lying Workflow', () => {
 
       let getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       let currentActor =
         testFixture.entityManager.getEntityInstance('test:actor1');
@@ -202,7 +202,7 @@ describe('Complete Lying Workflow', () => {
       // Second cycle
       const lieDownFixture2 = await ModTestFixture.forAction(
         'lying',
-        'lie_down'
+        'lying:lie_down'
       );
       currentActor =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
@@ -211,7 +211,7 @@ describe('Complete Lying Workflow', () => {
 
       const getUpFixture2 = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       currentActor =
         lieDownFixture2.entityManager.getEntityInstance('test:actor1');
@@ -297,7 +297,7 @@ describe('Complete Lying Workflow', () => {
 
       const bendFixture = await ModTestFixture.forAction(
         'bending',
-        'bend_over'
+        'bending:bend_over'
       );
       bendFixture.reset([room, actor, bed, counter]);
 
@@ -403,7 +403,7 @@ describe('Complete Lying Workflow', () => {
 
       const turnFixture = await ModTestFixture.forAction(
         'physical-control',
-        'turn_around'
+        'physical-control:turn_around'
       );
       turnFixture.reset([room, actor, bed]);
 
@@ -446,7 +446,7 @@ describe('Complete Lying Workflow', () => {
       // Act: Get up from lying
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, actor, bed, chair]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
@@ -496,7 +496,7 @@ describe('Complete Lying Workflow', () => {
       // Act: Get up
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, actor, bed, counter]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
@@ -504,7 +504,7 @@ describe('Complete Lying Workflow', () => {
       // Assert: Bending should now work
       const bendFixture = await ModTestFixture.forAction(
         'bending',
-        'bend_over'
+        'bending:bend_over'
       );
       const standingActor =
         getUpFixture.entityManager.getEntityInstance('test:actor1');
@@ -594,7 +594,7 @@ describe('Complete Lying Workflow', () => {
       // Act: Alice gets up
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, alice, bob, bed]);
       await getUpFixture.executeAction('test:alice', 'test:bed1');
@@ -626,7 +626,7 @@ describe('Complete Lying Workflow', () => {
 
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([room, actor]);
       // Note: Bed not registered (simulates deletion)
@@ -699,7 +699,7 @@ describe('Complete Lying Workflow', () => {
 
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       getUpFixture.reset([bedroom, kitchen, actor, bed]);
 
@@ -755,7 +755,7 @@ describe('Complete Lying Workflow', () => {
       // Alice gets up from bed
       const getUpFixture = await ModTestFixture.forAction(
         'lying',
-        'get_up_from_lying'
+        'lying:get_up_from_lying'
       );
       let aliceEntity =
         testFixture.entityManager.getEntityInstance('test:alice');
@@ -766,7 +766,7 @@ describe('Complete Lying Workflow', () => {
       // Alice lies on couch (need lie_down fixture again)
       const lieDownFixture2 = await ModTestFixture.forAction(
         'lying',
-        'lie_down'
+        'lying:lie_down'
       );
       const aliceStanding =
         getUpFixture.entityManager.getEntityInstance('test:alice');

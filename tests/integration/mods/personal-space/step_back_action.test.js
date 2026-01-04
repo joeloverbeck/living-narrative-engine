@@ -10,7 +10,7 @@ describe('personal-space:step_back action forbidden state enforcement', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('personal-space', 'step_back');
+    testFixture = await ModTestFixture.forAction('personal-space', 'personal-space:step_back');
   });
 
   afterEach(() => {

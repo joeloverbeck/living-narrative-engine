@@ -13,7 +13,7 @@ describe('travel_through_dimensions Action Discovery', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'dimensional-travel',
-      'travel_through_dimensions'
+      'dimensional-travel:travel_through_dimensions'
     );
 
     // Register the dimensional_portals scope with its condition_ref dependencies

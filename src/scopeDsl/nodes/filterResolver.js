@@ -196,13 +196,6 @@ export default function createFilterResolver({
       const result = new Set();
       const filterEvaluations = []; // Collect detailed evaluation data for tracing
 
-      // DIAGNOSTIC: Log parentResult before filtering
-      console.log('[DIAGNOSTIC filterResolver] parentResult:', {
-        size: parentResult.size,
-        items: Array.from(parentResult).slice(0, 10),
-        logic: JSON.stringify(node.logic).slice(0, 200),
-      });
-
       for (const item of parentResult) {
         // Skip null or undefined items
         if (item === null || item === undefined) {
@@ -372,17 +365,6 @@ export default function createFilterResolver({
           }
         );
       }
-
-      // TEMPORARY DIAGNOSTIC: Log filter results to console
-      logDiagnosticDebug(logger, '[DIAGNOSTIC] Filter evaluation:', {
-        initialSize,
-        finalSize: result.size,
-        logic: JSON.stringify(node.logic),
-        filterEvaluations: filterEvaluations.map((e) => ({
-          entityId: e.entityId,
-          passed: e.passedFilter,
-        })),
-      });
 
       return result;
     },

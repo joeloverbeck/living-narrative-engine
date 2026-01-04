@@ -4,6 +4,9 @@
  * actors_in_location_not_attacked_and_not_facing_away) correctly filter out targets
  * that the actor is facing away from. This tests the unidirectional facing check
  * where only the actor's perspective matters.
+ *
+ * NOTE: This test file demonstrates the migration from legacy manual mocking patterns
+ * to the new mockScope() and registerCondition() APIs. See docs/testing/test-infrastructure-migration.md
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -66,17 +69,15 @@ describe('striking scopes facing_away filtering', () => {
     );
 
     // Mock the striking:actor-has-arm prerequisite to always pass
-    if (!testEnv._loadedConditions) {
-      testEnv._loadedConditions = new Map();
-    }
-    testEnv._loadedConditions.set('striking:actor-has-arm', {
+    // Using new registerCondition() API - see docs/testing/test-infrastructure-migration.md
+    fixture.registerCondition('striking:actor-has-arm', {
       id: 'striking:actor-has-arm',
       description: 'Mocked condition for test - always passes',
       logic: { '==': [true, true] },
     });
 
     // Mock the anatomy:actor-has-free-grabbing-appendage prerequisite
-    testEnv._loadedConditions.set('anatomy:actor-has-free-grabbing-appendage', {
+    fixture.registerCondition('anatomy:actor-has-free-grabbing-appendage', {
       id: 'anatomy:actor-has-free-grabbing-appendage',
       description: 'Mocked condition for test - always passes',
       logic: { '==': [true, true] },
@@ -101,16 +102,13 @@ describe('striking scopes facing_away filtering', () => {
       'actors_in_location_not_attacked_and_not_facing_away'
     );
 
-    // Mock prerequisites
-    if (!testEnv._loadedConditions) {
-      testEnv._loadedConditions = new Map();
-    }
-    testEnv._loadedConditions.set('striking:actor-has-arm', {
+    // Mock prerequisites using new registerCondition() API
+    fixture.registerCondition('striking:actor-has-arm', {
       id: 'striking:actor-has-arm',
       description: 'Mocked condition for test - always passes',
       logic: { '==': [true, true] },
     });
-    testEnv._loadedConditions.set('anatomy:actor-has-free-grabbing-appendage', {
+    fixture.registerCondition('anatomy:actor-has-free-grabbing-appendage', {
       id: 'anatomy:actor-has-free-grabbing-appendage',
       description: 'Mocked condition for test - always passes',
       logic: { '==': [true, true] },
@@ -133,24 +131,9 @@ describe('striking scopes facing_away filtering', () => {
     testEnv.actionIndex.buildIndex([action]);
 
     // Mock the arm scope to return the actor's arm
+    // Using new mockScope() API - see docs/testing/test-infrastructure-migration.md
     const armEntityId = `${actorId}_left_arm`;
-    const scopeResolver = testEnv.unifiedScopeResolver;
-
-    if (scopeResolver) {
-      const originalResolveSync =
-        scopeResolver.__strikingOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
-
-      scopeResolver.__strikingOriginalResolve = originalResolveSync;
-
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'striking:actor_arm_body_parts') {
-          // Return the mocked arm entity
-          return { success: true, value: new Set([armEntityId]) };
-        }
-        return originalResolveSync(scopeName, context);
-      };
-    }
+    fixture.mockScope('striking:actor_arm_body_parts', new Set([armEntityId]));
   };
 
   beforeEach(async () => {
