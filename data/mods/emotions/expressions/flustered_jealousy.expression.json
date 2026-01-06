@@ -1,0 +1,55 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:flustered_jealousy",
+    "description": "Jealousy or envy made visible - a tight, possessive or comparative flare that leaks into glare and posture.",
+    "priority": 62,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.jealousy"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.envy"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It hits like a small, humiliating clamp in my chest. I compare without meaning to. I want to pretend I don't care, but my attention keeps snapping back to what they have—or who they have. I feel possessive, exposed, and a little sick about it.",
+    "description_text": "A tightness crosses {actor}'s expression—jaw set hard, eyes narrowing as a brief glare flickers toward the object of their envy before they try to smooth it away.",
+    "alternate_descriptions": {
+        "auditory": "I hear {actor}'s voice tighten—words clipped a little too clean, like they're forcing calm through their teeth.",
+        "tactile": "The air around {actor} feels taut and prickly, like tension pulled tight and held just under the skin."
+    },
+    "tags": [
+        "jealousy",
+        "envy",
+        "possessive",
+        "social",
+        "tension"
+    ]
+}

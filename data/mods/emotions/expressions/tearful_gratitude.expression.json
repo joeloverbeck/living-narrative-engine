@@ -1,0 +1,102 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:tearful_gratitude",
+    "description": "A sudden rush of thankfulness—moved, softened, and visibly affected by kindness or help.",
+    "priority": 69,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.gratitude"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.gratitude"
+                                    },
+                                    {
+                                        "var": "previousEmotions.gratitude"
+                                    }
+                                ]
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.4
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.5
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.admiration"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.4
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "The gratitude hits hard—too fast to keep polite. My eyes sting. My throat tightens. For a second I can't do anything but nod, like my body is trying to say thank you before my mouth can manage it.",
+    "description_text": "{actor}'s expression brightens and trembles at once; their eyes shine with sudden moisture as they give an earnest, almost overwhelmed nod.",
+    "alternate_descriptions": {
+        "auditory": "I hear a wavering breath and a soft, choked sound—like someone trying to say thank you and getting caught on the feeling.",
+        "tactile": "I sense a loosened tension nearby, a warmth in the way someone leans forward—as if pulled toward connection."
+    },
+    "tags": [
+        "gratitude",
+        "moved",
+        "relief",
+        "thankful",
+        "positive"
+    ]
+}

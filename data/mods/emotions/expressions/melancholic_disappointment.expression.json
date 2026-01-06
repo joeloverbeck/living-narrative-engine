@@ -8,8 +8,7 @@
       "logic": {
         "and": [
           { ">=": [{ "var": "emotions.disappointment" }, 0.45] },
-          { ">=": [{ "var": "emotions.sadness" }, 0.35] },
-          { "<=": [{ "var": "moodAxes.valence" }, -20] }
+          { ">=": [{ "var": "emotions.sadness" }, 0.35] }
         ]
       }
     }

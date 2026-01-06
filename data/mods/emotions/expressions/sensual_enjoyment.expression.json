@@ -1,0 +1,43 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:sensual_enjoyment",
+    "description": "Relaxed sensual pleasure - high arousal with positive valence and very low threat.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_sensual_pleasure"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It feels good—simple as that. My body softens into the sensation, like it's finally allowed to enjoy itself. I breathe deeper. I stop bracing. The pleasure isn't a demand; it's a warm current I can sink into.",
+    "description_text": "{actor}'s eyes half-close and their posture loosens, a soft, satisfied smile appearing as they lean into the sensation with unguarded ease.",
+    "alternate_descriptions": {
+        "auditory": "I hear a slow exhale and a quiet sound of contentment—breathing that turns warm and unhurried.",
+        "tactile": "I sense a relaxed warmth in {actor}'s body—tension draining as they melt into gentle contact."
+    },
+    "tags": [
+        "sexual",
+        "sensual",
+        "pleasure",
+        "relaxed",
+        "enjoyment"
+    ]
+}

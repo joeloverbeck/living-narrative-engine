@@ -1,0 +1,53 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:passionate_longing",
+    "description": "Passionate love expressing as a hungry-yet-tender longing—desire fused with warmth and a hint of surrender.",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.passionate_love"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.5
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It isn't just heat—it's them. Wanting folds into tenderness until I can't tell where one ends and the other begins. My chest feels open and exposed, like I'm offering myself without a fight. I want to close the distance, to be held and to take them in, and the thought makes my body thrum.",
+    "description_text": "{actor}'s gaze lingers with a hungry warmth—desire bright in their eyes, softened by unmistakable affection; they lean in as if pulled by both craving and closeness.",
+    "alternate_descriptions": {
+        "auditory": "I hear someone's breathing deepen and slow, a soft catch in it—like wanting held carefully, not hidden.",
+        "tactile": "I sense a warm, charged closeness around someone, a subtle pull in their posture as if the space between them and someone else is becoming unbearable."
+    },
+    "tags": [
+        "love",
+        "desire",
+        "passionate_love",
+        "longing",
+        "warmth",
+        "vulnerability",
+        "sexual"
+    ]
+}

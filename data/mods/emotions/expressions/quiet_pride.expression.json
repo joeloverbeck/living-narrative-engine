@@ -1,0 +1,65 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:quiet_pride",
+    "description": "Subtle, self-assured satisfaction—an internal 'I did that' settling into confident posture.",
+    "priority": 61,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.pride"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.pride"
+                                    },
+                                    {
+                                        "var": "previousEmotions.pride"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.3
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "A small, steady satisfaction clicks into place. I feel my spine straighten on its own—like my body is acknowledging the work before my mind tries to downplay it. I don't need to announce it. I just know I earned this.",
+    "description_text": "{actor} stands a touch taller, a restrained, satisfied smile tugging at their mouth; their gaze steadies with quiet confidence.",
+    "alternate_descriptions": {
+        "auditory": "I hear a soft exhale that sounds like satisfaction—like someone letting themselves have the win."
+    },
+    "tags": [
+        "pride",
+        "confidence",
+        "accomplishment",
+        "self_assured",
+        "positive"
+    ]
+}

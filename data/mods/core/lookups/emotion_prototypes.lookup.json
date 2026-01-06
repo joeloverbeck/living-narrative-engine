@@ -113,7 +113,7 @@
         "threat <= 0.20"
       ]
     },
-    "safety_confidence": {
+    "confidence": {
       "weights": {
         "valence": 0.4,
         "threat": -0.8,
@@ -586,6 +586,24 @@
         "arousal >= 0.20"
       ]
     },
+    "suspicion": {
+      "weights": {
+        "threat": 0.65,
+        "engagement": 0.70,
+        "arousal": 0.30,
+        "valence": -0.25,
+        "agency_control": 0.10,
+        "future_expectancy": -0.10,
+        "self_evaluation": 0.00
+      },
+      "gates": [
+        "threat >= 0.15",
+        "threat <= 0.60",
+        "engagement >= 0.25",
+        "arousal >= 0.00",
+        "valence <= 0.20"
+      ]
+    },
     "irritation": {
       "weights": {
         "valence": -0.6,
@@ -636,15 +654,20 @@
     },
     "resentment": {
       "weights": {
-        "valence": -0.7,
-        "arousal": 0.2,
-        "agency_control": -0.3,
-        "future_expectancy": -0.3,
-        "self_evaluation": -0.2
+        "valence": -0.75,
+        "arousal": 0.20,
+        "agency_control": -0.55,
+        "future_expectancy": -0.35,
+        "self_evaluation": -0.20,
+        "engagement": 0.55,
+        "threat": 0.10
       },
       "gates": [
-        "valence <= -0.10",
-        "agency_control >= 0.10"
+        "valence <= -0.15",
+        "agency_control <= 0.10",
+        "engagement >= 0.15",
+        "arousal <= 0.60",
+        "future_expectancy <= 0.20"
       ]
     },
     "contempt": {
@@ -693,6 +716,23 @@
         "self_evaluation >= 0.25"
       ]
     },
+    "triumph": {
+      "weights": {
+        "valence": 0.80,
+        "arousal": 0.85,
+        "agency_control": 0.80,
+        "self_evaluation": 0.55,
+        "engagement": 0.35,
+        "threat": -0.20,
+        "future_expectancy": 0.20
+      },
+      "gates": [
+        "valence >= 0.35",
+        "arousal >= 0.40",
+        "agency_control >= 0.35",
+        "self_evaluation >= 0.25"
+      ]
+    },
     "shame": {
       "weights": {
         "self_evaluation": -1.0,
@@ -714,6 +754,24 @@
       "gates": [
         "self_evaluation <= -0.10",
         "threat >= 0.20"
+      ]
+    },
+    "awkwardness": {
+      "weights": {
+        "valence": -0.25,
+        "arousal": 0.35,
+        "threat": 0.55,
+        "agency_control": -0.25,
+        "engagement": 0.10,
+        "self_evaluation": -0.10
+      },
+      "gates": [
+        "threat >= 0.20",
+        "arousal >= 0.05",
+        "arousal <= 0.60",
+        "self_evaluation >= -0.35",
+        "valence >= -0.50",
+        "valence <= 0.10"
       ]
     },
     "guilt": {
@@ -779,17 +837,37 @@
         "valence <= -0.05"
       ]
     },
+    "trusting_surrender": {
+      "weights": {
+        "valence": 0.70,
+        "threat": -0.90,
+        "agency_control": -0.75,
+        "engagement": 0.45,
+        "arousal": -0.10,
+        "future_expectancy": 0.20,
+        "self_evaluation": 0.05
+      },
+      "gates": [
+        "valence >= 0.25",
+        "threat <= 0.25",
+        "agency_control <= -0.25",
+        "engagement >= 0.15",
+        "self_evaluation >= -0.35"
+      ]
+    },
     "jealousy": {
       "weights": {
         "threat": 0.6,
         "arousal": 0.6,
         "valence": -0.6,
         "agency_control": -0.2,
-        "engagement": 0.4
+        "engagement": 0.4,
+        "self_evaluation": -0.25
       },
       "gates": [
         "threat >= 0.20",
-        "valence <= -0.05"
+        "valence <= -0.05",
+        "engagement >= 0.15"
       ]
     },
     "trust": {
@@ -813,6 +891,23 @@
       "gates": [
         "engagement >= 0.10",
         "valence >= 0.10"
+      ]
+    },
+    "adoration": {
+      "weights": {
+        "valence": 0.85,
+        "engagement": 0.70,
+        "agency_control": -0.25,
+        "arousal": 0.35,
+        "threat": -0.50,
+        "self_evaluation": 0.10,
+        "future_expectancy": 0.15
+      },
+      "gates": [
+        "valence >= 0.35",
+        "engagement >= 0.35",
+        "threat <= 0.35",
+        "agency_control <= 0.25"
       ]
     },
     "gratitude": {
@@ -854,14 +949,17 @@
     },
     "compassion": {
       "weights": {
-        "valence": -0.2,
-        "engagement": 0.8,
-        "self_evaluation": 0.3,
-        "threat": -0.4
+        "valence": 0.15,
+        "engagement": 0.85,
+        "self_evaluation": 0.25,
+        "threat": -0.35,
+        "agency_control": 0.10
       },
       "gates": [
-        "engagement >= 0.3",
-        "valence <= 0"
+        "engagement >= 0.30",
+        "valence >= -0.20",
+        "valence <= 0.35",
+        "threat <= 0.50"
       ]
     },
     "empathic_distress": {

@@ -80,91 +80,81 @@ describe('Emotions joy/arousal expressions', () => {
     }
   });
 
-  it('euphoric_excitement requires high arousal', () => {
+  it('euphoric_excitement requires euphoria threshold', () => {
     const expression = expressionsById['emotions:euphoric_excitement'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { euphoria: 0.7 },
-      moodAxes: { arousal: 55, valence: 50 },
     };
 
     const failingContext = {
-      emotions: { euphoria: 0.7 },
-      moodAxes: { arousal: 20, valence: 50 },
+      emotions: { euphoria: 0.4 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('quiet_contentment requires LOW arousal', () => {
+  it('quiet_contentment requires contentment threshold', () => {
     const expression = expressionsById['emotions:quiet_contentment'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { contentment: 0.6 },
-      moodAxes: { arousal: 20, valence: 35 },
     };
 
     const failingContext = {
-      emotions: { contentment: 0.6 },
-      moodAxes: { arousal: 45, valence: 35 },
+      emotions: { contentment: 0.4 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('warm_affection considers engagement axis', () => {
+  it('warm_affection requires affection and attachment', () => {
     const expression = expressionsById['emotions:warm_affection'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { affection: 0.6, love_attachment: 0.45 },
-      moodAxes: { engagement: 30 },
     };
 
     const failingContext = {
-      emotions: { affection: 0.6, love_attachment: 0.45 },
-      moodAxes: { engagement: 5 },
+      emotions: { affection: 0.6, love_attachment: 0.2 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('playful_mischief needs amusement with active engagement', () => {
+  it('playful_mischief needs amusement with interest or curiosity', () => {
     const expression = expressionsById['emotions:playful_mischief'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { amusement: 0.55 },
-      moodAxes: { engagement: 20, arousal: 25, valence: 25 },
+      emotions: { amusement: 0.55, curiosity: 0.25 },
     };
 
     const failingContext = {
-      emotions: { amusement: 0.55 },
-      moodAxes: { engagement: 0, arousal: 25, valence: 25 },
+      emotions: { amusement: 0.55, curiosity: 0.1, interest: 0.1 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('intense_desire uses sexualStates.sexual_lust and sexualArousal', () => {
+  it('intense_desire uses sexualStates.sexual_lust and arousal', () => {
     const expression = expressionsById['emotions:intense_desire'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       sexualStates: { sexual_lust: 0.7 },
-      sexualArousal: 0.6,
       moodAxes: { arousal: 60 },
     };
 
     const failingContext = {
-      sexualStates: { sexual_lust: 0.7 },
-      sexualArousal: 0.2,
+      sexualStates: { sexual_lust: 0.4 },
       moodAxes: { arousal: 60 },
     };
 

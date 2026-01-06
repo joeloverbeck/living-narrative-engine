@@ -1,0 +1,104 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:awed_transfixion",
+    "description": "Stunned, reverent wonder—attention captured by something vast, beautiful, or impossible to ignore.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.awe"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.surprise_startle"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.awe"
+                                            },
+                                            {
+                                                "var": "previousEmotions.awe"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.euphoria"
+                                    },
+                                    0.65
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.awe"
+                                    },
+                                    {
+                                        "+": [
+                                            {
+                                                "var": "emotions.euphoria"
+                                            },
+                                            0.05
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Something in front of me is too large to fit in my usual thoughts. My breath catches. I go quiet, not out of fear, but because words feel small and late. For a moment I can only stare, trying to take it in without breaking it.",
+    "description_text": "{actor} stills mid-motion, eyes wide and fixed; their mouth parts slightly as if language has fallen away, posture held in a quiet, transfixed awe.",
+    "alternate_descriptions": {
+        "auditory": "I hear a sudden silence—someone's breath caught and held, like they're witnessing something that demands attention."
+    },
+    "tags": [
+        "awe",
+        "wonder",
+        "transfixed",
+        "breathtaking",
+        "positive"
+    ]
+}

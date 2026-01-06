@@ -1,0 +1,43 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:submissive_pleasure",
+    "description": "Yielding sexual pleasure - high arousal with low agency, enjoying surrender and being led.",
+    "priority": 80,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_submissive_pleasure"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "The relief is in not having to steer. I feel my body respond when I let go—when I stop trying to be in control. It isn't fear. It's permission. I yield, and the yielding itself becomes the pleasure.",
+    "description_text": "{actor} lowers their gaze for a beat and tilts subtly forward, cheeks warmed, expression open and receptive—body language yielding as if inviting someone else to take the lead.",
+    "alternate_descriptions": {
+        "auditory": "I hear a softer voice and a breath that catches, then releases—like someone giving in on purpose.",
+        "tactile": "I sense a compliant softness in {actor}'s posture—warmth and eagerness without the tension of resistance."
+    },
+    "tags": [
+        "sexual",
+        "submissive",
+        "pleasure",
+        "yielding",
+        "receptive"
+    ]
+}

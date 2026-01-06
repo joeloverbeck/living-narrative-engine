@@ -1,0 +1,35 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:confused_frown",
+    "description": "Confusion or bewilderment - attention snagged on inconsistency, showing as a puzzled frown and small orientation gestures.",
+    "priority": 44,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.confusion"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I can't make it line up. The pieces refuse to click together, and the harder I try to force it, the more wrong it feels. I keep replaying what I just saw or heard, looking for the missing step.",
+    "description_text": "{actor}'s brow knits and their head tilts slightly, a puzzled frown settling in as if they're trying to re-parse what's in front of them.",
+    "alternate_descriptions": {
+        "auditory": "I hear a hesitant pause—maybe a small “wait” or a questioning hum—like {actor} is checking their own understanding out loud.",
+        "tactile": "Close to {actor}, there's a stop-start quality—micro-pauses and recalibration, as if their attention keeps catching on a snag."
+    },
+    "tags": [
+        "confusion",
+        "bewilderment",
+        "puzzled",
+        "uncertainty",
+        "cognitive"
+    ]
+}

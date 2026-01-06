@@ -80,36 +80,32 @@ describe('Emotions sadness expressions', () => {
     }
   });
 
-  it('deep_despair requires high despair AND very low future_expectancy', () => {
+  it('deep_despair requires high despair and sadness', () => {
     const expression = expressionsById['emotions:deep_despair'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { despair: 0.75, sadness: 0.65 },
-      moodAxes: { future_expectancy: -60 },
     };
 
     const failingContext = {
-      emotions: { despair: 0.75, sadness: 0.65 },
-      moodAxes: { future_expectancy: -20 },
+      emotions: { despair: 0.65, sadness: 0.65 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('tearful_sorrow requires sadness with HIGH arousal', () => {
+  it('tearful_sorrow requires sadness with low numbness', () => {
     const expression = expressionsById['emotions:tearful_sorrow'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { sadness: 0.7 },
-      moodAxes: { arousal: 40, valence: -50 },
+      emotions: { sadness: 0.7, numbness: 0.2 },
     };
 
     const failingContext = {
-      emotions: { sadness: 0.7 },
-      moodAxes: { arousal: 10, valence: -50 },
+      emotions: { sadness: 0.7, numbness: 0.5 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -134,36 +130,32 @@ describe('Emotions sadness expressions', () => {
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('lonely_isolation considers engagement axis', () => {
+  it('lonely_isolation requires sufficient loneliness', () => {
     const expression = expressionsById['emotions:lonely_isolation'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { loneliness: 0.6 },
-      moodAxes: { engagement: -40, valence: -30 },
     };
 
     const failingContext = {
-      emotions: { loneliness: 0.6 },
-      moodAxes: { engagement: -10, valence: -30 },
+      emotions: { loneliness: 0.4 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('melancholic_disappointment requires disappointment with negative valence', () => {
+  it('melancholic_disappointment requires disappointment with sadness', () => {
     const expression = expressionsById['emotions:melancholic_disappointment'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: { disappointment: 0.5, sadness: 0.4 },
-      moodAxes: { valence: -30 },
     };
 
     const failingContext = {
-      emotions: { disappointment: 0.5, sadness: 0.4 },
-      moodAxes: { valence: -5 },
+      emotions: { disappointment: 0.3, sadness: 0.4 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);

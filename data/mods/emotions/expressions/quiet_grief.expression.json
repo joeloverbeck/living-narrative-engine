@@ -7,9 +7,38 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.grief" }, 0.55] },
-          { ">=": [{ "var": "emotions.sadness" }, 0.5] },
-          { "<=": [{ "var": "moodAxes.arousal" }, 20] }
+          {
+            ">=": [
+              {
+                "var": "emotions.grief"
+              },
+              0.55
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.sadness"
+              },
+              0.50
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.alarm"
+              },
+              0.25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              20
+            ]
+          }
         ]
       }
     }
@@ -19,5 +48,10 @@
   "alternate_descriptions": {
     "auditory": "A heavy silence emanates from nearby, punctuated by a single, quiet sigh."
   },
-  "tags": ["grief", "sadness", "mourning", "quiet"]
+  "tags": [
+    "grief",
+    "sadness",
+    "mourning",
+    "quiet"
+  ]
 }

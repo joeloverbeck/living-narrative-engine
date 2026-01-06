@@ -1,0 +1,61 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:self_disgust_arousal",
+    "description": "Arousal with revulsion - sexual disgust conflict where the body responds while the mind recoils.",
+    "priority": 92,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_disgust_conflict"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "My body betrays me. Heat rises anyway—breath thickening, skin too aware—while my stomach turns with disgust at the fact that it's happening. I want to shove the feeling out of myself, to scrub it off, but it clings. The conflict makes me angry. It makes me ashamed. Mostly it makes me sick.",
+    "description_text": "{actor}'s face tightens with open revulsion even as their breathing turns heavy; a sharp, angry grimace fights with an unwanted flush, as if their body is responding to something their mind rejects.",
+    "alternate_descriptions": {
+        "auditory": "I hear a harsh exhale through the nose—almost a snarl—followed by breathing that's too deep and unsteady to hide.",
+        "tactile": "The air around {actor} feels tense and hot at once—like recoil and pull happening in the same instant."
+    },
+    "tags": [
+        "sexual",
+        "conflict",
+        "disgust",
+        "revulsion",
+        "arousal",
+        "shame",
+        "anger"
+    ]
+}

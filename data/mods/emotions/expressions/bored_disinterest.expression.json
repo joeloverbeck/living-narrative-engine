@@ -1,0 +1,47 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:bored_disinterest",
+    "description": "Low engagement boredom or apathy - everyday disinterest expressed through drifting attention and impatient fidgeting.",
+    "priority": 34,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.boredom"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.apathy"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "My attention keeps sliding off everything in front of me. I try to care and it doesn't stick. Time feels thick. I want to be anywhere else—or at least doing anything that doesn't feel this empty.",
+    "description_text": "{actor} stares off into the distance, stifling a yawn as their fingers drum impatiently—interest slipping away despite their best attempt to stay present.",
+    "alternate_descriptions": {
+        "auditory": "I hear a slow exhale and a faint, restless rhythm—tapping, shifting, the sound of someone waiting for life to start again.",
+        "tactile": "Around {actor} there's a slackened energy—impatience without momentum, like attention has gone loose in the joints."
+    },
+    "tags": [
+        "boredom",
+        "apathy",
+        "disinterest",
+        "low_engagement",
+        "impatient"
+    ]
+}
