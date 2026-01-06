@@ -1,0 +1,81 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:resigned_shame",
+    "description": "Chronic, non-spiking shame—low self-worth settling into withdrawn, resigned posture",
+    "priority": 63,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.shame"
+                                    },
+                                    {
+                                        "var": "previousEmotions.shame"
+                                    }
+                                ]
+                            },
+                            0.10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.embarrassment"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It doesn't spike—it's just there, like a baseline verdict. I don't argue with it anymore. I make myself smaller, try not to take up space, try not to invite attention that will only confirm what I already think.",
+    "description_text": "{actor}'s posture folds in on itself; their gaze avoids meeting anyone's for long, as if they've already accepted the worst interpretation of them.",
+    "alternate_descriptions": {
+        "auditory": "The quiet around {actor} feels weighted—breathing measured, words chosen sparingly."
+    },
+    "tags": [
+        "shame",
+        "resigned",
+        "withdrawal",
+        "chronic",
+        "self_worth"
+    ]
+}

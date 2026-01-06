@@ -1,0 +1,69 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:erotic_thrill",
+    "description": "Adrenaline-laced arousal: fear/threat present, but valence remains non-negative—danger registers as exciting rather than purely aversive.",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.erotic_thrill"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_but_ashamed"
+                            },
+                            0.45
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "My pulse is loud. The danger is real—I can feel it in my chest—but it doesn't dampen the heat. It sharpens it. Fear and excitement braid together until I can't tell which one is driving my breath. Part of me wants to back away; part of me wants to lean in and taste the edge of it.",
+    "description_text": "{actor}'s breath comes quick, eyes bright with a confusing mix of alarm and excitement; their body holds tense readiness, but there's a telling spark of enjoyment in the expression.",
+    "alternate_descriptions": {
+        "auditory": "I hear a shaky, breathy laugh—or a sharp inhale—that sounds like fear turning into exhilaration.",
+        "tactile": "The air around someone feels charged, like nervous energy and heat are rising off their skin at once."
+    },
+    "tags": [
+        "sexual",
+        "arousal",
+        "fear",
+        "thrill",
+        "danger",
+        "conflict",
+        "exhilaration"
+    ]
+}

@@ -1,0 +1,76 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:afterglow",
+    "description": "Post-release calm: threat low, valence positive, arousal settling—content, warm, physically spent presence after intimacy.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.afterglow"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousSexualStates.sexual_lust"
+                                    },
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    }
+                                ]
+                            },
+                            0.15
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Everything in me is softer now. The urgency has drained away, leaving warmth and a slow, satisfied quiet. My limbs feel heavy in the good way—like I can finally stop bracing for the next moment. I don't need anything right now except a little closeness and time to breathe.",
+    "description_text": "{actor} looks content and a bit drowsy, a warm ease lingering in their eyes; their posture slackens into relaxed comfort, as if the world has finally stopped demanding anything.",
+    "alternate_descriptions": {
+        "auditory": "I hear slow, steady breathing—soft little exhales that sound satisfied and unguarded.",
+        "tactile": "The tension around {actor} seems to melt; their presence feels warm and unhurried, like heat slowly fading from skin."
+    },
+    "tags": [
+        "sexual",
+        "afterglow",
+        "contentment",
+        "relaxation",
+        "post_release",
+        "warmth",
+        "calm"
+    ]
+}

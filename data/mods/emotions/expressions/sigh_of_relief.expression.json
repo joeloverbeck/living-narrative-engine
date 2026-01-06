@@ -1,0 +1,79 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:sigh_of_relief",
+    "description": "A visible release of tension after fear drops and relief spikes",
+    "priority": 68,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "previousEmotions.fear"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    {
+                                        "var": "previousEmotions.relief"
+                                    }
+                                ]
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    }
+                                ]
+                            },
+                            -0.20
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I let out a long breath I didn't realize I'd been holding. My shoulders loosen. The tightness in my chest unknots, and for a moment my body remembers what safe feels like.",
+    "description_text": "{actor} exhales slowly, shoulders dropping as the tension drains out of them.",
+    "alternate_descriptions": {
+        "auditory": "I hear a long, quiet exhale—like someone finally remembered how to breathe."
+    },
+    "tags": [
+        "relief",
+        "tension_release",
+        "fear_resolution",
+        "safety"
+    ]
+}

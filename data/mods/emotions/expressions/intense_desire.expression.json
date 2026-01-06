@@ -7,9 +7,22 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "sexualStates.sexual_lust" }, 0.6] },
-          { ">=": [{ "var": "sexualArousal" }, 0.5] },
-          { ">=": [{ "var": "moodAxes.arousal" }, 50] }
+          {
+            ">=": [
+              {
+                "var": "sexualStates.sexual_lust"
+              },
+              0.6
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              50
+            ]
+          }
         ]
       }
     }
@@ -20,5 +33,10 @@
     "auditory": "I hear someone's breathing grow heavier, more deliberate.",
     "tactile": "I sense a charged tension in the air, a palpable warmth radiating nearby."
   },
-  "tags": ["desire", "arousal", "intense", "sexual"]
+  "tags": [
+    "desire",
+    "arousal",
+    "intense",
+    "sexual"
+  ]
 }

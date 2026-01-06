@@ -1,0 +1,43 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:flirtatious_playfulness",
+    "description": "Light, teasing sexual arousal - playful flirt energy with low threat.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_playfulness"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "The heat in me feels bright instead of urgent. I can't help the little grin that keeps slipping out—like the moment is a game I'm enjoying. I tease, I linger too close, I let my hands and eyes do the talking just to see what happens.",
+    "description_text": "{actor} wears a mischievous, flirty smile—touchy and teasing in small ways, posture relaxed and inviting as if daring someone to play along.",
+    "alternate_descriptions": {
+        "auditory": "I hear a light, breathy laugh and a voice that lingers on words like it's flirting.",
+        "tactile": "I sense a warm, playful closeness—movement that brushes near on purpose without feeling threatening."
+    },
+    "tags": [
+        "sexual",
+        "playful",
+        "flirt",
+        "teasing",
+        "arousal"
+    ]
+}

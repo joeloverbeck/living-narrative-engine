@@ -1,0 +1,43 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:seductive_confidence",
+    "description": "Sexual confidence and control - aroused, self-assured, and deliberately seductive.",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_confidence"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I feel the want in my body, but I'm not being pulled around by it. I'm in control—aware of exactly what I'm doing, and what it does to them. I move like I mean it. I hold eye contact a second longer than necessary. I let the silence do some of the work.",
+    "description_text": "{actor} carries themselves with a slow, knowing swagger—eye contact steady, smile faint and deliberate, as if they're choosing exactly how close to get.",
+    "alternate_descriptions": {
+        "auditory": "I hear a voice that sounds composed and intent—words measured like they're meant to land.",
+        "tactile": "I sense an assured presence closing distance without hesitation—warmth that feels controlled, not frantic."
+    },
+    "tags": [
+        "sexual",
+        "confidence",
+        "seductive",
+        "control",
+        "swagger"
+    ]
+}

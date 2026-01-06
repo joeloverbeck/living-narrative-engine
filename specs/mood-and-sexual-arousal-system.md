@@ -236,7 +236,7 @@ export const SEXUAL_STATE_COMPONENT_ID = 'core:sexual_state';
       "weights": {"valence": 0.8, "arousal": -0.4, "threat": -0.9},
       "gates": ["threat <= 0.20"]
     },
-    "safety_confidence": {
+    "confidence": {
       "weights": {"valence": 0.4, "threat": -0.8, "agency_control": 0.8, "arousal": 0.2},
       "gates": ["threat <= 0.20", "agency_control >= 0.10"]
     },

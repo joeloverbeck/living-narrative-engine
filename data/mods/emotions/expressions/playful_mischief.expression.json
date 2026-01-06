@@ -7,10 +7,34 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.amusement" }, 0.45] },
-          { ">=": [{ "var": "moodAxes.engagement" }, 10] },
-          { ">=": [{ "var": "moodAxes.arousal" }, 20] },
-          { ">=": [{ "var": "moodAxes.valence" }, 15] }
+          {
+            ">=": [
+              {
+                "var": "emotions.amusement"
+              },
+              0.45
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.interest"
+                  },
+                  0.20
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.curiosity"
+                  },
+                  0.20
+                ]
+              }
+            ]
+          }
         ]
       }
     }
@@ -20,5 +44,10 @@
   "alternate_descriptions": {
     "auditory": "I hear a playful chuckle, barely suppressed."
   },
-  "tags": ["playful", "mischief", "amusement", "fun"]
+  "tags": [
+    "playful",
+    "mischief",
+    "amusement",
+    "fun"
+  ]
 }

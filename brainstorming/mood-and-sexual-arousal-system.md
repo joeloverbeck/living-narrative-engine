@@ -241,7 +241,7 @@ Note: the purpose of the gates is to stop nonsense overlap in states (e.g. fear 
     "weights": {"valence": 0.8, "arousal": -0.4, "threat": -0.9},
     "gates": ["threat <= 0.20"]
   },
-  "safety_confidence": {
+  "confidence": {
     "weights": {"valence": 0.4, "threat": -0.8, "agency_control": 0.8, "arousal": 0.2},
     "gates": ["threat <= 0.20", "agency_control >= 0.10"]
   },

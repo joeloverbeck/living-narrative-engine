@@ -7,8 +7,22 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.anger" }, 0.75] },
-          { ">=": [{ "var": "emotions.rage" }, 0.6] }
+          {
+            ">=": [
+              {
+                "var": "emotions.anger"
+              },
+              0.75
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.rage"
+              },
+              0.6
+            ]
+          }
         ]
       }
     }
@@ -19,5 +33,10 @@
     "auditory": "I hear ragged breathing that never quite settles—words clipped short, like anger is taking up space in the throat.",
     "tactile": "I sense a tense, vibrating stillness in someone's posture—like a coiled spring you can feel in the air."
   },
-  "tags": ["anger", "rage", "explosive", "sustained"]
+  "tags": [
+    "anger",
+    "rage",
+    "explosive",
+    "sustained"
+  ]
 }

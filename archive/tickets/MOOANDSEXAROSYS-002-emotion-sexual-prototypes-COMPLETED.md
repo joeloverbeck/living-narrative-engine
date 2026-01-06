@@ -40,7 +40,7 @@ Each entry contains:
 
 ### Required Emotion Entries (55 total)
 
-**Low-Arousal Positive (4)**: calm, contentment, relief, safety_confidence
+**Low-Arousal Positive (4)**: calm, contentment, relief, confidence
 
 **High-Arousal Positive (5)**: joy, enthusiasm, amusement, awe, inspiration
 

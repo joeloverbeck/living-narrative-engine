@@ -1,0 +1,81 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:lingering_guilt",
+    "description": "Moderate, non-spiking guilt—an apologetic, sheepish self-consciousness after a minor mistake",
+    "priority": 57,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.70
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.guilt"
+                                    },
+                                    {
+                                        "var": "previousEmotions.guilt"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It wasn't a catastrophe, but it still sits wrong. I replay the moment and feel that small, sour twist—like I owe someone a cleaner version of myself. I want to smooth it over without making a scene.",
+    "description_text": "{actor} looks faintly apologetic—eyes dipping, a tight little wince crossing their face as if they're privately conceding a mistake.",
+    "alternate_descriptions": {
+        "auditory": "I catch a small, hesitant exhale—like a half-swallowed \"sorry.\""
+    },
+    "tags": [
+        "guilt",
+        "sheepish",
+        "apology",
+        "minor_mistake",
+        "lingering"
+    ]
+}

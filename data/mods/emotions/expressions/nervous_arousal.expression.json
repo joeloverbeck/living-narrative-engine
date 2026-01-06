@@ -1,0 +1,84 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:nervous_arousal",
+    "description": "Sexual performance anxiety: arousal present alongside threat/anxiety and low perceived control/self-evaluation, expressed as fidgety, hesitant excitement.",
+    "priority": 81,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_performance_anxiety"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_but_ashamed"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I want this—my body's already answering—but my mind keeps tripping over what could go wrong. Am I doing it right? Are they judging me? I can't hold eye contact for long. My hands don't know where to rest. The excitement is real, but it's threaded with a thin, jittery fear of failing.",
+    "description_text": "{actor} fidgets and avoids holding direct gaze, a flush on their face not entirely from excitement; their smile looks a touch forced, and their hands keep finding and losing something to do.",
+    "alternate_descriptions": {
+        "auditory": "I hear an awkward little chuckle or a stammered half-word, like someone trying to sound casual while their nerves spike."
+    },
+    "tags": [
+        "sexual",
+        "anxiety",
+        "performance",
+        "nervous",
+        "arousal",
+        "hesitation",
+        "self_doubt"
+    ]
+}

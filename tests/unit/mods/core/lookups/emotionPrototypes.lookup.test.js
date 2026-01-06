@@ -40,7 +40,7 @@ describe('core:emotion_prototypes lookup', () => {
 
   describe('emotion category completeness', () => {
     const expectedEmotions = {
-      'Low-Arousal Positive': ['calm', 'contentment', 'relief', 'safety_confidence'],
+      'Low-Arousal Positive': ['calm', 'contentment', 'relief', 'confidence'],
       'High-Arousal Positive': ['joy', 'enthusiasm', 'amusement', 'awe', 'inspiration'],
       'Engagement-Based': ['interest', 'curiosity', 'fascination', 'flow'],
       'Future-Oriented Positive': ['hope', 'optimism', 'determination', 'anticipation'],

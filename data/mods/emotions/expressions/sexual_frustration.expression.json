@@ -1,0 +1,89 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:sexual_frustration",
+    "description": "High arousal with negative valence: desire persists, but it curdles into irritation/anger from lack of satisfaction or repeated thwarting.",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_frustration"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.irritation"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.frustration"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "My body wants, insists, keeps insisting—and it's not pleasant anymore. The heat has nowhere to go. It pools and sharpens into a nasty edge under my skin. I hate how distracted I feel. I hate that I can't fix it right now. Desire turns abrasive, like it's scraping at me from the inside.",
+    "description_text": "{actor}'s expression flickers between desire and frustration—flushed, tense, jaw set; their gaze lingers with wanting, then snaps away with a hard, irritated edge.",
+    "alternate_descriptions": {
+        "auditory": "I hear a tight exhale through the nose, like someone swallowing a groan and replacing it with annoyance.",
+        "tactile": "There's a restless, pent-up tension in {actor}'s movements—heat without release, irritation riding on top of it."
+    },
+    "tags": [
+        "sexual",
+        "frustration",
+        "arousal",
+        "irritation",
+        "anger",
+        "unpleasant",
+        "pent_up"
+    ]
+}

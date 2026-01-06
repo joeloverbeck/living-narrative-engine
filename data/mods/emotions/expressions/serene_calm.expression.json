@@ -1,0 +1,67 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:serene_calm",
+    "description": "A neutral-to-gently-positive calm—unhurried, serene, and emotionally even.",
+    "priority": 26,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.calm"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.contentment"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Everything in me is quiet and unforced. No urge to push, no urge to retreat—just a steady, even breath and a mind that isn't chasing anything.",
+    "description_text": "{actor} looks serenely composed, movements unhurried; their breathing is even and their face rests in a calm, neutral softness.",
+    "alternate_descriptions": {
+        "auditory": "I hear slow, even breathing nearby—no strain, no hurry.",
+        "limited": "The air around {actor} feels settled, like nothing is pressing on them."
+    },
+    "tags": [
+        "calm",
+        "serene",
+        "composed",
+        "low_arousal",
+        "neutral_positive"
+    ]
+}

@@ -1,0 +1,43 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:compassionate_concern",
+    "description": "Warm concern and empathy - attentive care directed outward, distinct from personal sadness or panic.",
+    "priority": 58,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.empathic_distress"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "My focus goes straight to them. I can't ignore it. I feel the pull to help—steady, practical care rising up before I even decide. I want to ease whatever they're carrying, even if I can only do something small.",
+    "description_text": "Worry and care soften {actor}'s face as they step forward, eyes full of concern—attention fixed on whoever needs help.",
+    "alternate_descriptions": {
+        "auditory": "I hear a gentler tone in {actor}'s voice—questions asked softly, like they're trying not to make things worse.",
+        "tactile": "Near {actor}, there's a grounded steadiness—an intent, careful presence that feels like support offered without pressure."
+    },
+    "tags": [
+        "compassion",
+        "concern",
+        "empathy",
+        "care",
+        "supportive"
+    ]
+}

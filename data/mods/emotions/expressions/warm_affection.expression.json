@@ -8,8 +8,7 @@
       "logic": {
         "and": [
           { ">=": [{ "var": "emotions.affection" }, 0.5] },
-          { ">=": [{ "var": "emotions.love_attachment" }, 0.35] },
-          { ">=": [{ "var": "moodAxes.engagement" }, 20] }
+          { ">=": [{ "var": "emotions.love_attachment" }, 0.35] }
         ]
       }
     }

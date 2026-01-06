@@ -7,9 +7,14 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.loneliness" }, 0.55] },
-          { "<=": [{ "var": "moodAxes.engagement" }, -30] },
-          { "<=": [{ "var": "moodAxes.valence" }, -25] }
+          {
+            ">=": [
+              {
+                "var": "emotions.loneliness"
+              },
+              0.55
+            ]
+          }
         ]
       }
     }
@@ -19,5 +24,9 @@
   "alternate_descriptions": {
     "auditory": "The space around {actor} feels strangely quiet, as if sound itself keeps its distance."
   },
-  "tags": ["loneliness", "isolation", "disconnection"]
+  "tags": [
+    "loneliness",
+    "isolation",
+    "disconnection"
+  ]
 }
