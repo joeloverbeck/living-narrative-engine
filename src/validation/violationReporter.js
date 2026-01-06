@@ -67,13 +67,31 @@ class ViolationReporter {
 
     // Use existing report generation as base, enhance with new violation data
     if (data instanceof Map) {
+      if (this._isExpressionPrerequisiteReportMap(data)) {
+        return this._generateExpressionPrerequisiteConsoleReport(data, options);
+      }
       return this._generateEcosystemConsoleReport(data, options);
     }
 
     // Handle ecosystem wrapper structure with nested crossReferences Map
     if (data.crossReferences instanceof Map) {
-      return this._generateEcosystemConsoleReport(
-        data.crossReferences,
+      const reports = [
+        this._generateEcosystemConsoleReport(data.crossReferences, options),
+      ];
+      if (data.expressionPrerequisites instanceof Map) {
+        reports.push(
+          this._generateExpressionPrerequisiteConsoleReport(
+            data.expressionPrerequisites,
+            options
+          )
+        );
+      }
+      return reports.join('\n\n');
+    }
+
+    if (data.expressionPrerequisites instanceof Map) {
+      return this._generateExpressionPrerequisiteConsoleReport(
+        data.expressionPrerequisites,
         options
       );
     }
@@ -434,12 +452,31 @@ class ViolationReporter {
     };
 
     if (data instanceof Map) {
+      if (this._isExpressionPrerequisiteReportMap(data)) {
+        reportData.type = 'expression-prerequisites';
+        reportData.mods = Object.fromEntries(data);
+      } else {
+        reportData.type = 'ecosystem';
+        reportData.mods = Object.fromEntries(data);
+        reportData.summary = this._generateEcosystemSummary(data);
+      }
+    } else if (data.crossReferences instanceof Map) {
       reportData.type = 'ecosystem';
-      reportData.mods = Object.fromEntries(data);
-      reportData.summary = this._generateEcosystemSummary(data);
+      reportData.crossReferences = Object.fromEntries(data.crossReferences);
+      if (data.expressionPrerequisites instanceof Map) {
+        reportData.expressionPrerequisites = Object.fromEntries(
+          data.expressionPrerequisites
+        );
+      }
+      reportData.summary = this._generateEcosystemSummary(data.crossReferences);
     } else {
       reportData.type = 'single-mod';
       reportData.mod = data;
+      if (data.expressionPrerequisites instanceof Map) {
+        reportData.expressionPrerequisites = Object.fromEntries(
+          data.expressionPrerequisites
+        );
+      }
     }
 
     return JSON.stringify(reportData, null, pretty ? 2 : 0);
@@ -472,9 +509,29 @@ class ViolationReporter {
     html.push(`  <h1>${title}</h1>`);
 
     if (data instanceof Map) {
-      html.push(this._generateEcosystemHtmlContent(data));
+      if (this._isExpressionPrerequisiteReportMap(data)) {
+        html.push(this._generateExpressionPrerequisiteHtmlContent(data));
+      } else {
+        html.push(this._generateEcosystemHtmlContent(data));
+      }
+    } else if (data.crossReferences instanceof Map) {
+      html.push(this._generateEcosystemHtmlContent(data.crossReferences));
+      if (data.expressionPrerequisites instanceof Map) {
+        html.push(
+          this._generateExpressionPrerequisiteHtmlContent(
+            data.expressionPrerequisites
+          )
+        );
+      }
     } else {
       html.push(this._generateSingleModHtmlContent(data));
+      if (data.expressionPrerequisites instanceof Map) {
+        html.push(
+          this._generateExpressionPrerequisiteHtmlContent(
+            data.expressionPrerequisites
+          )
+        );
+      }
     }
 
     html.push('</body>');
@@ -500,9 +557,29 @@ class ViolationReporter {
     lines.push('');
 
     if (data instanceof Map) {
-      lines.push(this._generateEcosystemMarkdownContent(data));
+      if (this._isExpressionPrerequisiteReportMap(data)) {
+        lines.push(this._generateExpressionPrerequisiteMarkdownContent(data));
+      } else {
+        lines.push(this._generateEcosystemMarkdownContent(data));
+      }
+    } else if (data.crossReferences instanceof Map) {
+      lines.push(this._generateEcosystemMarkdownContent(data.crossReferences));
+      if (data.expressionPrerequisites instanceof Map) {
+        lines.push(
+          this._generateExpressionPrerequisiteMarkdownContent(
+            data.expressionPrerequisites
+          )
+        );
+      }
     } else {
       lines.push(this._generateSingleModMarkdownContent(data));
+      if (data.expressionPrerequisites instanceof Map) {
+        lines.push(
+          this._generateExpressionPrerequisiteMarkdownContent(
+            data.expressionPrerequisites
+          )
+        );
+      }
     }
 
     return lines.join('\n');
@@ -662,6 +739,169 @@ class ViolationReporter {
       th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
       th { background-color: #f2f2f2; }
     `;
+  }
+
+  _generateExpressionPrerequisiteConsoleReport(results) {
+    const lines = [];
+    const modsWithIssues = Array.from(results.entries()).filter(
+      ([, report]) => report && (report.violations?.length || report.warnings?.length)
+    );
+
+    lines.push('Living Narrative Engine - Expression Prerequisite Validation Report');
+    lines.push('='.repeat(60));
+    lines.push('');
+
+    if (modsWithIssues.length === 0) {
+      lines.push('✅ No expression prerequisite issues detected');
+      lines.push(`📊 Validated ${results.size} mods successfully`);
+      return lines.join('\n');
+    }
+
+    const totalIssues = modsWithIssues.reduce(
+      (sum, [, report]) =>
+        sum + (report.violations?.length || 0) + (report.warnings?.length || 0),
+      0
+    );
+
+    lines.push(`❌ Found ${totalIssues} issue(s) across ${modsWithIssues.length} mod(s)`);
+    lines.push('');
+
+    for (const [modId, report] of modsWithIssues) {
+      lines.push(`📦 ${modId}:`);
+
+      report.violations?.forEach((violation) => {
+        lines.push(`  ❌ ${violation.expressionId} (${violation.source})`);
+        lines.push(`     ${violation.message}`);
+        if (violation.varPath) {
+          lines.push(`     var: ${violation.varPath}`);
+        }
+        if (violation.logicSummary) {
+          lines.push(`     logic: ${violation.logicSummary}`);
+        }
+      });
+
+      report.warnings?.forEach((warning) => {
+        lines.push(`  ⚠️  ${warning.expressionId} (${warning.source})`);
+        lines.push(`     ${warning.message}`);
+        if (warning.varPath) {
+          lines.push(`     var: ${warning.varPath}`);
+        }
+        if (warning.logicSummary) {
+          lines.push(`     logic: ${warning.logicSummary}`);
+        }
+      });
+    }
+
+    return lines.join('\n');
+  }
+
+  _generateExpressionPrerequisiteHtmlContent(results) {
+    const modsWithIssues = Array.from(results.entries()).filter(
+      ([, report]) => report && (report.violations?.length || report.warnings?.length)
+    );
+    const html = [];
+
+    html.push('<h2>Expression Prerequisite Validation</h2>');
+
+    if (modsWithIssues.length === 0) {
+      html.push('<div class="success"><p>✅ No expression prerequisite issues detected.</p></div>');
+      return html.join('\n');
+    }
+
+    for (const [modId, report] of modsWithIssues) {
+      html.push(`<h3>📦 ${modId}</h3>`);
+      html.push('<div>');
+
+      report.violations?.forEach((violation) => {
+        html.push('<div class="violation">');
+        html.push(`<strong>${violation.expressionId}</strong> <em>${violation.source}</em>`);
+        html.push(`<br>${violation.message}`);
+        if (violation.varPath) {
+          html.push(`<br>var: <code>${violation.varPath}</code>`);
+        }
+        if (violation.logicSummary) {
+          html.push(`<br>logic: <code>${violation.logicSummary}</code>`);
+        }
+        html.push('</div>');
+      });
+
+      report.warnings?.forEach((warning) => {
+        html.push('<div class="warning">');
+        html.push(`<strong>${warning.expressionId}</strong> <em>${warning.source}</em>`);
+        html.push(`<br>${warning.message}`);
+        if (warning.varPath) {
+          html.push(`<br>var: <code>${warning.varPath}</code>`);
+        }
+        if (warning.logicSummary) {
+          html.push(`<br>logic: <code>${warning.logicSummary}</code>`);
+        }
+        html.push('</div>');
+      });
+
+      html.push('</div>');
+    }
+
+    return html.join('\n');
+  }
+
+  _generateExpressionPrerequisiteMarkdownContent(results) {
+    const modsWithIssues = Array.from(results.entries()).filter(
+      ([, report]) => report && (report.violations?.length || report.warnings?.length)
+    );
+    const lines = [];
+
+    lines.push('## Expression Prerequisite Validation');
+    lines.push('');
+
+    if (modsWithIssues.length === 0) {
+      lines.push('✅ No expression prerequisite issues detected.');
+      return lines.join('\n');
+    }
+
+    for (const [modId, report] of modsWithIssues) {
+      lines.push(`### ${modId}`);
+      lines.push('');
+
+      report.violations?.forEach((violation) => {
+        lines.push(`- ❌ **${violation.expressionId}** (\`${violation.source}\`)`);
+        lines.push(`  - ${violation.message}`);
+        if (violation.varPath) {
+          lines.push(`  - var: \`${violation.varPath}\``);
+        }
+        if (violation.logicSummary) {
+          lines.push(`  - logic: \`${violation.logicSummary}\``);
+        }
+      });
+
+      report.warnings?.forEach((warning) => {
+        lines.push(`- ⚠️ **${warning.expressionId}** (\`${warning.source}\`)`);
+        lines.push(`  - ${warning.message}`);
+        if (warning.varPath) {
+          lines.push(`  - var: \`${warning.varPath}\``);
+        }
+        if (warning.logicSummary) {
+          lines.push(`  - logic: \`${warning.logicSummary}\``);
+        }
+      });
+
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  _isExpressionPrerequisiteReportMap(results) {
+    return Array.from(results.values()).some((report) => {
+      if (!report) {
+        return false;
+      }
+      if (report.summary && report.summary.totalPrerequisites !== undefined) {
+        return true;
+      }
+      return (report.violations || []).some(
+        (violation) => violation.violationType === 'expression_prerequisite'
+      );
+    });
   }
 
   /**

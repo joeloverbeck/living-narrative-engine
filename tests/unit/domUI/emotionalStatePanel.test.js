@@ -6,7 +6,10 @@
 import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
 import { EmotionalStatePanel } from '../../../src/domUI/emotionalStatePanel.js';
 import { TURN_STARTED_ID, COMPONENT_ADDED_ID } from '../../../src/constants/eventIds.js';
-import { MOOD_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import {
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
+} from '../../../src/constants/componentIds.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -30,18 +33,36 @@ const createMockEntityManager = () => ({
 });
 
 const createMockEmotionCalculatorService = () => ({
-  calculateEmotions: jest.fn().mockReturnValue(['calm']),
+  calculateEmotions: jest.fn().mockReturnValue(new Map()),
+  calculateSexualArousal: jest.fn().mockReturnValue(0),
+  getTopEmotions: jest.fn().mockReturnValue([
+    {
+      name: 'calm',
+      displayName: 'calm',
+      label: 'mild',
+      intensity: 0.2,
+    },
+  ]),
   formatEmotionsForPrompt: jest.fn().mockReturnValue('calm'),
 });
 
-const createMockEntity = (hasMood = true, moodData = null) => ({
+const createMockEntity = (
+  hasMood = true,
+  moodData = null,
+  hasSexualState = true,
+  sexualStateData = null
+) => ({
   hasComponent: jest.fn((componentId) => {
     if (componentId === MOOD_COMPONENT_ID) return hasMood;
+    if (componentId === SEXUAL_STATE_COMPONENT_ID) return hasSexualState;
     return false;
   }),
   getComponentData: jest.fn((componentId) => {
     if (componentId === MOOD_COMPONENT_ID && hasMood) {
       return moodData || createDefaultMoodData();
+    }
+    if (componentId === SEXUAL_STATE_COMPONENT_ID && hasSexualState) {
+      return sexualStateData || createDefaultSexualStateData();
     }
     return null;
   }),
@@ -60,6 +81,12 @@ const createDefaultMoodData = () => ({
 const createMoodData = (overrides = {}) => ({
   ...createDefaultMoodData(),
   ...overrides,
+});
+
+const createDefaultSexualStateData = () => ({
+  sex_excitation: 0,
+  sex_inhibition: 0,
+  baseline_libido: 0,
 });
 
 describe('EmotionalStatePanel', () => {
@@ -155,7 +182,7 @@ describe('EmotionalStatePanel', () => {
     });
 
     it('throws when emotionCalculatorService lacks calculateEmotions method', () => {
-      deps.emotionCalculatorService = { formatEmotionsForPrompt: jest.fn() };
+      deps.emotionCalculatorService = { getTopEmotions: jest.fn() };
       expect(() => new EmotionalStatePanel(deps)).toThrow(
         '[EmotionalStatePanel] EmotionCalculatorService must have calculateEmotions method.'
       );
@@ -164,27 +191,53 @@ describe('EmotionalStatePanel', () => {
     it('throws when emotionCalculatorService.calculateEmotions is not a function', () => {
       deps.emotionCalculatorService = {
         calculateEmotions: 'not-a-function',
-        formatEmotionsForPrompt: jest.fn(),
+        calculateSexualArousal: jest.fn(),
+        getTopEmotions: jest.fn(),
       };
       expect(() => new EmotionalStatePanel(deps)).toThrow(
         '[EmotionalStatePanel] EmotionCalculatorService must have calculateEmotions method.'
       );
     });
 
-    it('throws when emotionCalculatorService lacks formatEmotionsForPrompt method', () => {
-      deps.emotionCalculatorService = { calculateEmotions: jest.fn() };
+    it('throws when emotionCalculatorService lacks calculateSexualArousal method', () => {
+      deps.emotionCalculatorService = {
+        calculateEmotions: jest.fn(),
+        getTopEmotions: jest.fn(),
+      };
       expect(() => new EmotionalStatePanel(deps)).toThrow(
-        '[EmotionalStatePanel] EmotionCalculatorService must have formatEmotionsForPrompt method.'
+        '[EmotionalStatePanel] EmotionCalculatorService must have calculateSexualArousal method.'
       );
     });
 
-    it('throws when emotionCalculatorService.formatEmotionsForPrompt is not a function', () => {
+    it('throws when emotionCalculatorService.calculateSexualArousal is not a function', () => {
       deps.emotionCalculatorService = {
         calculateEmotions: jest.fn(),
-        formatEmotionsForPrompt: 'not-a-function',
+        calculateSexualArousal: 'not-a-function',
+        getTopEmotions: jest.fn(),
       };
       expect(() => new EmotionalStatePanel(deps)).toThrow(
-        '[EmotionalStatePanel] EmotionCalculatorService must have formatEmotionsForPrompt method.'
+        '[EmotionalStatePanel] EmotionCalculatorService must have calculateSexualArousal method.'
+      );
+    });
+
+    it('throws when emotionCalculatorService lacks getTopEmotions method', () => {
+      deps.emotionCalculatorService = {
+        calculateEmotions: jest.fn(),
+        calculateSexualArousal: jest.fn(),
+      };
+      expect(() => new EmotionalStatePanel(deps)).toThrow(
+        '[EmotionalStatePanel] EmotionCalculatorService must have getTopEmotions method.'
+      );
+    });
+
+    it('throws when emotionCalculatorService.getTopEmotions is not a function', () => {
+      deps.emotionCalculatorService = {
+        calculateEmotions: jest.fn(),
+        calculateSexualArousal: jest.fn(),
+        getTopEmotions: 'not-a-function',
+      };
+      expect(() => new EmotionalStatePanel(deps)).toThrow(
+        '[EmotionalStatePanel] EmotionCalculatorService must have getTopEmotions method.'
       );
     });
 
@@ -642,7 +695,10 @@ describe('EmotionalStatePanel', () => {
     it('renders calculated emotions text below bars', () => {
       const mockEntity = createMockEntity(true, createMoodData({ valence: 50, arousal: 30 }));
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatEmotionsForPrompt.mockReturnValue('happy, excited');
+      deps.emotionCalculatorService.getTopEmotions.mockReturnValue([
+        { name: 'happy', displayName: 'happy', label: 'mild', intensity: 0.3 },
+        { name: 'excited', displayName: 'excited', label: 'noticeable', intensity: 0.5 },
+      ]);
 
       new EmotionalStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);
@@ -650,25 +706,33 @@ describe('EmotionalStatePanel', () => {
 
       const emotionsContainer = panelElement.querySelector('.emotional-state-panel__emotions');
       expect(emotionsContainer).not.toBeNull();
-      expect(emotionsContainer.textContent).toContain('happy, excited');
+      expect(emotionsContainer.textContent).toContain('happy: mild');
+      expect(emotionsContainer.textContent).toContain('excited: noticeable');
     });
 
     it('calls emotionCalculatorService with mood data', () => {
       const moodData = createMoodData({ valence: 25, arousal: -15 });
-      const mockEntity = createMockEntity(true, moodData);
+      const sexualStateData = createDefaultSexualStateData();
+      const mockEntity = createMockEntity(true, moodData, true, sexualStateData);
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
       new EmotionalStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);
       handler({ payload: { entityId: 'test-entity' } });
 
-      expect(deps.emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(moodData, null);
+      expect(deps.emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        moodData,
+        0,
+        sexualStateData
+      );
     });
 
     it('displays "Current: " label before emotions', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatEmotionsForPrompt.mockReturnValue('calm');
+      deps.emotionCalculatorService.getTopEmotions.mockReturnValue([
+        { name: 'calm', displayName: 'calm', label: 'mild', intensity: 0.2 },
+      ]);
 
       new EmotionalStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);
@@ -681,7 +745,7 @@ describe('EmotionalStatePanel', () => {
     it('displays "neutral" when emotions text is empty', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatEmotionsForPrompt.mockReturnValue('');
+      deps.emotionCalculatorService.getTopEmotions.mockReturnValue([]);
 
       new EmotionalStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);

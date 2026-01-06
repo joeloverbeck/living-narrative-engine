@@ -48,6 +48,21 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "sex_excitation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "sex_inhibition": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "sexual_inhibition": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -181,6 +196,24 @@
         "engagement >= 0.15"
       ]
     },
+    "aesthetic_appreciation": {
+      "weights": {
+        "valence": 0.75,
+        "engagement": 0.85,
+        "arousal": -0.35,
+        "threat": -0.45,
+        "agency_control": -0.15,
+        "future_expectancy": 0.15,
+        "self_evaluation": 0.10
+      },
+      "gates": [
+        "valence >= 0.20",
+        "engagement >= 0.25",
+        "threat <= 0.35",
+        "arousal <= 0.35",
+        "arousal >= -0.30"
+      ]
+    },
     "interest": {
       "weights": {
         "engagement": 1.0,
@@ -224,6 +257,24 @@
       "gates": [
         "engagement >= 0.40",
         "agency_control >= 0.10"
+      ]
+    },
+    "entrancement": {
+      "weights": {
+        "engagement": 1.0,
+        "arousal": 0.45,
+        "agency_control": -0.55,
+        "threat": -0.45,
+        "valence": 0.25,
+        "future_expectancy": 0.10
+      },
+      "gates": [
+        "engagement >= 0.45",
+        "arousal >= 0.10",
+        "arousal <= 0.60",
+        "threat <= 0.35",
+        "agency_control <= 0.10",
+        "valence >= -0.10"
       ]
     },
     "hope": {
@@ -352,6 +403,22 @@
         "engagement <= -0.10"
       ]
     },
+    "nostalgia": {
+      "weights": {
+        "engagement": 1.0,
+        "valence": 0.25,
+        "future_expectancy": -0.45,
+        "arousal": -0.10,
+        "threat": -0.25,
+        "agency_control": -0.15
+      },
+      "gates": [
+        "engagement >= 0.20",
+        "threat <= 0.40",
+        "arousal <= 0.45",
+        "valence >= -0.25"
+      ]
+    },
     "boredom": {
       "weights": {
         "engagement": -1.0,
@@ -385,6 +452,25 @@
         "threat >= 0.10"
       ]
     },
+    "stress": {
+      "weights": {
+        "arousal": 0.85,
+        "threat": 0.45,
+        "agency_control": -0.65,
+        "valence": -0.35,
+        "engagement": 0.35,
+        "future_expectancy": -0.20,
+        "self_evaluation": -0.10
+      },
+      "gates": [
+        "arousal >= 0.20",
+        "engagement >= 0.15",
+        "agency_control <= 0.10",
+        "threat >= 0.10",
+        "threat <= 0.45",
+        "valence <= 0.10"
+      ]
+    },
     "anxiety": {
       "weights": {
         "threat": 0.8,
@@ -396,6 +482,23 @@
       "gates": [
         "threat >= 0.20",
         "agency_control <= 0.20"
+      ]
+    },
+    "craving": {
+      "weights": {
+        "engagement": 1.0,
+        "arousal": 0.65,
+        "valence": -0.55,
+        "agency_control": -0.35,
+        "threat": 0.15,
+        "future_expectancy": 0.15
+      },
+      "gates": [
+        "engagement >= 0.35",
+        "arousal >= 0.15",
+        "valence <= -0.05",
+        "agency_control <= 0.20",
+        "threat <= 0.60"
       ]
     },
     "thrill": {
@@ -759,6 +862,23 @@
       "gates": [
         "engagement >= 0.3",
         "valence <= 0"
+      ]
+    },
+    "empathic_distress": {
+      "weights": {
+        "valence": -0.75,
+        "arousal": 0.60,
+        "engagement": 0.90,
+        "agency_control": -0.60,
+        "self_evaluation": -0.20,
+        "future_expectancy": -0.20,
+        "threat": 0.15
+      },
+      "gates": [
+        "engagement >= 0.35",
+        "valence <= -0.20",
+        "arousal >= 0.10",
+        "agency_control <= 0.10"
       ]
     },
     "hatred": {

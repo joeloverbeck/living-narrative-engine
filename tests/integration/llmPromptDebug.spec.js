@@ -115,9 +115,11 @@ describe('Integration: LLM Prompt Debug Panel', () => {
 
     const mockEmotionCalculatorService = {
       calculateEmotions: jest.fn().mockReturnValue({}),
+      getTopEmotions: jest.fn().mockReturnValue([]),
       formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
       calculateSexualArousal: jest.fn().mockReturnValue(0),
       calculateSexualStates: jest.fn().mockReturnValue([]),
+      getTopSexualStates: jest.fn().mockReturnValue([]),
       formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
     };
     ensureInstance(tokens.IEmotionCalculatorService, mockEmotionCalculatorService);

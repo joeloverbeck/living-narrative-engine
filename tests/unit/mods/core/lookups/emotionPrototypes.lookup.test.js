@@ -100,6 +100,9 @@ describe('core:emotion_prototypes lookup', () => {
       'future_expectancy',
       'self_evaluation',
       'sexual_arousal',
+      'sex_excitation',
+      'sex_inhibition',
+      'sexual_inhibition',
     ];
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
@@ -128,7 +131,7 @@ describe('core:emotion_prototypes lookup', () => {
 
   describe('gate validation', () => {
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       if (emotionData.gates) {

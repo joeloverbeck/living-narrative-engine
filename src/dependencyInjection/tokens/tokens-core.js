@@ -40,6 +40,7 @@ export const coreTokens = freeze({
   ITextDataFetcher: 'ITextDataFetcher',
   IConfiguration: 'IConfiguration',
   IPathConfiguration: 'IPathConfiguration',
+  IEmotionDisplayConfiguration: 'IEmotionDisplayConfiguration',
   ITraceConfiguration: 'ITraceConfiguration',
   ITraceConfigLoader: 'ITraceConfigLoader',
   IPathResolver: 'IPathResolver',

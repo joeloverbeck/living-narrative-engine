@@ -79,6 +79,67 @@ describe('Node Resolvers Performance', () => {
     };
   });
 
+  /**
+   * Create an actor entity with a specified number of items in inventory.
+   * Used for testing scaling behavior of array iteration resolution.
+   *
+   * @param {number} itemCount - Number of items to add
+   * @returns {Promise<{actor: object, items: Array}>} Actor and item IDs
+   */
+  async function createActorWithItems(itemCount) {
+    const testId = Date.now() + Math.random().toString(36).substring(2, 9);
+    const actorId = `scaling-test-actor-${testId}`;
+    const { default: EntityDefinition } = await import(
+      '../../../src/entities/entityDefinition.js'
+    );
+
+    // Create item entities
+    const itemIds = [];
+    for (let i = 0; i < itemCount; i++) {
+      const itemId = `scaling-item-${testId}-${i}`;
+      const itemDef = {
+        id: itemId,
+        description: `Test item ${i}`,
+        components: {
+          'core:item': { name: `Item ${i}`, type: 'weapon' },
+        },
+      };
+      registry.store(
+        'entityDefinitions',
+        itemId,
+        new EntityDefinition(itemId, itemDef)
+      );
+      await entityManager.createEntityInstance(itemId, {
+        instanceId: itemId,
+        definitionId: itemId,
+        components: itemDef.components,
+      });
+      itemIds.push(itemId);
+    }
+
+    // Create actor with items in inventory
+    const actorDef = {
+      id: actorId,
+      description: 'Scaling test actor',
+      components: {
+        'core:actor': { name: 'Scaling Actor' },
+        'core:inventory': { items: itemIds },
+      },
+    };
+    registry.store(
+      'entityDefinitions',
+      actorId,
+      new EntityDefinition(actorId, actorDef)
+    );
+    const actor = await entityManager.createEntityInstance(actorId, {
+      instanceId: actorId,
+      definitionId: actorId,
+      components: actorDef.components,
+    });
+
+    return { actor, items: itemIds };
+  }
+
   afterAll(() => {
     PerformanceTestBed.cleanup();
   });
@@ -386,44 +447,71 @@ describe('Node Resolvers Performance', () => {
       }
     });
 
-    it('should scale with entity count', () => {
+    it('should scale with entity count', async () => {
+      // This test verifies that array iteration scales linearly with entity count.
+      // We create actors with varying numbers of items and measure the resolution time
+      // of iterating over those items. Per-item time should remain roughly constant.
       const entityCounts = [10, 50, 100];
       const scalingMetrics = [];
 
       for (const count of entityCounts) {
-        const scope = 'actor[]';
-        const start = performance.now();
+        // Create an actor with 'count' items in inventory
+        const { actor } = await createActorWithItems(count);
+        const scope = 'actor.core:inventory.items[]';
 
-        try {
-          // Create a subset of actors for testing
-          const ast = dslParser.parse(scope);
-          const testActor = entityManager.getEntityInstance(
-            testDataset.actors[0]?.id
-          );
-          if (testActor) {
-            scopeEngine.resolve(ast, testActor, runtimeContext);
+        // Warmup for this specific configuration to stabilize JIT
+        for (let w = 0; w < 10; w++) {
+          try {
+            const ast = dslParser.parse(scope);
+            scopeEngine.resolve(ast, actor, runtimeContext);
+          } catch {
+            // Ignore warmup errors
           }
-        } catch {
-          // Handle resolution errors
         }
 
-        const duration = performance.now() - start;
-        const avgTimePerEntity = duration / count;
+        // Measure with multiple iterations for stability
+        const iterations = 20;
+        const timings = [];
+
+        for (let i = 0; i < iterations; i++) {
+          const start = performance.now();
+
+          try {
+            const ast = dslParser.parse(scope);
+            scopeEngine.resolve(ast, actor, runtimeContext);
+          } catch {
+            // Handle resolution errors
+          }
+
+          timings.push(performance.now() - start);
+        }
+
+        // Use median for stability (less affected by outliers than average)
+        const sortedTimings = timings.sort((a, b) => a - b);
+        const medianDuration = sortedTimings[Math.floor(sortedTimings.length / 2)];
+        const avgTimePerEntity = medianDuration / count;
 
         scalingMetrics.push({
           count,
-          duration,
+          duration: medianDuration,
           avgTimePerEntity,
         });
       }
 
       // Verify linear or better scaling
+      // Per-entity time should remain roughly constant as count increases
       const efficiencies = scalingMetrics.map((m) => m.avgTimePerEntity);
       const firstEfficiency = efficiencies[0];
 
       for (let i = 1; i < efficiencies.length; i++) {
-        // Later operations shouldn't be significantly slower per entity
-        expect(efficiencies[i]).toBeLessThan(firstEfficiency * 1.5);
+        // Allow 3x tolerance for timing jitter at microsecond scale
+        // A truly O(n) algorithm should have roughly equal per-entity times
+        expect(efficiencies[i]).toBeLessThan(firstEfficiency * 3);
+      }
+
+      // Also verify absolute performance - resolution should be fast
+      for (const metric of scalingMetrics) {
+        expect(metric.duration).toBeLessThan(50); // <50ms even for 100 items
       }
     });
   });

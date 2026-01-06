@@ -25,6 +25,10 @@ jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
   loadAndApplyTraceConfig: jest.fn(),
 }));
 
+jest.mock('../../../src/configuration/utils/emotionDisplayConfigUtils.js', () => ({
+  loadAndApplyEmotionDisplayConfig: jest.fn(),
+}));
+
 // Mock base container configuration
 jest.mock('../../../src/dependencyInjection/baseContainerConfig.js', () => ({
   configureBaseContainer: jest.fn(),
@@ -57,6 +61,7 @@ import {
 } from '../../../src/utils/environmentUtils.js';
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { loadAndApplyTraceConfig } from '../../../src/configuration/utils/traceConfigUtils.js';
+import { loadAndApplyEmotionDisplayConfig } from '../../../src/configuration/utils/emotionDisplayConfigUtils.js';
 import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import LoggerStrategy from '../../../src/logging/loggerStrategy.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
@@ -106,6 +111,7 @@ describe('containerConfig - Runtime Error Reproduction', () => {
     // Setup config loading mocks
     loadAndApplyLoggerConfig.mockResolvedValue(undefined);
     loadAndApplyTraceConfig.mockResolvedValue(undefined);
+    loadAndApplyEmotionDisplayConfig.mockResolvedValue(undefined);
     configureBaseContainer.mockResolvedValue(undefined);
   });
 

@@ -121,6 +121,7 @@ describe('Index.html - Main Menu', () => {
         'Start New Game',
         'Anatomy Visualizer',
         'Damage Simulator',
+        'Expressions Simulator',
         'Change LLM',
         'Character Concepts Manager',
         'Thematic Direction Generator',
@@ -145,6 +146,7 @@ describe('Index.html - Main Menu', () => {
         { id: 'start-button', text: 'Start New Game' },
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
         { id: 'damage-simulator-button', text: 'Damage Simulator' },
+        { id: 'expressions-simulator-button', text: 'Expressions Simulator' },
         { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
         {
@@ -187,6 +189,10 @@ describe('Index.html - Main Menu', () => {
         { id: 'start-button', href: 'game.html' },
         { id: 'anatomy-button', href: 'anatomy-visualizer.html' },
         { id: 'damage-simulator-button', href: 'damage-simulator.html' },
+        {
+          id: 'expressions-simulator-button',
+          href: 'expressions-simulator.html',
+        },
         {
           id: 'character-concepts-button',
           href: 'character-concepts-manager.html',

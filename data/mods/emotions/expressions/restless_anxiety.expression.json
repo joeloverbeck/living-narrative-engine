@@ -1,0 +1,102 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:restless_anxiety",
+    "description": "Moderate anxiety/unease expressed as fidgeting, pacing, and wary attention without full panic",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anxiety"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.unease"
+                                    },
+                                    0.50
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "max": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anxiety"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anxiety"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.unease"
+                                            },
+                                            {
+                                                "var": "previousEmotions.unease"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            -0.05
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires moderate anxiety/unease without escalating into terror/hypervigilance, and not collapsing into a freeze-level fear state."
+        }
+    ],
+    "actor_description": "I can't settle. My thoughts keep circling the same possibilities, each one a little worse than the last. I catch myself checking the room again—hands busy, feet shifting, jaw tight—as if motion could keep the feeling from landing.",
+    "description_text": "{actor} fidgets with restless energy—small movements that don't resolve into action, eyes tracking the room with a worried, distracted focus.",
+    "alternate_descriptions": {
+        "auditory": "I hear uneven breathing and little sounds of restlessness—footsteps that start and stop, a quiet exhale that doesn't fully release.",
+        "olfactory": "I smell a faint edge of stress-sweat, the kind that comes from holding yourself together."
+    },
+    "tags": [
+        "anxiety",
+        "unease",
+        "restless",
+        "fidgeting",
+        "moderate",
+        "visible"
+    ]
+}

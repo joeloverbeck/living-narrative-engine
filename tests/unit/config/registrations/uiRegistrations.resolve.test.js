@@ -49,8 +49,10 @@ describe('registerUI token resolution', () => {
     container.register(tokens.IEmotionCalculatorService, {
       calculateSexualArousal: jest.fn(),
       calculateEmotions: jest.fn(),
+      getTopEmotions: jest.fn().mockReturnValue([]),
       formatEmotionsForPrompt: jest.fn(),
       calculateSexualStates: jest.fn(),
+      getTopSexualStates: jest.fn().mockReturnValue([]),
       formatSexualStatesForPrompt: jest.fn(),
     });
   });

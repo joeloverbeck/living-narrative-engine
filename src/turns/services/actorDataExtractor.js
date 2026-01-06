@@ -279,7 +279,8 @@ class ActorDataExtractor extends IActorDataExtractor {
     // 4. Calculate emotions and format
     const emotions = this.#emotionCalculatorService.calculateEmotions(
       moodAxes,
-      sexualArousal
+      sexualArousal,
+      sexualComponent
     );
     const emotionalStateText =
       this.#emotionCalculatorService.formatEmotionsForPrompt(emotions);
@@ -287,7 +288,8 @@ class ActorDataExtractor extends IActorDataExtractor {
     // 5. Calculate sexual states and format
     const sexualStates = this.#emotionCalculatorService.calculateSexualStates(
       moodAxes,
-      sexualArousal
+      sexualArousal,
+      sexualComponent
     );
     const sexualStateText =
       this.#emotionCalculatorService.formatSexualStatesForPrompt(sexualStates);

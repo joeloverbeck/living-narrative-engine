@@ -299,9 +299,13 @@ export function registerAIGameStateProviders(registrar, logger) {
     });
   });
   registrar.singletonFactory(tokens.IEmotionCalculatorService, (c) => {
+    const displayConfig = c.isRegistered(tokens.IEmotionDisplayConfiguration)
+      ? c.resolve(tokens.IEmotionDisplayConfiguration)
+      : undefined;
     return new EmotionCalculatorService({
       logger: c.resolve(tokens.ILogger),
       dataRegistry: c.resolve(tokens.IDataRegistry),
+      displayConfig,
     });
   });
   registrar.single(tokens.IActorStateProvider, ActorStateProvider);

@@ -7,6 +7,10 @@
 /* global process */
 
 import { validateDependency } from '../../src/utils/dependencyUtils.js';
+import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
+import ExpressionPrerequisiteValidator, {
+  DEFAULT_MOOD_AXES,
+} from '../../src/validation/expressionPrerequisiteValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 import ManifestFileExistenceValidator from './manifestFileExistenceValidator.js';
 import path from 'path';
@@ -44,6 +48,17 @@ class ModValidationError extends ModDependencyError {
       }
     }
 
+    if (validationResults.expressionPrerequisites) {
+      const issueCount = Array.from(
+        validationResults.expressionPrerequisites.values()
+      ).reduce((sum, r) => sum + r.violations?.length || 0, 0);
+      if (issueCount > 0) {
+        messages.push(
+          `Expression prerequisite validation failed: ${issueCount} issue(s)`
+        );
+      }
+    }
+
     super(`Mod ecosystem validation failed:\n${messages.join('\n')}`);
     this.name = 'ModValidationError';
     this.validationResults = validationResults;
@@ -63,6 +78,7 @@ class ModValidationOrchestrator {
   #pathResolver;
   #configuration;
   #fileExistenceValidator;
+  #expressionPrerequisiteValidator;
 
   /**
    * @param {object} dependencies
@@ -74,6 +90,8 @@ class ModValidationOrchestrator {
    * @param {import('../../src/interfaces/coreServices.js').IPathResolver} dependencies.pathResolver
    * @param {import('../../src/interfaces/coreServices.js').IConfiguration} dependencies.configuration
    * @param {ManifestFileExistenceValidator} [dependencies.fileExistenceValidator] - Optional file existence validator
+   * @param {ExpressionPrerequisiteValidator} [dependencies.expressionPrerequisiteValidator] - Optional expression prerequisite validator
+   * @param {JsonLogicEvaluationService} [dependencies.jsonLogicEvaluationService] - Optional JSON Logic evaluator for operator registry
    */
   constructor({
     logger,
@@ -84,6 +102,8 @@ class ModValidationOrchestrator {
     pathResolver,
     configuration,
     fileExistenceValidator = null,
+    expressionPrerequisiteValidator = null,
+    jsonLogicEvaluationService = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -127,6 +147,13 @@ class ModValidationOrchestrator {
     this.#configuration = configuration;
     this.#fileExistenceValidator =
       fileExistenceValidator || new ManifestFileExistenceValidator({ logger });
+    const jsonLogicService =
+      jsonLogicEvaluationService || new JsonLogicEvaluationService({ logger });
+    this.#expressionPrerequisiteValidator =
+      expressionPrerequisiteValidator ||
+      new ExpressionPrerequisiteValidator({
+        allowedOperations: jsonLogicService.getAllowedOperations(),
+      });
   }
 
   /**
@@ -143,6 +170,7 @@ class ModValidationOrchestrator {
       skipCrossReferences = false,
       failFast = false,
       modsToValidate = null,
+      strictMode = false,
     } = options;
 
     this.#logger.info('Starting comprehensive mod ecosystem validation');
@@ -151,6 +179,7 @@ class ModValidationOrchestrator {
     const results = {
       dependencies: null,
       crossReferences: null,
+      expressionPrerequisites: null,
       loadOrder: null,
       performance: {
         startTime,
@@ -294,8 +323,47 @@ class ModValidationOrchestrator {
         this.#logger.info('Phase 4: Cross-reference validation skipped');
       }
 
-      // Phase 5: File existence validation
-      this.#logger.info('Phase 5: Validating manifest file references');
+      // Phase 5: Expression prerequisite validation
+      this.#logger.info('Phase 5: Validating expression prerequisites');
+      const expressionStartTime = performance.now();
+
+      try {
+        results.expressionPrerequisites =
+          await this.#validateExpressionPrerequisites(manifestsMap, {
+            strictMode,
+          });
+        results.performance.phases.set(
+          'expression-prerequisite-validation',
+          performance.now() - expressionStartTime
+        );
+
+        const expressionViolations = Array.from(
+          results.expressionPrerequisites.values()
+        ).some((report) => report.hasViolations);
+        if (expressionViolations) {
+          const totalIssues = Array.from(
+            results.expressionPrerequisites.values()
+          ).reduce((sum, report) => sum + report.violations.length, 0);
+          this.#logger.warn(
+            `Expression prerequisite validation found ${totalIssues} issue(s)`
+          );
+
+          if (failFast) {
+            throw new ModValidationError(results);
+          }
+          results.warnings.push(
+            `Expression prerequisite validation found ${totalIssues} issue(s)`
+          );
+        }
+      } catch (error) {
+        this.#logger.error('Expression prerequisite validation failed', error);
+        results.errors.push(
+          `Expression prerequisite validation failed: ${error.message}`
+        );
+      }
+
+      // Phase 6: File existence validation
+      this.#logger.info('Phase 6: Validating manifest file references');
       const fileExistenceStartTime = performance.now();
 
       try {
@@ -332,8 +400,8 @@ class ModValidationOrchestrator {
         );
       }
 
-      // Phase 6: Unregistered files validation (inverse of Phase 5)
-      this.#logger.info('Phase 6: Validating for unregistered files on disk');
+      // Phase 7: Unregistered files validation (inverse of Phase 6)
+      this.#logger.info('Phase 7: Validating for unregistered files on disk');
       const unregisteredFilesStartTime = performance.now();
 
       try {
@@ -378,6 +446,10 @@ class ModValidationOrchestrator {
           !Array.from(results.crossReferences.values()).some(
             (r) => r.hasViolations
           )) &&
+        (!results.expressionPrerequisites ||
+          !Array.from(results.expressionPrerequisites.values()).some(
+            (r) => r.hasViolations
+          )) &&
         (!results.fileExistence ||
           !Array.from(results.fileExistence.values()).some((r) => !r.isValid));
 
@@ -407,7 +479,11 @@ class ModValidationOrchestrator {
    * @returns {Promise<ModValidationResult>} Single mod validation results
    */
   async validateMod(modId, options = {}) {
-    const { skipCrossReferences = false, includeContext = true } = options;
+    const {
+      skipCrossReferences = false,
+      includeContext = true,
+      strictMode = false,
+    } = options;
 
     this.#logger.info(`Starting validation for mod: ${modId}`);
 
@@ -425,6 +501,7 @@ class ModValidationOrchestrator {
         modId,
         dependencies: null,
         crossReferences: null,
+        expressionPrerequisites: null,
         isValid: false,
         errors: [],
         warnings: [],
@@ -471,10 +548,47 @@ class ModValidationOrchestrator {
         }
       }
 
+      // Expression prerequisite validation
+      try {
+        const prereqReports =
+          await this.#validateExpressionPrerequisites(
+            new Map([[modId, modManifest]]),
+            { strictMode }
+          );
+        results.expressionPrerequisites = prereqReports.get(modId) || {
+          modId,
+          hasViolations: false,
+          violations: [],
+          warnings: [],
+          summary: {
+            totalExpressions: 0,
+            totalPrerequisites: 0,
+            violationCount: 0,
+            warningCount: 0,
+          },
+        };
+
+        if (results.expressionPrerequisites.hasViolations) {
+          results.warnings.push(
+            `${results.expressionPrerequisites.violations.length} expression prerequisite issues`
+          );
+        }
+      } catch (error) {
+        this.#logger.error(
+          `Expression prerequisite validation failed for mod ${modId}`,
+          error
+        );
+        results.errors.push(
+          `Expression prerequisite validation failed: ${error.message}`
+        );
+      }
+
       results.isValid =
         results.dependencies.isValid &&
         results.errors.length === 0 &&
-        (!results.crossReferences || !results.crossReferences.hasViolations);
+        (!results.crossReferences || !results.crossReferences.hasViolations) &&
+        (!results.expressionPrerequisites ||
+          !results.expressionPrerequisites.hasViolations);
 
       return results;
     } catch (error) {
@@ -786,6 +900,123 @@ class ModValidationOrchestrator {
       return this.#pathResolver.resolveModPath(modId);
     }
     return path.join(process.cwd(), 'data', 'mods', modId);
+  }
+
+  async #validateExpressionPrerequisites(manifestsMap, options = {}) {
+    const { strictMode = false } = options;
+    const referenceData = await this.#loadExpressionReferenceData();
+    const reports = new Map();
+
+    for (const [modId, manifest] of manifestsMap.entries()) {
+      const expressionFiles = manifest?.content?.expressions;
+      if (!Array.isArray(expressionFiles) || expressionFiles.length === 0) {
+        continue;
+      }
+
+      const modPath = this._resolveModPath(modId, manifest);
+      const violations = [];
+      const warnings = [];
+      let totalPrerequisites = 0;
+
+      for (const fileName of expressionFiles) {
+        const expressionPath = path.join(modPath, 'expressions', fileName);
+        const source = path.join('expressions', fileName);
+        let expression;
+
+        try {
+          const raw = await fs.readFile(expressionPath, 'utf-8');
+          expression = JSON.parse(raw);
+        } catch (error) {
+          violations.push({
+            violationType: 'expression_prerequisite',
+            issueType: 'expression_load_error',
+            modId,
+            expressionId: 'unknown',
+            source,
+            message: `Failed to read expression file: ${error.message}`,
+            severity: 'high',
+          });
+          continue;
+        }
+
+        const prereqCount = Array.isArray(expression?.prerequisites)
+          ? expression.prerequisites.length
+          : 0;
+        totalPrerequisites += prereqCount;
+
+        const result = this.#expressionPrerequisiteValidator.validateExpression(
+          expression,
+          {
+            modId,
+            source,
+            validKeysByRoot: referenceData,
+            strictMode,
+          }
+        );
+        violations.push(...result.violations);
+        warnings.push(...result.warnings);
+      }
+
+      reports.set(modId, {
+        modId,
+        hasViolations: violations.length > 0,
+        violations,
+        warnings,
+        summary: {
+          totalExpressions: expressionFiles.length,
+          totalPrerequisites,
+          violationCount: violations.length,
+          warningCount: warnings.length,
+        },
+      });
+    }
+
+    return reports;
+  }
+
+  async #loadExpressionReferenceData() {
+    const moodAxes = new Set(DEFAULT_MOOD_AXES);
+    const emotionKeys = await this.#loadLookupKeys(
+      'emotion_prototypes.lookup.json'
+    );
+    const sexualStateKeys = await this.#loadLookupKeys(
+      'sexual_prototypes.lookup.json'
+    );
+
+    return {
+      emotions: emotionKeys,
+      sexualStates: sexualStateKeys,
+      moodAxes,
+    };
+  }
+
+  async #loadLookupKeys(fileName) {
+    const lookupPath = path.join(
+      process.cwd(),
+      'data',
+      'mods',
+      'core',
+      'lookups',
+      fileName
+    );
+    try {
+      const raw = await fs.readFile(lookupPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      const entries = parsed?.entries;
+      if (!entries || typeof entries !== 'object') {
+        this.#logger.warn(
+          `Expression prerequisite validation: lookup ${fileName} has no entries`
+        );
+        return new Set();
+      }
+
+      return new Set(Object.keys(entries));
+    } catch (error) {
+      this.#logger.warn(
+        `Expression prerequisite validation: failed to load ${fileName}: ${error.message}`
+      );
+      return new Set();
+    }
   }
 }
 

@@ -59,9 +59,11 @@ async function createContainerAndLogger() {
   container.register(tokens.LLMAdapter, llmAdapterStub);
   container.register(tokens.IEmotionCalculatorService, {
     calculateEmotions: jest.fn().mockReturnValue({}),
+    getTopEmotions: jest.fn().mockReturnValue([]),
     formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
     calculateSexualArousal: jest.fn().mockReturnValue(0),
     calculateSexualStates: jest.fn().mockReturnValue([]),
+    getTopSexualStates: jest.fn().mockReturnValue([]),
     formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
   });
 

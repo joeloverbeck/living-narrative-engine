@@ -23,6 +23,11 @@ jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
   loadAndApplyTraceConfig: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the async emotion display config utility
+jest.mock('../../../src/configuration/utils/emotionDisplayConfigUtils.js', () => ({
+  loadAndApplyEmotionDisplayConfig: jest.fn().mockResolvedValue(undefined),
+}));
+
 /**
  * Creates a mock DI container that spies on registrations.
  *

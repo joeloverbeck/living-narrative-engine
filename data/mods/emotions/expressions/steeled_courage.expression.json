@@ -1,0 +1,90 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:steeled_courage",
+    "description": "Fear is present but contained; courage/determination rises and the actor visibly steadies themselves to face the threat",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.courage"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.determination"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "max": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.courage"
+                                            },
+                                            {
+                                                "var": "previousEmotions.courage"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.determination"
+                                            },
+                                            {
+                                                "var": "previousEmotions.determination"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0.10
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires courage + fear + determination, with a notable rise in courage/determination (a 'steeling' moment) and without being overwhelmed into terror."
+        }
+    ],
+    "actor_description": "I'm afraid—no point pretending otherwise. But I pull my breathing into shape and make my hands do what I need them to do. The fear stays there, loud and bright, while something firmer steps in front of it: Fine. Then we do this.",
+    "description_text": "{actor} takes a steadying breath and squares up—tension visible, but their posture firms as if choosing to meet the danger head-on.",
+    "alternate_descriptions": {
+        "auditory": "I hear a controlled inhale, then a slower exhale—like they're forcing their breathing into a steadier rhythm.",
+        "olfactory": "I smell a clean spike of adrenaline-sweat, sharp but controlled."
+    },
+    "tags": [
+        "courage",
+        "fear",
+        "determination",
+        "resolve",
+        "bravery",
+        "visible"
+    ]
+}

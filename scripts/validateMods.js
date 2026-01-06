@@ -211,10 +211,28 @@ async function main() {
     };
 
     // Extract crossReferences Map for ecosystem validation to match reporter's expected structure
-    const reportData =
-      config.ecosystem && results.crossReferences instanceof Map
-        ? results.crossReferences
-        : results;
+    let reportData = results;
+    if (results instanceof Map && !config.ecosystem) {
+      const expressionPrerequisites = new Map();
+      for (const [modId, report] of results.entries()) {
+        if (report?.expressionPrerequisites) {
+          expressionPrerequisites.set(modId, report.expressionPrerequisites);
+        }
+      }
+
+      if (expressionPrerequisites.size > 0) {
+        reportData = {
+          crossReferences: results,
+          expressionPrerequisites,
+        };
+      }
+    } else if (
+      config.ecosystem &&
+      results.crossReferences instanceof Map &&
+      !results.expressionPrerequisites
+    ) {
+      reportData = results.crossReferences;
+    }
 
     const report = reporter.generateReport(
       reportData,
@@ -608,6 +626,7 @@ async function runValidation(orchestrator, config) {
         const modResult = await orchestrator.validateMod(modId, {
           skipCrossReferences: !config.crossReferences,
           includeContext: true,
+          strictMode: config.strictMode,
         });
 
         modResults.set(modId, modResult);
@@ -674,6 +693,12 @@ function showValidationSummary(results, executionTime) {
       ).reduce((sum, r) => sum + r.violations.length, 0);
       console.log(`   • Cross-reference violations: ${totalViolations}`);
     }
+    if (results.expressionPrerequisites) {
+      const totalIssues = Array.from(
+        results.expressionPrerequisites.values()
+      ).reduce((sum, r) => sum + r.violations.length, 0);
+      console.log(`   • Expression prerequisite issues: ${totalIssues}`);
+    }
   }
 }
 
@@ -690,7 +715,9 @@ function calculateExitCode(results, config) {
 
   if (results instanceof Map) {
     hasViolations = Array.from(results.values()).some(
-      (r) => r.crossReferences?.hasViolations
+      (r) =>
+        r.crossReferences?.hasViolations ||
+        r.expressionPrerequisites?.hasViolations
     );
     hasErrors = results.errors && results.errors.length > 0;
   } else {
@@ -699,6 +726,13 @@ function calculateExitCode(results, config) {
       hasViolations = Array.from(results.crossReferences.values()).some(
         (r) => r.hasViolations
       );
+    }
+    if (results.expressionPrerequisites) {
+      hasViolations =
+        hasViolations ||
+        Array.from(results.expressionPrerequisites.values()).some(
+          (r) => r.hasViolations
+        );
     }
   }
 

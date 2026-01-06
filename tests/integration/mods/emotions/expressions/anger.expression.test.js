@@ -86,30 +86,28 @@ describe('Emotions anger expressions', () => {
 
     const passingContext = {
       emotions: { anger: 0.7 },
-      moodAxes: { agency_control: -35 },
+      moodAxes: { agency_control: -35, future_expectancy: 0 },
     };
 
     const failingContext = {
       emotions: { anger: 0.7 },
-      moodAxes: { agency_control: -10 },
+      moodAxes: { agency_control: -35, future_expectancy: -20 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('explosive_anger requires high anger AND high arousal', () => {
+  it('explosive_anger requires high anger AND high rage', () => {
     const expression = expressionsById['emotions:explosive_anger'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { anger: 0.8 },
-      moodAxes: { arousal: 60 },
+      emotions: { anger: 0.8, rage: 0.7 },
     };
 
     const failingContext = {
-      emotions: { anger: 0.8 },
-      moodAxes: { arousal: 20 },
+      emotions: { anger: 0.8, rage: 0.4 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -155,12 +153,12 @@ describe('Emotions anger expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { frustration: 0.6 },
+      emotions: { frustration: 0.6, hope: 0.2, despair: 0.1 },
       moodAxes: { agency_control: -50, future_expectancy: -30 },
     };
 
     const failingContext = {
-      emotions: { frustration: 0.6 },
+      emotions: { frustration: 0.6, hope: 0.6, despair: 0.1 },
       moodAxes: { agency_control: -50, future_expectancy: -10 },
     };
 

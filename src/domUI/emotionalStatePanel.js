@@ -18,7 +18,10 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { TURN_STARTED_ID, COMPONENT_ADDED_ID } from '../constants/eventIds.js';
-import { MOOD_COMPONENT_ID } from '../constants/componentIds.js';
+import {
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
+} from '../constants/componentIds.js';
 
 /**
  * Color configuration for each mood axis.
@@ -157,14 +160,25 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
       );
     }
     if (
-      !emotionCalculatorService.formatEmotionsForPrompt ||
-      typeof emotionCalculatorService.formatEmotionsForPrompt !== 'function'
+      !emotionCalculatorService.calculateSexualArousal ||
+      typeof emotionCalculatorService.calculateSexualArousal !== 'function'
     ) {
       this.logger.error(
-        `${this._logPrefix} EmotionCalculatorService must have formatEmotionsForPrompt method.`
+        `${this._logPrefix} EmotionCalculatorService must have calculateSexualArousal method.`
       );
       throw new Error(
-        `${this._logPrefix} EmotionCalculatorService must have formatEmotionsForPrompt method.`
+        `${this._logPrefix} EmotionCalculatorService must have calculateSexualArousal method.`
+      );
+    }
+    if (
+      !emotionCalculatorService.getTopEmotions ||
+      typeof emotionCalculatorService.getTopEmotions !== 'function'
+    ) {
+      this.logger.error(
+        `${this._logPrefix} EmotionCalculatorService must have getTopEmotions method.`
+      );
+      throw new Error(
+        `${this._logPrefix} EmotionCalculatorService must have getTopEmotions method.`
       );
     }
 
@@ -302,6 +316,30 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
     }
 
     return moodComponent;
+  }
+
+  /**
+   * Gets the sexual state data from the current actor.
+   *
+   * @returns {{sex_excitation: number, sex_inhibition: number, baseline_libido: number}|null}
+   * @private
+   */
+  #getSexualStateData() {
+    if (!this.#currentActorId) {
+      return null;
+    }
+
+    const entity = this.#entityManager.getEntityInstance(this.#currentActorId);
+    if (!entity) {
+      return null;
+    }
+
+    const sexualComponent = entity.getComponentData(SEXUAL_STATE_COMPONENT_ID);
+    if (!sexualComponent) {
+      return null;
+    }
+
+    return sexualComponent;
   }
 
   /**
@@ -469,25 +507,46 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
       return;
     }
 
-    // Calculate emotions using the service
-    // Note: We pass null for sexual arousal since we're only displaying mood-based emotions here
-    const emotions = this.#emotionCalculatorService.calculateEmotions(moodData, null);
-    const emotionsText = this.#emotionCalculatorService.formatEmotionsForPrompt(emotions);
+    const sexualStateData = this.#getSexualStateData();
+    const sexualArousal =
+      this.#emotionCalculatorService.calculateSexualArousal(sexualStateData);
+    const emotions = this.#emotionCalculatorService.calculateEmotions(
+      moodData,
+      sexualArousal,
+      sexualStateData
+    );
+    const emotionItems = this.#emotionCalculatorService.getTopEmotions(emotions);
 
     // Create emotions text container
     const emotionsContainer = this.documentContext.create('div');
     emotionsContainer.className = 'emotional-state-panel__emotions';
 
-    if (emotionsText) {
+    if (emotionItems.length > 0) {
       const emotionsLabel = this.documentContext.create('span');
       emotionsLabel.className = 'emotional-state-panel__emotions-label';
       emotionsLabel.textContent = 'Current: ';
       emotionsContainer.appendChild(emotionsLabel);
 
-      const emotionsValue = this.documentContext.create('span');
-      emotionsValue.className = 'emotional-state-panel__emotions-value';
-      emotionsValue.textContent = emotionsText;
-      emotionsContainer.appendChild(emotionsValue);
+      const emotionsList = this.documentContext.create('div');
+      emotionsList.className = 'emotional-state-panel__emotions-list';
+      emotionsContainer.appendChild(emotionsList);
+
+      emotionItems.forEach((item) => {
+        const emotionItem = this.documentContext.create('span');
+        emotionItem.className = 'emotional-state-panel__emotion-item';
+
+        const emotionName = this.documentContext.create('span');
+        emotionName.className = 'emotional-state-panel__emotion-name';
+        emotionName.textContent = `${item.displayName}: `;
+
+        const emotionLabel = this.documentContext.create('span');
+        emotionLabel.className = 'emotional-state-panel__emotion-label';
+        emotionLabel.textContent = item.label;
+
+        emotionItem.appendChild(emotionName);
+        emotionItem.appendChild(emotionLabel);
+        emotionsList.appendChild(emotionItem);
+      });
     } else {
       emotionsContainer.textContent = 'Current: neutral';
     }

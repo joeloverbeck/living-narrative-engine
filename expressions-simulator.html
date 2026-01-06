@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expressions Simulator - Living Narrative Engine</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/expressions-simulator.css" />
+  </head>
+
+  <body>
+    <div id="expressions-simulator-container">
+      <header id="es-header">
+        <h1>Expressions Simulator</h1>
+        <nav><a href="index.html" class="menu-button">Back to Menu</a></nav>
+      </header>
+
+      <main class="es-main">
+        <section class="es-section es-inputs" aria-labelledby="es-inputs-title">
+          <h2 id="es-inputs-title">Inputs</h2>
+          <div class="es-input-grid">
+            <section class="es-panel" aria-labelledby="es-mood-title">
+              <h3 id="es-mood-title">Mood Axes</h3>
+              <div id="es-mood-inputs" class="es-input-list"></div>
+              <div
+                id="es-mood-derived"
+                class="es-derived-text"
+                aria-live="polite"
+              >
+                <div class="emotional-state-panel__emotions">Current: neutral</div>
+              </div>
+            </section>
+            <section class="es-panel" aria-labelledby="es-sexual-title">
+              <h3 id="es-sexual-title">Sexual State</h3>
+              <div id="es-sexual-inputs" class="es-input-list"></div>
+              <div
+                id="es-sexual-derived"
+                class="es-derived-text"
+                aria-live="polite"
+              >
+                <div class="sexual-state-panel__states">Current: neutral</div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="es-section es-results" aria-labelledby="es-results-title">
+          <h2 id="es-results-title">Expression Results</h2>
+          <div class="es-results-grid">
+            <div class="es-panel es-summary-panel">
+              <h3>Registry Summary</h3>
+              <p class="es-placeholder-message">
+                Total expressions: <span id="es-expression-total">--</span>
+              </p>
+              <button type="button" class="es-button" id="es-trigger-button" disabled>
+                Trigger Expression
+              </button>
+            </div>
+            <div class="es-panel es-matches-panel">
+              <h3>Matching Expressions</h3>
+              <ul id="es-matching-list" class="es-matching-list">
+                <li>Matches will appear after evaluation.</li>
+              </ul>
+            </div>
+            <div class="es-panel es-selected-panel">
+              <h3>Selected Expression</h3>
+              <p class="es-placeholder-message" id="es-selected-expression">
+                None
+              </p>
+            </div>
+            <div class="es-panel es-messages-panel">
+              <h3>Perceptible Messages</h3>
+              <div class="es-message-block">
+                <h4>Actor Message</h4>
+                <p class="es-placeholder-message" id="es-actor-message">
+                  Actor output will appear here.
+                </p>
+              </div>
+              <div class="es-message-block">
+                <h4>Observer Message</h4>
+                <p class="es-placeholder-message" id="es-observer-message">
+                  Observer output will appear here.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="es-footer">
+        <a href="index.html">Developer Tools Index</a>
+      </footer>
+    </div>
+
+    <script src="expressions-simulator.js"></script>
+  </body>
+</html>
