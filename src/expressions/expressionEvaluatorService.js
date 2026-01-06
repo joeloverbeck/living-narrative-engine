@@ -57,13 +57,28 @@ class ExpressionEvaluatorService {
    */
   evaluate(context) {
     const expressions = this.#expressionRegistry.getExpressionsByPriority();
+    this.#logger.info(
+      `Expression evaluation: considering ${expressions.length} expressions`
+    );
 
-    for (const expression of expressions) {
-      if (this.#evaluatePrerequisites(expression, context)) {
-        return expression;
-      }
+    const matchingExpressions = this.#evaluateExpressions(expressions, context);
+
+    if (matchingExpressions.length > 0) {
+      const matchIds = matchingExpressions.map(
+        (expression) => expression?.id ?? 'unknown'
+      );
+      this.#logger.info(
+        `Expression evaluation: matched ${matchingExpressions.length} expressions [${matchIds.join(', ')}]`
+      );
+
+      const selectedExpression = matchingExpressions[0];
+      this.#logger.info(
+        `Expression evaluation: selected expression ${selectedExpression?.id ?? 'unknown'}`
+      );
+      return selectedExpression;
     }
 
+    this.#logger.info('Expression evaluation: no match');
     return null;
   }
 
@@ -75,15 +90,7 @@ class ExpressionEvaluatorService {
    */
   evaluateAll(context) {
     const expressions = this.#expressionRegistry.getExpressionsByPriority();
-    const matchingExpressions = [];
-
-    for (const expression of expressions) {
-      if (this.#evaluatePrerequisites(expression, context)) {
-        matchingExpressions.push(expression);
-      }
-    }
-
-    return matchingExpressions;
+    return this.#evaluateExpressions(expressions, context);
   }
 
   /**
@@ -135,6 +142,26 @@ class ExpressionEvaluatorService {
     }
 
     return true;
+  }
+
+  /**
+   * Evaluate all expressions and return matches in the provided order.
+   *
+   * @private
+   * @param {object[]} expressions
+   * @param {object} context
+   * @returns {object[]}
+   */
+  #evaluateExpressions(expressions, context) {
+    const matchingExpressions = [];
+
+    for (const expression of expressions) {
+      if (this.#evaluatePrerequisites(expression, context)) {
+        matchingExpressions.push(expression);
+      }
+    }
+
+    return matchingExpressions;
   }
 }
 

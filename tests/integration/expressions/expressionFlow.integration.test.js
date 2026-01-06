@@ -11,6 +11,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ACTION_DECIDED_ID } from '../../../src/constants/eventIds.js';
 import {
   NAME_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
@@ -73,6 +74,22 @@ const createEntityManagerStub = () => {
 
 const createEmotionMap = (values) => new Map(Object.entries(values));
 
+const createTestExpression = ({
+  id,
+  priority = 999,
+  prerequisites,
+  descriptionText = '{actor} reacts to a test trigger.',
+  actorDescription = 'Test actor description.',
+} = {}) => ({
+  $schema: 'schema://living-narrative-engine/expression.schema.json',
+  id,
+  description: 'Test expression',
+  priority,
+  prerequisites,
+  actor_description: actorDescription,
+  description_text: descriptionText,
+});
+
 describe('Expression Flow - Integration', () => {
   let testBed;
   let container;
@@ -80,6 +97,7 @@ describe('Expression Flow - Integration', () => {
   let entityManager;
   let emotionCalculator;
   let expressionListener;
+  let dataRegistry;
 
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
@@ -94,7 +112,7 @@ describe('Expression Flow - Integration', () => {
 
     registerExpressionServices(container);
 
-    const dataRegistry = container.resolve(tokens.IDataRegistry);
+    dataRegistry = container.resolve(tokens.IDataRegistry);
     await loadExpressions(dataRegistry);
 
     emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
@@ -199,5 +217,162 @@ describe('Expression Flow - Integration', () => {
     });
 
     expect(eventBus.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('skips dispatch when the evaluation state is unchanged', async () => {
+    const actorId = 'actor-4';
+    entityManager.setComponent(actorId, POSITION_COMPONENT_ID, {
+      locationId: 'loc-4',
+    });
+    entityManager.setComponent(actorId, NAME_COMPONENT_ID, { text: 'Robin' });
+
+    emotionCalculator.calculateSexualArousal.mockReturnValue(0.1);
+    emotionCalculator.calculateEmotions.mockReturnValue(
+      createEmotionMap({ contentment: 0.6 })
+    );
+    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+
+    const payload = {
+      type: ACTION_DECIDED_ID,
+      payload: {
+        actorId,
+        extractedData: {
+          moodUpdate: {
+            arousal: 10,
+            valence: 30,
+          },
+        },
+      },
+    };
+
+    await expressionListener.handleEvent(payload);
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+
+    await expressionListener.handleEvent(payload);
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires all prerequisites to match before dispatching', async () => {
+    const actorId = 'actor-5';
+    entityManager.setComponent(actorId, POSITION_COMPONENT_ID, {
+      locationId: 'loc-5',
+    });
+    entityManager.setComponent(actorId, NAME_COMPONENT_ID, { text: 'Morgan' });
+
+    dataRegistry.store(
+      'expressions',
+      'test:multi_prereq',
+      createTestExpression({
+        id: 'test:multi_prereq',
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 10] } },
+          { logic: { '>=': [{ var: 'moodAxes.arousal' }, 15] } },
+        ],
+      })
+    );
+
+    emotionCalculator.calculateSexualArousal.mockReturnValue(0);
+    emotionCalculator.calculateEmotions.mockReturnValue(new Map());
+    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+
+    await expressionListener.handleEvent({
+      type: ACTION_DECIDED_ID,
+      payload: {
+        actorId,
+        extractedData: {
+          moodUpdate: {
+            arousal: 0,
+            valence: 12,
+          },
+        },
+      },
+    });
+
+    expect(eventBus.dispatch).not.toHaveBeenCalled();
+
+    await expressionListener.handleEvent({
+      type: ACTION_DECIDED_ID,
+      payload: {
+        actorId,
+        extractedData: {
+          moodUpdate: {
+            arousal: 20,
+            valence: 12,
+          },
+        },
+      },
+    });
+
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+    const [, payload] = eventBus.dispatch.mock.calls[0];
+    expect(payload.contextualData.expressionId).toBe('test:multi_prereq');
+  });
+
+  it('uses cached prior state instead of current components for change detection', async () => {
+    const actorId = 'actor-6';
+    entityManager.setComponent(actorId, POSITION_COMPONENT_ID, {
+      locationId: 'loc-6',
+    });
+    entityManager.setComponent(actorId, NAME_COMPONENT_ID, { text: 'Taylor' });
+
+    dataRegistry.store(
+      'expressions',
+      'test:cache_precedes_components',
+      createTestExpression({
+        id: 'test:cache_precedes_components',
+        priority: 1000,
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 0] } },
+        ],
+      })
+    );
+
+    emotionCalculator.calculateSexualArousal.mockReturnValue(0);
+    emotionCalculator.calculateEmotions.mockReturnValue(new Map());
+    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+
+    entityManager.setComponent(actorId, MOOD_COMPONENT_ID, {
+      arousal: 0,
+      valence: 5,
+    });
+
+    await expressionListener.handleEvent({
+      type: ACTION_DECIDED_ID,
+      payload: {
+        actorId,
+        extractedData: {
+          moodUpdate: {
+            arousal: 0,
+            valence: 5,
+          },
+        },
+      },
+    });
+
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+
+    entityManager.setComponent(actorId, MOOD_COMPONENT_ID, {
+      arousal: 0,
+      valence: 15,
+    });
+
+    await expressionListener.handleEvent({
+      type: ACTION_DECIDED_ID,
+      payload: {
+        actorId,
+        extractedData: {
+          moodUpdate: {
+            arousal: 0,
+            valence: 15,
+          },
+        },
+      },
+    });
+
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(2);
+    const [, payload] = eventBus.dispatch.mock.calls[1];
+    expect(payload.contextualData.expressionId).toBe(
+      'test:cache_precedes_components'
+    );
   });
 });

@@ -296,6 +296,11 @@ describe('ExpressionPersistenceListener', () => {
       expression,
       1
     );
+    expect(logger.info).toHaveBeenCalledWith('Expression matched', {
+      actorId: 'actor-1',
+      turnNumber: 1,
+      expressionId: 'expr:one',
+    });
   });
 
   it('should not dispatch when no expression matches', async () => {
