@@ -231,6 +231,7 @@ describe('registerLoaders additional coverage', () => {
     const stubValues = new Map([
       [actualTokens.ComponentLoader, { id: 'component' }],
       [actualTokens.EventLoader, { id: 'event' }],
+      [actualTokens.ExpressionLoader, { id: 'expression' }],
       [actualTokens.ConditionLoader, { id: 'condition' }],
       [actualTokens.MacroLoader, { id: 'macro' }],
       [actualTokens.LookupLoader, { id: 'lookup' }],

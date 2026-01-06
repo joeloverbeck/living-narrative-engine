@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:panic_onset",
+  "description": "Acute panic response triggered by high terror combined with alarm and rapid terror increase",
+  "priority": 92,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.terror" }, 0.55] },
+          { ">=": [{ "var": "emotions.alarm" }, 0.55] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.terror" },
+                  { "var": "previousEmotions.terror" }
+                ]
+              },
+              0.2
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My thoughts fragment into urgent pieces. I can't hold the whole room in my head at once—only the next threat. My breathing turns fast and uneven, like my body is trying to outrun something without moving. My heart hammers; my hands tingle with useless readiness.",
+  "description_text": "{actor}'s breathing speeds up and their attention darts—head turning in short, searching movements.",
+  "alternate_descriptions": {
+    "auditory": "I hear quick, ragged breaths, like someone bracing for impact."
+  },
+  "tags": ["panic", "terror", "alarm", "acute", "fear"]
+}

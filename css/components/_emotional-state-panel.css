@@ -1,0 +1,181 @@
+/**
+ * Emotional State Panel Styles (Warm Sepia Theme)
+ *
+ * Widget displaying character's current emotional state with:
+ * - 7 mood axis bars (bidirectional from center)
+ * - Color-coded axis values
+ * - Calculated emotions text display
+ *
+ * Design: Warm sepia gradient background (#FFFEFB → #FFF8F0) with
+ * teal accent border (--accent-color-primary) to match injury panel.
+ * Integrates with the "Vibrant Explorer" theme using CSS variables.
+ *
+ * WCAG AA color contrast compliance ensured for all text.
+ */
+
+/* ============================================
+   Panel Container
+   ============================================ */
+
+#emotional-state-panel {
+  background: linear-gradient(135deg, #fffefb 0%, #fff8f0 100%);
+  border: var(--border-width, 2px) solid var(--border-color-subtle, #ddd3c7);
+  border-left: 4px solid var(--accent-color-secondary, #9b59b6);
+  border-radius: var(--border-radius-md, 6px);
+  padding: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-md, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.06));
+}
+
+#emotional-state-panel.hidden {
+  display: none;
+}
+
+.emotional-state-panel__title {
+  margin: 0 0 var(--spacing-sm, 8px) 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+  border-bottom: var(--border-width, 2px) solid
+    var(--border-color-subtle, #ddd3c7);
+  padding-bottom: var(--spacing-sm, 8px);
+}
+
+/* ============================================
+   Axes Container
+   ============================================ */
+
+.emotional-state-panel__axes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+  margin-bottom: var(--spacing-sm, 8px);
+}
+
+/* ============================================
+   Individual Axis Row
+   ============================================ */
+
+.emotional-state-panel__axis {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  min-height: 20px;
+}
+
+/* ============================================
+   Axis Labels
+   ============================================ */
+
+.emotional-state-panel__label {
+  font-size: 0.7rem;
+  color: var(--secondary-text-color, #576574);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emotional-state-panel__label--left {
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.emotional-state-panel__label--right {
+  width: 70px;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Bar Container (Bidirectional)
+   ============================================ */
+
+.emotional-state-panel__bar-container {
+  flex: 1;
+  height: 12px;
+  background-color: #e8e4dc;
+  border-radius: var(--border-radius-sm, 4px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-color-subtle, #ddd3c7);
+  min-width: 100px;
+  cursor: help; /* Indicates hoverable element for tooltip */
+}
+
+/* Center marker at 50% */
+.emotional-state-panel__bar-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #555;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* ============================================
+   Bar Fill
+   ============================================ */
+
+.emotional-state-panel__bar-fill {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 2px;
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+/* Negative values: fill extends left from center */
+.emotional-state-panel__bar-fill--negative {
+  right: 50%;
+}
+
+/* Positive values: fill extends right from center */
+.emotional-state-panel__bar-fill--positive {
+  left: 50%;
+}
+
+/* ============================================
+   Value Display (Hidden - values shown as tooltips)
+   ============================================ */
+
+.emotional-state-panel__value {
+  /* Hidden: values are now displayed as tooltips on the bar container */
+  display: none;
+}
+
+/* ============================================
+   Calculated Emotions Text
+   ============================================ */
+
+.emotional-state-panel__emotions {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color, #576574);
+  background-color: rgba(155, 89, 182, 0.08);
+  border-radius: var(--border-radius-sm, 4px);
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  margin-top: var(--spacing-sm, 8px);
+  border-top: 1px solid var(--border-color-subtle, #ddd3c7);
+}
+
+.emotional-state-panel__emotions-label {
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+}
+
+.emotional-state-panel__emotions-value {
+  font-style: italic;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 400px) {
+  .emotional-state-panel__label {
+    width: 50px;
+    font-size: 0.65rem;
+  }
+}

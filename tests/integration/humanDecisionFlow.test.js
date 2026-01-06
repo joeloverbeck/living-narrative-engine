@@ -103,6 +103,8 @@ describe('Integration – Human decision flow', () => {
         speech: 'Wait',
         thoughts: null,
         notes: null,
+        moodUpdate: null,
+        sexualUpdate: null,
         chosenIndex: 1,
       },
       availableActions: [

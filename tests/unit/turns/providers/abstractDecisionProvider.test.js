@@ -106,6 +106,8 @@ describe('AbstractDecisionProvider base logic', () => {
           speech: undefined,
           thoughts: undefined,
           notes: undefined,
+          moodUpdate: undefined,
+          sexualUpdate: undefined,
         },
       }
     );
@@ -136,6 +138,8 @@ describe('AbstractDecisionProvider base logic', () => {
           speech: undefined,
           thoughts: undefined,
           notes: undefined,
+          moodUpdate: undefined,
+          sexualUpdate: undefined,
         },
       }
     );
@@ -157,6 +161,8 @@ describe('AbstractDecisionProvider base logic', () => {
       speech: null,
       thoughts: null,
       notes: null,
+      moodUpdate: null,
+      sexualUpdate: null,
     });
   });
 
@@ -193,6 +199,16 @@ describe('AbstractDecisionProvider base logic', () => {
         speech: 'Hello there',
         thoughts: 'Thinking',
         notes: expectedNotes,
+        moodUpdate: {
+          valence: 20,
+          arousal: 10,
+          agency_control: 5,
+          threat: -5,
+          engagement: 15,
+          future_expectancy: 10,
+          self_evaluation: 8,
+        },
+        sexualUpdate: { sex_excitation: 40, sex_inhibition: 10 },
       },
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
@@ -213,6 +229,16 @@ describe('AbstractDecisionProvider base logic', () => {
       speech: 'Hello there',
       thoughts: 'Thinking',
       notes: expectedNotes,
+      moodUpdate: {
+        valence: 20,
+        arousal: 10,
+        agency_control: 5,
+        threat: -5,
+        engagement: 15,
+        future_expectancy: 10,
+        self_evaluation: 8,
+      },
+      sexualUpdate: { sex_excitation: 40, sex_inhibition: 10 },
     });
     expect(captured).toEqual({
       actor,

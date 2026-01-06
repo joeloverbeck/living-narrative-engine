@@ -47,6 +47,8 @@ export const uiTokens = freeze({
   ThematicDirectionController: 'ThematicDirectionController',
   TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
   InjuryStatusPanel: 'InjuryStatusPanel',
+  EmotionalStatePanel: 'EmotionalStatePanel',
+  SexualStatePanel: 'SexualStatePanel',
   DamageEventMessageRenderer: 'DamageEventMessageRenderer',
   // Damage Simulator Components
   DamageSimulatorUI: 'DamageSimulatorUI',

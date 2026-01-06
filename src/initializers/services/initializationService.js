@@ -61,6 +61,8 @@ class InitializationService extends IInitializationService {
   #gameDataRepository;
   #thoughtListener;
   #notesListener;
+  #moodSexualListener;
+  #expressionPersistenceListener;
   #spatialIndexManager;
   #contentDependencyValidator;
   #llmAdapterInitializer;
@@ -80,6 +82,8 @@ class InitializationService extends IInitializationService {
    *   gameDataRepository: import('../../interfaces/IGameDataRepository.js').IGameDataRepository,
    *   thoughtListener: IThoughtListener,
    *   notesListener: INotesListener,
+   *   moodSexualListener: import('../../ai/moodSexualPersistenceListener.js').MoodSexualPersistenceListener,
+   *   expressionPersistenceListener: import('../../expressions/expressionPersistenceListener.js').default,
    *   spatialIndexManager: ISpatialIndexManager,
    * }} config.persistence - Persistence related services.
    * @param {{
@@ -111,6 +115,8 @@ class InitializationService extends IInitializationService {
       gameDataRepository,
       thoughtListener,
       notesListener,
+      moodSexualListener,
+      expressionPersistenceListener,
       spatialIndexManager,
     } = persistence;
     const {
@@ -213,6 +219,18 @@ class InitializationService extends IInitializationService {
       SystemInitializationError
     );
     assertFunction(
+      moodSexualListener,
+      'handleEvent',
+      "InitializationService: Missing or invalid required dependency 'moodSexualListener'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      expressionPersistenceListener,
+      'handleEvent',
+      "InitializationService: Missing or invalid required dependency 'expressionPersistenceListener'.",
+      SystemInitializationError
+    );
+    assertFunction(
       spatialIndexManager,
       'buildIndex',
       "InitializationService: Missing or invalid required dependency 'spatialIndexManager'.",
@@ -251,6 +269,8 @@ class InitializationService extends IInitializationService {
     this.#gameDataRepository = gameDataRepository;
     this.#thoughtListener = thoughtListener;
     this.#notesListener = notesListener;
+    this.#moodSexualListener = moodSexualListener;
+    this.#expressionPersistenceListener = expressionPersistenceListener;
     this.#spatialIndexManager = spatialIndexManager;
     this.#contentDependencyValidator = contentDependencyValidator;
     this.#llmAdapterInitializer = llmAdapterInitializer;
@@ -314,6 +334,18 @@ class InitializationService extends IInitializationService {
           {
             eventId: ACTION_DECIDED_ID,
             handler: this.#notesListener.handleEvent.bind(this.#notesListener),
+          },
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#moodSexualListener.handleEvent.bind(
+              this.#moodSexualListener
+            ),
+          },
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#expressionPersistenceListener.handleEvent.bind(
+              this.#expressionPersistenceListener
+            ),
           },
         ],
         this.#logger

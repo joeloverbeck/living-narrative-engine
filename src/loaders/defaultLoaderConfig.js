@@ -48,6 +48,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {object} deps - Loader instances used to build the config.
  * @param {BaseManifestItemLoaderInterface} deps.componentLoader - Component loader.
  * @param {BaseManifestItemLoaderInterface} deps.eventLoader - Event loader.
+ * @param {BaseManifestItemLoaderInterface} deps.expressionLoader - Expression loader.
  * @param {BaseManifestItemLoaderInterface} deps.conditionLoader - Condition loader.
  * @param {BaseManifestItemLoaderInterface} deps.macroLoader - Macro loader.
  * @param {BaseManifestItemLoaderInterface} deps.lookupLoader - Lookup loader.
@@ -71,6 +72,7 @@ export function createContentLoadersConfig(loaderMap) {
 export function createDefaultContentLoadersConfig({
   componentLoader,
   eventLoader,
+  expressionLoader,
   conditionLoader,
   macroLoader,
   lookupLoader,
@@ -93,6 +95,7 @@ export function createDefaultContentLoadersConfig({
   return createContentLoadersConfig({
     components: componentLoader,
     events: eventLoader,
+    expressions: expressionLoader,
     conditions: conditionLoader,
     macros: macroLoader,
     lookups: lookupLoader,

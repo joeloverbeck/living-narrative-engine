@@ -46,6 +46,9 @@ describe('Notes Formatting Integration', () => {
         namespace.toUpperCase()
       ),
     },
+    chanceTextTranslator: {
+      translateForLlm: jest.fn((text) => text),
+    },
   });
 
   beforeEach(() => {

@@ -150,6 +150,9 @@ describe('End-to-End Notes Persistence Flow', () => {
       modActionMetadataProvider: {
         getMetadataForMod: jest.fn().mockReturnValue(null),
       },
+      chanceTextTranslator: {
+        translateForLlm: jest.fn((text) => text),
+      },
     });
 
     const llmConfigService = {
@@ -197,6 +200,19 @@ describe('End-to-End Notes Persistence Flow', () => {
       chosenIndex: 1,
       speech: '',
       thoughts: 'thinking',
+      moodUpdate: {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      },
+      sexualUpdate: {
+        sex_excitation: 0,
+        sex_inhibition: 0,
+      },
       notes: [
         {
           text: 'Remember the password',

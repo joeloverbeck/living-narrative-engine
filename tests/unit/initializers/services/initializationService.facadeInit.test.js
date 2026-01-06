@@ -17,6 +17,8 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let moodSexualListener;
+let expressionPersistenceListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
 let anatomyFormattingService;
@@ -42,6 +44,8 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  moodSexualListener = { handleEvent: jest.fn() };
+  expressionPersistenceListener = { handleEvent: jest.fn() };
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
@@ -64,6 +68,8 @@ describe('InitializationService DomUiFacade handling', () => {
           },
           thoughtListener,
           notesListener,
+          moodSexualListener,
+          expressionPersistenceListener,
           // domUiFacade omitted
         },
         coreSystems: {
@@ -92,6 +98,8 @@ describe('InitializationService DomUiFacade handling', () => {
           },
           thoughtListener,
           notesListener,
+          moodSexualListener,
+          expressionPersistenceListener,
           // domUiFacade omitted
         },
         coreSystems: {

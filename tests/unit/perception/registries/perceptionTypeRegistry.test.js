@@ -25,10 +25,10 @@ import {
 
 describe('perceptionTypeRegistry', () => {
   describe('PERCEPTION_TYPE_REGISTRY', () => {
-    it('should contain all perception types (34 total)', () => {
+    it('should contain all perception types (35 total)', () => {
       const types = Object.keys(PERCEPTION_TYPE_REGISTRY);
-      // 14 categories with varying types: 3+2+4+5+3+2+1+1+3+2+2+2+2+2 = 34
-      expect(types.length).toBe(34);
+      // 15 categories with varying types: 3+1+2+4+5+3+2+1+1+3+2+2+2+2+2 = 35
+      expect(types.length).toBe(35);
     });
 
     it('should have all required properties for each type', () => {
@@ -74,12 +74,13 @@ describe('perceptionTypeRegistry', () => {
   });
 
   describe('PERCEPTION_CATEGORIES', () => {
-    it('should contain all 14 categories', () => {
+    it('should contain all 15 categories', () => {
       const categories = Object.keys(PERCEPTION_CATEGORIES);
-      expect(categories.length).toBe(14);
+      expect(categories.length).toBe(15);
 
       const expected = [
         'communication',
+        'emotion',
         'movement',
         'combat',
         'item',
@@ -256,10 +257,10 @@ describe('perceptionTypeRegistry', () => {
   });
 
   describe('getAllValidTypes', () => {
-    it('should return all 34 valid types', () => {
+    it('should return all 35 valid types', () => {
       const types = getAllValidTypes();
 
-      expect(types.length).toBe(34);
+      expect(types.length).toBe(35);
       expect(types).toContain('communication.speech');
       expect(types).toContain('combat.attack');
       expect(types).toContain('error.system_error');
@@ -396,7 +397,7 @@ describe('perceptionTypeRegistry', () => {
       'omniscient',
     ];
 
-    it('should have valid primarySense for all 34 types', () => {
+    it('should have valid primarySense for all 35 types', () => {
       for (const [typeName, metadata] of Object.entries(
         PERCEPTION_TYPE_REGISTRY
       )) {
@@ -427,6 +428,10 @@ describe('perceptionTypeRegistry', () => {
         'communication.speech': { primary: 'auditory', fallback: ['tactile'] },
         'communication.thought': { primary: 'proprioceptive', fallback: [] },
         'communication.notes': { primary: 'visual', fallback: ['tactile'] },
+        'emotion.expression': {
+          primary: 'visual',
+          fallback: ['auditory', 'tactile', 'olfactory'],
+        },
         'movement.arrival': {
           primary: 'visual',
           fallback: ['auditory', 'tactile'],

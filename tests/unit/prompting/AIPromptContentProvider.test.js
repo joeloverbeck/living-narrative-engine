@@ -62,6 +62,8 @@ describe('AIPromptContentProvider', () => {
   let mockCharacterDataXmlBuilder;
   /** @type {jest.Mocked<any>} */
   let mockModActionMetadataProvider;
+  /** @type {jest.Mocked<any>} */
+  let mockChanceTextTranslator;
 
   // Spies for instance methods called by getPromptData or other methods
   /** @type {jest.SpyInstance} */
@@ -132,6 +134,9 @@ describe('AIPromptContentProvider', () => {
     mockModActionMetadataProvider = {
       getMetadataForMod: jest.fn(() => null), // Default to no metadata
     };
+    mockChanceTextTranslator = {
+      translateForLlm: jest.fn((text) => text),
+    };
 
     // Instantiate with all mocks
     provider = new AIPromptContentProvider({
@@ -142,6 +147,7 @@ describe('AIPromptContentProvider', () => {
       actionCategorizationService: mockActionCategorizationService,
       characterDataXmlBuilder: mockCharacterDataXmlBuilder,
       modActionMetadataProvider: mockModActionMetadataProvider,
+      chanceTextTranslator: mockChanceTextTranslator,
     });
 
     // Spy on the provider's own methods that are either delegating or complex internal logic
@@ -300,6 +306,43 @@ describe('AIPromptContentProvider', () => {
           })
       ).toThrow(
         "Invalid or missing method 'buildCharacterDataXml' on dependency 'AIPromptContentProvider: characterDataXmlBuilder'."
+      );
+    });
+
+    test('should throw error if chanceTextTranslator is not provided', () => {
+      expect(
+        () =>
+          new AIPromptContentProvider({
+            logger: mockLoggerInstance,
+            promptStaticContentService: mockPromptStaticContentService,
+            perceptionLogFormatter: mockPerceptionLogFormatterInstance,
+            gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+            modActionMetadataProvider: mockModActionMetadataProvider,
+            // @ts-ignore
+            chanceTextTranslator: null,
+          })
+      ).toThrow(
+        'Missing required dependency: AIPromptContentProvider: chanceTextTranslator.'
+      );
+    });
+
+    test('should throw error if chanceTextTranslator lacks translateForLlm method', () => {
+      expect(
+        () =>
+          new AIPromptContentProvider({
+            logger: mockLoggerInstance,
+            promptStaticContentService: mockPromptStaticContentService,
+            perceptionLogFormatter: mockPerceptionLogFormatterInstance,
+            gameStateValidationService: mockGameStateValidationServiceInstance,
+            actionCategorizationService: mockActionCategorizationService,
+            characterDataXmlBuilder: mockCharacterDataXmlBuilder,
+            modActionMetadataProvider: mockModActionMetadataProvider,
+            chanceTextTranslator: {},
+          })
+      ).toThrow(
+        "Invalid or missing method 'translateForLlm' on dependency 'AIPromptContentProvider: chanceTextTranslator'."
       );
     });
   });

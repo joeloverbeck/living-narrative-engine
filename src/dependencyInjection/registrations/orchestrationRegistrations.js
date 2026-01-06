@@ -14,6 +14,7 @@ import InitializationService from '../../initializers/services/initializationSer
 import ShutdownService from '../../shutdown/services/shutdownService.js'; // Adjusted path
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
+import { MoodSexualPersistenceListener } from '../../ai/moodSexualPersistenceListener.js';
 import ContentDependencyValidator from '../../initializers/services/contentDependencyValidator.js';
 import ComponentAccessService from '../../entities/componentAccessService.js';
 
@@ -62,6 +63,9 @@ export function registerOrchestration(container) {
     const domUiFacade = c.resolve(tokens.DomUiFacade);
     const actionIndex = c.resolve(tokens.ActionIndex);
     const gameDataRepository = c.resolve(tokens.IGameDataRepository);
+    const expressionPersistenceListener = c.resolve(
+      tokens.IExpressionPersistenceListener
+    );
 
     if (!initLogger)
       throw new Error(
@@ -95,6 +99,11 @@ export function registerOrchestration(container) {
       dispatcher: safeEventDispatcher,
       componentAccessService,
     });
+    const moodSexualListener = new MoodSexualPersistenceListener({
+      logger: initLogger,
+      entityManager,
+      safeEventDispatcher,
+    });
     const spatialIndexManager = c.resolve(tokens.ISpatialIndexManager);
     const contentDependencyValidator = new ContentDependencyValidator({
       gameDataRepository,
@@ -112,6 +121,8 @@ export function registerOrchestration(container) {
         gameDataRepository,
         thoughtListener,
         notesListener,
+        moodSexualListener,
+        expressionPersistenceListener,
         spatialIndexManager,
       },
       coreSystems: {

@@ -50,7 +50,7 @@ export class TurnContext extends ITurnContext {
 
   /** @type {ITurnAction|null}    */ #chosenAction = null;
   /** @type {AbortController}     */ #promptAbortController;
-  /** @type {{speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null}|null} */
+  /** @type {{speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate?: { sex_excitation: number, sex_inhibition: number }|null}|null} */
   #decisionMeta = null;
   /** @type {object|null} - Pending turn_ended event captured before AwaitingExternalTurnEndState was ready */
   #pendingTurnEndEvent = null;

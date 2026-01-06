@@ -52,6 +52,8 @@ function buildInitializationServiceDeps(logger) {
   const gameDataRepository = { getAllActionDefinitions: () => [] };
   const thoughtListener = { handleEvent: () => {} };
   const notesListener = { handleEvent: () => {} };
+  const moodSexualListener = { handleEvent: () => {} };
+  const expressionPersistenceListener = { handleEvent: () => {} };
   const spatialIndexManager = { buildIndex: () => {} };
 
   return {
@@ -71,6 +73,8 @@ function buildInitializationServiceDeps(logger) {
       gameDataRepository,
       thoughtListener,
       notesListener,
+      moodSexualListener,
+      expressionPersistenceListener,
       spatialIndexManager,
     },
     coreSystems: {

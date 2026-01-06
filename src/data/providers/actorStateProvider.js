@@ -20,6 +20,8 @@ import {
   DILEMMAS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
   APPARENT_AGE_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -102,6 +104,18 @@ export class ActorStateProvider extends IActorStateProvider {
       ) {
         actorState[APPARENT_AGE_COMPONENT_ID] = { ...ageData };
       }
+    }
+
+    if (actor.hasComponent(MOOD_COMPONENT_ID)) {
+      actorState[MOOD_COMPONENT_ID] = {
+        ...actorState.components[MOOD_COMPONENT_ID],
+      };
+    }
+
+    if (actor.hasComponent(SEXUAL_STATE_COMPONENT_ID)) {
+      actorState[SEXUAL_STATE_COMPONENT_ID] = {
+        ...actorState.components[SEXUAL_STATE_COMPONENT_ID],
+      };
     }
 
     return actorState;

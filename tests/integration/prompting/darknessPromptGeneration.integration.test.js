@@ -132,6 +132,7 @@ function createContentProvider() {
     actionCategorizationService,
     characterDataXmlBuilder: createMockCharacterDataXmlBuilder(),
     modActionMetadataProvider: createMockModActionMetadataProvider(),
+    chanceTextTranslator: { translateForLlm: (text) => text },
   });
 
   return { provider, logger };

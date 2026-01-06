@@ -62,6 +62,8 @@ const createInitializationDeps = (logger, overrides = {}) => {
       },
       thoughtListener: { handleEvent: () => {} },
       notesListener: { handleEvent: () => {} },
+      moodSexualListener: { handleEvent: () => {} },
+      expressionPersistenceListener: { handleEvent: () => {} },
       spatialIndexManager: { buildIndex: () => {} },
     },
     coreSystems: {

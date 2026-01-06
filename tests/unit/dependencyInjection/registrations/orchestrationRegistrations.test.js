@@ -67,6 +67,7 @@ function createContainerWithDefaults() {
   const gameDataRepository = {
     getAllActionDefinitions: jest.fn().mockReturnValue([]),
   };
+  const expressionPersistenceListener = { handleEvent: jest.fn() };
   const spatialIndexManager = { buildIndex: jest.fn() };
   const anatomyFormattingService = { initialize: jest.fn() };
   const gameLoop = { stop: jest.fn() };
@@ -88,6 +89,10 @@ function createContainerWithDefaults() {
   container.register(tokens.DomUiFacade, () => domUiFacade);
   container.register(tokens.ActionIndex, () => actionIndex);
   container.register(tokens.IGameDataRepository, () => gameDataRepository);
+  container.register(
+    tokens.IExpressionPersistenceListener,
+    () => expressionPersistenceListener
+  );
   container.register(tokens.ISpatialIndexManager, () => spatialIndexManager);
   container.register(
     tokens.AnatomyFormattingService,

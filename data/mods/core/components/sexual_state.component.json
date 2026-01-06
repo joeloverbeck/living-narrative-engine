@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:sexual_state",
+  "description": "Tracks sexual arousal-related values using the dual-control model (excitation/inhibition).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sex_excitation": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 0,
+        "description": "Sexual response activation (accelerator). 0=none, 100=fully activated."
+      },
+      "sex_inhibition": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 0,
+        "description": "Sexual response suppression (brake). 0=no brakes, 100=fully suppressed."
+      },
+      "baseline_libido": {
+        "type": "integer",
+        "minimum": -50,
+        "maximum": 50,
+        "default": 0,
+        "description": "Trait-level sexual drive modifier. Negative=low drive, positive=high drive."
+      }
+    },
+    "required": ["sex_excitation", "sex_inhibition", "baseline_libido"],
+    "additionalProperties": false
+  }
+}

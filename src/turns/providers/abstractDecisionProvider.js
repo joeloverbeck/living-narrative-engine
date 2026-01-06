@@ -55,7 +55,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    * @param {import('../interfaces/ITurnContext.js').ITurnContext} _context - Turn context
    * @param {import('../dtos/actionComposite.js').ActionComposite[]} _actions - Indexed action list
    * @param {AbortSignal} [_abortSignal] - Optional cancellation signal
-   * @returns {Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null }>} Selected action information
+   * @returns {Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate?: { sex_excitation: number, sex_inhibition: number }|null }>} Selected action information
    */
   async choose(_actor, _context, _actions, _abortSignal) {
     throw new Error('abstract');
@@ -71,12 +71,8 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    * @returns {Promise<import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionResult>} Finalized decision result
    */
   async decide(actor, context, actions, abortSignal) {
-    const { index, speech, thoughts, notes } = await this.choose(
-      actor,
-      context,
-      actions,
-      abortSignal
-    );
+    const { index, speech, thoughts, notes, moodUpdate, sexualUpdate } =
+      await this.choose(actor, context, actions, abortSignal);
 
     // Only validate non-null indexes (null means no decision could be made)
     if (index !== null) {
@@ -87,7 +83,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
         actor.id,
         this.#safeEventDispatcher,
         this.#logger,
-        { result: { index, speech, thoughts, notes } }
+        { result: { index, speech, thoughts, notes, moodUpdate, sexualUpdate } }
       );
     }
 
@@ -96,6 +92,8 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
       speech: speech ?? null,
       thoughts: thoughts ?? null,
       notes: notes ?? null,
+      moodUpdate: moodUpdate ?? null,
+      sexualUpdate: sexualUpdate ?? null,
     };
   }
 }

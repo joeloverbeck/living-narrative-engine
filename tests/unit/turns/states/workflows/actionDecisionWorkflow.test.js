@@ -637,6 +637,70 @@ describe('ActionDecisionWorkflow.run', () => {
     );
   });
 
+  test('preserves mood and sexual updates through pending approval flow', async () => {
+    const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const llmProvider = new LLMDecisionProvider({
+      llmChooser: { choose: jest.fn() },
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    });
+
+    const availableActions = [
+      {
+        index: 1,
+        actionId: 'act1',
+        description: 'One',
+        commandString: 'cmd1',
+      },
+    ];
+
+    const prompt = {
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    };
+
+    const initialAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+    const finalAction = { actionDefinitionId: 'act1', commandString: 'cmd1' };
+
+    ctx.getPlayerPromptService = () => prompt;
+    ctx.getPromptSignal = jest.fn(() => new AbortController().signal);
+    ctx.setAwaitingExternalEvent = jest.fn();
+    ctx.getSafeEventDispatcher = () => safeDispatcher;
+
+    strategy = {
+      decisionProvider: llmProvider,
+      turnActionFactory: {
+        create: jest.fn().mockReturnValue(finalAction),
+      },
+    };
+
+    const moodUpdate = {
+      valence: 45,
+      arousal: 35,
+      agency_control: 5,
+      threat: -35,
+      engagement: 20,
+      future_expectancy: 10,
+      self_evaluation: 15,
+    };
+    const sexualUpdate = { sex_excitation: 35, sex_inhibition: 25 };
+
+    state._decideAction.mockResolvedValue({
+      action: initialAction,
+      extractedData: { speech: 'hi', moodUpdate, sexualUpdate },
+      availableActions,
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      ctx,
+      finalAction,
+      expect.objectContaining({ moodUpdate, sexualUpdate })
+    );
+  });
+
   test('logs telemetry once with invalid suggestion correction and override', async () => {
     const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
     const llmProvider = new LLMDecisionProvider({

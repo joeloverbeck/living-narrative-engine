@@ -24,6 +24,38 @@ const mockSchemaValidator = () => ({
   isSchemaLoaded: jest.fn().mockReturnValue(true),
 });
 
+// Common valid fixtures for required fields (moodUpdate and sexualUpdate are now required)
+const validMoodUpdate = {
+  valence: 10,
+  arousal: -20,
+  agency_control: 30,
+  threat: -40,
+  engagement: 50,
+  future_expectancy: -60,
+  self_evaluation: 70,
+};
+
+const validSexualUpdate = {
+  sex_excitation: 30,
+  sex_inhibition: 70,
+};
+
+/**
+ * Creates a minimal valid response with all required fields.
+ * @param {object} overrides - Fields to override or add.
+ * @returns {object} Valid response object.
+ */
+function createValidPayload(overrides = {}) {
+  return {
+    chosenIndex: 1,
+    speech: 'Hello',
+    thoughts: 'Internal monologue',
+    moodUpdate: validMoodUpdate,
+    sexualUpdate: validSexualUpdate,
+    ...overrides,
+  };
+}
+
 describe('LLMResponseProcessor', () => {
   let processor;
   let logger;
@@ -315,6 +347,178 @@ describe('LLMResponseProcessor', () => {
           name: 'LLMProcessingError',
           details: { validationErrors: mockErrors },
         });
+      });
+    });
+
+    describe('moodUpdate and sexualUpdate extraction', () => {
+      // Uses validMoodUpdate and validSexualUpdate fixtures defined at top of file
+
+      test('extracts moodUpdate from valid response', async () => {
+        const payload = createValidPayload({ thoughts: 'Feeling good' });
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        const result = await processor.processResponse(llmResponse, actorId);
+
+        expect(result.extractedData.moodUpdate).toEqual(validMoodUpdate);
+      });
+
+      test('extracts sexualUpdate from valid response', async () => {
+        const payload = createValidPayload({ thoughts: 'Feeling something' });
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        const result = await processor.processResponse(llmResponse, actorId);
+
+        expect(result.extractedData.sexualUpdate).toEqual(validSexualUpdate);
+      });
+
+      test('extracts both moodUpdate and sexualUpdate from valid response', async () => {
+        const payload = createValidPayload({ thoughts: 'Complex emotional state' });
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        const result = await processor.processResponse(llmResponse, actorId);
+
+        expect(result.extractedData.moodUpdate).toEqual(validMoodUpdate);
+        expect(result.extractedData.sexualUpdate).toEqual(validSexualUpdate);
+      });
+
+      test('extracts notes alongside mood and sexual updates', async () => {
+        const payload = createValidPayload({
+          chosenIndex: 3,
+          speech: 'Test speech',
+          thoughts: 'Test thoughts',
+          notes: [{ text: 'note1', subject: 'test', subjectType: 'entity' }],
+        });
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        const result = await processor.processResponse(llmResponse, actorId);
+
+        expect(result.success).toBe(true);
+        expect(result.action.chosenIndex).toBe(3);
+        expect(result.action.speech).toBe('Test speech');
+        expect(result.extractedData.thoughts).toBe('Test thoughts');
+        expect(result.extractedData.notes).toEqual(payload.notes);
+        expect(result.extractedData.moodUpdate).toEqual(validMoodUpdate);
+        expect(result.extractedData.sexualUpdate).toEqual(validSexualUpdate);
+      });
+    });
+
+    describe('INFO-level logging for mood and sexual updates', () => {
+      // Uses validMoodUpdate and validSexualUpdate fixtures defined at top of file
+
+      test('logs INFO for moodUpdate extraction when present', async () => {
+        const payload = createValidPayload();
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        await processor.processResponse(llmResponse, actorId);
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining('moodUpdate extracted'),
+          expect.objectContaining({
+            valence: validMoodUpdate.valence,
+            arousal: validMoodUpdate.arousal,
+            threat: validMoodUpdate.threat,
+          })
+        );
+      });
+
+      test('logs INFO for sexualUpdate extraction when present', async () => {
+        const payload = createValidPayload();
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        await processor.processResponse(llmResponse, actorId);
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining('sexualUpdate extracted'),
+          expect.objectContaining({
+            sex_excitation: validSexualUpdate.sex_excitation,
+            sex_inhibition: validSexualUpdate.sex_inhibition,
+          })
+        );
+      });
+
+      test('logs INFO with NO moodUpdate when field is missing in response', async () => {
+        // Simulate a response without moodUpdate (schema validator bypassed for unit test)
+        const payload = {
+          chosenIndex: 1,
+          speech: 'Hello',
+          thoughts: 'Normal thoughts',
+          sexualUpdate: validSexualUpdate,
+        };
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        await processor.processResponse(llmResponse, actorId);
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining('NO moodUpdate')
+        );
+      });
+
+      test('logs INFO with NO sexualUpdate when field is missing in response', async () => {
+        // Simulate a response without sexualUpdate (schema validator bypassed for unit test)
+        const payload = {
+          chosenIndex: 1,
+          speech: 'Hello',
+          thoughts: 'Normal thoughts',
+          moodUpdate: validMoodUpdate,
+        };
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        await processor.processResponse(llmResponse, actorId);
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining('NO sexualUpdate')
+        );
+      });
+
+      test('logs INFO for both fields in a complete response', async () => {
+        const payload = createValidPayload();
+        const llmResponse = JSON.stringify(payload);
+        schemaValidatorMock.validate.mockReturnValue({
+          isValid: true,
+          errors: [],
+        });
+
+        await processor.processResponse(llmResponse, actorId);
+
+        // Should have exactly 2 INFO calls for mood and sexual extraction
+        const infoCallsWithExtracted = logger.info.mock.calls.filter(
+          (call) =>
+            call[0].includes('moodUpdate extracted') ||
+            call[0].includes('sexualUpdate extracted')
+        );
+        expect(infoCallsWithExtracted).toHaveLength(2);
       });
     });
   });

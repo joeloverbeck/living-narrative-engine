@@ -80,6 +80,7 @@ describe('Complete Action Categorization Workflow Performance', () => {
       actionCategorizationService: actionCategorizationService,
       characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
       modActionMetadataProvider: { getMetadataForMod: () => null },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 

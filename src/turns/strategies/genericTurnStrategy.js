@@ -89,6 +89,8 @@ export class GenericTurnStrategy {
         speech: preservedData.speech || fb.speech || null,
         thoughts: preservedData.thoughts || null,
         notes: preservedData.notes || null,
+        moodUpdate: preservedData.moodUpdate || null,
+        sexualUpdate: preservedData.sexualUpdate || null,
       };
 
       return { kind: 'fallback', action: fb, extractedData: meta };

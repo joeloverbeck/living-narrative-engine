@@ -52,6 +52,9 @@ describe('AIPromptContentProvider.getPromptData', () => {
     const dummyModActionMetadataProvider = {
       getMetadataForMod: jest.fn(() => null),
     };
+    const dummyChanceTextTranslator = {
+      translateForLlm: jest.fn((text) => text),
+    };
 
     provider = new AIPromptContentProvider({
       logger: dummyLogger,
@@ -61,6 +64,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
       actionCategorizationService: dummyActionCategorizationService,
       characterDataXmlBuilder: dummyCharacterDataXmlBuilder,
       modActionMetadataProvider: dummyModActionMetadataProvider,
+      chanceTextTranslator: dummyChanceTextTranslator,
     });
   });
 

@@ -161,6 +161,8 @@ describe('dependencyUtils failure logging integration', () => {
       gameDataRepository: new PassiveGameDataRepository(),
       thoughtListener: new PassiveListener(),
       notesListener: new PassiveListener(),
+      moodSexualListener: new PassiveListener(),
+      expressionPersistenceListener: new PassiveListener(),
       spatialIndexManager: new PassiveSpatialIndexManager(),
     },
     coreSystems: {

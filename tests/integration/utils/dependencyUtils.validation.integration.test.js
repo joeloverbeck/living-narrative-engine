@@ -362,6 +362,8 @@ describe('dependencyUtils integration coverage', () => {
           gameDataRepository: { getAllActionDefinitions: () => [] },
           thoughtListener: { handleEvent: () => {} },
           notesListener: { handleEvent: () => {} },
+          moodSexualListener: { handleEvent: () => {} },
+          expressionPersistenceListener: { handleEvent: () => {} },
           spatialIndexManager: { buildIndex: () => {} },
         },
         coreSystems: {

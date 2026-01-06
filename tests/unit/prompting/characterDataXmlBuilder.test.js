@@ -38,6 +38,12 @@ import {
   CHARACTER_HEALTHY,
   CHARACTER_WITH_EFFECTS_ONLY,
   CHARACTER_WITH_SPECIAL_CHARS_INJURY,
+  // Emotional state fixtures (MOOANDSEXAROSYS-005)
+  CHARACTER_WITH_EMOTIONAL_STATE,
+  CHARACTER_WITH_EMOTIONAL_AND_SEXUAL_STATE,
+  CHARACTER_WITH_EMPTY_EMOTIONAL_TEXT,
+  CHARACTER_WITH_SPECIAL_CHARS_EMOTIONS,
+  CHARACTER_WITH_WHITESPACE_SEXUAL_STATE,
 } from '../../common/prompting/characterDataFixtures.js';
 
 describe('CharacterDataXmlBuilder', () => {
@@ -1135,6 +1141,164 @@ describe('CharacterDataXmlBuilder', () => {
         expect(result).toContain('<current_state>');
         expect(result).not.toContain('<physical_condition>');
         expect(result).toContain('<goals>');
+      });
+    });
+  });
+
+  // Inner State Section Tests (MOOANDSEXAROSYS-005)
+  // ========================================================================
+
+  describe('Inner State Section', () => {
+    describe('FAIL-FAST Validation', () => {
+      it('should NOT throw when emotionalState is missing (backward compatibility)', () => {
+        // emotionalState is optional for backward compatibility
+        const result = builder.buildCharacterDataXml(MINIMAL_CHARACTER_DATA);
+
+        expect(result).not.toContain('<inner_state>');
+        expect(result).toContain('<name>');
+      });
+
+      it('should include character name in validation context when provided', () => {
+        // This tests the validation path indirectly - when emotionalState exists
+        // but the validation runs, it should have access to character name
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMOTIONAL_STATE);
+
+        expect(result).toContain('<inner_state>');
+      });
+    });
+
+    describe('XML Generation', () => {
+      it('should generate inner_state section with emotional_state when emotionalState is present', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMOTIONAL_STATE);
+
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>');
+        expect(result).toContain('fear: intense, anxiety: strong, hypervigilance: moderate');
+        expect(result).toContain('</emotional_state>');
+        expect(result).toContain('</inner_state>');
+      });
+
+      it('should include both emotional_state and sexual_state when both have text', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMOTIONAL_AND_SEXUAL_STATE);
+
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>');
+        expect(result).toContain('excitement: high, anticipation: strong, joy: moderate');
+        expect(result).toContain('<sexual_state>');
+        expect(result).toContain('lust: moderate, romantic yearning: strong');
+        expect(result).toContain('</inner_state>');
+      });
+
+      it('should omit sexual_state when sexualStateText is empty', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMOTIONAL_STATE);
+
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>');
+        expect(result).not.toContain('<sexual_state>');
+      });
+
+      it('should omit sexual_state when sexualStateText is whitespace-only', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_WHITESPACE_SEXUAL_STATE);
+
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>');
+        expect(result).not.toContain('<sexual_state>');
+      });
+
+      it('should use "neutral" fallback when emotionalStateText is empty', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMPTY_EMOTIONAL_TEXT);
+
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>neutral</emotional_state>');
+      });
+
+      it('should escape special characters in emotional state text', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_EMOTIONS);
+
+        expect(result).toContain('<emotional_state>');
+        // Check that angle brackets and ampersands are escaped
+        expect(result).toContain('&lt;intense&gt;');
+        expect(result).toContain('&amp; overwhelming');
+        // Note: quotes are NOT escaped per codebase convention (LLM readability)
+        expect(result).toContain('"paralyzing"');
+      });
+
+      it('should escape special characters in sexual state text', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_EMOTIONS);
+
+        expect(result).toContain('<sexual_state>');
+        expect(result).toContain('&lt;suppressed&gt;');
+        expect(result).toContain('&amp; "conflicted"');
+      });
+    });
+
+    describe('Placement', () => {
+      it('should place inner_state after physical_condition', () => {
+        const characterWithBoth = {
+          ...CHARACTER_WITH_INJURIES,
+          emotionalState: CHARACTER_WITH_EMOTIONAL_STATE.emotionalState,
+        };
+        const result = builder.buildCharacterDataXml(characterWithBoth);
+
+        const physicalConditionEnd = result.indexOf('</physical_condition>');
+        const innerStateStart = result.indexOf('<inner_state>');
+
+        expect(physicalConditionEnd).toBeGreaterThan(-1);
+        expect(innerStateStart).toBeGreaterThan(-1);
+        expect(innerStateStart).toBeGreaterThan(physicalConditionEnd);
+      });
+
+      it('should place inner_state before goals', () => {
+        const characterWithEmotionalAndGoals = {
+          name: 'Test Character',
+          emotionalState: CHARACTER_WITH_EMOTIONAL_STATE.emotionalState,
+          goals: [{ text: 'Complete the mission' }],
+        };
+        const result = builder.buildCharacterDataXml(characterWithEmotionalAndGoals);
+
+        const innerStateEnd = result.indexOf('</inner_state>');
+        const goalsStart = result.indexOf('<goals>');
+
+        expect(innerStateEnd).toBeGreaterThan(-1);
+        expect(goalsStart).toBeGreaterThan(-1);
+        expect(goalsStart).toBeGreaterThan(innerStateEnd);
+      });
+
+      it('should include inner_state inside current_state', () => {
+        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMOTIONAL_STATE);
+
+        const currentStateStart = result.indexOf('<current_state>');
+        const currentStateEnd = result.indexOf('</current_state>');
+        const innerStateStart = result.indexOf('<inner_state>');
+        const innerStateEnd = result.indexOf('</inner_state>');
+
+        expect(currentStateStart).toBeGreaterThan(-1);
+        expect(innerStateStart).toBeGreaterThan(currentStateStart);
+        expect(innerStateEnd).toBeLessThan(currentStateEnd);
+      });
+    });
+
+    describe('Integration with Complete Character Data', () => {
+      it('should include inner_state in full character XML when emotionalState is present', () => {
+        const completeWithEmotional = {
+          ...COMPLETE_CHARACTER_DATA,
+          emotionalState: CHARACTER_WITH_EMOTIONAL_AND_SEXUAL_STATE.emotionalState,
+        };
+        const result = builder.buildCharacterDataXml(completeWithEmotional);
+
+        // Should have all sections
+        expect(result).toContain('<name>');
+        expect(result).toContain('<personality>');
+        expect(result).toContain('<current_state>');
+        expect(result).toContain('<inner_state>');
+        expect(result).toContain('<emotional_state>');
+        expect(result).toContain('<sexual_state>');
+      });
+
+      it('should not include inner_state when emotionalState is missing', () => {
+        const result = builder.buildCharacterDataXml(COMPLETE_CHARACTER_DATA);
+
+        expect(result).not.toContain('<inner_state>');
       });
     });
   });

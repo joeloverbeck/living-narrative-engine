@@ -136,6 +136,9 @@
         "structure-templates": {
           "$ref": "#/definitions/contentFileList"
         },
+        "expressions": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "refinement-methods": {
           "description": "Array of relative paths to refinement method definition files. Paths are resolved relative to the mod root (typically under refinement-methods/) and must reference .refinement.json files without using absolute paths or parent directory segments.",
           "type": "array",

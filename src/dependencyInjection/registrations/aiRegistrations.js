@@ -72,6 +72,7 @@ import { PromptBuilder } from '../../prompting/promptBuilder.js';
 import { PromptTemplateService } from '../../prompting/promptTemplateService.js';
 import { PromptDataFormatter } from '../../prompting/promptDataFormatter.js';
 import { EntitySummaryProvider } from '../../data/providers/entitySummaryProvider.js';
+import { ChanceTextTranslator } from '../../prompting/ChanceTextTranslator.js';
 import { ActorDataExtractor } from '../../turns/services/actorDataExtractor.js';
 import { ActorStateProvider } from '../../data/providers/actorStateProvider.js';
 import { PerceptionLogProvider } from '../../data/providers/perceptionLogProvider.js';
@@ -91,6 +92,7 @@ import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
 import XmlElementBuilder from '../../prompting/xmlElementBuilder.js';
 import CharacterDataXmlBuilder from '../../prompting/characterDataXmlBuilder.js';
 import { ModActionMetadataProvider } from '../../prompting/modActionMetadataProvider.js';
+import EmotionCalculatorService from '../../emotions/emotionCalculatorService.js';
 
 /**
  * Registers LLM infrastructure and adapter services.
@@ -293,6 +295,13 @@ export function registerAIGameStateProviders(registrar, logger) {
       injuryNarrativeFormatterService: c.resolve(
         tokens.InjuryNarrativeFormatterService
       ),
+      emotionCalculatorService: c.resolve(tokens.IEmotionCalculatorService),
+    });
+  });
+  registrar.singletonFactory(tokens.IEmotionCalculatorService, (c) => {
+    return new EmotionCalculatorService({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
     });
   });
   registrar.single(tokens.IActorStateProvider, ActorStateProvider);
@@ -350,6 +359,15 @@ export function registerAITurnPipeline(registrar, logger) {
     `AI Systems Registration: Registered ${tokens.IModActionMetadataProvider}.`
   );
 
+  registrar.singletonFactory(tokens.ChanceTextTranslator, (c) => {
+    return new ChanceTextTranslator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ChanceTextTranslator}.`
+  );
+
   registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
     return new AIPromptContentProvider({
       logger: c.resolve(tokens.ILogger),
@@ -363,6 +381,7 @@ export function registerAITurnPipeline(registrar, logger) {
       ),
       characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder),
       modActionMetadataProvider: c.resolve(tokens.IModActionMetadataProvider),
+      chanceTextTranslator: c.resolve(tokens.ChanceTextTranslator),
     });
   });
   registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());

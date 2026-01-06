@@ -2190,6 +2190,25 @@ export class ModActionTestFixture extends BaseModTestFixture {
     if (this.testEnv._loadedConditions) {
       this.testEnv._loadedConditions.set(conditionId, definition);
     }
+
+    const found = this.testEnv.dataRegistry.getConditionDefinition(conditionId);
+    if (!found) {
+      const debugInfo = [
+        `CRITICAL: registerCondition() succeeded but condition '${conditionId}' is not findable.`,
+        'This indicates a test infrastructure bug.',
+        '',
+        'Debug state:',
+        `  - fixture._loadedConditions.has(): ${this._loadedConditions.has(conditionId)}`,
+        `  - testEnv._loadedConditions exists: ${!!this.testEnv._loadedConditions}`,
+        `  - testEnv._loadedConditions.has(): ${this.testEnv._loadedConditions?.has(conditionId)}`,
+        '',
+        'Resolution: The dataRegistry.getConditionDefinition override chain may be misconfigured.',
+        'Ensure loadDependencyConditions() or ScopeResolverHelpers._loadConditionsIntoRegistry()',
+        'was called before registerCondition() to establish the override.',
+      ].join('\n');
+
+      throw new Error(debugInfo);
+    }
   }
 
   /**

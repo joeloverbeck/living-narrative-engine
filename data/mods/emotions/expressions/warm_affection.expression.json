@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:warm_affection",
+  "description": "Tender feelings of love and care toward others.",
+  "priority": 55,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.affection" }, 0.5] },
+          { ">=": [{ "var": "emotions.love_attachment" }, 0.35] },
+          { ">=": [{ "var": "moodAxes.engagement" }, 20] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My heart swells with warmth. I want to reach out, to connect, to show them they matter.",
+  "description_text": "{actor}'s gaze softens noticeably, their body language open and inviting, radiating gentle warmth.",
+  "alternate_descriptions": {
+    "auditory": "I hear a voice nearby, soft and tender in its tone.",
+    "tactile": "I sense a gentle, welcoming presence moving closer."
+  },
+  "tags": ["affection", "love", "warmth", "connection"]
+}

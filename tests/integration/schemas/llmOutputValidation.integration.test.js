@@ -10,6 +10,19 @@ import { LLM_TURN_ACTION_RESPONSE_SCHEMA } from '../../../src/turns/schemas/llmO
 
 describe('LLM Output Validation Pipeline Integration', () => {
   let validator;
+  const baseMoodUpdate = {
+    valence: 10,
+    arousal: 5,
+    agency_control: 15,
+    threat: -5,
+    engagement: 20,
+    future_expectancy: 10,
+    self_evaluation: 5,
+  };
+  const baseSexualUpdate = {
+    sex_excitation: 10,
+    sex_inhibition: 20,
+  };
 
   beforeAll(() => {
     const ajv = new Ajv({ strict: true, allErrors: true });
@@ -24,6 +37,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         speech: 'I understand your concern about the situation.',
         thoughts:
           'The player seems worried. I should provide reassurance while staying in character.',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [
           {
             text: 'Player expressed worry about upcoming battle',
@@ -50,6 +65,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         speech: 'The marketplace is bustling today.',
         thoughts:
           'Many people are out shopping. This could be useful information.',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [
           {
             text: 'Merchant seems nervous about recent events',
@@ -80,6 +97,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 3,
         speech: 'Yes, that makes sense.',
         thoughts: 'Simple response, no new information to note.',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [],
       };
 
@@ -93,6 +112,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Hello there!',
         thoughts: 'Greeting the player character.',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
       };
 
       const isValid = validator(mockLlmResponse);
@@ -105,6 +126,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 2,
         speech: 'The situation is quite complex.',
         thoughts: 'Multiple observations to record.',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [
           {
             text: 'First observation - normal note',
@@ -140,6 +163,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Test response',
         thoughts: 'Test thoughts',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [
           {
             text: 'Note with tags',
@@ -173,6 +198,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Test',
         thoughts: 'Test',
+        moodUpdate: baseMoodUpdate,
+        sexualUpdate: baseSexualUpdate,
         notes: [
           {
             text: 'Valid note',
@@ -211,6 +238,8 @@ describe('LLM Output Validation Pipeline Integration', () => {
         'chosenIndex',
         'speech',
         'thoughts',
+        'moodUpdate',
+        'sexualUpdate',
       ]);
     });
 

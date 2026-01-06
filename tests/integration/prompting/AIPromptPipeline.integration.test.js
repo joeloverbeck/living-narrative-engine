@@ -212,6 +212,7 @@ function createPipelineSetup({
     actionCategorizationService,
     characterDataXmlBuilder,
     modActionMetadataProvider,
+    chanceTextTranslator: { translateForLlm: (text) => text },
   });
 
   const llmConfigService = {

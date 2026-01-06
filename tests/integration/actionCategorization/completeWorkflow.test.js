@@ -84,6 +84,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
       modActionMetadataProvider: {
         getMetadataForMod: jest.fn(() => null),
       },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 
@@ -424,6 +425,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
         modActionMetadataProvider: {
           getMetadataForMod: jest.fn(() => null),
         },
+        chanceTextTranslator: { translateForLlm: (text) => text },
       });
 
       const gameState = {

@@ -58,6 +58,9 @@ describe('Backwards Compatibility Integration Tests', () => {
     modActionMetadataProvider: {
       getMetadataForMod: jest.fn(() => null),
     },
+    chanceTextTranslator: {
+      translateForLlm: jest.fn((text) => text),
+    },
   });
 
   beforeEach(async () => {

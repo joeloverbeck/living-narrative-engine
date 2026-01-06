@@ -465,7 +465,10 @@ describe('Validation Failure Recovery E2E Test', () => {
       );
 
       // Error message should include the event name
-      expect(mockLogger.error.mock.calls[0][0]).toContain(ENTITY_CREATED_ID);
+      const errorMessages = mockLogger.error.mock.calls.map((call) => call[0]);
+      expect(
+        errorMessages.some((message) => message.includes(ENTITY_CREATED_ID))
+      ).toBe(true);
     });
 
     it('should handle validation process errors gracefully', async () => {

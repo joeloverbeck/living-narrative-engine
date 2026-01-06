@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:melancholic_disappointment",
+  "description": "Wistful sadness mixed with lingering disappointment over something lost or unrealized",
+  "priority": 55,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.disappointment" }, 0.45] },
+          { ">=": [{ "var": "emotions.sadness" }, 0.35] },
+          { "<=": [{ "var": "moodAxes.valence" }, -20] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "The thought lingers - what could have been, what should have been. It aches in a quiet, patient way.",
+  "description_text": "{actor}'s gaze drifts toward nothing in particular, a wistful softness and faint regret settling over their features.",
+  "alternate_descriptions": {
+    "auditory": "I hear a soft, melancholic hum trailing off into silence."
+  },
+  "tags": ["disappointment", "sadness", "wistful", "nostalgia"]
+}

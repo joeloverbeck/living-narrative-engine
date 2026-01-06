@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:cold_fury",
+  "description": "Deadly-calm anger: high anger with suppressed rage; precise, controlled hostility (optionally edged with contempt).",
+  "priority": 80,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.anger" }, 0.60] },
+          { "<=": [{ "var": "emotions.rage" }, 0.35] },
+          {
+            "or": [
+              { ">=": [{ "var": "emotions.contempt" }, 0.30] },
+              { ">=": [{ "var": "emotions.determination" }, 0.25] },
+              { ">=": [{ "var": "moodAxes.agency_control" }, 10] }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My body goes still on purpose. The anger doesn't flare—it tightens. My voice gets flatter, my words fewer. I'm not losing control. I'm choosing where to apply it.",
+  "description_text": "{actor} goes unnervingly calm—jaw set, movements deliberate, eyes fixed as if measuring the next exact step.",
+  "tags": ["anger", "cold", "controlled", "focused"]
+}

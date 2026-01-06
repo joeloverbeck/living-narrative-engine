@@ -82,6 +82,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       modActionMetadataProvider: {
         getMetadataForMod: jest.fn(() => null),
       },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 
@@ -361,6 +362,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
         modActionMetadataProvider: {
           getMetadataForMod: jest.fn(() => null),
         },
+        chanceTextTranslator: { translateForLlm: (text) => text },
       });
 
       const gameState = {

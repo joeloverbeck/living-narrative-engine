@@ -79,6 +79,8 @@ describe('HumanDecisionProvider', () => {
     // Assert: Check that the result is correctly structured
     expect(result).toEqual({
       chosenIndex: 2,
+      moodUpdate: null,
+      sexualUpdate: null,
       speech: 'I choose the second option.',
       thoughts: 'This seems wise.',
       notes: ['A note'],
@@ -100,6 +102,8 @@ describe('HumanDecisionProvider', () => {
     // Assert
     expect(result).toEqual({
       chosenIndex: 1,
+      moodUpdate: null,
+      sexualUpdate: null,
       speech: null,
       thoughts: null,
       notes: null,
@@ -192,7 +196,16 @@ describe('HumanDecisionProvider', () => {
       mockActor.id,
       mockDispatcher,
       mockLogger,
-      { result: { index: 2, speech: 'hello', thoughts: null, notes: null } }
+      {
+        result: {
+          index: 2,
+          speech: 'hello',
+          thoughts: null,
+          notes: null,
+          moodUpdate: undefined,
+          sexualUpdate: undefined,
+        },
+      }
     );
   });
 

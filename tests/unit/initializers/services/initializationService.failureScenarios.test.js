@@ -80,6 +80,8 @@ describe('InitializationService failure scenarios', () => {
         },
         thoughtListener: { handleEvent: jest.fn() },
         notesListener: { handleEvent: jest.fn() },
+        moodSexualListener: { handleEvent: jest.fn() },
+        expressionPersistenceListener: { handleEvent: jest.fn() },
         spatialIndexManager: { buildIndex: jest.fn() },
       },
     };

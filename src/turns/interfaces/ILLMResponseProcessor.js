@@ -4,7 +4,12 @@
  * @typedef {object} LlmProcessingResult
  * @property {boolean} success            – true when the JSON parsed & validated
  * @property {{ chosenIndex: number; speech: string }} action – The structured action data.
- * @property {{thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>}|null} extractedData – Extracted metadata.
+ * @property {{
+ *   thoughts: string;
+ *   notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>;
+ *   moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number };
+ *   sexualUpdate?: { sex_excitation: number, sex_inhibition: number };
+ * }|null} extractedData – Extracted metadata.
  */
 
 /**

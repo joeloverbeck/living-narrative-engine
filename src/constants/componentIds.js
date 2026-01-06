@@ -73,3 +73,7 @@ export const WIELDING_COMPONENT_ID = 'item-handling-states:wielding';
 
 // Breathing system components
 export const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_organ';
+
+// Emotional system components
+export const MOOD_COMPONENT_ID = 'core:mood';
+export const SEXUAL_STATE_COMPONENT_ID = 'core:sexual_state';

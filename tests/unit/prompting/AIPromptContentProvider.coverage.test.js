@@ -52,6 +52,8 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
   let mockCharacterDataXmlBuilder;
   /** @type {jest.Mocked<IActionCategorizationService>} */
   let mockActionCategorizationService;
+  /** @type {jest.Mocked<any>} */
+  let mockChanceTextTranslator;
 
   beforeEach(() => {
     mockLogger = mockLoggerFn();
@@ -91,6 +93,9 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
     const mockModActionMetadataProvider = {
       getMetadataForMod: jest.fn().mockReturnValue(null),
     };
+    mockChanceTextTranslator = {
+      translateForLlm: jest.fn((text) => text),
+    };
 
     provider = new AIPromptContentProvider({
       logger: mockLogger,
@@ -100,6 +105,7 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       actionCategorizationService: mockActionCategorizationService,
       characterDataXmlBuilder: mockCharacterDataXmlBuilder,
       modActionMetadataProvider: mockModActionMetadataProvider,
+      chanceTextTranslator: mockChanceTextTranslator,
     });
   });
 
@@ -297,6 +303,25 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
   });
 
   describe('_formatSingleAction edge cases', () => {
+    test('should translate chance text without mutating action command', () => {
+      const action = {
+        index: 1,
+        commandString: 'attack (55% chance)',
+        description: 'do it',
+      };
+      mockChanceTextTranslator.translateForLlm.mockReturnValue(
+        'attack (decent chance)'
+      );
+
+      const result = provider._formatSingleAction(action);
+
+      expect(mockChanceTextTranslator.translateForLlm).toHaveBeenCalledWith(
+        'attack (55% chance)'
+      );
+      expect(action.commandString).toBe('attack (55% chance)');
+      expect(result).toContain('attack (decent chance)');
+    });
+
     test('should handle null action and log warning (lines 751-754)', () => {
       // Act
       const result = provider._formatSingleAction(null);

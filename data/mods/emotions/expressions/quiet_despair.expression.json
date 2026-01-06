@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:quiet_despair",
+  "description": "Silent, numbed hopelessness where the future stops feeling real",
+  "priority": 90,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.despair" }, 0.65] },
+          { ">=": [{ "var": "emotions.numbness" }, 0.35] },
+          { "<=": [{ "var": "emotions.hope" }, 0.20] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "The future stops feeling real. My thoughts slow down like they're moving through thick water. Silence feels safer than speech. I can't find the energy to shape words. My body feels heavy, as if gravity turned up.",
+  "description_text": "{actor} goes distant—expression blank in a way that feels heavier than crying.",
+  "tags": ["despair", "numbness", "hopelessness", "withdrawal"]
+}

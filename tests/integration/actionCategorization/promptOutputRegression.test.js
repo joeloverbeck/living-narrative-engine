@@ -68,6 +68,7 @@ describe('AI Prompt Output Regression', () => {
       modActionMetadataProvider: {
         getMetadataForMod: jest.fn(() => null),
       },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 

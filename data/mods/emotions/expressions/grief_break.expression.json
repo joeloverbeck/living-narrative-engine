@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:grief_break",
+  "description": "Acute grief breakdown triggered by overwhelming sorrow and rapid grief escalation",
+  "priority": 95,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.grief" }, 0.70] },
+          { ">=": [{ "var": "emotions.sadness" }, 0.60] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.grief" },
+                  { "var": "previousEmotions.grief" }
+                ]
+              },
+              0.20
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "It breaks through me. Tears come in waves and I can't keep my face steady. I'm trying to breathe around the hurt and failing. A sob escapes—raw, involuntary—before I can swallow it back. My chest tightens and releases in shaking pulses.",
+  "description_text": "{actor} breaks down—tears spilling and shoulders shaking, trying to hide the sound and failing.",
+  "alternate_descriptions": {
+    "auditory": "I hear involuntary sobs and wet, uneven breathing."
+  },
+  "tags": ["grief", "sadness", "tears", "acute", "breakdown"]
+}

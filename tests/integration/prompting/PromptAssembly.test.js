@@ -76,6 +76,7 @@ describe('Prompt Assembly with template-based system', () => {
       },
       characterDataXmlBuilder,
       modActionMetadataProvider,
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
 
     llmConfigService = {

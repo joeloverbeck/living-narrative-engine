@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:frustrated_helplessness",
+  "description": "Anger combined with feelings of powerlessness",
+  "priority": 70,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.frustration" }, 0.55] },
+          { "<=": [{ "var": "moodAxes.agency_control" }, -40] },
+          { "<=": [{ "var": "moodAxes.future_expectancy" }, -20] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My hands clench and unclench uselessly. The walls are closing in and there's nothing I can do about it. Every option leads nowhere.",
+  "description_text": "{actor}'s hands clench and unclench uselessly, their gaze darting around as if searching for an exit that doesn't exist.",
+  "alternate_descriptions": {
+    "auditory": "I hear the frustrated tap of someone's fingers against a surface."
+  },
+  "tags": ["frustration", "helplessness", "trapped"]
+}

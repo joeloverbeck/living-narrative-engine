@@ -84,6 +84,9 @@ describe('AIPromptContentProvider Performance', () => {
       modActionMetadataProvider: {
         getMetadataForMod: jest.fn(() => null),
       },
+      chanceTextTranslator: {
+        translateForLlm: jest.fn((text) => text),
+      },
     });
   });
 

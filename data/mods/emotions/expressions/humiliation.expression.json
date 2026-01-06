@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:humiliation",
+  "description": "Profound humiliation causing visible distress and urge to disappear",
+  "priority": 91,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.humiliation" }, 0.60] },
+          { ">=": [{ "var": "emotions.shame" }, 0.55] },
+          { ">=": [{ "var": "emotions.fear" }, 0.35] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I feel exposed. My mind scrambles for a way to rewind time, and there isn't one. A laugh tries to happen and comes out wrong—thin, defensive, broken. My skin feels too tight, like I can't fit inside myself.",
+  "description_text": "{actor} looks stricken—posture collapsing inward, face tense with the urge to disappear.",
+  "alternate_descriptions": {
+    "auditory": "I hear a brittle sound—half laugh, half choke—followed by silence."
+  },
+  "tags": ["humiliation", "shame", "fear", "exposure"]
+}

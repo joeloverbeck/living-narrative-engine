@@ -113,6 +113,26 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     };
     ensureInstance(tokens.IValidatedEventDispatcher, mockValidatedDispatcher);
 
+    const mockEmotionCalculatorService = {
+      calculateEmotions: jest.fn().mockReturnValue({}),
+      formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
+      calculateSexualArousal: jest.fn().mockReturnValue(0),
+      calculateSexualStates: jest.fn().mockReturnValue([]),
+      formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+    };
+    ensureInstance(tokens.IEmotionCalculatorService, mockEmotionCalculatorService);
+
+    const mockEntity = {
+      hasComponent: jest.fn(() => false),
+      getComponentData: jest.fn(),
+    };
+    ensureInstance(tokens.IEntityManager, {
+      getEntitiesWithComponents: jest.fn().mockReturnValue([]),
+      getEntitiesInLocation: jest.fn().mockReturnValue([]),
+      getEntityInstance: jest.fn(() => mockEntity),
+      hasComponent: jest.fn(() => false),
+    });
+
     // Register UI registrations
     // We need to register DomUiFacade, EngineUIManager, PromptPreviewModal
     // And their dependencies (DomElementFactory, IDocumentContext, etc.)
@@ -139,17 +159,6 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     // registerUI registers almost everything in domUI.
     // However, some renderers might depend on IEntityManager, EntityDisplayDataProvider, etc.
     // We need to mock those.
-
-    const mockEntity = {
-      hasComponent: jest.fn(() => false),
-      getComponentData: jest.fn(),
-    };
-    ensureInstance(tokens.IEntityManager, {
-      getEntitiesWithComponents: jest.fn().mockReturnValue([]),
-      getEntitiesInLocation: jest.fn().mockReturnValue([]),
-      getEntityInstance: jest.fn(() => mockEntity),
-      hasComponent: jest.fn(() => false),
-    });
     ensureInstance(tokens.EntityDisplayDataProvider, {
       getEntityName: jest.fn().mockReturnValue('Entity'),
       getLocationDetails: jest.fn().mockReturnValue({}),

@@ -174,6 +174,7 @@ describe('Action Formatting with Metadata - Integration', () => {
       actionCategorizationService,
       characterDataXmlBuilder,
       modActionMetadataProvider,
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 

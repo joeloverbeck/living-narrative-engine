@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions",
+  "version": "1.0.0",
+  "name": "Emotions",
+  "description": "Expression system for emotional and psychological states.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "aroused_but_ashamed_conflict.expression.json",
+      "attachment_swell.expression.json",
+      "cold_fury.expression.json",
+      "deep_despair.expression.json",
+      "dissociation.expression.json",
+      "euphoric_excitement.expression.json",
+      "explosive_anger.expression.json",
+      "freeze_response.expression.json",
+      "frustrated_helplessness.expression.json",
+      "frustration_spiral.expression.json",
+      "grief_break.expression.json",
+      "guilt_driven_repair_impulse.expression.json",
+      "humiliation.expression.json",
+      "hypervigilant_scanning.expression.json",
+      "intense_desire.expression.json",
+      "lonely_isolation.expression.json",
+      "melancholic_disappointment.expression.json",
+      "mild_irritation.expression.json",
+      "panic_onset.expression.json",
+      "playful_mischief.expression.json",
+      "quiet_contentment.expression.json",
+      "quiet_despair.expression.json",
+      "quiet_grief.expression.json",
+      "rage_surge.expression.json",
+      "shame_spike.expression.json",
+      "startle_flinch.expression.json",
+      "suppressed_rage.expression.json",
+      "tearful_sorrow.expression.json",
+      "warm_affection.expression.json"
+    ]
+  }
+}

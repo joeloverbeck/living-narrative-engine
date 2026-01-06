@@ -103,6 +103,7 @@
 /* Root color variables for perception categories */
 :root {
   --perception-communication: #6a1b9a; /* Purple */
+  --perception-emotion: #00796b; /* Teal */
   --perception-movement: #1565c0; /* Blue */
   --perception-combat: #c62828; /* Red */
   --perception-item: #e65100; /* Amber */
@@ -121,6 +122,10 @@
 /* Category Classes - Primary Color Theming */
 .log-cat-communication {
   color: var(--perception-communication);
+}
+
+.log-cat-emotion {
+  color: var(--perception-emotion);
 }
 
 .log-cat-movement {
@@ -198,6 +203,11 @@
 .log-type-notes {
   font-family: 'Courier New', monospace;
   font-size: 0.95em;
+}
+
+/* Emotion types */
+.log-type-expression::before {
+  content: '\2665 '; /* Heart */
 }
 
 /* Combat types */

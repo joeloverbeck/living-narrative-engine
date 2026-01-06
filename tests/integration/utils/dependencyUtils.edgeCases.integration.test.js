@@ -62,6 +62,8 @@ describe('dependencyUtils integration edge cases', () => {
         gameDataRepository: { getAllActionDefinitions: () => [] },
         thoughtListener: { handleEvent: () => {} },
         notesListener: { handleEvent: () => {} },
+        moodSexualListener: { handleEvent: () => {} },
+        expressionPersistenceListener: { handleEvent: () => {} },
         spatialIndexManager: { start: () => {}, stop: () => {} },
       },
       coreSystems: {

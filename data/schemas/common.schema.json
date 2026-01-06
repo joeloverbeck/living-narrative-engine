@@ -45,6 +45,7 @@
         "communication.speech",
         "communication.thought",
         "communication.notes",
+        "emotion.expression",
         "movement.arrival",
         "movement.departure",
         "combat.attack",

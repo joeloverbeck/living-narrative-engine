@@ -18,6 +18,8 @@ import {
   MOTIVATIONS_COMPONENT_ID,
   INTERNAL_TENSIONS_COMPONENT_ID,
   DILEMMAS_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
@@ -25,11 +27,68 @@ import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 const DEFAULT_NAME = 'Unnamed Character';
 const DEFAULT_DESCRIPTION = 'No description available.'; // Already ends with a period
 
+/**
+ * Creates default mood component data for tests.
+ * @returns {object} Mood component data
+ */
+function createMoodComponent() {
+  return {
+    valence: 50,
+    arousal: 30,
+    agency_control: 40,
+    threat: -20,
+    engagement: 60,
+    future_expectancy: 25,
+    self_evaluation: 35,
+  };
+}
+
+/**
+ * Creates default sexual state component data for tests.
+ * @returns {object} Sexual state component data
+ */
+function createSexualStateComponent() {
+  return {
+    sex_excitation: 20,
+    sex_inhibition: 10,
+    baseline_libido: 5,
+  };
+}
+
+/**
+ * Creates a mock emotionCalculatorService with default return values.
+ * @returns {object} Mock emotion calculator service
+ */
+function createMockEmotionCalculatorService() {
+  return {
+    calculateSexualArousal: jest.fn().mockReturnValue(0.15),
+    calculateEmotions: jest.fn().mockReturnValue(new Map([['calm', 0.5]])),
+    calculateSexualStates: jest.fn().mockReturnValue(new Map()),
+    formatEmotionsForPrompt: jest.fn().mockReturnValue('calm: moderate'),
+    formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+  };
+}
+
+/**
+ * Creates a minimal valid actor state with required emotional components.
+ * @param {object} [overrides] - Additional component overrides
+ * @returns {object} Actor state
+ */
+function createValidActorState(overrides = {}) {
+  return {
+    [NAME_COMPONENT_ID]: { text: 'Test Actor' },
+    [MOOD_COMPONENT_ID]: createMoodComponent(),
+    [SEXUAL_STATE_COMPONENT_ID]: createSexualStateComponent(),
+    ...overrides,
+  };
+}
+
 describe('ActorDataExtractor', () => {
   /** @type {ActorDataExtractor} */
   let extractor;
   let mockAnatomyDescriptionService;
   let mockEntityFinder;
+  let mockEmotionCalculatorService;
 
   beforeEach(() => {
     mockAnatomyDescriptionService = {
@@ -38,16 +97,21 @@ describe('ActorDataExtractor', () => {
     mockEntityFinder = {
       getEntityInstance: jest.fn(),
     };
+    mockEmotionCalculatorService = createMockEmotionCalculatorService();
     extractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,
       entityFinder: mockEntityFinder,
+      emotionCalculatorService: mockEmotionCalculatorService,
     });
   });
 
   describe('extractPromptData', () => {
-    test('should return default name and description when actorState is empty', () => {
-      const actorState = {};
-      const result = extractor.extractPromptData(actorState);
+    test('should return default name and description when actorState has only required emotional components', () => {
+      const actorState = createValidActorState({
+        [NAME_COMPONENT_ID]: undefined,
+        [DESCRIPTION_COMPONENT_ID]: undefined,
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe(DEFAULT_NAME);
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
       expect(result.personality).toBeUndefined();
@@ -55,99 +119,111 @@ describe('ActorDataExtractor', () => {
     });
 
     test('should return default name if name component is missing', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: 'A character.' },
-      };
-      const result = extractor.extractPromptData(actorState);
+        [NAME_COMPONENT_ID]: undefined,
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe(DEFAULT_NAME);
     });
 
     test('should return default name if name component text is null or empty string', () => {
-      let actorState = { [NAME_COMPONENT_ID]: { text: null } };
-      let result = extractor.extractPromptData(actorState);
+      let actorState = createValidActorState({
+        [NAME_COMPONENT_ID]: { text: null },
+      });
+      let result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe(DEFAULT_NAME);
 
-      actorState = { [NAME_COMPONENT_ID]: { text: '' } };
-      result = extractor.extractPromptData(actorState);
+      actorState = createValidActorState({ [NAME_COMPONENT_ID]: { text: '' } });
+      result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe(DEFAULT_NAME);
 
-      actorState = { [NAME_COMPONENT_ID]: { text: '   ' } };
-      result = extractor.extractPromptData(actorState);
+      actorState = createValidActorState({
+        [NAME_COMPONENT_ID]: { text: '   ' },
+      });
+      result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe(DEFAULT_NAME);
     });
 
     test('should extract and trim name correctly', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [NAME_COMPONENT_ID]: { text: '  Test Name  ' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.name).toBe('Test Name');
     });
 
     test('should return default description if description component is missing', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [NAME_COMPONENT_ID]: { text: 'Test Character' },
-      };
-      const result = extractor.extractPromptData(actorState);
+        [DESCRIPTION_COMPONENT_ID]: undefined,
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
     });
 
     test('should return default description if description component text is null or empty string', () => {
-      let actorState = { [DESCRIPTION_COMPONENT_ID]: { text: null } };
-      let result = extractor.extractPromptData(actorState);
+      let actorState = createValidActorState({
+        [DESCRIPTION_COMPONENT_ID]: { text: null },
+      });
+      let result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
 
-      actorState = { [DESCRIPTION_COMPONENT_ID]: { text: '' } };
-      result = extractor.extractPromptData(actorState);
+      actorState = createValidActorState({
+        [DESCRIPTION_COMPONENT_ID]: { text: '' },
+      });
+      result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
 
-      actorState = { [DESCRIPTION_COMPONENT_ID]: { text: '   ' } };
-      result = extractor.extractPromptData(actorState);
+      actorState = createValidActorState({
+        [DESCRIPTION_COMPONENT_ID]: { text: '   ' },
+      });
+      result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
     });
 
     test('should extract, trim, and punctuate description correctly', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: '  A detailed description ' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe('A detailed description.');
     });
 
     test('should not add extra punctuation if description already ends with a period', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: 'Already punctuated.' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe('Already punctuated.');
     });
 
     test('should not add extra punctuation if description already ends with an exclamation mark', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: 'Exciting!' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe('Exciting!');
     });
 
     test('should not add extra punctuation if description already ends with a question mark', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: 'Really?' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe('Really?');
     });
 
     test('should handle description that becomes empty after trim, defaulting to default description', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: '   ' }, // Only spaces
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
     });
 
     test('should extract all optional text attributes if present and valid', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [NAME_COMPONENT_ID]: { text: 'Full Char' },
         [DESCRIPTION_COMPONENT_ID]: { text: 'Desc.' },
         [PERSONALITY_COMPONENT_ID]: { text: '  Bright ' },
@@ -157,8 +233,8 @@ describe('ActorDataExtractor', () => {
         [STRENGTHS_COMPONENT_ID]: { text: '  Leadership, Problem-solving  ' },
         [WEAKNESSES_COMPONENT_ID]: { text: 'Impatience' },
         [SECRETS_COMPONENT_ID]: { text: 'Is secretly a cat.' },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-1');
       expect(result.personality).toBe('Bright');
       expect(result.profile).toBe('A mysterious individual.');
       expect(result.likes).toBe('Apples, Pears');
@@ -180,49 +256,60 @@ describe('ActorDataExtractor', () => {
 
     optionalAttributesTestCases.forEach(({ field, componentId }) => {
       test(`should leave ${field} undefined if component is missing`, () => {
-        const actorState = {};
-        const result = extractor.extractPromptData(actorState);
+        // createValidActorState doesn't include this optional component by default
+        const actorState = createValidActorState();
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBeUndefined();
       });
 
       test(`should leave ${field} undefined if component text is null`, () => {
-        const actorState = { [componentId]: { text: null } };
-        const result = extractor.extractPromptData(actorState);
+        const actorState = createValidActorState({
+          [componentId]: { text: null },
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBeUndefined();
       });
 
       test(`should leave ${field} undefined if component text is empty string`, () => {
-        const actorState = { [componentId]: { text: '' } };
-        const result = extractor.extractPromptData(actorState);
+        const actorState = createValidActorState({
+          [componentId]: { text: '' },
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBeUndefined();
       });
 
       test(`should leave ${field} undefined if component text is only whitespace`, () => {
-        const actorState = { [componentId]: { text: '   ' } };
-        const result = extractor.extractPromptData(actorState);
+        const actorState = createValidActorState({
+          [componentId]: { text: '   ' },
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBeUndefined();
       });
 
       test(`should leave ${field} undefined if component data is not a string (e.g. number)`, () => {
-        const actorState = { [componentId]: { text: 123 } };
-        const result = extractor.extractPromptData(actorState);
+        const actorState = createValidActorState({
+          [componentId]: { text: 123 },
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBeUndefined();
       });
 
       test(`should extract and trim ${field} correctly`, () => {
-        const actorState = { [componentId]: { text: `  Test ${field}  ` } };
-        const result = extractor.extractPromptData(actorState);
+        const actorState = createValidActorState({
+          [componentId]: { text: `  Test ${field}  ` },
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result[field]).toBe(`Test ${field}`);
       });
     });
 
     test('should correctly handle speech patterns: all valid', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: {
           patterns: ['  Pattern 1  ', 'Pattern 2', ' Another Pattern! '],
         },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toEqual([
         'Pattern 1',
         'Pattern 2',
@@ -231,67 +318,71 @@ describe('ActorDataExtractor', () => {
     });
 
     test('should correctly handle speech patterns: some empty or whitespace', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: {
           patterns: ['Valid', '  ', '', '  Pattern 3  ', null, undefined, 123],
         },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       // Note: The implementation maps non-strings to empty strings before filtering.
       // So null, undefined, 123 become '' and are filtered out.
       expect(result.speechPatterns).toEqual(['Valid', 'Pattern 3']);
     });
 
     test('should leave speechPatterns undefined if component is missing', () => {
-      const actorState = {};
-      const result = extractor.extractPromptData(actorState);
+      const actorState = createValidActorState();
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
     });
 
     test('should leave speechPatterns undefined if patterns array is missing', () => {
-      const actorState = { [SPEECH_PATTERNS_COMPONENT_ID]: {} }; // no 'patterns' array
-      const result = extractor.extractPromptData(actorState);
+      const actorState = createValidActorState({
+        [SPEECH_PATTERNS_COMPONENT_ID]: {},
+      }); // no 'patterns' array
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
     });
 
     test('should leave speechPatterns undefined if patterns array is null', () => {
-      const actorState = { [SPEECH_PATTERNS_COMPONENT_ID]: { patterns: null } };
-      const result = extractor.extractPromptData(actorState);
+      const actorState = createValidActorState({
+        [SPEECH_PATTERNS_COMPONENT_ID]: { patterns: null },
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
     });
 
     test('should leave speechPatterns undefined if patterns array is empty', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: { patterns: [] },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
       // If the DTO/requirements change to expect an empty array:
       // expect(result.speechPatterns).toEqual([]);
     });
 
     test('should leave speechPatterns undefined if patterns array contains only empty or whitespace strings', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: { patterns: ['', '   ', '      '] },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
       // If the DTO/requirements change to expect an empty array:
       // expect(result.speechPatterns).toEqual([]);
     });
 
     test('should leave speechPatterns undefined if patterns array contains non-string elements that trim to empty', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: {
           patterns: [null, undefined, 123, true, {}],
         },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
     });
 
     test('should handle a mix of valid and invalid data gracefully', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [NAME_COMPONENT_ID]: { text: '  Mixed Test  ' },
         // Description missing -> default
         [PERSONALITY_COMPONENT_ID]: { text: '' }, // -> undefined
@@ -302,8 +393,8 @@ describe('ActorDataExtractor', () => {
         [SPEECH_PATTERNS_COMPONENT_ID]: {
           patterns: ['Speak up!', '  ', '  Louder!  '],
         },
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
 
       expect(result.name).toBe('Mixed Test');
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
@@ -317,59 +408,59 @@ describe('ActorDataExtractor', () => {
     });
 
     test('should correctly handle name and description component data not being an object', () => {
-      let actorState = {
+      let actorState = createValidActorState({
         [NAME_COMPONENT_ID]: 'Just a string name', // not {text: ...}
         [DESCRIPTION_COMPONENT_ID]: 'Just a string desc', // not {text: ...}
-      };
-      let result = extractor.extractPromptData(actorState);
+      });
+      let result = extractor.extractPromptData(actorState, 'actor-test');
       // Current implementation relies on .text property. If component is not object, .text is undefined.
       expect(result.name).toBe(DEFAULT_NAME);
       expect(result.description).toBe(DEFAULT_DESCRIPTION); // Will default and then ensure punctuation
 
-      actorState = {
+      actorState = createValidActorState({
         [NAME_COMPONENT_ID]: null,
         [DESCRIPTION_COMPONENT_ID]: null,
-      };
-      result = extractor.extractPromptData(actorState);
+      });
+      result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.name).toBe(DEFAULT_NAME);
       expect(result.description).toBe(DEFAULT_DESCRIPTION);
     });
 
     test('should handle optional text attributes component data not being an object or not having text prop', () => {
-      const actorState = {
+      const actorState = createValidActorState({
         [PERSONALITY_COMPONENT_ID]: 'Just a string personality', // not {text: ...}
         [PROFILE_COMPONENT_ID]: null, // component itself is null
         [LIKES_COMPONENT_ID]: { notText: 'no text prop' }, // component exists but no 'text'
-      };
-      const result = extractor.extractPromptData(actorState);
+      });
+      const result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.personality).toBeUndefined();
       expect(result.profile).toBeUndefined();
       expect(result.likes).toBeUndefined();
     });
 
     test('should handle speech patterns component data not being an object or not having patterns prop', () => {
-      let actorState = {
+      let actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: 'Just a string patterns', // not {patterns: ...}
-      };
-      let result = extractor.extractPromptData(actorState);
+      });
+      let result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
 
-      actorState = {
+      actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: null,
-      };
-      result = extractor.extractPromptData(actorState);
+      });
+      result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
 
-      actorState = {
+      actorState = createValidActorState({
         [SPEECH_PATTERNS_COMPONENT_ID]: { notPatterns: ['array', 'here'] },
-      };
-      result = extractor.extractPromptData(actorState);
+      });
+      result = extractor.extractPromptData(actorState, 'actor-test');
       expect(result.speechPatterns).toBeUndefined();
     });
 
     describe('psychological components extraction', () => {
       test('should extract all three psychological components when present', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [MOTIVATIONS_COMPONENT_ID]: {
             text: 'I seek power because I fear being powerless again.',
@@ -380,8 +471,8 @@ describe('ActorDataExtractor', () => {
           [DILEMMAS_COMPONENT_ID]: {
             text: 'Can I achieve justice without becoming a monster?',
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBe(
           'I seek power because I fear being powerless again.'
@@ -395,11 +486,11 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should return undefined for psychological components when absent', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [DESCRIPTION_COMPONENT_ID]: { text: 'A simple character' },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
@@ -407,7 +498,7 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should handle mixed presence of psychological components', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [MOTIVATIONS_COMPONENT_ID]: {
             text: 'To protect those I love.',
@@ -416,8 +507,8 @@ describe('ActorDataExtractor', () => {
           [DILEMMAS_COMPONENT_ID]: {
             text: 'How far is too far when protecting family?',
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBe('To protect those I love.');
         expect(result.internalTensions).toBeUndefined();
@@ -427,13 +518,13 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should return undefined for empty text in psychological components', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [MOTIVATIONS_COMPONENT_ID]: { text: '' },
           [INTERNAL_TENSIONS_COMPONENT_ID]: { text: '   ' }, // whitespace only
           [DILEMMAS_COMPONENT_ID]: { text: null },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
@@ -441,7 +532,7 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should trim whitespace from psychological component text', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [MOTIVATIONS_COMPONENT_ID]: {
             text: '  To find my purpose  ',
@@ -452,8 +543,8 @@ describe('ActorDataExtractor', () => {
           [DILEMMAS_COMPONENT_ID]: {
             text: '  Can I trust again?  ',
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBe('To find my purpose');
         expect(result.internalTensions).toBe(
@@ -463,13 +554,13 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should handle psychological components with invalid data types', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [MOTIVATIONS_COMPONENT_ID]: 'Just a string', // not {text: ...}
           [INTERNAL_TENSIONS_COMPONENT_ID]: null,
           [DILEMMAS_COMPONENT_ID]: { notText: 'wrong property' },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
@@ -477,7 +568,7 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should extract psychological components alongside other optional attributes', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Complex Character' },
           [PERSONALITY_COMPONENT_ID]: { text: 'Brooding and intense' },
           [FEARS_COMPONENT_ID]: { text: 'Being alone' },
@@ -486,8 +577,8 @@ describe('ActorDataExtractor', () => {
             text: 'Push people away vs need connection',
           },
           [DILEMMAS_COMPONENT_ID]: { text: 'Is vulnerability weakness?' },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
 
         expect(result.personality).toBe('Brooding and intense');
         expect(result.fears).toBe('Being alone');
@@ -501,7 +592,7 @@ describe('ActorDataExtractor', () => {
 
     describe('apparent age extraction', () => {
       test('should extract apparent age when all fields are present', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Elena Rodriguez' },
           [DESCRIPTION_COMPONENT_ID]: { text: 'A woman with sharp features' },
           [APPARENT_AGE_COMPONENT_ID]: {
@@ -509,8 +600,8 @@ describe('ActorDataExtractor', () => {
             maxAge: 35,
             bestGuess: 33,
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toEqual({
           minAge: 30,
           maxAge: 35,
@@ -519,14 +610,14 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should extract apparent age without bestGuess', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [APPARENT_AGE_COMPONENT_ID]: {
             minAge: 25,
             maxAge: 30,
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toEqual({
           minAge: 25,
           maxAge: 30,
@@ -534,48 +625,48 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should not include apparent age if component is missing', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [DESCRIPTION_COMPONENT_ID]: { text: 'A test description' },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toBeUndefined();
       });
 
       test('should not include apparent age if minAge is missing', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [APPARENT_AGE_COMPONENT_ID]: {
             maxAge: 30,
             bestGuess: 28,
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toBeUndefined();
       });
 
       test('should not include apparent age if maxAge is missing', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [APPARENT_AGE_COMPONENT_ID]: {
             minAge: 25,
             bestGuess: 28,
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toBeUndefined();
       });
 
       test('should include apparent age even if bestGuess is 0', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Baby Character' },
           [APPARENT_AGE_COMPONENT_ID]: {
             minAge: 0,
             maxAge: 1,
             bestGuess: 0,
           },
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toEqual({
           minAge: 0,
           maxAge: 1,
@@ -584,11 +675,11 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should not include apparent age if data is null', () => {
-        const actorState = {
+        const actorState = createValidActorState({
           [NAME_COMPONENT_ID]: { text: 'Test Character' },
           [APPARENT_AGE_COMPONENT_ID]: null,
-        };
-        const result = extractor.extractPromptData(actorState);
+        });
+        const result = extractor.extractPromptData(actorState, 'actor-test');
         expect(result.apparentAge).toBeUndefined();
       });
     });
@@ -622,6 +713,7 @@ describe('ActorDataExtractor', () => {
           entityFinder: mockEntityFinder,
           injuryAggregationService: mockInjuryAggregationService,
           injuryNarrativeFormatterService: mockInjuryNarrativeFormatterService,
+          emotionCalculatorService: createMockEmotionCalculatorService(),
         });
       });
 
@@ -629,8 +721,9 @@ describe('ActorDataExtractor', () => {
         const extractorWithoutHealth = new ActorDataExtractor({
           anatomyDescriptionService: mockAnatomyDescriptionService,
           entityFinder: mockEntityFinder,
+          emotionCalculatorService: createMockEmotionCalculatorService(),
         });
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithoutHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -639,7 +732,7 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should return null healthState when actorId not provided', () => {
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(actorState);
         expect(result.healthState).toBeNull();
         expect(
@@ -659,7 +752,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -674,7 +767,7 @@ describe('ActorDataExtractor', () => {
       test('should return null healthState when aggregation service returns null', () => {
         mockInjuryAggregationService.aggregateInjuries.mockReturnValue(null);
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -711,7 +804,7 @@ describe('ActorDataExtractor', () => {
           'My left arm is wounded and bleeding.'
         );
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -762,7 +855,7 @@ describe('ActorDataExtractor', () => {
           'My leg feels numb from the poison.'
         );
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -817,7 +910,7 @@ describe('ActorDataExtractor', () => {
             fracturedParts: [],
           });
 
-          const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+          const actorState = createValidActorState();
           const result = extractorWithHealth.extractPromptData(
             actorState,
             `actor-${percentage}`
@@ -852,7 +945,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-dying'
@@ -886,7 +979,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-dead'
@@ -919,7 +1012,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [{ partType: 'arm' }],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -946,7 +1039,7 @@ describe('ActorDataExtractor', () => {
           }
         );
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -998,7 +1091,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithHealth.extractPromptData(
           actorState,
           'actor-1'
@@ -1014,6 +1107,7 @@ describe('ActorDataExtractor', () => {
           anatomyDescriptionService: mockAnatomyDescriptionService,
           entityFinder: mockEntityFinder,
           injuryAggregationService: mockInjuryAggregationService,
+          emotionCalculatorService: createMockEmotionCalculatorService(),
         });
 
         mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
@@ -1038,7 +1132,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         const result = extractorWithoutFormatter.extractPromptData(
           actorState,
           'actor-1'
@@ -1060,7 +1154,7 @@ describe('ActorDataExtractor', () => {
           fracturedParts: [],
         });
 
-        const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
+        const actorState = createValidActorState();
         extractorWithHealth.extractPromptData(actorState, 'actor-1');
 
         expect(

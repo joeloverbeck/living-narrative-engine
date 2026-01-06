@@ -43,6 +43,12 @@ export { EntityLifecycleMonitor } from './entityLifecycleMonitor.js';
 // Injury Status Panel
 export { InjuryStatusPanel } from './injuryStatusPanel.js';
 
+// Emotional State Panel
+export { EmotionalStatePanel } from './emotionalStatePanel.js';
+
+// Sexual State Panel
+export { SexualStatePanel } from './sexualStatePanel.js';
+
 // Damage Event Message Renderer
 export { DamageEventMessageRenderer } from './damageEventMessageRenderer.js';
 

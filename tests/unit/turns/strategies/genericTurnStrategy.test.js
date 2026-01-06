@@ -67,6 +67,8 @@ describe('GenericTurnStrategy', () => {
           thoughts: null,
           notes: null,
           chosenIndex: 1,
+          moodUpdate: null,
+          sexualUpdate: null,
         }),
         availableActions: [fakeComposite],
         suggestedIndex: 1,
@@ -76,6 +78,70 @@ describe('GenericTurnStrategy', () => {
     // Assert immutability
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.extractedData)).toBe(true);
+  });
+
+  it('preserves mood and sexual updates from the decision provider', async () => {
+    const fakeActor = { id: 'actor-mood' };
+    const fakeContext = {
+      getActor: () => fakeActor,
+      getPromptSignal: () => null,
+    };
+
+    const fakeComposite = {
+      actionDefinitionId: 'testAction',
+      resolvedParameters: {},
+      index: 1,
+    };
+    const fakeTurnAction = {
+      actionDefinitionId: 'testAction',
+      resolvedParameters: {},
+    };
+
+    const choicePipeline = {
+      buildChoices: jest.fn().mockResolvedValue([fakeComposite]),
+    };
+    const decisionProvider = {
+      decide: jest.fn().mockResolvedValue({
+        chosenIndex: 1,
+        moodUpdate: {
+          valence: 30,
+          arousal: 20,
+          agency_control: 10,
+          threat: -10,
+          engagement: 25,
+          future_expectancy: 5,
+          self_evaluation: 15,
+        },
+        sexualUpdate: { sex_excitation: 45, sex_inhibition: 30 },
+      }),
+    };
+    const turnActionFactory = {
+      create: jest.fn().mockReturnValue(fakeTurnAction),
+    };
+    const logger = { debug: jest.fn() };
+
+    const strategy = new GenericTurnStrategy({
+      choicePipeline,
+      decisionProvider,
+      turnActionFactory,
+      logger,
+    });
+
+    const result = await strategy.decideAction(fakeContext);
+
+    expect(result.extractedData.moodUpdate).toEqual({
+      valence: 30,
+      arousal: 20,
+      agency_control: 10,
+      threat: -10,
+      engagement: 25,
+      future_expectancy: 5,
+      self_evaluation: 15,
+    });
+    expect(result.extractedData.sexualUpdate).toEqual({
+      sex_excitation: 45,
+      sex_inhibition: 30,
+    });
   });
 
   it('returns fallback decision when an error occurs and factory provided', async () => {
@@ -111,7 +177,13 @@ describe('GenericTurnStrategy', () => {
     expect(result).toEqual({
       kind: 'fallback',
       action: fallbackAction,
-      extractedData: { speech: 'wait', thoughts: null, notes: null },
+      extractedData: {
+        speech: 'wait',
+        thoughts: null,
+        notes: null,
+        moodUpdate: null,
+        sexualUpdate: null,
+      },
     });
   });
 
@@ -200,7 +272,13 @@ describe('GenericTurnStrategy', () => {
     expect(result).toEqual({
       kind: 'fallback',
       action: fallbackAction,
-      extractedData: { speech: 'fallback speech', thoughts: null, notes: null },
+      extractedData: {
+        speech: 'fallback speech',
+        thoughts: null,
+        notes: null,
+        moodUpdate: null,
+        sexualUpdate: null,
+      },
     });
 
     // Verify fallback factory was called with correct parameters

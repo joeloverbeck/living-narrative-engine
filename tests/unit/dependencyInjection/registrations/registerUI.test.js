@@ -27,6 +27,9 @@ describe('registerUI', () => {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
     });
+    container.register(tokens.IEntityManager, {
+      getEntityInstance: jest.fn(),
+    });
     container.register(tokens.InjuryAggregationService, {
       aggregateInjuries: jest.fn(),
     });
@@ -36,6 +39,13 @@ describe('registerUI', () => {
     });
     container.register(tokens.OxygenAggregationService, {
       aggregateOxygen: jest.fn(),
+    });
+    container.register(tokens.IEmotionCalculatorService, {
+      calculateSexualArousal: jest.fn(),
+      calculateEmotions: jest.fn(),
+      formatEmotionsForPrompt: jest.fn(),
+      calculateSexualStates: jest.fn(),
+      formatSexualStatesForPrompt: jest.fn(),
     });
 
     const doc = document;

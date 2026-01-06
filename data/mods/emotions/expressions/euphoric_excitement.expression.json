@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:euphoric_excitement",
+  "description": "High-energy joy with elevated arousal and positive valence.",
+  "priority": 70,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.euphoria" }, 0.55] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 45] },
+          { ">=": [{ "var": "moodAxes.valence" }, 40] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Energy surges through me. I feel alive, electric, ready for anything.",
+  "description_text": "{actor}'s eyes shine with barely contained excitement, their movements quick and animated.",
+  "alternate_descriptions": {
+    "auditory": "I hear an infectious, energetic laugh bubbling up nearby."
+  },
+  "tags": ["joy", "excitement", "energy", "positive"]
+}

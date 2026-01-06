@@ -30,7 +30,9 @@ describe('registerUI token resolution', () => {
       subscribe: jest.fn(),
       dispatch: jest.fn(),
     });
-    container.register(tokens.IEntityManager, {});
+    container.register(tokens.IEntityManager, {
+      getEntityInstance: jest.fn(),
+    });
     container.register(tokens.EntityDisplayDataProvider, {});
     container.register(tokens.IDataRegistry, {});
     container.register(tokens.LLMAdapter, {});
@@ -43,6 +45,13 @@ describe('registerUI token resolution', () => {
     });
     container.register(tokens.OxygenAggregationService, {
       aggregateOxygen: jest.fn(),
+    });
+    container.register(tokens.IEmotionCalculatorService, {
+      calculateSexualArousal: jest.fn(),
+      calculateEmotions: jest.fn(),
+      formatEmotionsForPrompt: jest.fn(),
+      calculateSexualStates: jest.fn(),
+      formatSexualStatesForPrompt: jest.fn(),
     });
   });
 
