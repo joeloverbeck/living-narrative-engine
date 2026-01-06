@@ -20,6 +20,7 @@
       "frustration_spiral.expression.json",
       "grief_break.expression.json",
       "guilt_driven_repair_impulse.expression.json",
+      "horror_revulsion.expression.json",
       "humiliation.expression.json",
       "hypervigilant_scanning.expression.json",
       "intense_desire.expression.json",
@@ -32,8 +33,10 @@
       "quiet_despair.expression.json",
       "quiet_grief.expression.json",
       "rage_surge.expression.json",
+      "restless_anxiety.expression.json",
       "shame_spike.expression.json",
       "startle_flinch.expression.json",
+      "steeled_courage.expression.json",
       "suppressed_rage.expression.json",
       "tearful_sorrow.expression.json",
       "warm_affection.expression.json"

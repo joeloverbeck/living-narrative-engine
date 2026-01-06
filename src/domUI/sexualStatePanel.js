@@ -127,14 +127,14 @@ export class SexualStatePanel extends BoundDomRendererBase {
       );
     }
     if (
-      !emotionCalculatorService.formatSexualStatesForPrompt ||
-      typeof emotionCalculatorService.formatSexualStatesForPrompt !== 'function'
+      !emotionCalculatorService.getTopSexualStates ||
+      typeof emotionCalculatorService.getTopSexualStates !== 'function'
     ) {
       this.logger.error(
-        `${this._logPrefix} EmotionCalculatorService must have formatSexualStatesForPrompt method.`
+        `${this._logPrefix} EmotionCalculatorService must have getTopSexualStates method.`
       );
       throw new Error(
-        `${this._logPrefix} EmotionCalculatorService must have formatSexualStatesForPrompt method.`
+        `${this._logPrefix} EmotionCalculatorService must have getTopSexualStates method.`
       );
     }
 
@@ -497,23 +497,43 @@ export class SexualStatePanel extends BoundDomRendererBase {
     // The calculateSexualStates method takes moodData and sexualArousal
     // Fetch mood data from the entity for proper sexual state calculation
     const moodData = this.#getMoodData();
-    const sexualStates = this.#emotionCalculatorService.calculateSexualStates(moodData, arousal);
-    const sexualStatesText = this.#emotionCalculatorService.formatSexualStatesForPrompt(sexualStates);
+    const sexualStates = this.#emotionCalculatorService.calculateSexualStates(
+      moodData,
+      arousal,
+      sexualStateData
+    );
+    const sexualStateItems = this.#emotionCalculatorService.getTopSexualStates(sexualStates);
 
     // Create sexual states text container
     const statesContainer = this.documentContext.create('div');
     statesContainer.className = 'sexual-state-panel__states';
 
-    if (sexualStatesText) {
+    if (sexualStateItems.length > 0) {
       const statesLabel = this.documentContext.create('span');
       statesLabel.className = 'sexual-state-panel__states-label';
       statesLabel.textContent = 'Current: ';
       statesContainer.appendChild(statesLabel);
 
-      const statesValue = this.documentContext.create('span');
-      statesValue.className = 'sexual-state-panel__states-value';
-      statesValue.textContent = sexualStatesText;
-      statesContainer.appendChild(statesValue);
+      const statesList = this.documentContext.create('div');
+      statesList.className = 'sexual-state-panel__states-list';
+      statesContainer.appendChild(statesList);
+
+      sexualStateItems.forEach((item) => {
+        const stateItem = this.documentContext.create('span');
+        stateItem.className = 'sexual-state-panel__state-item';
+
+        const stateName = this.documentContext.create('span');
+        stateName.className = 'sexual-state-panel__state-name';
+        stateName.textContent = `${item.displayName}: `;
+
+        const stateLabel = this.documentContext.create('span');
+        stateLabel.className = 'sexual-state-panel__state-label';
+        stateLabel.textContent = item.label;
+
+        stateItem.appendChild(stateName);
+        stateItem.appendChild(stateLabel);
+        statesList.appendChild(stateItem);
+      });
     } else {
       statesContainer.textContent = 'Current: neutral';
     }

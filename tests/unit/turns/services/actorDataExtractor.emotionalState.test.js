@@ -263,13 +263,15 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
       });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
       mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.42);
 
       extractor.extractPromptData(actorState, 'actor-test');
 
       expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
         moodData,
-        0.42
+        0.42,
+        sexualStateData
       );
     });
 
@@ -304,13 +306,15 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
       });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
       mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.55);
 
       extractor.extractPromptData(actorState, 'actor-test');
 
       expect(mockEmotionCalculatorService.calculateSexualStates).toHaveBeenCalledWith(
         moodData,
-        0.55
+        0.55,
+        sexualStateData
       );
     });
 

@@ -18,6 +18,8 @@ import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUti
 
 // --- Import Trace Config Utility ---
 import { loadAndApplyTraceConfig } from '../configuration/utils/traceConfigUtils.js';
+// --- Import Emotion Display Config Utility ---
+import { loadAndApplyEmotionDisplayConfig } from '../configuration/utils/emotionDisplayConfigUtils.js';
 
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -153,6 +155,14 @@ export async function configureContainer(container, uiElements) {
 
     // --- Load trace configuration asynchronously ---
     await loadAndApplyTraceConfig(container, logger, tokens, 'ContainerConfig');
+
+    // --- Load emotion display configuration asynchronously ---
+    await loadAndApplyEmotionDisplayConfig(
+      container,
+      logger,
+      tokens,
+      'ContainerConfig'
+    );
 
     logger.debug(
       '[ContainerConfig] Configuration and registry population complete.'

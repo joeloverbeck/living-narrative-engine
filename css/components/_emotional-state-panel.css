@@ -158,6 +158,10 @@
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   margin-top: var(--spacing-sm, 8px);
   border-top: 1px solid var(--border-color-subtle, #ddd3c7);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
 }
 
 .emotional-state-panel__emotions-label {
@@ -167,6 +171,35 @@
 
 .emotional-state-panel__emotions-value {
   font-style: italic;
+}
+
+.emotional-state-panel__emotions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+}
+
+.emotional-state-panel__emotion-item {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background-color: rgba(155, 89, 182, 0.12);
+  border: 1px solid rgba(155, 89, 182, 0.2);
+}
+
+.emotional-state-panel__emotion-name {
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+}
+
+.emotional-state-panel__emotion-label {
+  font-style: italic;
+  color: var(--secondary-text-color, #576574);
 }
 
 /* ============================================

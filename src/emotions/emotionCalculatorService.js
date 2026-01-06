@@ -81,6 +81,12 @@ class EmotionCalculatorService {
   #emotionPrototypes = null;
   /** @type {{[key: string]: EmotionPrototype}|null} */
   #sexualPrototypes = null;
+  /** @type {number} */
+  #defaultMaxEmotionalStates = 7;
+  /** @type {number} */
+  #defaultMaxSexualStates = 5;
+  /** @type {string} */
+  #sexualComponentId = 'core:sexual_state';
 
   /**
    * Creates a new EmotionCalculatorService instance.
@@ -88,8 +94,9 @@ class EmotionCalculatorService {
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger instance
    * @param {IDataRegistry} deps.dataRegistry - Data registry for lookup access
+   * @param {{maxEmotionalStates?: number, maxSexualStates?: number}} [deps.displayConfig] - Display defaults
    */
-  constructor({ logger, dataRegistry }) {
+  constructor({ logger, dataRegistry, displayConfig }) {
     if (!logger) {
       throw new InvalidArgumentError('logger is required');
     }
@@ -99,6 +106,16 @@ class EmotionCalculatorService {
 
     this.#logger = logger;
     this.#dataRegistry = dataRegistry;
+
+    if (displayConfig && typeof displayConfig === 'object') {
+      const { maxEmotionalStates, maxSexualStates } = displayConfig;
+      if (Number.isInteger(maxEmotionalStates) && maxEmotionalStates > 0) {
+        this.#defaultMaxEmotionalStates = maxEmotionalStates;
+      }
+      if (Number.isInteger(maxSexualStates) && maxSexualStates > 0) {
+        this.#defaultMaxSexualStates = maxSexualStates;
+      }
+    }
   }
 
   /**
@@ -196,14 +213,32 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Resolves axis values across mood and sexual axes.
+   *
+   * @param {string} axis - Axis name
+   * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
+   * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
+   * @returns {number} Resolved axis value
+   */
+  #resolveAxisValue(axis, normalizedAxes, sexualAxes) {
+    const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
+
+    if (Object.prototype.hasOwnProperty.call(sexualAxes, resolvedAxis)) {
+      return sexualAxes[resolvedAxis] ?? 0;
+    }
+
+    return normalizedAxes[resolvedAxis] ?? 0;
+  }
+
+  /**
    * Checks if all gates pass for a prototype.
    *
    * @param {string[]|undefined} gates - Array of gate conditions
    * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
-   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
    * @returns {boolean} True if all gates pass
    */
-  #checkGates(gates, normalizedAxes, sexualArousal) {
+  #checkGates(gates, normalizedAxes, sexualAxes) {
     if (!gates || !Array.isArray(gates) || gates.length === 0) {
       return true;
     }
@@ -219,13 +254,11 @@ class EmotionCalculatorService {
 
       const { axis, operator, value } = parsed;
 
-      // Get the axis value - special handling for sexual_arousal
-      let axisValue;
-      if (axis === 'sexual_arousal') {
-        axisValue = sexualArousal ?? 0;
-      } else {
-        axisValue = normalizedAxes[axis] ?? 0;
-      }
+      const axisValue = this.#resolveAxisValue(
+        axis,
+        normalizedAxes,
+        sexualAxes
+      );
 
       // Evaluate the gate condition
       let passes;
@@ -265,12 +298,12 @@ class EmotionCalculatorService {
    *
    * @param {EmotionPrototype} prototype - Emotion/sexual prototype
    * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
-   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
    * @returns {number} Intensity value in [0..1]
    */
-  #calculatePrototypeIntensity(prototype, normalizedAxes, sexualArousal) {
+  #calculatePrototypeIntensity(prototype, normalizedAxes, sexualAxes) {
     // Check gates first
-    if (!this.#checkGates(prototype.gates, normalizedAxes, sexualArousal)) {
+    if (!this.#checkGates(prototype.gates, normalizedAxes, sexualAxes)) {
       return 0;
     }
 
@@ -283,13 +316,11 @@ class EmotionCalculatorService {
     let maxPossible = 0;
 
     for (const [axis, weight] of Object.entries(weights)) {
-      // Get axis value - special handling for sexual_arousal and SA alias
-      let axisValue;
-      if (axis === 'sexual_arousal' || axis === 'SA') {
-        axisValue = sexualArousal ?? 0;
-      } else {
-        axisValue = normalizedAxes[axis] ?? 0;
-      }
+      const axisValue = this.#resolveAxisValue(
+        axis,
+        normalizedAxes,
+        sexualAxes
+      );
 
       rawSum += axisValue * weight;
       maxPossible += Math.abs(weight);
@@ -306,6 +337,82 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Normalizes sexual axes from [0..100] to [0..1].
+   *
+   * @param {SexualState|null|undefined} sexualState - Raw sexual state data
+   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @returns {{[key: string]: number}} Normalized sexual axes
+   */
+  #normalizeSexualAxes(sexualState, sexualArousal) {
+    const normalized = {};
+    const resolvedArousal =
+      typeof sexualArousal === 'number'
+        ? sexualArousal
+        : this.calculateSexualArousal(sexualState);
+
+    normalized.sexual_arousal = clamp01(resolvedArousal ?? 0);
+
+    if (sexualState && typeof sexualState === 'object') {
+      const hasSexInhibition = Object.prototype.hasOwnProperty.call(
+        sexualState,
+        'sex_inhibition'
+      );
+      const hasSexualInhibition = Object.prototype.hasOwnProperty.call(
+        sexualState,
+        'sexual_inhibition'
+      );
+      const hasSexExcitation = Object.prototype.hasOwnProperty.call(
+        sexualState,
+        'sex_excitation'
+      );
+
+      if (hasSexInhibition) {
+        this.#assertSexualAxisValue(
+          'sex_inhibition',
+          sexualState.sex_inhibition,
+          sexualState,
+          'normalizeSexualAxes'
+        );
+      } else if (hasSexualInhibition) {
+        this.#assertSexualAxisValue(
+          'sexual_inhibition',
+          sexualState.sexual_inhibition,
+          sexualState,
+          'normalizeSexualAxes'
+        );
+      }
+
+      if (hasSexExcitation) {
+        this.#assertSexualAxisValue(
+          'sex_excitation',
+          sexualState.sex_excitation,
+          sexualState,
+          'normalizeSexualAxes'
+        );
+      }
+
+      const inhibitionValue =
+        typeof sexualState.sex_inhibition === 'number'
+          ? sexualState.sex_inhibition
+          : typeof sexualState.sexual_inhibition === 'number'
+            ? sexualState.sexual_inhibition
+            : null;
+
+      if (typeof inhibitionValue === 'number') {
+        const normalizedInhibition = clamp01(inhibitionValue / 100);
+        normalized.sex_inhibition = normalizedInhibition;
+        normalized.sexual_inhibition = normalizedInhibition;
+      }
+
+      if (typeof sexualState.sex_excitation === 'number') {
+        normalized.sex_excitation = clamp01(sexualState.sex_excitation / 100);
+      }
+    }
+
+    return normalized;
+  }
+
+  /**
    * Calculates sexual arousal from sexual state.
    *
    * @param {SexualState|null|undefined} sexualState - Sexual state data
@@ -316,9 +423,37 @@ class EmotionCalculatorService {
       return null;
     }
 
-    const excitation = sexualState.sex_excitation ?? 0;
-    const inhibition = sexualState.sex_inhibition ?? 0;
-    const baseline = sexualState.baseline_libido ?? 0;
+    if (typeof sexualState === 'object') {
+      if (Object.prototype.hasOwnProperty.call(sexualState, 'sex_excitation')) {
+        this.#assertSexualAxisValue(
+          'sex_excitation',
+          sexualState.sex_excitation,
+          sexualState,
+          'calculateSexualArousal'
+        );
+      }
+      if (Object.prototype.hasOwnProperty.call(sexualState, 'sex_inhibition')) {
+        this.#assertSexualAxisValue(
+          'sex_inhibition',
+          sexualState.sex_inhibition,
+          sexualState,
+          'calculateSexualArousal'
+        );
+      }
+    }
+
+    const excitation =
+      typeof sexualState.sex_excitation === 'number'
+        ? sexualState.sex_excitation
+        : 0;
+    const inhibition =
+      typeof sexualState.sex_inhibition === 'number'
+        ? sexualState.sex_inhibition
+        : 0;
+    const baseline =
+      typeof sexualState.baseline_libido === 'number'
+        ? sexualState.baseline_libido
+        : 0;
 
     // Formula: (excitation - inhibition + baseline) / 100
     const rawValue = (excitation - inhibition + baseline) / 100;
@@ -327,13 +462,73 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Validates sexual axis inputs before normalization.
+   *
+   * @param {string} axisName - Axis name in sexual state
+   * @param {unknown} value - Incoming raw axis value
+   * @param {SexualState|null|undefined} sexualState - Sexual state payload
+   * @param {string} context - Calling method for error context
+   * @returns {void}
+   */
+  #assertSexualAxisValue(axisName, value, sexualState, context) {
+    const serialized = this.#stringifySexualState(sexualState);
+    const normalizationNote =
+      'EmotionCalculatorService normalizes sexual axes by dividing by 100; pass raw core:sexual_state values in [0..100].';
+
+    if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService.${context}: Invalid "${axisName}" value. Expected a finite number (integer) in [0..100] from ${this.#sexualComponentId}. Received ${String(
+          value
+        )} (${typeof value}). ${normalizationNote} sexualState=${serialized}`,
+        axisName,
+        value
+      );
+    }
+
+    if (!Number.isInteger(value)) {
+      const normalizedHint =
+        value > 0 && value < 1
+          ? ' Value looks pre-normalized in [0..1].'
+          : '';
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService.${context}: Invalid "${axisName}" value. Expected an integer in [0..100] from ${this.#sexualComponentId}. Received ${value} (non-integer).${normalizedHint} ${normalizationNote} sexualState=${serialized}`,
+        axisName,
+        value
+      );
+    }
+
+    if (value < 0 || value > 100) {
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService.${context}: Invalid "${axisName}" value. Expected integer range [0..100] from ${this.#sexualComponentId}. Received ${value}. ${normalizationNote} sexualState=${serialized}`,
+        axisName,
+        value
+      );
+    }
+  }
+
+  /**
+   * Stringifies sexual state for error messages.
+   *
+   * @param {SexualState|null|undefined} sexualState
+   * @returns {string}
+   */
+  #stringifySexualState(sexualState) {
+    try {
+      return JSON.stringify(sexualState);
+    } catch (error) {
+      return '[unserializable sexualState]';
+    }
+  }
+
+  /**
    * Calculates emotion intensities from mood data.
    *
    * @param {MoodData} moodData - Mood axis values
    * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
    * @returns {Map<string, number>} Map of emotion name to intensity
    */
-  calculateEmotions(moodData, sexualArousal) {
+  calculateEmotions(moodData, sexualArousal, sexualState) {
     const result = new Map();
 
     const prototypes = this.#ensureEmotionPrototypes();
@@ -345,12 +540,13 @@ class EmotionCalculatorService {
     }
 
     const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
 
     for (const [emotionName, prototype] of Object.entries(prototypes)) {
       const intensity = this.#calculatePrototypeIntensity(
         prototype,
         normalizedAxes,
-        sexualArousal
+        sexualAxes
       );
 
       // Only include emotions with intensity > 0 (gates passed and has positive intensity)
@@ -367,9 +563,10 @@ class EmotionCalculatorService {
    *
    * @param {MoodData} moodData - Mood axis values
    * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
    * @returns {Map<string, number>} Map of sexual state name to intensity
    */
-  calculateSexualStates(moodData, sexualArousal) {
+  calculateSexualStates(moodData, sexualArousal, sexualState) {
     const result = new Map();
 
     const prototypes = this.#ensureSexualPrototypes();
@@ -381,12 +578,13 @@ class EmotionCalculatorService {
     }
 
     const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
 
     for (const [stateName, prototype] of Object.entries(prototypes)) {
       const intensity = this.#calculatePrototypeIntensity(
         prototype,
         normalizedAxes,
-        sexualArousal
+        sexualAxes
       );
 
       // Only include states with intensity > 0
@@ -424,33 +622,9 @@ class EmotionCalculatorService {
    * @param {number} [maxCount] - Maximum number of emotions to include
    * @returns {string} Formatted string like "joy: strong, curiosity: moderate, ..."
    */
-  formatEmotionsForPrompt(emotions, maxCount = 5) {
-    if (!emotions || emotions.size === 0) {
-      return '';
-    }
-
-    // Filter out absent emotions (intensity < 0.05)
-    const filtered = Array.from(emotions.entries()).filter(
-      ([, intensity]) => intensity >= 0.05
-    );
-
-    if (filtered.length === 0) {
-      return '';
-    }
-
-    // Sort by intensity descending
-    filtered.sort((a, b) => b[1] - a[1]);
-
-    // Take top N
-    const topEmotions = filtered.slice(0, maxCount);
-
-    // Format: "emotion_name: label" with underscores replaced by spaces
-    return topEmotions
-      .map(([name, intensity]) => {
-        const displayName = name.replace(/_/g, ' ');
-        const label = this.getIntensityLabel(intensity);
-        return `${displayName}: ${label}`;
-      })
+  formatEmotionsForPrompt(emotions, maxCount) {
+    return this.getTopEmotions(emotions, maxCount)
+      .map(({ displayName, label }) => `${displayName}: ${label}`)
       .join(', ');
   }
 
@@ -461,34 +635,70 @@ class EmotionCalculatorService {
    * @param {number} [maxCount] - Maximum number of states to include
    * @returns {string} Formatted string like "sexual_lust: strong, ..."
    */
-  formatSexualStatesForPrompt(sexualStates, maxCount = 3) {
-    if (!sexualStates || sexualStates.size === 0) {
-      return '';
+  formatSexualStatesForPrompt(sexualStates, maxCount) {
+    return this.getTopSexualStates(sexualStates, maxCount)
+      .map(({ displayName, label }) => `${displayName}: ${label}`)
+      .join(', ');
+  }
+
+  /**
+   * Gets the top emotions for display purposes.
+   *
+   * @param {Map<string, number>} emotions - Map of emotion name to intensity
+   * @param {number} [maxCount] - Maximum number of emotions to include
+   * @returns {Array<{name: string, displayName: string, label: string, intensity: number}>}
+   */
+  getTopEmotions(emotions, maxCount) {
+    return this.#getTopStates(emotions, maxCount, this.#defaultMaxEmotionalStates);
+  }
+
+  /**
+   * Gets the top sexual states for display purposes.
+   *
+   * @param {Map<string, number>} sexualStates - Map of sexual state name to intensity
+   * @param {number} [maxCount] - Maximum number of states to include
+   * @returns {Array<{name: string, displayName: string, label: string, intensity: number}>}
+   */
+  getTopSexualStates(sexualStates, maxCount) {
+    return this.#getTopStates(sexualStates, maxCount, this.#defaultMaxSexualStates);
+  }
+
+  /**
+   * Shared filtering/sorting for emotion/sexual state lists.
+   *
+   * @param {Map<string, number>|null|undefined} states - Map of state name to intensity
+   * @param {number|undefined} maxCount - Maximum number of items to include
+   * @param {number} defaultMaxCount - Default max if maxCount is not provided
+   * @returns {Array<{name: string, displayName: string, label: string, intensity: number}>}
+   */
+  #getTopStates(states, maxCount, defaultMaxCount) {
+    if (!states || states.size === 0) {
+      return [];
     }
 
-    // Filter out absent states (intensity < 0.05)
-    const filtered = Array.from(sexualStates.entries()).filter(
+    const filtered = Array.from(states.entries()).filter(
       ([, intensity]) => intensity >= 0.05
     );
 
     if (filtered.length === 0) {
-      return '';
+      return [];
     }
 
-    // Sort by intensity descending
     filtered.sort((a, b) => b[1] - a[1]);
 
-    // Take top N
-    const topStates = filtered.slice(0, maxCount);
+    const resolvedMaxCount = maxCount ?? defaultMaxCount;
+    const topStates = filtered.slice(0, resolvedMaxCount);
 
-    // Format: "state_name: label" with underscores replaced by spaces
-    return topStates
-      .map(([name, intensity]) => {
-        const displayName = name.replace(/_/g, ' ');
-        const label = this.getIntensityLabel(intensity);
-        return `${displayName}: ${label}`;
-      })
-      .join(', ');
+    return topStates.map(([name, intensity]) => {
+      const displayName = name.replace(/_/g, ' ');
+      const label = this.getIntensityLabel(intensity);
+      return {
+        name,
+        displayName,
+        label,
+        intensity,
+      };
+    });
   }
 }
 

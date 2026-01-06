@@ -48,6 +48,21 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "sex_excitation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "sex_inhibition": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "sexual_inhibition": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -154,7 +169,7 @@
         "future_expectancy >= 0.10"
       ]
     },
-    "sexual_confident": {
+    "sexual_confidence": {
       "weights": {
         "sexual_arousal": 0.8,
         "agency_control": 0.6,
@@ -193,6 +208,24 @@
       "gates": [
         "sexual_arousal >= 0.35",
         "threat >= 0.30"
+      ]
+    },
+    "sexual_craving": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "engagement": 0.7,
+        "arousal": 0.4,
+        "valence": -0.35,
+        "agency_control": -0.25,
+        "threat": 0.15,
+        "self_evaluation": -0.10
+      },
+      "gates": [
+        "sexual_arousal >= 0.40",
+        "engagement >= 0.25",
+        "valence <= -0.05",
+        "threat <= 0.45",
+        "self_evaluation >= -0.45"
       ]
     },
     "erotic_thrill": {
@@ -264,6 +297,41 @@
       "gates": [
         "sexual_arousal >= 0.30",
         "valence <= -0.40"
+      ]
+    },
+    "sexual_indifference": {
+      "weights": {
+        "sex_inhibition": 0.8,
+        "engagement": -0.7,
+        "arousal": -0.5,
+        "threat": -0.2,
+        "valence": 0.1
+      },
+      "gates": [
+        "sexual_arousal <= 0.12",
+        "sex_inhibition >= 0.70",
+        "sex_excitation <= 0.25",
+        "engagement <= -0.10",
+        "arousal <= 0.20",
+        "threat <= 0.40"
+      ]
+    },
+    "sexual_repulsion": {
+      "weights": {
+        "sex_inhibition": 0.8,
+        "valence": -0.8,
+        "threat": 0.5,
+        "engagement": 0.3,
+        "self_evaluation": -0.2,
+        "arousal": 0.2
+      },
+      "gates": [
+        "sexual_arousal <= 0.20",
+        "sex_inhibition >= 0.70",
+        "sex_excitation <= 0.25",
+        "valence <= -0.20",
+        "engagement >= 0.10",
+        "threat >= 0.10"
       ]
     }
   }

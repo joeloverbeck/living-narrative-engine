@@ -56,12 +56,14 @@ class ExpressionContextBuilder {
 
     const emotions = this.#emotionCalculatorService.calculateEmotions(
       moodData,
-      sexualArousal
+      sexualArousal,
+      sexualStateData
     );
 
     const sexualStates = this.#emotionCalculatorService.calculateSexualStates(
       moodData,
-      sexualArousal
+      sexualArousal,
+      sexualStateData
     );
 
     const actorContext = createEntityContext(

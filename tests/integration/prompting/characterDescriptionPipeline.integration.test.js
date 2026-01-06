@@ -24,7 +24,9 @@ function createMockEmotionCalculatorService() {
     calculateEmotions: jest.fn().mockReturnValue(new Map([['calm', 0.5]])),
     calculateSexualStates: jest.fn().mockReturnValue(new Map()),
     formatEmotionsForPrompt: jest.fn().mockReturnValue('calm: moderate'),
+    getTopEmotions: jest.fn().mockReturnValue([]),
     formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+    getTopSexualStates: jest.fn().mockReturnValue([]),
   };
 }
 

@@ -134,7 +134,7 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.2);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      createEmotionMap({ anger: 0.8 })
+      createEmotionMap({ anger: 0.8, rage: 0.7 })
     );
     emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
 
@@ -154,7 +154,7 @@ describe('Expression Flow - Integration', () => {
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     const [eventName, payload] = eventBus.dispatch.mock.calls[0];
     expect(eventName).toBe('core:perceptible_event');
-    expect(payload.contextualData.expressionId).toBe('emotions:explosive_anger');
+    expect(payload.contextualData.expressionId).toBe('emotions:rage_surge');
     expect(payload.descriptionText).toContain('Avery');
     expect(payload.descriptionText).not.toContain('{actor}');
     expect(payload.actorDescription).toBeDefined();

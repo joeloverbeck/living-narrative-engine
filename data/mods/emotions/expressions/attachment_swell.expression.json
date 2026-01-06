@@ -7,14 +7,14 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "sexualStates.love_attachment" }, 0.65] },
+          { ">=": [{ "var": "emotions.love_attachment" }, 0.65] },
           { ">=": [{ "var": "emotions.affection" }, 0.55] },
           {
             ">=": [
               {
                 "-": [
-                  { "var": "sexualStates.love_attachment" },
-                  { "var": "previousSexualStates.love_attachment" }
+                  { "var": "emotions.love_attachment" },
+                  { "var": "previousEmotions.love_attachment" }
                 ]
               },
               0.12

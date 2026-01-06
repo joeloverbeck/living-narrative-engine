@@ -89,6 +89,26 @@
           </div>
         </section>
 
+        <!-- Emotions Section -->
+        <section
+          class="button-category button-category--emotions"
+          aria-labelledby="emotions-title"
+        >
+          <h2 id="emotions-title" class="category-title">Emotions</h2>
+          <p class="category-description">
+            Explore expression triggers and mood-driven outputs
+          </p>
+          <div class="button-grid button-grid--1col button-grid--centered">
+            <button
+              id="expressions-simulator-button"
+              class="menu-button nav-button nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">😊</span>
+              <span class="button-text">Expressions Simulator</span>
+            </button>
+          </div>
+        </section>
+
         <!-- LLM Configuration Section -->
         <section
           class="button-category button-category--llm"
@@ -247,6 +267,11 @@
         .getElementById('damage-simulator-button')
         .addEventListener('click', () => {
           window.location.href = 'damage-simulator.html';
+        });
+      document
+        .getElementById('expressions-simulator-button')
+        .addEventListener('click', () => {
+          window.location.href = 'expressions-simulator.html';
         });
       document
         .getElementById('character-concepts-button')

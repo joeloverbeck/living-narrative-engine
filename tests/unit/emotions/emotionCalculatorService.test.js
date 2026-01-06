@@ -195,6 +195,36 @@ describe('EmotionCalculatorService', () => {
       const result = service.calculateSexualArousal(sexualState);
       expect(result).toBe(0);
     });
+
+    it('should throw when sex_excitation looks pre-normalized', () => {
+      const sexualState = {
+        sex_excitation: 0.5,
+        sex_inhibition: 20,
+        baseline_libido: 0,
+      };
+
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        'pre-normalized'
+      );
+    });
+
+    it('should throw when sex_inhibition is out of range', () => {
+      const sexualState = {
+        sex_excitation: 50,
+        sex_inhibition: 120,
+        baseline_libido: 0,
+      };
+
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        'range [0..100]'
+      );
+    });
   });
 
   describe('calculateEmotions', () => {
@@ -337,6 +367,97 @@ describe('EmotionCalculatorService', () => {
       const result = service.calculateSexualStates(moodData, 0.5);
 
       expect(result).toBeInstanceOf(Map);
+    });
+
+    it('should handle sex_inhibition axis in sexual state weights', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:sexual_prototypes') {
+          return {
+            entries: {
+              sexual_repulsion: {
+                weights: { sex_inhibition: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateSexualStates(
+        {},
+        null,
+        { sex_inhibition: 90 }
+      );
+
+      expect(result.get('sexual_repulsion')).toBeCloseTo(0.9, 2);
+    });
+
+    it('should handle sex_excitation axis in sexual state weights', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:sexual_prototypes') {
+          return {
+            entries: {
+              sexual_interest: {
+                weights: { sex_excitation: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateSexualStates(
+        {},
+        null,
+        { sex_excitation: 80 }
+      );
+
+      expect(result.get('sexual_interest')).toBeCloseTo(0.8, 2);
+    });
+
+    it('should handle sex_excitation axis in sexual state gates', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:sexual_prototypes') {
+          return {
+            entries: {
+              sexual_interest: {
+                weights: { sex_excitation: 1.0 },
+                gates: ['sex_excitation >= 0.6'],
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const lowExcitation = freshService.calculateSexualStates(
+        {},
+        null,
+        { sex_excitation: 40 }
+      );
+      expect(lowExcitation.has('sexual_interest')).toBe(false);
+
+      const highExcitation = freshService.calculateSexualStates(
+        {},
+        null,
+        { sex_excitation: 80 }
+      );
+      expect(highExcitation.has('sexual_interest')).toBe(true);
     });
 
     it('should filter out states that fail gate checks', () => {
@@ -524,6 +645,160 @@ describe('EmotionCalculatorService', () => {
       expect(highSAResult.has('lust_emotion')).toBe(true);
     });
 
+    it('should handle sex_inhibition axis in weights', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              inhibited_emotion: {
+                weights: { sex_inhibition: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_inhibition: 80 }
+      );
+
+      expect(result.get('inhibited_emotion')).toBeCloseTo(0.8, 2);
+    });
+
+    it('should handle sex_excitation axis in weights', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              excited_emotion: {
+                weights: { sex_excitation: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_excitation: 80 }
+      );
+
+      expect(result.get('excited_emotion')).toBeCloseTo(0.8, 2);
+    });
+
+    it('should handle sexual_inhibition axis alias in weights', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              inhibited_emotion: {
+                weights: { sexual_inhibition: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_inhibition: 70 }
+      );
+
+      expect(result.get('inhibited_emotion')).toBeCloseTo(0.7, 2);
+    });
+
+    it('should handle sex_excitation axis in gates', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              excited_emotion: {
+                weights: { sex_excitation: 1.0 },
+                gates: ['sex_excitation >= 0.6'],
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const lowExcitation = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_excitation: 40 }
+      );
+      expect(lowExcitation.has('excited_emotion')).toBe(false);
+
+      const highExcitation = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_excitation: 80 }
+      );
+      expect(highExcitation.has('excited_emotion')).toBe(true);
+    });
+
+    it('should handle sex_inhibition axis in gates', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              inhibited_emotion: {
+                weights: { sex_inhibition: 1.0 },
+                gates: ['sex_inhibition >= 0.6'],
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const lowInhibition = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_inhibition: 40 }
+      );
+      expect(lowInhibition.has('inhibited_emotion')).toBe(false);
+
+      const highInhibition = freshService.calculateEmotions(
+        {},
+        null,
+        { sex_inhibition: 80 }
+      );
+      expect(highInhibition.has('inhibited_emotion')).toBe(true);
+    });
+
     it('should log warning for invalid gate format', () => {
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:emotion_prototypes') {
@@ -672,6 +947,85 @@ describe('EmotionCalculatorService', () => {
     });
   });
 
+  describe('getTopEmotions', () => {
+    it('returns sorted items with display names and labels', () => {
+      const emotions = new Map([
+        ['inner_peace', 0.6],
+        ['joy', 0.8],
+      ]);
+
+      const result = service.getTopEmotions(emotions);
+
+      expect(result[0].name).toBe('joy');
+      expect(result[0].displayName).toBe('joy');
+      expect(result[1].displayName).toBe('inner peace');
+      expect(result[0].label).toBe('powerful');
+    });
+
+    it('filters out emotions below the threshold', () => {
+      const emotions = new Map([
+        ['joy', 0.6],
+        ['weak', 0.04],
+      ]);
+
+      const result = service.getTopEmotions(emotions);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('joy');
+    });
+
+    it('respects maxCount overrides', () => {
+      const emotions = new Map([
+        ['joy', 0.9],
+        ['pride', 0.8],
+        ['excitement', 0.7],
+      ]);
+
+      const result = service.getTopEmotions(emotions, 2);
+
+      expect(result).toHaveLength(2);
+      expect(result.find((item) => item.name === 'excitement')).toBeUndefined();
+    });
+
+    it('returns empty array for null or empty maps', () => {
+      expect(service.getTopEmotions(null)).toEqual([]);
+      expect(service.getTopEmotions(new Map())).toEqual([]);
+    });
+  });
+
+  describe('getTopSexualStates', () => {
+    it('returns sorted items with display names and labels', () => {
+      const states = new Map([
+        ['romantic_yearning', 0.4],
+        ['sexual_lust', 0.7],
+      ]);
+
+      const result = service.getTopSexualStates(states);
+
+      expect(result[0].name).toBe('sexual_lust');
+      expect(result[0].displayName).toBe('sexual lust');
+      expect(result[1].displayName).toBe('romantic yearning');
+      expect(result[0].label).toBe('intense');
+    });
+
+    it('filters out states below the threshold', () => {
+      const states = new Map([
+        ['sexual_lust', 0.7],
+        ['weak', 0.01],
+      ]);
+
+      const result = service.getTopSexualStates(states);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('sexual_lust');
+    });
+
+    it('returns empty array for null or empty maps', () => {
+      expect(service.getTopSexualStates(null)).toEqual([]);
+      expect(service.getTopSexualStates(new Map())).toEqual([]);
+    });
+  });
+
   describe('formatEmotionsForPrompt', () => {
     it('should format top emotions with labels', () => {
       const emotions = new Map([
@@ -694,7 +1048,7 @@ describe('EmotionCalculatorService', () => {
         ['excitement', 0.7],
         ['contentment', 0.6],
         ['curiosity', 0.5],
-        ['hope', 0.4], // should be excluded with default maxCount=5
+        ['hope', 0.4], // should be excluded with explicit maxCount=5
       ]);
 
       const result = service.formatEmotionsForPrompt(emotions, 5);
@@ -780,6 +1134,49 @@ describe('EmotionCalculatorService', () => {
 
       expect(result).toMatch(/joy: strong,\s*pride: moderate/);
     });
+
+    it('should limit to default max emotions when maxCount is omitted', () => {
+      const emotions = new Map([
+        ['joy', 0.9],
+        ['pride', 0.8],
+        ['excitement', 0.7],
+        ['contentment', 0.6],
+        ['curiosity', 0.5],
+        ['hope', 0.4],
+        ['relief', 0.35],
+        ['gratitude', 0.3],
+      ]);
+
+      const result = service.formatEmotionsForPrompt(emotions);
+
+      expect(result).toContain('joy');
+      expect(result).toContain('pride');
+      expect(result).toContain('excitement');
+      expect(result).toContain('contentment');
+      expect(result).toContain('curiosity');
+      expect(result).toContain('hope');
+      expect(result).toContain('relief');
+      expect(result).not.toContain('gratitude');
+    });
+
+    it('should use configured default max emotions when maxCount is omitted', () => {
+      const customService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+        displayConfig: { maxEmotionalStates: 2, maxSexualStates: 5 },
+      });
+      const emotions = new Map([
+        ['joy', 0.9],
+        ['pride', 0.8],
+        ['excitement', 0.7],
+      ]);
+
+      const result = customService.formatEmotionsForPrompt(emotions);
+
+      expect(result).toContain('joy');
+      expect(result).toContain('pride');
+      expect(result).not.toContain('excitement');
+    });
   });
 
   describe('formatSexualStatesForPrompt', () => {
@@ -795,12 +1192,14 @@ describe('EmotionCalculatorService', () => {
       expect(result).toContain('afterglow: moderate');
     });
 
-    it('should limit to maxCount states (default 3)', () => {
+    it('should limit to maxCount states (default 5)', () => {
       const states = new Map([
         ['state1', 0.9],
         ['state2', 0.8],
         ['state3', 0.7],
-        ['state4', 0.6], // should be excluded
+        ['state4', 0.6],
+        ['state5', 0.5],
+        ['state6', 0.4], // should be excluded
       ]);
 
       const result = service.formatSexualStatesForPrompt(states);
@@ -808,7 +1207,9 @@ describe('EmotionCalculatorService', () => {
       expect(result).toContain('state1');
       expect(result).toContain('state2');
       expect(result).toContain('state3');
-      expect(result).not.toContain('state4');
+      expect(result).toContain('state4');
+      expect(result).toContain('state5');
+      expect(result).not.toContain('state6');
     });
 
     it('should sort by intensity descending', () => {
@@ -833,6 +1234,23 @@ describe('EmotionCalculatorService', () => {
       const result = service.formatSexualStatesForPrompt(states);
 
       expect(result).toBe('');
+    });
+
+    it('should use configured default max sexual states when maxCount is omitted', () => {
+      const customService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+        displayConfig: { maxEmotionalStates: 7, maxSexualStates: 1 },
+      });
+      const states = new Map([
+        ['state1', 0.9],
+        ['state2', 0.8],
+      ]);
+
+      const result = customService.formatSexualStatesForPrompt(states);
+
+      expect(result).toContain('state1');
+      expect(result).not.toContain('state2');
     });
   });
 

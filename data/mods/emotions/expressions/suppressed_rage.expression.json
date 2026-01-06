@@ -1,22 +1,23 @@
 {
   "$schema": "schema://living-narrative-engine/expression.schema.json",
   "id": "emotions:suppressed_rage",
-  "description": "Activated when actor feels intense anger with suppressed agency",
+  "description": "Activated when actor feels intense anger with suppressed agency, but still has some fight/hope left (not despair).",
   "priority": 75,
   "prerequisites": [
     {
       "logic": {
         "and": [
           { ">=": [{ "var": "emotions.anger" }, 0.65] },
-          { "<=": [{ "var": "moodAxes.agency_control" }, -30] }
+          { "<=": [{ "var": "moodAxes.agency_control" }, -30] },
+          { ">=": [{ "var": "moodAxes.future_expectancy" }, -15] }
         ]
       }
     }
   ],
-  "actor_description": "Heat floods my face. I want to do something right now - break the stalemate, make the world stop pushing back.",
-  "description_text": "{actor}'s jaw locks and their movements get sharp and purposeful, like they're done asking and started acting.",
+  "actor_description": "Heat climbs up my neck and into my face. I want to move, to force an outcome—anything—but the moment won’t give me purchase. I swallow it down and keep looking for the one lever that might still exist.",
+  "description_text": "{actor} goes unnaturally still, jaw set hard enough to show in the tendons. The anger doesn’t spill—it's packed tight, held behind clenched teeth, waiting for a crack in the situation.",
   "alternate_descriptions": {
-    "auditory": "I hear a sharp intake of breath and the creak of tension nearby."
+    "auditory": "I hear a breath held too long, then released in a controlled, careful exhale—like someone biting back words."
   },
-  "tags": ["anger", "frustration", "suppression"]
+  "tags": ["anger", "suppression", "restraint", "trapped"]
 }

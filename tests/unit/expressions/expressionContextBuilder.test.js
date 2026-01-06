@@ -93,29 +93,41 @@ describe('ExpressionContextBuilder', () => {
 
   it('should calculate emotions using EmotionCalculatorService', () => {
     const moodData = { valence: 15, arousal: 25 };
+    const sexualStateData = {
+      sex_excitation: 5,
+      sex_inhibition: 1,
+      baseline_libido: 0,
+    };
     builder.buildContext(
       'actor-1',
       moodData,
-      { sex_excitation: 5, sex_inhibition: 1, baseline_libido: 0 }
+      sexualStateData
     );
 
     expect(emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
       moodData,
-      0.4
+      0.4,
+      sexualStateData
     );
   });
 
   it('should calculate sexual states using EmotionCalculatorService', () => {
     const moodData = { valence: -5, arousal: 10 };
+    const sexualStateData = {
+      sex_excitation: 5,
+      sex_inhibition: 1,
+      baseline_libido: 0,
+    };
     builder.buildContext(
       'actor-1',
       moodData,
-      { sex_excitation: 5, sex_inhibition: 1, baseline_libido: 0 }
+      sexualStateData
     );
 
     expect(emotionCalculatorService.calculateSexualStates).toHaveBeenCalledWith(
       moodData,
-      0.4
+      0.4,
+      sexualStateData
     );
   });
 
@@ -273,10 +285,12 @@ describe('ExpressionContextBuilder', () => {
     expect(result.sexualArousal).toBeNull();
     expect(emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
       { valence: 10 },
+      null,
       null
     );
     expect(emotionCalculatorService.calculateSexualStates).toHaveBeenCalledWith(
       { valence: 10 },
+      null,
       null
     );
   });

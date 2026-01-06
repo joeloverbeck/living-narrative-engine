@@ -31,7 +31,15 @@ const createMockEntityManager = () => ({
 
 const createMockEmotionCalculatorService = () => ({
   calculateSexualArousal: jest.fn().mockReturnValue(0.5),
-  calculateSexualStates: jest.fn().mockReturnValue(['aroused']),
+  calculateSexualStates: jest.fn().mockReturnValue(new Map()),
+  getTopSexualStates: jest.fn().mockReturnValue([
+    {
+      name: 'romantic_yearning',
+      displayName: 'romantic yearning',
+      label: 'noticeable',
+      intensity: 0.4,
+    },
+  ]),
   formatSexualStatesForPrompt: jest.fn().mockReturnValue('aroused'),
 });
 
@@ -154,7 +162,7 @@ describe('SexualStatePanel', () => {
     it('throws when emotionCalculatorService lacks calculateSexualArousal method', () => {
       deps.emotionCalculatorService = {
         calculateSexualStates: jest.fn(),
-        formatSexualStatesForPrompt: jest.fn(),
+        getTopSexualStates: jest.fn(),
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
         '[SexualStatePanel] EmotionCalculatorService must have calculateSexualArousal method.'
@@ -165,7 +173,7 @@ describe('SexualStatePanel', () => {
       deps.emotionCalculatorService = {
         calculateSexualArousal: 'not-a-function',
         calculateSexualStates: jest.fn(),
-        formatSexualStatesForPrompt: jest.fn(),
+        getTopSexualStates: jest.fn(),
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
         '[SexualStatePanel] EmotionCalculatorService must have calculateSexualArousal method.'
@@ -175,7 +183,7 @@ describe('SexualStatePanel', () => {
     it('throws when emotionCalculatorService lacks calculateSexualStates method', () => {
       deps.emotionCalculatorService = {
         calculateSexualArousal: jest.fn(),
-        formatSexualStatesForPrompt: jest.fn(),
+        getTopSexualStates: jest.fn(),
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
         '[SexualStatePanel] EmotionCalculatorService must have calculateSexualStates method.'
@@ -186,31 +194,31 @@ describe('SexualStatePanel', () => {
       deps.emotionCalculatorService = {
         calculateSexualArousal: jest.fn(),
         calculateSexualStates: 'not-a-function',
-        formatSexualStatesForPrompt: jest.fn(),
+        getTopSexualStates: jest.fn(),
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
         '[SexualStatePanel] EmotionCalculatorService must have calculateSexualStates method.'
       );
     });
 
-    it('throws when emotionCalculatorService lacks formatSexualStatesForPrompt method', () => {
+    it('throws when emotionCalculatorService lacks getTopSexualStates method', () => {
       deps.emotionCalculatorService = {
         calculateSexualArousal: jest.fn(),
         calculateSexualStates: jest.fn(),
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
-        '[SexualStatePanel] EmotionCalculatorService must have formatSexualStatesForPrompt method.'
+        '[SexualStatePanel] EmotionCalculatorService must have getTopSexualStates method.'
       );
     });
 
-    it('throws when emotionCalculatorService.formatSexualStatesForPrompt is not a function', () => {
+    it('throws when emotionCalculatorService.getTopSexualStates is not a function', () => {
       deps.emotionCalculatorService = {
         calculateSexualArousal: jest.fn(),
         calculateSexualStates: jest.fn(),
-        formatSexualStatesForPrompt: 'not-a-function',
+        getTopSexualStates: 'not-a-function',
       };
       expect(() => new SexualStatePanel(deps)).toThrow(
-        '[SexualStatePanel] EmotionCalculatorService must have formatSexualStatesForPrompt method.'
+        '[SexualStatePanel] EmotionCalculatorService must have getTopSexualStates method.'
       );
     });
 
@@ -612,7 +620,10 @@ describe('SexualStatePanel', () => {
     it('renders calculated sexual states text below baseline', () => {
       const mockEntity = createMockEntity(true, createSexualStateData({ sex_excitation: 80 }));
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatSexualStatesForPrompt.mockReturnValue('highly aroused, passionate');
+      deps.emotionCalculatorService.getTopSexualStates.mockReturnValue([
+        { name: 'aroused', displayName: 'aroused', label: 'strong', intensity: 0.7 },
+        { name: 'passionate', displayName: 'passionate', label: 'noticeable', intensity: 0.5 },
+      ]);
 
       new SexualStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);
@@ -620,7 +631,8 @@ describe('SexualStatePanel', () => {
 
       const statesContainer = panelElement.querySelector('.sexual-state-panel__states');
       expect(statesContainer).not.toBeNull();
-      expect(statesContainer.textContent).toContain('highly aroused, passionate');
+      expect(statesContainer.textContent).toContain('aroused: strong');
+      expect(statesContainer.textContent).toContain('passionate: noticeable');
     });
 
     it('calls emotionCalculatorService.calculateSexualArousal with sexual state data', () => {
@@ -636,7 +648,8 @@ describe('SexualStatePanel', () => {
     });
 
     it('calls emotionCalculatorService.calculateSexualStates with null and arousal', () => {
-      const mockEntity = createMockEntity(true, createSexualStateData());
+      const sexualStateData = createSexualStateData();
+      const mockEntity = createMockEntity(true, sexualStateData);
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
       deps.emotionCalculatorService.calculateSexualArousal.mockReturnValue(0.65);
 
@@ -644,13 +657,19 @@ describe('SexualStatePanel', () => {
       const handler = getEventHandler(TURN_STARTED_ID);
       handler({ payload: { entityId: 'test-entity' } });
 
-      expect(deps.emotionCalculatorService.calculateSexualStates).toHaveBeenCalledWith(null, 0.65);
+      expect(deps.emotionCalculatorService.calculateSexualStates).toHaveBeenCalledWith(
+        null,
+        0.65,
+        sexualStateData
+      );
     });
 
     it('displays "Current: " label before sexual states', () => {
       const mockEntity = createMockEntity(true, createSexualStateData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatSexualStatesForPrompt.mockReturnValue('interested');
+      deps.emotionCalculatorService.getTopSexualStates.mockReturnValue([
+        { name: 'interested', displayName: 'interested', label: 'mild', intensity: 0.2 },
+      ]);
 
       new SexualStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);
@@ -663,7 +682,7 @@ describe('SexualStatePanel', () => {
     it('displays "neutral" when sexual states text is empty', () => {
       const mockEntity = createMockEntity(true, createSexualStateData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
-      deps.emotionCalculatorService.formatSexualStatesForPrompt.mockReturnValue('');
+      deps.emotionCalculatorService.getTopSexualStates.mockReturnValue([]);
 
       new SexualStatePanel(deps);
       const handler = getEventHandler(TURN_STARTED_ID);

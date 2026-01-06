@@ -44,13 +44,15 @@ describe('core:sexual_prototypes lookup', () => {
       'sexual_sensual_pleasure',
       'sexual_playfulness',
       'romantic_yearning',
-      'sexual_confident',
+      'sexual_confidence',
       'aroused_but_ashamed',
       'aroused_but_threatened',
       'sexual_performance_anxiety',
       'sexual_frustration',
       'afterglow',
       'sexual_disgust_conflict',
+      'sexual_indifference',
+      'sexual_repulsion',
     ];
 
     requiredStates.forEach((state) => {
@@ -70,6 +72,9 @@ describe('core:sexual_prototypes lookup', () => {
       'future_expectancy',
       'self_evaluation',
       'sexual_arousal',
+      'sex_excitation',
+      'sex_inhibition',
+      'sexual_inhibition',
     ];
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
@@ -93,7 +98,17 @@ describe('core:sexual_prototypes lookup', () => {
           });
         });
 
-        it('should include sexual_arousal in weights', () => {
+        it('should include sexual_arousal in weights when expected', () => {
+          const allowsNoSexualArousal = new Set([
+            'sexual_indifference',
+            'sexual_repulsion',
+          ]);
+
+          if (allowsNoSexualArousal.has(stateName)) {
+            expect(stateData.weights.sexual_arousal).toBeUndefined();
+            return;
+          }
+
           expect(stateData.weights.sexual_arousal).toBeDefined();
         });
       });
@@ -102,7 +117,7 @@ describe('core:sexual_prototypes lookup', () => {
 
   describe('gate validation', () => {
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
       if (stateData.gates) {
@@ -135,7 +150,7 @@ describe('core:sexual_prototypes lookup', () => {
       'sexual_lust',
       'sexual_sensual_pleasure',
       'sexual_playfulness',
-      'sexual_confident',
+      'sexual_confidence',
       'aroused_but_ashamed',
       'aroused_but_threatened',
       'sexual_performance_anxiety',
@@ -203,7 +218,7 @@ describe('core:sexual_prototypes lookup', () => {
 
     it('sexual_confident should have positive agency_control', () => {
       expect(
-        lookupData.entries.sexual_confident.weights.agency_control
+        lookupData.entries.sexual_confidence.weights.agency_control
       ).toBeGreaterThan(0.3);
     });
 

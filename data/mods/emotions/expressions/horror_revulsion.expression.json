@@ -1,0 +1,116 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:horror_revulsion",
+    "description": "Visceral horror: disgust fused with threat awareness, producing recoil, gag reflex, and instinctive withdrawal",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -0.2
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "max": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    {
+                                        "var": "emotions.alarm"
+                                    }
+                                ]
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "max": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.disgust"
+                                            },
+                                            {
+                                                "var": "previousEmotions.disgust"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.fear"
+                                            },
+                                            {
+                                                "var": "previousEmotions.fear"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires strong disgust plus meaningful threat and a recent spike (disgust/threat/fear), with fear/alarm present but not escalating into full terror."
+        }
+    ],
+    "actor_description": "My stomach flips hard, like my body is rejecting the whole scene. I get that cold, crawling shudder—revulsion so sharp it turns into fear. My throat tightens with a gag I have to swallow down, and all I can think is: get away, don't let it touch you. Breathing feels wrong, too close to the taste of it.",
+    "description_text": "{actor} recoils with a sharp, involuntary shudder—hand rising toward their mouth as their face drains of color. Their eyes widen and fix on the source for a beat, then flick away as if looking is physically difficult.",
+    "alternate_descriptions": {
+        "auditory": "I hear a choked inhale and a wet swallow—like someone fighting down a gag—followed by a quick, unsteady breath.",
+        "olfactory": "I smell a sharp, sour edge to someone's breath—stress and nausea mixing in a way that lingers for a moment."
+    },
+    "tags": [
+        "horror",
+        "disgust",
+        "revulsion",
+        "fear",
+        "intense",
+        "withdrawal",
+        "visible"
+    ]
+}

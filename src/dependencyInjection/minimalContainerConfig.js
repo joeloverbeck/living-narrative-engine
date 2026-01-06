@@ -10,12 +10,15 @@ import LoggerStrategy from '../logging/loggerStrategy.js';
 
 // --- Import Logger Config Utility ---
 import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
+// --- Import Emotion Display Config Utility ---
+import { loadAndApplyEmotionDisplayConfig } from '../configuration/utils/emotionDisplayConfigUtils.js';
 
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Import base container configuration ---
 import { configureBaseContainer } from './baseContainerConfig.js';
+import EmotionCalculatorService from '../emotions/emotionCalculatorService.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
 
@@ -103,6 +106,36 @@ export async function configureMinimalContainer(container, options = {}) {
     logger.debug(
       '[MinimalContainerConfig] Skipping logger config loading in test environment.'
     );
+  }
+
+  if (process.env.NODE_ENV !== 'test') {
+    await loadAndApplyEmotionDisplayConfig(
+      container,
+      logger,
+      tokens,
+      'MinimalContainerConfig'
+    );
+  } else {
+    logger.debug(
+      '[MinimalContainerConfig] Skipping emotion display config loading in test environment.'
+    );
+    container.register(tokens.IEmotionDisplayConfiguration, {
+      maxEmotionalStates: 7,
+      maxSexualStates: 5,
+    });
+  }
+
+  if (!container.isRegistered(tokens.IEmotionCalculatorService)) {
+    registrar.singletonFactory(tokens.IEmotionCalculatorService, (c) => {
+      const displayConfig = c.isRegistered(tokens.IEmotionDisplayConfiguration)
+        ? c.resolve(tokens.IEmotionDisplayConfiguration)
+        : undefined;
+      return new EmotionCalculatorService({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        displayConfig,
+      });
+    });
   }
 
   logger.debug('[MinimalContainerConfig] Minimal configuration complete.');

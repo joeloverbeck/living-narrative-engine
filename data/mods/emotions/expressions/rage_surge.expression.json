@@ -1,13 +1,14 @@
 {
   "$schema": "schema://living-narrative-engine/expression.schema.json",
   "id": "emotions:rage_surge",
-  "description": "Sudden explosive rage triggered by rapid anger escalation past restraint threshold",
+  "description": "Acute outburst moment: rage spikes sharply and crosses the restraint threshold",
   "priority": 90,
   "prerequisites": [
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.rage" }, 0.60] },
+          { ">=": [{ "var": "emotions.rage" }, 0.6] },
+          { "<": [{ "var": "previousEmotions.rage" }, 0.6] },
           {
             ">=": [
               {
@@ -16,7 +17,7 @@
                   { "var": "previousEmotions.rage" }
                 ]
               },
-              0.20
+              0.2
             ]
           }
         ]
@@ -26,7 +27,7 @@
   "actor_description": "Heat floods my face. A hard exhale punches out of me before any words do. My hands clench until my knuckles ache. I stop weighing options and start wanting consequences.",
   "description_text": "{actor}'s expression tightens and their movements turn sharp, like they've snapped past restraint.",
   "alternate_descriptions": {
-    "auditory": "A harsh breath or clipped words—anger spilling into sound."
+    "auditory": "I hear a harsh breath or clipped words—anger spilling into sound."
   },
   "tags": ["rage", "anger", "explosive", "acute"]
 }
