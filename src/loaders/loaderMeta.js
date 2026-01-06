@@ -24,6 +24,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'events',
   },
+  expressions: {
+    contentKey: 'expressions',
+    diskFolder: 'expressions',
+    phase: 'definitions',
+    registryKey: 'expressions',
+  },
   conditions: {
     contentKey: 'conditions',
     diskFolder: 'conditions',

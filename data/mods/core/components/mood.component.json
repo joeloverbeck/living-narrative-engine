@@ -1,0 +1,61 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:mood",
+  "description": "Tracks the 7 emotional axes that define a character's current mood state. Each axis ranges from -100 to +100.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "valence": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Pleasant (+) to unpleasant (-). Overall hedonic tone."
+      },
+      "arousal": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Energized (+) to depleted (-). Activation level."
+      },
+      "agency_control": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Dominant/in-control (+) to helpless (-). Felt power."
+      },
+      "threat": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Endangered (+) to safe (-). Perceived danger."
+      },
+      "engagement": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Absorbed (+) to indifferent (-). Attentional capture."
+      },
+      "future_expectancy": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Hopeful (+) to hopeless (-). Belief in positive outcomes."
+      },
+      "self_evaluation": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Pride (+) to shame (-). Momentary self-worth."
+      }
+    },
+    "required": ["valence", "arousal", "agency_control", "threat", "engagement", "future_expectancy", "self_evaluation"],
+    "additionalProperties": false
+  }
+}

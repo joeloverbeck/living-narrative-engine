@@ -72,6 +72,8 @@ describe('LLMChooser.choose – metadata propagation', () => {
       speech: 'hello',
       thoughts: 'thinking',
       notes: ['n1', 'n2'],
+      moodUpdate: null,
+      sexualUpdate: null,
     });
   });
 
@@ -93,6 +95,8 @@ describe('LLMChooser.choose – metadata propagation', () => {
       speech: 'hi',
       thoughts: 'pondering',
       notes: null,
+      moodUpdate: null,
+      sexualUpdate: null,
     });
   });
 });

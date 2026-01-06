@@ -95,6 +95,8 @@ describe('LLMChooser additional branches', () => {
       speech: null,
       thoughts: 't',
       notes: ['n1'],
+      moodUpdate: null,
+      sexualUpdate: null,
     });
   });
 });

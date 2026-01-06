@@ -451,15 +451,6 @@ export function createEvaluationContext(
       entity = gateway.getEntityInstance(item);
       let resolvedHow = null;
 
-      // DIAGNOSTIC: Log entity resolution
-      console.log('[DIAGNOSTIC entityHelpers] getEntityInstance called:', {
-        item,
-        gotEntity: !!entity,
-        entityId: entity?.id,
-        entityHasComponents: !!entity?.components,
-        componentKeys: entity ? Object.keys(entity.components || {}) : [],
-      });
-
       if (entity) {
         resolvedHow = 'resolved as entity';
       } else {

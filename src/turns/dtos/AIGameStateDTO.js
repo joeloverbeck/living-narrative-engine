@@ -107,6 +107,25 @@
  */
 
 /**
+ * @typedef {object} EmotionalStateDTO
+ * @property {object} moodAxes - Raw mood axis values
+ * @property {number} moodAxes.valence - Pleasure-displeasure axis [-100..100]
+ * @property {number} moodAxes.arousal - Activation-deactivation axis [-100..100]
+ * @property {number} moodAxes.agency_control - Control-powerlessness axis [-100..100]
+ * @property {number} moodAxes.threat - Safety-threat axis [-100..100]
+ * @property {number} moodAxes.engagement - Interest-boredom axis [-100..100]
+ * @property {number} moodAxes.future_expectancy - Hope-dread axis [-100..100]
+ * @property {number} moodAxes.self_evaluation - Pride-shame axis [-100..100]
+ * @property {string} emotionalStateText - Formatted emotions for prompt (e.g., "joy: strong, curiosity: moderate")
+ * @property {object} sexualState - Sexual state values with calculated arousal
+ * @property {number} sexualState.sex_excitation - Sexual excitation level [0..100]
+ * @property {number} sexualState.sex_inhibition - Sexual inhibition level [0..100]
+ * @property {number} sexualState.baseline_libido - Baseline libido [-50..50]
+ * @property {number} sexualState.sexual_arousal - Calculated arousal [0..1]
+ * @property {string} sexualStateText - Formatted sexual states for prompt
+ */
+
+/**
  * @typedef {object} ActorPromptDataDTO
  * @property {string} id - The entity ID of the actor
  * @property {string} name - The name of the actor
@@ -129,6 +148,7 @@
  * @property {Array<object>} [relationships] - Character's relationships with other entities
  * @property {object} [notes] - Character's notes and observations
  * @property {ActorHealthStateDTO|null} [healthState] - Current physical condition (null if healthy)
+ * @property {EmotionalStateDTO} emotionalState - Current emotional and sexual state
  */
 
 /**

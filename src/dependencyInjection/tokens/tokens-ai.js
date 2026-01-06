@@ -11,6 +11,7 @@ import { freeze } from '../../utils/cloneUtils.js';
  * @type {Readonly<Record<string, DiToken>>}
  */
 export const aiTokens = freeze({
+  ChanceTextTranslator: 'ChanceTextTranslator',
   CharacterDataXmlBuilder: 'CharacterDataXmlBuilder',
   LLMAdapter: 'LLMAdapter',
   ILLMChooser: 'ILLMChooser',
@@ -47,6 +48,7 @@ export const aiTokens = freeze({
   ILocationSummaryProvider: 'ILocationSummaryProvider',
   IModActionMetadataProvider: 'IModActionMetadataProvider',
   IActorDataExtractor: 'IActorDataExtractor',
+  IEmotionCalculatorService: 'IEmotionCalculatorService',
   ILLMDecisionProvider: 'ILLMDecisionProvider',
   LlmJsonService: 'LlmJsonService',
   NotesSectionAssembler: 'NotesSectionAssembler',

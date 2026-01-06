@@ -1,0 +1,270 @@
+{
+  "$schema": "schema://living-narrative-engine/lookup.schema.json",
+  "id": "core:sexual_prototypes",
+  "description": "Maps sexual state names to prototype weights and gates. Each entry defines how strongly mood axes and sexual_arousal contribute to that state and prerequisite conditions for the state to activate.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "weights": {
+        "type": "object",
+        "description": "Weight coefficients for each axis, in range [-1.0, 1.0]. sexual_arousal is in [0, 1].",
+        "properties": {
+          "valence": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "arousal": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "agency_control": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "threat": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "engagement": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "future_expectancy": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "self_evaluation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "sexual_arousal": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "gates": {
+        "type": "array",
+        "description": "Prerequisite conditions (e.g., 'sexual_arousal >= 0.35'). State is gated (calculated as 0) unless all gates pass.",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "weights"
+    ],
+    "additionalProperties": false
+  },
+  "entries": {
+    "sexual_lust": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "valence": 0.3,
+        "arousal": 0.3,
+        "threat": -0.6,
+        "self_evaluation": 0.2,
+        "engagement": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "threat <= 0.30",
+        "self_evaluation >= -0.40"
+      ]
+    },
+    "passionate_love": {
+      "weights": {
+        "sexual_arousal": 0.7,
+        "valence": 0.7,
+        "engagement": 1.0,
+        "arousal": 0.5,
+        "agency_control": -0.2,
+        "threat": 0.2
+      },
+      "gates": [
+        "engagement >= 0.5",
+        "sexual_arousal >= 0.3",
+        "valence >= 0.4",
+        "agency_control <= 0.0"
+      ]
+    },
+    "sexual_sensual_pleasure": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "valence": 0.6,
+        "arousal": 0.1,
+        "threat": -0.6,
+        "self_evaluation": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "threat <= 0.20"
+      ]
+    },
+    "sexual_submissive_pleasure": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "agency_control": -0.7,
+        "valence": 0.4,
+        "threat": -0.5,
+        "self_evaluation": 0.1,
+        "engagement": 0.3
+      },
+      "gates": [
+        "sexual_arousal >= 0.4",
+        "threat <= 0.2",
+        "agency_control <= -0.3"
+      ]
+    },
+    "sexual_playfulness": {
+      "weights": {
+        "sexual_arousal": 0.9,
+        "valence": 0.5,
+        "arousal": 0.5,
+        "engagement": 0.4,
+        "threat": -0.4,
+        "self_evaluation": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.40",
+        "threat <= 0.20",
+        "self_evaluation >= -0.20"
+      ]
+    },
+    "romantic_yearning": {
+      "weights": {
+        "sexual_arousal": 0.6,
+        "engagement": 0.6,
+        "future_expectancy": 0.5,
+        "valence": 0.1,
+        "arousal": 0.2,
+        "threat": -0.2
+      },
+      "gates": [
+        "engagement >= 0.10",
+        "future_expectancy >= 0.10"
+      ]
+    },
+    "sexual_confident": {
+      "weights": {
+        "sexual_arousal": 0.8,
+        "agency_control": 0.6,
+        "valence": 0.2,
+        "threat": -0.4,
+        "self_evaluation": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "agency_control >= 0.10",
+        "threat <= 0.30"
+      ]
+    },
+    "aroused_but_ashamed": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "self_evaluation": -0.9,
+        "valence": -0.3,
+        "threat": 0.2,
+        "agency_control": -0.2,
+        "arousal": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "self_evaluation <= -0.20"
+      ]
+    },
+    "aroused_but_threatened": {
+      "weights": {
+        "sexual_arousal": 0.8,
+        "threat": 0.9,
+        "arousal": 0.6,
+        "valence": -0.4,
+        "agency_control": -0.3
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "threat >= 0.30"
+      ]
+    },
+    "erotic_thrill": {
+      "weights": {
+        "sexual_arousal": 0.8,
+        "threat": 0.7,
+        "valence": 0.2,
+        "arousal": 0.5,
+        "agency_control": -0.1,
+        "engagement": 0.4
+      },
+      "gates": [
+        "sexual_arousal >= 0.5",
+        "threat >= 0.3",
+        "valence >= 0"
+      ]
+    },
+    "sexual_performance_anxiety": {
+      "weights": {
+        "sexual_arousal": 0.8,
+        "threat": 0.6,
+        "self_evaluation": -0.5,
+        "agency_control": -0.5,
+        "arousal": 0.5,
+        "valence": -0.3
+      },
+      "gates": [
+        "sexual_arousal >= 0.35",
+        "threat >= 0.20",
+        "agency_control <= 0.10"
+      ]
+    },
+    "sexual_frustration": {
+      "weights": {
+        "sexual_arousal": 0.7,
+        "valence": -0.5,
+        "arousal": 0.4,
+        "engagement": 0.4,
+        "agency_control": -0.4,
+        "threat": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.30",
+        "valence <= -0.10"
+      ]
+    },
+    "afterglow": {
+      "weights": {
+        "sexual_arousal": 0.3,
+        "valence": 0.7,
+        "arousal": -0.3,
+        "threat": -0.6,
+        "self_evaluation": 0.2,
+        "engagement": 0.2
+      },
+      "gates": [
+        "valence >= 0.20",
+        "threat <= 0.20"
+      ]
+    },
+    "sexual_disgust_conflict": {
+      "weights": {
+        "sexual_arousal": 0.7,
+        "valence": -0.8,
+        "self_evaluation": -0.3,
+        "threat": 0.2,
+        "arousal": 0.3
+      },
+      "gates": [
+        "sexual_arousal >= 0.30",
+        "valence <= -0.40"
+      ]
+    }
+  }
+}

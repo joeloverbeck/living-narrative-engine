@@ -76,6 +76,7 @@ describe('defaultLoaderConfig', () => {
     const deps = {
       componentLoader: stubLoader,
       eventLoader: stubLoader,
+      expressionLoader: stubLoader,
       conditionLoader: stubLoader,
       macroLoader: stubLoader,
       lookupLoader: stubLoader,

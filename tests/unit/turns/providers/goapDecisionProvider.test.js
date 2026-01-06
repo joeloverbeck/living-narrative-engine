@@ -138,6 +138,8 @@ describe('GoapDecisionProvider', () => {
 
       expect(result).toEqual({
         chosenIndex: 1,
+        moodUpdate: null,
+        sexualUpdate: null,
         speech: null,
         thoughts: null,
         notes: null,
@@ -230,6 +232,8 @@ describe('GoapDecisionProvider', () => {
 
       expect(result).toEqual({
         chosenIndex: null,
+        moodUpdate: null,
+        sexualUpdate: null,
         speech: null,
         thoughts: null,
         notes: null,

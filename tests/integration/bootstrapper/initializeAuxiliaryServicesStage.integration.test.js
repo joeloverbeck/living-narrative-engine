@@ -57,6 +57,13 @@ async function createContainerAndLogger() {
     setActiveLlm: jest.fn().mockResolvedValue(true),
   };
   container.register(tokens.LLMAdapter, llmAdapterStub);
+  container.register(tokens.IEmotionCalculatorService, {
+    calculateEmotions: jest.fn().mockReturnValue({}),
+    formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
+    calculateSexualArousal: jest.fn().mockReturnValue(0),
+    calculateSexualStates: jest.fn().mockReturnValue([]),
+    formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+  });
 
   const uiElements = {
     outputDiv: document.getElementById('outputDiv'),

@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:playful_mischief",
+  "description": "Lighthearted playfulness with a hint of mischief.",
+  "priority": 50,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.amusement" }, 0.45] },
+          { ">=": [{ "var": "moodAxes.engagement" }, 10] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 20] },
+          { ">=": [{ "var": "moodAxes.valence" }, 15] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "A spark of mischief lights up inside me. My lips curl by themselves into an impish grin. This could be fun...",
+  "description_text": "{actor}'s lips curl into an impish grin, a mischievous glint dancing in their eyes.",
+  "alternate_descriptions": {
+    "auditory": "I hear a playful chuckle, barely suppressed."
+  },
+  "tags": ["playful", "mischief", "amusement", "fun"]
+}

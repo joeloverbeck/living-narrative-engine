@@ -93,6 +93,10 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
+    // Mock IExpressionPersistenceListener (added as new dependency for expressions system)
+    container.register(tokens.IExpressionPersistenceListener, () => ({
+      handleEvent: jest.fn(),
+    }));
 
     // Run the registration function that defines the InitializationService factory.
     registerOrchestration(container);
@@ -152,6 +156,10 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
+    // Mock IExpressionPersistenceListener (added as new dependency for expressions system)
+    container.register(tokens.IExpressionPersistenceListener, () => ({
+      handleEvent: jest.fn(),
+    }));
 
     // Register the service using the orchestration logic. This will cause some logs.
     registerOrchestration(container);

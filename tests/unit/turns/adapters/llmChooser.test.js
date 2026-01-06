@@ -65,6 +65,8 @@ describe('LLMChooser', () => {
       speech: 'Hello there!',
       notes: null,
       thoughts: null,
+      moodUpdate: null,
+      sexualUpdate: null,
     });
   });
 });

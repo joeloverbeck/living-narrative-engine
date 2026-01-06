@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:shame_spike",
+  "description": "Acute shame response with rapid onset causing visible recoil and avoidance",
+  "priority": 84,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.shame" }, 0.60] },
+          { ">=": [{ "var": "emotions.embarrassment" }, 0.45] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.shame" },
+                  { "var": "previousEmotions.shame" }
+                ]
+              },
+              0.15
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Heat rushes to my face. I want to fold in on myself and stop being visible. Words snag in my throat; I hear myself falter. My stomach tightens as if I've been caught doing something unforgivable.",
+  "description_text": "{actor} recoils inward—chin tucked, shoulders drawn up, avoiding eye contact like it hurts.",
+  "tags": ["shame", "embarrassment", "acute", "avoidance"]
+}

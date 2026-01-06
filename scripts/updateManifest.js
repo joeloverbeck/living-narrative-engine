@@ -275,6 +275,37 @@ async function scanLookupDirectoryRecursively(basePath, currentPath = '') {
 }
 
 /**
+ * Recursively scan a directory for expression files (.expression.json extension), maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanExpressionDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanExpressionDirectoryRecursively(
+        basePath,
+        entryPath
+      );
+      files.push(...subFiles);
+    } else if (entry.isFile() && entry.name.endsWith('.expression.json')) {
+      // Add the expression file with its relative path
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
+
+/**
  * Get all mod names from the mods directory
  *
  * @returns {Promise<string[]>} Array of mod directory names
@@ -777,6 +808,13 @@ async function processContentType(modPath, contentType, manifest, opts) {
         files = await scanLookupDirectoryRecursively(contentDirPath);
         console.log(
           `  - Scanned "${contentType}": Found ${files.length} .lookup.json file(s).`
+        );
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      } else if (contentType === 'expressions') {
+        files = await scanExpressionDirectoryRecursively(contentDirPath);
+        console.log(
+          `  - Scanned "${contentType}": Found ${files.length} .expression.json file(s).`
         );
         manifest.content[contentType] = files.sort();
         result.filesProcessed += files.length;

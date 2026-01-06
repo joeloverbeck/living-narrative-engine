@@ -18,6 +18,8 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let moodSexualListener;
+let expressionPersistenceListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
 
@@ -42,6 +44,8 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  moodSexualListener = { handleEvent: jest.fn() };
+  expressionPersistenceListener = { handleEvent: jest.fn() };
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
@@ -62,6 +66,8 @@ const createService = (overrides = {}) =>
       },
       thoughtListener,
       notesListener,
+      moodSexualListener,
+      expressionPersistenceListener,
       spatialIndexManager: { buildIndex: jest.fn() },
     },
     coreSystems: {

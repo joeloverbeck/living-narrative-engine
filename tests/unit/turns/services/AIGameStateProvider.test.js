@@ -13,6 +13,8 @@ import {
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import {
@@ -105,10 +107,18 @@ describe('AIGameStateProvider Integration Tests', () => {
     const mockEntityFinder = {
       getEntityInstance: jest.fn(),
     };
+    const mockEmotionCalculatorService = {
+      calculateSexualArousal: jest.fn(() => 0),
+      calculateEmotions: jest.fn(() => ({})),
+      formatEmotionsForPrompt: jest.fn(() => 'neutral'),
+      calculateSexualStates: jest.fn(() => ({})),
+      formatSexualStatesForPrompt: jest.fn(() => 'neutral'),
+    };
 
     actorDataExtractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,
       entityFinder: mockEntityFinder,
+      emotionCalculatorService: mockEmotionCalculatorService,
     });
 
     perceptionLogProvider = new PerceptionLogProvider();
@@ -139,6 +149,20 @@ describe('AIGameStateProvider Integration Tests', () => {
     entityManager = mockEntityManager();
     mockActor = new MockEntity('actor1', {
       [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
+      [MOOD_COMPONENT_ID]: {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      },
+      [SEXUAL_STATE_COMPONENT_ID]: {
+        sex_excitation: 0,
+        sex_inhibition: 0,
+        baseline_libido: 0,
+      },
     });
     turnContext.game = { worldId: 'test-world' };
 
@@ -191,6 +215,20 @@ describe('AIGameStateProvider Integration Tests', () => {
         const actor = new MockEntity('actorTest', {
           [NAME_COMPONENT_ID]: { text: 'Test Actor Name' },
           [DESCRIPTION_COMPONENT_ID]: { text: 'A brave test actor.' },
+          [MOOD_COMPONENT_ID]: {
+            valence: 0,
+            arousal: 0,
+            agency_control: 0,
+            threat: 0,
+            engagement: 0,
+            future_expectancy: 0,
+            self_evaluation: 0,
+          },
+          [SEXUAL_STATE_COMPONENT_ID]: {
+            sex_excitation: 0,
+            sex_inhibition: 0,
+            baseline_libido: 0,
+          },
         });
         const { actorState } = await provider.buildGameState(
           actor,
@@ -207,7 +245,22 @@ describe('AIGameStateProvider Integration Tests', () => {
       });
 
       test('should use default name and description if components are missing', async () => {
-        const actor = new MockEntity('actorNoName', {});
+        const actor = new MockEntity('actorNoName', {
+          [MOOD_COMPONENT_ID]: {
+            valence: 0,
+            arousal: 0,
+            agency_control: 0,
+            threat: 0,
+            engagement: 0,
+            future_expectancy: 0,
+            self_evaluation: 0,
+          },
+          [SEXUAL_STATE_COMPONENT_ID]: {
+            sex_excitation: 0,
+            sex_inhibition: 0,
+            baseline_libido: 0,
+          },
+        });
         const { actorState } = await provider.buildGameState(
           actor,
           turnContext,
@@ -224,7 +277,22 @@ describe('AIGameStateProvider Integration Tests', () => {
 
     describe('Location Summary Building', () => {
       test('should return null for location if actor has no position', async () => {
-        const actorNoPos = new MockEntity('actorNoPos', {});
+        const actorNoPos = new MockEntity('actorNoPos', {
+          [MOOD_COMPONENT_ID]: {
+            valence: 0,
+            arousal: 0,
+            agency_control: 0,
+            threat: 0,
+            engagement: 0,
+            future_expectancy: 0,
+            self_evaluation: 0,
+          },
+          [SEXUAL_STATE_COMPONENT_ID]: {
+            sex_excitation: 0,
+            sex_inhibition: 0,
+            baseline_libido: 0,
+          },
+        });
         const { currentLocation } = await provider.buildGameState(
           actorNoPos,
           turnContext,
@@ -307,11 +375,12 @@ describe('AIGameStateProvider Integration Tests', () => {
       });
 
       test('should return empty array and log on error', async () => {
+        const originalHasComponent = mockActor.hasComponent;
         mockActor.hasComponent = jest.fn((id) => {
           if (id === PERCEPTION_LOG_COMPONENT_ID) {
             throw new Error('Test error');
           }
-          return false;
+          return originalHasComponent(id);
         });
         const { perceptionLog } = await provider.buildGameState(
           mockActor,

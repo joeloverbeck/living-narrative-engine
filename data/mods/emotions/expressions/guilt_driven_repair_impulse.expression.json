@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:guilt_driven_repair_impulse",
+  "description": "Urgent need to make amends triggered by rapidly rising guilt",
+  "priority": 70,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.guilt" }, 0.60] },
+          { "<=": [{ "var": "emotions.gratitude" }, 0.30] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.guilt" },
+                  { "var": "previousEmotions.guilt" }
+                ]
+              },
+              0.15
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I can't leave it like this. I need to make it right—say it clearly, do something concrete. I start to speak, stop, and try again—like my mouth is searching for the honest words. A knot tightens under my ribs until I act.",
+  "description_text": "{actor} hovers with an apologetic intensity, as if they're about to admit fault or offer help.",
+  "alternate_descriptions": {
+    "auditory": "I hear hesitant false starts—'I...' then silence, then another attempt."
+  },
+  "tags": ["guilt", "repair", "apology", "urgency"]
+}

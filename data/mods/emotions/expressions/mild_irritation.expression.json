@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:mild_irritation",
+  "description": "Low-level annoyance and frustration",
+  "priority": 30,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.irritation" }, 0.35] },
+          { "<": [{ "var": "emotions.anger" }, 0.50] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "A prickle of annoyance crawls under my skin. It's nothing major, but it's there.",
+  "description_text": "{actor} shifts their weight impatiently, a slight furrow appearing between their brows.",
+  "alternate_descriptions": {
+    "auditory": "I hear a soft, exasperated sigh."
+  },
+  "tags": ["irritation", "annoyance", "mild"]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:suppressed_rage",
+  "description": "Activated when actor feels intense anger with suppressed agency",
+  "priority": 75,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.anger" }, 0.65] },
+          { "<=": [{ "var": "moodAxes.agency_control" }, -30] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Heat floods my face. I want to do something right now - break the stalemate, make the world stop pushing back.",
+  "description_text": "{actor}'s jaw locks and their movements get sharp and purposeful, like they're done asking and started acting.",
+  "alternate_descriptions": {
+    "auditory": "I hear a sharp intake of breath and the creak of tension nearby."
+  },
+  "tags": ["anger", "frustration", "suppression"]
+}

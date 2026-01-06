@@ -161,6 +161,7 @@ class StaticConfiguration {
       'llm-configs.schema.json',
       'prompt-text.schema.json',
       'macro.schema.json',
+      'expression.schema.json',
       'ui-icons.schema.json',
       'ui-labels.schema.json',
       'world.schema.json',
@@ -193,6 +194,7 @@ class StaticConfiguration {
       conditions: 'schema://living-narrative-engine/condition.schema.json',
       damageTypes: 'schema://living-narrative-engine/damage-type.schema.json',
       macros: 'schema://living-narrative-engine/macro.schema.json',
+      expressions: 'schema://living-narrative-engine/expression.schema.json',
       rules: 'schema://living-narrative-engine/rule.schema.json',
       goals: 'schema://living-narrative-engine/goal.schema.json',
       entityDefinitions:

@@ -113,6 +113,11 @@ jest.mock('../../../../src/prompting/promptDataFormatter.js', () => ({
   PromptDataFormatter: mockCreateClass('PromptDataFormatter'),
 }));
 
+jest.mock('../../../../src/prompting/ChanceTextTranslator.js', () => ({
+  __esModule: true,
+  ChanceTextTranslator: mockCreateClass('ChanceTextTranslator'),
+}));
+
 jest.mock('../../../../src/prompting/xmlElementBuilder.js', () => ({
   __esModule: true,
   default: mockCreateClass('XmlElementBuilder'),
@@ -271,6 +276,9 @@ const { PromptTemplateService: PromptTemplateServiceMock } = jest.requireMock(
 );
 const { PromptDataFormatter: PromptDataFormatterMock } = jest.requireMock(
   '../../../../src/prompting/promptDataFormatter.js'
+);
+const { ChanceTextTranslator: ChanceTextTranslatorMock } = jest.requireMock(
+  '../../../../src/prompting/ChanceTextTranslator.js'
 );
 const XmlElementBuilderMock = jest.requireMock(
   '../../../../src/prompting/xmlElementBuilder.js'
@@ -629,6 +637,7 @@ describe('aiRegistrations', () => {
           [tokens.InjuryNarrativeFormatterService]: {
             injuryNarrativeFormatter: true,
           },
+          [tokens.IEmotionCalculatorService]: { emotionCalculator: true },
         })
       );
       expect(ActorDataExtractorMock).toHaveBeenCalledWith({
@@ -636,6 +645,7 @@ describe('aiRegistrations', () => {
         entityFinder: { entityManager: true },
         injuryAggregationService: { injuryAggregation: true },
         injuryNarrativeFormatterService: { injuryNarrativeFormatter: true },
+        emotionCalculatorService: { emotionCalculator: true },
       });
 
       const availableActionsCall = container.register.mock.calls.find(
@@ -723,6 +733,13 @@ describe('aiRegistrations', () => {
         logger,
       });
 
+      const translatorCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.ChanceTextTranslator
+      );
+      expect(translatorCall).toBeDefined();
+      translatorCall[1](createFactoryContext({ [tokens.ILogger]: logger }));
+      expect(ChanceTextTranslatorMock).toHaveBeenCalledWith({ logger });
+
       const contentCall = container.register.mock.calls.find(
         ([token]) => token === tokens.IAIPromptContentProvider
       );
@@ -737,6 +754,7 @@ describe('aiRegistrations', () => {
           [tokens.IActionCategorizationService]: { categorization: true },
           [tokens.CharacterDataXmlBuilder]: { xmlBuilder: true },
           [tokens.IModActionMetadataProvider]: { metadataProvider: true },
+          [tokens.ChanceTextTranslator]: { translator: true },
         })
       );
       expect(AIPromptContentProviderMock).toHaveBeenCalledWith({
@@ -747,6 +765,7 @@ describe('aiRegistrations', () => {
         actionCategorizationService: { categorization: true },
         characterDataXmlBuilder: { xmlBuilder: true },
         modActionMetadataProvider: { metadataProvider: true },
+        chanceTextTranslator: { translator: true },
       });
 
       const llmJsonCall = container.register.mock.calls.find(

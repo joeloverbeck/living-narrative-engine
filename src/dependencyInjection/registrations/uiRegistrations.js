@@ -32,6 +32,8 @@ import {
   WindowUserPrompt,
   EntityLifecycleMonitor,
   InjuryStatusPanel,
+  EmotionalStatePanel,
+  SexualStatePanel,
   DamageEventMessageRenderer,
   PromptPreviewModal,
 } from '../../domUI/index.js';
@@ -353,6 +355,36 @@ export function registerRenderers(registrar, logger) {
 
   registerWithLog(
     registrar,
+    tokens.EmotionalStatePanel,
+    (c) =>
+      new EmotionalStatePanel({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        entityManager: c.resolve(tokens.IEntityManager),
+        emotionCalculatorService: c.resolve(tokens.IEmotionCalculatorService),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.SexualStatePanel,
+    (c) =>
+      new SexualStatePanel({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        entityManager: c.resolve(tokens.IEntityManager),
+        emotionCalculatorService: c.resolve(tokens.IEmotionCalculatorService),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
     tokens.DamageEventMessageRenderer,
     (c) =>
       new DamageEventMessageRenderer({
@@ -596,6 +628,16 @@ export function registerUI(
   container.resolve(tokens.InjuryStatusPanel);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.InjuryStatusPanel}.`
+  );
+
+  container.resolve(tokens.SexualStatePanel);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.SexualStatePanel}.`
+  );
+
+  container.resolve(tokens.EmotionalStatePanel);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.EmotionalStatePanel}.`
   );
 
   container.resolve(tokens.DamageEventMessageRenderer);

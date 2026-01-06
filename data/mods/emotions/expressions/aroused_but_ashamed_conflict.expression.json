@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:aroused_but_ashamed_conflict",
+  "description": "Internal conflict between sexual arousal and shame - visible tension from wanting what feels forbidden.",
+  "priority": 88,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "sexualStates.aroused_but_ashamed" }, 0.65] },
+          { ">=": [{ "var": "sexualStates.sexual_lust" }, 0.45] },
+          { ">=": [{ "var": "emotions.shame" }, 0.45] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My attention keeps snapping back to my target of arousal, and then I hate myself for it. I want to hide my reaction and I can't unfeel it. If I speak, my words will come out overly careful, like I'm trying to sound normal at gunpoint. Heat rises to my face; my hands stay busy with anything that looks casual.",
+  "description_text": "{actor} looks conflicted—avoiding eye contact, then glancing back, posture tense as if suppressing a reaction.",
+  "alternate_descriptions": {
+    "auditory": "I catch an unsteady breath and a voice that hesitates around simple sentences."
+  },
+  "tags": ["arousal", "shame", "conflict", "suppression", "tension"]
+}

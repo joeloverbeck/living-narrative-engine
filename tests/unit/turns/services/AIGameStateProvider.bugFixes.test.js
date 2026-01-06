@@ -17,6 +17,8 @@ import {
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_LOCATION_NAME,
@@ -97,6 +99,20 @@ describe('AIGameStateProvider', () => {
 
     mockActor = new MockEntity('actor1', {
       [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
+      [MOOD_COMPONENT_ID]: {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      },
+      [SEXUAL_STATE_COMPONENT_ID]: {
+        sex_excitation: 0,
+        sex_inhibition: 0,
+        baseline_libido: 0,
+      },
     });
 
     turnContext.game = { worldId: 'test-world', someOtherData: 'data' };
@@ -110,10 +126,18 @@ describe('AIGameStateProvider', () => {
     const mockEntityFinder = {
       getEntityInstance: jest.fn(),
     };
+    const mockEmotionCalculatorService = {
+      calculateSexualArousal: jest.fn(() => 0),
+      calculateEmotions: jest.fn(() => ({})),
+      formatEmotionsForPrompt: jest.fn(() => 'neutral'),
+      calculateSexualStates: jest.fn(() => ({})),
+      formatSexualStatesForPrompt: jest.fn(() => 'neutral'),
+    };
 
     const actorDataExtractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,
       entityFinder: mockEntityFinder,
+      emotionCalculatorService: mockEmotionCalculatorService,
     });
 
     const perceptionLogProvider = new PerceptionLogProvider();

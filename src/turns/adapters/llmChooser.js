@@ -54,7 +54,7 @@ export class LLMChooser extends ILLMChooser {
    *   actions:  Array,               // The definitive, indexed list of actions
    *   abortSignal?: AbortSignal
    * }} options
-   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null }>}
+   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate: { sex_excitation: number, sex_inhibition: number }|null }>}
    */
   async choose({ actor, context, actions, abortSignal }) {
     this.#logger.debug(`LLMChooser.choose → actor=${actor.id}`);
@@ -75,6 +75,8 @@ export class LLMChooser extends ILLMChooser {
       speech: action.speech,
       thoughts: extractedData?.thoughts ?? null,
       notes: extractedData?.notes ?? null,
+      moodUpdate: extractedData?.moodUpdate ?? null,
+      sexualUpdate: extractedData?.sexualUpdate ?? null,
     };
   }
 }

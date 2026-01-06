@@ -71,7 +71,89 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
         additionalProperties: false,
       },
     },
+    // Optional mood axis updates (all 7 axes must be provided if present)
+    moodUpdate: {
+      type: 'object',
+      additionalProperties: false,
+      description:
+        'Optional mood axis updates. All 7 axes must be provided if present.',
+      properties: {
+        valence: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Pleasant (+) to unpleasant (-)',
+        },
+        arousal: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Energized (+) to depleted (-)',
+        },
+        agency_control: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'In control (+) to helpless (-)',
+        },
+        threat: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Endangered (+) to safe (-)',
+        },
+        engagement: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Absorbed (+) to indifferent (-)',
+        },
+        future_expectancy: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Hopeful (+) to hopeless (-)',
+        },
+        self_evaluation: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Pride (+) to shame (-)',
+        },
+      },
+      required: [
+        'valence',
+        'arousal',
+        'agency_control',
+        'threat',
+        'engagement',
+        'future_expectancy',
+        'self_evaluation',
+      ],
+    },
+    // Optional sexual state updates (both fields must be provided if present)
+    sexualUpdate: {
+      type: 'object',
+      additionalProperties: false,
+      description:
+        'Optional sexual state updates. Both fields must be provided if present.',
+      properties: {
+        sex_excitation: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 100,
+          description: 'Sexual response activation (accelerator)',
+        },
+        sex_inhibition: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 100,
+          description: 'Sexual response suppression (brake)',
+        },
+      },
+      required: ['sex_excitation', 'sex_inhibition'],
+    },
   },
   // These fields are mandatory
-  required: ['chosenIndex', 'speech', 'thoughts'],
+  required: ['chosenIndex', 'speech', 'thoughts', 'moodUpdate', 'sexualUpdate'],
 };

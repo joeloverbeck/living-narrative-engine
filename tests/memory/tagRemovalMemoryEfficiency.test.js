@@ -57,6 +57,9 @@ describe('Tag Removal Memory Efficiency Tests', () => {
     modActionMetadataProvider: {
       getMetadataForMod: jest.fn(() => null),
     },
+    chanceTextTranslator: {
+      translateForLlm: jest.fn((text) => text),
+    },
   });
 
   const createTestNotesWithoutTags = (count = 10) => {

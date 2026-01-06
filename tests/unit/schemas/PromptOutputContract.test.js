@@ -26,11 +26,32 @@ beforeAll(() => {
 // -----------------------------------------------------------------------------
 
 describe('PromptOutputContract', () => {
+  const baseMoodUpdate = {
+    valence: 10,
+    arousal: 5,
+    agency_control: 3,
+    threat: -4,
+    engagement: 2,
+    future_expectancy: 1,
+    self_evaluation: 0,
+  };
+  const baseSexualUpdate = {
+    sex_excitation: 25,
+    sex_inhibition: 30,
+  };
+  const basePayload = {
+    chosenIndex: 1,
+    speech: '',
+    thoughts: 'Thinking about next move.',
+    moodUpdate: baseMoodUpdate,
+    sexualUpdate: baseSexualUpdate,
+  };
+
   test('fails validation when `thoughts` field is missing', () => {
     const payload = {
-      chosenIndex: 1,
-      speech: '',
+      ...basePayload,
     };
+    delete payload.thoughts;
 
     const isValid = validate(payload);
     expect(isValid).toBe(false);
@@ -39,8 +60,7 @@ describe('PromptOutputContract', () => {
 
   test('fails validation when `thoughts` is not a string', () => {
     const payload = {
-      chosenIndex: 1,
-      speech: '',
+      ...basePayload,
       thoughts: 123,
     };
 
@@ -50,11 +70,7 @@ describe('PromptOutputContract', () => {
   });
 
   test('passes validation for a correct payload', () => {
-    const payload = {
-      chosenIndex: 1,
-      speech: '',
-      thoughts: 'Thinking about next move.',
-    };
+    const payload = { ...basePayload };
 
     const isValid = validate(payload);
     expect(isValid).toBe(true);

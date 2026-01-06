@@ -8,8 +8,8 @@ import { freeze } from './cloneUtils.js';
  * @typedef {object} DecisionResult
  * @property {'success'} kind - Indicates the decision was successful.
  * @property {*} action - The action payload for the turn.
- * @property {{speech: string|null, thoughts: string|null, notes: string|null}} extractedData
- *   - Metadata extracted from the decision (speech, thoughts, notes).
+ * @property {{speech: string|null, thoughts: string|null, notes: string|null, moodUpdate: object|null, sexualUpdate: object|null}} extractedData
+ *   - Metadata extracted from the decision (speech, thoughts, notes, mood/sexual state updates).
  */
 
 /**
@@ -20,6 +20,8 @@ import { freeze } from './cloneUtils.js';
  * @param {string} [meta.speech]   - Speech text, if any.
  * @param {string} [meta.thoughts] - Thoughts text, if any.
  * @param {string} [meta.notes]    - Notes text, if any.
+ * @param {object} [meta.moodUpdate] - Mood update data, if any.
+ * @param {object} [meta.sexualUpdate] - Sexual state update data, if any.
  * @param {object} [extras] - Optional additional fields to include on the result.
  * @returns {Readonly<DecisionResult & object>} A frozen decision result envelope.
  */
@@ -29,6 +31,8 @@ export function buildDecisionResult(action, meta = {}, extras = {}) {
     thoughts: meta.thoughts ?? null,
     notes: meta.notes ?? null,
     chosenIndex: meta.chosenIndex ?? meta.suggestedIndex ?? null,
+    moodUpdate: meta.moodUpdate ?? null,
+    sexualUpdate: meta.sexualUpdate ?? null,
   };
 
   // Freeze nested data first

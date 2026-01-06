@@ -416,6 +416,8 @@ describe('dependencyUtils cross-module integration', () => {
         },
         thoughtListener: { handleEvent: () => {} },
         notesListener: { handleEvent: () => {} },
+        moodSexualListener: { handleEvent: () => {} },
+        expressionPersistenceListener: { handleEvent: () => {} },
         spatialIndexManager: { buildIndex: () => {} },
       },
       coreSystems: {

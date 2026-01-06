@@ -40,6 +40,9 @@ const makeDummyCharacterDataXmlBuilder = () => ({
 const makeDummyModActionMetadataProvider = () => ({
   getMetadataForMod: jest.fn(() => null),
 });
+const makeDummyChanceTextTranslator = () => ({
+  translateForLlm: jest.fn((text) => text),
+});
 
 describe('AIPromptContentProvider helper methods', () => {
   let provider;
@@ -55,6 +58,7 @@ describe('AIPromptContentProvider helper methods', () => {
       actionCategorizationService: makeDummyActionCategorizationService(),
       characterDataXmlBuilder: makeDummyCharacterDataXmlBuilder(),
       modActionMetadataProvider: makeDummyModActionMetadataProvider(),
+      chanceTextTranslator: makeDummyChanceTextTranslator(),
     });
   });
 

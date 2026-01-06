@@ -18,6 +18,8 @@ import {
   MOTIVATIONS_COMPONENT_ID,
   INTERNAL_TENSIONS_COMPONENT_ID,
   DILEMMAS_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -32,6 +34,8 @@ import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor.js';
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorHealthStateDTO} ActorHealthStateDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorInjuryDTO} ActorInjuryDTO */
+/** @typedef {import('../dtos/AIGameStateDTO.js').EmotionalStateDTO} EmotionalStateDTO */
+/** @typedef {import('../../emotions/emotionCalculatorService.js').default} EmotionCalculatorService */
 
 /**
  * Retrieve and trim the text from a component if available.
@@ -69,18 +73,28 @@ class ActorDataExtractor extends IActorDataExtractor {
   /** @type {object | null} */
   #injuryNarrativeFormatterService;
 
+  /** @type {EmotionCalculatorService} */
+  #emotionCalculatorService;
+
   constructor({
     anatomyDescriptionService,
     entityFinder,
     injuryAggregationService,
     injuryNarrativeFormatterService,
+    emotionCalculatorService,
   }) {
     super();
+    if (!emotionCalculatorService) {
+      throw new Error(
+        'ActorDataExtractor: emotionCalculatorService is required'
+      );
+    }
     this.anatomyDescriptionService = anatomyDescriptionService;
     this.entityFinder = entityFinder;
     this.#injuryAggregationService = injuryAggregationService ?? null;
     this.#injuryNarrativeFormatterService =
       injuryNarrativeFormatterService ?? null;
+    this.#emotionCalculatorService = emotionCalculatorService;
   }
 
   /**
@@ -207,7 +221,83 @@ class ActorDataExtractor extends IActorDataExtractor {
     // Health State - returns null for healthy characters (optimization)
     promptData.healthState = this.#extractHealthData(actorId);
 
+    // Emotional State - FAIL-FAST validation if components missing
+    promptData.emotionalState = this.#extractEmotionalData(actorState, actorId);
+
     return /** @type {ActorPromptDataDTO} */ (promptData);
+  }
+
+  /**
+   * FAIL-FAST validation: Throws if actor lacks required emotional components.
+   *
+   * @param {object} actorState - Actor state with components (direct property access)
+   * @param {string} actorId - Actor entity ID
+   * @throws {Error} If actor lacks core:mood or core:sexual_state components
+   */
+  #validateEmotionalComponents(actorState, actorId) {
+    const hasMood = actorState[MOOD_COMPONENT_ID] !== undefined;
+    const hasSexualState = actorState[SEXUAL_STATE_COMPONENT_ID] !== undefined;
+
+    if (!hasMood || !hasSexualState) {
+      const missing = [];
+      if (!hasMood) missing.push(MOOD_COMPONENT_ID);
+      if (!hasSexualState) missing.push(SEXUAL_STATE_COMPONENT_ID);
+
+      throw new Error(
+        `ActorDataExtractor: Actor '${actorId}' is missing required emotional components: [${missing.join(', ')}]. ` +
+          `All actors must have both core:mood and core:sexual_state components for LLM prompt generation.`
+      );
+    }
+  }
+
+  /**
+   * Extracts emotional and sexual state data from actor.
+   *
+   * @param {object} actorState - Actor state with components (direct property access)
+   * @param {string} actorId - Actor entity ID
+   * @returns {EmotionalStateDTO} Emotional state data
+   * @throws {Error} If actor lacks required emotional components (FAIL-FAST)
+   */
+  #extractEmotionalData(actorState, actorId) {
+    // 1. FAIL-FAST validation
+    this.#validateEmotionalComponents(actorState, actorId);
+
+    // 2. Extract mood data (direct property access)
+    const moodComponent = actorState[MOOD_COMPONENT_ID];
+    const moodAxes = { ...moodComponent };
+
+    // 3. Extract sexual state data
+    const sexualComponent = actorState[SEXUAL_STATE_COMPONENT_ID];
+    const sexualArousal =
+      this.#emotionCalculatorService.calculateSexualArousal(sexualComponent);
+
+    const sexualState = {
+      ...sexualComponent,
+      sexual_arousal: sexualArousal,
+    };
+
+    // 4. Calculate emotions and format
+    const emotions = this.#emotionCalculatorService.calculateEmotions(
+      moodAxes,
+      sexualArousal
+    );
+    const emotionalStateText =
+      this.#emotionCalculatorService.formatEmotionsForPrompt(emotions);
+
+    // 5. Calculate sexual states and format
+    const sexualStates = this.#emotionCalculatorService.calculateSexualStates(
+      moodAxes,
+      sexualArousal
+    );
+    const sexualStateText =
+      this.#emotionCalculatorService.formatSexualStatesForPrompt(sexualStates);
+
+    return {
+      moodAxes,
+      emotionalStateText,
+      sexualState,
+      sexualStateText,
+    };
   }
 
   /**

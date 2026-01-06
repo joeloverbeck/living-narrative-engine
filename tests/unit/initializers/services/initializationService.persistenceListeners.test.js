@@ -27,6 +27,8 @@ let actionIndex;
 let gameDataRepository;
 let thoughtListener;
 let notesListener;
+let moodSexualListener;
+let expressionPersistenceListener;
 let contentDependencyValidator;
 let llmAdapterInitializer;
 let anatomyFormattingService;
@@ -57,6 +59,8 @@ beforeEach(() => {
   };
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  moodSexualListener = { handleEvent: jest.fn() };
+  expressionPersistenceListener = { handleEvent: jest.fn() };
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
   };
@@ -77,6 +81,8 @@ describe('InitializationService persistence listener setup', () => {
         gameDataRepository,
         thoughtListener,
         notesListener,
+        moodSexualListener,
+        expressionPersistenceListener,
         spatialIndexManager: { buildIndex: jest.fn() },
       },
       coreSystems: {
@@ -102,6 +108,25 @@ describe('InitializationService persistence listener setup', () => {
     expect(listenersArg).toEqual([
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
+      { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
+      { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
     ]);
+
+    listenersArg[0].handler();
+    listenersArg[1].handler();
+    listenersArg[2].handler();
+    listenersArg[3].handler();
+
+    const callOrder = {
+      thought: thoughtListener.handleEvent.mock.invocationCallOrder[0],
+      notes: notesListener.handleEvent.mock.invocationCallOrder[0],
+      mood: moodSexualListener.handleEvent.mock.invocationCallOrder[0],
+      expression:
+        expressionPersistenceListener.handleEvent.mock.invocationCallOrder[0],
+    };
+
+    expect(callOrder.thought).toBeLessThan(callOrder.notes);
+    expect(callOrder.notes).toBeLessThan(callOrder.mood);
+    expect(callOrder.mood).toBeLessThan(callOrder.expression);
   });
 });

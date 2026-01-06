@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:freeze_response",
+  "description": "Acute freeze response triggered by sudden fear spike with low determination to act",
+  "priority": 88,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.fear" }, 0.65] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.fear" },
+                  { "var": "previousEmotions.fear" }
+                ]
+              },
+              0.15
+            ]
+          },
+          { "<=": [{ "var": "emotions.determination" }, 0.25] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My body goes still without asking me. Moving feels like choosing the wrong option. For a second I hear my own breathing too clearly—then I realize I've been holding it. Cold prickles rise along my arms; my limbs feel heavy.",
+  "description_text": "{actor} freezes—eyes wide, posture locked as if bracing for something they can't dodge.",
+  "alternate_descriptions": {
+    "auditory": "A sudden hush, like someone stopped breathing mid-thought."
+  },
+  "tags": ["fear", "freeze", "acute", "paralysis"]
+}

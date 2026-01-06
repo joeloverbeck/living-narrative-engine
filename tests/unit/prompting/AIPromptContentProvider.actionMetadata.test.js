@@ -20,6 +20,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
   let mockActionCategorizationService;
   let mockCharacterDataXmlBuilder;
   let mockModActionMetadataProvider;
+  let mockChanceTextTranslator;
 
   beforeEach(() => {
     mockLogger = {
@@ -63,6 +64,9 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
     mockModActionMetadataProvider = {
       getMetadataForMod: jest.fn(),
     };
+    mockChanceTextTranslator = {
+      translateForLlm: jest.fn((text) => text),
+    };
 
     provider = new AIPromptContentProvider({
       logger: mockLogger,
@@ -72,6 +76,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
       actionCategorizationService: mockActionCategorizationService,
       characterDataXmlBuilder: mockCharacterDataXmlBuilder,
       modActionMetadataProvider: mockModActionMetadataProvider,
+      chanceTextTranslator: mockChanceTextTranslator,
     });
   });
 
@@ -290,6 +295,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
             actionCategorizationService: mockActionCategorizationService,
             characterDataXmlBuilder: mockCharacterDataXmlBuilder,
             modActionMetadataProvider: null,
+            chanceTextTranslator: mockChanceTextTranslator,
           })
       ).toThrow();
     });
@@ -305,6 +311,7 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
             actionCategorizationService: mockActionCategorizationService,
             characterDataXmlBuilder: mockCharacterDataXmlBuilder,
             modActionMetadataProvider: {}, // Missing getMetadataForMod
+            chanceTextTranslator: mockChanceTextTranslator,
           })
       ).toThrow();
     });

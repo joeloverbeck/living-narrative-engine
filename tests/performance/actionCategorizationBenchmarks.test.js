@@ -89,6 +89,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       actionCategorizationService: service, // This now has UI_CATEGORIZATION_CONFIG
       characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
       modActionMetadataProvider: { getMetadataForMod: () => null },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
 
     const domElementFactory = new DomElementFactory(documentContext);

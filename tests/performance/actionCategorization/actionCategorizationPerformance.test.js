@@ -65,6 +65,7 @@ describe('Action Categorization Performance Regression', () => {
       actionCategorizationService: service,
       characterDataXmlBuilder: { buildCharacterDataXml: () => '<character/>' },
       modActionMetadataProvider: { getMetadataForMod: () => null },
+      chanceTextTranslator: { translateForLlm: (text) => text },
     });
   });
 

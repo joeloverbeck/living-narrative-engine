@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:quiet_grief",
+  "description": "Deep but contained grief, mourning without dramatic display",
+  "priority": 70,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.grief" }, 0.55] },
+          { ">=": [{ "var": "emotions.sadness" }, 0.5] },
+          { "<=": [{ "var": "moodAxes.arousal" }, 20] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "The loss sits heavy in my chest - not screaming, but present. Always present.",
+  "description_text": "{actor} moves slowly, almost carefully, as though the world has become fragile around them. Their eyes hold a distant heaviness.",
+  "alternate_descriptions": {
+    "auditory": "A heavy silence emanates from nearby, punctuated by a single, quiet sigh."
+  },
+  "tags": ["grief", "sadness", "mourning", "quiet"]
+}

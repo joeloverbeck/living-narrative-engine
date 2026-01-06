@@ -1,0 +1,210 @@
+/**
+ * Sexual State Panel Styles (Warm Sepia Theme)
+ *
+ * Widget displaying character's sexual state variables with:
+ * - 3 bars: Excitation (pink/red), Inhibition (blue), Arousal (purple)
+ * - Baseline libido numeric display
+ * - Calculated sexual states text display
+ *
+ * Design: Warm sepia gradient background (#FFFEFB → #FFF8F0) with
+ * pink/rose accent border to match the sexual arousal theme.
+ * Integrates with the "Vibrant Explorer" theme using CSS variables.
+ *
+ * WCAG AA color contrast compliance ensured for all text.
+ */
+
+/* ============================================
+   Panel Container
+   ============================================ */
+
+#sexual-state-panel {
+  background: linear-gradient(135deg, #fffefb 0%, #fff8f0 100%);
+  border: var(--border-width, 2px) solid var(--border-color-subtle, #ddd3c7);
+  border-left: 4px solid #e91e63;
+  border-radius: var(--border-radius-md, 6px);
+  padding: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-md, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.06));
+}
+
+#sexual-state-panel.hidden {
+  display: none;
+}
+
+.sexual-state-panel__title {
+  margin: 0 0 var(--spacing-sm, 8px) 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+  border-bottom: var(--border-width, 2px) solid
+    var(--border-color-subtle, #ddd3c7);
+  padding-bottom: var(--spacing-sm, 8px);
+}
+
+/* ============================================
+   Bars Container
+   ============================================ */
+
+.sexual-state-panel__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 8px);
+  margin-bottom: var(--spacing-sm, 8px);
+}
+
+/* ============================================
+   Individual Row
+   ============================================ */
+
+.sexual-state-panel__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  min-height: 20px;
+}
+
+/* ============================================
+   Labels
+   ============================================ */
+
+.sexual-state-panel__label {
+  width: 80px;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #576574);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Bar Container
+   ============================================ */
+
+.sexual-state-panel__bar-container {
+  flex: 1;
+  height: 16px;
+  background-color: #e8e4dc;
+  border-radius: var(--border-radius-sm, 4px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-color-subtle, #ddd3c7);
+  min-width: 100px;
+}
+
+/* ============================================
+   Bar Fill
+   ============================================ */
+
+.sexual-state-panel__bar-fill {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  border-radius: 2px;
+  transition: width 0.3s ease-in-out;
+}
+
+.sexual-state-panel__bar-fill--excitation {
+  background: linear-gradient(90deg, #e91e63, #f44336);
+}
+
+.sexual-state-panel__bar-fill--inhibition {
+  background: linear-gradient(90deg, #2196f3, #1976d2);
+}
+
+.sexual-state-panel__bar-fill--arousal {
+  background: linear-gradient(90deg, #9c27b0, #7b1fa2);
+}
+
+/* ============================================
+   Value Display
+   ============================================ */
+
+.sexual-state-panel__value {
+  width: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+  color: var(--primary-text-color, #2c3e50);
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   Divider
+   ============================================ */
+
+.sexual-state-panel__divider {
+  border-top: 1px solid var(--border-color-subtle, #ddd3c7);
+  margin: var(--spacing-sm, 8px) 0;
+}
+
+/* ============================================
+   Baseline Libido
+   ============================================ */
+
+.sexual-state-panel__baseline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color, #576574);
+  padding: var(--spacing-xs, 4px) 0;
+}
+
+.sexual-state-panel__baseline-label {
+  color: var(--secondary-text-color, #576574);
+}
+
+.sexual-state-panel__baseline-value {
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+  font-family: 'Courier New', monospace;
+}
+
+.sexual-state-panel__baseline-value--positive {
+  color: #4caf50;
+}
+
+.sexual-state-panel__baseline-value--negative {
+  color: #f44336;
+}
+
+/* ============================================
+   Calculated Sexual States Text
+   ============================================ */
+
+.sexual-state-panel__states {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color, #576574);
+  background-color: rgba(233, 30, 99, 0.08);
+  border-radius: var(--border-radius-sm, 4px);
+  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  margin-top: var(--spacing-sm, 8px);
+  border-top: 1px solid var(--border-color-subtle, #ddd3c7);
+}
+
+.sexual-state-panel__states-label {
+  font-weight: 600;
+  color: var(--primary-text-color, #2c3e50);
+}
+
+.sexual-state-panel__states-value {
+  font-style: italic;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 400px) {
+  .sexual-state-panel__label {
+    width: 60px;
+    font-size: 0.65rem;
+  }
+
+  .sexual-state-panel__value {
+    width: 40px;
+    font-size: 0.7rem;
+  }
+}

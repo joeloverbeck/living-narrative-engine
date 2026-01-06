@@ -501,8 +501,8 @@ describe('registerRenderers', () => {
   it('should register all renderers', () => {
     registerRenderers(mockRegistrar, mockLogger);
 
-    // Count total registrations (TitleRenderer removed, TurnOrderTickerRenderer added, InjuryStatusPanel added, DamageEventMessageRenderer added, PromptPreviewModal added)
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
+    // Count total registrations (TitleRenderer removed, TurnOrderTickerRenderer added, InjuryStatusPanel added, EmotionalStatePanel added, SexualStatePanel added, DamageEventMessageRenderer added, PromptPreviewModal added)
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(15);
 
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(
@@ -519,6 +519,8 @@ describe('registerRenderers', () => {
     expect(registeredTokens).toContain(tokens.ActionResultRenderer);
     expect(registeredTokens).toContain(tokens.TurnOrderTickerRenderer);
     expect(registeredTokens).toContain(tokens.InjuryStatusPanel);
+    expect(registeredTokens).toContain(tokens.EmotionalStatePanel);
+    expect(registeredTokens).toContain(tokens.SexualStatePanel);
     expect(registeredTokens).toContain(tokens.DamageEventMessageRenderer);
     expect(registeredTokens).toContain(tokens.PromptPreviewModal);
   });

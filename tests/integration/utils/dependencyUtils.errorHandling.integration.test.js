@@ -42,6 +42,14 @@ class SimpleNotesListener {
   handleEvent() {}
 }
 
+class SimpleMoodSexualListener {
+  handleEvent() {}
+}
+
+class SimpleExpressionPersistenceListener {
+  handleEvent() {}
+}
+
 class SimpleActionIndex {
   constructor() {
     this.receivedDefinitions = null;
@@ -154,6 +162,8 @@ describe('dependencyUtils error handling integration', () => {
           gameDataRepository: new SimpleGameDataRepository(),
           thoughtListener: new SimpleThoughtListener(),
           notesListener: new SimpleNotesListener(),
+          moodSexualListener: new SimpleMoodSexualListener(),
+          expressionPersistenceListener: new SimpleExpressionPersistenceListener(),
           spatialIndexManager: new SimpleSpatialIndexManager(),
         },
         coreSystems: {
@@ -242,6 +252,8 @@ describe('dependencyUtils error handling integration', () => {
         gameDataRepository: new SimpleGameDataRepository(),
         thoughtListener: new SimpleThoughtListener(),
         notesListener: new SimpleNotesListener(),
+        moodSexualListener: new SimpleMoodSexualListener(),
+        expressionPersistenceListener: new SimpleExpressionPersistenceListener(),
         spatialIndexManager: new SimpleSpatialIndexManager(),
       },
       coreSystems: {

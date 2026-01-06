@@ -54,6 +54,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #actionCategorizationService;
   /** @type {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} */
   #modActionMetadataProvider;
+  /** @type {import('./ChanceTextTranslator.js').ChanceTextTranslator} */
+  #chanceTextTranslator;
 
   /**
    * @param {object} dependencies - Object containing required services.
@@ -74,6 +76,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     actionCategorizationService,
     characterDataXmlBuilder,
     modActionMetadataProvider,
+    chanceTextTranslator,
   }) {
     super();
     validateDependencies(
@@ -124,6 +127,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           name: 'AIPromptContentProvider: modActionMetadataProvider',
           methods: ['getMetadataForMod'],
         },
+        {
+          dependency: chanceTextTranslator,
+          name: 'AIPromptContentProvider: chanceTextTranslator',
+          methods: ['translateForLlm'],
+        },
       ],
       logger
     );
@@ -135,6 +143,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#actionCategorizationService = actionCategorizationService;
     this.#characterDataXmlBuilder = characterDataXmlBuilder;
     this.#modActionMetadataProvider = modActionMetadataProvider;
+    this.#chanceTextTranslator = chanceTextTranslator;
     this.#logger.debug(
       'AIPromptContentProvider initialized with XML builder for character data.'
     );
@@ -813,7 +822,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       return '';
     }
 
-    const commandStr = action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
+    let commandStr = action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
+    commandStr = this.#chanceTextTranslator.translateForLlm(commandStr);
     let description =
       action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
 

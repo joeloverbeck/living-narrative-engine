@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:attachment_swell",
+  "description": "Protective warmth arising from deepening love attachment - a sudden swell of caring closeness.",
+  "priority": 74,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "sexualStates.love_attachment" }, 0.65] },
+          { ">=": [{ "var": "emotions.affection" }, 0.55] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "sexualStates.love_attachment" },
+                  { "var": "previousSexualStates.love_attachment" }
+                ]
+              },
+              0.12
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "A protective softness spreads through me. I want them okay. I want to stay close enough to matter. My voice gentles without me deciding to. My shoulders loosen; I lean in a fraction as if proximity is reassurance.",
+  "description_text": "{actor} stays subtly close to their target of affection, attention tuned toward them in a protective, warm way.",
+  "tags": ["attachment", "love", "protective", "warmth", "closeness"]
+}

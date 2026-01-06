@@ -13,6 +13,26 @@ const schema = OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema;
 describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
+  const baseMoodUpdate = {
+    valence: 10,
+    arousal: 5,
+    agency_control: 3,
+    threat: -4,
+    engagement: 2,
+    future_expectancy: 1,
+    self_evaluation: 0,
+  };
+  const baseSexualUpdate = {
+    sex_excitation: 25,
+    sex_inhibition: 30,
+  };
+  const basePayload = {
+    chosenIndex: 1,
+    speech: 'hello',
+    thoughts: 'thinking',
+    moodUpdate: baseMoodUpdate,
+    sexualUpdate: baseSexualUpdate,
+  };
 
   beforeAll(() => {
     const ajv = new Ajv({ strict: true, allErrors: true });
@@ -22,18 +42,19 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
 
   /* ── VALID CASES ─────────────────────────────────────────────────────── */
   test.each([
+    ['minimal payload', basePayload],
     [
-      'minimal payload',
-      { chosenIndex: 1, speech: 'hello', thoughts: 'thinking' },
+      'empty speech and thoughts',
+      { ...basePayload, chosenIndex: 5, speech: '', thoughts: '' },
     ],
-    ['empty speech and thoughts', { chosenIndex: 5, speech: '', thoughts: '' }],
     [
       'with empty notes array',
-      { chosenIndex: 1, speech: 's', thoughts: 't', notes: [] },
+      { ...basePayload, speech: 's', thoughts: 't', notes: [] },
     ],
     [
       'with notes entries',
       {
+        ...basePayload,
         chosenIndex: 2,
         speech: 'action',
         thoughts: 'inner monologue',
@@ -59,34 +80,57 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
 
   /* ── INVALID CASES ───────────────────────────────────────────────────── */
   test.each([
-    ['missing chosenIndex', { speech: 'a', thoughts: 'b' }],
-    ['missing speech', { chosenIndex: 1, thoughts: 'b' }],
-    ['missing thoughts', { chosenIndex: 1, speech: 'a' }],
-    ['chosenIndex too low (0)', { chosenIndex: 0, speech: 'a', thoughts: 'b' }],
-    ['chosenIndex negative', { chosenIndex: -5, speech: 'a', thoughts: 'b' }],
+    ['missing chosenIndex', { ...basePayload, chosenIndex: undefined }],
+    ['missing speech', { ...basePayload, speech: undefined }],
+    ['missing thoughts', { ...basePayload, thoughts: undefined }],
+    [
+      'missing moodUpdate',
+      { ...basePayload, moodUpdate: undefined },
+    ],
+    [
+      'missing sexualUpdate',
+      { ...basePayload, sexualUpdate: undefined },
+    ],
+    ['chosenIndex too low (0)', { ...basePayload, chosenIndex: 0 }],
+    ['chosenIndex negative', { ...basePayload, chosenIndex: -5 }],
     [
       'chosenIndex non-integer',
-      { chosenIndex: 1.5, speech: 'a', thoughts: 'b' },
+      { ...basePayload, chosenIndex: 1.5 },
     ],
-    ['speech not a string', { chosenIndex: 1, speech: 123, thoughts: 'b' }],
-    ['thoughts not a string', { chosenIndex: 1, speech: 'a', thoughts: 456 }],
+    ['speech not a string', { ...basePayload, speech: 123 }],
+    ['thoughts not a string', { ...basePayload, thoughts: 456 }],
     [
       'notes not an array',
-      { chosenIndex: 1, speech: 'a', thoughts: 'b', notes: 'not-array' },
+      { ...basePayload, notes: 'not-array' },
     ],
     [
       'note item empty string',
-      { chosenIndex: 1, speech: 'a', thoughts: 'b', notes: [''] },
+      { ...basePayload, notes: [''] },
     ],
     [
       'note item non-string',
-      { chosenIndex: 1, speech: 'a', thoughts: 'b', notes: [123] },
+      { ...basePayload, notes: [123] },
     ],
     [
       'additional property at root',
-      { chosenIndex: 1, speech: 'a', thoughts: 'b', extra: 'x' },
+      { ...basePayload, extra: 'x' },
     ],
   ])('✗ %s – should reject', (_label, payload) => {
+    if (payload.chosenIndex === undefined) {
+      delete payload.chosenIndex;
+    }
+    if (payload.speech === undefined) {
+      delete payload.speech;
+    }
+    if (payload.thoughts === undefined) {
+      delete payload.thoughts;
+    }
+    if (payload.moodUpdate === undefined) {
+      delete payload.moodUpdate;
+    }
+    if (payload.sexualUpdate === undefined) {
+      delete payload.sexualUpdate;
+    }
     const ok = validate(payload);
     expect(ok).toBe(false);
     expect(validate.errors?.length).toBeGreaterThan(0);

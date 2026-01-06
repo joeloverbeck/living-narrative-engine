@@ -38,6 +38,8 @@
 @import url('components/_llm-prompt-debug.css');
 @import url('components/_turn-order-ticker.css');
 @import url('components/_injury-status-panel.css');
+@import url('components/_emotional-state-panel.css');
+@import url('components/_sexual-state-panel.css');
 
 /* Action-Result Bubbles */
 @import url('components/_action-result-bubbles.css');

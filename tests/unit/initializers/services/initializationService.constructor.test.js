@@ -19,6 +19,8 @@ let actionIndex;
 let gameDataRepository;
 let thoughtListener;
 let notesListener;
+let moodSexualListener;
+let expressionPersistenceListener;
 let spatialIndexManager;
 let contentDependencyValidator;
 let llmAdapterInitializer;
@@ -41,6 +43,8 @@ beforeEach(() => {
   gameDataRepository = { getAllActionDefinitions: jest.fn(() => []) };
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  moodSexualListener = { handleEvent: jest.fn() };
+  expressionPersistenceListener = { handleEvent: jest.fn() };
   spatialIndexManager = { buildIndex: jest.fn() };
   contentDependencyValidator = {
     validate: jest.fn().mockResolvedValue(undefined),
@@ -64,6 +68,8 @@ describe('InitializationService constructor', () => {
             gameDataRepository,
             thoughtListener,
             notesListener,
+            moodSexualListener,
+            expressionPersistenceListener,
             spatialIndexManager,
           },
           coreSystems: {
@@ -92,6 +98,8 @@ describe('InitializationService constructor', () => {
           gameDataRepository,
           thoughtListener,
           notesListener,
+          moodSexualListener,
+          expressionPersistenceListener,
           spatialIndexManager,
         },
         coreSystems: {
@@ -122,6 +130,8 @@ describe('InitializationService constructor', () => {
           gameDataRepository,
           thoughtListener,
           notesListener,
+          moodSexualListener,
+          expressionPersistenceListener,
           spatialIndexManager,
         },
         coreSystems: {

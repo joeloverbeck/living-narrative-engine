@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:quiet_contentment",
+  "description": "Calm satisfaction and peaceful happiness - low arousal positive state.",
+  "priority": 45,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.contentment" }, 0.5] },
+          { "<=": [{ "var": "moodAxes.arousal" }, 30] },
+          { ">=": [{ "var": "moodAxes.valence" }, 25] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "A gentle warmth settles in my chest. Everything feels right, somehow.",
+  "description_text": "{actor} radiates a quiet calm, their posture relaxed and their expression softened with gentle satisfaction.",
+  "alternate_descriptions": {
+    "auditory": "I hear a soft, contented sigh from nearby."
+  },
+  "tags": ["contentment", "peace", "satisfaction", "calm"]
+}

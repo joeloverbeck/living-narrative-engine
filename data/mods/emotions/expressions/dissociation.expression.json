@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:dissociation",
+  "description": "Detachment from reality triggered by sudden numbness spike and interest drop",
+  "priority": 86,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.numbness" }, 0.60] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.numbness" },
+                  { "var": "previousEmotions.numbness" }
+                ]
+              },
+              0.20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "-": [
+                  { "var": "emotions.interest" },
+                  { "var": "previousEmotions.interest" }
+                ]
+              },
+              -0.20
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I feel myself step back inside my own head. Things keep happening, but they don't fully arrive. Sounds get oddly distant, like I'm hearing them through a wall. My face and hands feel slightly unreal—present but not mine.",
+  "description_text": "{actor}'s reactions lag; their gaze unfocuses as if they're operating on autopilot.",
+  "tags": ["numbness", "dissociation", "detachment", "acute"]
+}

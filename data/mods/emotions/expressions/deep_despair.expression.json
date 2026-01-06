@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:deep_despair",
+  "description": "Profound hopelessness and grief overwhelming the actor",
+  "priority": 80,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.despair" }, 0.7] },
+          { ">=": [{ "var": "emotions.sadness" }, 0.6] },
+          { "<=": [{ "var": "moodAxes.future_expectancy" }, -50] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Everything feels hollow. The weight in my chest will not lift, and I cannot remember the last time anything seemed worth trying.",
+  "description_text": "{actor}'s shoulders slump as if carrying an invisible burden, their gaze unfocused and distant.",
+  "alternate_descriptions": {
+    "auditory": "I hear a shaky, uneven breath from nearby."
+  },
+  "tags": ["sadness", "despair", "hopelessness"]
+}

@@ -29,6 +29,7 @@
       "known_to.component.json",
       "likes.component.json",
       "material.component.json",
+      "mood.component.json",
       "motivations.component.json",
       "mouth_engagement.component.json",
       "movement.component.json",
@@ -45,6 +46,7 @@
       "profile.component.json",
       "progress_tracker.component.json",
       "secrets.component.json",
+      "sexual_state.component.json",
       "short_term_memory.component.json",
       "speech_patterns.component.json",
       "strengths.component.json",
@@ -209,6 +211,10 @@
     "scopes": [
       "actors_in_location.scope",
       "environment.scope"
+    ],
+    "lookups": [
+      "emotion_prototypes.lookup.json",
+      "sexual_prototypes.lookup.json"
     ],
     "recipes": [],
     "goals": [],

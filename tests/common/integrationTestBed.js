@@ -62,6 +62,20 @@ export class IntegrationTestBed extends BaseTestBed {
     // Register the logger first before configuring base container
     this.container.register(tokens.ILogger, mockLogger);
 
+    const mockEmotionCalculatorService = {
+      calculateEmotions: jest.fn().mockReturnValue(new Map()),
+      formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
+      calculateSexualArousal: jest.fn().mockReturnValue(0),
+      calculateSexualStates: jest.fn().mockReturnValue(new Map()),
+      formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+    };
+
+    this.container.register(
+      tokens.IEmotionCalculatorService,
+      () => mockEmotionCalculatorService,
+      { lifecycle: 'singleton' }
+    );
+
     // Create mock UI elements for tests that need UI components
     const outputDiv = document.createElement('div');
     outputDiv.id = 'outputDiv'; // Changed from 'gameArea' to match UI component expectations

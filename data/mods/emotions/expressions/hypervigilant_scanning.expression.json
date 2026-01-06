@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:hypervigilant_scanning",
+  "description": "Heightened threat awareness with constant environmental monitoring",
+  "priority": 84,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.hypervigilance" }, 0.65] },
+          { ">=": [{ "var": "emotions.fear" }, 0.45] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I keep re-checking corners and faces, unable to trust that the danger is where I last saw it. Every small sound feels highlighted, like my mind is circling it for meaning. My shoulders stay raised; I can't get them to drop.",
+  "description_text": "{actor} keeps scanning—quick glances, tense posture, attention snapping to tiny movements.",
+  "alternate_descriptions": {
+    "auditory": "I hear them shifting their weight repeatedly, restlessness that won't settle."
+  },
+  "tags": ["hypervigilance", "fear", "scanning", "alert", "watchful"]
+}

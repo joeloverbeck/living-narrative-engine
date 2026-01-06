@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:explosive_anger",
+  "description": "Intense anger combined with high arousal - ready to explode",
+  "priority": 85,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.anger" }, 0.75] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 50] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Something snaps inside. The pressure is unbearable - every muscle coiled, ready to strike.",
+  "description_text": "{actor}'s face flushes red, fists clenching and unclenching as their whole body trembles with barely contained rage.",
+  "alternate_descriptions": {
+    "auditory": "I hear ragged, heavy breathing and the sound of someone's fist slamming into something.",
+    "tactile": "I feel the vibration of someone's heavy footsteps nearby."
+  },
+  "tags": ["anger", "rage", "explosive"]
+}

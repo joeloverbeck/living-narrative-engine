@@ -5,13 +5,75 @@ import { ActorDataExtractor } from '../../../../src/turns/services/actorDataExtr
 import {
   ANATOMY_BODY_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
+
+/**
+ * Creates a mock EmotionCalculatorService for testing.
+ *
+ * @returns {object} Mock emotion calculator service
+ */
+function createMockEmotionCalculatorService() {
+  return {
+    calculateSexualArousal: jest.fn().mockReturnValue(0.15),
+    calculateEmotions: jest.fn().mockReturnValue(new Map([['calm', 0.5]])),
+    calculateSexualStates: jest.fn().mockReturnValue(new Map()),
+    formatEmotionsForPrompt: jest.fn().mockReturnValue('calm: moderate'),
+    formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
+  };
+}
+
+/**
+ * Creates a valid mood component with all required axes.
+ *
+ * @returns {object} Mood component data
+ */
+function createMoodComponent() {
+  return {
+    valence: 50,
+    arousal: 30,
+    agency_control: 40,
+    threat: -20,
+    engagement: 60,
+    future_expectancy: 25,
+    self_evaluation: 35,
+  };
+}
+
+/**
+ * Creates a valid sexual state component.
+ *
+ * @returns {object} Sexual state component data
+ */
+function createSexualStateComponent() {
+  return {
+    sex_excitation: 20,
+    sex_inhibition: 10,
+    baseline_libido: 5,
+  };
+}
+
+/**
+ * Creates a valid actor state with required emotional components.
+ *
+ * @param {object} [overrides] - Additional component overrides
+ * @returns {object} Actor state
+ */
+function createValidActorState(overrides = {}) {
+  return {
+    [MOOD_COMPONENT_ID]: createMoodComponent(),
+    [SEXUAL_STATE_COMPONENT_ID]: createSexualStateComponent(),
+    ...overrides,
+  };
+}
 
 describe('ActorDataExtractor - Anatomy Handling', () => {
   let extractor;
   let mockAnatomyDescriptionService;
   let mockEntityFinder;
+  let mockEmotionCalculatorService;
   let mockEntity;
 
   beforeEach(() => {
@@ -25,10 +87,14 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       getEntityInstance: jest.fn(),
     };
 
+    // Mock the emotion calculator service
+    mockEmotionCalculatorService = createMockEmotionCalculatorService();
+
     // Create the extractor with mocks
     extractor = new ActorDataExtractor({
       anatomyDescriptionService: mockAnatomyDescriptionService,
       entityFinder: mockEntityFinder,
+      emotionCalculatorService: mockEmotionCalculatorService,
     });
 
     // Create a mock entity with proper API methods
@@ -50,7 +116,7 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       });
 
       // Act
-      const actorState = {};
+      const actorState = createValidActorState();
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
@@ -77,9 +143,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const componentDescription = 'A regular description';
 
       // Act
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: componentDescription },
-      };
+      });
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
@@ -97,7 +163,7 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       mockEntityFinder.getEntityInstance.mockReturnValue(null);
 
       // Act
-      const actorState = {};
+      const actorState = createValidActorState();
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
@@ -112,9 +178,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const fallbackDescription = 'Fallback description';
 
       // Act
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
-      };
+      });
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert
@@ -126,9 +192,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       mockEntityFinder.getEntityInstance.mockReturnValue(undefined);
 
       // Act & Assert - should not throw
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: 'Some description' },
-      };
+      });
       expect(() => {
         extractor.extractPromptData(actorState, 'test-actor-id');
       }).not.toThrow();
@@ -142,6 +208,7 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const extractorNoAnatomy = new ActorDataExtractor({
         anatomyDescriptionService: null,
         entityFinder: mockEntityFinder,
+        emotionCalculatorService: mockEmotionCalculatorService,
       });
 
       // Setup
@@ -149,9 +216,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const fallbackDescription = 'Regular description';
 
       // Act
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
-      };
+      });
       const result = extractorNoAnatomy.extractPromptData(
         actorState,
         'test-actor-id'
@@ -166,14 +233,15 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const extractorNoFinder = new ActorDataExtractor({
         anatomyDescriptionService: mockAnatomyDescriptionService,
         entityFinder: null,
+        emotionCalculatorService: mockEmotionCalculatorService,
       });
 
       const fallbackDescription = 'Regular description';
 
       // Act
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
-      };
+      });
       const result = extractorNoFinder.extractPromptData(
         actorState,
         'test-actor-id'
@@ -194,9 +262,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       });
 
       // Act
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: actorStateDescription },
-      };
+      });
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
       // Assert - entity description should be used (anatomy-generated) with terminal punctuation
@@ -213,9 +281,9 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       const fallbackDescription = 'Fallback description';
 
       // Act & Assert - should not crash
-      const actorState = {
+      const actorState = createValidActorState({
         [DESCRIPTION_COMPONENT_ID]: { text: fallbackDescription },
-      };
+      });
       expect(() => {
         extractor.extractPromptData(actorState, 'test-actor-id');
       }).not.toThrow();

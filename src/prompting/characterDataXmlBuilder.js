@@ -626,6 +626,13 @@ class CharacterDataXmlBuilder {
       elements.push(physicalConditionContent);
     }
 
+    // Inner state (emotional + sexual) - MOOANDSEXAROSYS-005
+    if (data.emotionalState) {
+      this.#validateEmotionalState(data);
+      const innerStateContent = this.#buildInnerStateSection(data.emotionalState);
+      elements.push(innerStateContent);
+    }
+
     // Goals
     const goalsContent = this.#formatGoalsList(data.goals);
     if (goalsContent) {
@@ -819,6 +826,63 @@ class CharacterDataXmlBuilder {
     }
 
     return this.#wrapSection('physical_condition', parts);
+  }
+
+  // ========================================================================
+  // Inner State Section (MOOANDSEXAROSYS-005)
+  // ========================================================================
+
+  /**
+   * Validates that emotionalState exists in the data DTO.
+   * FAIL-FAST: Throws an error if emotionalState is missing.
+   *
+   * @param {object} data - Character data DTO
+   * @throws {Error} If emotionalState is missing
+   */
+  #validateEmotionalState(data) {
+    if (!data.emotionalState) {
+      throw new Error(
+        `CharacterDataXmlBuilder: DTO for character '${data.name || 'unknown'}' is missing required 'emotionalState' field. ` +
+          `Ensure ActorDataExtractor properly extracts emotional data.`
+      );
+    }
+  }
+
+  /**
+   * Builds the inner state XML section containing emotional and sexual state.
+   * Follows same pattern as #buildPhysicalConditionSection (uses #wrapSection and wrap(tag, content, 2)).
+   *
+   * @param {object} emotionalState - EmotionalStateDTO from ActorDataExtractor
+   * @returns {string} Inner state section XML
+   */
+  #buildInnerStateSection(emotionalState) {
+    const parts = [];
+
+    // Always include emotional_state (required due to validation)
+    const emotionText = emotionalState.emotionalStateText || 'neutral';
+    parts.push(
+      this.#xmlBuilder.wrap(
+        'emotional_state',
+        this.#xmlBuilder.escape(emotionText),
+        2
+      )
+    );
+
+    // Include sexual_state only if present and non-empty
+    if (
+      emotionalState.sexualStateText &&
+      emotionalState.sexualStateText.trim()
+    ) {
+      parts.push(
+        this.#xmlBuilder.wrap(
+          'sexual_state',
+          this.#xmlBuilder.escape(emotionalState.sexualStateText),
+          2
+        )
+      );
+    }
+
+    return this.#wrapSection('inner_state', parts);
   }
 
   /**

@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:intense_desire",
+  "description": "Strong romantic or sexual desire - high arousal wanting state.",
+  "priority": 75,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "sexualStates.sexual_lust" }, 0.6] },
+          { ">=": [{ "var": "sexualArousal" }, 0.5] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 50] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Heat rises through me while blood rushes to my genitals. I'm acutely aware of the focus of my arousal - every movement, every breath. I feel myself starting to lose the grip on my mind.",
+  "description_text": "{actor}'s glazed gaze becomes intent and focused, their breathing slightly quickened, an unmistakable intensity in their presence.",
+  "alternate_descriptions": {
+    "auditory": "I hear someone's breathing grow heavier, more deliberate.",
+    "tactile": "I sense a charged tension in the air, a palpable warmth radiating nearby."
+  },
+  "tags": ["desire", "arousal", "intense", "sexual"]
+}

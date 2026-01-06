@@ -74,6 +74,9 @@ const mockCharacterDataXmlBuilderFn = () => ({
 const mockModActionMetadataProviderFn = () => ({
   getMetadataForMod: jest.fn(() => null),
 });
+const mockChanceTextTranslatorFn = () => ({
+  translateForLlm: jest.fn((text) => text),
+});
 
 describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
   /** @type {AIPromptContentProvider} */
@@ -101,6 +104,7 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       actionCategorizationService: mockActionCategorizationServiceFn(),
       characterDataXmlBuilder: mockCharacterDataXmlBuilderFn(),
       modActionMetadataProvider: mockModActionMetadataProviderFn(),
+      chanceTextTranslator: mockChanceTextTranslatorFn(),
     });
   });
 

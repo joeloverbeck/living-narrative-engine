@@ -426,3 +426,77 @@ export const CHARACTER_WITH_SPECIAL_CHARS_INJURY = {
     firstPersonNarrative: 'Pain in my "arm" & shoulder <sharp>.',
   },
 };
+
+// ========================================================================
+// Emotional State Fixtures (MOOANDSEXAROSYS-005)
+// ========================================================================
+
+/**
+ * Character with emotional state only (no sexual state text)
+ */
+export const CHARACTER_WITH_EMOTIONAL_STATE = {
+  name: 'Emotional Character',
+  personality: 'Deeply feeling',
+  emotionalState: {
+    moodAxes: { valence: -30, arousal: 60, threat: 45, sociality: 10 },
+    emotionalStateText: 'fear: intense, anxiety: strong, hypervigilance: moderate',
+    sexualState: { sex_excitation: 10, sex_inhibition: 80, baseline_libido: 0, sexual_arousal: 0 },
+    sexualStateText: '', // Empty due to high inhibition
+  },
+};
+
+/**
+ * Character with both emotional and sexual state
+ */
+export const CHARACTER_WITH_EMOTIONAL_AND_SEXUAL_STATE = {
+  name: 'Complex Character',
+  personality: 'Passionate and driven',
+  emotionalState: {
+    moodAxes: { valence: 40, arousal: 70, threat: 10, sociality: 60 },
+    emotionalStateText: 'excitement: high, anticipation: strong, joy: moderate',
+    sexualState: { sex_excitation: 60, sex_inhibition: 20, baseline_libido: 50, sexual_arousal: 55 },
+    sexualStateText: 'lust: moderate, romantic yearning: strong',
+  },
+};
+
+/**
+ * Character with empty emotional state text (should fallback to "neutral")
+ */
+export const CHARACTER_WITH_EMPTY_EMOTIONAL_TEXT = {
+  name: 'Neutral Character',
+  personality: 'Calm and collected',
+  emotionalState: {
+    moodAxes: { valence: 0, arousal: 20, threat: 5, sociality: 30 },
+    emotionalStateText: '',
+    sexualState: { sex_excitation: 0, sex_inhibition: 50, baseline_libido: 20, sexual_arousal: 0 },
+    sexualStateText: '',
+  },
+};
+
+/**
+ * Character with special characters in emotional state (for XML escaping tests)
+ */
+export const CHARACTER_WITH_SPECIAL_CHARS_EMOTIONS = {
+  name: 'Special Chars Emotions',
+  personality: 'Expressive',
+  emotionalState: {
+    moodAxes: { valence: -50, arousal: 80, threat: 60, sociality: 5 },
+    emotionalStateText: 'anger: <intense> & overwhelming, fear: "paralyzing"',
+    sexualState: { sex_excitation: 0, sex_inhibition: 90, baseline_libido: 10, sexual_arousal: 0 },
+    sexualStateText: 'desire: <suppressed> & "conflicted"',
+  },
+};
+
+/**
+ * Character with whitespace-only sexual state text (should be treated as empty)
+ */
+export const CHARACTER_WITH_WHITESPACE_SEXUAL_STATE = {
+  name: 'Whitespace Sexual State',
+  personality: 'Reserved',
+  emotionalState: {
+    moodAxes: { valence: 10, arousal: 30, threat: 5, sociality: 40 },
+    emotionalStateText: 'contentment: mild',
+    sexualState: { sex_excitation: 5, sex_inhibition: 70, baseline_libido: 15, sexual_arousal: 0 },
+    sexualStateText: '   ', // Whitespace only - should be treated as empty
+  },
+};

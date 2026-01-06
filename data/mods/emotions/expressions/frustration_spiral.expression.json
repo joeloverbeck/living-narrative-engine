@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:frustration_spiral",
+  "description": "Escalating frustration combined with irritation, building pressure from repeated failure or obstruction",
+  "priority": 72,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.frustration" }, 0.65] },
+          { ">=": [{ "var": "emotions.irritation" }, 0.45] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.frustration" },
+                  { "var": "previousEmotions.frustration" }
+                ]
+              },
+              0.15
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I keep trying and it keeps failing. The pressure builds behind my eyes like I'm about to crack a tooth. I mutter without meaning to—half complaint, half calculation. Restlessness crawls through my legs; I can't keep still.",
+  "description_text": "{actor} repeats motions with increasing force, impatience leaking into every small gesture.",
+  "alternate_descriptions": {
+    "auditory": "I catch muttered words and sharp, irritated breaths."
+  },
+  "tags": ["frustration", "irritation", "spiral", "escalation"]
+}

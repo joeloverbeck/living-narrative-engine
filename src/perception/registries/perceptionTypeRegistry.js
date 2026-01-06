@@ -59,6 +59,18 @@ export const PERCEPTION_TYPE_REGISTRY = {
     fallbackSenses: ['tactile'],
   },
 
+  // Emotion category
+  'emotion.expression': {
+    type: 'emotion.expression',
+    category: 'emotion',
+    displayLabel: 'Expression',
+    cssClass: 'log-type-expression',
+    legacyTypes: [],
+    isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile', 'olfactory'],
+  },
+
   // Movement category
   'movement.arrival': {
     type: 'movement.arrival',
@@ -432,6 +444,11 @@ export const PERCEPTION_CATEGORIES = {
     displayLabel: 'Communication',
     cssClassPrefix: 'log-cat-communication',
     themeColor: '#6a1b9a',
+  },
+  emotion: {
+    displayLabel: 'Emotion',
+    cssClassPrefix: 'log-cat-emotion',
+    themeColor: '#00796b',
   },
   movement: {
     displayLabel: 'Movement',

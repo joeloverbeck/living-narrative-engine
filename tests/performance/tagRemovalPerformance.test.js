@@ -65,6 +65,9 @@ describe('Tag Removal Performance Tests', () => {
     modActionMetadataProvider: {
       getMetadataForMod: jest.fn(() => null),
     },
+    chanceTextTranslator: {
+      translateForLlm: jest.fn((text) => text),
+    },
   });
 
   const createTestNotesWithTags = (count = 10) => {

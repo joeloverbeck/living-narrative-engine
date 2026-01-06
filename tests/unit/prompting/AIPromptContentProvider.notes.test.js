@@ -46,6 +46,9 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
   const stubModActionMetadataProvider = {
     getMetadataForMod: jest.fn(() => null),
   };
+  const stubChanceTextTranslator = {
+    translateForLlm: jest.fn((text) => text),
+  };
 
   let provider;
   let logger;
@@ -60,6 +63,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
       actionCategorizationService: stubActionCategorizationService,
       characterDataXmlBuilder: stubCharacterDataXmlBuilder,
       modActionMetadataProvider: stubModActionMetadataProvider,
+      chanceTextTranslator: stubChanceTextTranslator,
     });
   });
 

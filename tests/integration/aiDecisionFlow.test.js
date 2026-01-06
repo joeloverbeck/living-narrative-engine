@@ -87,6 +87,8 @@ describe('Integration – AI decision flow', () => {
         speech: null,
         thoughts: null,
         notes: null,
+        moodUpdate: null,
+        sexualUpdate: null,
         chosenIndex: 1,
       },
       availableActions: [

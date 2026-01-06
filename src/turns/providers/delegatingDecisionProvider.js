@@ -14,7 +14,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  *  context: import('../interfaces/ITurnContext.js').ITurnContext,
  *  actions: import('../dtos/actionComposite.js').ActionComposite[],
  *  abortSignal?: AbortSignal
- * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null }>} DecisionDelegate
+ * ) => Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate?: { sex_excitation: number, sex_inhibition: number }|null }>} DecisionDelegate
  * Callback used by decision providers to select an action.
  */
 

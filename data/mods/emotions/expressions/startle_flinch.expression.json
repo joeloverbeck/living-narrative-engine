@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:startle_flinch",
+  "description": "Sudden startle response triggered by rapid increase in surprise/startle emotion",
+  "priority": 78,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.surprise_startle" }, 0.55] },
+          {
+            ">=": [
+              {
+                "-": [
+                  { "var": "emotions.surprise_startle" },
+                  { "var": "previousEmotions.surprise_startle" }
+                ]
+              },
+              0.25
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "I flinch hard before I can think, breath catching like I swallowed a shock, my muscles locking for a beat, then releasing in a jitter.",
+  "description_text": "{actor} jerks back in a reflexive flinch, eyes widening as if struck by a sudden thought.",
+  "alternate_descriptions": {
+    "auditory": "I hear a sharp intake of breath—startled, involuntary."
+  },
+  "tags": ["startle", "flinch", "surprise", "reactive"]
+}

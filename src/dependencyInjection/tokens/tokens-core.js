@@ -55,6 +55,7 @@ export const coreTokens = freeze({
   ConditionLoader: 'ConditionLoader',
   ActionLoader: 'ActionLoader',
   EventLoader: 'EventLoader',
+  ExpressionLoader: 'ExpressionLoader',
   MacroLoader: 'MacroLoader',
   LookupLoader: 'LookupLoader',
   StatusEffectRegistryLoader: 'StatusEffectRegistryLoader',
@@ -428,4 +429,11 @@ export const coreTokens = freeze({
   ProbabilityCalculatorService: 'ProbabilityCalculatorService',
   ResolveOutcomeHandler: 'ResolveOutcomeHandler',
   SkillResolverService: 'SkillResolverService',
+  // Expression System Services
+  IExpressionRegistry: 'IExpressionRegistry',
+  IExpressionContextBuilder: 'IExpressionContextBuilder',
+  IExpressionEvaluatorService: 'IExpressionEvaluatorService',
+  IExpressionDispatcher: 'IExpressionDispatcher',
+  IExpressionPersistenceListener: 'IExpressionPersistenceListener',
+  IExpressionOrchestrator: 'IExpressionOrchestrator',
 });

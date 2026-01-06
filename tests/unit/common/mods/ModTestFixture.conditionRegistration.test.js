@@ -13,6 +13,8 @@ describe('ModTestFixture.registerCondition()', () => {
   beforeEach(async () => {
     // Use a simple test action that exists
     fixture = await ModTestFixture.forAction('core', 'core:wait');
+    // Ensure the dataRegistry override is in place for registerCondition().
+    await fixture.loadDependencyConditions([]);
   });
 
   afterEach(() => {
@@ -139,6 +141,19 @@ describe('ModTestFixture.registerCondition()', () => {
         other: 'value',
       })
     ).toThrow('Received: ["description","other"]');
+  });
+
+  it('should throw with diagnostics when condition is not findable after registration', () => {
+    const original = fixture.testEnv.dataRegistry.getConditionDefinition;
+    fixture.testEnv.dataRegistry.getConditionDefinition = () => undefined;
+
+    try {
+      expect(() => {
+        fixture.registerCondition('test:should-fail', { logic: { '==': [1, 1] } });
+      }).toThrow(/CRITICAL: registerCondition\(\) succeeded but condition 'test:should-fail' is not findable/);
+    } finally {
+      fixture.testEnv.dataRegistry.getConditionDefinition = original;
+    }
   });
 
   it('should not affect manually added _loadedConditions on clear', () => {

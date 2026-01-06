@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:lonely_isolation",
+  "description": "Profound sense of isolation and disconnection from others",
+  "priority": 60,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.loneliness" }, 0.55] },
+          { "<=": [{ "var": "moodAxes.engagement" }, -30] },
+          { "<=": [{ "var": "moodAxes.valence" }, -25] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Even surrounded by people, I feel utterly alone. Like I am behind glass, watching but never quite touching.",
+  "description_text": "{actor} seems to draw inward, their posture closed and their attention turned somewhere far away from the present moment.",
+  "alternate_descriptions": {
+    "auditory": "The space around {actor} feels strangely quiet, as if sound itself keeps its distance."
+  },
+  "tags": ["loneliness", "isolation", "disconnection"]
+}

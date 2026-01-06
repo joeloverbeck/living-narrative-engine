@@ -75,6 +75,7 @@ import ConditionLoader from '../../loaders/conditionLoader.js';
 import EntityDefinitionLoader from '../../loaders/entityDefinitionLoader.js';
 import EntityInstanceLoader from '../../loaders/entityInstanceLoader.js';
 import EventLoader from '../../loaders/eventLoader.js';
+import ExpressionLoader from '../../loaders/expressionLoader.js';
 import GameConfigLoader from '../../loaders/gameConfigLoader.js';
 import GoalLoader from '../../loaders/goalLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
@@ -296,6 +297,7 @@ export async function registerLoaders(container) {
   registerLoader(tokens.ConditionLoader, ConditionLoader);
   registerLoader(tokens.ActionLoader, ActionLoader);
   registerLoader(tokens.EventLoader, EventLoader);
+  registerLoader(tokens.ExpressionLoader, ExpressionLoader);
   registerLoader(tokens.MacroLoader, MacroLoader);
   registerLoader(tokens.LookupLoader, LookupLoader);
   registerLoader(tokens.StatusEffectRegistryLoader, StatusEffectRegistryLoader);
@@ -409,6 +411,7 @@ export async function registerLoaders(container) {
         contentLoadersConfig: createDefaultContentLoadersConfig({
           componentLoader: c.resolve(tokens.ComponentLoader),
           eventLoader: c.resolve(tokens.EventLoader),
+          expressionLoader: c.resolve(tokens.ExpressionLoader),
           conditionLoader: c.resolve(tokens.ConditionLoader),
           macroLoader: c.resolve(tokens.MacroLoader),
           lookupLoader: c.resolve(tokens.LookupLoader),

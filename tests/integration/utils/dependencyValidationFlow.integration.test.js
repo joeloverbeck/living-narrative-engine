@@ -68,6 +68,14 @@ function createInitializationConfig(overrides = {}) {
         handleEvent: jest.fn(),
         ...overrides.persistence?.notesListener,
       },
+      moodSexualListener: {
+        handleEvent: jest.fn(),
+        ...overrides.persistence?.moodSexualListener,
+      },
+      expressionPersistenceListener: {
+        handleEvent: jest.fn(),
+        ...overrides.persistence?.expressionPersistenceListener,
+      },
       spatialIndexManager: {
         buildIndex: jest.fn(),
         ...overrides.persistence?.spatialIndexManager,

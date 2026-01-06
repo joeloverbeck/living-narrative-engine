@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions:tearful_sorrow",
+  "description": "Active crying or near-crying state from overwhelming sadness",
+  "priority": 75,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.sadness" }, 0.65] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 25] },
+          { "<=": [{ "var": "moodAxes.valence" }, -40] }
+        ]
+      }
+    }
+  ],
+  "actor_description": "The tears come whether I want them to or not. Everything feels too much, too raw.",
+  "description_text": "{actor}'s eyes glisten with unshed tears, their breath catching as they struggle to maintain composure.",
+  "alternate_descriptions": {
+    "auditory": "I hear a stifled sob and the sound of someone trying to steady their breathing.",
+    "tactile": "U feel a slight tremor nearby, someone's body shaking with suppressed emotion."
+  },
+  "tags": ["sadness", "crying", "sorrow", "tears"]
+}

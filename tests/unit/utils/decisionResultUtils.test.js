@@ -12,6 +12,8 @@ describe('buildDecisionResult utility', () => {
         thoughts: null,
         notes: null,
         chosenIndex: null,
+        moodUpdate: null,
+        sexualUpdate: null,
       },
     });
   });
@@ -27,11 +29,18 @@ describe('buildDecisionResult utility', () => {
     const actions = [{ index: 1 }];
     const result = buildDecisionResult(
       { foo: 'bar' },
-      { speech: 'hi', chosenIndex: 2 },
+      {
+        speech: 'hi',
+        chosenIndex: 2,
+        moodUpdate: { valence: 10 },
+        sexualUpdate: { sex_excitation: 40 },
+      },
       { availableActions: actions }
     );
 
     expect(result.extractedData.chosenIndex).toBe(2);
+    expect(result.extractedData.moodUpdate).toEqual({ valence: 10 });
+    expect(result.extractedData.sexualUpdate).toEqual({ sex_excitation: 40 });
     expect(result.availableActions).toBe(actions);
   });
 });
