@@ -111,12 +111,21 @@ class ExpressionPersistenceListener {
       previousState
     );
 
+    if (this.#isStateUnchanged(previousState, context)) {
+      this.#logger.debug(
+        `Expression listener: No state change for actor ${actorId}, skipping`
+      );
+      return;
+    }
+
     const matchedExpression = this.#expressionEvaluatorService.evaluate(context);
 
     if (matchedExpression) {
-      this.#logger.debug(
-        `Expression matched for actor ${actorId}: ${matchedExpression.id}`
-      );
+      this.#logger.info('Expression matched', {
+        actorId,
+        turnNumber: this.#turnCounter,
+        expressionId: matchedExpression.id ?? 'unknown',
+      });
 
       await this.#expressionDispatcher.dispatch(
         actorId,
@@ -130,6 +139,65 @@ class ExpressionPersistenceListener {
       sexualStates: context.sexualStates,
       moodAxes: context.moodAxes,
     });
+  }
+
+  /**
+   * Check if the evaluation-relevant state is unchanged.
+   *
+   * @private
+   * @param {object|null} previousState
+   * @param {object} context
+   * @returns {boolean}
+   */
+  #isStateUnchanged(previousState, context) {
+    if (!previousState) {
+      return false;
+    }
+
+    return (
+      this.#areShallowObjectsEqual(previousState.moodAxes, context.moodAxes) &&
+      this.#areShallowObjectsEqual(previousState.emotions, context.emotions) &&
+      this.#areShallowObjectsEqual(
+        previousState.sexualStates,
+        context.sexualStates
+      )
+    );
+  }
+
+  /**
+   * Compare plain objects with primitive values.
+   *
+   * @private
+   * @param {object|null} left
+   * @param {object|null} right
+   * @returns {boolean}
+   */
+  #areShallowObjectsEqual(left, right) {
+    if (left === right) {
+      return true;
+    }
+
+    if (!left || !right) {
+      return false;
+    }
+
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+
+    if (leftKeys.length !== rightKeys.length) {
+      return false;
+    }
+
+    for (const key of leftKeys) {
+      if (!Object.prototype.hasOwnProperty.call(right, key)) {
+        return false;
+      }
+      if (!Object.is(left[key], right[key])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

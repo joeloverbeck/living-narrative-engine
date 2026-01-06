@@ -136,6 +136,7 @@ class ExpressionRegistry extends BaseService {
     this.#expressionCache = cache;
     this.#buildTagIndex();
     this.#priorityCache = this.#buildPriorityList();
+    this.#logger.info(`loaded ${this.#expressionCache.size} expressions`);
   }
 
   /**

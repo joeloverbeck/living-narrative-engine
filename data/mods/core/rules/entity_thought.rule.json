@@ -57,7 +57,10 @@
                 "limited": "I sense {context.thinkerNameComponent.text} is distracted."
               },
               "contextual_data": {
-                "thoughts": "{event.payload.thoughts}"
+                "thoughts": "{event.payload.thoughts}",
+                "excludedActorIds": [
+                  "{event.payload.entityId}"
+                ]
               }
             }
           },
