@@ -1,0 +1,126 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:inspired_uplift",
+    "description": "Inspiration: engaged attention paired with hopeful possibility; the actor shows uplift, mental expansion, and forward-looking energy.",
+    "priority": 70,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.inspiration"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.50
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.inspiration"
+                                    },
+                                    {
+                                        "var": "previousEmotions.inspiration"
+                                    }
+                                ]
+                            },
+                            0.10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.engagement"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.engagement"
+                                    }
+                                ]
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.inspiration"
+                            },
+                            0.80
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Something in me clicks into place. The world stops being a wall and turns into a set of handles—ways to grab, ways to try. I can almost feel the idea forming behind my eyes, not as words yet but as shape and pressure, like a door unlatching. My body comes along for it: breath fuller, posture rising without permission. I want to move. I want to make a first attempt before the feeling cools.",
+    "description_text": "{actor} looks abruptly more awake—eyes widening a fraction, attention sharpening. Their posture lifts as if an invisible string has tightened; movements get purposeful, a little quicker, like they’ve just found a workable angle on something that was stuck.",
+    "alternate_descriptions": {
+        "olfactory": "The air around someone is less stale with stress—less sharp sweat, more dry warmth, like a person who’s stopped bracing and started moving again."
+    },
+    "tags": [
+        "engagement",
+        "inspiration",
+        "uplift",
+        "possibility",
+        "approach"
+    ]
+}

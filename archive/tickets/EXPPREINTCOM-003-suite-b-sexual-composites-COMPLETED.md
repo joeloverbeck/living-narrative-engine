@@ -25,7 +25,7 @@ Completed
 - Add Suite B test for emotions:aroused_but_ashamed_conflict (B1).
 - Assert context.sexualArousal and context.sexualStates.* computed values plus the evaluator match.
 - Provide sexual state component data via `sex_excitation`, `sex_inhibition`, and `baseline_libido` fields.
-- Use a slightly negative valence (e.g., -10) and higher engagement (e.g., 90) to avoid a borderline `aroused_but_ashamed` value of 0.649999... failing the strict >= 0.65 gate.
+- Use a slightly negative valence (e.g., -10) and higher engagement (e.g., 90) to avoid a borderline `aroused_with_shame` value of 0.649999... failing the strict >= 0.65 gate.
 
 ## Outcome
 - Added Suite B1 integration coverage for sexual composites, including computed sexual arousal/state assertions.

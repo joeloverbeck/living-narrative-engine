@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:erotic_thrill",
     "description": "Adrenaline-laced arousal: fear/threat present, but valence remains non-negative—danger registers as exciting rather than purely aversive.",
-    "priority": 86,
+    "priority": 75,
     "prerequisites": [
         {
             "logic": {
@@ -12,7 +12,7 @@
                             {
                                 "var": "sexualStates.erotic_thrill"
                             },
-                            0.55
+                            0.60
                         ]
                     },
                     {
@@ -28,7 +28,15 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            30
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            80
                         ]
                     },
                     {
@@ -36,26 +44,124 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            0
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.thrill"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anticipation"
+                                    },
+                                    0.40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.curiosity"
+                                    },
+                                    0.35
+                                ]
+                            }
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "sexualStates.aroused_but_ashamed"
+                                "var": "sexualStates.aroused_with_shame"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_performance_anxiety"
                             },
                             0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.fearful_arousal"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.erotic_thrill"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.erotic_thrill"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.erotic_thrill"
+                            },
+                            0.82
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "My pulse is loud. The danger is real—I can feel it in my chest—but it doesn't dampen the heat. It sharpens it. Fear and excitement braid together until I can't tell which one is driving my breath. Part of me wants to back away; part of me wants to lean in and taste the edge of it.",
-    "description_text": "{actor}'s breath comes quick, eyes bright with a confusing mix of alarm and excitement; their body holds tense readiness, but there's a telling spark of enjoyment in the expression.",
+    "actor_description": "The danger doesn’t push me back—it pulls. My pulse climbs into my throat, breath shallow and bright, like my body’s trying to run and kiss at the same time. Everything sharpens: sound, heat, distance. I can feel the grin forming before I decide to make it. This is the edge, and I’m leaning into it.",
+    "description_text": "{actor} goes taut in a way that isn’t fear—breath quick, posture subtly forward. Their attention locks on, pupils wide, as if risk has turned into a kind of invitation. There’s a charged alertness in their stillness, the body’s yes hiding inside its restraint.",
     "alternate_descriptions": {
-        "auditory": "I hear a shaky, breathy laugh—or a sharp inhale—that sounds like fear turning into exhilaration.",
-        "tactile": "The air around someone feels charged, like nervous energy and heat are rising off their skin at once."
+        "auditory": "I catch a tight inhale and a small, unsteady exhale—too eager to be calm, too controlled to be panic.",
+        "tactile": "Heat seems to radiate nearby; a faint tremor runs through the air like someone’s holding perfectly still to keep from lunging.",
+        "olfactory": "I smell warm skin, a hint of sweat, and something faintly sweet—adrenaline turning into appetite."
     },
     "tags": [
         "sexual",

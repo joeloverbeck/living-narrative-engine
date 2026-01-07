@@ -52,6 +52,12 @@
   gap: var(--spacing-lg);
 }
 
+.es-input-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
 .es-panel {
   background: var(--panel-bg-color);
   border: 1px solid var(--border-color-subtle);
@@ -131,6 +137,38 @@
   padding: var(--spacing-xs) var(--spacing-md);
 }
 
+.es-recorded-panel .es-button {
+  margin-bottom: var(--spacing-md);
+}
+
+.es-recorded-state-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 368px;
+  overflow-y: auto;
+  padding-right: var(--spacing-xs);
+}
+
+.es-recorded-state-section h4 {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-base);
+}
+
+.es-recorded-state-list {
+  margin: 0;
+  padding-left: var(--spacing-md);
+  color: var(--secondary-text-color);
+}
+
+.es-recorded-state-item {
+  margin-bottom: var(--spacing-xs);
+}
+
+.es-recorded-state-item:last-child {
+  margin-bottom: 0;
+}
+
 .es-button:disabled {
   background-color: var(--button-disabled-bg-color);
   color: var(--button-disabled-text-color);
@@ -160,6 +198,23 @@
   grid-column: 1 / -1;
 }
 
+.es-evaluation-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.es-evaluation-panel-header h3 {
+  margin: 0;
+}
+
+.es-evaluation-count {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+}
+
 .es-evaluation-log {
   display: flex;
   flex-direction: column;
@@ -167,10 +222,32 @@
 }
 
 .es-evaluation-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
   padding: var(--spacing-sm);
   border: 1px solid var(--border-color-subtle);
   border-radius: var(--border-radius-sm);
   background: var(--secondary-bg-color);
+}
+
+.es-evaluation-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.es-evaluation-priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px var(--spacing-xs);
+  border-radius: 999px;
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--primary-text-color);
 }
 
 .es-evaluation-item--pass {

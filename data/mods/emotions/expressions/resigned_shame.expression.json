@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:resigned_shame",
     "description": "Chronic, non-spiking shame—low self-worth settling into withdrawn, resigned posture",
-    "priority": 63,
+    "priority": 60,
     "prerequisites": [
         {
             "logic": {
@@ -16,18 +16,37 @@
                         ]
                     },
                     {
-                        "<=": [
+                        "and": [
                             {
-                                "-": [
+                                "<=": [
                                     {
-                                        "var": "emotions.shame"
+                                        "-": [
+                                            {
+                                                "var": "emotions.shame"
+                                            },
+                                            {
+                                                "var": "previousEmotions.shame"
+                                            }
+                                        ]
                                     },
-                                    {
-                                        "var": "previousEmotions.shame"
-                                    }
+                                    0.08
                                 ]
                             },
-                            0.10
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.shame"
+                                            },
+                                            {
+                                                "var": "emotions.shame"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            }
                         ]
                     },
                     {
@@ -57,20 +76,85 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.terror"
                             },
                             0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.despair"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.numbness"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.apathy"
+                                    },
+                                    0.35
+                                ]
+                            }
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "It doesn't spike—it's just there, like a baseline verdict. I don't argue with it anymore. I make myself smaller, try not to take up space, try not to invite attention that will only confirm what I already think.",
-    "description_text": "{actor}'s posture folds in on itself; their gaze avoids meeting anyone's for long, as if they've already accepted the worst interpretation of them.",
-    "alternate_descriptions": {
-        "auditory": "The quiet around {actor} feels weighted—breathing measured, words chosen sparingly."
-    },
+    "actor_description": "The shame isn’t a flare anymore. It’s weight. It sits in my chest and stomach like a verdict I’ve stopped arguing with. I catch myself making smaller choices—lowering my eyes, taking up less space, moving slower—because some part of me already assumes I’m wrong. I’m tired of defending myself against it. I just carry it.",
+    "description_text": "{actor} looks folded inward—shoulders rounding, gaze dropping, movements slowed as if each one costs more than it should. They don’t bristle or protest; they simply seem to shrink around a quiet, persistent self-reproach.",
     "tags": [
         "shame",
         "resigned",

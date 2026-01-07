@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:steeled_courage",
     "description": "Fear is present but contained; courage/determination rises and the actor visibly steadies themselves to face the threat",
-    "priority": 86,
+    "priority": 88,
     "prerequisites": [
         {
             "logic": {
@@ -40,6 +40,34 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.dread"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.alarm"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "max": [
@@ -67,17 +95,49 @@
                             },
                             0.10
                         ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    }
+                                ]
+                            },
+                            -0.05
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.70
+                        ]
                     }
                 ]
             },
-            "failure_message": "Requires courage + fear + determination, with a notable rise in courage/determination (a 'steeling' moment) and without being overwhelmed into terror."
+            "failure_message": "Requires high courage + fear + determination with a notable rise in courage/determination, genuine threat signals, fear not sharply dropping (not relief), and not being flattened by numbness/fatigue."
         }
     ],
-    "actor_description": "I'm afraid—no point pretending otherwise. But I pull my breathing into shape and make my hands do what I need them to do. The fear stays there, loud and bright, while something firmer steps in front of it: Fine. Then we do this.",
-    "description_text": "{actor} takes a steadying breath and squares up—tension visible, but their posture firms as if choosing to meet the danger head-on.",
+    "actor_description": "The fear is still there—sharp, bright, insisting—but I stop negotiating with it. I draw one clean breath, set my jaw, and make my hands behave. My pulse bangs in my wrists. Fine. We’re doing this scared.",
+    "description_text": "{actor} squares up like they’ve chosen a line and won’t step back from it. Their breathing goes measured; their posture tightens into purpose. There’s still fear in them—small tremors, a hard swallow—but their focus doesn’t waver.",
     "alternate_descriptions": {
-        "auditory": "I hear a controlled inhale, then a slower exhale—like they're forcing their breathing into a steadier rhythm.",
-        "olfactory": "I smell a clean spike of adrenaline-sweat, sharp but controlled."
+        "auditory": "I hear a controlled inhale, then a slow exhale—breathing that sounds like someone taking command of themselves.",
+        "olfactory": "I smell a clean spike of adrenaline-sweat, sharp but controlled.",
+        "tactile": "Someone's body goes rigid for a beat, then steadies—tension reorganizing into readiness instead of panic."
     },
     "tags": [
         "courage",

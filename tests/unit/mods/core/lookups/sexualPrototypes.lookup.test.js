@@ -45,12 +45,11 @@ describe('core:sexual_prototypes lookup', () => {
       'sexual_playfulness',
       'romantic_yearning',
       'sexual_confidence',
-      'aroused_but_ashamed',
-      'aroused_but_threatened',
+      'aroused_with_shame',
+      'fearful_arousal',
       'sexual_performance_anxiety',
       'sexual_frustration',
-      'afterglow',
-      'sexual_disgust_conflict',
+      'aroused_with_disgust',
       'sexual_indifference',
       'sexual_repulsion',
     ];
@@ -151,11 +150,11 @@ describe('core:sexual_prototypes lookup', () => {
       'sexual_sensual_pleasure',
       'sexual_playfulness',
       'sexual_confidence',
-      'aroused_but_ashamed',
-      'aroused_but_threatened',
+      'aroused_with_shame',
+      'fearful_arousal',
       'sexual_performance_anxiety',
       'sexual_frustration',
-      'sexual_disgust_conflict',
+      'aroused_with_disgust',
     ];
 
     statesRequiringSexualArousalGate.forEach((state) => {
@@ -168,17 +167,6 @@ describe('core:sexual_prototypes lookup', () => {
       });
     });
 
-    it('afterglow may not require high sexual_arousal gate (exception)', () => {
-      const afterglowGates = lookupData.entries.afterglow.gates || [];
-      const sexualArousalGates = afterglowGates.filter((gate) =>
-        gate.startsWith('sexual_arousal >=')
-      );
-
-      if (sexualArousalGates.length > 0) {
-        const gateValue = parseFloat(sexualArousalGates[0].match(/-?[0-9.]+$/)[0]);
-        expect(gateValue).toBeLessThan(0.35);
-      }
-    });
   });
 
   describe('specific state configurations', () => {
@@ -192,24 +180,16 @@ describe('core:sexual_prototypes lookup', () => {
       expect(lookupData.entries.sexual_lust.weights.threat).toBeLessThan(0);
     });
 
-    it('aroused_but_ashamed should have negative self_evaluation', () => {
+    it('aroused_with_shame should have negative self_evaluation', () => {
       expect(
-        lookupData.entries.aroused_but_ashamed.weights.self_evaluation
+        lookupData.entries.aroused_with_shame.weights.self_evaluation
       ).toBeLessThan(0);
     });
 
-    it('aroused_but_threatened should have high threat weight', () => {
+    it('fearful_arousal should have high threat weight', () => {
       expect(
-        lookupData.entries.aroused_but_threatened.weights.threat
+        lookupData.entries.fearful_arousal.weights.threat
       ).toBeGreaterThan(0.5);
-    });
-
-    it('afterglow should have lower sexual_arousal weight', () => {
-      expect(lookupData.entries.afterglow.weights.sexual_arousal).toBeLessThan(0.5);
-    });
-
-    it('afterglow should have positive valence', () => {
-      expect(lookupData.entries.afterglow.weights.valence).toBeGreaterThan(0.5);
     });
 
     it('sexual_frustration should have negative valence', () => {

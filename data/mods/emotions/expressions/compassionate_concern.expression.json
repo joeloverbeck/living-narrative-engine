@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:compassionate_concern",
     "description": "Warm concern and empathy - attentive care directed outward, distinct from personal sadness or panic.",
-    "priority": 58,
+    "priority": 60,
     "prerequisites": [
         {
             "logic": {
@@ -16,22 +16,106 @@
                         ]
                     },
                     {
-                        "<": [
+                        "<=": [
                             {
                                 "var": "emotions.empathic_distress"
                             },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
                             0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.45
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.compassion"
+                                    },
+                                    {
+                                        "var": "previousEmotions.compassion"
+                                    }
+                                ]
+                            },
+                            0.07
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.75
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "My focus goes straight to them. I can't ignore it. I feel the pull to help—steady, practical care rising up before I even decide. I want to ease whatever they're carrying, even if I can only do something small.",
-    "description_text": "Worry and care soften {actor}'s face as they step forward, eyes full of concern—attention fixed on whoever needs help.",
+    "actor_description": "My attention goes to them like it has weight. It isn’t curiosity—it’s pull. Something in me tightens, not with fear, but with readiness: What do you need? What can I do? I feel it physically—jaw softening, breath turning careful, hands wanting to move without being told. I don’t have to like someone to recognize hurt. I just have to see it.",
+    "description_text": "{actor}’s face changes first: the brow eases, the eyes narrow in focus rather than suspicion. Their posture tilts forward a fraction—an unconscious lean toward the problem. Their hands make small, restrained movements, as if they’re measuring whether touch would help or harm.",
     "alternate_descriptions": {
-        "auditory": "I hear a gentler tone in {actor}'s voice—questions asked softly, like they're trying not to make things worse.",
-        "tactile": "Near {actor}, there's a grounded steadiness—an intent, careful presence that feels like support offered without pressure."
+        "auditory": "A voice drops in volume and sharpness—questions asked gently, pauses left open on purpose. The words sound arranged around someone else’s fragility."
     },
     "tags": [
         "compassion",

@@ -20,17 +20,83 @@
               {
                 "var": "emotions.rage"
               },
-              0.6
+              0.60
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              -10
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.anger"
+                      },
+                      {
+                        "var": "previousEmotions.anger"
+                      }
+                    ]
+                  },
+                  0.15
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.rage"
+                      },
+                      {
+                        "var": "previousEmotions.rage"
+                      }
+                    ]
+                  },
+                  0.15
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "previousMoodAxes.agency_control"
+                      },
+                      {
+                        "var": "moodAxes.agency_control"
+                      }
+                    ]
+                  },
+                  15
+                ]
+              }
             ]
           }
         ]
-      }
+      },
+      "failure_message": "Requires very high anger+rage with arousal and reduced control, plus a recent spike (anger/rage/control drop)."
     }
   ],
-  "actor_description": "The anger, it doesn't pass. It sits in my chest like pressure, hot and tight. I can feel my jaw locked, my hands itching to do something irreversible. Every second is restraint.",
-  "description_text": "{actor}'s face stays flushed, jaw clenched; their hands flex and curl as their whole body holds a rigid, barely contained fury.",
+  "actor_description": "It tips. One more ounce and the lid is gone—heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can’t seem to stop it. The anger isn’t an opinion anymore; it’s a physical force shoving outward, demanding release, turning everything I say into impact.",
+  "description_text": "{actor} detonates—voice surging into a shout, movements cutting sharp through the air. Their face flushes, neck tendons standing out, body pitching forward as if the anger has weight and momentum of its own.",
   "alternate_descriptions": {
-    "auditory": "I hear ragged breathing that never quite settles—words clipped short, like anger is taking up space in the throat.",
+    "auditory": "I hear a sudden rise in volume—raw, forceful shouting that arrives faster than context. Words slam into each other, powered more by breath and pressure than clarity.",
     "tactile": "I sense a tense, vibrating stillness in someone's posture—like a coiled spring you can feel in the air."
   },
   "tags": [

@@ -96,7 +96,7 @@
         "self_evaluation >= -0.40"
       ]
     },
-    "passionate_love": {
+    "passion": {
       "weights": {
         "sexual_arousal": 0.7,
         "valence": 0.7,
@@ -122,10 +122,11 @@
       },
       "gates": [
         "sexual_arousal >= 0.35",
-        "threat <= 0.20"
+        "threat <= 0.20",
+        "valence >= 0.0"
       ]
     },
-    "sexual_submissive_pleasure": {
+    "submissive_arousal": {
       "weights": {
         "sexual_arousal": 1.0,
         "agency_control": -0.7,
@@ -166,7 +167,8 @@
       },
       "gates": [
         "engagement >= 0.10",
-        "future_expectancy >= 0.10"
+        "future_expectancy >= 0.10",
+        "sexual_arousal >= 0.1"
       ]
     },
     "sexual_confidence": {
@@ -180,10 +182,26 @@
       "gates": [
         "sexual_arousal >= 0.35",
         "agency_control >= 0.10",
-        "threat <= 0.30"
+        "threat <= 0.30",
+        "self_evaluation >= 0.0"
       ]
     },
-    "aroused_but_ashamed": {
+    "sexual_dominant_pleasure": {
+      "weights": {
+        "sexual_arousal": 1.0,
+        "agency_control": 0.7,
+        "valence": 0.4,
+        "threat": -0.5,
+        "self_evaluation": 0.3,
+        "engagement": 0.2
+      },
+      "gates": [
+        "sexual_arousal >= 0.40",
+        "threat <= 0.20",
+        "agency_control >= 0.30"
+      ]
+    },
+    "aroused_with_shame": {
       "weights": {
         "sexual_arousal": 1.0,
         "self_evaluation": -0.9,
@@ -197,7 +215,7 @@
         "self_evaluation <= -0.20"
       ]
     },
-    "aroused_but_threatened": {
+    "fearful_arousal": {
       "weights": {
         "sexual_arousal": 0.8,
         "threat": 0.9,
@@ -207,7 +225,8 @@
       },
       "gates": [
         "sexual_arousal >= 0.35",
-        "threat >= 0.30"
+        "threat >= 0.30",
+        "valence <= 0.0"
       ]
     },
     "sexual_craving": {
@@ -255,7 +274,8 @@
       "gates": [
         "sexual_arousal >= 0.35",
         "threat >= 0.20",
-        "agency_control <= 0.10"
+        "agency_control <= 0.10",
+        "self_evaluation <= 0.0"
       ]
     },
     "sexual_frustration": {
@@ -272,21 +292,7 @@
         "valence <= -0.10"
       ]
     },
-    "afterglow": {
-      "weights": {
-        "sexual_arousal": 0.3,
-        "valence": 0.7,
-        "arousal": -0.3,
-        "threat": -0.6,
-        "self_evaluation": 0.2,
-        "engagement": 0.2
-      },
-      "gates": [
-        "valence >= 0.20",
-        "threat <= 0.20"
-      ]
-    },
-    "sexual_disgust_conflict": {
+    "aroused_with_disgust": {
       "weights": {
         "sexual_arousal": 0.7,
         "valence": -0.8,

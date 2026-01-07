@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:confused_frown",
     "description": "Confusion or bewilderment - attention snagged on inconsistency, showing as a puzzled frown and small orientation gestures.",
-    "priority": 44,
+    "priority": 46,
     "prerequisites": [
         {
             "logic": {
@@ -14,16 +14,91 @@
                             },
                             0.55
                         ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.confusion"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.confusion"
+                                            },
+                                            {
+                                                "var": "previousEmotions.confusion"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "I can't make it line up. The pieces refuse to click together, and the harder I try to force it, the more wrong it feels. I keep replaying what I just saw or heard, looking for the missing step.",
-    "description_text": "{actor}'s brow knits and their head tilts slightly, a puzzled frown settling in as if they're trying to re-parse what's in front of them.",
+    "actor_description": "I don’t get it. I keep turning it over and it keeps coming back wrong. My brow tightens; I replay what I just saw or heard, hunting the missing step like it’s hiding in plain sight. The more I try to force it to click, the more it resists. I can feel my attention snagging—wait, how does that follow?—stuck at the point where the logic should bridge and doesn’t.",
+    "description_text": "{actor} pauses, brow creasing as they look from one thing to another. Their head tilts, then stills; their eyes track as if trying to map an invisible route. They hover on the verge of speaking and stop again, caught between questions.",
     "alternate_descriptions": {
-        "auditory": "I hear a hesitant pause—maybe a small “wait” or a questioning hum—like {actor} is checking their own understanding out loud.",
-        "tactile": "Close to {actor}, there's a stop-start quality—micro-pauses and recalibration, as if their attention keeps catching on a snag."
+        "auditory": "I hear speech that starts, revises, and starts again—half-questions, little “wait—” sounds, the cadence of someone checking their own assumptions.",
+        "tactile": "Someone's body holds a searching tension—still, but not relaxed, like their attention is reaching for something it can’t quite grasp."
     },
     "tags": [
         "confusion",

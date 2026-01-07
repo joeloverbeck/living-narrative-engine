@@ -176,7 +176,7 @@ File suggestion: same file (separate describe block).
 
 #### B1. emotions:aroused_but_ashamed_conflict
 Expression: `data/mods/emotions/expressions/aroused_but_ashamed_conflict.expression.json`
-Prereqs: sexualStates.aroused_but_ashamed >= 0.65, sexualStates.sexual_lust >= 0.45, emotions.shame >= 0.45.
+Prereqs: sexualStates.aroused_with_shame >= 0.65, sexualStates.sexual_lust >= 0.45, emotions.shame >= 0.45.
 
 Current mood (raw axes):
 - valence: -10
@@ -194,7 +194,7 @@ Sexual state (raw):
 
 Expected checks:
 - `context.sexualArousal === 1.0`
-- `context.sexualStates.aroused_but_ashamed >= 0.65`
+- `context.sexualStates.aroused_with_shame >= 0.65`
 - `context.sexualStates.sexual_lust >= 0.45`
 - `context.emotions.shame >= 0.45`
 

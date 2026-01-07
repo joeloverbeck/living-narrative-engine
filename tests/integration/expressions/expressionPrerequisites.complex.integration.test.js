@@ -216,14 +216,16 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     const threatDelta =
       currentContext.moodAxes.threat - previousContext.moodAxes.threat;
     const fearDelta = fear - (previousContext.emotions.fear ?? 0);
-    const maxDelta = Math.max(disgustDelta, threatDelta, fearDelta);
+    const scaledDisgustDelta = disgustDelta * 100;
+    const scaledFearDelta = fearDelta * 100;
+    const maxDelta = Math.max(scaledDisgustDelta, threatDelta, scaledFearDelta);
 
     expect(disgust).toBeGreaterThanOrEqual(0.6);
     expect(fear >= 0.35 || alarm >= 0.35).toBe(true);
     expect(terror).toBeLessThan(0.55);
-    expect(currentContext.moodAxes.threat).toBeGreaterThanOrEqual(0.25);
-    expect(currentContext.moodAxes.valence).toBeLessThanOrEqual(-0.2);
-    expect(maxDelta).toBeGreaterThanOrEqual(0.12);
+    expect(currentContext.moodAxes.threat).toBeGreaterThanOrEqual(25);
+    expect(currentContext.moodAxes.valence).toBeLessThanOrEqual(-20);
+    expect(maxDelta).toBeGreaterThanOrEqual(12);
 
     const matches = expressionEvaluatorService.evaluateAll(currentContext);
     expect(matches.map((match) => match.id)).toContain(expression.id);
@@ -426,7 +428,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     );
 
     const arousalComposite =
-      currentContext.sexualStates.aroused_but_ashamed ?? 0;
+      currentContext.sexualStates.aroused_with_shame ?? 0;
     const lust = currentContext.sexualStates.sexual_lust ?? 0;
     const shame = currentContext.emotions.shame ?? 0;
 

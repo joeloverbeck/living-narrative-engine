@@ -8,6 +8,16 @@ import { createEntityContext } from '../logic/contextAssembler.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IEntityManager} IEntityManager */
 
+const MOOD_AXES_KEYS = [
+  'valence',
+  'arousal',
+  'agency_control',
+  'threat',
+  'engagement',
+  'future_expectancy',
+  'self_evaluation',
+];
+
 class ExpressionContextBuilder {
   #emotionCalculatorService;
   #entityManager;
@@ -68,13 +78,33 @@ class ExpressionContextBuilder {
       sexualStateData
     );
 
-    this.#assertStateCoverage(emotions, 'emotions');
-    this.#assertStateCoverage(sexualStates, 'sexualStates');
+    const emotionKeys = this.#emotionCalculatorService.getEmotionPrototypeKeys();
+    const sexualKeys = this.#emotionCalculatorService.getSexualPrototypeKeys();
+
+    this.#assertStateCoverage(emotions, 'emotions', emotionKeys);
+    this.#assertStateCoverage(sexualStates, 'sexualStates', sexualKeys);
 
     const actorContext = createEntityContext(
       actorId,
       this.#entityManager,
       this.#logger
+    );
+
+    const previousEmotions = this.#buildPreviousState(
+      previousState?.emotions ?? null,
+      emotionKeys,
+      'previousEmotions'
+    );
+    const previousSexualStates = this.#buildPreviousState(
+      previousState?.sexualStates ?? null,
+      sexualKeys,
+      'previousSexualStates'
+    );
+    const previousMoodAxes = this.#buildPreviousState(
+      previousState?.moodAxes ?? null,
+      MOOD_AXES_KEYS,
+      'previousMoodAxes',
+      'mood axes'
     );
 
     return {
@@ -83,9 +113,9 @@ class ExpressionContextBuilder {
       sexualStates: this.#mapToObject(sexualStates),
       moodAxes: this.#extractMoodAxes(moodData),
       sexualArousal,
-      previousEmotions: previousState?.emotions ?? null,
-      previousSexualStates: previousState?.sexualStates ?? null,
-      previousMoodAxes: previousState?.moodAxes ?? null,
+      previousEmotions,
+      previousSexualStates,
+      previousMoodAxes,
     };
   }
 
@@ -96,15 +126,16 @@ class ExpressionContextBuilder {
    * @param {'emotions'|'sexualStates'} kind
    * @private
    */
-  #assertStateCoverage(stateMap, kind) {
-    const expectedKeys =
-      kind === 'emotions'
-        ? this.#emotionCalculatorService.getEmotionPrototypeKeys()
-        : this.#emotionCalculatorService.getSexualPrototypeKeys();
-
+  #assertStateCoverage(stateMap, kind, expectedKeys) {
     if (!stateMap || typeof stateMap[Symbol.iterator] !== 'function') {
       throw new Error(
         `[ExpressionContextBuilder] ${kind} evaluation returned non-iterable results.`
+      );
+    }
+
+    if (!Array.isArray(expectedKeys)) {
+      throw new Error(
+        `[ExpressionContextBuilder] ${kind} prototype lookup returned invalid keys.`
       );
     }
 
@@ -134,21 +165,99 @@ class ExpressionContextBuilder {
   }
 
   /**
+   * Build previous-state objects with full coverage and validation.
+   *
+   * @param {object|Map<string, number>|null} previousValues
+   * @param {string[]} expectedKeys
+   * @param {string} label
+   * @param {string} [sourceLabel='prototype lookup']
+   * @returns {Record<string, number>}
+   * @private
+   */
+  #buildPreviousState(
+    previousValues,
+    expectedKeys,
+    label,
+    sourceLabel = 'prototype lookup'
+  ) {
+    if (!Array.isArray(expectedKeys) || expectedKeys.length === 0) {
+      throw new Error(
+        `[ExpressionContextBuilder] ${label} ${sourceLabel} returned no keys.`
+      );
+    }
+
+    if (previousValues === null || previousValues === undefined) {
+      return this.#createZeroedState(expectedKeys);
+    }
+
+    const normalized =
+      previousValues instanceof Map
+        ? this.#mapToObject(previousValues)
+        : previousValues;
+
+    if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) {
+      throw new Error(
+        `[ExpressionContextBuilder] ${label} must be a plain object with numeric values.`
+      );
+    }
+
+    this.#assertPreviousStateKeys(normalized, expectedKeys, label, sourceLabel);
+    return { ...normalized };
+  }
+
+  /**
+   * Validate previous-state keys against expected keys.
+   *
+   * @param {object} previousValues
+   * @param {string[]} expectedKeys
+   * @param {string} label
+   * @param {string} sourceLabel
+   * @private
+   */
+  #assertPreviousStateKeys(previousValues, expectedKeys, label, sourceLabel) {
+    const expectedSet = new Set(expectedKeys);
+    const actualKeys = Object.keys(previousValues);
+    const missingKeys = expectedKeys.filter(
+      (key) => !Object.prototype.hasOwnProperty.call(previousValues, key)
+    );
+    const extraKeys = actualKeys.filter((key) => !expectedSet.has(key));
+
+    if (missingKeys.length || extraKeys.length) {
+      const missingLabel = missingKeys.length ? missingKeys.join(', ') : 'none';
+      const extraLabel = extraKeys.length ? extraKeys.join(', ') : 'none';
+      throw new Error(
+        `[ExpressionContextBuilder] ${label} keys do not match ${sourceLabel}. Expected ${expectedKeys.length}, got ${actualKeys.length}. Missing: ${missingLabel}. Extra: ${extraLabel}.`
+      );
+    }
+  }
+
+  /**
+   * Create a zeroed state object for expected keys.
+   *
+   * @param {string[]} keys
+   * @returns {Record<string, number>}
+   * @private
+   */
+  #createZeroedState(keys) {
+    const result = {};
+    for (const key of keys) {
+      result[key] = 0;
+    }
+    return result;
+  }
+
+  /**
    * Extract mood axes from mood component data.
    *
    * @param {object} moodData
    * @returns {object}
    */
   #extractMoodAxes(moodData) {
-    return {
-      valence: moodData?.valence ?? 0,
-      arousal: moodData?.arousal ?? 0,
-      agency_control: moodData?.agency_control ?? 0,
-      threat: moodData?.threat ?? 0,
-      engagement: moodData?.engagement ?? 0,
-      future_expectancy: moodData?.future_expectancy ?? 0,
-      self_evaluation: moodData?.self_evaluation ?? 0,
-    };
+    const axes = {};
+    for (const key of MOOD_AXES_KEYS) {
+      axes[key] = moodData?.[key] ?? 0;
+    }
+    return axes;
   }
 
   /**

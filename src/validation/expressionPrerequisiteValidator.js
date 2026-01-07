@@ -34,6 +34,15 @@ const COMPARISON_OPERATORS = new Set([
   '<=',
 ]);
 
+const MOOD_AXES_ROOTS = new Set(['moodAxes', 'previousMoodAxes']);
+const NORMALIZED_ROOTS = new Set([
+  'emotions',
+  'previousEmotions',
+  'sexualStates',
+  'previousSexualStates',
+  'sexualArousal',
+]);
+
 const OPERATOR_ARITY_RULES = new Map([
   ['and', { type: 'array', min: 1 }],
   ['or', { type: 'array', min: 1 }],
@@ -239,6 +248,10 @@ class ExpressionPrerequisiteValidator {
       this.#validateComparisonRanges(operator, args, context);
     }
 
+    if (operator === 'max' || operator === 'min') {
+      this.#validateMixedScaleOperation(operator, args, context, node);
+    }
+
     if (operator !== 'var') {
       this.#validateLogicNode(args, context);
     }
@@ -410,42 +423,153 @@ class ExpressionPrerequisiteValidator {
 
     const numericArgs = args.filter((arg) => typeof arg === 'number');
     if (numericArgs.length === 0) {
-      return;
+      // Continue; nested comparisons might include numeric literals.
     }
 
     const nonNumericArgs = args.filter((arg) => typeof arg !== 'number');
     const directVarPaths = [];
+    let hasNonDirectArg = false;
     for (const arg of nonNumericArgs) {
       const varPath = this.#extractVarPath(arg);
       if (!varPath) {
-        return;
+        hasNonDirectArg = true;
+        break;
       }
       directVarPaths.push(varPath);
     }
 
-    if (directVarPaths.length === 0) {
+    if (!hasNonDirectArg && directVarPaths.length > 0) {
+      for (const varPath of directVarPaths) {
+        const root = varPath.split('.')[0];
+        const range = RANGE_BY_ROOT.get(root);
+        if (!range) {
+          continue;
+        }
+
+        numericArgs.forEach((value) => {
+          if (value < range.min || value > range.max) {
+            context.recordViolation({
+              issueType: 'range_mismatch',
+              prerequisiteIndex: context.prerequisiteIndex,
+              message: `Value ${value} is outside expected range for "${root}" (${range.min}..${range.max}).`,
+              severity: 'medium',
+              varPath,
+            });
+          }
+        });
+      }
+    }
+
+    const comparisonVarEntries = this.#collectVarPathsWithScales(args);
+    const comparisonVarPaths = comparisonVarEntries.map((entry) => entry.path);
+    if (comparisonVarPaths.length === 0) {
       return;
     }
 
-    for (const varPath of directVarPaths) {
-      const root = varPath.split('.')[0];
-      const range = RANGE_BY_ROOT.get(root);
-      if (!range) {
-        continue;
-      }
+    const roots = new Set(comparisonVarEntries.map((entry) => entry.root));
+    const moodAxesPaths = comparisonVarEntries
+      .filter((entry) => MOOD_AXES_ROOTS.has(entry.root))
+      .map((entry) => entry.path);
+    if (moodAxesPaths.length === 0) {
+      return;
+    }
 
-      numericArgs.forEach((value) => {
-        if (value < range.min || value > range.max) {
-          context.recordViolation({
-            issueType: 'range_mismatch',
-            prerequisiteIndex: context.prerequisiteIndex,
-            message: `Value ${value} is outside expected range for "${root}" (${range.min}..${range.max}).`,
-            severity: 'medium',
-            varPath,
-          });
-        }
+    const numericLiterals = this.#collectNumericLiterals(args);
+    if (numericLiterals.length === 0) {
+      return;
+    }
+
+    const logicSummary = this.#summarizeLogic({ [operator]: args });
+    const normalizedEntries = comparisonVarEntries.filter((entry) =>
+      NORMALIZED_ROOTS.has(entry.root)
+    );
+    const moodAxesEntries = comparisonVarEntries.filter((entry) =>
+      MOOD_AXES_ROOTS.has(entry.root)
+    );
+    const hasNormalizedRoot = normalizedEntries.length > 0;
+    if (
+      hasNormalizedRoot &&
+      !this.#isMixedScaleComparisonCompatible(
+        normalizedEntries,
+        moodAxesEntries
+      )
+    ) {
+      context.noteWarning({
+        issueType: 'mood_axes_mixed_scale',
+        prerequisiteIndex: context.prerequisiteIndex,
+        message:
+          'Comparison mixes mood axes with normalized roots (emotions or sexual states).',
+        severity: 'medium',
+        varPath: moodAxesPaths[0],
+        logicSummary,
       });
     }
+
+    const skipMoodAxesRangeCheck =
+      !hasNonDirectArg &&
+      directVarPaths.some((path) => MOOD_AXES_ROOTS.has(path.split('.')[0]));
+    numericLiterals.forEach((value) => {
+      if (!Number.isInteger(value)) {
+        context.recordViolation({
+          issueType: 'mood_axes_fractional_threshold',
+          prerequisiteIndex: context.prerequisiteIndex,
+          message: `Value ${value} must be an integer when comparing mood axes.`,
+          severity: 'medium',
+          varPath: moodAxesPaths[0],
+          logicSummary,
+        });
+      }
+
+      if (!skipMoodAxesRangeCheck && (value < -100 || value > 100)) {
+        context.recordViolation({
+          issueType: 'range_mismatch',
+          prerequisiteIndex: context.prerequisiteIndex,
+          message: `Value ${value} is outside expected range for mood axes (-100..100).`,
+          severity: 'medium',
+          varPath: moodAxesPaths[0],
+          logicSummary,
+        });
+      }
+    });
+  }
+
+  #validateMixedScaleOperation(operator, args, context, node) {
+    if (!Array.isArray(args)) {
+      return;
+    }
+
+    const entries = this.#collectVarPathsWithScales(args);
+    if (entries.length === 0) {
+      return;
+    }
+
+    const normalizedEntries = entries.filter((entry) =>
+      NORMALIZED_ROOTS.has(entry.root)
+    );
+    const moodAxesEntries = entries.filter((entry) =>
+      MOOD_AXES_ROOTS.has(entry.root)
+    );
+    if (normalizedEntries.length === 0 || moodAxesEntries.length === 0) {
+      return;
+    }
+
+    if (
+      this.#isMixedScaleComparisonCompatible(
+        normalizedEntries,
+        moodAxesEntries
+      )
+    ) {
+      return;
+    }
+
+    context.noteWarning({
+      issueType: 'mood_axes_mixed_scale',
+      prerequisiteIndex: context.prerequisiteIndex,
+      message: `Operator "${operator}" mixes mood axes with normalized roots (emotions or sexual states).`,
+      severity: 'medium',
+      varPath: moodAxesEntries[0]?.path,
+      logicSummary: this.#summarizeLogic(node),
+    });
   }
 
   #collectVarPaths(node, paths = []) {
@@ -472,6 +596,133 @@ class ExpressionPrerequisiteValidator {
       this.#collectVarPaths(value, paths)
     );
     return paths;
+  }
+
+  #collectVarPathsWithScales(node, scaleFactor = 1, entries = []) {
+    if (node === null || node === undefined) {
+      return entries;
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((entry) =>
+        this.#collectVarPathsWithScales(entry, scaleFactor, entries)
+      );
+      return entries;
+    }
+
+    if (typeof node !== 'object') {
+      return entries;
+    }
+
+    const directPath = this.#extractVarPath(node);
+    if (directPath) {
+      entries.push({
+        path: directPath,
+        root: directPath.split('.')[0],
+        scaleFactor,
+      });
+      return entries;
+    }
+
+    const keys = Object.keys(node);
+    if (keys.length === 1) {
+      const operator = keys[0];
+      const args = node[operator];
+
+      if (operator === '*' && Array.isArray(args)) {
+        const numericFactors = args.filter((arg) => typeof arg === 'number');
+        const multiplier = numericFactors.reduce((acc, value) => acc * value, 1);
+        const nextScaleFactor = numericFactors.length
+          ? scaleFactor * multiplier
+          : scaleFactor;
+        args.forEach((arg) => {
+          if (typeof arg !== 'number') {
+            this.#collectVarPathsWithScales(arg, nextScaleFactor, entries);
+          }
+        });
+        return entries;
+      }
+
+      if (operator === '/' && Array.isArray(args)) {
+        const [numerator, denominator, ...rest] = args;
+        if (typeof denominator === 'number' && denominator !== 0) {
+          this.#collectVarPathsWithScales(
+            numerator,
+            scaleFactor * (1 / denominator),
+            entries
+          );
+          rest.forEach((arg) =>
+            this.#collectVarPathsWithScales(arg, scaleFactor, entries)
+          );
+          return entries;
+        }
+      }
+    }
+
+    Object.values(node).forEach((value) =>
+      this.#collectVarPathsWithScales(value, scaleFactor, entries)
+    );
+    return entries;
+  }
+
+  #isMixedScaleComparisonCompatible(normalizedEntries, moodAxesEntries) {
+    if (normalizedEntries.length === 0 || moodAxesEntries.length === 0) {
+      return false;
+    }
+
+    const normalizedScales = normalizedEntries.map((entry) =>
+      Math.abs(entry.scaleFactor)
+    );
+    const moodAxesScales = moodAxesEntries.map((entry) =>
+      Math.abs(entry.scaleFactor)
+    );
+
+    const normalizedUp = normalizedScales.every((scale) =>
+      this.#isApproximately(scale, 100)
+    );
+    const moodAxesRaw = moodAxesScales.every((scale) =>
+      this.#isApproximately(scale, 1)
+    );
+    if (normalizedUp && moodAxesRaw) {
+      return true;
+    }
+
+    const normalizedRaw = normalizedScales.every((scale) =>
+      this.#isApproximately(scale, 1)
+    );
+    const moodAxesDown = moodAxesScales.every((scale) =>
+      this.#isApproximately(scale, 0.01)
+    );
+    return normalizedRaw && moodAxesDown;
+  }
+
+  #isApproximately(value, target, tolerance = 1e-6) {
+    return Math.abs(value - target) <= tolerance;
+  }
+
+  #collectNumericLiterals(node, values = []) {
+    if (node === null || node === undefined) {
+      return values;
+    }
+
+    if (typeof node === 'number') {
+      values.push(node);
+      return values;
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((entry) => this.#collectNumericLiterals(entry, values));
+      return values;
+    }
+
+    if (typeof node !== 'object') {
+      return values;
+    }
+
+    Object.values(node).forEach((value) =>
+      this.#collectNumericLiterals(value, values)
+    );
+    return values;
   }
 
   #extractVarPath(node) {

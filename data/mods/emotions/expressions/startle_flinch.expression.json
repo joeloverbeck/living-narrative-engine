@@ -7,26 +7,58 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.surprise_startle" }, 0.55] },
+          {
+            ">=": [
+              {
+                "var": "emotions.surprise_startle"
+              },
+              0.55
+            ]
+          },
           {
             ">=": [
               {
                 "-": [
-                  { "var": "emotions.surprise_startle" },
-                  { "var": "previousEmotions.surprise_startle" }
+                  {
+                    "var": "emotions.surprise_startle"
+                  },
+                  {
+                    "var": "previousEmotions.surprise_startle"
+                  }
                 ]
               },
               0.25
             ]
+          },
+          {
+            ">=": [
+              {
+                "max": [
+                  {
+                    "var": "emotions.alarm"
+                  },
+                  {
+                    "var": "emotions.fear"
+                  }
+                ]
+              },
+              0.20
+            ]
           }
         ]
-      }
+      },
+      "failure_message": "Requires a sharp startle spike with at least mild alarm/fear (not a purely positive surprise)."
     }
   ],
-  "actor_description": "I flinch hard before I can think, breath catching like I swallowed a shock, my muscles locking for a beat, then releasing in a jitter.",
-  "description_text": "{actor} jerks back in a reflexive flinch, eyes widening as if struck by a sudden thought.",
+  "actor_description": "My body jumps before my mind catches up—sharp inhale, shoulders snapping up, hands rising like a shield. For a beat my heart is a fist in my chest and I’m already halfway into defend / run. Then the world resolves and I’m left standing in the echo of the reflex, embarrassed at how fast it took me.",
+  "description_text": "{actor} flinches hard—shoulders jerking up, hands flashing into a guard, eyes wide as they snap toward the source. The reaction is instant and involuntary, like a wire got yanked.",
   "alternate_descriptions": {
-    "auditory": "I hear a sharp intake of breath—startled, involuntary."
+    "auditory": "I hear a sharp gasp—then a quick scuff or stumble, something bumped or grabbed too fast."
   },
-  "tags": ["startle", "flinch", "surprise", "reactive"]
+  "tags": [
+    "startle",
+    "flinch",
+    "surprise",
+    "reactive"
+  ]
 }

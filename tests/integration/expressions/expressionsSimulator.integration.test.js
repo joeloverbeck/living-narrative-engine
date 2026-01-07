@@ -17,6 +17,16 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
+const MOOD_AXES_KEYS = [
+  'valence',
+  'arousal',
+  'agency_control',
+  'threat',
+  'engagement',
+  'future_expectancy',
+  'self_evaluation',
+];
+
 const EXPRESSIONS_DIR = path.resolve(
   process.cwd(),
   'data',
@@ -42,6 +52,13 @@ const loadExpressions = async (dataRegistry) => {
   }
 
   return expressions;
+};
+
+const expectZeroedState = (state, keys) => {
+  expect(Object.keys(state).sort()).toEqual([...keys].sort());
+  keys.forEach((key) => {
+    expect(state[key]).toBe(0);
+  });
 };
 
 const createEntityManagerStub = () => {
@@ -179,5 +196,20 @@ describe('Expressions Simulator - Integration', () => {
       id: 'test:simulator-eval',
       priority: 99999,
     });
+  });
+
+  it('provides zeroed previous* defaults for simulator contexts', () => {
+    const actorId = 'sim-previous-defaults';
+
+    const context = expressionContextBuilder.buildContext(
+      actorId,
+      { valence: 15 },
+      { sex_excitation: 0, sex_inhibition: 0, baseline_libido: 0 },
+      null
+    );
+
+    expectZeroedState(context.previousEmotions, emotionKeys);
+    expectZeroedState(context.previousSexualStates, sexualKeys);
+    expectZeroedState(context.previousMoodAxes, MOOD_AXES_KEYS);
   });
 });

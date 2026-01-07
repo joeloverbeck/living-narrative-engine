@@ -2,21 +2,132 @@
   "$schema": "schema://living-narrative-engine/expression.schema.json",
   "id": "emotions:melancholic_disappointment",
   "description": "Wistful sadness mixed with lingering disappointment over something lost or unrealized",
-  "priority": 55,
+  "priority": 58,
   "prerequisites": [
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.disappointment" }, 0.45] },
-          { ">=": [{ "var": "emotions.sadness" }, 0.35] }
+          {
+            ">=": [
+              {
+                "var": "emotions.disappointment"
+              },
+              0.45
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.sadness"
+              },
+              0.35
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.anger"
+              },
+              0.35
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.rage"
+              },
+              0.20
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.frustration"
+              },
+              0.55
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.despair"
+              },
+              0.55
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.grief"
+              },
+              0.60
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.future_expectancy"
+              },
+              10
+            ]
+          },
+          {
+            "or": [
+              {
+                "<": [
+                  {
+                    "var": "previousEmotions.disappointment"
+                  },
+                  0.45
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.disappointment"
+                      },
+                      {
+                        "var": "previousEmotions.disappointment"
+                      }
+                    ]
+                  },
+                  0.10
+                ]
+              }
+            ]
+          }
         ]
       }
     }
   ],
-  "actor_description": "The thought lingers - what could have been, what should have been. It aches in a quiet, patient way.",
-  "description_text": "{actor}'s gaze drifts toward nothing in particular, a wistful softness and faint regret settling over their features.",
+  "actor_description": "I really thought it would go another way. The hope I’d been holding doesn’t shatter—it just folds in on itself, neat and final. My chest feels heavy, like I swallowed a small stone, and my thoughts keep circling the same simple verdict: not this time. I’m not gearing up to fight; I’m letting the loss settle, tasting the dull ache of what could’ve been. Even my body moves slower, as if it doesn’t see the point in hurrying.",
+  "description_text": "{actor} seems to sag by a degree, like something inside them unhooked. Their gaze drops and stays there a beat too long; the mouth softens into a thin, tired line. They breathe out—quiet, untheatrical—like they’re setting down an expectation they can’t carry anymore.",
   "alternate_descriptions": {
-    "auditory": "I hear a soft, melancholic hum trailing off into silence."
+    "auditory": "I hear a slow exhale—longer than it needs to be—like someone letting go of a hope without saying it out loud.",
+    "tactile": "Someone's body slackens, tension draining away; their movements turn careful and heavy, like they’ve accepted a small loss."
   },
-  "tags": ["disappointment", "sadness", "wistful", "nostalgia"]
+  "tags": [
+    "disappointment",
+    "sadness",
+    "wistful",
+    "nostalgia"
+  ]
 }

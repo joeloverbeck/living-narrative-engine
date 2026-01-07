@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:passionate_longing",
     "description": "Passionate love expressing as a hungry-yet-tender longing—desire fused with warmth and a hint of surrender.",
-    "priority": 78,
+    "priority": 82,
     "prerequisites": [
         {
             "logic": {
@@ -10,9 +10,17 @@
                     {
                         ">=": [
                             {
-                                "var": "sexualStates.passionate_love"
+                                "var": "sexualStates.passion"
                             },
-                            0.6
+                            0.55
+                        ]
+                    },
+                    {
+                        "!=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            null
                         ]
                     },
                     {
@@ -20,7 +28,7 @@
                             {
                                 "var": "sexualArousal"
                             },
-                            0.45
+                            0.40
                         ]
                     },
                     {
@@ -28,23 +36,127 @@
                             {
                                 "var": "emotions.love_attachment"
                             },
-                            0.5
+                            0.50
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.romantic_yearning"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.adoration"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.50
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_disgust"
+                            },
+                            0.35
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.passion"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.passion"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.romantic_yearning"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.romantic_yearning"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.passion"
+                            },
+                            0.85
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "It isn't just heat—it's them. Wanting folds into tenderness until I can't tell where one ends and the other begins. My chest feels open and exposed, like I'm offering myself without a fight. I want to close the distance, to be held and to take them in, and the thought makes my body thrum.",
-    "description_text": "{actor}'s gaze lingers with a hungry warmth—desire bright in their eyes, softened by unmistakable affection; they lean in as if pulled by both craving and closeness.",
+    "actor_description": "It’s not just desire; it’s them. Heat pulls through me, but it’s threaded with something softer—an ache in my chest, a hunger for closeness that feels almost steady. I keep imagining the small proofs of nearness: a touch that lingers, breath shared, the relief of not having to reach anymore. Even when I don’t move, my attention keeps drifting back to them like a compass needle.",
+    "description_text": "{actor} lingers—eyes returning again and again with a warmth that doesn’t blink away. Their movements slow and deliberate, as if they’re giving themself time not to rush. They angle their body toward the focus of their longing without fully committing, holding a careful distance that reads like restraint, not indifference.",
     "alternate_descriptions": {
-        "auditory": "I hear someone's breathing deepen and slow, a soft catch in it—like wanting held carefully, not hidden.",
-        "tactile": "I sense a warm, charged closeness around someone, a subtle pull in their posture as if the space between them and someone else is becoming unbearable."
+        "auditory": "I hear breathing deepen and soften; when they speak, their voice loses its hard edges, turned gentle in a way that feels directed.",
+        "tactile": "I sense a warm orientation nearby—someone’s whole presence subtly angled toward someone else, like a held-in step forward."
     },
     "tags": [
         "love",
         "desire",
-        "passionate_love",
+        "passion",
         "longing",
         "warmth",
         "vulnerability",

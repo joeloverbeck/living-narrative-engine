@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:tearful_gratitude",
     "description": "A sudden rush of thankfulness—moved, softened, and visibly affected by kindness or help.",
-    "priority": 69,
+    "priority": 72,
     "prerequisites": [
         {
             "logic": {
@@ -27,7 +27,7 @@
                                     }
                                 ]
                             },
-                            0.15
+                            0.12
                         ]
                     },
                     {
@@ -43,11 +43,54 @@
                             {
                                 ">=": [
                                     {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            {
+                                                "var": "moodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
                                         "var": "emotions.relief"
                                     },
                                     0.4
                                 ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
                             },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        "or": [
                             {
                                 ">=": [
                                     {
@@ -63,13 +106,37 @@
                                     },
                                     0.45
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.awe"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.inspiration"
+                                    },
+                                    0.45
+                                ]
                             }
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.hatred"
+                                "var": "emotions.sadness"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
                             },
                             0.35
                         ]
@@ -77,20 +144,51 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.contempt"
                             },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
                             0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.3
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "The gratitude hits hard—too fast to keep polite. My eyes sting. My throat tightens. For a second I can't do anything but nod, like my body is trying to say thank you before my mouth can manage it.",
-    "description_text": "{actor}'s expression brightens and trembles at once; their eyes shine with sudden moisture as they give an earnest, almost overwhelmed nod.",
+    "actor_description": "I don’t realize I’m crying until my throat tightens and my eyes burn. It isn’t sadness—it’s the opposite: the sudden, almost embarrassing pressure of having been met when I expected to fend for myself. My chest feels too full, like my body is trying to make room for what I can’t say cleanly. I blink hard. I breathe in, and it trembles on the way out. I want to speak, to name it, but the gratitude keeps arriving faster than language.",
+    "description_text": "{actor} goes still in a way that isn’t blank—more like holding something carefully. Their eyes shine; they blink more than they need to. When they inhale, their breath catches, and their mouth presses into a fragile line that keeps trying to become a smile. If they speak, the first word threatens to break.",
     "alternate_descriptions": {
-        "auditory": "I hear a wavering breath and a soft, choked sound—like someone trying to say thank you and getting caught on the feeling.",
-        "tactile": "I sense a loosened tension nearby, a warmth in the way someone leans forward—as if pulled toward connection."
+        "auditory": "I hear a breath hitch—then a soft exhale that doesn’t quite steady. Words start and stop, swallowed and tried again, as if the speaker is fighting not to cry while still needing to say thank you."
     },
     "tags": [
         "gratitude",

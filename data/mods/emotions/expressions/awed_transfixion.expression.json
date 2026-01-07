@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:awed_transfixion",
     "description": "Stunned, reverent wonder—attention captured by something vast, beautiful, or impossible to ignore.",
-    "priority": 73,
+    "priority": 78,
     "prerequisites": [
         {
             "logic": {
@@ -13,6 +13,38 @@
                                 "var": "emotions.awe"
                             },
                             0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            75
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
                         ]
                     },
                     {
@@ -29,33 +61,6 @@
                                 "var": "emotions.rage"
                             },
                             0.35
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.surprise_startle"
-                                    },
-                                    0.25
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.awe"
-                                            },
-                                            {
-                                                "var": "previousEmotions.awe"
-                                            }
-                                        ]
-                                    },
-                                    0.12
-                                ]
-                            }
                         ]
                     },
                     {
@@ -84,15 +89,92 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.entrancement"
+                                    },
+                                    0.60
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.awe"
+                                            },
+                                            {
+                                                "var": "emotions.entrancement"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.awe"
+                                    },
+                                    {
+                                        "var": "previousEmotions.awe"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.awe"
+                                    },
+                                    0.75
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.awe"
+                                    },
+                                    0.75
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "Something in front of me is too large to fit in my usual thoughts. My breath catches. I go quiet, not out of fear, but because words feel small and late. For a moment I can only stare, trying to take it in without breaking it.",
-    "description_text": "{actor} stills mid-motion, eyes wide and fixed; their mouth parts slightly as if language has fallen away, posture held in a quiet, transfixed awe.",
+    "actor_description": "It stops me. My breath catches halfway in and doesn’t want to finish. The world suddenly feels too large to hold in a single thought—like something has opened above me and I’m staring straight into it. My body goes quiet without asking permission: hands useless at my sides, tongue blank, heart thudding slow and heavy. I feel small, but not crushed—more like I’ve been reminded, with absolute clarity, that I’m standing inside something vast.",
+    "description_text": "{actor} goes still as if a switch has been flipped—head tipped, gaze fixed upward or outward, lips parted a fraction. Their blinking slows; their hands hang where they are, forgetting their next motion. Even their breathing seems to pause, the moment held in a tight, quiet suspension.",
     "alternate_descriptions": {
-        "auditory": "I hear a sudden silence—someone's breath caught and held, like they're witnessing something that demands attention."
+        "auditory": "I hear a single soft intake of breath, then a hush—no fidgeting, no speech—like someone’s sound has been turned down to make room for what they’re sensing.",
+        "tactile": "I sense someone becoming unnaturally still. The air feels steadier, as if their movement has stopped so completely it changes the texture of the space."
     },
     "tags": [
         "awe",

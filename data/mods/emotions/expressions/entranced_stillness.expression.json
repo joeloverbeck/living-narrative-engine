@@ -1,0 +1,144 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:entranced_stillness",
+    "description": "Entrancement: attention captured with reduced agency; the actor becomes quiet and still, hovering between comfort and surrender to the stimulus.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.entrancement"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            25
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.entrancement"
+                                    },
+                                    {
+                                        "var": "previousEmotions.entrancement"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.entrancement"
+                            },
+                            0.82
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I stop reaching for the wheel. My attention sinks and stays—caught, held, almost tenderly restrained. The world narrows to one thread, and the rest of me goes quiet around it. I can still feel my body, but it’s distant, obedient—breathing slower, muscles forgetting their usual fidget. Time feels thicker here.",
+    "description_text": "{actor} goes unusually still, gaze fixed as if something has hooked their attention and won’t let go. Their blinking slows; their posture softens into a held pause. It’s not sleepiness—it’s capture, a quiet surrender of movement to focus.",
+    "alternate_descriptions": {
+        "auditory": "Someone's breathing stretches out—longer inhales, longer silences—like someone has forgotten to fidget.",
+        "olfactory": "A muted warmth hangs in the air—calm attention with the edges smoothed down."
+    },
+    "tags": [
+        "engagement",
+        "entrancement",
+        "stillness",
+        "captured_attention",
+        "reduced_agency"
+    ]
+}

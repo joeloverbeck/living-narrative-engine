@@ -2,31 +2,11 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:flustered_jealousy",
     "description": "Jealousy or envy made visible - a tight, possessive or comparative flare that leaks into glare and posture.",
-    "priority": 62,
+    "priority": 67,
     "prerequisites": [
         {
             "logic": {
                 "and": [
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.jealousy"
-                                    },
-                                    0.55
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.envy"
-                                    },
-                                    0.55
-                                ]
-                            }
-                        ]
-                    },
                     {
                         "<": [
                             {
@@ -34,16 +14,158 @@
                             },
                             0.55
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.jealousy"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.love_attachment"
+                                                    },
+                                                    0.25
+                                                ]
+                                            },
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.affection"
+                                                    },
+                                                    0.25
+                                                ]
+                                            },
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "sexualStates.romantic_yearning"
+                                                    },
+                                                    0.25
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.envy"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.shame"
+                                                    },
+                                                    0.25
+                                                ]
+                                            },
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.embarrassment"
+                                                    },
+                                                    0.25
+                                                ]
+                                            },
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "var": "moodAxes.self_evaluation"
+                                                    },
+                                                    -10
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.jealousy"
+                                            },
+                                            {
+                                                "var": "previousEmotions.jealousy"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.envy"
+                                            },
+                                            {
+                                                "var": "previousEmotions.envy"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "It hits like a small, humiliating clamp in my chest. I compare without meaning to. I want to pretend I don't care, but my attention keeps snapping back to what they have—or who they have. I feel possessive, exposed, and a little sick about it.",
-    "description_text": "A tightness crosses {actor}'s expression—jaw set hard, eyes narrowing as a brief glare flickers toward the object of their envy before they try to smooth it away.",
+    "actor_description": "It hits hot and stupid—my stomach tightens, my chest goes hard, and my attention keeps snapping back no matter what I tell myself. I watch and compare without meaning to, and the comparison feels like losing. I want to look indifferent. I can’t. There’s this embarrassing urgency under my skin: the urge to reclaim space, to matter more, to be the obvious choice. The worst part is the self-awareness of it—how small it makes me feel—while the feeling keeps burning anyway.",
+    "description_text": "{actor} grows visibly unsettled: their gaze keeps returning in sharp, involuntary flicks, then darting away as if caught. Color rises in the face; the jaw tightens. They hover between reaching and retreating—half-steps forward that stop short, gestures aborted mid-motion.",
     "alternate_descriptions": {
-        "auditory": "I hear {actor}'s voice tighten—words clipped a little too clean, like they're forcing calm through their teeth.",
-        "tactile": "The air around {actor} feels taut and prickly, like tension pulled tight and held just under the skin."
+        "auditory": "I hear clipped pacing, a pause that feels like restraint being held in the throat.",
+        "tactile": "The air feels prickly—restless heat and tension, like someone is bracing and trying not to show it."
     },
     "tags": [
         "jealousy",

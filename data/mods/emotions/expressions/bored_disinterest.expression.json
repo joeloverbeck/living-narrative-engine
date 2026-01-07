@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:bored_disinterest",
     "description": "Low engagement boredom or apathy - everyday disinterest expressed through drifting attention and impatient fidgeting.",
-    "priority": 34,
+    "priority": 46,
     "prerequisites": [
         {
             "logic": {
@@ -26,16 +26,114 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.interest"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.curiosity"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fascination"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.boredom"
+                                            },
+                                            {
+                                                "var": "previousEmotions.boredom"
+                                            }
+                                        ]
+                                    },
+                                    0.06
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.40
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "My attention keeps sliding off everything in front of me. I try to care and it doesn't stick. Time feels thick. I want to be anywhere else—or at least doing anything that doesn't feel this empty.",
-    "description_text": "{actor} stares off into the distance, stifling a yawn as their fingers drum impatiently—interest slipping away despite their best attempt to stay present.",
+    "actor_description": "My attention won’t latch. It touches things and slips off, like there’s no friction in my mind. The room feels too slow—every second padded out. I try to care and nothing catches. My eyelids feel heavy, my thoughts feel blunt, and the part of me that should lean forward just… doesn’t. I’m left with this dry restlessness: the urge to leave, to switch tasks, to do anything that makes time move again.",
+    "description_text": "{actor} looks past things instead of at them—gaze unfocused, responses delayed by a beat as if they’re reaching for motivation and coming back empty. Their posture slackens; small fidgets (finger taps, a foot shifting) leak out like impatience with the moment itself.",
     "alternate_descriptions": {
-        "auditory": "I hear a slow exhale and a faint, restless rhythm—tapping, shifting, the sound of someone waiting for life to start again.",
-        "tactile": "Around {actor} there's a slackened energy—impatience without momentum, like attention has gone loose in the joints."
+        "auditory": "I hear a long, flattening exhale—silence that feels stretched—plus small impatiences: a tap, a scrape, a slow reply that arrives late and lands dull.",
+        "tactile": "Someone's presence feels heavy and withdrawn, like someone has stepped back from the moment without moving their feet."
     },
     "tags": [
         "boredom",

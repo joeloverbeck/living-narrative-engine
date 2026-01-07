@@ -501,11 +501,11 @@ export const SEXUAL_STATE_COMPONENT_ID = 'core:sexual_state';
       "weights": {"sexual_arousal": 0.8, "agency_control": 0.6, "valence": 0.2, "threat": -0.4, "self_evaluation": 0.2},
       "gates": ["sexual_arousal >= 0.35", "agency_control >= 0.10", "threat <= 0.30"]
     },
-    "aroused_but_ashamed": {
+    "aroused_with_shame": {
       "weights": {"sexual_arousal": 1.0, "self_evaluation": -0.9, "valence": -0.3, "threat": 0.2, "agency_control": -0.2, "arousal": 0.2},
       "gates": ["sexual_arousal >= 0.35", "self_evaluation <= -0.20"]
     },
-    "aroused_but_threatened": {
+    "fearful_arousal": {
       "weights": {"sexual_arousal": 0.8, "threat": 0.9, "arousal": 0.6, "valence": -0.4, "agency_control": -0.3},
       "gates": ["sexual_arousal >= 0.35", "threat >= 0.30"]
     },
@@ -521,7 +521,7 @@ export const SEXUAL_STATE_COMPONENT_ID = 'core:sexual_state';
       "weights": {"sexual_arousal": 0.3, "valence": 0.7, "arousal": -0.3, "threat": -0.6, "self_evaluation": 0.2, "engagement": 0.2},
       "gates": ["valence >= 0.20", "threat <= 0.20"]
     },
-    "sexual_disgust_conflict": {
+    "aroused_with_disgust": {
       "weights": {"sexual_arousal": 0.7, "valence": -0.8, "self_evaluation": -0.3, "threat": 0.2, "arousal": 0.3},
       "gates": ["sexual_arousal >= 0.30", "valence <= -0.40"]
     }
