@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:sigh_of_relief",
     "description": "A visible release of tension after fear drops and relief spikes",
-    "priority": 68,
+    "priority": 76,
     "prerequisites": [
         {
             "logic": {
@@ -60,15 +60,66 @@
                             },
                             -0.20
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.stress"
+                                            },
+                                            {
+                                                "var": "previousEmotions.stress"
+                                            }
+                                        ]
+                                    },
+                                    -0.10
+                                ]
+                            }
+                        ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires relief rising sharply, fear dropping sharply, and at least one physiological downshift (arousal/threat/stress) consistent with an exhale-and-release moment."
         }
     ],
-    "actor_description": "I let out a long breath I didn't realize I'd been holding. My shoulders loosen. The tightness in my chest unknots, and for a moment my body remembers what safe feels like.",
-    "description_text": "{actor} exhales slowly, shoulders dropping as the tension drains out of them.",
+    "actor_description": "The breath leaves me all at once, like my body finally got the message. My shoulders unclench. The tight band around my ribs loosens. For a second I just stand there and let the “not happening” of it sink in.",
+    "description_text": "{actor} lets out a long, audible exhale. Their shoulders drop; their face softens from braced to human again. Whatever they were holding in their posture drains out in one slow release.",
     "alternate_descriptions": {
-        "auditory": "I hear a long, quiet exhale—like someone finally remembered how to breathe."
+        "auditory": "A long exhale spills out nearby—air pushed out like someone finally stopped bracing.",
+        "tactile": "The tension of someone eases abruptly, as if a coiled spring just let go."
     },
     "tags": [
         "relief",

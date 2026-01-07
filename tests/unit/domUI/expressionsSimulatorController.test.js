@@ -10,12 +10,16 @@ const buildContainer = () => {
       <div id="es-mood-derived"></div>
       <div id="es-sexual-inputs"></div>
       <div id="es-sexual-derived"></div>
+      <button id="es-record-button" type="button"></button>
+      <div id="es-recorded-state-display"></div>
       <div id="es-expression-total"></div>
       <button id="es-trigger-button" type="button"></button>
       <ul id="es-matching-list"></ul>
       <div id="es-selected-expression"></div>
       <div id="es-actor-message"></div>
       <div id="es-observer-message"></div>
+      <div id="es-evaluation-count"></div>
+      <div id="es-evaluation-log"></div>
     </div>
   `;
 };
@@ -467,7 +471,7 @@ describe('ExpressionsSimulatorController', () => {
     );
   });
 
-  it('uses previous state only after a trigger', async () => {
+  it('keeps previous state zeroed without a recorded capture', async () => {
     const expressionContextBuilder = {
       buildContext: jest
         .fn()
@@ -516,12 +520,260 @@ describe('ExpressionsSimulatorController', () => {
       expect.any(String),
       expect.any(Object),
       expect.any(Object),
+      null
+    );
+  });
+
+  it('renders empty recorded state sections on initialization', async () => {
+    const controller = new ExpressionsSimulatorController(buildDependencies());
+
+    controller.initialize();
+    await flushPromises();
+
+    expect(
+      document.querySelector('.es-recorded-state-empty')?.textContent
+    ).toBe('No recorded state captured yet.');
+    const headings = Array.from(
+      document.querySelectorAll('.es-recorded-state-section h4')
+    ).map((node) => node.textContent);
+    expect(headings).toEqual(['Mood Axes', 'Emotions', 'Sexual States']);
+  });
+
+  it('records current state and reuses it for subsequent evaluations', async () => {
+    const moodSchema = {
+      properties: {
+        valence: {
+          minimum: -100,
+          maximum: 100,
+          default: 10,
+        },
+      },
+    };
+    const sexualSchema = {
+      properties: {
+        sex_excitation: {
+          minimum: 0,
+          maximum: 100,
+          default: 25,
+        },
+      },
+    };
+    const emotionOverrides = {
+      calculateEmotions: jest.fn(() => ({ calm: 0.5 })),
+      calculateSexualArousal: jest.fn(() => 0.6),
+      calculateSexualStates: jest.fn(() => ({ arousal: 0.6 })),
+    };
+    const expressionContextBuilder = {
+      buildContext: jest.fn().mockReturnValue({
+        emotions: {},
+        sexualStates: {},
+        moodAxes: {},
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({
+        moodSchema,
+        sexualSchema,
+        emotionOverrides,
+        expressionContextBuilder,
+        expressionEvaluatorService: {
+          evaluateAllWithDiagnostics: jest
+            .fn()
+            .mockReturnValue({ matches: [], evaluations: [] }),
+        },
+      })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    document.getElementById('es-record-button').click();
+    document.getElementById('es-trigger-button').click();
+    await flushPromises();
+
+    document.getElementById('es-trigger-button').click();
+    await flushPromises();
+
+    expect(expressionContextBuilder.buildContext).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.any(Object),
+      expect.any(Object),
       {
-        emotions: { calm: 0.4 },
-        sexualStates: { aroused: 0.2 },
         moodAxes: { valence: 10 },
+        emotions: { calm: 0.5 },
+        sexualStates: { arousal: 0.6 },
       }
     );
+    expect(expressionContextBuilder.buildContext).toHaveBeenNthCalledWith(
+      2,
+      expect.any(String),
+      expect.any(Object),
+      expect.any(Object),
+      {
+        moodAxes: { valence: 10 },
+        emotions: { calm: 0.5 },
+        sexualStates: { arousal: 0.6 },
+      }
+    );
+  });
+
+  it('records map-based state values for subsequent evaluation triggers', async () => {
+    const moodSchema = {
+      properties: {
+        valence: {
+          minimum: -100,
+          maximum: 100,
+          default: 10,
+        },
+      },
+    };
+    const sexualSchema = {
+      properties: {
+        sex_excitation: {
+          minimum: 0,
+          maximum: 100,
+          default: 25,
+        },
+      },
+    };
+    const emotionOverrides = {
+      calculateEmotions: jest.fn(
+        () => new Map([['calm', 0.5], ['joy', 0.2]])
+      ),
+      calculateSexualArousal: jest.fn(() => 0.1),
+      calculateSexualStates: jest.fn(() => new Map([['arousal', 0.1]])),
+    };
+    const expressionContextBuilder = {
+      buildContext: jest.fn((_actorId, _mood, _sexual, previousState) => {
+        expect(previousState).toEqual({
+          moodAxes: { valence: 10 },
+          emotions: { calm: 0.5, joy: 0.2 },
+          sexualStates: { arousal: 0.1 },
+        });
+        return { emotions: {}, sexualStates: {}, moodAxes: {} };
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({
+        moodSchema,
+        sexualSchema,
+        emotionOverrides,
+        expressionContextBuilder,
+        expressionEvaluatorService: {
+          evaluateAllWithDiagnostics: jest
+            .fn()
+            .mockReturnValue({ matches: [], evaluations: [] }),
+        },
+      })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    document.getElementById('es-record-button').click();
+    document.getElementById('es-trigger-button').click();
+    await flushPromises();
+
+    expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders recorded state values with formatting after capture', async () => {
+    const moodSchema = {
+      properties: {
+        valence: {
+          minimum: -100,
+          maximum: 100,
+          default: 8,
+        },
+      },
+    };
+    const sexualSchema = {
+      properties: {
+        sex_excitation: {
+          minimum: 0,
+          maximum: 100,
+          default: 20,
+        },
+      },
+    };
+    const emotionOverrides = {
+      calculateEmotions: jest.fn(() => ({ calm: 0.3333 })),
+      calculateSexualArousal: jest.fn(() => 0.1234),
+      calculateSexualStates: jest.fn(() => ({ arousal: 0.1234 })),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({ moodSchema, sexualSchema, emotionOverrides })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    document.getElementById('es-record-button').click();
+
+    const recordedItems = Array.from(
+      document.querySelectorAll('.es-recorded-state-item')
+    ).map((node) => node.textContent);
+
+    expect(recordedItems).toEqual(
+      expect.arrayContaining([
+        'Valence: 8',
+        'Calm: 0.333',
+        'Arousal: 0.123',
+      ])
+    );
+  });
+
+  it('leaves recorded display unchanged if the calculator throws', async () => {
+    const moodSchema = {
+      properties: {
+        valence: {
+          minimum: -100,
+          maximum: 100,
+          default: 10,
+        },
+      },
+    };
+    const sexualSchema = {
+      properties: {
+        sex_excitation: {
+          minimum: 0,
+          maximum: 100,
+          default: 25,
+        },
+      },
+    };
+    const emotionOverrides = {
+      calculateEmotions: jest
+        .fn()
+        .mockReturnValueOnce({})
+        .mockImplementationOnce(() => {
+          throw new Error('boom');
+        }),
+    };
+
+    const dependencies = buildDependencies({
+      moodSchema,
+      sexualSchema,
+      emotionOverrides,
+    });
+    const controller = new ExpressionsSimulatorController(dependencies);
+
+    controller.initialize();
+    await flushPromises();
+
+    document.getElementById('es-record-button').click();
+
+    expect(dependencies.logger.warn).toHaveBeenCalledWith(
+      '[ExpressionsSimulator] Failed to record previous state.',
+      expect.any(Error)
+    );
+    expect(
+      document.querySelector('.es-recorded-state-empty')
+    ).not.toBeNull();
   });
 
   it('clears selection and messages when no matches exist', async () => {
@@ -551,5 +803,179 @@ describe('ExpressionsSimulatorController', () => {
     expect(document.getElementById('es-observer-message').textContent).toBe(
       'None'
     );
+  });
+
+  it('updates evaluation count when evaluations render', async () => {
+    const expressionEvaluatorService = {
+      evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+        matches: [],
+        evaluations: [
+          {
+            expression: { id: 'expr-one', priority: 2 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-two', priority: 1 },
+            passed: false,
+            prerequisites: [],
+          },
+        ],
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({ expressionEvaluatorService })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    expect(document.getElementById('es-evaluation-count').textContent).toBe(
+      'Evaluated: --'
+    );
+
+    const triggerButton = document.getElementById('es-trigger-button');
+    triggerButton.click();
+    await flushPromises();
+
+    expect(document.getElementById('es-evaluation-count').textContent).toBe(
+      'Evaluated: 2'
+    );
+  });
+
+  it('keeps evaluation count reset when evaluations are empty', async () => {
+    const expressionEvaluatorService = {
+      evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+        matches: [],
+        evaluations: [],
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({ expressionEvaluatorService })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    const triggerButton = document.getElementById('es-trigger-button');
+    triggerButton.click();
+    await flushPromises();
+
+    expect(document.getElementById('es-evaluation-count').textContent).toBe(
+      'Evaluated: --'
+    );
+    expect(document.querySelector('.es-placeholder-message')).not.toBeNull();
+  });
+
+  it('renders evaluation log in priority order with badges', async () => {
+    const expressionEvaluatorService = {
+      evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+        matches: [],
+        evaluations: [
+          {
+            expression: { id: 'expr-mid', priority: 5 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-zero' },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-high', priority: 10 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-low', priority: 1 },
+            passed: true,
+            prerequisites: [],
+          },
+        ],
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({ expressionEvaluatorService })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    const triggerButton = document.getElementById('es-trigger-button');
+    triggerButton.click();
+    await flushPromises();
+
+    const evaluationNames = Array.from(
+      document.querySelectorAll('.es-evaluation-name')
+    ).map((node) => node.textContent);
+
+    expect(evaluationNames).toEqual([
+      'expr-high',
+      'expr-mid',
+      'expr-low',
+      'expr-zero',
+    ]);
+
+    const badges = Array.from(
+      document.querySelectorAll('.es-evaluation-priority')
+    ).map((node) => node.textContent);
+
+    expect(badges).toEqual(['P10', 'P5', 'P1', 'P0']);
+  });
+
+  it('orders evaluation log entries by priority then id', async () => {
+    const expressionEvaluatorService = {
+      evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+        matches: [],
+        evaluations: [
+          {
+            expression: { id: 'expr-c', priority: 5 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-a', priority: 5 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-z', priority: 10 },
+            passed: true,
+            prerequisites: [],
+          },
+          {
+            expression: { id: 'expr-b', priority: 5 },
+            passed: true,
+            prerequisites: [],
+          },
+        ],
+      }),
+    };
+
+    const controller = new ExpressionsSimulatorController(
+      buildDependencies({ expressionEvaluatorService })
+    );
+
+    controller.initialize();
+    await flushPromises();
+
+    const triggerButton = document.getElementById('es-trigger-button');
+    triggerButton.click();
+    await flushPromises();
+
+    const evaluationNames = Array.from(
+      document.querySelectorAll('.es-evaluation-name')
+    ).map((node) => node.textContent);
+
+    expect(evaluationNames).toEqual([
+      'expr-z',
+      'expr-a',
+      'expr-b',
+      'expr-c',
+    ]);
   });
 });

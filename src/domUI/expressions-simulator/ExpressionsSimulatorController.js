@@ -147,6 +147,10 @@ class ExpressionsSimulatorController {
       sexualInputs: this.#containerElement.querySelector('#es-sexual-inputs'),
       moodDerived: this.#containerElement.querySelector('#es-mood-derived'),
       sexualDerived: this.#containerElement.querySelector('#es-sexual-derived'),
+      recordButton: this.#containerElement.querySelector('#es-record-button'),
+      recordedStateDisplay: this.#containerElement.querySelector(
+        '#es-recorded-state-display'
+      ),
       expressionTotal: this.#containerElement.querySelector(
         '#es-expression-total'
       ),
@@ -160,6 +164,9 @@ class ExpressionsSimulatorController {
         '#es-observer-message'
       ),
       evaluationLog: this.#containerElement.querySelector('#es-evaluation-log'),
+      evaluationCount: this.#containerElement.querySelector(
+        '#es-evaluation-count'
+      ),
     };
 
     if (!this.#elements.moodInputs) {
@@ -180,6 +187,16 @@ class ExpressionsSimulatorController {
     if (!this.#elements.sexualDerived) {
       this.#logger.warn(
         '[ExpressionsSimulator] Sexual derived output missing (#es-sexual-derived).'
+      );
+    }
+    if (!this.#elements.recordButton) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Record button missing (#es-record-button).'
+      );
+    }
+    if (!this.#elements.recordedStateDisplay) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Recorded state display missing (#es-recorded-state-display).'
       );
     }
     if (!this.#elements.expressionTotal) {
@@ -217,6 +234,11 @@ class ExpressionsSimulatorController {
         '[ExpressionsSimulator] Evaluation log output missing (#es-evaluation-log).'
       );
     }
+    if (!this.#elements.evaluationCount) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Evaluation count output missing (#es-evaluation-count).'
+      );
+    }
   }
 
   /**
@@ -231,7 +253,7 @@ class ExpressionsSimulatorController {
     this.#state = {
       currentMood: this.#buildDefaultState(moodSchema),
       currentSexualState: this.#buildDefaultState(sexualSchema),
-      previousState: null,
+      recordedPreviousState: null,
       actorId: null,
       observerId: null,
       entityInitPromise: null,
@@ -624,12 +646,20 @@ class ExpressionsSimulatorController {
     this.#renderMatches([]);
     this.#renderSelectedExpression(null);
     this.#renderEvaluationLog(null);
+    this.#renderRecordedState(this.#state?.recordedPreviousState ?? null);
     this.#clearMessages();
 
     if (this.#elements?.triggerButton) {
       this.#elements.triggerButton.disabled = true;
       this.#elements.triggerButton.addEventListener('click', () => {
         void this.#handleTriggerExpression();
+      });
+    }
+
+    if (this.#elements?.recordButton) {
+      this.#elements.recordButton.disabled = true;
+      this.#elements.recordButton.addEventListener('click', () => {
+        this.#handleRecordState();
       });
     }
   }
@@ -667,6 +697,9 @@ class ExpressionsSimulatorController {
       .then(() => {
         if (this.#elements?.triggerButton) {
           this.#elements.triggerButton.disabled = false;
+        }
+        if (this.#elements?.recordButton) {
+          this.#elements.recordButton.disabled = false;
         }
       })
       .catch((error) => {
@@ -821,7 +854,7 @@ class ExpressionsSimulatorController {
       actorId,
       moodData,
       sexualStateData,
-      this.#state.previousState
+      this.#state.recordedPreviousState ?? null
     );
     const { matches, evaluations } =
       this.#expressionEvaluatorService.evaluateAllWithDiagnostics(context);
@@ -830,12 +863,6 @@ class ExpressionsSimulatorController {
     this.#renderEvaluationLog(evaluations);
     const selectedExpression = matches[0] ?? null;
     this.#renderSelectedExpression(selectedExpression);
-
-    this.#state.previousState = {
-      emotions: context.emotions,
-      sexualStates: context.sexualStates,
-      moodAxes: context.moodAxes,
-    };
 
     if (!selectedExpression) {
       this.#clearMessages();
@@ -960,6 +987,10 @@ class ExpressionsSimulatorController {
 
     this.#elements.evaluationLog.innerHTML = '';
 
+    if (this.#elements?.evaluationCount) {
+      this.#elements.evaluationCount.textContent = 'Evaluated: --';
+    }
+
     if (!Array.isArray(evaluations) || evaluations.length === 0) {
       const placeholder = document.createElement('p');
       placeholder.className = 'es-placeholder-message';
@@ -969,13 +1000,42 @@ class ExpressionsSimulatorController {
       return;
     }
 
-    for (const evaluation of evaluations) {
+    if (this.#elements?.evaluationCount) {
+      this.#elements.evaluationCount.textContent = `Evaluated: ${evaluations.length}`;
+    }
+
+    const sortedEvaluations = [...evaluations].sort((a, b) => {
+      const priorityA =
+        typeof a?.expression?.priority === 'number' ? a.expression.priority : 0;
+      const priorityB =
+        typeof b?.expression?.priority === 'number' ? b.expression.priority : 0;
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA;
+      }
+      const idA = a?.expression?.id ?? '';
+      const idB = b?.expression?.id ?? '';
+      return idA.localeCompare(idB);
+    });
+
+    for (const evaluation of sortedEvaluations) {
       const item = document.createElement('div');
       item.className = `es-evaluation-item ${
         evaluation.passed
           ? 'es-evaluation-item--pass'
           : 'es-evaluation-item--fail'
       }`;
+
+      const priorityValue =
+        typeof evaluation?.expression?.priority === 'number'
+          ? evaluation.expression.priority
+          : 0;
+      const priority = document.createElement('span');
+      priority.className = 'es-evaluation-priority';
+      priority.textContent = `P${priorityValue}`;
+      item.appendChild(priority);
+
+      const content = document.createElement('div');
+      content.className = 'es-evaluation-content';
 
       const header = document.createElement('div');
       header.className = 'es-evaluation-header';
@@ -990,7 +1050,7 @@ class ExpressionsSimulatorController {
 
       header.appendChild(name);
       header.appendChild(status);
-      item.appendChild(header);
+      content.appendChild(header);
 
       const details = document.createElement('div');
       details.className = 'es-evaluation-details';
@@ -1030,9 +1090,10 @@ class ExpressionsSimulatorController {
       }
 
       if (details.childNodes.length > 0) {
-        item.appendChild(details);
+        content.appendChild(details);
       }
 
+      item.appendChild(content);
       this.#elements.evaluationLog.appendChild(item);
     }
   }
@@ -1094,6 +1155,164 @@ class ExpressionsSimulatorController {
   #nextTurnNumber() {
     this.#state.turnNumber += 1;
     return this.#state.turnNumber;
+  }
+
+  /**
+   * Record the current mood/derived values as the next previous-state capture.
+   *
+   * @private
+   */
+  #handleRecordState() {
+    if (!this.#state) {
+      return;
+    }
+
+    const moodData = this.#state.currentMood || {};
+    const sexualStateData = this.#state.currentSexualState || {};
+
+    try {
+      const emotions = this.#emotionCalculatorService.calculateEmotions(
+        moodData,
+        null,
+        sexualStateData
+      );
+
+      const arousal =
+        this.#emotionCalculatorService.calculateSexualArousal(sexualStateData);
+      const sexualStates =
+        this.#emotionCalculatorService.calculateSexualStates(
+          moodData,
+          arousal,
+          sexualStateData
+        );
+
+      const normalizedEmotions =
+        emotions instanceof Map ? Object.fromEntries(emotions) : { ...emotions };
+      const normalizedSexualStates =
+        sexualStates instanceof Map
+          ? Object.fromEntries(sexualStates)
+          : { ...sexualStates };
+
+      this.#state.recordedPreviousState = {
+        moodAxes: { ...moodData },
+        emotions: normalizedEmotions,
+        sexualStates: normalizedSexualStates,
+      };
+      this.#renderRecordedState(this.#state.recordedPreviousState);
+    } catch (error) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Failed to record previous state.',
+        error
+      );
+    }
+  }
+
+  /**
+   * @param {{moodAxes: object, emotions: object, sexualStates: object}|null} recordedState
+   * @private
+   */
+  #renderRecordedState(recordedState) {
+    if (!this.#elements?.recordedStateDisplay) {
+      return;
+    }
+
+    this.#elements.recordedStateDisplay.innerHTML = '';
+
+    if (!recordedState) {
+      const emptyMessage = document.createElement('p');
+      emptyMessage.className = 'es-placeholder-message es-recorded-state-empty';
+      emptyMessage.textContent = 'No recorded state captured yet.';
+      this.#elements.recordedStateDisplay.appendChild(emptyMessage);
+    }
+
+    this.#renderRecordedSection({
+      title: 'Mood Axes',
+      values: recordedState?.moodAxes,
+      emptyText: 'No recorded mood axes.',
+      formatter: this.#formatRecordedInteger,
+    });
+
+    this.#renderRecordedSection({
+      title: 'Emotions',
+      values: recordedState?.emotions,
+      emptyText: 'No recorded emotions.',
+      formatter: this.#formatRecordedFloat,
+    });
+
+    this.#renderRecordedSection({
+      title: 'Sexual States',
+      values: recordedState?.sexualStates,
+      emptyText: 'No recorded sexual states.',
+      formatter: this.#formatRecordedFloat,
+    });
+  }
+
+  /**
+   * @param {object} params
+   * @param {string} params.title
+   * @param {object|undefined} params.values
+   * @param {string} params.emptyText
+   * @param {(value: number) => string} params.formatter
+   * @private
+   */
+  #renderRecordedSection({ title, values, emptyText, formatter }) {
+    const section = document.createElement('div');
+    section.className = 'es-recorded-state-section';
+
+    const heading = document.createElement('h4');
+    heading.textContent = title;
+    section.appendChild(heading);
+
+    const list = document.createElement('ul');
+    list.className = 'es-recorded-state-list';
+
+    const entries = values && typeof values === 'object'
+      ? Object.entries(values)
+      : [];
+
+    if (entries.length === 0) {
+      const item = document.createElement('li');
+      item.className = 'es-recorded-state-item';
+      item.textContent = emptyText;
+      list.appendChild(item);
+    } else {
+      entries.forEach(([key, value]) => {
+        const item = document.createElement('li');
+        item.className = 'es-recorded-state-item';
+        const label = this.#formatPropertyLabel(key);
+        item.textContent = `${label}: ${formatter(value)}`;
+        list.appendChild(item);
+      });
+    }
+
+    section.appendChild(list);
+    this.#elements.recordedStateDisplay.appendChild(section);
+  }
+
+  /**
+   * @param {number} value
+   * @returns {string}
+   * @private
+   */
+  #formatRecordedInteger(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return '0';
+    }
+    return String(Math.round(numeric));
+  }
+
+  /**
+   * @param {number} value
+   * @returns {string}
+   * @private
+   */
+  #formatRecordedFloat(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return '0.000';
+    }
+    return numeric.toFixed(3);
   }
 
   /**

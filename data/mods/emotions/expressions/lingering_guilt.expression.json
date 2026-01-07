@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:lingering_guilt",
     "description": "Moderate, non-spiking guilt—an apologetic, sheepish self-consciousness after a minor mistake",
-    "priority": 57,
+    "priority": 55,
     "prerequisites": [
         {
             "logic": {
@@ -20,22 +20,23 @@
                             {
                                 "var": "emotions.guilt"
                             },
-                            0.70
+                            0.75
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.regret"
+                            },
+                            0.25
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "-": [
-                                    {
-                                        "var": "emotions.guilt"
-                                    },
-                                    {
-                                        "var": "previousEmotions.guilt"
-                                    }
-                                ]
+                                "var": "emotions.shame"
                             },
-                            0.12
+                            0.55
                         ]
                     },
                     {
@@ -61,15 +62,59 @@
                             },
                             0.35
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.guilt"
+                                    },
+                                    {
+                                        "var": "previousEmotions.guilt"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.guilt"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.guilt"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "It wasn't a catastrophe, but it still sits wrong. I replay the moment and feel that small, sour twist—like I owe someone a cleaner version of myself. I want to smooth it over without making a scene.",
-    "description_text": "{actor} looks faintly apologetic—eyes dipping, a tight little wince crossing their face as if they're privately conceding a mistake.",
+    "actor_description": "It’s still there—the same scene, the same fork in the road, the same version of me that chose wrong or froze. It doesn’t flare up; it just sits in me, steady as a stone, and my mind keeps worrying it like a sore tooth. I catch myself editing imaginary conversations, rehearsing apologies I’ll never deliver. My stomach stays tight; my throat feels crowded, like my body is trying to make me smaller in advance of judgment.",
+    "description_text": "{actor} moves with a faint hesitation, as if checking their own right to occupy space. Their gaze slips away at the wrong moments; shoulders hold a quiet tension. Hands hover, fidget, then still—an awkwardness that reads less like fear and more like self-reproach.",
     "alternate_descriptions": {
-        "auditory": "I catch a small, hesitant exhale—like a half-swallowed \"sorry.\""
+        "auditory": "Words start and stop. There are pauses that don’t feel thoughtful—more like someone swallowing what they meant to say. A small sigh repeats, the kind that sounds like an apology with no audience.",
+        "tactile": "A body holds itself guarded—muscles tight in the shoulders, a careful stillness, like someone bracing to be blamed even if nobody’s speaking."
     },
     "tags": [
         "guilt",

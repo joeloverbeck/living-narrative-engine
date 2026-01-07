@@ -403,6 +403,70 @@ describe('ModValidationOrchestrator - Integration Tests', () => {
     });
   });
 
+  describe('Expression Prerequisite Validation Integration', () => {
+    it('should report fractional mood axis thresholds in the validation report', async () => {
+      const modId = 'mood-axes-fractional';
+      const expressionFile = 'fractional-mood-axis.expression.json';
+      const modPath = path.join(testModsPath, modId);
+      const expressionsPath = path.join(modPath, 'expressions');
+
+      await fs.mkdir(expressionsPath, { recursive: true });
+      await fs.writeFile(
+        path.join(expressionsPath, expressionFile),
+        JSON.stringify(
+          {
+            $schema: 'schema://living-narrative-engine/expression.schema.json',
+            id: `${modId}:fractional_threshold`,
+            prerequisites: [
+              {
+                logic: {
+                  '<=': [{ var: 'moodAxes.valence' }, 0.44],
+                },
+              },
+            ],
+          },
+          null,
+          2
+        )
+      );
+
+      mockModManifestLoader.loadRequestedManifests.mockImplementationOnce(
+        async (modIds) => {
+          const manifestsMap = new Map();
+          modIds.forEach((requestedId) => {
+            manifestsMap.set(requestedId, {
+              id: requestedId,
+              version: '1.0.0',
+              name: requestedId,
+              dependencies: [],
+              content: {
+                expressions: [expressionFile],
+              },
+            });
+          });
+          return manifestsMap;
+        }
+      );
+
+      orchestrator._resolveModPath = (requestedId) =>
+        path.join(testModsPath, requestedId);
+
+      const results = await orchestrator.validateEcosystem({
+        modsToValidate: [modId],
+      });
+
+      const report = results.expressionPrerequisites.get(modId);
+      expect(report).toBeDefined();
+      expect(report.hasViolations).toBe(true);
+      expect(
+        report.violations.some(
+          (violation) =>
+            violation.issueType === 'mood_axes_fractional_threshold'
+        )
+      ).toBe(true);
+    });
+  });
+
   describe('Error Handling Integration', () => {
     it('should handle ModDependencyValidator failures gracefully', async () => {
       // Import ModDependencyError for proper error type

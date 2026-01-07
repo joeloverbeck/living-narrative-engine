@@ -38,15 +38,97 @@
               },
               20
             ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -15
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.future_expectancy"
+              },
+              -10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.fear"
+              },
+              0.35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.anxiety"
+              },
+              0.45
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.grief"
+                      },
+                      {
+                        "var": "previousEmotions.grief"
+                      }
+                    ]
+                  },
+                  0.06
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.sadness"
+                      },
+                      {
+                        "var": "previousEmotions.sadness"
+                      }
+                    ]
+                  },
+                  0.06
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "previousMoodAxes.future_expectancy"
+                      },
+                      {
+                        "var": "moodAxes.future_expectancy"
+                      }
+                    ]
+                  },
+                  12
+                ]
+              }
+            ]
           }
         ]
       }
     }
   ],
-  "actor_description": "The loss sits heavy in my chest - not screaming, but present. Always present.",
-  "description_text": "{actor} moves slowly, almost carefully, as though the world has become fragile around them. Their eyes hold a distant heaviness.",
+  "actor_description": "The grief isn’t sharp anymore. It’s weight. It sits behind my sternum and in my throat, turning everything quieter. My thoughts move slowly, like they’re wading. I don’t even have the energy for drama. The loss is simply there—an ache that keeps its own hours. I notice myself handling the world more gently, as if one wrong touch could make something else break. Even breathing feels careful.",
+  "description_text": "{actor} carries a steady heaviness—eyes duller, movements slowed and deliberate. Their face holds sadness without spectacle; the body seems to conserve motion, as if every gesture costs more than it should.",
   "alternate_descriptions": {
-    "auditory": "A heavy silence emanates from nearby, punctuated by a single, quiet sigh."
+    "auditory": "I hear a thick quiet—one slow breath, a small exhale that sounds like giving up on words.",
+    "tactile": "Someone's presence feels weighted and still, like someone holding something they can’t set down."
   },
   "tags": [
     "grief",

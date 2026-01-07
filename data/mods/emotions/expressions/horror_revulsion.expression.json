@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.disgust"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            0.25
+                            25
                         ]
                     },
                     {
@@ -28,7 +28,7 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            -0.2
+                            -20
                         ]
                     },
                     {
@@ -55,9 +55,9 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "max": [
+                                ">=": [
                                     {
                                         "-": [
                                             {
@@ -68,6 +68,11 @@
                                             }
                                         ]
                                     },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
                                     {
                                         "-": [
                                             {
@@ -78,6 +83,11 @@
                                             }
                                         ]
                                     },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
                                     {
                                         "-": [
                                             {
@@ -87,22 +97,23 @@
                                                 "var": "previousEmotions.fear"
                                             }
                                         ]
-                                    }
+                                    },
+                                    0.12
                                 ]
-                            },
-                            0.12
+                            }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires strong disgust plus meaningful threat and a recent spike (disgust/threat/fear), with fear/alarm present but not escalating into full terror."
+            "failure_message": "Requires strong disgust plus real threat/negative valence, with fear/alarm present but not full terror, and a recent spike (disgust/threat/fear)."
         }
     ],
-    "actor_description": "My stomach flips hard, like my body is rejecting the whole scene. I get that cold, crawling shudder—revulsion so sharp it turns into fear. My throat tightens with a gag I have to swallow down, and all I can think is: get away, don't let it touch you. Breathing feels wrong, too close to the taste of it.",
-    "description_text": "{actor} recoils with a sharp, involuntary shudder—hand rising toward their mouth as their face drains of color. Their eyes widen and fix on the source for a beat, then flick away as if looking is physically difficult.",
+    "actor_description": "My stomach drops and then turns—an instant, violent rejection. My skin feels too tight on my body, like I want to crawl out of it. I can’t decide whether to stare or look away; both options feel wrong. There’s a sharp, sour rush in my mouth and a cold sweat on my back, the mind screaming no while the body already starts retreating.",
+    "description_text": "{actor} recoils as if the air itself turned foul—face twisting, shoulders pulling back, mouth tightening like they’re fighting a gag. Their eyes stay wide and fixed for a beat, then their body angles away, trying to put distance between themselves and whatever sickens them.",
     "alternate_descriptions": {
-        "auditory": "I hear a choked inhale and a wet swallow—like someone fighting down a gag—followed by a quick, unsteady breath.",
-        "olfactory": "I smell a sharp, sour edge to someone's breath—stress and nausea mixing in a way that lingers for a moment."
+        "auditory": "I hear a choked swallow and a wet, involuntary sound—almost a retch held back at the last second—followed by fast, sharp breathing.",
+        "tactile": "Someone jerks away hard enough to brush or bump me, the movement all rejection—like contact with the thing would be contamination.",
+        "olfactory": "A sour, urgent odor of cold sweat reaches me, the kind that comes with nausea and fear at the same time."
     },
     "tags": [
         "horror",

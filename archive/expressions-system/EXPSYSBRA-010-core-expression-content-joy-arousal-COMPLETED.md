@@ -16,7 +16,7 @@ This ticket adds expression content files covering positive emotions and arousal
 
 - Emotion prototypes include `joy`, `contentment`, `amusement`, `enthusiasm`, `euphoria`, `affection`, and `love_attachment`.
 - Emotion prototypes do NOT include `tenderness`, `playfulness`, or `attraction`.
-- Sexual state prototypes include `sexual_lust` (and others like `passionate_love`, `romantic_yearning`). There is no `sexualStates.desire` entry.
+- Sexual state prototypes include `sexual_lust` (and others like `passion`, `romantic_yearning`). There is no `sexualStates.desire` entry.
 - Expression JSON files should include the `$schema` field, consistent with existing core expressions.
 - There is no existing `joy-arousal.expression.test.js`; a new integration test must be added following the anger/sadness test pattern.
 
@@ -249,7 +249,7 @@ This ticket adds expression content files covering positive emotions and arousal
 ## Notes
 
 - Emotion prototypes include: joy, contentment, amusement, enthusiasm, euphoria, affection, love_attachment
-- Sexual states include: sexual_lust, romantic_yearning, passionate_love (accessed via `sexualStates` in context)
+- Sexual states include: sexual_lust, romantic_yearning, passion (accessed via `sexualStates` in context)
 - Use arousal axis to differentiate high-energy vs calm positive states
 - Use engagement for social/connection-based emotions
 - Descriptions should feel genuine and evocative without being overwrought

@@ -52,11 +52,7 @@ describe('EmotionCalculatorService', () => {
       },
       gates: ['sexual_arousal >= 0.35', 'threat <= 0.30'],
     },
-    afterglow: {
-      weights: { sexual_arousal: 0.3, valence: 0.7, arousal: -0.3 },
-      gates: ['valence >= 0.20'],
-    },
-    aroused_but_ashamed: {
+    aroused_with_shame: {
       weights: { sexual_arousal: 1.0, self_evaluation: -0.9 },
       gates: ['sexual_arousal >= 0.35', 'self_evaluation <= -0.20'],
     },
@@ -403,7 +399,7 @@ describe('EmotionCalculatorService', () => {
 
       expect(result.size).toBe(Object.keys(mockSexualPrototypes).length);
       expect(result.get('sexual_lust')).toBe(0);
-      expect(result.get('afterglow')).toBe(0);
+      expect(result.get('aroused_with_shame')).toBe(0);
     });
 
     it('should handle sex_inhibition axis in sexual state weights', () => {
@@ -1225,13 +1221,13 @@ describe('EmotionCalculatorService', () => {
     it('should format sexual states with labels', () => {
       const states = new Map([
         ['sexual_lust', 0.7],
-        ['afterglow', 0.5],
+        ['aroused_with_shame', 0.5],
       ]);
 
       const result = service.formatSexualStatesForPrompt(states);
 
       expect(result).toContain('sexual lust: intense');
-      expect(result).toContain('afterglow: moderate');
+      expect(result).toContain('aroused with shame: moderate');
     });
 
     it('should limit to maxCount states (default 5)', () => {

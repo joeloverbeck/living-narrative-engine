@@ -1,0 +1,131 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:confident_composure",
+    "description": "Steady confidence: calm control and readiness without brashness—grounded, capable, and unhurried.",
+    "priority": 70,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.confidence"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.confidence"
+                                            },
+                                            {
+                                                "var": "previousEmotions.confidence"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            {
+                                                "var": "moodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I settle into myself. It isn’t bravado—more like the noise drops low enough to hear what matters. My shoulders unclench, my breath finds an even rhythm, and my hands stop doing that tiny frantic overcorrection. I know what I can do, and I don’t need to sell it.",
+    "description_text": "{actor} carries a calm certainty—posture open, movements unhurried, gaze steady. Nothing about them looks rushed or reactive; they seem to choose each action instead of being pushed into it.",
+    "alternate_descriptions": {
+        "olfactory": "I smell little sign of stress-sweat; mostly steady breath and warmed skin, the air feeling “ready” rather than strained."
+    },
+    "tags": [
+        "positive",
+        "confidence",
+        "composure",
+        "control"
+    ]
+}

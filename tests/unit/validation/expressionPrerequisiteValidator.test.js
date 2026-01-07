@@ -12,6 +12,9 @@ const allowedOperations = new Set([
   '!=',
   '-',
   'max',
+  'min',
+  '*',
+  '/',
   'var',
 ]);
 
@@ -256,5 +259,253 @@ describe('ExpressionPrerequisiteValidator', () => {
     expect(strict.warnings).toHaveLength(0);
     expect(strict.violations).toHaveLength(1);
     expect(strict.violations[0].issueType).toBe('vacuous_operator');
+  });
+
+  it('flags fractional mood axis thresholds and allows integers', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const fractionalExpression = {
+      id: 'emotions:mood_axes_fractional',
+      prerequisites: [
+        { logic: { '<=': [{ var: 'moodAxes.valence' }, 0.44] } },
+      ],
+    };
+
+    const fractionalResult = validator.validateExpression(
+      fractionalExpression,
+      {
+        modId: 'emotions',
+        source: 'expressions/fractional.expression.json',
+        validKeysByRoot,
+      }
+    );
+
+    expect(
+      fractionalResult.violations.some(
+        (v) => v.issueType === 'mood_axes_fractional_threshold'
+      )
+    ).toBe(true);
+
+    const integerExpression = {
+      id: 'emotions:mood_axes_integer',
+      prerequisites: [
+        { logic: { '<=': [{ var: 'moodAxes.valence' }, 44] } },
+      ],
+    };
+
+    const integerResult = validator.validateExpression(integerExpression, {
+      modId: 'emotions',
+      source: 'expressions/integer.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(integerResult.violations).toHaveLength(0);
+  });
+
+  it('flags nested mood axes comparisons with fractional thresholds', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:mood_axes_nested',
+      prerequisites: [
+        {
+          logic: {
+            '<': [
+              {
+                '-': [
+                  { var: 'moodAxes.valence' },
+                  { var: 'previousMoodAxes.valence' },
+                ],
+              },
+              0.12,
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/nested.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(
+      result.violations.some(
+        (v) => v.issueType === 'mood_axes_fractional_threshold'
+      )
+    ).toBe(true);
+  });
+
+  it('warns on mixed-scale mood axes comparisons and escalates in strict mode', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:mood_axes_mixed_scale',
+      prerequisites: [
+        {
+          logic: {
+            '<': [
+              {
+                max: [
+                  { var: 'emotions.joy' },
+                  { var: 'moodAxes.valence' },
+                ],
+              },
+              12,
+            ],
+          },
+        },
+      ],
+    };
+
+    const nonStrict = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/mixed_scale.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(
+      nonStrict.warnings.some(
+        (v) => v.issueType === 'mood_axes_mixed_scale'
+      )
+    ).toBe(true);
+
+    const strict = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/mixed_scale.expression.json',
+      validKeysByRoot,
+      strictMode: true,
+    });
+
+    expect(
+      strict.violations.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(true);
+  });
+
+  it('allows mixed-scale comparisons when normalized roots are scaled to mood axes', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:mood_axes_scaled',
+      prerequisites: [
+        {
+          logic: {
+            '>=': [
+              {
+                max: [
+                  {
+                    '*': [
+                      {
+                        '-': [
+                          { var: 'emotions.joy' },
+                          { var: 'previousEmotions.joy' },
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                  {
+                    '-': [
+                      { var: 'moodAxes.valence' },
+                      { var: 'previousMoodAxes.valence' },
+                    ],
+                  },
+                ],
+              },
+              12,
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/scaled.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(
+      result.warnings.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(false);
+    expect(
+      result.violations.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(false);
+  });
+
+  it('warns on mixed-scale max/min operations without comparisons', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:mood_axes_mixed_scale_max',
+      prerequisites: [
+        {
+          logic: {
+            max: [{ var: 'emotions.joy' }, { var: 'moodAxes.valence' }],
+          },
+        },
+      ],
+    };
+
+    const nonStrict = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/mixed_scale_max.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(
+      nonStrict.warnings.some(
+        (v) => v.issueType === 'mood_axes_mixed_scale'
+      )
+    ).toBe(true);
+
+    const strict = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/mixed_scale_max.expression.json',
+      validKeysByRoot,
+      strictMode: true,
+    });
+
+    expect(
+      strict.violations.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(true);
+  });
+
+  it('allows mixed-scale min operations when normalized roots are scaled', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:mood_axes_scaled_min',
+      prerequisites: [
+        {
+          logic: {
+            min: [
+              { '*': [{ var: 'emotions.joy' }, 100] },
+              { var: 'moodAxes.valence' },
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/scaled_min.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(
+      result.warnings.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(false);
+    expect(
+      result.violations.some((v) => v.issueType === 'mood_axes_mixed_scale')
+    ).toBe(false);
   });
 });

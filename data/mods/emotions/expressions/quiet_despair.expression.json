@@ -2,19 +2,128 @@
   "$schema": "schema://living-narrative-engine/expression.schema.json",
   "id": "emotions:quiet_despair",
   "description": "Silent, numbed hopelessness where the future stops feeling real",
-  "priority": 90,
+  "priority": 92,
   "prerequisites": [
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.despair" }, 0.65] },
-          { ">=": [{ "var": "emotions.numbness" }, 0.35] },
-          { "<=": [{ "var": "emotions.hope" }, 0.20] }
+          {
+            ">=": [
+              {
+                "var": "emotions.despair"
+              },
+              0.65
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.numbness"
+              },
+              0.35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.hope"
+              },
+              0.20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -30
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.engagement"
+              },
+              -20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.frustration"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.anger"
+              },
+              0.40
+            ]
+          },
+          {
+            ">=": [
+              {
+                "max": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.despair"
+                      },
+                      {
+                        "var": "previousEmotions.despair"
+                      }
+                    ]
+                  },
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.numbness"
+                      },
+                      {
+                        "var": "previousEmotions.numbness"
+                      }
+                    ]
+                  },
+                  {
+                    "-": [
+                      {
+                        "var": "previousEmotions.hope"
+                      },
+                      {
+                        "var": "emotions.hope"
+                      }
+                    ]
+                  }
+                ]
+              },
+              0.10
+            ]
+          }
         ]
-      }
+      },
+      "failure_message": "Requires high despair + numbness + low hope with low arousal/engagement (quiet shutdown), not anger/frustration-driven, and a notable worsening shift (not a static plateau)."
     }
   ],
-  "actor_description": "The future stops feeling real. My thoughts slow down like they're moving through thick water. Silence feels safer than speech. I can't find the energy to shape words. My body feels heavy, as if gravity turned up.",
-  "description_text": "{actor} goes distant—expression blank in a way that feels heavier than crying.",
-  "tags": ["despair", "numbness", "hopelessness", "withdrawal"]
+  "actor_description": "Something in me stops reaching. The future doesn’t look bad so much as… blank—like a hallway with the lights out. My thoughts slow, heavy and unspecific. Even my breathing feels distant, like I’m listening to it from another room. I could speak, probably. I just can’t find a reason that feels real.",
+  "description_text": "{actor} goes still in a way that isn’t restful. Their face flattens; their gaze loses its hook on the room. Movements come late and small, as if every gesture has to be hauled up from deep water.",
+  "alternate_descriptions": {
+    "auditory": "I hear a slow breath that sounds far away."
+  },
+  "tags": [
+    "despair",
+    "numbness",
+    "hopelessness",
+    "withdrawal"
+  ]
 }

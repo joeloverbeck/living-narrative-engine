@@ -2,28 +2,141 @@
   "$schema": "schema://living-narrative-engine/expression.schema.json",
   "id": "emotions:frustrated_helplessness",
   "description": "Anger + frustration combined with powerlessness and hopelessness (despair/low hope present).",
-  "priority": 80,
+  "priority": 83,
   "prerequisites": [
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.frustration" }, 0.55] },
-          { "<=": [{ "var": "moodAxes.agency_control" }, -40] },
+          {
+            ">=": [
+              {
+                "var": "emotions.frustration"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              -40
+            ]
+          },
           {
             "or": [
-              { "<=": [{ "var": "moodAxes.future_expectancy" }, -25] },
-              { ">=": [{ "var": "emotions.despair" }, 0.35] },
-              { "<=": [{ "var": "emotions.hope" }, 0.10] }
+              {
+                "<=": [
+                  {
+                    "var": "moodAxes.future_expectancy"
+                  },
+                  -25
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.despair"
+                  },
+                  0.35
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "var": "emotions.hope"
+                  },
+                  0.10
+                ]
+              }
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.stress"
+                  },
+                  0.35
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.anger"
+                  },
+                  0.35
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "moodAxes.arousal"
+                  },
+                  15
+                ]
+              }
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.numbness"
+              },
+              0.50
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.frustration"
+                      },
+                      {
+                        "var": "previousEmotions.frustration"
+                      }
+                    ]
+                  },
+                  0.10
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "-": [
+                      {
+                        "var": "moodAxes.agency_control"
+                      },
+                      {
+                        "var": "previousMoodAxes.agency_control"
+                      }
+                    ]
+                  },
+                  -10
+                ]
+              }
             ]
           }
         ]
-      }
+      },
+      "failure_message": "Requires frustration + very low agency, plus bleak expectancy/hope signals, plus activation (stress/anger/arousal) to keep it 'hot,' capped numbness to avoid quiet shutdown, and a notable worsening shift."
     }
   ],
-  "actor_description": "My hands clench and unclench like it could matter. It doesn't. Every path collapses into the same wall, and the anger has nowhere to go—no action that changes anything, no outcome that isn't already decided.",
-  "description_text": "{actor}'s fists tighten and release in small, useless cycles. Their shoulders hitch with a sharp breath, eyes flicking for an exit that isn't there—anger curdling into something more desperate as the options run out.",
+  "actor_description": "I push and the world doesn’t move. The same wall, every time. Heat climbs my neck; my hands clench like they’re trying to become tools. I can feel my mind searching for leverage—anything to grab—and coming back empty. The worst part is the wasted energy: all this drive, nowhere it can actually go.",
+  "description_text": "{actor} paces in place without getting anywhere—fists tightening, jaw working, breath coming sharp. They look for exits, options, handles that aren’t there. The anger shows, but it keeps folding back on itself, trapped.",
   "alternate_descriptions": {
-    "auditory": "I hear a strained, ragged exhale and the faint stutter of something being tapped or struck—impatience with nowhere to land."
+    "auditory": "I hear a sharp breath, a muttered curse, the thud of something hit—not hard enough to break, hard enough to vent.",
+    "tactile": "I sense someone's tension spiking and circling with no release—like someone revving an engine in neutral."
   },
-  "tags": ["frustration", "helplessness", "hopelessness", "despair", "trapped"]
+  "tags": [
+    "frustration",
+    "helplessness",
+    "hopelessness",
+    "despair",
+    "trapped"
+  ]
 }

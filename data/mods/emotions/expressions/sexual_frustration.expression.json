@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:sexual_frustration",
     "description": "High arousal with negative valence: desire persists, but it curdles into irritation/anger from lack of satisfaction or repeated thwarting.",
-    "priority": 78,
+    "priority": 76,
     "prerequisites": [
         {
             "logic": {
@@ -24,11 +24,71 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_craving"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.passion"
+                                    },
+                                    0.28
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_indifference"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_repulsion"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.valence"
                             },
                             -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
                         ]
                     },
                     {
@@ -44,7 +104,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.anger"
+                                        "var": "emotions.frustration"
                                     },
                                     0.45
                                 ]
@@ -52,7 +112,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.frustration"
+                                        "var": "emotions.anger"
                                     },
                                     0.45
                                 ]
@@ -66,16 +126,48 @@
                             },
                             0.35
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.sexual_frustration"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.sexual_frustration"
+                                    }
+                                ]
+                            },
+                            0.10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "previousSexualStates.sexual_frustration"
+                            },
+                            0.60
+                        ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "My body wants, insists, keeps insisting—and it's not pleasant anymore. The heat has nowhere to go. It pools and sharpens into a nasty edge under my skin. I hate how distracted I feel. I hate that I can't fix it right now. Desire turns abrasive, like it's scraping at me from the inside.",
-    "description_text": "{actor}'s expression flickers between desire and frustration—flushed, tense, jaw set; their gaze lingers with wanting, then snaps away with a hard, irritated edge.",
+    "actor_description": "The want is there—bright, physical—but it keeps hitting a wall. My body leans forward and gets yanked back. I can feel the tension pooling low in me, not resolving, just tightening: breath a little too deep, jaw a little too clenched, hands not quite knowing what to do with themselves. The irritation isn’t only in my thoughts—it’s in my muscles, in the way I can’t settle. I keep reaching for relief and finding nothing but more heat.",
+    "description_text": "{actor} can’t get comfortable. They shift and reset their posture as if their own skin doesn’t sit right. Their jaw works; their breathing deepens and then catches. Their attention lingers—too long—then snaps away, and their movements carry a clipped edge, like they’re holding something back by force.",
     "alternate_descriptions": {
-        "auditory": "I hear a tight exhale through the nose, like someone swallowing a groan and replacing it with annoyance.",
-        "tactile": "There's a restless, pent-up tension in {actor}'s movements—heat without release, irritation riding on top of it."
+        "auditory": "I hear a hard exhale that turns into a swallowed groan, followed by the restless rustle of fabric—someone shifting again, and again.",
+        "tactile": "A body radiates contained energy—muscles tight, movements small but impatient, like a spring kept compressed.",
+        "olfactory": "The air carries warm sweat threaded with something sharper—arousal tangled with agitation, close and unsettled."
     },
     "tags": [
         "sexual",

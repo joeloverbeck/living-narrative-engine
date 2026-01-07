@@ -43,11 +43,15 @@ describe('ExpressionContextBuilder', () => {
       new Map([['joy', 0.6]])
     );
     emotionCalculatorService.calculateSexualStates.mockReturnValue(
-      new Map([['sexual_lust', 0.5]])
+      new Map([
+        ['sexual_lust', 0.5],
+        ['aroused_with_shame', 0.1],
+      ])
     );
     emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue(['joy']);
     emotionCalculatorService.getSexualPrototypeKeys.mockReturnValue([
       'sexual_lust',
+      'aroused_with_shame',
     ]);
 
     entityManager = createEntityManager();
@@ -90,9 +94,20 @@ describe('ExpressionContextBuilder', () => {
         sexualStates: expect.any(Object),
         moodAxes: expect.any(Object),
         sexualArousal: 0.4,
-        previousEmotions: null,
-        previousSexualStates: null,
-        previousMoodAxes: null,
+        previousEmotions: { joy: 0.0 },
+        previousSexualStates: {
+          sexual_lust: 0.0,
+          aroused_with_shame: 0.0,
+        },
+        previousMoodAxes: {
+          valence: 0,
+          arousal: 0,
+          agency_control: 0,
+          threat: 0,
+          engagement: 0,
+          future_expectancy: 0,
+          self_evaluation: 0,
+        },
       })
     );
   });
@@ -195,16 +210,38 @@ describe('ExpressionContextBuilder', () => {
       null
     );
 
-    expect(result.previousEmotions).toBeNull();
-    expect(result.previousSexualStates).toBeNull();
-    expect(result.previousMoodAxes).toBeNull();
+    expect(result.previousEmotions).toEqual({ joy: 0 });
+    expect(result.previousSexualStates).toEqual({
+      sexual_lust: 0,
+      aroused_with_shame: 0,
+    });
+    expect(result.previousMoodAxes).toEqual({
+      valence: 0,
+      arousal: 0,
+      agency_control: 0,
+      threat: 0,
+      engagement: 0,
+      future_expectancy: 0,
+      self_evaluation: 0,
+    });
   });
 
   it('should include previous state when provided', () => {
     const previousState = {
       emotions: { joy: 0.1 },
-      sexualStates: { sexual_lust: 0.2 },
-      moodAxes: { valence: 5 },
+      sexualStates: {
+        sexual_lust: 0.2,
+        aroused_with_shame: 0.0,
+      },
+      moodAxes: {
+        valence: 5,
+        arousal: 1,
+        agency_control: 2,
+        threat: 3,
+        engagement: 4,
+        future_expectancy: 5,
+        self_evaluation: 6,
+      },
     };
 
     const result = builder.buildContext(
@@ -325,7 +362,10 @@ describe('ExpressionContextBuilder', () => {
       new Map([['joy', 0.6]])
     );
     emotionCalculatorService.calculateSexualStates.mockReturnValue(
-      new Map([['sexual_lust', 0.5]])
+      new Map([
+        ['sexual_lust', 0.5],
+        ['aroused_with_shame', 0.1],
+      ])
     );
     emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue([
       'joy',
@@ -351,7 +391,7 @@ describe('ExpressionContextBuilder', () => {
     emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue(['joy']);
     emotionCalculatorService.getSexualPrototypeKeys.mockReturnValue([
       'sexual_lust',
-      'afterglow',
+      'aroused_with_shame',
     ]);
 
     expect(() =>
@@ -363,5 +403,62 @@ describe('ExpressionContextBuilder', () => {
     ).toThrow(
       '[ExpressionContextBuilder] sexualStates evaluation missing prototype keys.'
     );
+  });
+
+  it('should throw when previous emotions are missing prototype keys', () => {
+    const previousState = {
+      emotions: {},
+      sexualStates: {
+        sexual_lust: 0.2,
+        aroused_with_shame: 0.1,
+      },
+      moodAxes: {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      },
+    };
+
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 },
+        previousState
+      )
+    ).toThrow('[ExpressionContextBuilder] previousEmotions keys do not match');
+  });
+
+  it('should throw when previous mood axes include unexpected keys', () => {
+    const previousState = {
+      emotions: { joy: 0.1 },
+      sexualStates: {
+        sexual_lust: 0.2,
+        aroused_with_shame: 0.1,
+      },
+      moodAxes: {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        extra_axis: 5,
+      },
+    };
+
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 },
+        previousState
+      )
+    ).toThrow('[ExpressionContextBuilder] previousMoodAxes keys do not match');
   });
 });

@@ -7,27 +7,83 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.fear" }, 0.65] },
+          {
+            ">=": [
+              {
+                "var": "emotions.fear"
+              },
+              0.65
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              -20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.determination"
+              },
+              0.25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.numbness"
+              },
+              0.55
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.terror"
+              },
+              0.55
+            ]
+          },
           {
             ">=": [
               {
                 "-": [
-                  { "var": "emotions.fear" },
-                  { "var": "previousEmotions.fear" }
+                  {
+                    "var": "emotions.fear"
+                  },
+                  {
+                    "var": "previousEmotions.fear"
+                  }
                 ]
               },
               0.15
             ]
-          },
-          { "<=": [{ "var": "emotions.determination" }, 0.25] }
+          }
         ]
-      }
+      },
+      "failure_message": "Requires fear with a spike plus high threat and very low control—tonic immobility rather than panic/terror."
     }
   ],
-  "actor_description": "My body goes still without asking me. Moving feels like choosing the wrong option. For a second I hear my own breathing too clearly—then I realize I've been holding it. Cold prickles rise along my arms; my limbs feel heavy.",
-  "description_text": "{actor} freezes—eyes wide, posture locked as if bracing for something they can't dodge.",
+  "actor_description": "I go still. Not calm—caught. My breath thins and my muscles forget how to follow instructions. I’m aware of everything at once—the room, the sounds, the space behind me—but I can’t turn that awareness into movement. The only thing my body seems sure about is: don’t be noticed, don’t make a sound, don’t give the threat a reason.",
+  "description_text": "{actor} stops moving like a switch flipped—posture locked, eyes fixed too wide, breathing reduced to small careful sips. They look present but unreachable, a prey-stillness that reads as instinct rather than choice.",
   "alternate_descriptions": {
-    "auditory": "A sudden hush, like someone stopped breathing mid-thought."
+    "auditory": "I hear the faintest sound of controlled breathing, like someone is trying to make their lungs quieter."
   },
-  "tags": ["fear", "freeze", "acute", "paralysis"]
+  "tags": [
+    "fear",
+    "freeze",
+    "acute",
+    "paralysis"
+  ]
 }

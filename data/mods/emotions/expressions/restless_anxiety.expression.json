@@ -2,7 +2,7 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions:restless_anxiety",
     "description": "Moderate anxiety/unease expressed as fidgeting, pacing, and wary attention without full panic",
-    "priority": 72,
+    "priority": 66,
     "prerequisites": [
         {
             "logic": {
@@ -30,14 +30,6 @@
                     {
                         "<": [
                             {
-                                "var": "emotions.fear"
-                            },
-                            0.65
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
                                 "var": "emotions.terror"
                             },
                             0.45
@@ -46,9 +38,65 @@
                     {
                         "<": [
                             {
+                                "var": "emotions.fear"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
                                 "var": "emotions.hypervigilance"
                             },
                             0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            70
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.70
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -77,19 +125,20 @@
                                     }
                                 ]
                             },
-                            -0.05
+                            -0.02
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires moderate anxiety/unease without escalating into terror/hypervigilance, and not collapsing into a freeze-level fear state."
+            "failure_message": "Requires sustained anxiety/unease with activated arousal/engagement (restless energy), while staying below panic/terror/hypervigilance levels and not collapsing into numb fatigue."
         }
     ],
-    "actor_description": "I can't settle. My thoughts keep circling the same possibilities, each one a little worse than the last. I catch myself checking the room again—hands busy, feet shifting, jaw tight—as if motion could keep the feeling from landing.",
-    "description_text": "{actor} fidgets with restless energy—small movements that don't resolve into action, eyes tracking the room with a worried, distracted focus.",
+    "actor_description": "I can’t get comfortable. My body keeps trying to do something—shift, check, adjust—like motion might keep the worry from landing. My thoughts don’t sprint; they circle. The same few possibilities, each one sharpening a little as it comes around again. I notice my jaw set, my hands busy with nothing, my breath stuck high in my chest. Even when I tell myself it’s fine, my nervous system doesn’t believe me. I keep scanning for a problem I can fix, because the feeling itself won’t sit still long enough to name.",
+    "description_text": "{actor} can’t settle—small movements constantly restarting: fingers worrying at a seam, foot tapping, weight shifting. Their gaze keeps flicking to corners and exits, then away again, as if attention won’t hold. Breathing stays shallow, and they look busy without getting anywhere.",
     "alternate_descriptions": {
-        "auditory": "I hear uneven breathing and little sounds of restlessness—footsteps that start and stop, a quiet exhale that doesn't fully release.",
-        "olfactory": "I smell a faint edge of stress-sweat, the kind that comes from holding yourself together."
+        "auditory": "I hear stop-start movement nearby—soft footwork, fabric rustle, a breath that never fully empties.",
+        "olfactory": "I smell a faint edge of stress-sweat, the kind that comes from holding yourself together.",
+        "tactile": "Someone's presence vibrates with contained tension—micro-movements, a restless shifting that you can feel through the air and proximity."
     },
     "tags": [
         "anxiety",

@@ -77,12 +77,12 @@ Same structure as emotion prototypes. All entries use `sexual_arousal` in gates.
 3. `sexual_playfulness` - Arousal with engagement/fun
 4. `romantic_yearning` - Lower arousal, future-focused
 5. `sexual_confident` - Arousal with agency
-6. `aroused_but_ashamed` - Arousal conflicting with self-evaluation
-7. `aroused_but_threatened` - Arousal with danger
+6. `aroused_with_shame` - Arousal conflicting with self-evaluation
+7. `fearful_arousal` - Arousal with danger
 8. `sexual_performance_anxiety` - Arousal with threat and low agency
 9. `sexual_frustration` - Arousal with negative valence
 10. `afterglow` - Low arousal, positive state
-11. `sexual_disgust_conflict` - Arousal with strong disgust
+11. `aroused_with_disgust` - Arousal with strong disgust
 
 ## Acceptance Criteria
 

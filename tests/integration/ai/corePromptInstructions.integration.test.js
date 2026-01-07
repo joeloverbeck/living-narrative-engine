@@ -312,6 +312,23 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
     });
   });
 
+  describe('Speech Content Rule', () => {
+    it('should include no-recap guidance in the speech section', () => {
+      const promptText = corePromptText.finalLlmInstructionText;
+
+      expect(promptText).toContain('SPEECH CONTENT RULE (CRITICAL):');
+      expect(promptText).toContain(
+        'Do NOT recap or summarize prior dialogue. Your speech should advance the scene with a new contribution.'
+      );
+      expect(promptText).toContain(
+        'Only restate prior dialogue if absolutely necessary for in-character clarification or if another character explicitly requests a recap.'
+      );
+      expect(promptText).toContain(
+        'If a recap is unavoidable, keep it to one short clause and move on.'
+      );
+    });
+  });
+
   describe('Token Efficiency', () => {
     it('should be significantly shorter than old 19-type taxonomy', () => {
       const promptText = corePromptText.finalLlmInstructionText;

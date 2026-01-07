@@ -1,0 +1,145 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions:anticipatory_edge",
+    "description": "Approach-oriented anticipation: alert, eager readiness for what's about to happen—waiting becomes charged.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anticipation"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.interest"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.anticipation"
+                                    },
+                                    {
+                                        "var": "previousEmotions.anticipation"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.anticipation"
+                                    },
+                                    {
+                                        "var": "emotions.enthusiasm"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "The next moment has weight. My attention keeps snapping forward as if it can catch what’s coming before it arrives. I feel it in my body: a held breath, fingertips wanting to move, muscles lightly pre-tensed—ready without being afraid. I keep checking small cues, rehearsing the first action like a reflex test. It’s not panic. It’s timing. Like standing a half-step from a starting line, waiting for the signal that makes the whole world go.",
+    "description_text": "{actor} goes still in a way that isn’t restful—weight subtly forward, eyes tracking, attention snagging on every small change. Their hands flex once and settle. Breath runs a little high, controlled. They look prepared, not worried: someone measuring distance and seconds, waiting for the exact moment to move.",
+    "alternate_descriptions": {
+        "auditory": "I hear breathing held, then released in short controlled pulls—someone pacing their oxygen like a runner.",
+        "tactile": "A presence tightens into readiness—minute vibrations of contained motion, like a spring loaded but not released.",
+        "olfactory": "There’s a clean edge of adrenaline in the air—sharp and bright, without the sour rot of fear."
+    },
+    "tags": [
+        "positive",
+        "anticipation",
+        "readiness",
+        "approach"
+    ]
+}

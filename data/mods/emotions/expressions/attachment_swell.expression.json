@@ -7,24 +7,95 @@
     {
       "logic": {
         "and": [
-          { ">=": [{ "var": "emotions.love_attachment" }, 0.65] },
-          { ">=": [{ "var": "emotions.affection" }, 0.55] },
+          {
+            ">=": [
+              {
+                "var": "emotions.love_attachment"
+              },
+              0.65
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.affection"
+              },
+              0.55
+            ]
+          },
           {
             ">=": [
               {
                 "-": [
-                  { "var": "emotions.love_attachment" },
-                  { "var": "previousEmotions.love_attachment" }
+                  {
+                    "var": "emotions.love_attachment"
+                  },
+                  {
+                    "var": "previousEmotions.love_attachment"
+                  }
                 ]
               },
               0.12
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              40
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.jealousy"
+              },
+              0.45
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.trust"
+                  },
+                  0.30
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.gratitude"
+                  },
+                  0.25
+                ]
+              }
             ]
           }
         ]
       }
     }
   ],
-  "actor_description": "A protective softness spreads through me. I want them okay. I want to stay close enough to matter. My voice gentles without me deciding to. My shoulders loosen; I lean in a fraction as if proximity is reassurance.",
-  "description_text": "{actor} stays subtly close to their target of affection, attention tuned toward them in a protective, warm way.",
-  "tags": ["attachment", "love", "protective", "warmth", "closeness"]
+  "actor_description": "It comes on as warmth before it becomes thought—an easing under my ribs, like my body recognizes them as safe and important. My breathing slows without permission. My shoulders loosen. I feel pulled toward them in a simple, steady way. Not hunger. Not panic. Just this quiet certainty: you matter to me. I want to keep them close enough to protect, close enough to be useful. My voice goes softer. I find myself angling my body toward them like that’s the most natural thing in the world.",
+  "description_text": "{actor} softens visibly—features easing, attention settling with unhurried steadiness. They orient toward the person they care about, closing distance by small degrees: a half-step nearer, a protective angle of the shoulders, a warmth in the face that doesn’t ask permission.",
+  "alternate_descriptions": {
+    "tactile": "Someone's presence feels grounding—steady and warm, like someone has decided to stay."
+  },
+  "tags": [
+    "attachment",
+    "love",
+    "protective",
+    "warmth",
+    "closeness"
+  ]
 }

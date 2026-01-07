@@ -34,17 +34,61 @@
                 <div class="emotional-state-panel__emotions">Current: neutral</div>
               </div>
             </section>
-            <section class="es-panel" aria-labelledby="es-sexual-title">
-              <h3 id="es-sexual-title">Sexual State</h3>
-              <div id="es-sexual-inputs" class="es-input-list"></div>
-              <div
-                id="es-sexual-derived"
-                class="es-derived-text"
-                aria-live="polite"
+            <div class="es-input-column">
+              <section class="es-panel" aria-labelledby="es-sexual-title">
+                <h3 id="es-sexual-title">Sexual State</h3>
+                <div id="es-sexual-inputs" class="es-input-list"></div>
+                <div
+                  id="es-sexual-derived"
+                  class="es-derived-text"
+                  aria-live="polite"
+                >
+                  <div class="sexual-state-panel__states">Current: neutral</div>
+                </div>
+              </section>
+              <section
+                class="es-panel es-recorded-panel"
+                aria-labelledby="es-recorded-title"
               >
-                <div class="sexual-state-panel__states">Current: neutral</div>
-              </div>
-            </section>
+                <h3 id="es-recorded-title">Recorded Previous State</h3>
+                <button type="button" class="es-button" id="es-record-button">
+                  Record Current State
+                </button>
+                <div
+                  id="es-recorded-state-display"
+                  class="es-recorded-state-display"
+                  aria-live="polite"
+                >
+                  <p class="es-placeholder-message es-recorded-state-empty">
+                    No recorded state captured yet.
+                  </p>
+                  <div class="es-recorded-state-section">
+                    <h4>Mood Axes</h4>
+                    <ul class="es-recorded-state-list">
+                      <li class="es-recorded-state-item">
+                        No recorded mood axes.
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="es-recorded-state-section">
+                    <h4>Emotions</h4>
+                    <ul class="es-recorded-state-list">
+                      <li class="es-recorded-state-item">
+                        No recorded emotions.
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="es-recorded-state-section">
+                    <h4>Sexual States</h4>
+                    <ul class="es-recorded-state-list">
+                      <li class="es-recorded-state-item">
+                        No recorded sexual states.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
         </section>
 
@@ -88,7 +132,12 @@
               </div>
             </div>
             <div class="es-panel es-evaluation-panel">
-              <h3>Evaluation Log</h3>
+              <div class="es-evaluation-panel-header">
+                <h3>Evaluation Log</h3>
+                <span id="es-evaluation-count" class="es-evaluation-count"
+                  >Evaluated: --</span
+                >
+              </div>
               <div id="es-evaluation-log" class="es-evaluation-log">
                 <p class="es-placeholder-message">
                   Trigger expression to see evaluation diagnostics.
