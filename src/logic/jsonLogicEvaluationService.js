@@ -596,6 +596,46 @@ class JsonLogicEvaluationService extends BaseService {
   }
 
   /**
+   * Evaluate a JSON Logic rule and return a trace of the evaluation.
+   *
+   * @param {object} rule - The JSON Logic rule object to evaluate.
+   * @param {JsonLogicEvaluationContext} context - The data context.
+   * @returns {{result: any, resultBoolean: boolean, trace: object, failure: object|null}}
+   */
+  evaluateWithTrace(rule, context) {
+    try {
+      this.#validateJsonLogic(rule);
+    } catch (validationError) {
+      this.#logger.error('JSON Logic validation failed:', validationError);
+      return {
+        result: false,
+        resultBoolean: false,
+        trace: {
+          path: 'root',
+          op: 'validation',
+          result: false,
+          reason: validationError.message,
+        },
+        failure: {
+          path: 'root',
+          op: 'validation',
+          result: false,
+          reason: validationError.message,
+        },
+      };
+    }
+
+    const resolvedRule = this.#prepareRule(rule);
+    const trace = this.#traceEvaluate(resolvedRule, context, 'root');
+    return {
+      result: trace.result,
+      resultBoolean: trace.resultBoolean,
+      trace: trace.node,
+      failure: trace.failure,
+    };
+  }
+
+  /**
    * Allows adding custom operations to the underlying json-logic-js instance.
    *
    * @param {string} name - The name of the custom operator.
@@ -650,6 +690,212 @@ class JsonLogicEvaluationService extends BaseService {
         error
       );
       // Don't throw - this is cleanup code
+    }
+  }
+
+  /**
+   * Trace evaluation of a JSON Logic rule.
+   *
+   * @private
+   * @param {any} rule
+   * @param {JsonLogicEvaluationContext} context
+   * @param {string} path
+   * @returns {{result: any, resultBoolean: boolean, node: object, failure: object|null}}
+   */
+  #traceEvaluate(rule, context, path) {
+    if (!this.#isLogicRule(rule)) {
+      const value = jsonLogic.apply(rule, context);
+      const resultBoolean = !!value;
+      const ruleSummary = this.#summarizeRule(rule);
+      return {
+        result: value,
+        resultBoolean,
+        node: {
+          path,
+          type: 'literal',
+          result: value,
+          ruleSummary,
+        },
+        failure: resultBoolean
+          ? null
+          : {
+              path,
+              op: 'literal',
+              result: value,
+              ruleSummary,
+              reason: 'Literal evaluated to false',
+            },
+      };
+    }
+
+    const [op] = Object.keys(rule);
+    const args = rule[op];
+    const ruleSummary = this.#summarizeRule(rule);
+
+    if ((op === 'and' || op === 'or') && Array.isArray(args)) {
+      const children = [];
+      let failure = null;
+      let resultBoolean = op === 'and';
+
+      for (let index = 0; index < args.length; index += 1) {
+        const childPath = `${path}.${op}[${index}]`;
+        const childTrace = this.#traceEvaluate(args[index], context, childPath);
+        children.push(childTrace.node);
+
+        if (op === 'and' && !childTrace.resultBoolean) {
+          failure = childTrace.failure ?? {
+            path: childPath,
+            op: childTrace.node?.op ?? 'and',
+            result: childTrace.result,
+            reason: 'Condition evaluated to false',
+          };
+          resultBoolean = false;
+          break;
+        }
+
+        if (op === 'or' && childTrace.resultBoolean) {
+          resultBoolean = true;
+          break;
+        }
+      }
+
+      if (op === 'or' && resultBoolean === false) {
+        failure = failure ?? {
+          path,
+          op: 'or',
+          result: false,
+          ruleSummary,
+          reason: 'All branches evaluated to false',
+        };
+      }
+
+      return {
+        result: resultBoolean,
+        resultBoolean,
+        node: {
+          path,
+          op,
+          children,
+          result: resultBoolean,
+          ruleSummary,
+        },
+        failure,
+      };
+    }
+
+    let value;
+    try {
+      value = jsonLogic.apply(rule, context);
+    } catch (error) {
+      return {
+        result: false,
+        resultBoolean: false,
+        node: {
+          path,
+          op,
+          result: false,
+          ruleSummary,
+          error: error.message,
+        },
+        failure: {
+          path,
+          op,
+          result: false,
+          ruleSummary,
+          reason: `Evaluation error: ${error.message}`,
+        },
+      };
+    }
+
+    const resultBoolean = !!value;
+    const evaluatedArgs = this.#evaluateArgsForTrace(args, context);
+
+    return {
+      result: value,
+      resultBoolean,
+      node: {
+        path,
+        op,
+        args: evaluatedArgs,
+        result: value,
+        ruleSummary,
+      },
+      failure: resultBoolean
+        ? null
+        : {
+            path,
+            op,
+            result: value,
+            evaluatedArgs,
+            ruleSummary,
+            reason: 'Operation evaluated to false',
+          },
+    };
+  }
+
+  /**
+   * Determine whether an input is a JSON Logic rule.
+   *
+   * @private
+   * @param {any} rule
+   * @returns {boolean}
+   */
+  #isLogicRule(rule) {
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+      return false;
+    }
+    const keys = Object.keys(rule);
+    if (keys.length !== 1) {
+      return false;
+    }
+    return this.#allowedOperations.has(keys[0]);
+  }
+
+  /**
+   * Evaluate arguments for trace logging.
+   *
+   * @private
+   * @param {any} args
+   * @param {JsonLogicEvaluationContext} context
+   * @returns {any}
+   */
+  #evaluateArgsForTrace(args, context) {
+    if (Array.isArray(args)) {
+      return args.map((arg) => jsonLogic.apply(arg, context));
+    }
+    if (args === undefined) {
+      return [];
+    }
+    return jsonLogic.apply(args, context);
+  }
+
+  /**
+   * Summarize a rule for diagnostic display.
+   *
+   * @private
+   * @param {any} rule
+   * @returns {string}
+   */
+  #summarizeRule(rule) {
+    if (rule === undefined) {
+      return 'undefined';
+    }
+    if (rule === null) {
+      return 'null';
+    }
+    if (typeof rule === 'string') {
+      return rule.length > 160 ? `${rule.slice(0, 160)}...` : rule;
+    }
+    try {
+      const serialized = JSON.stringify(rule);
+      if (serialized === undefined) {
+        return '[unserializable]';
+      }
+      return serialized.length > 160
+        ? `${serialized.slice(0, 160)}...`
+        : serialized;
+    } catch {
+      return '[unserializable]';
     }
   }
 }

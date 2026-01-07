@@ -18,6 +18,7 @@ const createService = ({
   };
   const jsonLogicEvaluationService = {
     evaluate: evaluateImpl ?? jest.fn(),
+    evaluateWithTrace: jest.fn().mockReturnValue({ resultBoolean: true }),
   };
   const gameDataRepository = {
     getConditionDefinition: jest.fn(),
@@ -246,6 +247,7 @@ describe('ExpressionEvaluatorService', () => {
     };
     const jsonLogicEvaluationService = {
       evaluate: jest.fn(),
+      evaluateWithTrace: jest.fn(),
     };
     const gameDataRepository = {
       getConditionDefinition: jest.fn(),

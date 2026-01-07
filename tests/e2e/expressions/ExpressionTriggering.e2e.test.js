@@ -117,7 +117,16 @@ describe('Expression triggering E2E', () => {
   });
 
   it('dispatches a perceptible event for a known expression', async () => {
-    activeEnv = await setupExpressionEnv();
+    const deterministicExpression = {
+      id: 'test:known_expression',
+      priority: 9999,
+      prerequisites: [],
+      description_text: '{actor} shows a deterministic expression.',
+      actor_description: 'Deterministic expression.',
+      tags: ['test'],
+    };
+
+    activeEnv = await setupExpressionEnv([deterministicExpression]);
     const { env, safeEventDispatcher, entityManager } = activeEnv;
     const { events, unsubscribe } = capturePerceptibleEvents(
       env.services.eventBus
@@ -144,7 +153,7 @@ describe('Expression triggering E2E', () => {
     expect(dispatched).toBe(true);
     expect(events).toHaveLength(1);
     expect(events[0].payload.contextualData.expressionId).toBe(
-      'quiet_contentment'
+      'test:known_expression'
     );
 
     unsubscribe?.();

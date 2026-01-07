@@ -156,6 +156,58 @@
   font-size: var(--font-size-base);
 }
 
+.es-evaluation-panel {
+  grid-column: 1 / -1;
+}
+
+.es-evaluation-log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.es-evaluation-item {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  background: var(--secondary-bg-color);
+}
+
+.es-evaluation-item--pass {
+  border-left: 4px solid var(--success-color, #2e7d32);
+}
+
+.es-evaluation-item--fail {
+  border-left: 4px solid var(--error-color, #c62828);
+}
+
+.es-evaluation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 600;
+}
+
+.es-evaluation-name {
+  color: var(--primary-text-color);
+}
+
+.es-evaluation-status {
+  font-size: var(--font-size-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.es-evaluation-details {
+  margin-top: var(--spacing-xs);
+  color: var(--secondary-text-color);
+}
+
+.es-evaluation-details p {
+  margin: 0;
+}
+
 .es-footer {
   padding: var(--spacing-md) var(--spacing-lg);
   text-align: center;

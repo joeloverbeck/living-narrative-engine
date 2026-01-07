@@ -159,6 +159,7 @@ class ExpressionsSimulatorController {
       observerMessage: this.#containerElement.querySelector(
         '#es-observer-message'
       ),
+      evaluationLog: this.#containerElement.querySelector('#es-evaluation-log'),
     };
 
     if (!this.#elements.moodInputs) {
@@ -209,6 +210,11 @@ class ExpressionsSimulatorController {
     if (!this.#elements.observerMessage) {
       this.#logger.warn(
         '[ExpressionsSimulator] Observer message output missing (#es-observer-message).'
+      );
+    }
+    if (!this.#elements.evaluationLog) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Evaluation log output missing (#es-evaluation-log).'
       );
     }
   }
@@ -617,6 +623,7 @@ class ExpressionsSimulatorController {
     this.#renderExpressionTotal();
     this.#renderMatches([]);
     this.#renderSelectedExpression(null);
+    this.#renderEvaluationLog(null);
     this.#clearMessages();
 
     if (this.#elements?.triggerButton) {
@@ -791,6 +798,8 @@ class ExpressionsSimulatorController {
       return;
     }
 
+    this.#renderEvaluationLog(null);
+
     if (this.#state.entityInitPromise) {
       await this.#state.entityInitPromise;
     }
@@ -814,9 +823,11 @@ class ExpressionsSimulatorController {
       sexualStateData,
       this.#state.previousState
     );
-    const matches = this.#expressionEvaluatorService.evaluateAll(context);
+    const { matches, evaluations } =
+      this.#expressionEvaluatorService.evaluateAllWithDiagnostics(context);
 
     this.#renderMatches(matches);
+    this.#renderEvaluationLog(evaluations);
     const selectedExpression = matches[0] ?? null;
     this.#renderSelectedExpression(selectedExpression);
 
@@ -936,6 +947,94 @@ class ExpressionsSimulatorController {
         ? ` (priority ${expression.priority})`
         : '';
     this.#elements.selectedExpression.textContent = `${expression.id}${priority}`;
+  }
+
+  /**
+   * @param {Array<{expression: object, passed: boolean, prerequisites: Array<{index: number, status: string, message: string}>}>|null} evaluations
+   * @private
+   */
+  #renderEvaluationLog(evaluations) {
+    if (!this.#elements?.evaluationLog) {
+      return;
+    }
+
+    this.#elements.evaluationLog.innerHTML = '';
+
+    if (!Array.isArray(evaluations) || evaluations.length === 0) {
+      const placeholder = document.createElement('p');
+      placeholder.className = 'es-placeholder-message';
+      placeholder.textContent =
+        'Trigger expression to see evaluation diagnostics.';
+      this.#elements.evaluationLog.appendChild(placeholder);
+      return;
+    }
+
+    for (const evaluation of evaluations) {
+      const item = document.createElement('div');
+      item.className = `es-evaluation-item ${
+        evaluation.passed
+          ? 'es-evaluation-item--pass'
+          : 'es-evaluation-item--fail'
+      }`;
+
+      const header = document.createElement('div');
+      header.className = 'es-evaluation-header';
+
+      const name = document.createElement('span');
+      name.className = 'es-evaluation-name';
+      name.textContent = evaluation.expression?.id ?? 'unknown';
+
+      const status = document.createElement('span');
+      status.className = 'es-evaluation-status';
+      status.textContent = evaluation.passed ? 'Passed' : 'Failed';
+
+      header.appendChild(name);
+      header.appendChild(status);
+      item.appendChild(header);
+
+      const details = document.createElement('div');
+      details.className = 'es-evaluation-details';
+
+      const skipped = evaluation.prerequisites.filter(
+        (result) => result.status === 'skipped'
+      );
+      const failed = evaluation.prerequisites.filter(
+        (result) => result.status === 'failed'
+      );
+
+      if (evaluation.passed) {
+        if (evaluation.prerequisites.length === 0) {
+          const note = document.createElement('p');
+          note.textContent = 'No prerequisites; auto-passed.';
+          details.appendChild(note);
+        } else if (skipped.length > 0) {
+          const note = document.createElement('p');
+          note.textContent = `Passed with ${skipped.length} prerequisite${
+            skipped.length === 1 ? '' : 's'
+          } skipped due to missing logic.`;
+          details.appendChild(note);
+        }
+      } else {
+        failed.forEach((result) => {
+          const note = document.createElement('p');
+          note.textContent = `Prerequisite ${result.index + 1}: ${result.message}`;
+          details.appendChild(note);
+        });
+        if (skipped.length > 0) {
+          const note = document.createElement('p');
+          note.textContent = `Skipped ${skipped.length} prerequisite${
+            skipped.length === 1 ? '' : 's'
+          } due to missing logic.`;
+          details.appendChild(note);
+        }
+      }
+
+      if (details.childNodes.length > 0) {
+        item.appendChild(details);
+      }
+
+      this.#elements.evaluationLog.appendChild(item);
+    }
   }
 
   /**

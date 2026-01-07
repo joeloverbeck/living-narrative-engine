@@ -245,7 +245,25 @@ describe('EmotionCalculatorService', () => {
       expect(result.has('joy')).toBe(true);
     });
 
-    it('should filter out emotions that fail gate checks', () => {
+    it('should include all emotion prototype keys with zero defaults', () => {
+      const moodData = {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      };
+
+      const result = service.calculateEmotions(moodData, null);
+
+      expect(result.size).toBe(Object.keys(mockEmotionPrototypes).length);
+      expect(result.get('joy')).toBe(0);
+      expect(result.get('sadness')).toBe(0);
+    });
+
+    it('should set zero intensity when gate checks fail', () => {
       const moodData = {
         valence: -50, // fails joy gate (valence >= 0.20)
         arousal: 0,
@@ -258,8 +276,9 @@ describe('EmotionCalculatorService', () => {
 
       const result = service.calculateEmotions(moodData, null);
 
-      expect(result.has('joy')).toBe(false);
-      expect(result.has('sadness')).toBe(true); // passes sadness gate (valence <= -0.20)
+      expect(result.has('joy')).toBe(true);
+      expect(result.get('joy')).toBe(0);
+      expect(result.get('sadness')).toBeGreaterThan(0); // passes sadness gate (valence <= -0.20)
     });
 
     it('should calculate pride intensity correctly (ticket example)', () => {
@@ -369,6 +388,24 @@ describe('EmotionCalculatorService', () => {
       expect(result).toBeInstanceOf(Map);
     });
 
+    it('should include all sexual prototype keys with zero defaults', () => {
+      const moodData = {
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 100,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+      };
+
+      const result = service.calculateSexualStates(moodData, 0.1);
+
+      expect(result.size).toBe(Object.keys(mockSexualPrototypes).length);
+      expect(result.get('sexual_lust')).toBe(0);
+      expect(result.get('afterglow')).toBe(0);
+    });
+
     it('should handle sex_inhibition axis in sexual state weights', () => {
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:sexual_prototypes') {
@@ -450,7 +487,8 @@ describe('EmotionCalculatorService', () => {
         null,
         { sex_excitation: 40 }
       );
-      expect(lowExcitation.has('sexual_interest')).toBe(false);
+      expect(lowExcitation.has('sexual_interest')).toBe(true);
+      expect(lowExcitation.get('sexual_interest')).toBe(0);
 
       const highExcitation = freshService.calculateSexualStates(
         {},
@@ -460,7 +498,7 @@ describe('EmotionCalculatorService', () => {
       expect(highExcitation.has('sexual_interest')).toBe(true);
     });
 
-    it('should filter out states that fail gate checks', () => {
+    it('should set zero intensity when sexual state gates fail', () => {
       const moodData = {
         valence: 50,
         arousal: 0,
@@ -473,7 +511,8 @@ describe('EmotionCalculatorService', () => {
 
       const result = service.calculateSexualStates(moodData, 0.5);
 
-      expect(result.has('sexual_lust')).toBe(false);
+      expect(result.has('sexual_lust')).toBe(true);
+      expect(result.get('sexual_lust')).toBe(0);
     });
 
     it('should calculate sexual_lust correctly when all gates pass', () => {
@@ -567,7 +606,8 @@ describe('EmotionCalculatorService', () => {
       // 0.50 > 0.50 should fail
       const failingMood = { valence: 50 };
       const failingResult = freshService.calculateEmotions(failingMood, null);
-      expect(failingResult.has('test_emotion')).toBe(false);
+      expect(failingResult.has('test_emotion')).toBe(true);
+      expect(failingResult.get('test_emotion')).toBe(0);
     });
 
     it('should handle < operator', () => {
@@ -619,10 +659,9 @@ describe('EmotionCalculatorService', () => {
       const moodData = { valence: 0 };
       const result = freshService.calculateEmotions(moodData, null);
 
-      // Gates pass but intensity might be 0 since valence is 0
-      // The intensity formula: 0 * 0.1 / 0.1 = 0
-      // So the emotion won't appear (intensity = 0)
-      expect(result.has('neutral')).toBe(false);
+      // Gates pass but intensity is 0 since valence is 0
+      expect(result.has('neutral')).toBe(true);
+      expect(result.get('neutral')).toBe(0);
     });
 
     it('should handle sexual_arousal axis in gates', () => {
@@ -638,7 +677,8 @@ describe('EmotionCalculatorService', () => {
 
       // Test with SA below threshold
       const lowSAResult = service.calculateEmotions(moodData, 0.2);
-      expect(lowSAResult.has('lust_emotion')).toBe(false);
+      expect(lowSAResult.has('lust_emotion')).toBe(true);
+      expect(lowSAResult.get('lust_emotion')).toBe(0);
 
       // Test with SA above threshold
       const highSAResult = service.calculateEmotions(moodData, 0.4);
@@ -754,7 +794,8 @@ describe('EmotionCalculatorService', () => {
         null,
         { sex_excitation: 40 }
       );
-      expect(lowExcitation.has('excited_emotion')).toBe(false);
+      expect(lowExcitation.has('excited_emotion')).toBe(true);
+      expect(lowExcitation.get('excited_emotion')).toBe(0);
 
       const highExcitation = freshService.calculateEmotions(
         {},
@@ -789,7 +830,8 @@ describe('EmotionCalculatorService', () => {
         null,
         { sex_inhibition: 40 }
       );
-      expect(lowInhibition.has('inhibited_emotion')).toBe(false);
+      expect(lowInhibition.has('inhibited_emotion')).toBe(true);
+      expect(lowInhibition.get('inhibited_emotion')).toBe(0);
 
       const highInhibition = freshService.calculateEmotions(
         {},
@@ -1310,7 +1352,7 @@ describe('EmotionCalculatorService', () => {
       expect(mockLogger.warn).toHaveBeenCalled();
     });
 
-    it('should handle prototype without weights', () => {
+    it('should default prototype without weights to zero intensity', () => {
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:emotion_prototypes') {
           return {
@@ -1332,8 +1374,8 @@ describe('EmotionCalculatorService', () => {
 
       const result = freshService.calculateEmotions({ valence: 50 }, null);
 
-      // Should not include emotion without weights
-      expect(result.has('bad_emotion')).toBe(false);
+      expect(result.has('bad_emotion')).toBe(true);
+      expect(result.get('bad_emotion')).toBe(0);
     });
   });
 
@@ -1417,7 +1459,7 @@ describe('EmotionCalculatorService', () => {
       expect(emotions).toBeInstanceOf(Map);
     });
 
-    it('should filter out emotions with zero intensity', () => {
+    it('should keep emotions with zero intensity', () => {
       // All negative weights with positive values = negative intensity = clamped to 0
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:emotion_prototypes') {
@@ -1441,8 +1483,9 @@ describe('EmotionCalculatorService', () => {
       const moodData = { valence: 100, arousal: 100 };
       const result = freshService.calculateEmotions(moodData, null);
 
-      // Intensity would be negative, clamped to 0, not included
-      expect(result.has('negative_emotion')).toBe(false);
+      // Intensity would be negative, clamped to 0
+      expect(result.has('negative_emotion')).toBe(true);
+      expect(result.get('negative_emotion')).toBe(0);
     });
   });
 });

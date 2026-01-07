@@ -548,11 +548,7 @@ class EmotionCalculatorService {
         normalizedAxes,
         sexualAxes
       );
-
-      // Only include emotions with intensity > 0 (gates passed and has positive intensity)
-      if (intensity > 0) {
-        result.set(emotionName, intensity);
-      }
+      result.set(emotionName, intensity);
     }
 
     return result;
@@ -586,14 +582,42 @@ class EmotionCalculatorService {
         normalizedAxes,
         sexualAxes
       );
-
-      // Only include states with intensity > 0
-      if (intensity > 0) {
-        result.set(stateName, intensity);
-      }
+      result.set(stateName, intensity);
     }
 
     return result;
+  }
+
+  /**
+   * Get all emotion prototype keys from lookups.
+   *
+   * @returns {string[]} Emotion prototype keys
+   */
+  getEmotionPrototypeKeys() {
+    const prototypes = this.#ensureEmotionPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: Emotion prototypes unavailable for key lookup.'
+      );
+      return [];
+    }
+    return Object.keys(prototypes);
+  }
+
+  /**
+   * Get all sexual prototype keys from lookups.
+   *
+   * @returns {string[]} Sexual prototype keys
+   */
+  getSexualPrototypeKeys() {
+    const prototypes = this.#ensureSexualPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: Sexual prototypes unavailable for key lookup.'
+      );
+      return [];
+    }
+    return Object.keys(prototypes);
   }
 
   /**

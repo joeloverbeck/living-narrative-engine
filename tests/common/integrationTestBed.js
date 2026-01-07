@@ -65,10 +65,12 @@ export class IntegrationTestBed extends BaseTestBed {
     const mockEmotionCalculatorService = {
       calculateEmotions: jest.fn().mockReturnValue(new Map()),
       getTopEmotions: jest.fn().mockReturnValue([]),
+      getEmotionPrototypeKeys: jest.fn().mockReturnValue([]),
       formatEmotionsForPrompt: jest.fn().mockReturnValue(''),
       calculateSexualArousal: jest.fn().mockReturnValue(0),
       calculateSexualStates: jest.fn().mockReturnValue(new Map()),
       getTopSexualStates: jest.fn().mockReturnValue([]),
+      getSexualPrototypeKeys: jest.fn().mockReturnValue([]),
       formatSexualStatesForPrompt: jest.fn().mockReturnValue(''),
     };
 
