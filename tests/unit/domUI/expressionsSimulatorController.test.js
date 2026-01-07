@@ -181,7 +181,10 @@ const buildDependencies = ({
     expressionEvaluatorService:
       expressionEvaluatorService ??
       ({
-        evaluateAll: jest.fn().mockReturnValue([]),
+        evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+          matches: [],
+          evaluations: [],
+        }),
       }),
     expressionDispatcher:
       expressionDispatcher ??
@@ -417,10 +420,13 @@ describe('ExpressionsSimulatorController', () => {
     };
 
     const expressionEvaluatorService = {
-      evaluateAll: jest.fn().mockReturnValue([
-        { id: 'expr-high', priority: 10 },
-        { id: 'expr-low', priority: 5 },
-      ]),
+      evaluateAllWithDiagnostics: jest.fn().mockReturnValue({
+        matches: [
+          { id: 'expr-high', priority: 10 },
+          { id: 'expr-low', priority: 5 },
+        ],
+        evaluations: [],
+      }),
     };
 
     const controller = new ExpressionsSimulatorController(
@@ -481,7 +487,9 @@ describe('ExpressionsSimulatorController', () => {
       buildDependencies({
         expressionContextBuilder,
         expressionEvaluatorService: {
-          evaluateAll: jest.fn().mockReturnValue([]),
+          evaluateAllWithDiagnostics: jest
+            .fn()
+            .mockReturnValue({ matches: [], evaluations: [] }),
         },
       })
     );
@@ -520,7 +528,9 @@ describe('ExpressionsSimulatorController', () => {
     const controller = new ExpressionsSimulatorController(
       buildDependencies({
         expressionEvaluatorService: {
-          evaluateAll: jest.fn().mockReturnValue([]),
+          evaluateAllWithDiagnostics: jest
+            .fn()
+            .mockReturnValue({ matches: [], evaluations: [] }),
         },
       })
     );

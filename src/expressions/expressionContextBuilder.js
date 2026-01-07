@@ -25,6 +25,8 @@ class ExpressionContextBuilder {
         'calculateSexualArousal',
         'calculateEmotions',
         'calculateSexualStates',
+        'getEmotionPrototypeKeys',
+        'getSexualPrototypeKeys',
       ],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
@@ -66,6 +68,9 @@ class ExpressionContextBuilder {
       sexualStateData
     );
 
+    this.#assertStateCoverage(emotions, 'emotions');
+    this.#assertStateCoverage(sexualStates, 'sexualStates');
+
     const actorContext = createEntityContext(
       actorId,
       this.#entityManager,
@@ -82,6 +87,50 @@ class ExpressionContextBuilder {
       previousSexualStates: previousState?.sexualStates ?? null,
       previousMoodAxes: previousState?.moodAxes ?? null,
     };
+  }
+
+  /**
+   * Ensure calculator results contain all prototype keys.
+   *
+   * @param {Map<string, number>} stateMap
+   * @param {'emotions'|'sexualStates'} kind
+   * @private
+   */
+  #assertStateCoverage(stateMap, kind) {
+    const expectedKeys =
+      kind === 'emotions'
+        ? this.#emotionCalculatorService.getEmotionPrototypeKeys()
+        : this.#emotionCalculatorService.getSexualPrototypeKeys();
+
+    if (!stateMap || typeof stateMap[Symbol.iterator] !== 'function') {
+      throw new Error(
+        `[ExpressionContextBuilder] ${kind} evaluation returned non-iterable results.`
+      );
+    }
+
+    const expectedCount = expectedKeys.length;
+    if (expectedCount === 0) {
+      throw new Error(
+        `[ExpressionContextBuilder] ${kind} prototype lookup returned no keys.`
+      );
+    }
+    const actualCount = stateMap.size;
+
+    if (expectedCount !== actualCount) {
+      const expectedSet = new Set(expectedKeys);
+      const missingKeys = [];
+      for (const key of expectedSet) {
+        if (!stateMap.has(key)) {
+          missingKeys.push(key);
+        }
+      }
+
+      throw new Error(
+        `[ExpressionContextBuilder] ${kind} evaluation missing prototype keys. Expected ${expectedCount}, got ${actualCount}. Missing: ${missingKeys.join(
+          ', '
+        )}`
+      );
+    }
   }
 
   /**

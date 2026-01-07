@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import path from 'node:path';
 import { readFile, readdir } from 'node:fs/promises';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
+import {
+  buildStateMap,
+  collectExpressionStateKeys,
+} from '../../common/expressionTestUtils.js';
 import { registerExpressionServices } from '../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
@@ -79,6 +83,9 @@ describe('Expressions Simulator - Integration', () => {
   let expressionEvaluatorService;
   let entityManager;
   let loadedExpressions;
+  let emotionCalculator;
+  let emotionKeys;
+  let sexualKeys;
 
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
@@ -92,6 +99,15 @@ describe('Expressions Simulator - Integration', () => {
 
     dataRegistry = container.resolve(tokens.IDataRegistry);
     loadedExpressions = await loadExpressions(dataRegistry);
+
+    emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
+    ({ emotionKeys, sexualKeys } = collectExpressionStateKeys(loadedExpressions));
+    emotionCalculator.getEmotionPrototypeKeys.mockReturnValue(emotionKeys);
+    emotionCalculator.getSexualPrototypeKeys.mockReturnValue(sexualKeys);
+    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     expressionRegistry = container.resolve(tokens.IExpressionRegistry);
     expressionContextBuilder = container.resolve(tokens.IExpressionContextBuilder);

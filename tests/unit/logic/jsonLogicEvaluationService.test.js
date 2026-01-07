@@ -1689,6 +1689,66 @@ describe('JsonLogicEvaluationService', () => {
       }
     });
   });
+
+  describe('evaluateWithTrace', () => {
+    test('should surface the first failing and-branch with evaluated values', () => {
+      const rule = {
+        and: [
+          { '>=': [{ var: 'emotions.fear' }, 0.5] },
+          { '>=': [{ var: 'emotions.rage' }, 0.5] },
+        ],
+      };
+      const context = { emotions: { fear: 0.7, rage: 0.2 } };
+
+      const traced = service.evaluateWithTrace(rule, context);
+
+      expect(traced.resultBoolean).toBe(false);
+      expect(traced.failure).toEqual(
+        expect.objectContaining({
+          ruleSummary: JSON.stringify({ '>=': [{ var: 'emotions.rage' }, 0.5] }),
+          op: '>=',
+          result: false,
+        })
+      );
+      expect(traced.failure.evaluatedArgs).toEqual([0.2, 0.5]);
+    });
+
+    test('should report or-branches all false', () => {
+      const rule = {
+        or: [{ '>': [1, 2] }, { '>': [1, 3] }],
+      };
+
+      const traced = service.evaluateWithTrace(rule, {});
+
+      expect(traced.resultBoolean).toBe(false);
+      expect(traced.failure).toEqual(
+        expect.objectContaining({
+          ruleSummary: JSON.stringify({
+            or: [{ '>': [1, 2] }, { '>': [1, 3] }],
+          }),
+          op: 'or',
+          result: false,
+        })
+      );
+      expect(traced.failure.reason).toBe('All branches evaluated to false');
+    });
+
+    test('should report literal false when used in a logical group', () => {
+      const rule = {
+        and: [false, { '>=': [1, 0] }],
+      };
+
+      const traced = service.evaluateWithTrace(rule, {});
+
+      expect(traced.resultBoolean).toBe(false);
+      expect(traced.failure).toEqual(
+        expect.objectContaining({
+          op: 'literal',
+          reason: 'Literal evaluated to false',
+        })
+      );
+    });
+  });
 });
 
 // Example of a default dummy definition ID that could be shared

@@ -40,13 +40,23 @@ describe('registerExpressionServices', () => {
       calculateSexualArousal: jest.fn().mockReturnValue(0),
       calculateEmotions: jest.fn().mockReturnValue(new Map()),
       calculateSexualStates: jest.fn().mockReturnValue(new Map()),
+      getEmotionPrototypeKeys: jest.fn().mockReturnValue([]),
+      getSexualPrototypeKeys: jest.fn().mockReturnValue([]),
     };
     mockEntityManager = {
       getComponentData: jest.fn(),
       getAllComponentTypesForEntity: jest.fn().mockReturnValue([]),
       hasComponent: jest.fn().mockReturnValue(false),
     };
-    mockJsonLogicEvaluationService = { evaluate: jest.fn().mockReturnValue(false) };
+    mockJsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(false),
+      evaluateWithTrace: jest.fn().mockReturnValue({
+        result: false,
+        resultBoolean: false,
+        trace: null,
+        failure: null,
+      }),
+    };
     mockGameDataRepository = { getConditionDefinition: jest.fn() };
     mockEventBus = { dispatch: jest.fn() };
 

@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import path from 'node:path';
 import { readFile, readdir } from 'node:fs/promises';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
+import {
+  buildStateMap,
+  collectExpressionStateKeys,
+} from '../../common/expressionTestUtils.js';
 import { registerExpressionServices } from '../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ACTION_DECIDED_ID } from '../../../src/constants/eventIds.js';
@@ -72,8 +76,6 @@ const createEntityManagerStub = () => {
   };
 };
 
-const createEmotionMap = (values) => new Map(Object.entries(values));
-
 const createTestExpression = ({
   id,
   priority = 999,
@@ -98,6 +100,8 @@ describe('Expression Flow - Integration', () => {
   let emotionCalculator;
   let expressionListener;
   let dataRegistry;
+  let emotionKeys;
+  let sexualKeys;
 
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
@@ -113,9 +117,16 @@ describe('Expression Flow - Integration', () => {
     registerExpressionServices(container);
 
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    await loadExpressions(dataRegistry);
+    const loadedExpressions = await loadExpressions(dataRegistry);
 
     emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
+    ({ emotionKeys, sexualKeys } = collectExpressionStateKeys(loadedExpressions));
+    emotionCalculator.getEmotionPrototypeKeys.mockReturnValue(emotionKeys);
+    emotionCalculator.getSexualPrototypeKeys.mockReturnValue(sexualKeys);
+    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
     expressionListener = container.resolve(tokens.IExpressionPersistenceListener);
   });
 
@@ -134,9 +145,11 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.2);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      createEmotionMap({ anger: 0.8, rage: 0.7 })
+      buildStateMap(emotionKeys, { anger: 0.8, rage: 0.7 })
     );
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     await expressionListener.handleEvent({
       type: ACTION_DECIDED_ID,
@@ -170,9 +183,11 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.1);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      createEmotionMap({ contentment: 0.6 })
+      buildStateMap(emotionKeys, { contentment: 0.6 })
     );
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     await expressionListener.handleEvent({
       type: ACTION_DECIDED_ID,
@@ -200,8 +215,10 @@ describe('Expression Flow - Integration', () => {
     entityManager.setComponent(actorId, NAME_COMPONENT_ID, { text: 'Casey' });
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0);
-    emotionCalculator.calculateEmotions.mockReturnValue(new Map());
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     await expressionListener.handleEvent({
       type: ACTION_DECIDED_ID,
@@ -228,9 +245,11 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.1);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      createEmotionMap({ contentment: 0.6 })
+      buildStateMap(emotionKeys, { contentment: 0.6 })
     );
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     const payload = {
       type: ACTION_DECIDED_ID,
@@ -272,8 +291,10 @@ describe('Expression Flow - Integration', () => {
     );
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0);
-    emotionCalculator.calculateEmotions.mockReturnValue(new Map());
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     await expressionListener.handleEvent({
       type: ACTION_DECIDED_ID,
@@ -328,8 +349,10 @@ describe('Expression Flow - Integration', () => {
     );
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0);
-    emotionCalculator.calculateEmotions.mockReturnValue(new Map());
-    emotionCalculator.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.calculateSexualStates.mockReturnValue(
+      buildStateMap(sexualKeys)
+    );
 
     entityManager.setComponent(actorId, MOOD_COMPONENT_ID, {
       arousal: 0,

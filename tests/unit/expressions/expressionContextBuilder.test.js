@@ -23,6 +23,8 @@ const createEmotionCalculatorService = () => ({
   calculateSexualArousal: jest.fn(),
   calculateEmotions: jest.fn(),
   calculateSexualStates: jest.fn(),
+  getEmotionPrototypeKeys: jest.fn(),
+  getSexualPrototypeKeys: jest.fn(),
 });
 
 describe('ExpressionContextBuilder', () => {
@@ -43,6 +45,10 @@ describe('ExpressionContextBuilder', () => {
     emotionCalculatorService.calculateSexualStates.mockReturnValue(
       new Map([['sexual_lust', 0.5]])
     );
+    emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue(['joy']);
+    emotionCalculatorService.getSexualPrototypeKeys.mockReturnValue([
+      'sexual_lust',
+    ]);
 
     entityManager = createEntityManager();
     logger = createLogger();
@@ -220,6 +226,10 @@ describe('ExpressionContextBuilder', () => {
         ['sadness', 0.2],
       ])
     );
+    emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue([
+      'joy',
+      'sadness',
+    ]);
 
     const result = builder.buildContext(
       'actor-1',
@@ -295,17 +305,63 @@ describe('ExpressionContextBuilder', () => {
     );
   });
 
-  it('should return empty emotion/state objects when calculator returns non-iterable', () => {
+  it('should throw when calculator returns non-iterable results', () => {
     emotionCalculatorService.calculateEmotions.mockReturnValue(null);
     emotionCalculatorService.calculateSexualStates.mockReturnValue(undefined);
 
-    const result = builder.buildContext(
-      'actor-1',
-      { valence: 10 },
-      { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      )
+    ).toThrow(
+      '[ExpressionContextBuilder] emotions evaluation returned non-iterable results.'
     );
+  });
 
-    expect(result.emotions).toEqual({});
-    expect(result.sexualStates).toEqual({});
+  it('should throw when emotion results miss prototype keys', () => {
+    emotionCalculatorService.calculateEmotions.mockReturnValue(
+      new Map([['joy', 0.6]])
+    );
+    emotionCalculatorService.calculateSexualStates.mockReturnValue(
+      new Map([['sexual_lust', 0.5]])
+    );
+    emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue([
+      'joy',
+      'sadness',
+    ]);
+
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      )
+    ).toThrow('[ExpressionContextBuilder] emotions evaluation missing prototype keys.');
+  });
+
+  it('should throw when sexual state results miss prototype keys', () => {
+    emotionCalculatorService.calculateEmotions.mockReturnValue(
+      new Map([['joy', 0.6]])
+    );
+    emotionCalculatorService.calculateSexualStates.mockReturnValue(
+      new Map([['sexual_lust', 0.5]])
+    );
+    emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue(['joy']);
+    emotionCalculatorService.getSexualPrototypeKeys.mockReturnValue([
+      'sexual_lust',
+      'afterglow',
+    ]);
+
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      )
+    ).toThrow(
+      '[ExpressionContextBuilder] sexualStates evaluation missing prototype keys.'
+    );
   });
 });
