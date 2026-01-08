@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:awed_transfixion",
+    "id": "emotions-positive-affect:awed_transfixion",
     "description": "Stunned, reverent wonder—attention captured by something vast, beautiful, or impossible to ignore.",
     "priority": 78,
     "prerequisites": [

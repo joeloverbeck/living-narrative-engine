@@ -18,13 +18,16 @@ const LOOKUPS_DIR = path.resolve(
   'lookups'
 );
 
-const EXPRESSIONS_DIR = path.resolve(
-  process.cwd(),
-  'data',
-  'mods',
-  'emotions',
-  'expressions'
-);
+const EXPRESSIONS_DIRS = {
+  emotions: path.resolve(process.cwd(), 'data', 'mods', 'emotions', 'expressions'),
+  'emotions-positive-affect': path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-positive-affect',
+    'expressions'
+  ),
+};
 
 const loadLookup = async (dataRegistry, filename) => {
   const lookupPath = path.join(LOOKUPS_DIR, filename);
@@ -33,8 +36,12 @@ const loadLookup = async (dataRegistry, filename) => {
 };
 
 const loadExpressionDefinition = async (dataRegistry, expressionId) => {
-  const [, fileBase] = expressionId.split(':');
-  const filePath = path.join(EXPRESSIONS_DIR, `${fileBase}.expression.json`);
+  const [namespace, fileBase] = expressionId.split(':');
+  const expressionsDir = EXPRESSIONS_DIRS[namespace];
+  if (!expressionsDir) {
+    throw new Error(`Unsupported expression namespace: ${namespace}`);
+  }
+  const filePath = path.join(expressionsDir, `${fileBase}.expression.json`);
   const expression = JSON.parse(await readFile(filePath, 'utf-8'));
   dataRegistry.store('expressions', expression.id, expression);
   return expression;
@@ -113,11 +120,11 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     }
   });
 
-  it('matches emotions:awed_transfixion with previous-state delta gates (A1)', async () => {
+  it('matches emotions-positive-affect:awed_transfixion with previous-state delta gates (A1)', async () => {
     const actorId = 'actor-a1';
     const expression = await loadExpressionDefinition(
       dataRegistry,
-      'emotions:awed_transfixion'
+      'emotions-positive-affect:awed_transfixion'
     );
 
     const previousMood = {
@@ -131,7 +138,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     };
     const currentMood = {
       valence: 60,
-      arousal: 90,
+      arousal: 70,
       engagement: 90,
       agency_control: -60,
       threat: 10,
@@ -290,11 +297,11 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions:sigh_of_relief with relief spike and fear drop (A4)', async () => {
+  it('matches emotions-positive-affect:sigh_of_relief with relief spike and fear drop (A4)', async () => {
     const actorId = 'actor-a4';
     const expression = await loadExpressionDefinition(
       dataRegistry,
-      'emotions:sigh_of_relief'
+      'emotions-positive-affect:sigh_of_relief'
     );
 
     const previousMood = {
@@ -364,10 +371,10 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     const currentMood = {
       valence: -40,
       arousal: -100,
-      engagement: -60,
+      engagement: -20,
       agency_control: -20,
       future_expectancy: -40,
-      threat: 0,
+      threat: 100,
       self_evaluation: 0,
     };
 

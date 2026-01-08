@@ -224,7 +224,8 @@ class EmotionCalculatorService {
     const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
 
     if (Object.prototype.hasOwnProperty.call(sexualAxes, resolvedAxis)) {
-      return sexualAxes[resolvedAxis] ?? 0;
+      // Value guaranteed to be a number from #normalizeSexualAxes (uses clamp01)
+      return sexualAxes[resolvedAxis];
     }
 
     return normalizedAxes[resolvedAxis] ?? 0;
@@ -261,6 +262,7 @@ class EmotionCalculatorService {
       );
 
       // Evaluate the gate condition
+      // Note: operator is guaranteed to be one of >=, <=, >, <, == by the #parseGate regex
       let passes;
       switch (operator) {
         case '>=':
@@ -278,11 +280,6 @@ class EmotionCalculatorService {
         case '==':
           passes = Math.abs(axisValue - value) < 0.0001; // Float comparison
           break;
-        default:
-          this.#logger.warn(
-            `EmotionCalculatorService: Unknown gate operator: "${operator}"`
-          );
-          passes = false;
       }
 
       if (!passes) {
@@ -515,7 +512,7 @@ class EmotionCalculatorService {
   #stringifySexualState(sexualState) {
     try {
       return JSON.stringify(sexualState);
-    } catch (error) {
+    } catch {
       return '[unserializable sexualState]';
     }
   }
@@ -622,6 +619,7 @@ class EmotionCalculatorService {
 
   /**
    * Gets the intensity label for a given intensity value.
+   * Loop is guaranteed to return since clamp01() ensures [0,1] and INTENSITY_LEVELS[10].max === 1.0
    *
    * @param {number} intensity - Intensity value in [0..1]
    * @returns {string} Human-readable intensity label
@@ -629,14 +627,13 @@ class EmotionCalculatorService {
   getIntensityLabel(intensity) {
     const clamped = clamp01(intensity);
 
+    // Loop guaranteed to return: clamp01() ensures value is in [0,1]
+    // and INTENSITY_LEVELS ends with {max: 1.0}, so we always match
     for (const level of INTENSITY_LEVELS) {
       if (clamped <= level.max) {
         return level.label;
       }
     }
-
-    // Fallback for edge cases
-    return 'extreme';
   }
 
   /**

@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:aesthetic_appreciation_soften",
+    "id": "emotions-positive-affect:aesthetic_appreciation_soften",
     "description": "Aesthetic appreciation: calm engagement with a gentle, savoring quality—attention held without urgency, often with softened affect.",
     "priority": 64,
     "prerequisites": [

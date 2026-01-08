@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions:quiet_contentment",
+  "id": "emotions-positive-affect:quiet_contentment",
   "description": "Calm satisfaction and peaceful happiness - low arousal positive state.",
   "priority": 38,
   "prerequisites": [

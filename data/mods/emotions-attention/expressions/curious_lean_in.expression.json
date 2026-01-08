@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:curious_lean_in",
+    "id": "emotions-attention:curious_lean_in",
     "description": "Approach-oriented curiosity: the actor actively seeks more information, testing, probing, and re-orienting to novelty.",
     "priority": 66,
     "prerequisites": [

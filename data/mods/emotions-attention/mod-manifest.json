@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-attention",
+  "version": "1.0.0",
+  "name": "Emotions - Attention",
+  "description": "Attention-focused emotional expressions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "bored_disinterest.expression.json",
+      "confused_frown.expression.json",
+      "curious_lean_in.expression.json",
+      "entranced_stillness.expression.json",
+      "fascinated_lock_on.expression.json",
+      "flow_absorption.expression.json",
+      "interested_attention.expression.json"
+    ]
+  }
+}

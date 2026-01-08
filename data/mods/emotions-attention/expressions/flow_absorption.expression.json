@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:flow_absorption",
+    "id": "emotions-attention:flow_absorption",
     "description": "Flow state: sustained engagement with a sense of control and ease; actions become efficient, attention stable, self-consciousness reduced.",
     "priority": 76,
     "prerequisites": [

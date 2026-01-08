@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:interested_attention",
+    "id": "emotions-attention:interested_attention",
     "description": "Quiet, sustained attention: the actor is engaged and tracking information without strong affect or urgency.",
     "priority": 50,
     "prerequisites": [

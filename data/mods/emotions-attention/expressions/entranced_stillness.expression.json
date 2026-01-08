@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:entranced_stillness",
+    "id": "emotions-attention:entranced_stillness",
     "description": "Entrancement: attention captured with reduced agency; the actor becomes quiet and still, hovering between comfort and surrender to the stimulus.",
     "priority": 74,
     "prerequisites": [

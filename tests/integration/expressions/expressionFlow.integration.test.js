@@ -19,28 +19,41 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
-const EXPRESSIONS_DIR = path.resolve(
-  process.cwd(),
-  'data',
-  'mods',
-  'emotions',
-  'expressions'
-);
+const EXPRESSIONS_DIRS = [
+  path.resolve(process.cwd(), 'data', 'mods', 'emotions', 'expressions'),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-positive-affect',
+    'expressions'
+  ),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-attention',
+    'expressions'
+  ),
+];
 
 const loadExpressions = async (dataRegistry) => {
-  const files = await readdir(EXPRESSIONS_DIR);
   const expressions = [];
 
-  for (const file of files) {
-    if (!file.endsWith('.expression.json')) {
-      continue;
-    }
+  for (const dir of EXPRESSIONS_DIRS) {
+    const files = await readdir(dir);
 
-    const expression = JSON.parse(
-      await readFile(path.join(EXPRESSIONS_DIR, file), 'utf-8')
-    );
-    dataRegistry.store('expressions', expression.id, expression);
-    expressions.push(expression);
+    for (const file of files) {
+      if (!file.endsWith('.expression.json')) {
+        continue;
+      }
+
+      const expression = JSON.parse(
+        await readFile(path.join(dir, file), 'utf-8')
+      );
+      dataRegistry.store('expressions', expression.id, expression);
+      expressions.push(expression);
+    }
   }
 
   return expressions;
@@ -145,7 +158,7 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.2);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      buildStateMap(emotionKeys, { anger: 0.8, rage: 0.7 })
+      buildStateMap(emotionKeys, { anger: 0.7, rage: 0.7 })
     );
     emotionCalculator.calculateSexualStates.mockReturnValue(
       buildStateMap(sexualKeys)
@@ -183,7 +196,7 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.1);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      buildStateMap(emotionKeys, { contentment: 0.6 })
+      buildStateMap(emotionKeys, { contentment: 0.6, calm: 0.5 })
     );
     emotionCalculator.calculateSexualStates.mockReturnValue(
       buildStateMap(sexualKeys)
@@ -204,7 +217,7 @@ describe('Expression Flow - Integration', () => {
 
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     const [, payload] = eventBus.dispatch.mock.calls[0];
-    expect(payload.contextualData.expressionId).toBe('emotions:quiet_contentment');
+    expect(payload.contextualData.expressionId).toBe('emotions-positive-affect:quiet_contentment');
   });
 
   it('does not dispatch when no expressions match', async () => {
@@ -245,7 +258,7 @@ describe('Expression Flow - Integration', () => {
 
     emotionCalculator.calculateSexualArousal.mockReturnValue(0.1);
     emotionCalculator.calculateEmotions.mockReturnValue(
-      buildStateMap(emotionKeys, { contentment: 0.6 })
+      buildStateMap(emotionKeys, { contentment: 0.6, calm: 0.5 })
     );
     emotionCalculator.calculateSexualStates.mockReturnValue(
       buildStateMap(sexualKeys)

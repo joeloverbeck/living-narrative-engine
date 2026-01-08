@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:bored_disinterest",
+    "id": "emotions-attention:bored_disinterest",
     "description": "Low engagement boredom or apathy - everyday disinterest expressed through drifting attention and impatient fidgeting.",
     "priority": 46,
     "prerequisites": [

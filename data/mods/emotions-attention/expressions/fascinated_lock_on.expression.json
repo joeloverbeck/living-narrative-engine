@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:fascinated_lock_on",
+    "id": "emotions-attention:fascinated_lock_on",
     "description": "High engagement with rising arousal: fascination narrows the actor's attention and reduces responsiveness to distractions.",
     "priority": 72,
     "prerequisites": [

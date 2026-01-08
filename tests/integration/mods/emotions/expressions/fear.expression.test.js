@@ -83,14 +83,15 @@ describe('Emotions fear expressions', () => {
       const expression = expressionsById['emotions:startle_flinch'];
       const logic = expression.prerequisites[0].logic;
 
+      // Now also requires max(alarm, fear) >= 0.20
       const passingContext = {
-        emotions: { surprise_startle: 0.6 },
+        emotions: { surprise_startle: 0.6, alarm: 0.3 }, // alarm >= 0.20
         previousEmotions: { surprise_startle: 0.3 },
       };
 
       const failingContextLowDelta = {
-        emotions: { surprise_startle: 0.6 },
-        previousEmotions: { surprise_startle: 0.5 },
+        emotions: { surprise_startle: 0.6, alarm: 0.3 },
+        previousEmotions: { surprise_startle: 0.5 }, // delta = 0.1 < 0.25
       };
 
       expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -104,7 +105,7 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const failingContextLowEmotion = {
-        emotions: { surprise_startle: 0.4 },
+        emotions: { surprise_startle: 0.4, alarm: 0.3 }, // surprise_startle < 0.55
         previousEmotions: { surprise_startle: 0.1 },
       };
 
@@ -118,7 +119,7 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const exactThresholdContext = {
-        emotions: { surprise_startle: 0.55 },
+        emotions: { surprise_startle: 0.55, fear: 0.25 }, // fear >= 0.20
         previousEmotions: { surprise_startle: 0.3 },
       };
 
@@ -133,14 +134,25 @@ describe('Emotions fear expressions', () => {
       const expression = expressionsById['emotions:panic_onset'];
       const logic = expression.prerequisites[0].logic;
 
+      // Now also requires: threat >= 30, arousal >= 25, agency_control <= -5, numbness <= 0.45
       const passingContext = {
-        emotions: { terror: 0.7, alarm: 0.6 },
+        emotions: { terror: 0.7, alarm: 0.6, numbness: 0.2 },
         previousEmotions: { terror: 0.4 },
+        moodAxes: {
+          threat: 35,
+          arousal: 30,
+          agency_control: -10,
+        },
       };
 
       const failingContextNoIncrease = {
-        emotions: { terror: 0.7, alarm: 0.6 },
-        previousEmotions: { terror: 0.6 },
+        emotions: { terror: 0.7, alarm: 0.6, numbness: 0.2 },
+        previousEmotions: { terror: 0.6 }, // delta = 0.1 < 0.20
+        moodAxes: {
+          threat: 35,
+          arousal: 30,
+          agency_control: -10,
+        },
       };
 
       expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -154,8 +166,13 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const failingContextLowAlarm = {
-        emotions: { terror: 0.7, alarm: 0.4 },
+        emotions: { terror: 0.7, alarm: 0.4, numbness: 0.2 }, // alarm < 0.55
         previousEmotions: { terror: 0.4 },
+        moodAxes: {
+          threat: 35,
+          arousal: 30,
+          agency_control: -10,
+        },
       };
 
       expect(jsonLogicService.evaluate(logic, failingContextLowAlarm)).toBe(
@@ -168,8 +185,13 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const failingContextLowTerror = {
-        emotions: { terror: 0.4, alarm: 0.6 },
+        emotions: { terror: 0.4, alarm: 0.6, numbness: 0.2 }, // terror < 0.55
         previousEmotions: { terror: 0.1 },
+        moodAxes: {
+          threat: 35,
+          arousal: 30,
+          agency_control: -10,
+        },
       };
 
       expect(jsonLogicService.evaluate(logic, failingContextLowTerror)).toBe(
@@ -182,8 +204,13 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const exactThresholdContext = {
-        emotions: { terror: 0.55, alarm: 0.55 },
+        emotions: { terror: 0.55, alarm: 0.55, numbness: 0.4 },
         previousEmotions: { terror: 0.35 },
+        moodAxes: {
+          threat: 30,
+          arousal: 25,
+          agency_control: -5,
+        },
       };
 
       expect(jsonLogicService.evaluate(logic, exactThresholdContext)).toBe(
@@ -192,17 +219,25 @@ describe('Emotions fear expressions', () => {
     });
   });
 
-  describe('hypervigilant_scanning (no delta detection)', () => {
+  describe('hypervigilant_scanning (with activation detection)', () => {
     it('requires high hypervigilance AND moderate fear', () => {
       const expression = expressionsById['emotions:hypervigilant_scanning'];
       const logic = expression.prerequisites[0].logic;
 
+      // Now requires: threat >= 20, numbness <= 0.55, plus activation
+      // Activation can be: threshold crossing, hypervigilance spike, or threat spike
       const passingContext = {
-        emotions: { hypervigilance: 0.7, fear: 0.5 },
+        emotions: { hypervigilance: 0.7, fear: 0.5, numbness: 0.3 },
+        previousEmotions: { hypervigilance: 0.5 }, // < 0.65 for threshold crossing
+        moodAxes: { threat: 25 },
+        previousMoodAxes: { threat: 10 },
       };
 
       const failingContextLowHypervigilance = {
-        emotions: { hypervigilance: 0.5, fear: 0.5 },
+        emotions: { hypervigilance: 0.5, fear: 0.5, numbness: 0.3 }, // < 0.65
+        previousEmotions: { hypervigilance: 0.3 },
+        moodAxes: { threat: 25 },
+        previousMoodAxes: { threat: 10 },
       };
 
       expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -216,7 +251,10 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const failingContextLowFear = {
-        emotions: { hypervigilance: 0.7, fear: 0.3 },
+        emotions: { hypervigilance: 0.7, fear: 0.3, numbness: 0.3 }, // fear < 0.45
+        previousEmotions: { hypervigilance: 0.5 },
+        moodAxes: { threat: 25 },
+        previousMoodAxes: { threat: 10 },
       };
 
       expect(jsonLogicService.evaluate(logic, failingContextLowFear)).toBe(
@@ -229,7 +267,9 @@ describe('Emotions fear expressions', () => {
       const logic = expression.prerequisites[0].logic;
 
       const exactThresholdContext = {
-        emotions: { hypervigilance: 0.65, fear: 0.45 },
+        emotions: { hypervigilance: 0.65, fear: 0.45, numbness: 0.5 },
+        previousEmotions: { hypervigilance: 0.45 }, // < 0.65 for threshold crossing
+        moodAxes: { threat: 20 },
       };
 
       expect(jsonLogicService.evaluate(logic, exactThresholdContext)).toBe(
@@ -237,15 +277,19 @@ describe('Emotions fear expressions', () => {
       );
     });
 
-    it('does NOT require previousEmotions (no delta detection)', () => {
+    it('can activate via threat spike instead of threshold crossing', () => {
       const expression = expressionsById['emotions:hypervigilant_scanning'];
       const logic = expression.prerequisites[0].logic;
 
-      const contextWithoutPrevious = {
-        emotions: { hypervigilance: 0.7, fear: 0.5 },
+      // Already above threshold, but threat spike activates it
+      const contextWithThreatSpike = {
+        emotions: { hypervigilance: 0.7, fear: 0.5, numbness: 0.3 },
+        previousEmotions: { hypervigilance: 0.7 }, // No threshold crossing
+        moodAxes: { threat: 35 },
+        previousMoodAxes: { threat: 20 }, // Threat spike >= 10
       };
 
-      expect(jsonLogicService.evaluate(logic, contextWithoutPrevious)).toBe(
+      expect(jsonLogicService.evaluate(logic, contextWithThreatSpike)).toBe(
         true
       );
     });

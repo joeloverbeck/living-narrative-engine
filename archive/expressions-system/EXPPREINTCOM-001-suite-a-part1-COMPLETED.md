@@ -29,7 +29,7 @@ Build the base integration test harness and cover the first three complex emotio
 - Override tokens.IEmotionCalculatorService with a real EmotionCalculatorService instance.
 - Load only the target expression JSON per test into the registry to avoid evaluation collisions.
 - Add tests for:
-  - emotions:awed_transfixion (A1)
+  - emotions-positive-affect:awed_transfixion (A1)
   - emotions:horror_revulsion (A2)
   - emotions:steeled_courage (A3)
 - Each test should build previous/current contexts and pass previousState values from the previous context.

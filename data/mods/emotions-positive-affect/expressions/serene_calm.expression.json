@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:serene_calm",
+    "id": "emotions-positive-affect:serene_calm",
     "description": "A neutral-to-gently-positive calm—unhurried, serene, and emotionally even.",
     "priority": 32,
     "prerequisites": [
