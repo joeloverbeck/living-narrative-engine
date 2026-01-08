@@ -1,0 +1,148 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-anger:cold_fury",
+  "description": "Deadly-calm anger: high anger with suppressed rage; precise, controlled hostility (optionally edged with contempt).",
+  "priority": 80,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.anger"
+              },
+              0.60
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.rage"
+              },
+              0.30
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.terror"
+              },
+              0.30
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.fear"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.surprise_startle"
+              },
+              0.50
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.contempt"
+                  },
+                  0.30
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.resentment"
+                  },
+                  0.35
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.determination"
+                  },
+                  0.30
+                ]
+              }
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.anger"
+                      },
+                      {
+                        "var": "previousEmotions.anger"
+                      }
+                    ]
+                  },
+                  0.08
+                ]
+              },
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.anger"
+                      },
+                      0.75
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "emotions.rage"
+                      },
+                      0.25
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "The heat drains out and leaves something cleaner behind it. I get very still. My thoughts line up like tools on a table—what matters, what doesn't, what I'll do and when. My jaw locks, my voice wants to go flat. I'm not here to explode. I'm here to choose the moment.",
+  "description_text": "{actor} goes unnervingly controlled—face smoothed, eyes hard and steady, movements economical. There's no flailing anger in them; the restraint reads as intentional, like they're holding something back on purpose.",
+  "alternate_descriptions": {
+    "tactile": "The air feels tight; a body held in restraint, tension coiled rather than spilled."
+  },
+  "tags": [
+    "anger",
+    "cold",
+    "controlled",
+    "focused"
+  ]
+}

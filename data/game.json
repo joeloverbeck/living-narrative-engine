@@ -1,8 +1,11 @@
 {
   "mods": [
     "core",
-    "emotions",
     "emotions-attention",
+    "emotions-loss",
+    "emotions-moral",
+    "emotions-sexuality",
+    "emotions-threat-response",
     "aiming",
     "companionship",
     "containers",
@@ -48,11 +51,15 @@
     "writing",
     "ballet",
     "intoxicants",
-    "p_erotica_irun",
+    "alicia",
     "comfort",
     "breaching",
     "drinking",
-    "gymnastics"
+    "gymnastics",
+    "emotions-affiliation",
+    "emotions-agency",
+    "emotions-anger",
+    "emotions-positive-affect"
   ],
-  "startWorld": "p_erotica_irun:irun"
+  "startWorld": "alicia:alicia"
 }

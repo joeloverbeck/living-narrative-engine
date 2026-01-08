@@ -5,10 +5,11 @@
  * @see tests/unit/entities/entityManager.queries.test.js
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestData,
+  EntityManagerTestBed,
 } from '../../common/entities/index.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
@@ -356,6 +357,60 @@ describeEntityManagerSuite(
           withAny: [COMPONENT_A, COMPONENT_B, COMPONENT_C],
         });
         expect(results).toHaveLength(4);
+      });
+    });
+
+    // ----------------------------------------------------------------------//
+    //
+    //                          getEntitiesInLocation
+    //
+    // ----------------------------------------------------------------------//
+    describe('getEntitiesInLocation', () => {
+      it('should return empty Set when locationQueryService not provided', () => {
+        // The default EntityManagerTestBed does NOT provide locationQueryService
+        const { entityManager } = getBed();
+
+        const result = entityManager.getEntitiesInLocation('location-123');
+
+        expect(result).toBeInstanceOf(Set);
+        expect(result.size).toBe(0);
+      });
+
+      it('should delegate to locationQueryService when provided', () => {
+        const mockLocationQueryService = {
+          getEntitiesInLocation: jest.fn().mockReturnValue(
+            new Set(['entity-1', 'entity-2'])
+          ),
+        };
+
+        const bed = new EntityManagerTestBed({
+          entityManagerOptions: {
+            locationQueryService: mockLocationQueryService,
+          },
+        });
+
+        const result = bed.entityManager.getEntitiesInLocation('location-123');
+
+        expect(mockLocationQueryService.getEntitiesInLocation).toHaveBeenCalledWith('location-123');
+        expect(result).toEqual(new Set(['entity-1', 'entity-2']));
+      });
+
+      it('should return result from locationQueryService without modification', () => {
+        const expectedSet = new Set(['a', 'b', 'c']);
+        const mockLocationQueryService = {
+          getEntitiesInLocation: jest.fn().mockReturnValue(expectedSet),
+        };
+
+        const bed = new EntityManagerTestBed({
+          entityManagerOptions: {
+            locationQueryService: mockLocationQueryService,
+          },
+        });
+
+        const result = bed.entityManager.getEntitiesInLocation('any-location');
+
+        // Should be the exact same Set reference returned by the mock
+        expect(result).toBe(expectedSet);
       });
     });
   }

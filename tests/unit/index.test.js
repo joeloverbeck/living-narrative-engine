@@ -122,6 +122,7 @@ describe('Index.html - Main Menu', () => {
         'Anatomy Visualizer',
         'Damage Simulator',
         'Expressions Simulator',
+        'Expression Diagnostics',
         'Change LLM',
         'Character Concepts Manager',
         'Thematic Direction Generator',
@@ -147,6 +148,10 @@ describe('Index.html - Main Menu', () => {
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
         { id: 'damage-simulator-button', text: 'Damage Simulator' },
         { id: 'expressions-simulator-button', text: 'Expressions Simulator' },
+        {
+          id: 'expression-diagnostics-button',
+          text: 'Expression Diagnostics',
+        },
         { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
         {

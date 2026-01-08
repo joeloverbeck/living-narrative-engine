@@ -106,6 +106,13 @@
               <span class="button-icon" aria-hidden="true">😊</span>
               <span class="button-text">Expressions Simulator</span>
             </button>
+            <button
+              id="expression-diagnostics-button"
+              class="menu-button nav-button nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">🔬</span>
+              <span class="button-text">Expression Diagnostics</span>
+            </button>
           </div>
         </section>
 
@@ -272,6 +279,11 @@
         .getElementById('expressions-simulator-button')
         .addEventListener('click', () => {
           window.location.href = 'expressions-simulator.html';
+        });
+      document
+        .getElementById('expression-diagnostics-button')
+        .addEventListener('click', () => {
+          window.location.href = 'expression-diagnostics.html';
         });
       document
         .getElementById('character-concepts-button')

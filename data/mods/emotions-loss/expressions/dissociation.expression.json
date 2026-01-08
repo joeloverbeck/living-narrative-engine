@@ -1,0 +1,125 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-loss:dissociation",
+  "description": "Detachment from reality triggered by sudden numbness spike and interest drop",
+  "priority": 86,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.numbness"
+              },
+              0.60
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.numbness"
+                  },
+                  {
+                    "var": "previousEmotions.numbness"
+                  }
+                ]
+              },
+              0.20
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.freeze"
+              },
+              0.25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.interest"
+                  },
+                  {
+                    "var": "previousEmotions.interest"
+                  }
+                ]
+              },
+              -0.20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              -10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.panic"
+              },
+              0.15
+            ]
+          },
+          {
+            ">=": [
+              {
+                "max": [
+                  {
+                    "var": "emotions.stress"
+                  },
+                  {
+                    "var": "emotions.fear"
+                  },
+                  {
+                    "var": "emotions.grief"
+                  },
+                  {
+                    "var": "emotions.unease"
+                  }
+                ]
+              },
+              0.35
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.boredom"
+              },
+              0.60
+            ]
+          }
+        ]
+      },
+      "failure_message": "Requires a spike into numbness plus an interest drop, with negative valence and reduced control, and a stress/fear/grief/unease context (not plain boredom). Explicitly excludes freeze so tonic immobility is labeled as freeze_response instead of dissociation."
+    }
+  ],
+  "actor_description": "Everything goes a half-step unreal. Sounds flatten. The edges of things feel far away, like I'm watching through glass. I know what I should feel, what I should do, but it doesn't connect—there's a delay between thought and body, and even the thought is dimmer than it should be. I'm still here… but I'm not all the way inside it.",
+  "description_text": "{actor} drifts distant—eyes unfocused, face slackened into neutrality, movements slow and slightly delayed. When they respond, it's automatic, as if they're following instructions from far away rather than inhabiting the moment.",
+  "alternate_descriptions": {
+    "auditory": "The voice I hear is oddly flat—too even, too quiet, like someone reading their lines without being in the scene."
+  },
+  "tags": [
+    "numbness",
+    "dissociation",
+    "detachment",
+    "acute"
+  ]
+}

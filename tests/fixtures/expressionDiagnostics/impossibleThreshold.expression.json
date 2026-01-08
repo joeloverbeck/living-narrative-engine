@@ -1,0 +1,13 @@
+{
+  "id": "test:impossible_threshold",
+  "description": "Expression requiring unreachable intensity",
+  "priority": 100,
+  "prerequisites": [
+    {
+      "logic": {
+        ">=": [{ "var": "emotions.ecstasy" }, 0.95]
+      }
+    }
+  ],
+  "_comment": "ecstasy has weight structure that caps max intensity around 0.70"
+}

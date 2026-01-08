@@ -16,11 +16,27 @@
                         ]
                     },
                     {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.threat"
                             },
-                            40
+                            20
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.25
                         ]
                     },
                     {
@@ -37,6 +53,22 @@
                                 "var": "emotions.hypervigilance"
                             },
                             0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -93,6 +125,14 @@
                                 "var": "moodAxes.agency_control"
                             },
                             25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.15
                         ]
                     }
                 ]

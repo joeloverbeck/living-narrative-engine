@@ -11,7 +11,6 @@ import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import SpatialIndexManager from '../../../../src/entities/spatialIndexManager.js';
 import { SpatialIndexSynchronizer } from '../../../../src/entities/spatialIndexSynchronizer.js';
 import { LocationQueryService } from '../../../../src/entities/locationQueryService.js';
-import EntityManagerAdapter from '../../../../src/entities/entityManagerAdapter.js';
 import { LightingStateService } from '../../../../src/locations/services/lightingStateService.js';
 import DropItemAtLocationHandler from '../../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
 import {
@@ -28,7 +27,7 @@ describe('lighting: drop lit lantern keeps location lit', () => {
   let entityManager;
   let spatialIndexManager;
   let spatialIndexSynchronizer;
-  let entityManagerAdapter;
+  let locationQueryService;
   let lightingStateService;
   let dropHandler;
 
@@ -60,11 +59,20 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       'core:weight': { weight: 1 },
     });
 
+    // Create spatial infrastructure first
+    spatialIndexManager = new SpatialIndexManager({ logger });
+    locationQueryService = new LocationQueryService({
+      spatialIndexManager,
+      logger,
+    });
+
+    // Create EntityManager with locationQueryService injected
     entityManager = new EntityManager({
       registry,
       validator,
       logger,
       dispatcher: eventBus,
+      locationQueryService,
     });
 
     await entityManager.createEntityInstance('test:dark_room', {
@@ -86,7 +94,7 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       },
     });
 
-    spatialIndexManager = new SpatialIndexManager({ logger });
+    // Connect synchronizer after EntityManager is created
     spatialIndexSynchronizer = new SpatialIndexSynchronizer({
       spatialIndexManager,
       safeEventDispatcher: eventBus,
@@ -94,24 +102,14 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       entityManager,
     });
 
-    const locationQueryService = new LocationQueryService({
-      spatialIndexManager,
-      logger,
-    });
-
-    entityManagerAdapter = new EntityManagerAdapter({
-      entityManager,
-      locationQueryService,
-    });
-
     lightingStateService = new LightingStateService({
-      entityManager: entityManagerAdapter,
+      entityManager,
       logger,
     });
 
     dropHandler = new DropItemAtLocationHandler({
       logger,
-      entityManager: entityManagerAdapter,
+      entityManager,
       safeEventDispatcher: eventBus,
     });
   });
@@ -139,7 +137,7 @@ describe('lighting: drop lit lantern keeps location lit', () => {
       entityManager.getComponentData('saffi', 'inventory:inventory').items
     ).not.toContain('lantern1');
 
-    const entitiesInRoom = entityManagerAdapter.getEntitiesInLocation('room1');
+    const entitiesInRoom = entityManager.getEntitiesInLocation('room1');
     expect(entitiesInRoom.has('lantern1')).toBe(true);
 
     const afterDrop = lightingStateService.getLocationLightingState('room1');

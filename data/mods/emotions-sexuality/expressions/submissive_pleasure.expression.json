@@ -1,0 +1,163 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexuality:submissive_pleasure",
+    "description": "Yielding sexual pleasure - high arousal with low agency, enjoying surrender and being led.",
+    "priority": 82,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.submissive_arousal"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trusting_surrender"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.fearful_arousal"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_repulsion"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "sexualStates.submissive_arousal"
+                                            },
+                                            {
+                                                "var": "previousSexualStates.submissive_arousal"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.submissive_arousal"
+                                    },
+                                    0.80
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Chosen surrender supported by trust/affection; caps freeze and caps panic hard so reduced agency reads as consented yielding, not threat paralysis."
+        }
+    ],
+    "actor_description": "I stop bracing. Something in me loosens—jaw, shoulders, the constant urge to steer—and the relief is part of the pleasure. I can feel my breathing deepen, my body warmer and more responsive, like it's answering a pace I don't have to set. Being guided feels safe enough to enjoy.",
+    "description_text": "{actor} shifts into yielding body language—posture softened, movements slower, attention angled outward as if awaiting direction. There's an openness to them: less guarding, more readiness, like they've chosen to be led.",
+    "alternate_descriptions": {
+        "auditory": "I hear a softened voice and slow exhale—small sounds of assent, words that come out quieter, as if resistance has been deliberately put down.",
+        "olfactory": "I smell warm skin and faint, clean sweat; the air feels close and receptive, not sharp with fear."
+    },
+    "tags": [
+        "sexual",
+        "submissive",
+        "pleasure",
+        "yielding",
+        "receptive"
+    ]
+}

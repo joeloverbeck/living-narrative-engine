@@ -1,0 +1,165 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-threat-response:panic_onset",
+  "description": "Acute panic response triggered by high terror combined with alarm and rapid terror increase",
+  "priority": 92,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.panic"
+              },
+              0.62
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.terror"
+                  },
+                  0.55
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.alarm"
+                  },
+                  0.55
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.fear"
+                  },
+                  0.65
+                ]
+              }
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              40
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              -10
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.dissociation"
+              },
+              0.35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.numbness"
+              },
+              0.45
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.freeze"
+              },
+              0.25
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.panic"
+                      },
+                      {
+                        "var": "previousEmotions.panic"
+                      }
+                    ]
+                  },
+                  0.15
+                ]
+              },
+              {
+                "and": [
+                  {
+                    "<": [
+                      {
+                        "var": "previousEmotions.panic"
+                      },
+                      0.55
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.panic"
+                      },
+                      0.62
+                    ]
+                  }
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "previousMoodAxes.agency_control"
+                      },
+                      {
+                        "var": "moodAxes.agency_control"
+                      }
+                    ]
+                  },
+                  12
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "Requires panic as the primary signal (control-collapsing, high-arousal threat), grounded by high threat/arousal and low agency; explicitly excludes dissociation and numb shutdown and the freeze branch; fires only on a real panic onset (panic spike/crossing or a sharp drop in agency)."
+    }
+  ],
+  "actor_description": "It snaps on like a breaker. My heart starts hammering with no warm-up and my breath turns useless—too fast, too shallow, like I can't get enough air no matter how much I take. The world narrows into signals and edges. My thoughts stop being sentences and become one repeating instruction: move, now—except I can't decide where 'safe' even is.",
+  "description_text": "{actor} goes rigid and frantic at once—eyes wide, breath thin and rapid, hands twitching as if searching for a grip on something invisible. Their head jerks in quick scans, attention stuck on danger that seems to be everywhere at the same time.",
+  "alternate_descriptions": {
+    "auditory": "I hear breathing turn sharp and fast—air dragged in like it's not working. There's a shaky exhale, a small broken sound in the throat, and the scrape of movement that can't settle."
+  },
+  "tags": [
+    "panic",
+    "terror",
+    "alarm",
+    "acute",
+    "fear"
+  ]
+}

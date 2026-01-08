@@ -21,7 +21,6 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import EntityManager from '../../entities/entityManager.js';
-import { EntityManagerAdapter } from '../../entities/entityManagerAdapter.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../logic/jsonLogicCustomOperators.js';
@@ -126,8 +125,9 @@ export function registerWorldAndEntity(container) {
   logger.debug('World and Entity Registration: Starting...');
 
   // --- IEntityManager (EntityManager implementation) ---
+  // ENTARCREDANA-002: Return EntityManager directly with locationQueryService injected
   registrar.singletonFactory(tokens.IEntityManager, (c) => {
-    const entityManager = new EntityManager({
+    return new EntityManager({
       registry: /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
       validator: /** @type {ISchemaValidator} */ (
         c.resolve(tokens.ISchemaValidator)
@@ -136,15 +136,9 @@ export function registerWorldAndEntity(container) {
       dispatcher: /** @type {ISafeEventDispatcher} */ (
         c.resolve(tokens.ISafeEventDispatcher)
       ),
-    });
-
-    const locationQueryService = /** @type {LocationQueryService} */ (
-      c.resolve(tokens.LocationQueryService)
-    );
-
-    return new EntityManagerAdapter({
-      entityManager,
-      locationQueryService,
+      locationQueryService: /** @type {LocationQueryService} */ (
+        c.resolve(tokens.LocationQueryService)
+      ),
     });
   });
   logger.debug(

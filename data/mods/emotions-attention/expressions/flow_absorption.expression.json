@@ -16,6 +16,14 @@
                         ]
                     },
                     {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -113,6 +121,30 @@
                                 "var": "moodAxes.engagement"
                             },
                             10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.10
                         ]
                     }
                 ]

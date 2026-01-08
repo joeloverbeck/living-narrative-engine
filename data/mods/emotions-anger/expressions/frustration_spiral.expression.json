@@ -1,0 +1,153 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-anger:frustration_spiral",
+  "description": "Escalating frustration combined with irritation, building pressure from repeated failure or obstruction",
+  "priority": 76,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.frustration"
+              },
+              0.62
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.irritation"
+              },
+              0.40
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.rage"
+              },
+              0.65
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.despair"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.fatigue"
+              },
+              0.80
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "logic": {
+        "or": [
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.frustration"
+                  },
+                  {
+                    "var": "previousEmotions.frustration"
+                  }
+                ]
+              },
+              0.12
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.irritation"
+                  },
+                  {
+                    "var": "previousEmotions.irritation"
+                  }
+                ]
+              },
+              0.10
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "previousMoodAxes.agency_control"
+                  },
+                  {
+                    "var": "moodAxes.agency_control"
+                  }
+                ]
+              },
+              12
+            ]
+          },
+          {
+            "and": [
+              {
+                "<": [
+                  {
+                    "var": "previousEmotions.frustration"
+                  },
+                  0.80
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.frustration"
+                  },
+                  0.80
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "It's not one problem anymore—it's everything stacking. I try, it doesn't work, I try again, and I can feel the heat rising behind my eyes like my patience is catching fire. My thoughts start to snag; I can't hold the whole shape of the situation at once, only the part that's resisting me. My jaw tightens, my hands get stupidly strong on whatever I'm holding, and the impulse to force it—to slam, to shove, to blame something—keeps climbing the ladder in my chest.",
+  "description_text": "{actor} starts moving in hard, clipped bursts—hands too quick, grips too tight, motions that stop short and restart. Their breathing turns sharp and shallow, expelled like steam; their mouth presses thin, then flickers with a muttered word or a flash of teeth. They glance from obstacle to obstacle with a restless snap, as if the room has suddenly filled with things that won't cooperate.",
+  "alternate_descriptions": {
+    "auditory": "I hear tight, sharp exhales; a muttered string of words; the quick staccato of tapping or fidgeting. Something gets set down with more force than it needed.",
+    "tactile": "The space beside jitters—sudden movements, heat, a bristling energy that makes stillness feel unsafe."
+  },
+  "tags": [
+    "frustration",
+    "irritation",
+    "spiral",
+    "escalation"
+  ]
+}

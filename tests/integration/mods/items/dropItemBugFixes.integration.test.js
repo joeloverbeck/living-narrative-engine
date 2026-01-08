@@ -2,8 +2,8 @@
  * @file Integration test reproducing and verifying fixes for drop_item bugs
  * @description This test reproduces the specific bugs reported in the logs:
  * 1. TypeError: batchAddComponentsOptimized is not a function (line 232)
- *    - Root cause: EntityManagerAdapter was missing the method
- *    - Fix: Added batchAddComponentsOptimized delegation in EntityManagerAdapter
+ *    - Root cause: EntityManager was missing the method on adapter (now fixed)
+ *    - Fix: EntityManager now has batchAddComponentsOptimized directly
  * 2. VED: Payload validation FAILED for perceptionType "item_dropped" (line 296)
  *    - Root cause: Cascading failure from Issue 1
  *    - Fix: Resolves automatically when Issue 1 is fixed
@@ -12,7 +12,6 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import { EntityManagerAdapter } from '../../../../src/entities/entityManagerAdapter.js';
 import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
 
@@ -37,30 +36,18 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
   });
 
   describe('Issue 1: TypeError - batchAddComponentsOptimized is not a function', () => {
-    it('should have batchAddComponentsOptimized method available on EntityManagerAdapter', () => {
-      // The bug was that EntityManagerAdapter (used in production) didn't expose this method
-      // even though the underlying EntityManager had it
-      const adapter = new EntityManagerAdapter({
-        entityManager: testFixture.entityManager,
-        locationQueryService: {
-          getEntitiesInLocation: () => new Set(),
-        },
-      });
+    it('should have batchAddComponentsOptimized method available on EntityManager', () => {
+      // The bug was that the method wasn't available on the entity manager interface
+      // EntityManager now has batchAddComponentsOptimized directly
 
-      // Verify the adapter now has the method
-      expect(adapter.batchAddComponentsOptimized).toBeDefined();
-      expect(typeof adapter.batchAddComponentsOptimized).toBe('function');
+      // Verify EntityManager has the method
+      expect(testFixture.entityManager.batchAddComponentsOptimized).toBeDefined();
+      expect(typeof testFixture.entityManager.batchAddComponentsOptimized).toBe(
+        'function'
+      );
     });
 
-    it('should successfully call batchAddComponentsOptimized through adapter', async () => {
-      // Setup adapter
-      const adapter = new EntityManagerAdapter({
-        entityManager: testFixture.entityManager,
-        locationQueryService: {
-          getEntitiesInLocation: () => new Set(),
-        },
-      });
-
+    it('should successfully call batchAddComponentsOptimized on EntityManager', async () => {
       // Create test entities
       const room = new ModEntityBuilder('test-location').asRoom('Room').build();
       const item = new ModEntityBuilder('test-item')
@@ -70,7 +57,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
 
       testFixture.reset([room, item]);
 
-      // Test the method through the adapter (this is what production code does)
+      // Test the method directly on EntityManager (this is what production code does)
       const componentSpecs = [
         {
           instanceId: 'test-item',
@@ -80,7 +67,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       ];
 
       // This should NOT throw TypeError
-      const result = await adapter.batchAddComponentsOptimized(
+      const result = await testFixture.entityManager.batchAddComponentsOptimized(
         componentSpecs,
         true
       );
@@ -89,8 +76,8 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       expect(result).toBeDefined();
       expect(result.updateCount).toBe(1);
 
-      // Verify the component was added via the adapter
-      const itemAfter = adapter.getEntityInstance('test-item');
+      // Verify the component was added
+      const itemAfter = testFixture.entityManager.getEntityInstance('test-item');
       expect(itemAfter.components['core:position']).toBeDefined();
       expect(itemAfter.components['core:position'].locationId).toBe(
         'test-location'

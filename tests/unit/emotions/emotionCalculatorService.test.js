@@ -962,18 +962,33 @@ describe('EmotionCalculatorService', () => {
       expect(keys.length).toBe(Object.keys(mockEmotionPrototypes).length);
     });
 
-    it('should return empty array and log warning when prototypes unavailable', () => {
+    it('should throw InvalidArgumentError when lookup missing', () => {
       mockDataRegistry.get.mockReturnValue(null);
       const freshService = new EmotionCalculatorService({
         logger: mockLogger,
         dataRegistry: mockDataRegistry,
       });
 
-      const keys = freshService.getEmotionPrototypeKeys();
+      expect(() => freshService.getEmotionPrototypeKeys()).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => freshService.getEmotionPrototypeKeys()).toThrow(
+        /Required lookup "core:emotion_prototypes" not found/
+      );
+    });
 
-      expect(keys).toEqual([]);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Emotion prototypes unavailable')
+    it('should throw InvalidArgumentError when lookup has empty entries', () => {
+      mockDataRegistry.get.mockReturnValue({ entries: {} });
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      expect(() => freshService.getEmotionPrototypeKeys()).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => freshService.getEmotionPrototypeKeys()).toThrow(
+        /Emotion prototype lookup "core:emotion_prototypes" is empty/
       );
     });
   });
@@ -987,18 +1002,33 @@ describe('EmotionCalculatorService', () => {
       expect(keys.length).toBe(Object.keys(mockSexualPrototypes).length);
     });
 
-    it('should return empty array and log warning when prototypes unavailable', () => {
+    it('should throw InvalidArgumentError when lookup missing', () => {
       mockDataRegistry.get.mockReturnValue(null);
       const freshService = new EmotionCalculatorService({
         logger: mockLogger,
         dataRegistry: mockDataRegistry,
       });
 
-      const keys = freshService.getSexualPrototypeKeys();
+      expect(() => freshService.getSexualPrototypeKeys()).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => freshService.getSexualPrototypeKeys()).toThrow(
+        /Required lookup "core:sexual_prototypes" not found/
+      );
+    });
 
-      expect(keys).toEqual([]);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Sexual prototypes unavailable')
+    it('should throw InvalidArgumentError when lookup has empty entries', () => {
+      mockDataRegistry.get.mockReturnValue({ entries: {} });
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      expect(() => freshService.getSexualPrototypeKeys()).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => freshService.getSexualPrototypeKeys()).toThrow(
+        /Sexual prototype lookup "core:sexual_prototypes" is empty/
       );
     });
   });

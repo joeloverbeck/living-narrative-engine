@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-threat-response",
+  "version": "1.0.0",
+  "name": "Emotions - Threat Response",
+  "description": "Fear physiology, scanning, freeze/panic, revulsion-horror, and startle expressions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "dread_settling.expression.json",
+      "freeze_response.expression.json",
+      "horror_revulsion.expression.json",
+      "hypervigilant_scanning.expression.json",
+      "panic_onset.expression.json",
+      "restless_anxiety.expression.json",
+      "startle_flinch.expression.json",
+      "steeled_courage.expression.json",
+      "terror_spike.expression.json",
+      "uneasy_restraint.expression.json"
+    ]
+  }
+}

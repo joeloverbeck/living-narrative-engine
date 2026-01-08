@@ -135,7 +135,7 @@ describe('ExpressionPrerequisiteValidator', () => {
     ]);
 
     const dissociationExpression = {
-      id: 'emotions:dissociation',
+      id: 'emotions-loss:dissociation',
       prerequisites: [
         {
           logic: {
@@ -172,7 +172,7 @@ describe('ExpressionPrerequisiteValidator', () => {
     const dissociationResult = validator.validateExpression(
       dissociationExpression,
       {
-        modId: 'emotions',
+        modId: 'emotions-loss',
         source: 'expressions/dissociation.expression.json',
         validKeysByRoot: { emotions: validEmotionKeys },
       }

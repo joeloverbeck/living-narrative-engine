@@ -593,12 +593,19 @@ class EmotionCalculatorService {
   getEmotionPrototypeKeys() {
     const prototypes = this.#ensureEmotionPrototypes();
     if (!prototypes) {
-      this.#logger.warn(
-        'EmotionCalculatorService: Emotion prototypes unavailable for key lookup.'
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService: Required lookup "${EMOTION_PROTOTYPES_LOOKUP_ID}" not found in data registry. ` +
+          `Ensure mods are loaded before using expression services.`
       );
-      return [];
     }
-    return Object.keys(prototypes);
+    const keys = Object.keys(prototypes);
+    if (keys.length === 0) {
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService: Emotion prototype lookup "${EMOTION_PROTOTYPES_LOOKUP_ID}" is empty. ` +
+          `No prototype definitions found. Check the lookup file for valid entries.`
+      );
+    }
+    return keys;
   }
 
   /**
@@ -609,12 +616,19 @@ class EmotionCalculatorService {
   getSexualPrototypeKeys() {
     const prototypes = this.#ensureSexualPrototypes();
     if (!prototypes) {
-      this.#logger.warn(
-        'EmotionCalculatorService: Sexual prototypes unavailable for key lookup.'
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService: Required lookup "${SEXUAL_PROTOTYPES_LOOKUP_ID}" not found in data registry. ` +
+          `Ensure mods are loaded before using expression services.`
       );
-      return [];
     }
-    return Object.keys(prototypes);
+    const keys = Object.keys(prototypes);
+    if (keys.length === 0) {
+      throw new InvalidArgumentError(
+        `EmotionCalculatorService: Sexual prototype lookup "${SEXUAL_PROTOTYPES_LOOKUP_ID}" is empty. ` +
+          `No prototype definitions found. Check the lookup file for valid entries.`
+      );
+    }
+    return keys;
   }
 
   /**

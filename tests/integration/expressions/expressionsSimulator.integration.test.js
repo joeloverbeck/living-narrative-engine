@@ -31,7 +31,7 @@ const EXPRESSIONS_DIR = path.resolve(
   process.cwd(),
   'data',
   'mods',
-  'emotions',
+  'emotions-sexuality',
   'expressions'
 );
 

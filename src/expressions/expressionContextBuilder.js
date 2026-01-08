@@ -142,7 +142,9 @@ class ExpressionContextBuilder {
     const expectedCount = expectedKeys.length;
     if (expectedCount === 0) {
       throw new Error(
-        `[ExpressionContextBuilder] ${kind} prototype lookup returned no keys.`
+        `[ExpressionContextBuilder] ${kind} prototype lookup returned no keys. ` +
+          `This is unexpected - EmotionCalculatorService should have thrown. ` +
+          `Check that mocks provide non-empty prototype key arrays.`
       );
     }
     const actualCount = stateMap.size;
@@ -159,7 +161,7 @@ class ExpressionContextBuilder {
       throw new Error(
         `[ExpressionContextBuilder] ${kind} evaluation missing prototype keys. Expected ${expectedCount}, got ${actualCount}. Missing: ${missingKeys.join(
           ', '
-        )}`
+        )}. This may indicate a mismatch between prototype lookup and calculator logic.`
       );
     }
   }

@@ -81,6 +81,11 @@ module.exports = {
       entry: 'src/expressions-simulator.js',
       output: 'expressions-simulator.js',
     },
+    {
+      name: 'expression-diagnostics',
+      entry: 'src/expression-diagnostics.js',
+      output: 'expression-diagnostics.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -99,6 +104,7 @@ module.exports = {
     'mod-manager.html',
     'damage-simulator.html',
     'expressions-simulator.html',
+    'expression-diagnostics.html',
   ],
 
   // Static asset directories
