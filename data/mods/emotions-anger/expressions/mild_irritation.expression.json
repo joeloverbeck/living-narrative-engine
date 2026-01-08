@@ -1,0 +1,116 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-anger:mild_irritation",
+  "description": "Low-level annoyance and frustration",
+  "priority": 36,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.irritation"
+              },
+              0.35
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.anger"
+              },
+              0.50
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.rage"
+              },
+              0.20
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.contempt"
+              },
+              0.35
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.disgust"
+              },
+              0.35
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              60
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              60
+            ]
+          },
+          {
+            "or": [
+              {
+                "<": [
+                  {
+                    "var": "previousEmotions.irritation"
+                  },
+                  0.35
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.irritation"
+                      },
+                      {
+                        "var": "previousEmotions.irritation"
+                      }
+                    ]
+                  },
+                  0.08
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "Something keeps scraping at me—small, persistent, impossible to ignore. I feel my patience thinning, a tightness gathering at my jaw and behind my eyes. I'm not ready to blow up. I'm just… done with this. My thoughts get shorter, sharper; I want whatever's causing it to stop, move, or get fixed. I keep catching myself on the edge of a snap, then swallowing it back.",
+  "description_text": "{actor}'s expression tightens at the edges—jaw setting, eyes narrowing a fraction. Their movements get brisk, a touch more forceful than necessary. When they speak, it lands clipped, as if they're spending patience by the syllable.",
+  "alternate_descriptions": {
+    "auditory": "I hear the softness drain out of a voice—answers quick, consonants sharper, a sigh cut off halfway.",
+    "tactile": "Someone's movements turn snappier—small motions a bit harder, gestures more abrupt, like irritation leaking into the body."
+  },
+  "tags": [
+    "irritation",
+    "annoyance",
+    "mild"
+  ]
+}

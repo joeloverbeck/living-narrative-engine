@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expression Diagnostics - Living Narrative Engine</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/expression-diagnostics.css" />
+</head>
+<body>
+  <div class="diagnostics-container">
+    <header class="diagnostics-header">
+      <h1>Expression Diagnostics</h1>
+      <button id="back-button" class="menu-button">Back to Menu</button>
+    </header>
+
+    <main class="diagnostics-main">
+      <!-- Expression Selection Panel -->
+      <section class="panel expression-selection-panel">
+        <h2>Expression Selection</h2>
+        <div class="form-group">
+          <label for="expression-select">Select Expression:</label>
+          <select id="expression-select" class="form-select">
+            <option value="">-- Select an expression --</option>
+          </select>
+        </div>
+        <p id="expression-description" class="expression-description"></p>
+      </section>
+
+      <!-- Analysis Controls Panel -->
+      <section class="panel analysis-controls-panel">
+        <h2>Analysis Controls</h2>
+        <div class="button-group">
+          <button id="run-static-btn" class="action-button" disabled>
+            Run Static Analysis
+          </button>
+          <!-- Future buttons will be added here -->
+          <!-- <button id="run-monte-carlo-btn">Run Monte Carlo</button> -->
+          <!-- <button id="find-witness-btn">Find Witness</button> -->
+          <!-- <button id="run-all-btn">Run All</button> -->
+        </div>
+      </section>
+
+      <!-- Results Area -->
+      <div class="results-area">
+        <!-- Status Summary -->
+        <section class="panel status-panel">
+          <h2>Status Summary</h2>
+          <div id="status-indicator" class="status-indicator status-unknown">
+            <span class="status-emoji">⚪</span>
+            <span class="status-label">Not Analyzed</span>
+          </div>
+          <p id="status-message" class="status-message"></p>
+        </section>
+
+        <!-- Static Analysis Details -->
+        <section class="panel static-analysis-panel">
+          <h2>Static Analysis Results</h2>
+          <div id="static-results" class="results-content">
+            <p class="placeholder-text">Run static analysis to see results.</p>
+          </div>
+        </section>
+
+        <!-- Gate Conflicts Table -->
+        <section class="panel gate-conflicts-panel" id="gate-conflicts-section" hidden>
+          <h2>Gate Conflicts</h2>
+          <table id="gate-conflicts-table" class="results-table">
+            <thead>
+              <tr>
+                <th>Axis</th>
+                <th>Required</th>
+                <th>Conflicting Prototypes</th>
+                <th>Gates</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <!-- Unreachable Thresholds Table -->
+        <section class="panel thresholds-panel" id="thresholds-section" hidden>
+          <h2>Unreachable Thresholds</h2>
+          <table id="thresholds-table" class="results-table">
+            <thead>
+              <tr>
+                <th>Prototype</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Max Possible</th>
+                <th>Gap</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="expression-diagnostics.js"></script>
+</body>
+</html>

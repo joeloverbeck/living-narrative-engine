@@ -225,6 +225,22 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
         })
       ).rejects.toThrow(/Validation failed/);
     });
+
+    it('should log a debug message when creating an entity instance (inlined from EntityCreationManager)', async () => {
+      // Arrange
+      const { mocks } = getBed();
+
+      // Act
+      await getBed().createBasicEntity();
+
+      // Assert - verify debug logging occurs with definition ID
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Creating entity instance for definition')
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(TestData.DefinitionIDs.BASIC)
+      );
+    });
   });
 });
 
@@ -389,6 +405,30 @@ describeEntityManagerSuite('EntityManager - reconstructEntity', (getBed) => {
           InvalidInstanceIdError
         );
       });
+    });
+
+    it('should log a debug message when reconstructing an entity (inlined from EntityCreationManager)', () => {
+      // Arrange
+      const { entityManager, mocks } = getBed();
+      const { PRIMARY } = TestData.InstanceIDs;
+      getBed().setupTestDefinitions('basic');
+
+      const serializedEntity = buildSerializedEntity(
+        PRIMARY,
+        TestData.DefinitionIDs.BASIC,
+        { 'core:name': { name: 'Test' } }
+      );
+
+      // Act
+      entityManager.reconstructEntity(serializedEntity);
+
+      // Assert - verify debug logging occurs with instance ID
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Reconstructing entity from serialized data')
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(PRIMARY)
+      );
     });
   });
 });

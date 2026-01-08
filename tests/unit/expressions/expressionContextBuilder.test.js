@@ -357,7 +357,7 @@ describe('ExpressionContextBuilder', () => {
     );
   });
 
-  it('should throw when emotion results miss prototype keys', () => {
+  it('should throw when emotion results miss prototype keys with root cause hint', () => {
     emotionCalculatorService.calculateEmotions.mockReturnValue(
       new Map([['joy', 0.6]])
     );
@@ -378,10 +378,12 @@ describe('ExpressionContextBuilder', () => {
         { valence: 10 },
         { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
       )
-    ).toThrow('[ExpressionContextBuilder] emotions evaluation missing prototype keys.');
+    ).toThrow(
+      /\[ExpressionContextBuilder\] emotions evaluation missing prototype keys.*This may indicate a mismatch between prototype lookup and calculator logic\./
+    );
   });
 
-  it('should throw when sexual state results miss prototype keys', () => {
+  it('should throw when sexual state results miss prototype keys with root cause hint', () => {
     emotionCalculatorService.calculateEmotions.mockReturnValue(
       new Map([['joy', 0.6]])
     );
@@ -401,7 +403,24 @@ describe('ExpressionContextBuilder', () => {
         { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
       )
     ).toThrow(
-      '[ExpressionContextBuilder] sexualStates evaluation missing prototype keys.'
+      /\[ExpressionContextBuilder\] sexualStates evaluation missing prototype keys.*This may indicate a mismatch between prototype lookup and calculator logic\./
+    );
+  });
+
+  it('should throw with debugging guidance when prototype keys are empty', () => {
+    emotionCalculatorService.calculateEmotions.mockReturnValue(new Map());
+    emotionCalculatorService.calculateSexualStates.mockReturnValue(new Map());
+    emotionCalculatorService.getEmotionPrototypeKeys.mockReturnValue([]);
+    emotionCalculatorService.getSexualPrototypeKeys.mockReturnValue([]);
+
+    expect(() =>
+      builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      )
+    ).toThrow(
+      /\[ExpressionContextBuilder\] emotions prototype lookup returned no keys.*This is unexpected - EmotionCalculatorService should have thrown.*Check that mocks provide non-empty prototype key arrays\./
     );
   });
 

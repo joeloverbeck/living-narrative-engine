@@ -12,9 +12,14 @@ import AjvSchemaValidator from '../../../../../src/validation/ajvSchemaValidator
 import SchemaLoader from '../../../../../src/loaders/schemaLoader.js';
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 
-const EXPRESSIONS_DIR = path.resolve('data/mods/emotions/expressions');
 const POSITIVE_AFFECT_DIR = path.resolve(
   'data/mods/emotions-positive-affect/expressions'
+);
+const AFFILIATION_DIR = path.resolve(
+  'data/mods/emotions-affiliation/expressions'
+);
+const SEXUALITY_DIR = path.resolve(
+  'data/mods/emotions-sexuality/expressions'
 );
 const EXPRESSION_FILES = [
   {
@@ -26,7 +31,7 @@ const EXPRESSION_FILES = [
     file: 'quiet_contentment.expression.json',
   },
   {
-    dir: EXPRESSIONS_DIR,
+    dir: AFFILIATION_DIR,
     file: 'warm_affection.expression.json',
   },
   {
@@ -34,7 +39,7 @@ const EXPRESSION_FILES = [
     file: 'playful_mischief.expression.json',
   },
   {
-    dir: EXPRESSIONS_DIR,
+    dir: SEXUALITY_DIR,
     file: 'intense_desire.expression.json',
   },
 ];
@@ -165,7 +170,7 @@ describe('Emotions joy/arousal expressions', () => {
   });
 
   it('warm_affection requires affection and attachment', () => {
-    const expression = expressionsById['emotions:warm_affection'];
+    const expression = expressionsById['emotions-affiliation:warm_affection'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
@@ -218,7 +223,7 @@ describe('Emotions joy/arousal expressions', () => {
   });
 
   it('intense_desire uses sexualStates.sexual_lust and arousal', () => {
-    const expression = expressionsById['emotions:intense_desire'];
+    const expression = expressionsById['emotions-sexuality:intense_desire'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {

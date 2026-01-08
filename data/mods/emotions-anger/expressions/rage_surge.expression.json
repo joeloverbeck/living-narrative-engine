@@ -1,0 +1,81 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-anger:rage_surge",
+  "description": "Acute outburst moment: rage spikes sharply and crosses the restraint threshold",
+  "priority": 90,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.rage"
+              },
+              0.60
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "previousEmotions.rage"
+              },
+              0.60
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.anger"
+              },
+              0.45
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              15
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.anger"
+              },
+              0.75
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.rage"
+                  },
+                  {
+                    "var": "previousEmotions.rage"
+                  }
+                ]
+              },
+              0.20
+            ]
+          }
+        ]
+      },
+      "failure_message": "Requires crossing into rage with arousal and anger present, but not already at explosive anger levels."
+    }
+  ],
+  "actor_description": "It comes up fast—heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting—how every other thought is being shoved out to make room for the urge to hit back.",
+  "description_text": "{actor} hardens in place—jaw locked, stare sharpened, shoulders squaring as if bracing for impact. Their hands ball and unball, breath coming in clipped bursts, the whole body tightening into a controlled threat.",
+  "alternate_descriptions": {
+    "auditory": "I hear teeth grind and a breath pulled in like a hiss. If they speak, it's low and tight—words forced through a clenched throat."
+  },
+  "tags": [
+    "rage",
+    "anger",
+    "explosive",
+    "acute"
+  ]
+}

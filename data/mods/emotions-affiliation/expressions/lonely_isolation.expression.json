@@ -1,0 +1,125 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-affiliation:lonely_isolation",
+  "description": "Profound sense of isolation and disconnection from others",
+  "priority": 62,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "emotions.loneliness"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -15
+            ]
+          },
+          {
+            "<=": [
+              {
+                "max": [
+                  {
+                    "var": "emotions.affection"
+                  },
+                  {
+                    "var": "emotions.love_attachment"
+                  },
+                  {
+                    "var": "emotions.trust"
+                  },
+                  {
+                    "var": "emotions.gratitude"
+                  }
+                ]
+              },
+              0.45
+            ]
+          },
+          {
+            "<": [
+              {
+                "var": "emotions.despair"
+              },
+              0.65
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.loneliness"
+                      },
+                      {
+                        "var": "previousEmotions.loneliness"
+                      }
+                    ]
+                  },
+                  0.10
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "max": [
+                      {
+                        "-": [
+                          {
+                            "var": "previousEmotions.affection"
+                          },
+                          {
+                            "var": "emotions.affection"
+                          }
+                        ]
+                      },
+                      {
+                        "-": [
+                          {
+                            "var": "previousEmotions.love_attachment"
+                          },
+                          {
+                            "var": "emotions.love_attachment"
+                          }
+                        ]
+                      },
+                      {
+                        "-": [
+                          {
+                            "var": "previousEmotions.trust"
+                          },
+                          {
+                            "var": "emotions.trust"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  0.10
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "Requires loneliness dominant (with low connection emotions), mildly negative valence, not full despair, and a notable loneliness rise or connection-drop shift to avoid constant firing."
+    }
+  ],
+  "actor_description": "The room has people in it, noise in it—maybe even faces turned my way—and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",
+  "description_text": "{actor} drifts behind their own eyes. Their posture closes—shoulders in, hands kept near the body—as if they're taking up less space. They answer a beat late, when they answer at all, like the room is slightly out of range.",
+  "tags": [
+    "loneliness",
+    "isolation",
+    "disconnection"
+  ]
+}

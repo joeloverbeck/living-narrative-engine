@@ -1,0 +1,190 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-threat-response:dread_settling",
+    "description": "A slow, heavy dread that settles in—anticipation turns sour, attention narrows, and the body prepares for something bad without tipping into panic.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.unease"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.70
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.calm"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.dread"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.dread"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.dread"
+                                            },
+                                            {
+                                                "var": "previousEmotions.dread"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires dread as the primary signal with threat-axis grounding and negative valence; keeps arousal in the 'heavy bracing' band; keeps engagement from collapsing and explicitly excludes dissociation; stays below panic/terror extremes, excludes freeze, and fires only on dread crossing/spike or a sharp threat-axis jump."
+        }
+    ],
+    "actor_description": "Something heavy drops into my stomach like a stone finding water. My thoughts keep running a few steps ahead, rehearsing what could go wrong, and every option tastes metallic. I can still move and talk, but it feels like I'm doing it under a low ceiling. I keep listening for the moment the other shoe finally hits.",
+    "description_text": "{actor} grows quieter and more deliberate, as if weighing each second. Their gaze drifts into middle distance; their jaw sets and releases, and their breathing turns measured, careful. They don’t look panicked—just like they’re bracing for bad news that hasn’t arrived yet.",
+    "alternate_descriptions": {
+        "auditory": "Their voice comes out lower and tighter, with longer pauses—words chosen like they might matter later. You catch a slow inhale that stops halfway, then finishes as a controlled exhale.",
+        "tactile": "The air around them feels denser, like pressure building under the skin—shoulders subtly held, movements minimized, as if conserving readiness.",
+        "olfactory": "A faint stress-sour edge to their breath and sweat, like adrenaline without the sprint.",
+        "limited": "{actor} looks preoccupied and tense, attention narrowing as they brace themselves."
+    },
+    "tags": [
+        "dread",
+        "unease",
+        "bracing",
+        "anticipation",
+        "threat",
+        "quiet_tension",
+        "readiness"
+    ]
+}

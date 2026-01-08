@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-anger",
+  "version": "1.0.0",
+  "name": "Emotions - Anger",
+  "description": "Anger spectrum expressions from annoyance to controlled menace to blowups.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "cold_fury.expression.json",
+      "explosive_anger.expression.json",
+      "frustration_spiral.expression.json",
+      "mild_irritation.expression.json",
+      "rage_surge.expression.json",
+      "suppressed_rage.expression.json"
+    ]
+  }
+}

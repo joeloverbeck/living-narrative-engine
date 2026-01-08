@@ -8,7 +8,7 @@ import path from 'node:path';
 import ConsoleLogger from '../../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 
-const EXPRESSIONS_DIR = path.resolve('data/mods/emotions/expressions');
+const EXPRESSIONS_DIR = path.resolve('data/mods/emotions-sexuality/expressions');
 const EXPRESSION_FILE = 'aroused_but_ashamed_conflict.expression.json';
 
 describe('Emotions aroused-but-ashamed conflict prerequisites', () => {
@@ -28,27 +28,36 @@ describe('Emotions aroused-but-ashamed conflict prerequisites', () => {
   it('passes when both prerequisite logic blocks are satisfied', () => {
     expect(expression.prerequisites).toHaveLength(2);
 
+    // Production expression now requires:
+    // - freeze >= 0.18 and <= 0.70 (social freeze, not threat-collapse)
+    // - terror <= 0.40 and panic <= 0.20 (distinguishes from threat-collapse)
+    // - threat >= 5 and <= 60 (mild threat, not overwhelming)
+    // - aroused_with_disgust <= 0.45, sexual_indifference <= 0.55
     const context = {
       emotions: {
         shame: 0.45,
         embarrassment: 0.2,
         guilt: 0.2,
+        freeze: 0.35, // Required: >= 0.18 AND <= 0.70
+        terror: 0.25, // Required: <= 0.40
+        panic: 0.1, // Required: <= 0.20
       },
       sexualStates: {
-        aroused_with_shame: 0.7,
-        sexual_lust: 0.5,
-        aroused_with_disgust: 0.3,
-        sexual_indifference: 0.2,
+        aroused_with_shame: 0.7, // Required: >= 0.60
+        sexual_lust: 0.5, // Required: >= 0.35
+        aroused_with_disgust: 0.3, // Required: <= 0.45
+        sexual_indifference: 0.2, // Required: <= 0.55
       },
       moodAxes: {
-        self_evaluation: -15,
-        threat: 10,
+        self_evaluation: -15, // Required: <= -10
+        threat: 25, // Required: >= 5 AND <= 60
       },
       previousEmotions: {
-        shame: 0.35,
+        shame: 0.35, // Delta: 0.45 - 0.35 = 0.10 >= 0.06
+        freeze: 0.20,
       },
       previousSexualStates: {
-        aroused_with_shame: 0.55,
+        aroused_with_shame: 0.55, // Delta: 0.7 - 0.55 = 0.15 >= 0.06
       },
     };
 

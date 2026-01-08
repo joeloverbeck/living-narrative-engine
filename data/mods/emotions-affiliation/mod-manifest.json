@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-affiliation",
+  "version": "1.0.0",
+  "name": "Emotions - Affiliation",
+  "description": "Pro-social warmth, care, connection needs, and attachment expressions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "attachment_swell.expression.json",
+      "compassionate_concern.expression.json",
+      "lonely_isolation.expression.json",
+      "tearful_gratitude.expression.json",
+      "warm_affection.expression.json"
+    ]
+  }
+}

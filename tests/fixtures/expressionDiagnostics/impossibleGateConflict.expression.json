@@ -1,0 +1,16 @@
+{
+  "id": "test:impossible_gate_conflict",
+  "description": "Expression with conflicting gate requirements",
+  "priority": 100,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.fear" }, 0.5] },
+          { ">=": [{ "var": "emotions.confidence" }, 0.5] }
+        ]
+      }
+    }
+  ],
+  "_comment": "fear gates on threat >= 0.30, confidence gates on threat <= 0.20 - impossible"
+}

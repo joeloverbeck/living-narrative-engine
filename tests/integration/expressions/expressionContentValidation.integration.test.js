@@ -7,7 +7,13 @@ import path from 'node:path';
 import { readFile, readdir } from 'node:fs/promises';
 
 const EXPRESSIONS_DIRS = [
-  path.resolve(process.cwd(), 'data', 'mods', 'emotions', 'expressions'),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-sexuality',
+    'expressions'
+  ),
   path.resolve(
     process.cwd(),
     'data',

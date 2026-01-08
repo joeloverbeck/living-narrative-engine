@@ -24,6 +24,14 @@
                         ]
                     },
                     {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.boredom"
@@ -69,6 +77,14 @@
                                 "var": "emotions.fatigue"
                             },
                             0.60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.15
                         ]
                     },
                     {

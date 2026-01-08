@@ -20,9 +20,10 @@ import { createDefaultServicesWithConfig } from './utils/createDefaultServicesWi
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
-import EntityCreationManager from './managers/EntityCreationManager.js';
-import EntityMutationManager from './managers/EntityMutationManager.js';
 import EntityQueryManager from './managers/EntityQueryManager.js';
+import { SerializedEntityError } from '../errors/serializedEntityError.js';
+import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
+import { validateInstanceAndComponent } from '../utils/idValidation.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -49,10 +50,10 @@ import EntityQueryManager from './managers/EntityQueryManager.js';
  * @class EntityManager
  * @augments {IEntityManager}
  * @description
- * Refactored runtime manager that coordinates specialized managers for:
- * • Entity creation and reconstruction (EntityCreationManager)
- * • Component mutations and entity removal (EntityMutationManager)
- * • Entity queries and lookups (EntityQueryManager)
+ * Runtime manager for entities with inlined creation, mutation, and coordinated querying:
+ * • Entity creation and reconstruction (inlined from EntityCreationManager - ENTARCREDANA-004)
+ * • Component mutations and entity removal (inlined from EntityMutationManager - ENTARCREDANA-005)
+ * • Entity queries and lookups (delegated to EntityQueryManager)
  * • Maintains backward compatibility with original API
  */
 class EntityManager extends IEntityManager {
@@ -73,10 +74,11 @@ class EntityManager extends IEntityManager {
   #monitoringCoordinator;
   #batchOperationManager;
 
-  // Specialized managers
-  #creationManager;
-  #mutationManager;
+  // Specialized managers (EntityCreationManager + EntityMutationManager inlined)
   #queryManager;
+
+  // Optional services
+  #locationQueryService;
 
   /**
    * Getter that returns an iterator over all active entities.
@@ -154,6 +156,7 @@ class EntityManager extends IEntityManager {
    * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance
    * @param {object} [deps.monitoringCoordinator] - MonitoringCoordinator instance
    * @param {object} [deps.batchOperationManager] - BatchOperationManager instance
+   * @param {object} [deps.locationQueryService] - LocationQueryService instance for spatial queries
    * @throws {Error} If any dependency is missing or malformed
    */
   constructor({
@@ -173,6 +176,7 @@ class EntityManager extends IEntityManager {
     entityLifecycleManager,
     monitoringCoordinator,
     batchOperationManager,
+    locationQueryService,
   } = {}) {
     super();
 
@@ -197,6 +201,9 @@ class EntityManager extends IEntityManager {
       monitoringCoordinator,
       batchOperationManager,
     });
+
+    // Store optional locationQueryService (no validation - it's optional)
+    this.#locationQueryService = locationQueryService;
 
     this.#initSpecializedManagers();
 
@@ -349,19 +356,10 @@ class EntityManager extends IEntityManager {
 
   /**
    * Initialize specialized manager instances.
+   * Note: EntityCreationManager and EntityMutationManager were inlined into EntityManager
+   *       (ENTARCREDANA-004 and ENTARCREDANA-005)
    */
   #initSpecializedManagers() {
-    this.#creationManager = new EntityCreationManager({
-      lifecycleManager: this.#lifecycleManager,
-      logger: this.#logger,
-    });
-
-    this.#mutationManager = new EntityMutationManager({
-      componentMutationService: this.#componentMutationService,
-      lifecycleManager: this.#lifecycleManager,
-      logger: this.#logger,
-    });
-
     this.#queryManager = new EntityQueryManager({
       entityRepository: this.#entityRepository,
       logger: this.#logger,
@@ -369,7 +367,7 @@ class EntityManager extends IEntityManager {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Entity Creation (Delegated to EntityCreationManager)                  */
+  /* Entity Creation (Inlined from EntityCreationManager - ENTARCREDANA-004)*/
   /* ---------------------------------------------------------------------- */
 
   /**
@@ -386,7 +384,8 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails
    */
   async createEntityInstance(definitionId, opts = {}) {
-    return await this.#creationManager.createEntityInstance(definitionId, opts);
+    this.#logger.debug(`Creating entity instance for definition '${definitionId}'`);
+    return await this.#lifecycleManager.createEntityInstance(definitionId, opts);
   }
 
   /**
@@ -400,10 +399,18 @@ class EntityManager extends IEntityManager {
    * @throws {DefinitionNotFoundError} If the entity definition is not found
    * @throws {DuplicateEntityError} If an entity with the given ID already exists
    * @throws {ValidationError} If component data validation fails
-   * @throws {Error} If serializedEntity data is invalid
+   * @throws {SerializedEntityError} If serializedEntity data is invalid
    */
   reconstructEntity(serializedEntity) {
-    return this.#creationManager.reconstructEntity(serializedEntity);
+    if (!serializedEntity || typeof serializedEntity !== 'object') {
+      throw new SerializedEntityError(
+        'reconstructEntity: serializedEntity must be an object.'
+      );
+    }
+    this.#logger.debug(
+      `Reconstructing entity from serialized data (ID: '${serializedEntity?.instanceId}')`
+    );
+    return this.#lifecycleManager.reconstructEntity(serializedEntity);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -446,7 +453,7 @@ class EntityManager extends IEntityManager {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Component Mutations (Delegated to EntityMutationManager)              */
+  /* Component Mutations (Inlined from EntityMutationManager - ENTARCREDANA-005) */
   /* ---------------------------------------------------------------------- */
 
   /**
@@ -461,7 +468,24 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails
    */
   async addComponent(instanceId, componentTypeId, componentData) {
-    return await this.#mutationManager.addComponent(
+    validateInstanceAndComponent(
+      instanceId,
+      componentTypeId,
+      this.#logger,
+      'EntityManager.addComponent'
+    );
+
+    if (!componentData || typeof componentData !== 'object') {
+      throw new InvalidArgumentError(
+        'EntityManager.addComponent: componentData must be an object.'
+      );
+    }
+
+    this.#logger.debug(
+      `EntityManager.addComponent: Adding component '${componentTypeId}' to entity '${instanceId}'`
+    );
+
+    return await this.#componentMutationService.addComponent(
       instanceId,
       componentTypeId,
       componentData
@@ -470,16 +494,30 @@ class EntityManager extends IEntityManager {
 
   /**
    * Removes a component override from an existing entity instance.
+   * This operation is idempotent - removing a non-existent override succeeds without error.
    *
    * @param {string} instanceId - The ID of the entity instance
    * @param {string} componentTypeId - The unique ID of the component type to remove
    * @throws {EntityNotFoundError} If entity not found
    * @throws {InvalidArgumentError} If parameters are invalid
-   * @throws {ComponentOverrideNotFoundError} If component override does not exist
-   * @throws {Error} If removal fails
+   * @throws {Error} If removal fails due to internal error
    */
   async removeComponent(instanceId, componentTypeId) {
-    await this.#mutationManager.removeComponent(instanceId, componentTypeId);
+    validateInstanceAndComponent(
+      instanceId,
+      componentTypeId,
+      this.#logger,
+      'EntityManager.removeComponent'
+    );
+
+    this.#logger.debug(
+      `EntityManager.removeComponent: Removing component '${componentTypeId}' from entity '${instanceId}'`
+    );
+
+    await this.#componentMutationService.removeComponent(
+      instanceId,
+      componentTypeId
+    );
   }
 
   /**
@@ -506,7 +544,11 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If internal removal operation fails
    */
   async removeEntityInstance(instanceId) {
-    return await this.#mutationManager.removeEntityInstance(instanceId);
+    this.#logger.debug(
+      `EntityManager.removeEntityInstance: Removing entity '${instanceId}'`
+    );
+
+    return await this.#lifecycleManager.removeEntityInstance(instanceId);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -627,6 +669,20 @@ class EntityManager extends IEntityManager {
    */
   getAllComponentTypesForEntity(entityId) {
     return this.#queryManager.getAllComponentTypesForEntity(entityId);
+  }
+
+  /**
+   * Gets all entity instance IDs in a specific location.
+   * Delegates to the LocationQueryService if available.
+   *
+   * @param {string} locationId - The location entity ID
+   * @returns {Set<string>} Set of entity instance IDs in the location
+   */
+  getEntitiesInLocation(locationId) {
+    if (!this.#locationQueryService) {
+      return new Set();
+    }
+    return this.#locationQueryService.getEntitiesInLocation(locationId);
   }
 
   /* ---------------------------------------------------------------------- */

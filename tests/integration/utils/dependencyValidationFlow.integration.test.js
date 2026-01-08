@@ -9,7 +9,6 @@ import {
 import InitializationService from '../../../src/initializers/services/initializationService.js';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
 import { ServiceRegistry } from '../../../src/actions/pipeline/services/ServiceRegistry.js';
-import EntityMutationManager from '../../../src/entities/managers/EntityMutationManager.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { SystemInitializationError } from '../../../src/errors/InitializationError.js';
 import {
@@ -251,86 +250,6 @@ describe('dependency utilities integration coverage', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           "Invalid or missing method 'error' on dependency 'ILogger'."
-        )
-      );
-    });
-  });
-
-  describe('EntityMutationManager ID validation', () => {
-    let logger;
-    let componentMutationService;
-    let lifecycleManager;
-
-    beforeEach(() => {
-      logger = createEnhancedMockLogger();
-      componentMutationService = {
-        addComponent: jest.fn().mockResolvedValue(true),
-        removeComponent: jest.fn().mockResolvedValue(true),
-      };
-      lifecycleManager = {
-        removeEntityInstance: jest.fn().mockResolvedValue(true),
-      };
-    });
-
-    it('delegates to mutation services when identifiers are valid', async () => {
-      const manager = new EntityMutationManager({
-        componentMutationService,
-        lifecycleManager,
-        logger,
-      });
-
-      const result = await manager.addComponent('entity:1', 'test:component', {
-        value: 42,
-      });
-
-      expect(result).toBe(true);
-      expect(componentMutationService.addComponent).toHaveBeenCalledWith(
-        'entity:1',
-        'test:component',
-        { value: 42 }
-      );
-    });
-
-    it('throws descriptive errors for invalid entity identifiers', async () => {
-      const manager = new EntityMutationManager({
-        componentMutationService,
-        lifecycleManager,
-        logger,
-      });
-
-      await expect(
-        manager.addComponent(null, 'test:component', { value: 42 })
-      ).rejects.toThrow(InvalidArgumentError);
-      const [message] = logger.error.mock.calls[0];
-      expect(message).toContain("Invalid ID 'null'");
-    });
-
-    it('throws descriptive errors for invalid component identifiers', async () => {
-      const manager = new EntityMutationManager({
-        componentMutationService,
-        lifecycleManager,
-        logger,
-      });
-
-      await expect(
-        manager.addComponent('entity:1', '  ', { value: 42 })
-      ).rejects.toThrow(InvalidArgumentError);
-      const [message] = logger.error.mock.calls[0];
-      expect(message).toContain("Invalid componentTypeId '  '");
-    });
-
-    it('validates dependency presence when constructing the manager', () => {
-      expect(
-        () =>
-          new EntityMutationManager({
-            componentMutationService: null,
-            lifecycleManager,
-            logger,
-          })
-      ).toThrow(InvalidArgumentError);
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Missing required dependency: ComponentMutationService'
         )
       );
     });

@@ -9,6 +9,8 @@ import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 import {
   buildStateMap,
   collectExpressionStateKeys,
+  ensurePrototypeKeys,
+  DEFAULT_SEXUAL_KEYS,
 } from '../../common/expressionTestUtils.js';
 import { registerExpressionServices } from '../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -20,7 +22,13 @@ import {
 } from '../../../src/constants/componentIds.js';
 
 const EXPRESSIONS_DIRS = [
-  path.resolve(process.cwd(), 'data', 'mods', 'emotions', 'expressions'),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-anger',
+    'expressions'
+  ),
   path.resolve(
     process.cwd(),
     'data',
@@ -135,6 +143,8 @@ describe('Expression Flow - Integration', () => {
     emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
     ({ emotionKeys, sexualKeys } = collectExpressionStateKeys(loadedExpressions));
     emotionCalculator.getEmotionPrototypeKeys.mockReturnValue(emotionKeys);
+    // Use ensurePrototypeKeys utility for fallback when expressions don't reference sexual states
+    sexualKeys = ensurePrototypeKeys(sexualKeys, DEFAULT_SEXUAL_KEYS);
     emotionCalculator.getSexualPrototypeKeys.mockReturnValue(sexualKeys);
     emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
     emotionCalculator.calculateSexualStates.mockReturnValue(
@@ -180,7 +190,7 @@ describe('Expression Flow - Integration', () => {
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     const [eventName, payload] = eventBus.dispatch.mock.calls[0];
     expect(eventName).toBe('core:perceptible_event');
-    expect(payload.contextualData.expressionId).toBe('emotions:rage_surge');
+    expect(payload.contextualData.expressionId).toBe('emotions-anger:rage_surge');
     expect(payload.descriptionText).toContain('Avery');
     expect(payload.descriptionText).not.toContain('{actor}');
     expect(payload.actorDescription).toBeDefined();

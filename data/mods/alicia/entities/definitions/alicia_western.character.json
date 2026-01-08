@@ -284,7 +284,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "llm"
+            "type": "human"
         },
         "music:is_musician": {},
         "core:notes": {

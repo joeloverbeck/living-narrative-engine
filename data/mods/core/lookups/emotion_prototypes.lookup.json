@@ -380,6 +380,24 @@
         "engagement <= -0.15"
       ]
     },
+    "dissociation": {
+      "weights": {
+        "threat": 0.75,
+        "agency_control": -0.85,
+        "engagement": -1.0,
+        "arousal": -0.35,
+        "valence": -0.15,
+        "future_expectancy": -0.25,
+        "self_evaluation": -0.10
+      },
+      "gates": [
+        "threat >= 0.35",
+        "agency_control <= -0.20",
+        "engagement <= -0.20",
+        "arousal <= 0.35",
+        "valence <= 0.10"
+      ]
+    },
     "fatigue": {
       "weights": {
         "arousal": -1.0,
@@ -537,6 +555,23 @@
         "arousal >= 0.30"
       ]
     },
+    "panic": {
+      "weights": {
+        "threat": 1.0,
+        "arousal": 1.0,
+        "agency_control": -1.0,
+        "valence": -0.7,
+        "engagement": 0.55,
+        "future_expectancy": -0.35
+      },
+      "gates": [
+        "threat >= 0.50",
+        "arousal >= 0.55",
+        "agency_control <= -0.10",
+        "valence <= -0.15",
+        "engagement >= 0.10"
+      ]
+    },
     "dread": {
       "weights": {
         "future_expectancy": -0.8,
@@ -584,6 +619,23 @@
       "gates": [
         "threat >= 0.30",
         "arousal >= 0.20"
+      ]
+    },
+    "freeze": {
+      "weights": {
+        "threat": 1.0,
+        "agency_control": -1.0,
+        "valence": -0.35,
+        "arousal": -0.15,
+        "engagement": 0.25
+      },
+      "gates": [
+        "threat >= 0.35",
+        "agency_control <= -0.30",
+        "valence <= -0.05",
+        "arousal >= -0.10",
+        "arousal <= 0.40",
+        "engagement >= 0.05"
       ]
     },
     "suspicion": {

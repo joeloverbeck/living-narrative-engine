@@ -10,6 +10,7 @@ import { aiTokens } from './tokens/tokens-ai.js';
 import { pipelineTokens } from './tokens/tokens-pipeline.js';
 import { actionTracingTokens } from './tokens/actionTracingTokens.js';
 import { monitoringTokens } from './tokens/tokens-monitoring.js';
+import { diagnosticsTokens } from './tokens/tokens-diagnostics.js';
 
 /**
  * @typedef {string} DiToken
@@ -27,4 +28,8 @@ export const tokens = freeze({
   ...pipelineTokens,
   ...actionTracingTokens,
   ...monitoringTokens,
+  ...diagnosticsTokens,
 });
+
+// Named exports for direct access to token groups
+export { diagnosticsTokens } from './tokens/tokens-diagnostics.js';

@@ -76,7 +76,7 @@ const capturePerceptibleEvents = (eventBus) => {
 const setupExpressionEnv = async (extraExpressions = []) => {
   const env = await createE2ETestEnvironment({
     loadMods: true,
-    mods: ['core', 'emotions', 'emotions-attention'],
+    mods: ['core', 'emotions-sexuality', 'emotions-attention'],
     stubLLM: true,
   });
 
