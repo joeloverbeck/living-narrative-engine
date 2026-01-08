@@ -27,7 +27,7 @@ Each test should:
 - Assert the computed values used by prerequisites (e.g., `context.emotions.disgust`).
 - Run `expressionEvaluatorService.evaluateAll(context)` and assert the target expression id is present.
 
-#### A1. emotions:awed_transfixion
+#### A1. emotions-positive-affect:awed_transfixion
 Expression: `data/mods/emotions/expressions/awed_transfixion.expression.json`
 Prereqs: awe >= 0.65, terror <= 0.35, rage <= 0.35, (surprise_startle >= 0.25 OR awe delta >= 0.12), and euphoria relationship.
 
@@ -115,7 +115,7 @@ Expected checks:
 - `context.emotions.terror < 0.60`
 - `max(courage delta, determination delta) >= 0.10`
 
-#### A4. emotions:sigh_of_relief
+#### A4. emotions-positive-affect:sigh_of_relief
 Expression: `data/mods/emotions/expressions/sigh_of_relief.expression.json`
 Prereqs: relief >= 0.55, previous fear >= 0.25, current fear <= 0.20, relief delta >= 0.15, fear delta <= -0.20.
 

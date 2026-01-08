@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions:euphoric_excitement",
+  "id": "emotions-positive-affect:euphoric_excitement",
   "description": "High-energy joy with elevated arousal and positive valence.",
   "priority": 73,
   "prerequisites": [

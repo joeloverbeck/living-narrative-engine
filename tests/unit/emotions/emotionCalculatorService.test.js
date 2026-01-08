@@ -132,12 +132,47 @@ describe('EmotionCalculatorService', () => {
           })
       ).toThrow(InvalidArgumentError);
     });
+
+    it('should ignore invalid displayConfig.maxEmotionalStates values', () => {
+      // Test with invalid maxEmotionalStates (not a positive integer)
+      const serviceWithInvalidConfig = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+        displayConfig: { maxEmotionalStates: -5, maxSexualStates: 0 },
+      });
+
+      // Service should be created successfully with defaults
+      expect(serviceWithInvalidConfig).toBeInstanceOf(EmotionCalculatorService);
+    });
+
+    it('should ignore non-integer displayConfig values', () => {
+      const serviceWithFloatConfig = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+        displayConfig: { maxEmotionalStates: 2.5, maxSexualStates: 3.7 },
+      });
+
+      expect(serviceWithFloatConfig).toBeInstanceOf(EmotionCalculatorService);
+    });
   });
 
   describe('calculateSexualArousal', () => {
     it('should return null when sexualState is null', () => {
       const result = service.calculateSexualArousal(null);
       expect(result).toBeNull();
+    });
+
+    it('should handle non-serializable sexualState in error messages', () => {
+      // Create an object with a circular reference that will cause JSON.stringify to throw
+      const circular = { sex_excitation: 'invalid' };
+      circular.self = circular;
+
+      expect(() => service.calculateSexualArousal(circular)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.calculateSexualArousal(circular)).toThrow(
+        '[unserializable sexualState]'
+      );
     });
 
     it('should return null when sexualState is undefined', () => {
@@ -882,14 +917,16 @@ describe('EmotionCalculatorService', () => {
       expect(result.has('calm')).toBe(true);
     });
 
-    it('should handle unknown gate operator', () => {
+    it('should warn about unsupported gate operator format', () => {
+      // Note: Operators != are not in the regex pattern (>=|<=|>|<|==)
+      // so they fail at the parsing stage, not at the operator evaluation stage
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:emotion_prototypes') {
           return {
             entries: {
               test_emotion: {
                 weights: { valence: 1.0 },
-                gates: ['valence != 0.50'], // != is not supported
+                gates: ['valence != 0.50'], // != is not in the supported operator regex
               },
             },
           };
@@ -905,8 +942,64 @@ describe('EmotionCalculatorService', () => {
       const moodData = { valence: 50 };
       freshService.calculateEmotions(moodData, null);
 
-      // Invalid operator format - gate won't parse, so warning about invalid format
-      expect(mockLogger.warn).toHaveBeenCalled();
+      // Gate with unsupported operator format triggers invalid format warning
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid gate format')
+      );
+    });
+  });
+
+  describe('getEmotionPrototypeKeys', () => {
+    it('should return emotion prototype keys when available', () => {
+      const keys = service.getEmotionPrototypeKeys();
+
+      expect(keys).toContain('joy');
+      expect(keys).toContain('sadness');
+      expect(keys).toContain('pride');
+      expect(keys).toContain('fear');
+      expect(keys).toContain('calm');
+      expect(keys).toContain('lust_emotion');
+      expect(keys.length).toBe(Object.keys(mockEmotionPrototypes).length);
+    });
+
+    it('should return empty array and log warning when prototypes unavailable', () => {
+      mockDataRegistry.get.mockReturnValue(null);
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const keys = freshService.getEmotionPrototypeKeys();
+
+      expect(keys).toEqual([]);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Emotion prototypes unavailable')
+      );
+    });
+  });
+
+  describe('getSexualPrototypeKeys', () => {
+    it('should return sexual prototype keys when available', () => {
+      const keys = service.getSexualPrototypeKeys();
+
+      expect(keys).toContain('sexual_lust');
+      expect(keys).toContain('aroused_with_shame');
+      expect(keys.length).toBe(Object.keys(mockSexualPrototypes).length);
+    });
+
+    it('should return empty array and log warning when prototypes unavailable', () => {
+      mockDataRegistry.get.mockReturnValue(null);
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const keys = freshService.getSexualPrototypeKeys();
+
+      expect(keys).toEqual([]);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Sexual prototypes unavailable')
+      );
     });
   });
 
@@ -1404,6 +1497,119 @@ describe('EmotionCalculatorService', () => {
   });
 
   describe('edge cases', () => {
+    it('should handle null moodData', () => {
+      const result = service.calculateEmotions(null, null);
+      expect(result).toBeInstanceOf(Map);
+      expect(result.size).toBeGreaterThan(0);
+    });
+
+    it('should handle undefined moodData', () => {
+      const result = service.calculateEmotions(undefined, null);
+      expect(result).toBeInstanceOf(Map);
+    });
+
+    it('should handle prototype with empty weights object', () => {
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              empty_weights_emotion: {
+                weights: {},
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      const result = freshService.calculateEmotions({ valence: 50 }, null);
+
+      expect(result.has('empty_weights_emotion')).toBe(true);
+      expect(result.get('empty_weights_emotion')).toBe(0);
+    });
+
+    it('should handle sexual_inhibition alias in normalization', () => {
+      // Test that sexual_inhibition (without sex_ prefix) is properly validated
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        if (category === 'lookups' && id === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              test_emotion: {
+                weights: { sexual_inhibition: 1.0 },
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      const freshService = new EmotionCalculatorService({
+        logger: mockLogger,
+        dataRegistry: mockDataRegistry,
+      });
+
+      // Use sexual_inhibition property (without sex_ prefix)
+      const result = freshService.calculateEmotions(
+        {},
+        null,
+        { sexual_inhibition: 80 }
+      );
+
+      expect(result.has('test_emotion')).toBe(true);
+      expect(result.get('test_emotion')).toBeCloseTo(0.8, 2);
+    });
+
+    it('should throw for invalid sexual_inhibition value', () => {
+      expect(() =>
+        service.calculateEmotions({}, null, { sexual_inhibition: 0.5 })
+      ).toThrow(InvalidArgumentError);
+    });
+
+    it('should handle moodData with non-number values', () => {
+      const moodData = {
+        valence: 50,
+        arousal: 'not a number', // should be skipped
+        threat: null, // should be skipped
+      };
+
+      // Should not throw, just skip non-number values
+      const result = service.calculateEmotions(moodData, null);
+      expect(result).toBeInstanceOf(Map);
+    });
+
+    it('should handle non-integer decimal values (not pre-normalized)', () => {
+      // Test a decimal value that is NOT in (0,1) range - should not show pre-normalized hint
+      const sexualState = {
+        sex_excitation: 1.5, // non-integer but > 1, so NOT pre-normalized
+      };
+
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        InvalidArgumentError
+      );
+      // Should NOT contain the pre-normalized hint since 1.5 is not in (0,1)
+      expect(() => service.calculateSexualArousal(sexualState)).toThrow(
+        /non-integer/
+      );
+    });
+
+    it('should handle non-object sexualState values in calculateSexualArousal', () => {
+      // Test with primitive values that are truthy but not objects
+      // These should return 0 since they have no excitation/inhibition/baseline properties
+      const result1 = service.calculateSexualArousal('string value');
+      expect(result1).toBe(0); // Defaults to 0 for missing fields
+
+      const result2 = service.calculateSexualArousal(42);
+      expect(result2).toBe(0);
+
+      const result3 = service.calculateSexualArousal(true);
+      expect(result3).toBe(0);
+    });
+
     it('should handle all zero mood values', () => {
       const moodData = {
         valence: 0,

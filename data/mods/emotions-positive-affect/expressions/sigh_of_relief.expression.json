@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:sigh_of_relief",
+    "id": "emotions-positive-affect:sigh_of_relief",
     "description": "A visible release of tension after fear drops and relief spikes",
     "priority": 76,
     "prerequisites": [

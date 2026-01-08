@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:confused_frown",
+    "id": "emotions-attention:confused_frown",
     "description": "Confusion or bewilderment - attention snagged on inconsistency, showing as a puzzled frown and small orientation gestures.",
     "priority": 46,
     "prerequisites": [

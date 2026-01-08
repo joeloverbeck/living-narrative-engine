@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:amused_chuckle",
+    "id": "emotions-positive-affect:amused_chuckle",
     "description": "Light amusement surfacing as a contained laugh or grin—socially readable, de-escalating, and safe.",
     "priority": 62,
     "prerequisites": [

@@ -2,7 +2,7 @@
 
 ## Context
 
-Expressions are loaded from `data/mods/emotions/expressions/` by `src/loaders/expressionLoader.js` (registered in `src/dependencyInjection/registrations/loadersRegistrations.js`). They are cached and sorted by priority in `src/expressions/expressionRegistry.js`. When the engine initializes, `src/initializers/services/initializationService.js` attaches `ExpressionPersistenceListener.handleEvent` to `ACTION_DECIDED` events via `setupPersistenceListeners(...)`.
+Expressions are loaded from `data/mods/*/expressions/` by `src/loaders/expressionLoader.js` (registered in `src/dependencyInjection/registrations/loadersRegistrations.js`). They are cached and sorted by priority in `src/expressions/expressionRegistry.js`. When the engine initializes, `src/initializers/services/initializationService.js` attaches `ExpressionPersistenceListener.handleEvent` to `ACTION_DECIDED` events via `setupPersistenceListeners(...)`.
 
 The runtime execution path for expression triggering is:
 
@@ -69,7 +69,7 @@ Add a new E2E suite under `tests/e2e/expressions/ExpressionTriggering.e2e.test.j
 1. **Happy path from LLM update to perceptible event**
    - Initialize a world with the `emotions` mod loaded.
    - Create or select an LLM-controlled actor with mood and sexual_state components.
-   - Simulate `ACTION_DECIDED` with `extractedData.moodUpdate` that drives a known expression to pass (choose a specific expression from `data/mods/emotions/expressions/` with stable prerequisites, e.g., `emotions:quiet_contentment`).
+   - Simulate `ACTION_DECIDED` with `extractedData.moodUpdate` that drives a known expression to pass (choose a specific expression from `data/mods/*/expressions/` with stable prerequisites, e.g., `emotions-positive-affect:quiet_contentment`).
    - Assert `core:perceptible_event` appears with `contextualData.expressionId` matching the expected expression.
 
 2. **Priority selection in full stack**
@@ -101,10 +101,10 @@ Add INFO-level logs to improve observability of the expression system. The log m
 ## Acceptance Criteria
 
 - Integration tests confirm expression dispatch only occurs on actual mood/sexual_state changes and that priority selection is deterministic.
-- E2E tests prove that a valid expression in `data/mods/emotions/expressions/` can trigger from an `ACTION_DECIDED` payload and yield a perceptible event.
+- E2E tests prove that a valid expression in `data/mods/*/expressions/` can trigger from an `ACTION_DECIDED` payload and yield a perceptible event.
 - INFO logs provide counts and identifiers for expressions considered, matched, and selected, enabling easy validation that expressions are loaded and evaluated.
 
 ## Notes / Open Questions
 
 - Current `ExpressionPersistenceListener` does not explicitly compare updates against the previous component values, so tests must drive or enforce a change-detection behavior in the implementation.
-- Identify a stable expression in `data/mods/emotions/expressions/` with prerequisites that are straightforward to satisfy in an E2E fixture, or add a minimal test expression fixture specifically for testing.
+- Identify a stable expression in `data/mods/*/expressions/` with prerequisites that are straightforward to satisfy in an E2E fixture, or add a minimal test expression fixture specifically for testing.

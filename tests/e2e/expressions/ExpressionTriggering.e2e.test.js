@@ -76,7 +76,7 @@ const capturePerceptibleEvents = (eventBus) => {
 const setupExpressionEnv = async (extraExpressions = []) => {
   const env = await createE2ETestEnvironment({
     loadMods: true,
-    mods: ['core', 'emotions'],
+    mods: ['core', 'emotions', 'emotions-attention'],
     stubLLM: true,
   });
 
@@ -206,7 +206,18 @@ describe('Expression triggering E2E', () => {
   });
 
   it('skips dispatch on unchanged state updates after initial change', async () => {
-    activeEnv = await setupExpressionEnv();
+    // Inject deterministic expression with no prerequisites to isolate
+    // the caching/unchanged detection behavior being tested
+    const deterministicExpression = {
+      id: 'test:unchanged_state_expression',
+      priority: 9999,
+      prerequisites: [],
+      description_text: '{actor} shows an expression.',
+      actor_description: 'Expression.',
+      tags: ['test'],
+    };
+
+    activeEnv = await setupExpressionEnv([deterministicExpression]);
     const { env, safeEventDispatcher, entityManager } = activeEnv;
     const { events, unsubscribe } = capturePerceptibleEvents(
       env.services.eventBus

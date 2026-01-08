@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:optimistic_lift",
+    "id": "emotions-positive-affect:optimistic_lift",
     "description": "General upbeat expectancy: things are likely to go well, and the body behaves as if it believes that.",
     "priority": 61,
     "prerequisites": [

@@ -85,11 +85,43 @@ describe('Emotions sadness expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { despair: 0.75, sadness: 0.65 },
+      emotions: {
+        despair: 0.75,
+        sadness: 0.65,
+        hope: 0.2,
+        optimism: 0.2,
+        rage: 0.2,
+        terror: 0.2,
+      },
+      moodAxes: {
+        future_expectancy: -45,
+        engagement: -40,
+        agency_control: -35,
+        arousal: 15,
+      },
+      previousEmotions: {
+        despair: 0.5,
+      },
     };
 
     const failingContext = {
-      emotions: { despair: 0.65, sadness: 0.65 },
+      emotions: {
+        despair: 0.65,
+        sadness: 0.65,
+        hope: 0.2,
+        optimism: 0.2,
+        rage: 0.2,
+        terror: 0.2,
+      },
+      moodAxes: {
+        future_expectancy: -45,
+        engagement: -40,
+        agency_control: -35,
+        arousal: 15,
+      },
+      previousEmotions: {
+        despair: 0.5,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -117,13 +149,41 @@ describe('Emotions sadness expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { grief: 0.6, sadness: 0.55 },
-      moodAxes: { arousal: 10 },
+      emotions: {
+        grief: 0.6,
+        sadness: 0.55,
+        alarm: 0.2,
+        fear: 0.3,
+        anxiety: 0.4,
+      },
+      moodAxes: {
+        arousal: 10,
+        valence: -20,
+        future_expectancy: -15,
+      },
+      previousEmotions: {
+        grief: 0.5,
+        sadness: 0.4,
+      },
     };
 
     const failingContext = {
-      emotions: { grief: 0.6, sadness: 0.55 },
-      moodAxes: { arousal: 40 },
+      emotions: {
+        grief: 0.6,
+        sadness: 0.55,
+        alarm: 0.2,
+        fear: 0.3,
+        anxiety: 0.4,
+      },
+      moodAxes: {
+        arousal: 40,
+        valence: -20,
+        future_expectancy: -15,
+      },
+      previousEmotions: {
+        grief: 0.5,
+        sadness: 0.4,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -135,11 +195,37 @@ describe('Emotions sadness expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { loneliness: 0.6 },
+      emotions: {
+        loneliness: 0.6,
+        affection: 0.3,
+        love_attachment: 0.3,
+        trust: 0.3,
+        gratitude: 0.3,
+        despair: 0.5,
+      },
+      moodAxes: {
+        valence: -20,
+      },
+      previousEmotions: {
+        loneliness: 0.45,
+      },
     };
 
     const failingContext = {
-      emotions: { loneliness: 0.4 },
+      emotions: {
+        loneliness: 0.4,
+        affection: 0.3,
+        love_attachment: 0.3,
+        trust: 0.3,
+        gratitude: 0.3,
+        despair: 0.5,
+      },
+      moodAxes: {
+        valence: -20,
+      },
+      previousEmotions: {
+        loneliness: 0.45,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -151,11 +237,43 @@ describe('Emotions sadness expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { disappointment: 0.5, sadness: 0.4 },
+      emotions: {
+        disappointment: 0.5,
+        sadness: 0.4,
+        anger: 0.3,
+        rage: 0.15,
+        frustration: 0.4,
+        despair: 0.4,
+        grief: 0.5,
+      },
+      moodAxes: {
+        arousal: 20,
+        valence: -15,
+        future_expectancy: 5,
+      },
+      previousEmotions: {
+        disappointment: 0.35,
+      },
     };
 
     const failingContext = {
-      emotions: { disappointment: 0.3, sadness: 0.4 },
+      emotions: {
+        disappointment: 0.3,
+        sadness: 0.4,
+        anger: 0.3,
+        rage: 0.15,
+        frustration: 0.4,
+        despair: 0.4,
+        grief: 0.5,
+      },
+      moodAxes: {
+        arousal: 20,
+        valence: -15,
+        future_expectancy: 5,
+      },
+      previousEmotions: {
+        disappointment: 0.35,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);

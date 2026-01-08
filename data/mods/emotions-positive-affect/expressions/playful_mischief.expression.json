@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions:playful_mischief",
+  "id": "emotions-positive-affect:playful_mischief",
   "description": "Lighthearted playfulness with a hint of mischief.",
   "priority": 56,
   "prerequisites": [

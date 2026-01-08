@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:inspired_uplift",
+    "id": "emotions-positive-affect:inspired_uplift",
     "description": "Inspiration: engaged attention paired with hopeful possibility; the actor shows uplift, mental expansion, and forward-looking energy.",
     "priority": 70,
     "prerequisites": [

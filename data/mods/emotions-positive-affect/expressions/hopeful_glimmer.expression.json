@@ -1,6 +1,6 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions:hopeful_glimmer",
+    "id": "emotions-positive-affect:hopeful_glimmer",
     "description": "A small but meaningful uptick in hope—future feels less closed, possibilities re-enter the frame.",
     "priority": 64,
     "prerequisites": [

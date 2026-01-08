@@ -6,27 +6,33 @@ import { describe, expect, it } from '@jest/globals';
 import path from 'node:path';
 import { readFile, readdir } from 'node:fs/promises';
 
-const EXPRESSIONS_DIR = path.resolve(
-  process.cwd(),
-  'data',
-  'mods',
-  'emotions',
-  'expressions'
-);
+const EXPRESSIONS_DIRS = [
+  path.resolve(process.cwd(), 'data', 'mods', 'emotions', 'expressions'),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-attention',
+    'expressions'
+  ),
+];
 
 const loadExpressions = async () => {
-  const files = await readdir(EXPRESSIONS_DIR);
   const expressions = [];
 
-  for (const file of files) {
-    if (!file.endsWith('.expression.json')) {
-      continue;
-    }
+  for (const dir of EXPRESSIONS_DIRS) {
+    const files = await readdir(dir);
 
-    const expression = JSON.parse(
-      await readFile(path.join(EXPRESSIONS_DIR, file), 'utf-8')
-    );
-    expressions.push(expression);
+    for (const file of files) {
+      if (!file.endsWith('.expression.json')) {
+        continue;
+      }
+
+      const expression = JSON.parse(
+        await readFile(path.join(dir, file), 'utf-8')
+      );
+      expressions.push(expression);
+    }
   }
 
   return expressions;
