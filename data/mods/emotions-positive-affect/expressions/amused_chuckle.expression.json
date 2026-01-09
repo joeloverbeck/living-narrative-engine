@@ -28,7 +28,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -36,7 +36,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -108,7 +108,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -145,5 +145,6 @@
         "amusement",
         "social",
         "deescalation"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

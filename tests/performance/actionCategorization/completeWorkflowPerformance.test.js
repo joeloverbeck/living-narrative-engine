@@ -71,6 +71,7 @@ describe('Complete Action Categorization Workflow Performance', () => {
         getCharacterPortrayalGuidelines: () =>
           'Portray characters realistically.',
         getNc21ContentPolicyText: () => 'Follow content guidelines.',
+        getMoodUpdateInstructionText: () => '',
         getFinalLlmInstructionText: () => 'Choose an action by its index.',
       },
       perceptionLogFormatter: { format: (log) => `Formatted: ${log}` },

@@ -22,6 +22,7 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { extractEntityId } from '../utils/entityUtils.js';
 
 /**
  * Color configuration for each mood axis.
@@ -252,21 +253,24 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
    *
    * @param {object} eventWrapper - The event wrapper containing payload.
    * @param {object} eventWrapper.payload - The event payload.
-   * @param {string} eventWrapper.payload.entityId - The entity that received the component.
-   * @param {string} eventWrapper.payload.componentId - The component that was added.
+   * @param {string|object} eventWrapper.payload.entity - The entity that received the component (may be entity object or string ID).
+   * @param {string} eventWrapper.payload.componentTypeId - The component type that was added.
    * @private
    */
   #handleComponentAdded(eventWrapper) {
     const actualPayload = eventWrapper.payload;
 
-    if (!actualPayload || !actualPayload.entityId || !actualPayload.componentId) {
+    if (!actualPayload || !actualPayload.entity || !actualPayload.componentTypeId) {
       return;
     }
 
+    // Extract entity ID (handles both entity objects and string IDs)
+    const entityId = extractEntityId(actualPayload.entity);
+
     // Only re-render if this is the current actor's mood component
     if (
-      actualPayload.entityId === this.#currentActorId &&
-      actualPayload.componentId === MOOD_COMPONENT_ID
+      entityId === this.#currentActorId &&
+      actualPayload.componentTypeId === MOOD_COMPONENT_ID
     ) {
       this.logger.debug(
         `${this._logPrefix} Mood component added for current actor. Re-rendering.`

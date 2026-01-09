@@ -50,8 +50,10 @@ const createMockEntity = (
   hasMood = true,
   moodData = null,
   hasSexualState = true,
-  sexualStateData = null
+  sexualStateData = null,
+  entityId = 'test-entity'
 ) => ({
+  id: entityId,
   hasComponent: jest.fn((componentId) => {
     if (componentId === MOOD_COMPONENT_ID) return hasMood;
     if (componentId === SEXUAL_STATE_COMPONENT_ID) return hasSexualState;
@@ -354,7 +356,7 @@ describe('EmotionalStatePanel', () => {
   });
 
   describe('handleComponentAdded (via event)', () => {
-    it('re-renders when mood component is added to current actor', () => {
+    it('re-renders when mood component is added with entity object (production format)', () => {
       const mockEntity = createMockEntity(true, createMoodData({ valence: 30 }));
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -368,9 +370,32 @@ describe('EmotionalStatePanel', () => {
       // Clear previous calls
       deps.emotionCalculatorService.calculateEmotions.mockClear();
 
-      // Trigger component added
+      // Trigger component added with entity OBJECT (actual MoodPersistenceService format)
       componentHandler({
-        payload: { entityId: 'test-entity', componentId: MOOD_COMPONENT_ID },
+        payload: { entity: mockEntity, componentTypeId: MOOD_COMPONENT_ID },
+      });
+
+      // Should have re-rendered
+      expect(deps.emotionCalculatorService.calculateEmotions).toHaveBeenCalled();
+    });
+
+    it('re-renders when mood component is added with string entity ID (backward compatibility)', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ valence: 30 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const turnHandler = getEventHandler(TURN_STARTED_ID);
+      const componentHandler = getEventHandler(COMPONENT_ADDED_ID);
+
+      // First set the current actor
+      turnHandler({ payload: { entityId: 'test-entity' } });
+
+      // Clear previous calls
+      deps.emotionCalculatorService.calculateEmotions.mockClear();
+
+      // Trigger component added with string entity ID (backward compatibility)
+      componentHandler({
+        payload: { entity: 'test-entity', componentTypeId: MOOD_COMPONENT_ID },
       });
 
       // Should have re-rendered
@@ -391,7 +416,7 @@ describe('EmotionalStatePanel', () => {
 
       // Trigger component added for different entity
       componentHandler({
-        payload: { entityId: 'other-entity', componentId: MOOD_COMPONENT_ID },
+        payload: { entity: 'other-entity', componentTypeId: MOOD_COMPONENT_ID },
       });
 
       // Should NOT have re-rendered
@@ -412,7 +437,7 @@ describe('EmotionalStatePanel', () => {
 
       // Trigger component added for different component
       componentHandler({
-        payload: { entityId: 'test-entity', componentId: 'some:other:component' },
+        payload: { entity: 'test-entity', componentTypeId: 'some:other:component' },
       });
 
       // Should NOT have re-rendered
@@ -423,11 +448,11 @@ describe('EmotionalStatePanel', () => {
       new EmotionalStatePanel(deps);
       const componentHandler = getEventHandler(COMPONENT_ADDED_ID);
 
-      // Should not throw for various invalid payloads
+      // Should not throw for various invalid payloads (now checks for entity and componentTypeId)
       expect(() => componentHandler({ payload: null })).not.toThrow();
       expect(() => componentHandler({ payload: {} })).not.toThrow();
-      expect(() => componentHandler({ payload: { entityId: 'test' } })).not.toThrow();
-      expect(() => componentHandler({ payload: { componentId: 'test' } })).not.toThrow();
+      expect(() => componentHandler({ payload: { entity: 'test' } })).not.toThrow();
+      expect(() => componentHandler({ payload: { componentTypeId: 'test' } })).not.toThrow();
     });
   });
 

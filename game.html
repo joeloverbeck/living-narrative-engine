@@ -429,7 +429,52 @@
         </div>
 
         <div id="llm-prompt-debug-content-container">
-          <pre id="llm-prompt-debug-content" tabindex="0"></pre>
+          <div
+            id="llm-prompt-debug-tablist"
+            class="prompt-preview-tabs"
+            role="tablist"
+            aria-label="Prompt preview tabs"
+          >
+            <button
+              type="button"
+              id="llm-prompt-debug-tab-mood"
+              class="prompt-preview-tab-button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="llm-prompt-debug-panel-mood"
+              tabindex="-1"
+            >
+              Mood Update Prompt
+            </button>
+            <button
+              type="button"
+              id="llm-prompt-debug-tab-action"
+              class="prompt-preview-tab-button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="llm-prompt-debug-panel-action"
+              tabindex="0"
+            >
+              Action Decision Prompt
+            </button>
+          </div>
+          <div class="prompt-preview-panels">
+            <pre
+              id="llm-prompt-debug-panel-mood"
+              class="prompt-preview-panel"
+              role="tabpanel"
+              aria-labelledby="llm-prompt-debug-tab-mood"
+              tabindex="0"
+              hidden
+            ></pre>
+            <pre
+              id="llm-prompt-debug-panel-action"
+              class="prompt-preview-panel"
+              role="tabpanel"
+              aria-labelledby="llm-prompt-debug-tab-action"
+              tabindex="0"
+            ></pre>
+          </div>
         </div>
 
         <div class="modal-actions">

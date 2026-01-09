@@ -9,14 +9,16 @@
     "characterPortrayalGuidelinesTemplate": { "type": "string" },
     "nc21ContentPolicyText": { "type": "string" },
     "finalLlmInstructionText": { "type": "string" },
-    "actionTagRulesContent": { "type": "string" }
+    "actionTagRulesContent": { "type": "string" },
+    "moodUpdateOnlyInstructionText": { "type": "string" }
   },
   "required": [
     "coreTaskDescriptionText",
     "characterPortrayalGuidelinesTemplate",
     "nc21ContentPolicyText",
     "finalLlmInstructionText",
-    "actionTagRulesContent"
+    "actionTagRulesContent",
+    "moodUpdateOnlyInstructionText"
   ],
   "additionalProperties": false
 }

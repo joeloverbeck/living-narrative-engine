@@ -49,6 +49,10 @@ import TextDataFetcher from '../../data/textDataFetcher.js';
 import {
   LLM_TURN_ACTION_RESPONSE_SCHEMA,
   LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
+  LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
+  LLM_MOOD_UPDATE_RESPONSE_SCHEMA_ID,
 } from '../../turns/schemas/llmOutputSchemas.js';
 // Browser-compatible placeholder schemas - actual schemas loaded at runtime
 // These are minimal schemas that satisfy the type requirements
@@ -187,6 +191,14 @@ export async function registerLoaders(container) {
           {
             schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
             id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          },
+          {
+            schema: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
+            id: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
+          },
+          {
+            schema: LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
+            id: LLM_MOOD_UPDATE_RESPONSE_SCHEMA_ID,
           },
           // Register thematic-direction with full URI (matches $ref in character-concept schema)
           {

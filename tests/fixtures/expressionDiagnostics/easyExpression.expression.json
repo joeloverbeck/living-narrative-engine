@@ -1,0 +1,13 @@
+{
+  "id": "test:easy_trigger",
+  "description": "Expression that triggers frequently (>50% of the time)",
+  "priority": 100,
+  "prerequisites": [
+    {
+      "logic": {
+        ">=": [{ "var": "emotions.curiosity" }, 0.1]
+      }
+    }
+  ],
+  "_comment": "Low threshold means high trigger rate"
+}

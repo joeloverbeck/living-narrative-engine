@@ -20,6 +20,8 @@ import { IInitializationService } from '../../interfaces/IInitializationService.
 import {
   ACTION_DECIDED_ID,
   INITIALIZATION_SERVICE_FAILED_ID,
+  MOOD_STATE_UPDATED_ID,
+  TURN_STARTED_ID,
   UI_SHOW_FATAL_ERROR_ID,
 } from '../../constants/eventIds.js';
 import loadAndInitScopes from './scopeRegistryUtils.js';
@@ -343,6 +345,30 @@ class InitializationService extends IInitializationService {
           },
           {
             eventId: ACTION_DECIDED_ID,
+            handler: this.#expressionPersistenceListener.handleEvent.bind(
+              this.#expressionPersistenceListener
+            ),
+          },
+          {
+            eventId: MOOD_STATE_UPDATED_ID,
+            handler: this.#moodSexualListener.handleEvent.bind(
+              this.#moodSexualListener
+            ),
+          },
+          {
+            eventId: MOOD_STATE_UPDATED_ID,
+            handler: this.#expressionPersistenceListener.handleEvent.bind(
+              this.#expressionPersistenceListener
+            ),
+          },
+          {
+            eventId: TURN_STARTED_ID,
+            handler: this.#moodSexualListener.handleEvent.bind(
+              this.#moodSexualListener
+            ),
+          },
+          {
+            eventId: TURN_STARTED_ID,
             handler: this.#expressionPersistenceListener.handleEvent.bind(
               this.#expressionPersistenceListener
             ),

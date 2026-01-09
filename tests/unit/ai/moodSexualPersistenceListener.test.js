@@ -6,7 +6,12 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { COMPONENT_ADDED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  COMPONENT_ADDED_ID,
+  MOOD_STATE_UPDATED_ID,
+  TURN_STARTED_ID,
+} from '../../../src/constants/eventIds.js';
 
 describe('MoodSexualPersistenceListener', () => {
   let logger;
@@ -78,6 +83,7 @@ describe('MoodSexualPersistenceListener', () => {
       };
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { moodUpdate },
@@ -107,6 +113,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { moodUpdate: newMood },
@@ -132,6 +139,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { moodUpdate: { valence: 0.5 } },
@@ -143,6 +151,48 @@ describe('MoodSexualPersistenceListener', () => {
       );
       expect(actorEntity.modifyComponent).not.toHaveBeenCalled();
       expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleEvent - two-phase tracking', () => {
+    test('marks mood updates from MOOD_STATE_UPDATED_ID and skips next ACTION_DECIDED_ID', () => {
+      const actorEntity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue({ valence: 0.1 }),
+        modifyComponent: jest.fn(),
+      };
+      entityManager.getEntityInstance.mockReturnValue(actorEntity);
+
+      listener.handleEvent({
+        type: MOOD_STATE_UPDATED_ID,
+        payload: {
+          actorId: 'actor1',
+          moodUpdate: { valence: 0.2 },
+          sexualUpdate: { sex_excitation: 0.1, sex_inhibition: 0.2 },
+        },
+      });
+
+      listener.handleEvent({
+        type: ACTION_DECIDED_ID,
+        payload: {
+          actorId: 'actor1',
+          extractedData: { moodUpdate: { valence: 0.3 } },
+        },
+      });
+
+      listener.handleEvent({
+        type: ACTION_DECIDED_ID,
+        payload: {
+          actorId: 'actor1',
+          extractedData: { moodUpdate: { valence: 0.4 } },
+        },
+      });
+
+      expect(entityManager.getEntityInstance).toHaveBeenCalledTimes(1);
+      expect(actorEntity.modifyComponent).toHaveBeenCalledWith(
+        MOOD_COMPONENT_ID,
+        { valence: 0.4 }
+      );
     });
   });
 
@@ -161,6 +211,7 @@ describe('MoodSexualPersistenceListener', () => {
       };
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { sexualUpdate },
@@ -193,6 +244,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: {
@@ -224,6 +276,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { sexualUpdate: { sex_excitation: 0.4, sex_inhibition: 0.3 } },
@@ -249,6 +302,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { sexualUpdate: { sex_excitation: 0.5 } },
@@ -276,6 +330,7 @@ describe('MoodSexualPersistenceListener', () => {
       const sexualUpdate = { sex_excitation: 0.3, sex_inhibition: 0.2 };
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { moodUpdate, sexualUpdate },
@@ -315,6 +370,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: {
@@ -361,6 +417,7 @@ describe('MoodSexualPersistenceListener', () => {
 
     test('does nothing when extractedData is null', () => {
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: { actorId: 'actor1', extractedData: null },
       });
 
@@ -369,6 +426,7 @@ describe('MoodSexualPersistenceListener', () => {
 
     test('does nothing when neither moodUpdate nor sexualUpdate present', () => {
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { thoughts: 'some thoughts', notes: [] },
@@ -384,6 +442,7 @@ describe('MoodSexualPersistenceListener', () => {
       entityManager.getEntityInstance.mockReturnValue(null);
 
       listener.handleEvent({
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'actor1',
           extractedData: { moodUpdate: { valence: 0.5 } },
@@ -410,6 +469,7 @@ describe('MoodSexualPersistenceListener', () => {
       // Should not throw
       expect(() => {
         listener.handleEvent({
+          type: ACTION_DECIDED_ID,
           payload: {
             actorId: 'actor1',
             extractedData: { moodUpdate: { valence: 0.5 } },
@@ -430,6 +490,7 @@ describe('MoodSexualPersistenceListener', () => {
 
       expect(() => {
         listener.handleEvent({
+          type: ACTION_DECIDED_ID,
           payload: {
             actorId: 'actor1',
             extractedData: { moodUpdate: { valence: 0.5 } },
@@ -438,6 +499,97 @@ describe('MoodSexualPersistenceListener', () => {
       }).not.toThrow();
 
       expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleEvent - TURN_STARTED_ID reset', () => {
+    test('clears tracking set on TURN_STARTED_ID', () => {
+      const actorEntity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue({ valence: 0.1 }),
+        modifyComponent: jest.fn(),
+      };
+      entityManager.getEntityInstance.mockReturnValue(actorEntity);
+
+      // Simulate Phase 1 mood update
+      listener.handleEvent({
+        type: MOOD_STATE_UPDATED_ID,
+        payload: { actorId: 'actor1', moodUpdate: { valence: 0.2 } },
+      });
+
+      // Fire TURN_STARTED_ID to reset tracking
+      listener.handleEvent({ type: TURN_STARTED_ID });
+
+      // Now ACTION_DECIDED_ID should NOT be skipped because tracking was cleared
+      listener.handleEvent({
+        type: ACTION_DECIDED_ID,
+        payload: {
+          actorId: 'actor1',
+          extractedData: { moodUpdate: { valence: 0.3 } },
+        },
+      });
+
+      // Should have processed the ACTION_DECIDED_ID because turn started cleared tracking
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('actor1');
+      expect(actorEntity.modifyComponent).toHaveBeenCalledWith(
+        MOOD_COMPONENT_ID,
+        { valence: 0.3 }
+      );
+    });
+
+    test('logs debug message on TURN_STARTED_ID', () => {
+      listener.handleEvent({ type: TURN_STARTED_ID });
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'MoodSexualPersistenceListener: Turn started - cleared tracking set'
+      );
+    });
+
+    test('multi-turn scenario clears tracking between turns', () => {
+      const actorEntity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue({ valence: 0.1 }),
+        modifyComponent: jest.fn(),
+      };
+      entityManager.getEntityInstance.mockReturnValue(actorEntity);
+
+      // Turn 1: Phase 1 mood update
+      listener.handleEvent({
+        type: MOOD_STATE_UPDATED_ID,
+        payload: { actorId: 'actor1', moodUpdate: { valence: 0.2 } },
+      });
+      // Turn 1: Phase 2 skipped
+      listener.handleEvent({
+        type: ACTION_DECIDED_ID,
+        payload: {
+          actorId: 'actor1',
+          extractedData: { moodUpdate: { valence: 0.25 } },
+        },
+      });
+
+      // Turn 2 starts
+      listener.handleEvent({ type: TURN_STARTED_ID });
+
+      // Turn 2: Phase 1 mood update for actor2
+      listener.handleEvent({
+        type: MOOD_STATE_UPDATED_ID,
+        payload: { actorId: 'actor2', moodUpdate: { valence: 0.5 } },
+      });
+
+      // Turn 2: actor1 should now be processable (was cleared by turn start)
+      listener.handleEvent({
+        type: ACTION_DECIDED_ID,
+        payload: {
+          actorId: 'actor1',
+          extractedData: { moodUpdate: { valence: 0.6 } },
+        },
+      });
+
+      // actor1 should have been processed
+      expect(actorEntity.modifyComponent).toHaveBeenCalledWith(
+        MOOD_COMPONENT_ID,
+        { valence: 0.6 }
+      );
     });
   });
 });

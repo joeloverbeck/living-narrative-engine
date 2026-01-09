@@ -78,6 +78,7 @@ function createMockStaticContentService() {
     getCharacterPortrayalGuidelines: jest.fn(() => 'Guidelines: Test guidelines.'),
     getNc21ContentPolicyText: jest.fn(() => 'Policy: Test policy.'),
     getFinalLlmInstructionText: jest.fn(() => 'Final Instructions: Test.'),
+    getMoodUpdateInstructionText: jest.fn(() => 'Mood Update: Test.'),
   };
 }
 

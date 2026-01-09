@@ -1,9 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { LLMChooser } from '../../../../src/turns/adapters/llmChooser.js';
-import {
-  createMockLogger,
-  createMockAIPromptPipeline,
-} from '../../../common/mockFactories.js';
+import { createMockLogger } from '../../../common/mockFactories.js';
 
 /**
  * Additional branch coverage tests for LLMChooser.
@@ -15,72 +12,31 @@ describe('LLMChooser additional branches', () => {
     expect(
       () =>
         new LLMChooser({
-          promptPipeline: {},
-          llmAdapter: { getAIDecision: jest.fn() },
-          responseProcessor: { processResponse: jest.fn() },
+          twoPhaseOrchestrator: {},
           logger,
         })
-    ).toThrow('promptPipeline invalid');
+    ).toThrow('twoPhaseOrchestrator invalid');
 
     expect(
       () =>
         new LLMChooser({
-          promptPipeline: createMockAIPromptPipeline('x'),
-          llmAdapter: {},
-          responseProcessor: { processResponse: jest.fn() },
-          logger,
-        })
-    ).toThrow('llmAdapter invalid');
-
-    expect(
-      () =>
-        new LLMChooser({
-          promptPipeline: createMockAIPromptPipeline('x'),
-          llmAdapter: { getAIDecision: jest.fn() },
-          responseProcessor: {},
-          logger,
-        })
-    ).toThrow('responseProcessor invalid');
-
-    expect(
-      () =>
-        new LLMChooser({
-          promptPipeline: createMockAIPromptPipeline('x'),
-          llmAdapter: { getAIDecision: jest.fn() },
-          responseProcessor: { processResponse: jest.fn() },
+          twoPhaseOrchestrator: { orchestrate: jest.fn() },
           logger: {},
         })
     ).toThrow('logger invalid');
   });
 
-  it('throws if prompt pipeline returns empty prompt', async () => {
-    const promptPipeline = createMockAIPromptPipeline('');
-    const llmAdapter = { getAIDecision: jest.fn() };
-    const responseProcessor = { processResponse: jest.fn() };
-    const chooser = new LLMChooser({
-      promptPipeline,
-      llmAdapter,
-      responseProcessor,
-      logger,
-    });
-    await expect(
-      chooser.choose({ actor: { id: 'a' }, context: {}, actions: [] })
-    ).rejects.toThrow('empty prompt');
-  });
-
-  it('returns notes and thoughts from responseProcessor', async () => {
-    const promptPipeline = createMockAIPromptPipeline('PROMPT');
-    const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
-    const responseProcessor = {
-      processResponse: jest.fn().mockResolvedValue({
-        action: { chosenIndex: 1, speech: null },
-        extractedData: { thoughts: 't', notes: ['n1'] },
-      }),
+  it('returns orchestrator result with notes and thoughts', async () => {
+    const expected = {
+      index: 1,
+      speech: null,
+      thoughts: 't',
+      notes: ['n1'],
+      moodUpdate: null,
+      sexualUpdate: null,
     };
     const chooser = new LLMChooser({
-      promptPipeline,
-      llmAdapter,
-      responseProcessor,
+      twoPhaseOrchestrator: { orchestrate: jest.fn().mockResolvedValue(expected) },
       logger,
     });
 
@@ -90,13 +46,6 @@ describe('LLMChooser additional branches', () => {
       actions: [],
     });
 
-    expect(result).toEqual({
-      index: 1,
-      speech: null,
-      thoughts: 't',
-      notes: ['n1'],
-      moodUpdate: null,
-      sexualUpdate: null,
-    });
+    expect(result).toEqual(expected);
   });
 });

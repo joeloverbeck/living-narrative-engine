@@ -39,6 +39,7 @@ describe('Tag Removal Performance Tests', () => {
       getCoreTaskDescriptionText: () => 'core-task',
       getCharacterPortrayalGuidelines: () => 'portrayal',
       getNc21ContentPolicyText: () => 'content-policy',
+      getMoodUpdateInstructionText: () => '',
       getFinalLlmInstructionText: () => 'final-instructions',
     },
     perceptionLogFormatter: {

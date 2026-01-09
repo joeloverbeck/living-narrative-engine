@@ -16,6 +16,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     getCharacterPortrayalGuidelines: () => 'portrayal',
     getNc21ContentPolicyText: () => 'content-policy',
     getFinalLlmInstructionText: () => 'final-instructions',
+    getMoodUpdateInstructionText: () => 'mood-update-instructions',
   };
 
   // perceptionLogFormatter just returns the array it was given

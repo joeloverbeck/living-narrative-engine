@@ -148,9 +148,9 @@ describe('Emotions anger expressions', () => {
       previousEmotions: { anger: 0.6, rage: 0.5 }, // For spike detection (delta >= 0.15)
       moodAxes: {
         arousal: 30, // >= 25
-        agency_control: -15, // <= -10
+        agency_control: 15, // >= 10
       },
-      previousMoodAxes: { agency_control: 5 }, // For agency drop detection
+      previousMoodAxes: { agency_control: 35 }, // For agency drop detection
     };
 
     // Failing context: rage too low
@@ -159,9 +159,9 @@ describe('Emotions anger expressions', () => {
       previousEmotions: { anger: 0.6, rage: 0.2 },
       moodAxes: {
         arousal: 30,
-        agency_control: -15,
+        agency_control: 15,
       },
-      previousMoodAxes: { agency_control: 5 },
+      previousMoodAxes: { agency_control: 35 },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -172,39 +172,53 @@ describe('Emotions anger expressions', () => {
     const expression = expressionsById['emotions-anger:cold_fury'];
     const logic = expression.prerequisites[0].logic;
 
-    // Passing context: satisfies all 9 conditions + activation
+    // Passing context: satisfies all gates + activation
     const passingContext = {
       emotions: {
-        anger: 0.7, // >= 0.60
+        anger: 0.5, // >= 0.32
         rage: 0.2, // <= 0.30
-        contempt: 0.35, // >= 0.30 (one of contempt/resentment/determination)
+        contempt: 0.25, // >= 0.20 (one of contempt/hatred/determination)
         determination: 0.1,
-        terror: 0.2, // <= 0.30
-        fear: 0.3, // <= 0.55
-        surprise_startle: 0.3, // <= 0.50
+        hatred: 0.1,
+        panic: 0.2, // <= 0.25
+        terror: 0.2, // <= 0.35
+        fear: 0.5, // <= 0.60
+        surprise_startle: 0.4, // <= 0.55
       },
-      previousEmotions: { anger: 0.6 }, // For activation via anger spike >= 0.08
+      previousEmotions: { anger: 0.42 }, // For activation via anger spike >= 0.06
       moodAxes: {
-        agency_control: 15, // >= 10
-        arousal: 40, // <= 55
+        agency_control: 25, // >= 20
+        arousal: 20, // 10-35 band
+        valence: -15, // <= -10
+      },
+      previousMoodAxes: {
+        agency_control: 15,
+        arousal: 35,
       },
     };
 
-    // Failing context: rage too high (not suppressed) and agency_control too low
+    // Failing context: rage too high (not suppressed) and valence too high
     const failingContext = {
       emotions: {
-        anger: 0.7,
+        anger: 0.5,
         rage: 0.5, // > 0.30 - fails
-        contempt: 0.35,
+        contempt: 0.25,
         determination: 0.1,
+        hatred: 0.1,
+        panic: 0.2,
         terror: 0.2,
-        fear: 0.3,
-        surprise_startle: 0.3,
+        fear: 0.5,
+        surprise_startle: 0.4,
       },
-      previousEmotions: { anger: 0.6 },
+      previousEmotions: { anger: 0.42 },
       moodAxes: {
-        agency_control: 5, // < 10 - also fails
-        arousal: 40,
+        agency_control: 25,
+        arousal: 20,
+        valence: -5, // > -10 - fails
+      },
+      previousMoodAxes: {
+        agency_control: 15,
+        arousal: 35,
       },
     };
 
@@ -256,7 +270,7 @@ describe('Emotions anger expressions', () => {
     const expression = expressionsById['emotions-loss:frustrated_helplessness'];
     const logic = expression.prerequisites[0].logic;
 
-    // Passing context: satisfies all 6 condition groups + worsening detection
+    // Passing context: satisfies all condition groups + worsening detection
     const passingContext = {
       emotions: {
         frustration: 0.6, // >= 0.55
@@ -264,11 +278,16 @@ describe('Emotions anger expressions', () => {
         despair: 0.1,
         stress: 0.4, // >= 0.35 (activation driver)
         numbness: 0.3, // <= 0.50
+        dissociation: 0.2, // < 0.35
+        freeze: 0.1, // < 0.25
+        anger: 0.2,
       },
       previousEmotions: { frustration: 0.45 }, // For worsening detection (spike >= 0.10)
       moodAxes: {
         agency_control: -50, // <= -40
         future_expectancy: -30, // <= -25 (one of the OR conditions)
+        engagement: 10, // >= 5
+        arousal: 10,
       },
       previousMoodAxes: { agency_control: -35 }, // For agency drop detection
     };
@@ -281,11 +300,16 @@ describe('Emotions anger expressions', () => {
         despair: 0.1, // < 0.35 - fails that OR branch
         stress: 0.4,
         numbness: 0.3,
+        dissociation: 0.2,
+        freeze: 0.1,
+        anger: 0.2,
       },
       previousEmotions: { frustration: 0.45 },
       moodAxes: {
         agency_control: -50,
         future_expectancy: -10, // > -25 - fails that OR branch (all OR conditions fail)
+        engagement: 10,
+        arousal: 10,
       },
       previousMoodAxes: { agency_control: -35 },
     };

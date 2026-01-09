@@ -63,6 +63,7 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
       getCharacterPortrayalGuidelines: jest.fn().mockReturnValue('Guidelines'),
       getNc21ContentPolicyText: jest.fn().mockReturnValue('Policy'),
       getFinalLlmInstructionText: jest.fn().mockReturnValue('Instructions'),
+      getMoodUpdateInstructionText: jest.fn().mockReturnValue('Mood Instructions'),
     };
 
     mockPerceptionLogFormatter = {

@@ -556,6 +556,8 @@ describeEngineSuite('GameEngine', (context) => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
         expect.objectContaining({
+          moodPrompt: null,
+          actionPrompt: null,
           prompt: null,
           actorId: null,
           actorName: null,
@@ -578,6 +580,7 @@ describeEngineSuite('GameEngine', (context) => {
         getTurnContext: jest.fn().mockReturnValue(turnContext),
       };
       const availableActions = [{ id: 'a' }, { id: 'b' }];
+      const moodPrompt = 'mood-prompt';
       const prompt = 'prompt-body';
 
       context.bed
@@ -587,6 +590,9 @@ describeEngineSuite('GameEngine', (context) => {
       context.bed
         .getEntityDisplayDataProvider()
         .getEntityName.mockReturnValue('Actor Name');
+      context.bed
+        .getMoodUpdatePromptPipeline()
+        .generateMoodUpdatePrompt.mockResolvedValue(moodPrompt);
       context.bed
         .getTurnActionChoicePipeline()
         .buildChoices.mockResolvedValue(availableActions);
@@ -605,12 +611,17 @@ describeEngineSuite('GameEngine', (context) => {
       expect(
         context.bed.getAiPromptPipeline().generatePrompt
       ).toHaveBeenCalledWith(actor, turnContext, availableActions);
+      expect(
+        context.bed.getMoodUpdatePromptPipeline().generateMoodUpdatePrompt
+      ).toHaveBeenCalledWith(actor, turnContext);
       expect(context.bed.getLlmAdapter().getAIDecision).not.toHaveBeenCalled();
       expect(
         context.bed.getSafeEventDispatcher().dispatch
       ).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
         expect.objectContaining({
+          moodPrompt,
+          actionPrompt: prompt,
           prompt,
           actorId,
           actorName: 'Actor Name',
@@ -636,6 +647,9 @@ describeEngineSuite('GameEngine', (context) => {
         .getActiveTurnHandler.mockReturnValue(handler);
       context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
       context.bed
+        .getMoodUpdatePromptPipeline()
+        .generateMoodUpdatePrompt.mockResolvedValue(null);
+      context.bed
         .getTurnActionChoicePipeline()
         .buildChoices.mockRejectedValue(failure);
       context.bed
@@ -652,6 +666,8 @@ describeEngineSuite('GameEngine', (context) => {
       ).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
         expect.objectContaining({
+          moodPrompt: null,
+          actionPrompt: null,
           prompt: null,
           actorId,
           actorName: actorId,

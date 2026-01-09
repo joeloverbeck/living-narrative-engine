@@ -82,9 +82,11 @@ describe('DiagnosticResult Model', () => {
       expect(result.rarityCategory).toBe('impossible');
     });
 
-    it('should return "impossible" when triggerRate is null', () => {
+    it('should return "unknown" when triggerRate is null and not marked impossible', () => {
       const result = new DiagnosticResult('test:expression');
-      expect(result.rarityCategory).toBe('impossible');
+      // When triggerRate is null and no impossibility detected,
+      // should return 'unknown' (awaiting simulation data)
+      expect(result.rarityCategory).toBe('unknown');
     });
 
     it('should return "impossible" when triggerRate is 0', () => {
@@ -567,6 +569,150 @@ describe('DiagnosticResult Model', () => {
       expect(Object.isFrozen(DiagnosticResult.RARITY_THRESHOLDS)).toBe(true);
       expect(Object.isFrozen(DiagnosticResult.RARITY_CATEGORIES)).toBe(true);
       expect(Object.isFrozen(DiagnosticResult.STATUS_INDICATORS)).toBe(true);
+    });
+
+    it('should export UNKNOWN in RARITY_CATEGORIES', () => {
+      expect(DiagnosticResult.RARITY_CATEGORIES.UNKNOWN).toBe('unknown');
+    });
+
+    it('should export unknown status indicator', () => {
+      expect(DiagnosticResult.STATUS_INDICATORS.unknown).toBeDefined();
+      expect(DiagnosticResult.STATUS_INDICATORS.unknown.color).toBe('gray');
+      expect(DiagnosticResult.STATUS_INDICATORS.unknown.emoji).toBe('⚪');
+      expect(DiagnosticResult.STATUS_INDICATORS.unknown.label).toBe('Unknown');
+    });
+  });
+
+  describe('getRarityCategoryForRate() static helper', () => {
+    it('should return "impossible" for rate 0', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0)).toBe('impossible');
+    });
+
+    it('should return "extremely_rare" for rate < 0.00001 (0.001%)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.000005)).toBe(
+        'extremely_rare'
+      );
+    });
+
+    it('should return "rare" for rate at EXTREMELY_RARE threshold (boundary)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.00001)).toBe('rare');
+    });
+
+    it('should return "rare" for rate in EXTREMELY_RARE-RARE range', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.0001)).toBe('rare');
+    });
+
+    it('should return "normal" for rate at RARE threshold (boundary)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.0005)).toBe('normal');
+    });
+
+    it('should return "normal" for rate in RARE-NORMAL range', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.01)).toBe('normal');
+    });
+
+    it('should return "frequent" for rate at NORMAL threshold (boundary)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.02)).toBe('frequent');
+    });
+
+    it('should return "frequent" for rate > NORMAL threshold', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.05)).toBe('frequent');
+      expect(DiagnosticResult.getRarityCategoryForRate(0.5)).toBe('frequent');
+    });
+
+    it('should match instance rarityCategory getter for all rates', () => {
+      const rates = [0, 0.000005, 0.00001, 0.0001, 0.0005, 0.01, 0.02, 0.05];
+
+      // Test each rate - all use the same setMonteCarloResults pattern
+      for (const rate of rates) {
+        const result = new DiagnosticResult('test:expression');
+        result.setMonteCarloResults({ triggerRate: rate });
+        expect(DiagnosticResult.getRarityCategoryForRate(rate)).toBe(
+          result.rarityCategory
+        );
+      }
+    });
+  });
+
+  describe('Static Analysis Only (No Monte Carlo)', () => {
+    it('should return "unknown" when static analysis passes but no simulation run', () => {
+      const result = new DiagnosticResult('test:expression');
+      // Static analysis with no issues
+      result.setStaticAnalysis({
+        gateConflicts: [],
+        unreachableThresholds: [],
+      });
+
+      // No Monte Carlo results set (triggerRate remains null)
+      // Should NOT be 'impossible' - should be 'unknown'
+      expect(result.rarityCategory).toBe('unknown');
+      expect(result.isImpossible).toBe(false);
+    });
+
+    it('should return "impossible" when static analysis detects gate conflicts', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: ['fear'],
+            gates: ['threat >= 0.5', 'threat <= 0.2'],
+          },
+        ],
+        unreachableThresholds: [],
+      });
+
+      expect(result.rarityCategory).toBe('impossible');
+      expect(result.isImpossible).toBe(true);
+    });
+
+    it('should return "impossible" when static analysis detects unreachable thresholds', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [],
+        unreachableThresholds: [
+          {
+            prototypeId: 'fear',
+            type: 'emotion',
+            threshold: 0.85,
+            maxPossible: 0.7666666666666667,
+            gap: 0.0833333333333333,
+          },
+        ],
+      });
+
+      expect(result.rarityCategory).toBe('impossible');
+      expect(result.isImpossible).toBe(true);
+      expect(result.impossibilityReason).toContain('Unreachable threshold');
+    });
+
+    it('should have correct status indicator for unknown category', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [],
+        unreachableThresholds: [],
+      });
+
+      expect(result.statusIndicator).toEqual({
+        color: 'gray',
+        emoji: '⚪',
+        label: 'Unknown',
+      });
+    });
+
+    it('should transition from unknown to rarity category when Monte Carlo results added', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [],
+        unreachableThresholds: [],
+      });
+
+      // Before Monte Carlo
+      expect(result.rarityCategory).toBe('unknown');
+
+      // After Monte Carlo
+      result.setMonteCarloResults({ triggerRate: 0.05 });
+      expect(result.rarityCategory).toBe('frequent');
     });
   });
 });

@@ -68,10 +68,20 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 2 services (Phase 1)', () => {
+    it('should register exactly 5 services (Phase 1 + Phase 2 + ExpressionStatusService)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(2);
+      expect(mockContainer.register).toHaveBeenCalledTimes(5);
+    });
+
+    it('should register ExpressionStatusService', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IExpressionStatusService,
+        expect.any(Function),
+        expect.any(Object)
+      );
     });
 
     it('should use singletonFactory lifecycle', () => {
@@ -135,7 +145,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(2);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -188,6 +198,12 @@ describe('expressionDiagnosticsRegistrations', () => {
     it('should export IIntensityBoundsCalculator token', () => {
       expect(diagnosticsTokens.IIntensityBoundsCalculator).toBe(
         'IIntensityBoundsCalculator'
+      );
+    });
+
+    it('should export IExpressionStatusService token', () => {
+      expect(diagnosticsTokens.IExpressionStatusService).toBe(
+        'IExpressionStatusService'
       );
     });
 

@@ -12,7 +12,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color, #444);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .diagnostics-header h1 {
@@ -27,8 +27,8 @@
 
 /* Panels */
 .panel {
-  background: var(--panel-bg, #1e1e1e);
-  border: 1px solid var(--border-color, #444);
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 8px;
   padding: 1rem;
 }
@@ -36,7 +36,7 @@
 .panel h2 {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
-  color: var(--heading-color, #e0e0e0);
+  color: var(--primary-text-color);
 }
 
 /* Form Elements */
@@ -53,16 +53,16 @@
 .form-select {
   width: 100%;
   padding: 0.5rem;
-  background: var(--input-bg, #2a2a2a);
-  border: 1px solid var(--border-color, #444);
+  background: var(--input-bg-color);
+  border: 1px solid var(--input-border-color);
   border-radius: 4px;
-  color: var(--text-color, #e0e0e0);
+  color: var(--primary-text-color);
   font-size: 1rem;
 }
 
 .expression-description {
   font-style: italic;
-  color: var(--text-muted, #888);
+  color: var(--secondary-text-color);
   margin: 0;
 }
 
@@ -75,21 +75,22 @@
 
 .action-button {
   padding: 0.5rem 1rem;
-  background: var(--button-bg, #4a4a4a);
-  border: 1px solid var(--border-color, #555);
+  background: var(--button-bg-color);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 4px;
-  color: var(--text-color, #e0e0e0);
+  color: var(--button-text-color);
   cursor: pointer;
   font-size: 0.9rem;
   transition: background 0.2s;
 }
 
 .action-button:hover:not(:disabled) {
-  background: var(--button-hover-bg, #5a5a5a);
+  background: var(--button-hover-bg-color);
 }
 
 .action-button:disabled {
-  opacity: 0.5;
+  background: var(--button-disabled-bg-color);
+  color: var(--button-disabled-text-color);
   cursor: not-allowed;
 }
 
@@ -107,16 +108,17 @@
   font-size: 1.5rem;
 }
 
-.status-unknown { background: var(--status-unknown-bg, #333); }
-.status-impossible { background: var(--status-red-bg, #4a1a1a); color: #ff6b6b; }
-.status-extremely-rare { background: var(--status-orange-bg, #4a3a1a); color: #ffa94d; }
-.status-rare { background: var(--status-yellow-bg, #4a4a1a); color: #ffd43b; }
-.status-normal { background: var(--status-green-bg, #1a4a1a); color: #69db7c; }
-.status-frequent { background: var(--status-blue-bg, #1a2a4a); color: #74c0fc; }
+/* Status indicator backgrounds - these are page-specific colors */
+.status-unknown { background: #e8e8e8; color: #666; }
+.status-impossible { background: #fadbd8; color: #c0392b; }
+.status-extremely-rare { background: #fdebd0; color: #e67e22; }
+.status-rare { background: #fcf3cf; color: #b7950b; }
+.status-normal { background: #d5f5e3; color: #27ae60; }
+.status-frequent { background: #d6eaf8; color: #2980b9; }
 
 .status-message {
   margin-top: 0.5rem;
-  color: var(--text-muted, #888);
+  color: var(--secondary-text-color);
 }
 
 /* Results Area */
@@ -130,12 +132,12 @@
 }
 
 .placeholder-text {
-  color: var(--text-muted, #666);
+  color: var(--secondary-text-color);
   font-style: italic;
 }
 
 .success-text {
-  color: var(--success-color, #69db7c);
+  color: var(--success-text-color);
 }
 
 /* Results Tables */
@@ -148,16 +150,223 @@
 .results-table td {
   padding: 0.5rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-color, #333);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .results-table th {
-  background: var(--table-header-bg, #2a2a2a);
+  background: var(--secondary-bg-color);
   font-weight: 600;
 }
 
 .results-table tbody tr:hover {
-  background: var(--table-row-hover, #2a2a2a);
+  background: var(--secondary-bg-color);
+}
+
+/* Monte Carlo Controls */
+.mc-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.control-group label {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+}
+
+/* Trigger Rate Display */
+.trigger-rate-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: var(--secondary-bg-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.rarity-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Rarity indicator backgrounds - match status indicator colors */
+.rarity-indicator.rarity-impossible { background: #fadbd8; color: #c0392b; }
+.rarity-indicator.rarity-extremely-rare { background: #fdebd0; color: #e67e22; }
+.rarity-indicator.rarity-rare { background: #fcf3cf; color: #b7950b; }
+.rarity-indicator.rarity-normal { background: #d5f5e3; color: #27ae60; }
+.rarity-indicator.rarity-frequent { background: #d6eaf8; color: #2980b9; }
+
+.rarity-emoji { font-size: 1.25rem; }
+.rate-details { display: flex; flex-direction: column; }
+.trigger-rate { font-size: 1.75rem; font-weight: 700; color: var(--primary-text-color); }
+.confidence-interval { font-size: 0.875rem; color: var(--secondary-text-color); }
+
+.mc-summary {
+  padding: 0.75rem;
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+/* Severity badges */
+.severity-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.severity-badge.severity-critical { background: #fadbd8; color: #c0392b; }
+.severity-badge.severity-high { background: #fdebd0; color: #e67e22; }
+.severity-badge.severity-medium { background: #fcf3cf; color: #b7950b; }
+.severity-badge.severity-low { background: #d5f5e3; color: #27ae60; }
+
+.no-data { text-align: center; color: var(--secondary-text-color); font-style: italic; }
+
+/* Blockers Table with Hierarchical Breakdown */
+.blockers-table .toggle-header {
+  width: 30px;
+  padding: 0.5rem 0.25rem;
+}
+
+.blockers-table .toggle-cell {
+  width: 30px;
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+}
+
+.blockers-table .expand-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.blockers-table .expand-toggle:hover {
+  background: var(--secondary-bg-color);
+  color: var(--primary-text-color);
+}
+
+.blockers-table .no-toggle {
+  display: inline-block;
+  width: 1rem;
+}
+
+/* Breakdown row */
+.blockers-table .breakdown-row {
+  background: var(--secondary-bg-color);
+}
+
+.blockers-table .breakdown-row.collapsed {
+  display: none;
+}
+
+.blockers-table .breakdown-cell {
+  padding: 0;
+}
+
+/* Hierarchical Tree Display */
+.hierarchical-tree {
+  padding: 0.75rem 1rem;
+  font-family: var(--mono-font, monospace);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.tree-prefix {
+  color: var(--secondary-text-color);
+  font-size: 0.9rem;
+  width: 1rem;
+}
+
+.node-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.node-icon.and {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.node-icon.or {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.node-icon.leaf {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.node-description {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.failure-rate {
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.failure-rate.failure-critical {
+  background: #fadbd8;
+  color: #c0392b;
+}
+
+.failure-rate.failure-high {
+  background: #fdebd0;
+  color: #e67e22;
+}
+
+.failure-rate.failure-normal {
+  background: #d5f5e3;
+  color: #27ae60;
+}
+
+.violation-badge {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  background: var(--panel-bg-color);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
 }
 
 /* Responsive */
@@ -175,4 +384,93 @@
   .thresholds-panel {
     grid-column: 2;
   }
+
+  .mc-panel { grid-column: 1 / -1; }
+}
+
+/* Problematic Expressions Panel */
+.problematic-expressions-panel {
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+}
+
+.problematic-expressions-panel .panel-description {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  margin: 0 0 1rem 0;
+}
+
+/* Pills Container */
+.pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 40px;
+}
+
+.pills-container .placeholder-text {
+  width: 100%;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+/* Expression Pill */
+.expression-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--secondary-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  font-size: 0.875rem;
+  max-width: 200px;
+}
+
+.expression-pill:hover {
+  background: var(--secondary-bg-color);
+  border-color: var(--primary-text-color);
+  transform: translateY(-1px);
+}
+
+.expression-pill:active {
+  transform: translateY(0);
+}
+
+/* Status Circle */
+.status-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-circle.status-unknown { background-color: #6c757d; }
+.status-circle.status-impossible { background-color: #dc3545; }
+.status-circle.status-extremely-rare { background-color: #fd7e14; }
+.status-circle.status-rare { background-color: #ffc107; }
+.status-circle.status-normal { background-color: #28a745; }
+.status-circle.status-frequent { background-color: #17a2b8; }
+
+/* Pill Name */
+.pill-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--primary-text-color);
+}
+
+/* Empty State */
+.pills-container .no-problems {
+  color: var(--success-text-color);
+  font-style: normal;
+  padding: 0.5rem 0;
+}
+
+/* Loading State */
+.pills-container.loading {
+  opacity: 0.7;
+  pointer-events: none;
 }

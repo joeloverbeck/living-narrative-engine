@@ -25,6 +25,9 @@ function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
   const defaults = {
     [tokens.TurnActionChoicePipeline]: { buildChoices: jest.fn() },
     [tokens.IAIPromptPipeline]: { generatePrompt: jest.fn() },
+    [tokens.MoodUpdatePromptPipeline]: {
+      generateMoodUpdatePrompt: jest.fn().mockResolvedValue(''),
+    },
     [tokens.LLMAdapter]: { getCurrentActiveLlmId: jest.fn() },
     [tokens.EntityDisplayDataProvider]: { getEntityName: jest.fn() },
   };

@@ -17,6 +17,7 @@ function createMockStaticContentService() {
     getCharacterPortrayalGuidelines: jest.fn().mockReturnValue(''),
     getNc21ContentPolicyText: jest.fn().mockReturnValue(''),
     getFinalLlmInstructionText: jest.fn().mockReturnValue(''),
+    getMoodUpdateInstructionText: jest.fn().mockReturnValue(''),
   };
 }
 

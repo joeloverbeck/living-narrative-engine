@@ -29,7 +29,10 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { COMPONENT_ADDED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  COMPONENT_ADDED_ID,
+} from '../../../src/constants/eventIds.js';
 
 const ACTOR_ID = 'actor-mood-prompt-test';
 
@@ -218,7 +221,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
 
       // ACT: Simulate ACTION_DECIDED_ID event with moodUpdate
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: MOOD_UPDATE_HIGH_JOY },
@@ -257,7 +260,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
 
       // ACT: Simulate ACTION_DECIDED_ID event with sexualUpdate
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { sexualUpdate: SEXUAL_UPDATE_ELEVATED },
@@ -289,7 +292,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
 
       // ACT: Simulate ACTION_DECIDED_ID with BOTH updates
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: {
@@ -319,7 +322,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
 
       // ACT: First update - positive mood
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: MOOD_UPDATE_HIGH_JOY },
@@ -341,7 +344,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       };
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: negativeMoodUpdate },
@@ -365,7 +368,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       const actor = await createActorWithMoodAndSexualState();
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: MOOD_UPDATE_HIGH_JOY },
@@ -388,7 +391,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       const actor = await createActorWithMoodAndSexualState();
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { sexualUpdate: SEXUAL_UPDATE_ELEVATED },
@@ -411,7 +414,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       const actor = await createActorWithMoodAndSexualState();
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: {
@@ -461,7 +464,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       };
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: integerMoodUpdate },
@@ -495,7 +498,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       };
 
       persistenceListener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { sexualUpdate: integerSexualUpdate },

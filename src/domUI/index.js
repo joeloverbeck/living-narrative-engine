@@ -51,6 +51,8 @@ export { SexualStatePanel } from './sexualStatePanel.js';
 
 // Damage Event Message Renderer
 export { DamageEventMessageRenderer } from './damageEventMessageRenderer.js';
+// Expression Message Renderer
+export { ExpressionMessageRenderer } from './expressionMessageRenderer.js';
 
 // Facade
 export { DomUiFacade } from './domUiFacade.js';

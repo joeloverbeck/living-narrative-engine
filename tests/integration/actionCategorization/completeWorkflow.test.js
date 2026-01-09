@@ -72,6 +72,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           'Portray characters realistically.',
         getNc21ContentPolicyText: () => 'Follow content guidelines.',
         getFinalLlmInstructionText: () => 'Choose an action by its index.',
+        getMoodUpdateInstructionText: () => 'Mood update instructions.',
       },
       perceptionLogFormatter: { format: (log) => `Formatted: ${log}` },
       gameStateValidationService: {
@@ -415,6 +416,7 @@ describe('Complete Action Categorization Workflow Integration', () => {
           getCharacterPortrayalGuidelines: () => 'Guidelines',
           getNc21ContentPolicyText: () => 'Policy',
           getFinalLlmInstructionText: () => 'Instructions',
+          getMoodUpdateInstructionText: () => 'Mood update instructions',
         },
         perceptionLogFormatter: { format: () => 'Log' },
         gameStateValidationService: { validate: () => ({ isValid: true }) },

@@ -40,6 +40,11 @@ Static analysis can prove impossibility but cannot estimate trigger probability 
 
 ### MonteCarloSimulator Service
 
+> **NOTE**: Code corrected on 2026-01-08 to match actual codebase patterns:
+> - Removed `expressionEvaluator` dependency (uses json-logic-js directly)
+> - Changed `dataRegistry.getLookupData()` to `dataRegistry.get('lookups', id)`
+> - Changed CommonJS `require()` to ES module `import`
+
 ```javascript
 /**
  * @file MonteCarloSimulator - Statistical trigger probability estimation
@@ -47,6 +52,7 @@ Static analysis can prove impossibility but cannot estimate trigger probability 
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  * @typedef {'uniform' | 'gaussian'} DistributionType
@@ -81,9 +87,6 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 class MonteCarloSimulator {
   /** @type {object} */
-  #expressionEvaluator;
-
-  /** @type {object} */
   #dataRegistry;
 
   /** @type {object} */
@@ -91,22 +94,17 @@ class MonteCarloSimulator {
 
   /**
    * @param {Object} deps
-   * @param {object} deps.expressionEvaluator - IExpressionEvaluatorService
    * @param {object} deps.dataRegistry - IDataRegistry
    * @param {object} deps.logger - ILogger
    */
-  constructor({ expressionEvaluator, dataRegistry, logger }) {
-    validateDependency(expressionEvaluator, 'IExpressionEvaluatorService', logger, {
-      requiredMethods: ['evaluateWithContext']
-    });
+  constructor({ dataRegistry, logger }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getLookupData']
+      requiredMethods: ['get']
     });
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error']
     });
 
-    this.#expressionEvaluator = expressionEvaluator;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
   }
@@ -298,7 +296,7 @@ class MonteCarloSimulator {
    * @private
    */
   #calculateEmotions(mood) {
-    const lookup = this.#dataRegistry.getLookupData('core:emotion_prototypes');
+    const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
     if (!lookup?.entries) return {};
 
     const emotions = {};
@@ -323,7 +321,7 @@ class MonteCarloSimulator {
    * @private
    */
   #calculateSexualStates(sexual) {
-    const lookup = this.#dataRegistry.getLookupData('core:sexual_prototypes');
+    const lookup = this.#dataRegistry.get('lookups', 'core:sexual_prototypes');
     if (!lookup?.entries) return {};
 
     const states = {};
@@ -349,8 +347,7 @@ class MonteCarloSimulator {
    */
   #evaluatePrerequisite(prereq, context) {
     try {
-      // Use JSON Logic for evaluation
-      const jsonLogic = require('json-logic-js');
+      // Use JSON Logic for evaluation (imported at top of file)
       return jsonLogic.apply(prereq.logic, context);
     } catch {
       return false;
@@ -501,9 +498,9 @@ npm run test:unit -- tests/unit/expressionDiagnostics/services/monteCarloSimulat
 ### Unit Test Coverage Requirements
 
 **monteCarloSimulator.test.js:**
-- Constructor throws if expressionEvaluator is missing
 - Constructor throws if dataRegistry is missing
 - Constructor throws if logger is missing
+- Constructor throws if dataRegistry lacks `get` method
 - `simulate()` returns triggerRate in [0, 1] range
 - `simulate()` returns correct sampleCount
 - `simulate()` returns valid confidence interval
@@ -541,13 +538,57 @@ node -e "import('./src/dependencyInjection/tokens.js').then(m => console.log(m.d
 
 ## Definition of Done
 
-- [ ] `MonteCarloSimulator.js` created with all methods implemented
-- [ ] `services/index.js` updated with export
-- [ ] DI token added to `tokens-diagnostics.js`
-- [ ] Service registered in `expressionDiagnosticsRegistrations.js`
-- [ ] Test fixtures created (easyExpression, rareExpression)
-- [ ] Unit tests cover all public methods
-- [ ] Tests verify statistical properties
-- [ ] JSDoc documentation complete
-- [ ] All tests pass
-- [ ] No modifications to existing expression services
+- [x] `MonteCarloSimulator.js` created with all methods implemented
+- [x] `services/index.js` updated with export
+- [x] DI token added to `tokens-diagnostics.js`
+- [x] Service registered in `expressionDiagnosticsRegistrations.js`
+- [x] Test fixtures created (easyExpression, rareExpression)
+- [x] Unit tests cover all public methods
+- [x] Tests verify statistical properties
+- [x] JSDoc documentation complete
+- [x] All tests pass
+- [x] No modifications to existing expression services
+
+---
+
+## Status: ✅ COMPLETED
+
+**Completed**: 2026-01-08
+
+---
+
+## Outcome
+
+### Implementation Summary
+
+Successfully implemented the MonteCarloSimulator service for statistical trigger probability estimation of expression prerequisites.
+
+### Files Created
+- `src/expressionDiagnostics/services/MonteCarloSimulator.js` - Core service with Monte Carlo simulation
+- `tests/unit/expressionDiagnostics/services/monteCarloSimulator.test.js` - 28 unit tests (all passing)
+- `tests/fixtures/expressionDiagnostics/easyExpression.expression.json` - Easy trigger test fixture
+- `tests/fixtures/expressionDiagnostics/rareExpression.expression.json` - Rare trigger test fixture
+
+### Files Modified
+- `src/expressionDiagnostics/services/index.js` - Added MonteCarloSimulator export
+- `src/dependencyInjection/tokens/tokens-diagnostics.js` - Uncommented IMonteCarloSimulator token
+- `src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js` - Added registration
+
+### Key Implementation Details
+- Uses `json-logic-js` directly for prerequisite evaluation (no expressionEvaluator dependency)
+- Supports both uniform and Gaussian distributions via Box-Muller transform
+- Wilson score confidence interval for statistical accuracy
+- Per-clause failure tracking with sorted results by failure rate
+- 95.58% statement coverage, 98.37% line coverage on the service
+
+### Ticket Corrections Made
+Before implementation, corrected assumptions in this ticket:
+1. Changed `dataRegistry.getLookupData()` to `dataRegistry.get('lookups', id)` pattern
+2. Removed unused `expressionEvaluator` dependency
+3. Changed CommonJS `require()` to ES module `import`
+
+### Test Results
+```
+28 tests passed
+Coverage: 95.58% statements, 77.77% branches, 100% functions, 98.37% lines
+```

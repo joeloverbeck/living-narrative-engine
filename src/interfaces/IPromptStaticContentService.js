@@ -48,6 +48,17 @@ export class IPromptStaticContentService {
       "Method 'getFinalLlmInstructionText()' must be implemented."
     );
   }
+
+  /**
+   * Returns the mood-only update instruction text for Phase 1 prompts.
+   *
+   * @returns {string}
+   */
+  getMoodUpdateInstructionText() {
+    throw new Error(
+      "Method 'getMoodUpdateInstructionText()' must be implemented."
+    );
+  }
 }
 
 // --- FILE END ---

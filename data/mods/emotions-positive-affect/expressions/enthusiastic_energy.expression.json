@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.enthusiasm"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -44,7 +44,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -68,7 +68,7 @@
                             {
                                 "var": "emotions.apathy"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -156,5 +156,6 @@
         "energy",
         "approach",
         "engaged"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.anticipation"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.interest"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -44,7 +44,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -108,7 +108,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -158,5 +158,6 @@
         "anticipation",
         "readiness",
         "approach"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

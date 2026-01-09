@@ -91,6 +91,11 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "diagnosticStatus": {
+      "type": "string",
+      "enum": ["unknown", "impossible", "extremely_rare", "rare", "normal", "frequent"],
+      "description": "Diagnostic status determined by static analysis or Monte Carlo simulation. Absence means 'unknown'. This field is managed by the Expression Diagnostics tool."
     }
   },
   "required": ["id", "description", "actor_description", "description_text"],

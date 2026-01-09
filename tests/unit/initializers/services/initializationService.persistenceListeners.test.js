@@ -7,7 +7,11 @@ jest.mock('../../../../src/initializers/services/initHelpers.js', () => ({
 import { setupPersistenceListeners } from '../../../../src/initializers/services/initHelpers.js';
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
 import LlmAdapterInitializer from '../../../../src/initializers/services/llmAdapterInitializer.js';
-import { ACTION_DECIDED_ID } from '../../../../src/constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  MOOD_STATE_UPDATED_ID,
+  TURN_STARTED_ID,
+} from '../../../../src/constants/eventIds.js';
 
 const WORLD = 'persistenceWorld';
 
@@ -106,12 +110,20 @@ describe('InitializationService persistence listener setup', () => {
     expect(loggerArg).toBe(logger);
     expect(Array.isArray(listenersArg)).toBe(true);
     expect(listenersArg).toEqual([
+      // ACTION_DECIDED_ID listeners
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
+      // MOOD_STATE_UPDATED_ID listeners (for two-phase emotional state)
+      { eventId: MOOD_STATE_UPDATED_ID, handler: expect.any(Function) },
+      { eventId: MOOD_STATE_UPDATED_ID, handler: expect.any(Function) },
+      // TURN_STARTED_ID listeners (for two-phase emotional state)
+      { eventId: TURN_STARTED_ID, handler: expect.any(Function) },
+      { eventId: TURN_STARTED_ID, handler: expect.any(Function) },
     ]);
 
+    // Execute ACTION_DECIDED_ID handlers (first 4)
     listenersArg[0].handler();
     listenersArg[1].handler();
     listenersArg[2].handler();

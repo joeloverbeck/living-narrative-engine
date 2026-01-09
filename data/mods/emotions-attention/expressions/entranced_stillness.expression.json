@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-attention:entranced_stillness",
-    "description": "Entrancement: attention captured with reduced agency; the actor becomes quiet and still, hovering between comfort and surrender to the stimulus.",
+    "description": "Entrancement: attention captured with reduced agency; the actor grows quiet and still, pulled into the stimulus with soft surrender rather than effortful control.",
     "priority": 74,
     "prerequisites": [
         {
@@ -42,9 +42,17 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.panic"
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.alarm"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -60,7 +68,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -68,7 +76,23 @@
                             {
                                 "var": "emotions.anxiety"
                             },
-                            0.55
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.confusion"
+                            },
+                            0.45
                         ]
                     },
                     {
@@ -76,7 +100,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -120,19 +144,19 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
-                                "var": "moodAxes.agency_control"
+                                "var": "moodAxes.engagement"
                             },
-                            25
+                            10
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.panic"
+                                "var": "moodAxes.agency_control"
                             },
-                            0.15
+                            15
                         ]
                     }
                 ]
@@ -157,28 +181,42 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "and": [
                             {
-                                "var": "emotions.entrancement"
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.entrancement"
+                                    },
+                                    0.82
+                                ]
                             },
-                            0.82
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.entrancement"
+                                    },
+                                    0.82
+                                ]
+                            }
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "I stop reaching for the wheel. My attention sinks and stays—caught, held, almost tenderly restrained. The world narrows to one thread, and the rest of me goes quiet around it. I can still feel my body, but it’s distant, obedient—breathing slower, muscles forgetting their usual fidget. Time feels thicker here.",
-    "description_text": "{actor} goes unusually still, gaze fixed as if something has hooked their attention and won’t let go. Their blinking slows; their posture softens into a held pause. It’s not sleepiness—it’s capture, a quiet surrender of movement to focus.",
+    "actor_description": "I stop reaching for the wheel. My attention sinks and stays—caught, held, almost tenderly restrained. The world narrows to one thread and I follow it because it keeps pulling. Movement feels optional; breath slows; the usual little corrections and self-checks fade. It isn’t effort or mastery. It’s capture—quiet, steady, and hard to interrupt.",
+    "description_text": "{actor} grows unusually still, gaze fixed as if something has hooked their attention and won’t let go. Their blinking slows; posture softens into a held pause. They don’t look tense or urgent—just drawn in, following a current rather than steering. It’s not sleepiness and not efficiency; it’s absorption with reduced agency, a quiet surrender of motion to focus.",
     "alternate_descriptions": {
-        "auditory": "Someone's breathing stretches out—longer inhales, longer silences—like someone has forgotten to fidget.",
-        "olfactory": "A muted warmth hangs in the air—calm attention with the edges smoothed down."
+        "auditory": "Their breathing stretches out—longer inhales, longer silences—small repeated motions landing with the same gentle cadence, like fidgeting has been switched off.",
+        "olfactory": "A muted warmth hangs in the air—calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
     },
     "tags": [
         "engagement",
         "entrancement",
         "stillness",
         "captured_attention",
-        "reduced_agency"
-    ]
+        "reduced_agency",
+        "trance_like"
+    ],
+    "diagnosticStatus": "rare"
 }

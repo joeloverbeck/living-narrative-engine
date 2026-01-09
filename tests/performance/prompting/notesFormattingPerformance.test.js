@@ -37,6 +37,7 @@ describe('Notes Formatting Performance', () => {
       getCoreTaskDescriptionText: () => 'core-task',
       getCharacterPortrayalGuidelines: () => 'portrayal',
       getNc21ContentPolicyText: () => 'content-policy',
+      getMoodUpdateInstructionText: () => '',
       getFinalLlmInstructionText: () => 'final-instructions',
     },
     perceptionLogFormatter: {

@@ -32,6 +32,7 @@ const mockPromptStaticContentServiceFn = () => ({
   getCharacterPortrayalGuidelines: jest.fn(),
   getNc21ContentPolicyText: jest.fn(),
   getFinalLlmInstructionText: jest.fn(),
+  getMoodUpdateInstructionText: jest.fn(),
 });
 
 /**

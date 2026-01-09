@@ -94,6 +94,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             'getCharacterPortrayalGuidelines',
             'getNc21ContentPolicyText',
             'getFinalLlmInstructionText',
+            'getMoodUpdateInstructionText',
           ],
         },
         {
@@ -930,5 +931,84 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   getFinalInstructionsContent() {
     return this.#promptStaticContentService.getFinalLlmInstructionText();
+  }
+
+  /**
+   * @returns {string} The mood-only update instruction text for Phase 1 prompts.
+   */
+  getMoodUpdateInstructionsContent() {
+    return this.#promptStaticContentService.getMoodUpdateInstructionText();
+  }
+
+  /**
+   * Assembles PromptData for mood-only update (Phase 1 of two-phase flow).
+   * Similar to getPromptData but excludes action-related content and uses
+   * mood-specific instructions.
+   *
+   * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
+   * @param {ILogger} logger - Logger instance for logging during the assembly process.
+   * @returns {Promise<PromptData>} A promise that resolves to PromptData for mood update.
+   * @throws {Error} If critical information is missing.
+   */
+  async getMoodUpdatePromptData(gameStateDto, logger) {
+    this.#logger.debug(
+      'AIPromptContentProvider: Starting assembly of mood-only PromptData.'
+    );
+
+    // 1. Validate incoming DTO
+    this._validateOrThrow(gameStateDto, logger);
+
+    // 2. Extract commonly-used values
+    const {
+      characterName,
+      currentUserInput,
+      perceptionLogArray,
+      locationName,
+      componentsMap,
+    } = this._extractCommonValues(gameStateDto);
+
+    // 3. Assemble mood-only PromptData
+    let promptData;
+    try {
+      const baseValues = {
+        taskDefinitionContent: this.getTaskDefinitionContent(),
+        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto),
+        portrayalGuidelinesContent:
+          this.getCharacterPortrayalGuidelinesContent(characterName),
+        contentPolicyContent: this.getContentPolicyContent(),
+        worldContextContent: this.getWorldContextContent(gameStateDto),
+        availableActionsInfoContent: '', // Empty for mood-only prompt
+        userInputContent: currentUserInput,
+        finalInstructionsContent: this.getMoodUpdateInstructionsContent(),
+        perceptionLogArray: perceptionLogArray,
+        characterName: characterName,
+        locationName: locationName,
+        assistantResponsePrefix: '\n',
+      };
+
+      const memoryData = this._extractMemoryComponents(componentsMap);
+
+      promptData = this._buildPromptData(
+        baseValues,
+        memoryData.thoughtsArray,
+        memoryData.notesArray,
+        memoryData.goalsArray
+      );
+
+      this.#logger.debug(
+        'AIPromptContentProvider.getMoodUpdatePromptData: Mood-only PromptData assembled successfully.'
+      );
+
+      return promptData;
+    } catch (error) {
+      const err = /** @type {Error} */ (error);
+      this.#logger.error(
+        `AIPromptContentProvider.getMoodUpdatePromptData: Error during assembly: ${err.message}`,
+        { error: err }
+      );
+      throw new Error(
+        `AIPromptContentProvider.getMoodUpdatePromptData: Failed to assemble PromptData: ${err.message}`
+      );
+    }
   }
 }

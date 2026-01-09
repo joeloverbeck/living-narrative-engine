@@ -4,7 +4,7 @@
  */
 
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
-import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../../src/turns/schemas/llmOutputSchemas.js';
+import { LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID } from '../../../../src/turns/schemas/llmOutputSchemas.js';
 import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
@@ -80,7 +80,7 @@ describe('LLMResponseProcessor', () => {
   describe('constructor', () => {
     test('should check schemaLoaded on init', () => {
       expect(schemaValidatorMock.isSchemaLoaded).toHaveBeenCalledWith(
-        LLM_TURN_ACTION_RESPONSE_SCHEMA_ID
+        LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID
       );
     });
 
@@ -100,7 +100,7 @@ describe('LLMResponseProcessor', () => {
             safeEventDispatcher,
             llmJsonService: new LlmJsonService(),
           })
-      ).toThrow(`Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID} not loaded`);
+      ).toThrow(`Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID} not loaded`);
     });
 
     test('throws if invalid dependencies are provided', () => {
@@ -230,7 +230,7 @@ describe('LLMResponseProcessor', () => {
           },
         });
         expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
-          LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
           payload
         );
       });

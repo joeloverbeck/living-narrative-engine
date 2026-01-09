@@ -59,9 +59,10 @@ const RARITY_THRESHOLDS = Object.freeze({
 /**
  * Rarity category string constants.
  *
- * @type {Readonly<{IMPOSSIBLE: string, EXTREMELY_RARE: string, RARE: string, NORMAL: string, FREQUENT: string}>}
+ * @type {Readonly<{UNKNOWN: string, IMPOSSIBLE: string, EXTREMELY_RARE: string, RARE: string, NORMAL: string, FREQUENT: string}>}
  */
 const RARITY_CATEGORIES = Object.freeze({
+  UNKNOWN: 'unknown',
   IMPOSSIBLE: 'impossible',
   EXTREMELY_RARE: 'extremely_rare',
   RARE: 'rare',
@@ -75,6 +76,7 @@ const RARITY_CATEGORIES = Object.freeze({
  * @type {Readonly<{[key: string]: {color: string, emoji: string, label: string}}>}
  */
 const STATUS_INDICATORS = Object.freeze({
+  unknown: { color: 'gray', emoji: '⚪', label: 'Unknown' },
   impossible: { color: 'red', emoji: '🔴', label: 'Impossible' },
   extremely_rare: { color: 'orange', emoji: '🟠', label: 'Extremely Rare' },
   rare: { color: 'yellow', emoji: '🟡', label: 'Rare' },
@@ -310,7 +312,9 @@ class DiagnosticResult {
     }
 
     if (this.#triggerRate === null) {
-      return RARITY_CATEGORIES.IMPOSSIBLE; // No data, assume worst
+      // No simulation data yet - return unknown (not impossible)
+      // This allows static analysis to pass without falsely reporting impossible
+      return RARITY_CATEGORIES.UNKNOWN;
     }
 
     if (this.#triggerRate === 0) {
@@ -489,5 +493,21 @@ class DiagnosticResult {
 DiagnosticResult.RARITY_THRESHOLDS = RARITY_THRESHOLDS;
 DiagnosticResult.RARITY_CATEGORIES = RARITY_CATEGORIES;
 DiagnosticResult.STATUS_INDICATORS = STATUS_INDICATORS;
+
+/**
+ * Get rarity category for a given trigger rate.
+ * This static helper can be used without creating a DiagnosticResult instance.
+ *
+ * @param {number} rate - Trigger rate as decimal (0.02 = 2%)
+ * @returns {string} Rarity category string from RARITY_CATEGORIES
+ */
+DiagnosticResult.getRarityCategoryForRate = function (rate) {
+  if (rate === 0) return RARITY_CATEGORIES.IMPOSSIBLE;
+  if (rate < RARITY_THRESHOLDS.EXTREMELY_RARE)
+    return RARITY_CATEGORIES.EXTREMELY_RARE;
+  if (rate < RARITY_THRESHOLDS.RARE) return RARITY_CATEGORIES.RARE;
+  if (rate < RARITY_THRESHOLDS.NORMAL) return RARITY_CATEGORIES.NORMAL;
+  return RARITY_CATEGORIES.FREQUENT;
+};
 
 export default DiagnosticResult;

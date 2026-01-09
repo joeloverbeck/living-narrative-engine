@@ -14,9 +14,12 @@ export const diagnosticsTokens = freeze({
   IGateConstraintAnalyzer: 'IGateConstraintAnalyzer',
   IIntensityBoundsCalculator: 'IIntensityBoundsCalculator',
 
-  // Phase 2 - Monte Carlo (to be added in EXPDIA-007)
-  // IMonteCarloSimulator: 'IMonteCarloSimulator',
-  // IFailureExplainer: 'IFailureExplainer',
+  // Phase 2 - Monte Carlo
+  IMonteCarloSimulator: 'IMonteCarloSimulator',
+  IFailureExplainer: 'IFailureExplainer',
+
+  // Status Persistence
+  IExpressionStatusService: 'IExpressionStatusService',
 
   // Phase 3 - Witness Finding (to be added in EXPDIA-011)
   // IWitnessStateFinder: 'IWitnessStateFinder',

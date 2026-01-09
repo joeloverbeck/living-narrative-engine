@@ -1,0 +1,75 @@
+/* css/components/_expression-messages.css */
+/* Styling for expression narrative messages in the chat panel */
+
+/* Base expression message styling */
+.expression-message {
+  display: block;
+  max-width: 85%;
+  margin: 0.75rem auto;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-narrative, Georgia, serif);
+  font-style: italic;
+  border-left: 3px solid var(--expression-accent-color, #00796b);
+  background: linear-gradient(
+    to right,
+    var(--expression-accent-background, rgba(0, 121, 107, 0.08)),
+    transparent
+  );
+  border-radius: var(--border-radius-sm, 4px);
+  animation: expressionFadeIn 0.4s ease-out;
+}
+
+/* Entry animation */
+@keyframes expressionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .expression-message {
+    animation: none;
+  }
+}
+
+/* Tag-based modifiers */
+.expression-message--default {
+  border-left-color: #00796b;
+  background: linear-gradient(to right, rgba(0, 121, 107, 0.08), transparent);
+}
+
+.expression-message--anger {
+  border-left-color: #c62828;
+  background: linear-gradient(to right, rgba(198, 40, 40, 0.1), transparent);
+}
+
+.expression-message--affection {
+  border-left-color: #ad1457;
+  background: linear-gradient(to right, rgba(173, 20, 87, 0.1), transparent);
+}
+
+.expression-message--loss {
+  border-left-color: #37474f;
+  background: linear-gradient(to right, rgba(55, 71, 79, 0.1), transparent);
+}
+
+.expression-message--threat {
+  border-left-color: #4a148c;
+  background: linear-gradient(to right, rgba(74, 20, 140, 0.1), transparent);
+}
+
+.expression-message--agency {
+  border-left-color: #00695c;
+  background: linear-gradient(to right, rgba(0, 105, 92, 0.1), transparent);
+}
+
+.expression-message--attention {
+  border-left-color: #f57c00;
+  background: linear-gradient(to right, rgba(245, 124, 0, 0.1), transparent);
+}

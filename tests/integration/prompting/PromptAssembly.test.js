@@ -56,6 +56,7 @@ describe('Prompt Assembly with template-based system', () => {
         getCharacterPortrayalGuidelines: jest.fn().mockReturnValue('GUIDE'),
         getNc21ContentPolicyText: jest.fn().mockReturnValue('POLICY'),
         getFinalLlmInstructionText: jest.fn().mockReturnValue('FINAL'),
+        getMoodUpdateInstructionText: jest.fn().mockReturnValue('MOOD'),
       },
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {

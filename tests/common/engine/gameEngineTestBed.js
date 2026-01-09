@@ -41,6 +41,7 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
    *   initializationService: ReturnType<import('../mockFactories').createMockInitializationService>,
    *   turnActionChoicePipeline: ReturnType<import('../mockFactories').createMockTurnActionChoicePipeline>,
    *   aiPromptPipeline: ReturnType<import('../mockFactories').createMockAIPromptPipeline>,
+   *   moodUpdatePromptPipeline: ReturnType<import('../mockFactories').createMockMoodUpdatePromptPipeline>,
    *   llmAdapter: ReturnType<import('../mockFactories').createMockLLMAdapter>,
    *   entityDisplayDataProvider: ReturnType<import('../mockFactories').createMockEntityDisplayDataProvider>,
    * }}
@@ -62,6 +63,7 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
       initializationService: env.initializationService,
       turnActionChoicePipeline: env.turnActionChoicePipeline,
       aiPromptPipeline: env.aiPromptPipeline,
+      moodUpdatePromptPipeline: env.moodUpdatePromptPipeline,
       llmAdapter: env.llmAdapter,
       entityDisplayDataProvider: env.entityDisplayDataProvider,
     });
@@ -140,6 +142,10 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
 
   getAiPromptPipeline() {
     return this.aiPromptPipeline;
+  }
+
+  getMoodUpdatePromptPipeline() {
+    return this.moodUpdatePromptPipeline;
   }
 
   getLlmAdapter() {

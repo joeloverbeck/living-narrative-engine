@@ -38,6 +38,9 @@ function createStaticContentService() {
     getFinalLlmInstructionText: jest.fn(
       () => 'Final Instructions: Reply with a concise action plan.'
     ),
+    getMoodUpdateInstructionText: jest.fn(
+      () => 'Mood Update Instructions: Update emotional state appropriately.'
+    ),
   };
 }
 

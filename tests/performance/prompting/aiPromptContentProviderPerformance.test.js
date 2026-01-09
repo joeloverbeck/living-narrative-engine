@@ -67,6 +67,7 @@ describe('AIPromptContentProvider Performance', () => {
         getCoreTaskDescriptionText: jest.fn(() => 'Core task'),
         getCharacterPortrayalGuidelines: jest.fn(() => 'Guidelines'),
         getNc21ContentPolicyText: jest.fn(() => 'Policy'),
+        getMoodUpdateInstructionText: jest.fn(() => ''),
         getFinalLlmInstructionText: jest.fn(() => 'Instructions'),
       },
       perceptionLogFormatter: {

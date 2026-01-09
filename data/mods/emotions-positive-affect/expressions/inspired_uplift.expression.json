@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.inspiration"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -52,7 +52,7 @@
                             {
                                 "var": "emotions.boredom"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -89,7 +89,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -112,7 +112,7 @@
                             {
                                 "var": "emotions.inspiration"
                             },
-                            0.80
+                            0.8
                         ]
                     }
                 ]
@@ -130,5 +130,6 @@
         "uplift",
         "possibility",
         "approach"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

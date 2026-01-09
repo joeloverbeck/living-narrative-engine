@@ -17,6 +17,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   DISPLAY_WARNING_ID: 'core:display_warning',
   LLM_SUGGESTED_ACTION_ID: 'core:suggested_action',
   ACTION_DECIDED_ID: 'core:action_decided',
+  MOOD_STATE_UPDATED_ID: 'core:mood_state_updated',
   ATTEMPT_ACTION_ID: 'core:attempt_action',
   ENTITY_SPOKE_ID: 'core:entity_spoke',
   ENTITY_THOUGHT_ID: 'core:entity_thought',

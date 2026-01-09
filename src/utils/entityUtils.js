@@ -4,6 +4,31 @@ import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 import { isValidEntity } from './entityValidationUtils.js';
 import { isNonBlankString } from './textUtils.js';
 
+/**
+ * Extracts entity ID from an entity reference that may be either:
+ * - An Entity object with an `id` property
+ * - A string entity ID directly
+ *
+ * This function provides robust handling for event payloads that may
+ * contain either entity objects or string IDs, ensuring consistent
+ * behavior regardless of the payload format.
+ *
+ * @param {string|object|null|undefined} entityRef - Entity object or string ID
+ * @returns {string|undefined} The entity ID, or undefined if invalid
+ */
+export function extractEntityId(entityRef) {
+  if (!entityRef) {
+    return undefined;
+  }
+  if (typeof entityRef === 'string') {
+    return entityRef;
+  }
+  if (typeof entityRef === 'object' && typeof entityRef.id === 'string') {
+    return entityRef.id;
+  }
+  return undefined;
+}
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 

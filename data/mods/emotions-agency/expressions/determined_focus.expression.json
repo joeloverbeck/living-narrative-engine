@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.determination"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -84,7 +84,7 @@
                             {
                                 "var": "emotions.fatigue"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -141,5 +141,6 @@
         "determination",
         "focus",
         "resolve"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

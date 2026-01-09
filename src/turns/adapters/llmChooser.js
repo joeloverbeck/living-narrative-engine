@@ -1,82 +1,56 @@
-/* eslint-env es2022 */
 /**
  * @module LLMChooser
  * @description
- *  Wraps prompt generation, LLM invocation and response parsing.
- *  Implements the contract sketched in Ticket 6.
+ *  Delegates LLM decision-making to the two-phase orchestrator.
  */
 
-/** @typedef {import('../../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
-/** @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
-
-/** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 import { ILLMChooser } from '../ports/ILLMChooser.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../orchestrators/TwoPhaseDecisionOrchestrator.js').TwoPhaseDecisionOrchestrator} TwoPhaseDecisionOrchestrator */
 
 export class LLMChooser extends ILLMChooser {
-  /** @type {IAIPromptPipeline}   */ #promptPipeline;
-  /** @type {ILLMAdapter}         */ #llmAdapter;
-  /** @type {ILLMResponseProcessor}*/ #responseProcessor;
+  /** @type {TwoPhaseDecisionOrchestrator} */ #twoPhaseOrchestrator;
   /** @type {ILogger}             */ #logger;
 
   /**
+   * Create an orchestrator-backed LLM chooser.
+   *
    * @param {{
-   *   promptPipeline: IAIPromptPipeline,
-   *   llmAdapter: ILLMAdapter,
-   *   responseProcessor: ILLMResponseProcessor,
+   *   twoPhaseOrchestrator: TwoPhaseDecisionOrchestrator,
    *   logger: ILogger
-   * }} deps
+   * }} deps - Constructor dependencies.
    */
-  constructor({ promptPipeline, llmAdapter, responseProcessor, logger }) {
+  constructor({ twoPhaseOrchestrator, logger }) {
     super();
 
-    if (!promptPipeline?.generatePrompt)
-      throw new Error('LLMChooser: promptPipeline invalid');
-    if (!llmAdapter?.getAIDecision)
-      throw new Error('LLMChooser: llmAdapter invalid');
-    if (!responseProcessor?.processResponse)
-      throw new Error('LLMChooser: responseProcessor invalid');
+    if (!twoPhaseOrchestrator?.orchestrate)
+      throw new Error('LLMChooser: twoPhaseOrchestrator invalid');
     if (!logger?.debug) throw new Error('LLMChooser: logger invalid');
 
-    this.#promptPipeline = promptPipeline;
-    this.#llmAdapter = llmAdapter;
-    this.#responseProcessor = responseProcessor;
+    this.#twoPhaseOrchestrator = twoPhaseOrchestrator;
     this.#logger = logger;
   }
 
   /**
    * Generate a prompt, call the LLM and parse its answer.
    *
-   * @param {{
-   *   actor:    import('../../entities/entity.js').default,
-   *   context:  import('../interfaces/ITurnContext.js').ITurnContext,
-   *   actions:  Array,               // The definitive, indexed list of actions
-   *   abortSignal?: AbortSignal
-   * }} options
-   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate: { sex_excitation: number, sex_inhibition: number }|null }>}
+   * @param {object} options - Input for LLM choice.
+   * @param {import('../../entities/entity.js').default} options.actor - Acting entity.
+   * @param {import('../interfaces/ITurnContext.js').ITurnContext} options.context - Turn context.
+   * @param {Array} options.actions - Indexed list of actions.
+   * @param {AbortSignal} [options.abortSignal] - Optional abort signal.
+   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: Array<{text: string, subject: string, context?: string, timestamp?: string}>|null, moodUpdate: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null, sexualUpdate: { sex_excitation: number, sex_inhibition: number }|null }>} Decision payload.
    */
   async choose({ actor, context, actions, abortSignal }) {
-    this.#logger.debug(`LLMChooser.choose → actor=${actor.id}`);
-
-    const prompt = await this.#promptPipeline.generatePrompt(
+    this.#logger.debug(
+      `LLMChooser: Delegating to two-phase orchestrator for ${actor.id}`
+    );
+    return this.#twoPhaseOrchestrator.orchestrate({
       actor,
       context,
-      actions
-    );
-    if (!prompt) throw new Error('Prompt pipeline produced empty prompt');
-
-    const raw = await this.#llmAdapter.getAIDecision(prompt, abortSignal);
-    const parsed = await this.#responseProcessor.processResponse(raw, actor.id);
-
-    const { action, extractedData } = parsed; // after processResponse()
-    return {
-      index: action.chosenIndex,
-      speech: action.speech,
-      thoughts: extractedData?.thoughts ?? null,
-      notes: extractedData?.notes ?? null,
-      moodUpdate: extractedData?.moodUpdate ?? null,
-      sexualUpdate: extractedData?.sexualUpdate ?? null,
-    };
+      actions,
+      abortSignal,
+    });
   }
 }

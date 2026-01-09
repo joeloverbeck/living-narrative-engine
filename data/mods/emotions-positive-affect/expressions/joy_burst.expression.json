@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.numbness"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -126,5 +126,6 @@
         "uplift",
         "approach",
         "social"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

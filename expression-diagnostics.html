@@ -27,6 +27,15 @@
         <p id="expression-description" class="expression-description"></p>
       </section>
 
+      <!-- Problematic Expressions Panel -->
+      <section class="panel problematic-expressions-panel">
+        <h2>Problematic Expressions</h2>
+        <p class="panel-description">Expressions with problematic diagnostic statuses. Click to select.</p>
+        <div id="problematic-pills-container" class="pills-container">
+          <p class="placeholder-text">Loading...</p>
+        </div>
+      </section>
+
       <!-- Analysis Controls Panel -->
       <section class="panel analysis-controls-panel">
         <h2>Analysis Controls</h2>
@@ -92,6 +101,56 @@
             </thead>
             <tbody></tbody>
           </table>
+        </section>
+
+        <!-- Monte Carlo Section -->
+        <section class="panel mc-panel" id="monte-carlo-section">
+          <h2>Monte Carlo Simulation</h2>
+          <div class="mc-controls">
+            <div class="control-group">
+              <label for="sample-count">Sample Count:</label>
+              <select id="sample-count" class="form-select">
+                <option value="1000">1,000 (Fast)</option>
+                <option value="10000" selected>10,000 (Standard)</option>
+                <option value="100000">100,000 (Precise)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="distribution">Distribution:</label>
+              <select id="distribution" class="form-select">
+                <option value="uniform" selected>Uniform</option>
+                <option value="gaussian">Gaussian</option>
+              </select>
+            </div>
+            <button id="run-mc-btn" class="action-button" disabled>Run Simulation</button>
+          </div>
+          <div id="mc-results" class="mc-results" hidden>
+            <div class="trigger-rate-display">
+              <div class="rarity-indicator" id="mc-rarity-indicator">
+                <span class="rarity-emoji"></span>
+                <span class="rarity-label"></span>
+              </div>
+              <div class="rate-details">
+                <span class="trigger-rate" id="mc-trigger-rate">--</span>
+                <span class="confidence-interval" id="mc-confidence-interval">(-- - --)</span>
+              </div>
+            </div>
+            <p class="mc-summary" id="mc-summary"></p>
+            <h3>Top Blockers</h3>
+            <table id="blockers-table" class="results-table blockers-table">
+              <thead>
+                <tr>
+                  <th class="toggle-header"></th>
+                  <th>Rank</th>
+                  <th>Clause</th>
+                  <th>Failure Rate</th>
+                  <th>Avg. Violation</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody id="blockers-tbody"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </main>

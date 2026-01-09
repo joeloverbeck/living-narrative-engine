@@ -8,6 +8,9 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 
 import GateConstraintAnalyzer from '../../expressionDiagnostics/services/GateConstraintAnalyzer.js';
 import IntensityBoundsCalculator from '../../expressionDiagnostics/services/IntensityBoundsCalculator.js';
+import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarloSimulator.js';
+import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
+import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -53,9 +56,39 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IIntensityBoundsCalculator}`);
 
+  // Phase 2 - Monte Carlo
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloSimulator,
+    (c) =>
+      new MonteCarloSimulator({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloSimulator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IFailureExplainer,
+    (c) =>
+      new FailureExplainer({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IFailureExplainer}`);
+
+  // Status Persistence Service
+  registrar.singletonFactory(
+    diagnosticsTokens.IExpressionStatusService,
+    (c) =>
+      new ExpressionStatusService({
+        logger: c.resolve(tokens.ILogger),
+        // baseUrl defaults to http://localhost:3001 in the service
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IExpressionStatusService}`);
+
   // Note: Additional services will be registered as they're implemented
-  // - IMonteCarloSimulator (EXPDIA-007)
-  // - IFailureExplainer (EXPDIA-008)
   // - IWitnessStateFinder (EXPDIA-011)
   // - ISmtSolver (EXPDIA-013)
   // - IThresholdSuggester (EXPDIA-015)

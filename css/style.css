@@ -47,6 +47,9 @@
 /* Damage Messages */
 @import url('components/_damage-messages.css');
 
+/* Expression Messages */
+@import url('components/_expression-messages.css');
+
 /* Add more component imports here as they are created/refactored if any were missed */
 
 /* 5. Utilities */

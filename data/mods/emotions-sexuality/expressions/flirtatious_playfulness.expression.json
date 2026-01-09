@@ -12,7 +12,7 @@
                             {
                                 "var": "sexualStates.sexual_playfulness"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "sexualStates.fearful_arousal"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -138,7 +138,7 @@
                                     {
                                         "var": "previousSexualStates.sexual_playfulness"
                                     },
-                                    0.60
+                                    0.6
                                 ]
                             },
                             {
@@ -153,7 +153,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]

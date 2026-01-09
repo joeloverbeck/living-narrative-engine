@@ -13,6 +13,7 @@ const makeDummyPromptStaticContentService = () => ({
   getCharacterPortrayalGuidelines: (name) => `portray-${name}`,
   getNc21ContentPolicyText: () => 'policy-content',
   getFinalLlmInstructionText: () => 'instructions',
+  getMoodUpdateInstructionText: () => 'mood-update-instructions',
 });
 
 const makeDummyPerceptionLogFormatter = () => ({
