@@ -27,7 +27,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -83,7 +83,7 @@
                             {
                                 "var": "emotions.numbness"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -126,5 +126,6 @@
         "soft",
         "future",
         "approach"
-    ]
+    ],
+    "diagnosticStatus": "frequent"
 }

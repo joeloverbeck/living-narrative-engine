@@ -27,6 +27,7 @@ describe('Notes Formatting Integration', () => {
       getCharacterPortrayalGuidelines: () => 'portrayal',
       getNc21ContentPolicyText: () => 'content-policy',
       getFinalLlmInstructionText: () => 'final-instructions',
+      getMoodUpdateInstructionText: () => 'mood-update-instructions',
     },
     perceptionLogFormatter: {
       format: (logArray) =>

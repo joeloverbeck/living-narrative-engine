@@ -14,7 +14,10 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { COMPONENT_ADDED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  COMPONENT_ADDED_ID,
+} from '../../../src/constants/eventIds.js';
 
 const ACTOR_ID = 'actor-mood-sexual';
 
@@ -98,7 +101,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       };
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate },
@@ -140,7 +143,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       });
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: {
@@ -171,7 +174,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       };
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { sexualUpdate },
@@ -210,7 +213,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       });
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: {
@@ -235,7 +238,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       });
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: {
@@ -261,7 +264,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       const getEntitySpy = jest.spyOn(testBed.entityManager, 'getEntityInstance');
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: 'missing-actor',
           extractedData: { moodUpdate: { valence: 0.5 } },
@@ -290,7 +293,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       });
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { moodUpdate: { valence: 0.5 } },
@@ -315,7 +318,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       });
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { sexualUpdate: { sex_excitation: 0.5 } },
@@ -343,7 +346,7 @@ describe('MoodSexualPersistenceListener integration with real services', () => {
       const getEntitySpy = jest.spyOn(testBed.entityManager, 'getEntityInstance');
 
       listener.handleEvent({
-        type: 'ACTION_DECIDED',
+        type: ACTION_DECIDED_ID,
         payload: {
           actorId: actor.id,
           extractedData: { thoughts: 'some thoughts', notes: [] },

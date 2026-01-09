@@ -3,7 +3,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { LlmJsonService } from '../../llms/llmJsonService.js';
-import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
+import { LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID } from '../schemas/llmOutputSchemas.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -81,10 +81,10 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
 
     // Ensure the required schema is loaded
     if (
-      !this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)
+      !this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID)
     ) {
       throw new Error(
-        `Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID} not loaded`
+        `Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID} not loaded`
       );
     }
   }
@@ -133,7 +133,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    */
   #validateSchema(parsed, actorId) {
     const validationResult = this.#schemaValidator.validate(
-      LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+      LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
       parsed
     );
     const { isValid, errors } = validationResult;

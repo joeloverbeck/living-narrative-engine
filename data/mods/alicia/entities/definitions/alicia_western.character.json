@@ -501,6 +501,9 @@
         "skills:grappling_skill": {
             "value": 12
         },
+        "skills:mobility_skill": {
+            "value": 62
+        },
         "core:mood": {
             "valence": -88,
             "arousal": -42,

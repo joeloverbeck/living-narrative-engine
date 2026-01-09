@@ -1,5 +1,7 @@
 # EXPDIA-008: Create FailureExplainer Service
 
+## Status: ✅ COMPLETED (2026-01-08)
+
 ## Summary
 
 Analyze Monte Carlo clause failure data and generate human-readable explanations. This service transforms raw statistical data into actionable insights that help content authors understand why expressions are rare or failing.
@@ -75,7 +77,7 @@ class FailureExplainer {
    */
   constructor({ dataRegistry, logger }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getLookupData']
+      requiredMethods: ['get']
     });
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error']
@@ -269,7 +271,7 @@ class FailureExplainer {
    * @private
    */
   #getEmotionPrototype(emotionId) {
-    const lookup = this.#dataRegistry.getLookupData('core:emotion_prototypes');
+    const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
     return lookup?.entries?.[emotionId] || null;
   }
 
@@ -342,12 +344,47 @@ npm run typecheck
 
 ## Definition of Done
 
-- [ ] `FailureExplainer.js` created with all methods implemented
-- [ ] `services/index.js` updated with export
-- [ ] DI token added to `tokens-diagnostics.js`
-- [ ] Service registered in `expressionDiagnosticsRegistrations.js`
-- [ ] Unit tests cover all public methods
-- [ ] Tests cover edge cases (empty input, malformed clauses)
-- [ ] JSDoc documentation complete
-- [ ] All tests pass
-- [ ] No modifications to MonteCarloSimulator
+- [x] `FailureExplainer.js` created with all methods implemented
+- [x] `services/index.js` updated with export
+- [x] DI token added to `tokens-diagnostics.js`
+- [x] Service registered in `expressionDiagnosticsRegistrations.js`
+- [x] Unit tests cover all public methods
+- [x] Tests cover edge cases (empty input, malformed clauses)
+- [x] JSDoc documentation complete
+- [x] All tests pass
+- [x] No modifications to MonteCarloSimulator
+
+## Outcome
+
+### Ticket Discrepancy Corrected
+- **Issue Found**: Ticket code sample used `this.#dataRegistry.getLookupData('core:emotion_prototypes')` but codebase uses `this.#dataRegistry.get('lookups', 'core:emotion_prototypes')`
+- **Resolution**: Updated ticket code sample to use correct API before implementation
+
+### Files Changed (as planned)
+| File | Status | Notes |
+|------|--------|-------|
+| `src/expressionDiagnostics/services/FailureExplainer.js` | ✅ Created | Full implementation with debug logging |
+| `src/expressionDiagnostics/services/index.js` | ✅ Modified | Added barrel export |
+| `src/dependencyInjection/tokens/tokens-diagnostics.js` | ✅ Modified | Added IFailureExplainer token |
+| `src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js` | ✅ Modified | Added singleton factory registration |
+| `tests/unit/expressionDiagnostics/services/failureExplainer.test.js` | ✅ Created | 43 tests, 98.78% statement coverage |
+
+### Implementation Notes
+- Added debug logging to `analyzeBlockers()` to utilize the `#logger` field
+- Renamed unused `context` parameter to `_context` following project convention
+- All 43 tests pass with comprehensive coverage of:
+  - Constructor validation
+  - `analyzeBlockers()` sorting, ranking, and explanation generation
+  - `getTopBlockers()` with default and custom limits
+  - `generateSummary()` for all rarity categories
+  - Severity categorization thresholds
+  - Clause parsing (threshold, compound, unknown types)
+  - Threshold suggestions
+  - Emotion prototype weight description
+  - Edge cases (empty input, malformed clauses, null values)
+
+### Verification
+- Unit tests: ✅ All 43 passing
+- Coverage: 98.78% statements on FailureExplainer.js
+- Lint: ✅ No errors (48 warnings unrelated to this implementation)
+- MonteCarloSimulator: ✅ Not modified

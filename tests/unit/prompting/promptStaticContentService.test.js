@@ -13,6 +13,7 @@ const promptData = {
   characterPortrayalGuidelinesTemplate: 'Guidelines for {{name}}',
   nc21ContentPolicyText: 'Policy',
   finalLlmInstructionText: 'Final',
+  moodUpdateOnlyInstructionText: 'Mood update instructions',
 };
 
 describe('PromptStaticContentService', () => {
@@ -43,6 +44,30 @@ describe('PromptStaticContentService', () => {
     expect(service.getFinalLlmInstructionText()).toBe(
       promptData.finalLlmInstructionText
     );
+  });
+
+  it('provides mood update instruction text from loaded data', () => {
+    expect(service.getMoodUpdateInstructionText()).toBe(
+      promptData.moodUpdateOnlyInstructionText
+    );
+  });
+
+  it('returns empty string if moodUpdateOnlyInstructionText is missing from data', async () => {
+    const dataWithoutMood = {
+      coreTaskDescriptionText: 'Core text',
+      characterPortrayalGuidelinesTemplate: 'Guidelines for {{name}}',
+      nc21ContentPolicyText: 'Policy',
+      finalLlmInstructionText: 'Final',
+    };
+    const loader = {
+      loadPromptText: jest.fn().mockResolvedValue(dataWithoutMood),
+    };
+    const serviceNoMood = new PromptStaticContentService({
+      logger: mockLogger,
+      promptTextLoader: loader,
+    });
+    await serviceNoMood.initialize();
+    expect(serviceNoMood.getMoodUpdateInstructionText()).toBe('');
   });
 
   it('substitutes the character name in portrayal guidelines', () => {

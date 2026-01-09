@@ -6,6 +6,35 @@
     "prerequisites": [
         {
             "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.pride"
+                                    },
+                                    {
+                                        "var": "previousEmotions.pride"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
                 "and": [
                     {
                         ">=": [
@@ -13,33 +42,6 @@
                                 "var": "emotions.pride"
                             },
                             0.55
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.pride"
-                                            },
-                                            {
-                                                "var": "previousEmotions.pride"
-                                            }
-                                        ]
-                                    },
-                                    0.1
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.triumph"
-                                    },
-                                    0.55
-                                ]
-                            }
                         ]
                     },
                     {
@@ -129,5 +131,6 @@
         "accomplishment",
         "self_assured",
         "positive"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

@@ -16,6 +16,7 @@ import {
   createMockInitializationService,
   createMockTurnActionChoicePipeline,
   createMockAIPromptPipeline,
+  createMockMoodUpdatePromptPipeline,
   createMockLLMAdapter,
   createMockEntityDisplayDataProvider,
 } from '../mockFactories';
@@ -31,6 +32,7 @@ const factoryMap = {
   initializationService: createMockInitializationService,
   turnActionChoicePipeline: createMockTurnActionChoicePipeline,
   aiPromptPipeline: createMockAIPromptPipeline,
+  moodUpdatePromptPipeline: createMockMoodUpdatePromptPipeline,
   llmAdapter: createMockLLMAdapter,
   entityDisplayDataProvider: createMockEntityDisplayDataProvider,
 };
@@ -45,6 +47,7 @@ const tokenMap = {
   [tokens.IInitializationService]: 'initializationService',
   [tokens.TurnActionChoicePipeline]: 'turnActionChoicePipeline',
   [tokens.IAIPromptPipeline]: 'aiPromptPipeline',
+  [tokens.MoodUpdatePromptPipeline]: 'moodUpdatePromptPipeline',
   [tokens.LLMAdapter]: 'llmAdapter',
   [tokens.EntityDisplayDataProvider]: 'entityDisplayDataProvider',
 };

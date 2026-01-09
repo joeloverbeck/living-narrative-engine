@@ -35,6 +35,7 @@ import {
   EmotionalStatePanel,
   SexualStatePanel,
   DamageEventMessageRenderer,
+  ExpressionMessageRenderer,
   PromptPreviewModal,
 } from '../../domUI/index.js';
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
@@ -399,6 +400,20 @@ export function registerRenderers(registrar, logger) {
 
   registerWithLog(
     registrar,
+    tokens.ExpressionMessageRenderer,
+    (c) =>
+      new ExpressionMessageRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
     tokens.PromptPreviewModal,
     (c) =>
       new PromptPreviewModal({
@@ -643,6 +658,11 @@ export function registerUI(
   container.resolve(tokens.DamageEventMessageRenderer);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.DamageEventMessageRenderer}.`
+  );
+
+  container.resolve(tokens.ExpressionMessageRenderer);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.ExpressionMessageRenderer}.`
   );
 
   logger.debug('UI Registrations: Complete.');

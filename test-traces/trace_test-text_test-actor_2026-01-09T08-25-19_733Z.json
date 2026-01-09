@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-01-09T08:25:19.739Z",
+  "outputDirectory": "./test-traces",
+  "trace": "text data",
+  "metadata": {
+    "actionId": "test-text",
+    "actorId": "test-actor",
+    "isComplete": true,
+    "hasError": false,
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

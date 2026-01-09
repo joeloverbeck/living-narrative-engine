@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.calm"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -44,7 +44,7 @@
                             {
                                 "var": "emotions.anxiety"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -76,7 +76,7 @@
                             {
                                 "var": "emotions.contentment"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -84,7 +84,7 @@
                             {
                                 "var": "emotions.relief"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -112,5 +112,6 @@
         "composed",
         "low_arousal",
         "neutral_positive"
-    ]
+    ],
+    "diagnosticStatus": "frequent"
 }

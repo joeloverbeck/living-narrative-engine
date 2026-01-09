@@ -44,6 +44,7 @@ const createExpression = (overrides = {}) => ({
     auditory: '{actor} inhales sharply.',
   },
   perception_type: 'emotion.expression',
+  tags: ['anger', 'tension'],
   ...overrides,
 });
 
@@ -96,6 +97,7 @@ describe('ExpressionDispatcher', () => {
       contextualData: {
         source: 'expression_system',
         expressionId: 'expr:one',
+        tags: ['anger', 'tension'],
       },
     });
     expect(payload.timestamp).toEqual(expect.any(String));
@@ -253,5 +255,38 @@ describe('ExpressionDispatcher', () => {
 
     const [, payload] = eventBus.dispatch.mock.calls[0];
     expect(payload.contextualData.expressionId).toBe('expr:debug');
+  });
+
+  it('should include tags from expression in contextualData', async () => {
+    const { dispatcher, eventBus, entityManager } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression({ tags: ['affection', 'warmth'] });
+    await dispatcher.dispatch('actor-1', expression, 1);
+
+    const [, payload] = eventBus.dispatch.mock.calls[0];
+    expect(payload.contextualData.tags).toEqual(['affection', 'warmth']);
+  });
+
+  it('should default tags to empty array when expression has no tags', async () => {
+    const { dispatcher, eventBus, entityManager } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression({ tags: undefined });
+    await dispatcher.dispatch('actor-1', expression, 1);
+
+    const [, payload] = eventBus.dispatch.mock.calls[0];
+    expect(payload.contextualData.tags).toEqual([]);
+  });
+
+  it('should default tags to empty array when expression.tags is null', async () => {
+    const { dispatcher, eventBus, entityManager } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression({ tags: null });
+    await dispatcher.dispatch('actor-1', expression, 1);
+
+    const [, payload] = eventBus.dispatch.mock.calls[0];
+    expect(payload.contextualData.tags).toEqual([]);
   });
 });

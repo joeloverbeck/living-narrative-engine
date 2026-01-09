@@ -132,41 +132,96 @@ class GateConstraintAnalyzer {
   /**
    * Extract emotion/sexual state requirements from prerequisites
    *
+   * Only returns prototypes that MUST be active (gates must pass).
+   * Prototypes with ceiling constraints (<=, <) that can be satisfied by
+   * gate failure (emotion = 0) are excluded because their gates don't need
+   * to constrain the axis intervals.
+   *
    * @private
    * @param {Array} prerequisites - Expression prerequisites
    * @returns {Array<{prototypeId: string, type: string}>}
    */
   #extractRequiredPrototypes(prerequisites) {
-    const required = [];
+    // First pass: collect all floor and ceiling constraints
+    const floorConstraints = new Map(); // prototypeKey -> {prototypeId, type}
+    const ceilingConstraints = new Set(); // prototypeKey
 
     for (const prereq of prerequisites) {
-      this.#extractFromLogic(prereq.logic, required);
+      this.#extractConstraintsFromLogic(
+        prereq.logic,
+        floorConstraints,
+        ceilingConstraints
+      );
+    }
+
+    // Second pass: filter out prototypes that have ceiling constraints
+    // Rationale: If emotion <= X (where X >= 0), then gate failure makes
+    // emotion = 0, which satisfies the ceiling constraint. Therefore,
+    // the emotion's gates don't need to be applied to constrain axis intervals.
+    const required = [];
+
+    for (const [key, prototype] of floorConstraints) {
+      if (!ceilingConstraints.has(key)) {
+        required.push(prototype);
+      }
     }
 
     return required;
   }
 
   /**
-   * Recursively extract prototype references from JSON Logic
+   * Recursively extract prototype references from JSON Logic,
+   * categorizing them as floor (>=) or ceiling (<=, <) constraints.
    *
    * @private
    * @param {object} logic - JSON Logic expression
-   * @param {Array} results - Accumulator for extracted prototypes
+   * @param {Map} floorConstraints - Floor constraints (>= threshold)
+   * @param {Set} ceilingConstraints - Ceiling constraints (<= or < threshold)
    */
-  #extractFromLogic(logic, results) {
+  #extractConstraintsFromLogic(logic, floorConstraints, ceilingConstraints) {
     if (!logic || typeof logic !== 'object') return;
 
-    // Check for >= comparisons on emotions.* or sexualStates.*
+    // Check for >= comparisons (floor constraints)
     if (logic['>=']) {
       const [left] = logic['>='];
       if (typeof left === 'object' && left.var) {
         const varPath = left.var;
-        if (varPath.startsWith('emotions.')) {
-          const prototypeId = varPath.replace('emotions.', '');
-          results.push({ prototypeId, type: 'emotion' });
-        } else if (varPath.startsWith('sexualStates.')) {
-          const prototypeId = varPath.replace('sexualStates.', '');
-          results.push({ prototypeId, type: 'sexual' });
+        const parsed = this.#parsePrototypeVar(varPath);
+        if (parsed) {
+          const key = `${parsed.type}:${parsed.prototypeId}`;
+          if (!floorConstraints.has(key)) {
+            floorConstraints.set(key, parsed);
+          }
+        }
+      }
+    }
+
+    // Check for <= comparisons (ceiling constraints)
+    if (logic['<=']) {
+      const [left, right] = logic['<='];
+      if (typeof left === 'object' && left.var) {
+        const varPath = left.var;
+        const parsed = this.#parsePrototypeVar(varPath);
+        if (parsed && typeof right === 'number' && right >= 0) {
+          // Ceiling constraint with non-negative threshold
+          // Gate failure (emotion = 0) satisfies this
+          const key = `${parsed.type}:${parsed.prototypeId}`;
+          ceilingConstraints.add(key);
+        }
+      }
+    }
+
+    // Check for < comparisons (strict ceiling constraints)
+    if (logic['<']) {
+      const [left, right] = logic['<'];
+      if (typeof left === 'object' && left.var) {
+        const varPath = left.var;
+        const parsed = this.#parsePrototypeVar(varPath);
+        if (parsed && typeof right === 'number' && right > 0) {
+          // Strict ceiling constraint with positive threshold
+          // Gate failure (emotion = 0) satisfies this
+          const key = `${parsed.type}:${parsed.prototypeId}`;
+          ceilingConstraints.add(key);
         }
       }
     }
@@ -175,9 +230,31 @@ class GateConstraintAnalyzer {
     if (logic.and || logic.or) {
       const clauses = logic.and || logic.or;
       for (const clause of clauses) {
-        this.#extractFromLogic(clause, results);
+        this.#extractConstraintsFromLogic(clause, floorConstraints, ceilingConstraints);
       }
     }
+  }
+
+  /**
+   * Parse a var path to extract prototype info if it's an emotion or sexual state
+   *
+   * @private
+   * @param {string} varPath - Variable path like 'emotions.jealousy'
+   * @returns {{prototypeId: string, type: string}|null}
+   */
+  #parsePrototypeVar(varPath) {
+    if (varPath.startsWith('emotions.')) {
+      return {
+        prototypeId: varPath.replace('emotions.', ''),
+        type: 'emotion',
+      };
+    } else if (varPath.startsWith('sexualStates.')) {
+      return {
+        prototypeId: varPath.replace('sexualStates.', ''),
+        type: 'sexual',
+      };
+    }
+    return null;
   }
 
   /**

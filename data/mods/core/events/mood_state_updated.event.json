@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:mood_state_updated",
+  "description": "Fired when an actor's mood or sexual state is updated by the MoodPersistenceService. This event is dispatched after the mood/sexual state components have been modified on the entity.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:mood_state_updated' event payload.",
+    "type": "object",
+    "required": ["actorId"],
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The ID of the actor whose mood or sexual state was updated."
+      },
+      "moodUpdate": {
+        "type": ["object", "null"],
+        "description": "The mood axis values that were updated (valence, arousal, threat, etc.), or null if only sexual state was updated."
+      },
+      "sexualUpdate": {
+        "type": ["object", "null"],
+        "description": "The sexual state values that were updated (sex_excitation, sex_inhibition, etc.), or null if only mood was updated."
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -21,7 +21,12 @@ describe('Integration: LLM Prompt Debug Panel', () => {
         <button id="llm-prompt-debug-button">prompt to llm</button>
       </div>
       <div id="llm-prompt-debug-modal" class="modal" hidden>
-        <div id="llm-prompt-debug-content"></div>
+        <div id="llm-prompt-debug-tablist">
+          <button id="llm-prompt-debug-tab-mood">Mood</button>
+          <button id="llm-prompt-debug-tab-action">Action</button>
+        </div>
+        <pre id="llm-prompt-debug-panel-mood"></pre>
+        <pre id="llm-prompt-debug-panel-action"></pre>
         <div id="llm-prompt-meta-actor"></div>
         <div id="llm-prompt-meta-llm"></div>
         <div id="llm-prompt-meta-actions"></div>
@@ -207,7 +212,9 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     const mockPreviewMethod = jest.fn(async () => {
       // Simulate engine logic: Dispatch the event
       await eventDispatcher.dispatch(UI_SHOW_LLM_PROMPT_PREVIEW, {
-        prompt: 'Mock Prompt Content',
+        moodPrompt: 'Mock Mood Prompt Content',
+        actionPrompt: 'Mock Action Prompt Content',
+        prompt: 'Mock Action Prompt Content',
         actorId: 'hero',
         actorName: 'Hero',
         llmId: 'gpt-4',
@@ -241,7 +248,9 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     // Verify Modal is shown (DomUiFacade -> PromptPreviewModal)
     // We can check the DOM elements directly since PromptPreviewModal updates them.
     const modal = document.getElementById('llm-prompt-debug-modal');
-    const content = document.getElementById('llm-prompt-debug-content');
+    const actionPanel = document.getElementById(
+      'llm-prompt-debug-panel-action'
+    );
     const metaActor = document.getElementById('llm-prompt-meta-actor');
 
     // BaseModalRenderer removes 'hidden' attribute or adds 'visible' class?
@@ -249,7 +258,7 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     // Usually checking if it's "visible" implies checking display style or classes.
     // But checking the CONTENT update verifies the data flow.
 
-    expect(content.textContent).toBe('Mock Prompt Content');
+    expect(actionPanel.textContent).toBe('Mock Action Prompt Content');
     expect(metaActor.textContent).toBe('Hero');
   });
 

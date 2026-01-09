@@ -22,6 +22,7 @@ import {
   SEXUAL_STATE_COMPONENT_ID,
   MOOD_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { extractEntityId } from '../utils/entityUtils.js';
 
 /**
  * Widget displaying character's current sexual state as 3 bars plus baseline and qualitative text.
@@ -208,21 +209,24 @@ export class SexualStatePanel extends BoundDomRendererBase {
    *
    * @param {object} eventWrapper - The event wrapper containing payload.
    * @param {object} eventWrapper.payload - The event payload.
-   * @param {string} eventWrapper.payload.entityId - The entity that received the component.
-   * @param {string} eventWrapper.payload.componentId - The component that was added.
+   * @param {string|object} eventWrapper.payload.entity - The entity that received the component (may be entity object or string ID).
+   * @param {string} eventWrapper.payload.componentTypeId - The component type that was added.
    * @private
    */
   #handleComponentAdded(eventWrapper) {
     const actualPayload = eventWrapper.payload;
 
-    if (!actualPayload || !actualPayload.entityId || !actualPayload.componentId) {
+    if (!actualPayload || !actualPayload.entity || !actualPayload.componentTypeId) {
       return;
     }
 
+    // Extract entity ID (handles both entity objects and string IDs)
+    const entityId = extractEntityId(actualPayload.entity);
+
     // Only re-render if this is the current actor's sexual_state component
     if (
-      actualPayload.entityId === this.#currentActorId &&
-      actualPayload.componentId === SEXUAL_STATE_COMPONENT_ID
+      entityId === this.#currentActorId &&
+      actualPayload.componentTypeId === SEXUAL_STATE_COMPONENT_ID
     ) {
       this.logger.debug(
         `${this._logPrefix} Sexual state component added for current actor. Re-rendering.`

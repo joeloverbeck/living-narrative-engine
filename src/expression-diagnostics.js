@@ -3,6 +3,7 @@
 import { CommonBootstrapper } from './bootstrapper/CommonBootstrapper.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { diagnosticsTokens } from './dependencyInjection/tokens/tokens-diagnostics.js';
+import { registerExpressionServices } from './dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from './dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
 import ExpressionDiagnosticsController from './domUI/expression-diagnostics/ExpressionDiagnosticsController.js';
 import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
@@ -17,6 +18,10 @@ async function initialize() {
       containerConfigType: 'minimal',
       worldName: 'default',
       postInitHook: async (services, container) => {
+        // Register expression services (required for IExpressionRegistry)
+        // This is needed because minimal container config doesn't include game systems
+        registerExpressionServices(container);
+
         // Register diagnostics services
         registerExpressionDiagnosticsServices(container);
 
@@ -29,6 +34,15 @@ async function initialize() {
         const boundsCalculator = container.resolve(
           diagnosticsTokens.IIntensityBoundsCalculator
         );
+        const monteCarloSimulator = container.resolve(
+          diagnosticsTokens.IMonteCarloSimulator
+        );
+        const failureExplainer = container.resolve(
+          diagnosticsTokens.IFailureExplainer
+        );
+        const expressionStatusService = container.resolve(
+          diagnosticsTokens.IExpressionStatusService
+        );
 
         // Initialize controller
         controller = new ExpressionDiagnosticsController({
@@ -36,6 +50,9 @@ async function initialize() {
           expressionRegistry,
           gateAnalyzer,
           boundsCalculator,
+          monteCarloSimulator,
+          failureExplainer,
+          expressionStatusService,
         });
 
         await controller.initialize();

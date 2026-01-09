@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.fatigue"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -52,7 +52,7 @@
                             {
                                 "var": "emotions.despair"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.grief"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -92,7 +92,7 @@
                             {
                                 "var": "emotions.fascination"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -100,7 +100,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -142,7 +142,7 @@
                                             {
                                                 "var": "previousEmotions.fatigue"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     },
                                     {
@@ -150,7 +150,7 @@
                                             {
                                                 "var": "emotions.fatigue"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     }
                                 ]
@@ -178,5 +178,6 @@
         "withdrawal",
         "effort_cost",
         "attention_drift"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

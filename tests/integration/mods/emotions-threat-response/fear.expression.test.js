@@ -130,40 +130,44 @@ describe('Emotions-threat-response fear expressions', () => {
   });
 
   describe('panic_onset delta detection', () => {
-    it('requires high panic as primary signal with terror/alarm support AND activation trigger', () => {
+    it('requires panic threshold, mood axes gates, and activation trigger', () => {
       const expression = expressionsById['emotions-threat-response:panic_onset'];
       const logic = expression.prerequisites[0].logic;
 
       // Production expression now requires:
-      // - panic >= 0.62 (primary signal, not terror/alarm)
-      // - OR block: terror >= 0.55 OR alarm >= 0.55 OR fear >= 0.65
-      // - threat >= 40, arousal >= 35, agency_control <= -10
-      // - numbness <= 0.45, freeze < 0.25
-      // - Activation: panic delta >= 0.15 OR (previousPanic < 0.55 AND panic >= 0.62) OR agency drop >= 12
+      // - panic >= 0.48
+      // - threat >= 45, arousal >= 30, agency_control <= -12
+      // - numbness <= 0.6, freeze < 0.35, dissociation < 0.55
+      // - Activation: panic delta >= 0.1 OR (previousPanic < 0.38 AND panic >= 0.48)
+      //   OR agency drop >= 10 OR threat/arousal jump >= 15
       const passingContext = {
-        emotions: { panic: 0.75, terror: 0.6, alarm: 0.6, numbness: 0.2, freeze: 0.1 },
-        previousEmotions: { panic: 0.5 }, // previousPanic < 0.55, panic >= 0.62 triggers activation
+        emotions: { panic: 0.6, numbness: 0.2, freeze: 0.1, dissociation: 0.2 },
+        previousEmotions: { panic: 0.45 }, // delta = 0.15 triggers activation
         moodAxes: {
           threat: 50,
-          arousal: 45,
-          agency_control: -15,
+          arousal: 35,
+          agency_control: -13,
         },
         previousMoodAxes: {
-          agency_control: -5,
+          threat: 50,
+          arousal: 35,
+          agency_control: -13,
         },
       };
 
       // Failing: panic doesn't have activation trigger (no delta, no threshold cross, no agency drop)
       const failingContextNoIncrease = {
-        emotions: { panic: 0.75, terror: 0.6, alarm: 0.6, numbness: 0.2, freeze: 0.1 },
-        previousEmotions: { panic: 0.65 }, // previousPanic > 0.55 and delta = 0.10 < 0.15
+        emotions: { panic: 0.6, numbness: 0.2, freeze: 0.1, dissociation: 0.2 },
+        previousEmotions: { panic: 0.55 }, // previousPanic >= 0.38 and delta = 0.05 < 0.1
         moodAxes: {
           threat: 50,
-          arousal: 45,
-          agency_control: -15,
+          arousal: 35,
+          agency_control: -13,
         },
         previousMoodAxes: {
-          agency_control: -15, // No agency drop
+          threat: 50,
+          arousal: 35,
+          agency_control: -13, // No agency drop
         },
       };
 
@@ -177,14 +181,19 @@ describe('Emotions-threat-response fear expressions', () => {
       const expression = expressionsById['emotions-threat-response:panic_onset'];
       const logic = expression.prerequisites[0].logic;
 
-      // Now panic is the primary signal (>= 0.62 required)
+      // Panic must be >= 0.48
       const failingContextLowPanic = {
-        emotions: { panic: 0.5, terror: 0.7, alarm: 0.6, numbness: 0.2, freeze: 0.1 }, // panic < 0.62
-        previousEmotions: { panic: 0.3 },
+        emotions: { panic: 0.45, numbness: 0.2, freeze: 0.1, dissociation: 0.2 }, // panic < 0.48
+        previousEmotions: { panic: 0.2 },
         moodAxes: {
           threat: 50,
-          arousal: 45,
-          agency_control: -15,
+          arousal: 35,
+          agency_control: -13,
+        },
+        previousMoodAxes: {
+          threat: 50,
+          arousal: 35,
+          agency_control: -13,
         },
       };
 
@@ -193,39 +202,48 @@ describe('Emotions-threat-response fear expressions', () => {
       );
     });
 
-    it('fails when none of terror/alarm/fear meet their thresholds', () => {
+    it('fails when threat is below the required threshold', () => {
       const expression = expressionsById['emotions-threat-response:panic_onset'];
       const logic = expression.prerequisites[0].logic;
 
-      // OR block requires: terror >= 0.55 OR alarm >= 0.55 OR fear >= 0.65
-      const failingContextLowSupport = {
-        emotions: { panic: 0.75, terror: 0.4, alarm: 0.4, fear: 0.5, numbness: 0.2, freeze: 0.1 },
-        previousEmotions: { panic: 0.5 },
+      const failingContextLowThreat = {
+        emotions: { panic: 0.6, numbness: 0.2, freeze: 0.1, dissociation: 0.2 },
+        previousEmotions: { panic: 0.45 }, // delta = 0.15 would trigger activation
         moodAxes: {
-          threat: 50,
-          arousal: 45,
-          agency_control: -15,
+          threat: 40, // below 45
+          arousal: 35,
+          agency_control: -13,
+        },
+        previousMoodAxes: {
+          threat: 40,
+          arousal: 35,
+          agency_control: -13,
         },
       };
 
-      expect(jsonLogicService.evaluate(logic, failingContextLowSupport)).toBe(
+      expect(jsonLogicService.evaluate(logic, failingContextLowThreat)).toBe(
         false
       );
     });
 
-    it('passes at exact thresholds (0.62 panic, 0.55 terror, threshold cross activation)', () => {
+    it('passes at exact thresholds (panic 0.48, activation via threshold crossing)', () => {
       const expression = expressionsById['emotions-threat-response:panic_onset'];
       const logic = expression.prerequisites[0].logic;
 
-      // Exact thresholds: panic = 0.62, terror = 0.55, threat = 40, arousal = 35, agency_control = -10
-      // Activation via threshold crossing: previousPanic < 0.55 AND panic >= 0.62
+      // Exact thresholds: panic = 0.48, threat = 45, arousal = 30, agency_control = -12
+      // Activation via threshold crossing: previousPanic < 0.38 AND panic >= 0.48
       const exactThresholdContext = {
-        emotions: { panic: 0.62, terror: 0.55, alarm: 0.55, numbness: 0.45, freeze: 0.24 },
-        previousEmotions: { panic: 0.54 }, // < 0.55, triggers threshold cross activation
+        emotions: { panic: 0.48, numbness: 0.6, freeze: 0.34, dissociation: 0.54 },
+        previousEmotions: { panic: 0.37 }, // < 0.38, triggers threshold cross activation
         moodAxes: {
-          threat: 40,
-          arousal: 35,
-          agency_control: -10,
+          threat: 45,
+          arousal: 30,
+          agency_control: -12,
+        },
+        previousMoodAxes: {
+          threat: 45,
+          arousal: 30,
+          agency_control: -12,
         },
       };
 

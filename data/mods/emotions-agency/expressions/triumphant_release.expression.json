@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -75,7 +75,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -122,5 +122,6 @@
         "victory",
         "pride",
         "release"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

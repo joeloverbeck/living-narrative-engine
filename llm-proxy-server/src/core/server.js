@@ -54,6 +54,9 @@ import { ModScannerService } from '../services/modScannerService.js';
 import { createGameConfigRoutes } from '../routes/gameConfigRoutes.js';
 import { GameConfigController } from '../handlers/gameConfigController.js';
 import { GameConfigService } from '../services/gameConfigService.js';
+import { createExpressionRoutes } from '../routes/expressionRoutes.js';
+import { ExpressionStatusController } from '../handlers/expressionStatusController.js';
+import { ExpressionFileService } from '../services/expressionFileService.js';
 
 const shutdownSignals = ['SIGTERM', 'SIGINT', 'SIGHUP'];
 
@@ -127,7 +130,8 @@ export function createProxyServer(options = {}) {
   app.use((req, res, next) => {
     if (
       req.path === '/api/llm-request' ||
-      req.path.startsWith('/api/llm-request/salvage')
+      req.path.startsWith('/api/llm-request/salvage') ||
+      req.path.startsWith('/api/expressions')
     ) {
       return next();
     }
@@ -165,7 +169,7 @@ export function createProxyServer(options = {}) {
 
     const corsOptions = {
       origin: allowedOriginsArray,
-      methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
+      methods: ['GET', HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
       allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
     };
     app.use(cors(corsOptions));
@@ -241,6 +245,12 @@ export function createProxyServer(options = {}) {
   const gameConfigController = new GameConfigController(
     proxyLogger,
     gameConfigService
+  );
+
+  const expressionFileService = new ExpressionFileService(proxyLogger);
+  const expressionStatusController = new ExpressionStatusController(
+    proxyLogger,
+    expressionFileService
   );
 
   app.get('/metrics', async (req, res) => {
@@ -321,6 +331,7 @@ export function createProxyServer(options = {}) {
 
   app.use('/api/mods', createModsRoutes(modsController));
   app.use('/api/game-config', createGameConfigRoutes(gameConfigController));
+  app.use('/api/expressions', createExpressionRoutes(expressionStatusController));
 
   let server = null;
   let isShuttingDown = false;

@@ -188,6 +188,14 @@ jest.mock('../../../../src/prompting/AIPromptPipeline.js', () => ({
   AIPromptPipeline: mockCreateClass('AIPromptPipeline'),
 }));
 
+jest.mock(
+  '../../../../src/turns/orchestrators/TwoPhaseDecisionOrchestrator.js',
+  () => ({
+    __esModule: true,
+    TwoPhaseDecisionOrchestrator: mockCreateClass('TwoPhaseDecisionOrchestrator'),
+  })
+);
+
 jest.mock('../../../../src/turns/adapters/llmChooser.js', () => ({
   __esModule: true,
   LLMChooser: mockCreateClass('LLMChooser'),
@@ -312,6 +320,11 @@ const { AIPromptPipeline: AIPromptPipelineMock } = jest.requireMock(
 );
 const { LLMChooser: LLMChooserMock } = jest.requireMock(
   '../../../../src/turns/adapters/llmChooser.js'
+);
+const {
+  TwoPhaseDecisionOrchestrator: TwoPhaseDecisionOrchestratorMock,
+} = jest.requireMock(
+  '../../../../src/turns/orchestrators/TwoPhaseDecisionOrchestrator.js'
 );
 const { ActionIndexerAdapter: ActionIndexerAdapterMock } = jest.requireMock(
   '../../../../src/turns/adapters/actionIndexerAdapter.js'
@@ -818,21 +831,41 @@ describe('aiRegistrations', () => {
         logger,
       });
 
-      const chooserCall = container.register.mock.calls.find(
-        ([token]) => token === tokens.ILLMChooser
+      const twoPhaseCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.TwoPhaseDecisionOrchestrator
       );
-      chooserCall[1](
+      twoPhaseCall[1](
         createFactoryContext({
+          [tokens.MoodUpdatePromptPipeline]: { moodPipeline: true },
+          [tokens.MoodResponseProcessor]: { moodProcessor: true },
+          [tokens.IMoodPersistenceService]: { moodPersistence: true },
           [tokens.IAIPromptPipeline]: { pipeline: true },
           [tokens.LLMAdapter]: { adapter: true },
           [tokens.ILLMResponseProcessor]: { processor: true },
           [tokens.ILogger]: logger,
         })
       );
-      expect(LLMChooserMock).toHaveBeenCalledWith({
-        promptPipeline: { pipeline: true },
+      expect(TwoPhaseDecisionOrchestratorMock).toHaveBeenCalledWith({
+        moodUpdatePipeline: { moodPipeline: true },
+        moodResponseProcessor: { moodProcessor: true },
+        moodPersistenceService: { moodPersistence: true },
+        aiPromptPipeline: { pipeline: true },
         llmAdapter: { adapter: true },
-        responseProcessor: { processor: true },
+        llmResponseProcessor: { processor: true },
+        logger,
+      });
+
+      const chooserCall = container.register.mock.calls.find(
+        ([token]) => token === tokens.ILLMChooser
+      );
+      chooserCall[1](
+        createFactoryContext({
+          [tokens.TwoPhaseDecisionOrchestrator]: { orchestrator: true },
+          [tokens.ILogger]: logger,
+        })
+      );
+      expect(LLMChooserMock).toHaveBeenCalledWith({
+        twoPhaseOrchestrator: { orchestrator: true },
         logger,
       });
 

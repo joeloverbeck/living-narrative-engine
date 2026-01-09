@@ -144,6 +144,7 @@
       "entity_thought.event.json",
       "existing_cliches_loaded.event.json",
       "export_notification.event.json",
+      "mood_state_updated.event.json",
       "motivations_search_performed.event.json",
       "motivations_sort_changed.event.json",
       "mouth_engagement_unlocked.event.json",

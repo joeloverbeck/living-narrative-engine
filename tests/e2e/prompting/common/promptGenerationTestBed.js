@@ -54,12 +54,14 @@ export class PromptGenerationTestBed {
     this._schemaCache = null;
     this._configCache = null;
     this._fileCache = new Map(); // Cache file reads
+    this._originalFetch = null;
   }
 
   /**
    * Initialize the test bed with all required services
    */
   async initialize() {
+    this._installConfigFetchStub();
     // Use cached test configuration if available, otherwise create new one
     if (!this._configCache) {
       const testConfig =
@@ -486,6 +488,7 @@ export class PromptGenerationTestBed {
    * Clean up resources after tests
    */
   async cleanup() {
+    this._restoreConfigFetchStub();
     // Clean up event subscription first
     if (this.eventSubscription) {
       this.eventSubscription();
@@ -1000,6 +1003,64 @@ export class PromptGenerationTestBed {
   }
 
   /**
+   * Stub fetch for config files to avoid jsdom network calls.
+   *
+   * @private
+   */
+  _installConfigFetchStub() {
+    if (this._originalFetch) {
+      return;
+    }
+
+    const configResponses = new Map([
+      ['config/trace-config.json', {}],
+      ['config/emotion-display-config.json', {}],
+    ]);
+
+    this._originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async (input) => {
+      const rawUrl = typeof input === 'string' ? input : input?.url;
+      const urlString = rawUrl ? String(rawUrl) : '';
+      const path = (() => {
+        try {
+          const parsed = new URL(urlString, 'http://localhost');
+          return parsed.pathname.replace(/^\//, '');
+        } catch (error) {
+          return urlString.replace(/^\//, '');
+        }
+      })();
+
+      if (configResponses.has(path)) {
+        const payload = configResponses.get(path);
+        return {
+          ok: true,
+          status: 200,
+          json: async () => payload,
+        };
+      }
+
+      if (typeof this._originalFetch === 'function') {
+        return this._originalFetch(input);
+      }
+
+      throw new Error(`Mock fetch: no handler for ${urlString}`);
+    };
+  }
+
+  /**
+   * Restore the original fetch implementation.
+   *
+   * @private
+   */
+  _restoreConfigFetchStub() {
+    if (this._originalFetch) {
+      globalThis.fetch = this._originalFetch;
+      this._originalFetch = null;
+    }
+  }
+
+  /**
    * Get entity by ID
    *
    * @param {string} entityId
@@ -1145,6 +1206,8 @@ export class PromptGenerationTestBed {
             'NOTES RULES\n- Only record brand-new, critical facts (locations, allies, threats, etc.) that may determine your survival, well-being, or prosperity.\n- No internal musings, only hard data.\n- Each note MUST identify its subject (who/what the note is about)\n- Include context when relevant (where/when observed)\n- Use tags for categorization (e.g., "combat", "relationship", "location")\n- Example format:\n  {\n    "text": "Seems nervous about the council meeting",\n    "subject": "John",\n    "context": "tavern conversation",\n    "tags": ["emotion", "politics"]\n  }\n- Another example:\n  {\n    "text": "Guards doubled at the north gate",\n    "subject": "City defenses",\n    "context": "morning patrol",\n    "tags": ["security", "observation"]\n  }\n\nNow, based on all the information provided, decide on your character\'s action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.',
           actionTagRulesContent:
             'ACTION TAG RULES:\n- Wrap only *visible, externally observable actions* in single asterisks.\n- The asterisk block must contain NO internal thoughts, emotions, private reasoning, or hidden information.\n- Use third-person present tense inside asterisks (e.g., *crosses arms*, *narrows her eyes*).\n- If it cannot be seen or heard by other characters, it does NOT belong between asterisks.',
+          moodUpdateOnlyInstructionText:
+            'MOOD UPDATE ONLY:\n- Update the character\'s emotional state based on recent events and current context.\n- Focus on how the moment changes feelings, not on action selection.\n- Keep the update concise and grounded in observable circumstances.',
         },
       };
     }

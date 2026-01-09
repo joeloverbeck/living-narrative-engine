@@ -1,26 +1,23 @@
 import { jest, describe, test, expect } from '@jest/globals';
 import { LLMChooser } from '../../../../src/turns/adapters/llmChooser.js';
-import {
-  createMockLogger,
-  createMockAIPromptPipeline,
-} from '../../../common/mockFactories.js';
+import { createMockLogger } from '../../../common/mockFactories.js';
 
 const dummyLogger = createMockLogger();
 
 describe('LLMChooser', () => {
-  test('forwards AbortSignal to llmAdapter', async () => {
-    const promptPipeline = createMockAIPromptPipeline('PROMPT');
-    const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
-    const responseProcessor = {
-      processResponse: jest.fn().mockResolvedValue({
-        action: { chosenIndex: 0, speech: null },
-      }),
+  test('throws when twoPhaseOrchestrator is invalid', () => {
+    expect(() => {
+      new LLMChooser({ twoPhaseOrchestrator: null, logger: dummyLogger });
+    }).toThrow('LLMChooser: twoPhaseOrchestrator invalid');
+  });
+
+  test('forwards AbortSignal to orchestrator', async () => {
+    const twoPhaseOrchestrator = {
+      orchestrate: jest.fn().mockResolvedValue({ index: 0, speech: null }),
     };
 
     const chooser = new LLMChooser({
-      promptPipeline,
-      llmAdapter,
-      responseProcessor,
+      twoPhaseOrchestrator,
       logger: dummyLogger,
     });
 
@@ -32,25 +29,29 @@ describe('LLMChooser', () => {
       abortSignal: controller.signal,
     });
 
-    expect(llmAdapter.getAIDecision).toHaveBeenCalledWith(
-      'PROMPT',
-      controller.signal
-    );
+    expect(twoPhaseOrchestrator.orchestrate).toHaveBeenCalledWith({
+      actor: { id: 'a1' },
+      context: {},
+      actions: [],
+      abortSignal: controller.signal,
+    });
   });
 
-  test('returns {index, speech} shape', async () => {
-    const promptPipeline = createMockAIPromptPipeline('PROMPT');
-    const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
-    const responseProcessor = {
-      processResponse: jest.fn().mockResolvedValue({
-        action: { chosenIndex: 2, speech: 'Hello there!' },
-      }),
+  test('returns orchestrator result unchanged', async () => {
+    const expected = {
+      index: 2,
+      speech: 'Hello there!',
+      notes: null,
+      thoughts: null,
+      moodUpdate: null,
+      sexualUpdate: null,
+    };
+    const twoPhaseOrchestrator = {
+      orchestrate: jest.fn().mockResolvedValue(expected),
     };
 
     const chooser = new LLMChooser({
-      promptPipeline,
-      llmAdapter,
-      responseProcessor,
+      twoPhaseOrchestrator,
       logger: dummyLogger,
     });
 
@@ -60,13 +61,6 @@ describe('LLMChooser', () => {
       actions: [],
     });
 
-    expect(result).toEqual({
-      index: 2,
-      speech: 'Hello there!',
-      notes: null,
-      thoughts: null,
-      moodUpdate: null,
-      sexualUpdate: null,
-    });
+    expect(result).toEqual(expected);
   });
 });

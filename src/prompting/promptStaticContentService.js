@@ -99,6 +99,17 @@ export class PromptStaticContentService extends IPromptStaticContentService {
     this.#ensureInitialized();
     return this.#promptData.finalLlmInstructionText;
   }
+
+
+  /**
+   * Returns the mood-only update instruction text for Phase 1 prompts.
+   *
+   * @returns {string}
+   */
+  getMoodUpdateInstructionText() {
+    this.#ensureInitialized();
+    return this.#promptData.moodUpdateOnlyInstructionText ?? '';
+  }
 }
 
 export default PromptStaticContentService;

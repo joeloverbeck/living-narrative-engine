@@ -43,7 +43,12 @@ const createMockEmotionCalculatorService = () => ({
   formatSexualStatesForPrompt: jest.fn().mockReturnValue('aroused'),
 });
 
-const createMockEntity = (hasSexualState = true, sexualStateData = null) => ({
+const createMockEntity = (
+  hasSexualState = true,
+  sexualStateData = null,
+  entityId = 'test-entity'
+) => ({
+  id: entityId,
   hasComponent: jest.fn((componentId) => {
     if (componentId === SEXUAL_STATE_COMPONENT_ID) return hasSexualState;
     return false;
@@ -335,7 +340,7 @@ describe('SexualStatePanel', () => {
   });
 
   describe('handleComponentAdded (via event)', () => {
-    it('re-renders when sexual_state component is added to current actor', () => {
+    it('re-renders when sexual_state component is added with entity object (production format)', () => {
       const mockEntity = createMockEntity(true, createSexualStateData({ sex_excitation: 30 }));
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -349,9 +354,32 @@ describe('SexualStatePanel', () => {
       // Clear previous calls
       deps.emotionCalculatorService.calculateSexualArousal.mockClear();
 
-      // Trigger component added
+      // Trigger component added with entity OBJECT (actual MoodPersistenceService format)
       componentHandler({
-        payload: { entityId: 'test-entity', componentId: SEXUAL_STATE_COMPONENT_ID },
+        payload: { entity: mockEntity, componentTypeId: SEXUAL_STATE_COMPONENT_ID },
+      });
+
+      // Should have re-rendered
+      expect(deps.emotionCalculatorService.calculateSexualArousal).toHaveBeenCalled();
+    });
+
+    it('re-renders when sexual_state component is added with string entity ID (backward compatibility)', () => {
+      const mockEntity = createMockEntity(true, createSexualStateData({ sex_excitation: 30 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new SexualStatePanel(deps);
+      const turnHandler = getEventHandler(TURN_STARTED_ID);
+      const componentHandler = getEventHandler(COMPONENT_ADDED_ID);
+
+      // First set the current actor
+      turnHandler({ payload: { entityId: 'test-entity' } });
+
+      // Clear previous calls
+      deps.emotionCalculatorService.calculateSexualArousal.mockClear();
+
+      // Trigger component added with string entity ID (backward compatibility)
+      componentHandler({
+        payload: { entity: 'test-entity', componentTypeId: SEXUAL_STATE_COMPONENT_ID },
       });
 
       // Should have re-rendered
@@ -372,7 +400,7 @@ describe('SexualStatePanel', () => {
 
       // Trigger component added for different entity
       componentHandler({
-        payload: { entityId: 'other-entity', componentId: SEXUAL_STATE_COMPONENT_ID },
+        payload: { entity: 'other-entity', componentTypeId: SEXUAL_STATE_COMPONENT_ID },
       });
 
       // Should NOT have re-rendered
@@ -393,7 +421,7 @@ describe('SexualStatePanel', () => {
 
       // Trigger component added for different component
       componentHandler({
-        payload: { entityId: 'test-entity', componentId: 'some:other:component' },
+        payload: { entity: 'test-entity', componentTypeId: 'some:other:component' },
       });
 
       // Should NOT have re-rendered
@@ -404,11 +432,11 @@ describe('SexualStatePanel', () => {
       new SexualStatePanel(deps);
       const componentHandler = getEventHandler(COMPONENT_ADDED_ID);
 
-      // Should not throw for various invalid payloads
+      // Should not throw for various invalid payloads (now checks for entity and componentTypeId)
       expect(() => componentHandler({ payload: null })).not.toThrow();
       expect(() => componentHandler({ payload: {} })).not.toThrow();
-      expect(() => componentHandler({ payload: { entityId: 'test' } })).not.toThrow();
-      expect(() => componentHandler({ payload: { componentId: 'test' } })).not.toThrow();
+      expect(() => componentHandler({ payload: { entity: 'test' } })).not.toThrow();
+      expect(() => componentHandler({ payload: { componentTypeId: 'test' } })).not.toThrow();
     });
   });
 

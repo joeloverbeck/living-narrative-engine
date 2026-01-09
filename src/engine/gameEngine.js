@@ -28,6 +28,7 @@ import GameSessionManager from './gameSessionManager.js';
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('../turns/pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
 /** @typedef {import('../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
+/** @typedef {import('../prompting/MoodUpdatePromptPipeline.js').MoodUpdatePromptPipeline} MoodUpdatePromptPipeline */
 /** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 
@@ -48,6 +49,8 @@ class GameEngine {
   #turnActionChoicePipeline;
   /** @type {IAIPromptPipeline} */
   #aiPromptPipeline;
+  /** @type {MoodUpdatePromptPipeline} */
+  #moodUpdatePromptPipeline;
   /** @type {ILLMAdapter} */
   #llmAdapter;
   /** @type {EntityDisplayDataProvider} */
@@ -89,6 +92,9 @@ class GameEngine {
       );
       this.#aiPromptPipeline = /** @type {IAIPromptPipeline} */ (
         container.resolve(tokens.IAIPromptPipeline)
+      );
+      this.#moodUpdatePromptPipeline = /** @type {MoodUpdatePromptPipeline} */ (
+        container.resolve(tokens.MoodUpdatePromptPipeline)
       );
       this.#llmAdapter = /** @type {ILLMAdapter} */ (
         container.resolve(tokens.LLMAdapter)
@@ -676,6 +682,8 @@ class GameEngine {
 
     if (!turnContext || !actor) {
       await this.#dispatchPromptPreview({
+        moodPrompt: null,
+        actionPrompt: null,
         prompt: null,
         actorId: null,
         actorName: null,
@@ -694,8 +702,22 @@ class GameEngine {
 
     /** @type {import('../turns/dtos/actionComposite.js').ActionComposite[]} */
     let availableActions = [];
-    let prompt = null;
+    let moodPrompt = null;
+    let actionPrompt = null;
     let llmId = null;
+
+    try {
+      const generatedMoodPrompt =
+        await this.#moodUpdatePromptPipeline.generateMoodUpdatePrompt(
+          actor,
+          turnContext
+        );
+      moodPrompt =
+        typeof generatedMoodPrompt === 'string' ? generatedMoodPrompt : null;
+    } catch (error) {
+      const normalizedError = normalizeError(error);
+      errors.push(normalizedError.message || String(normalizedError));
+    }
 
     try {
       availableActions = await this.#turnActionChoicePipeline.buildChoices(
@@ -703,11 +725,13 @@ class GameEngine {
         turnContext
       );
       llmId = await this.#llmAdapter.getCurrentActiveLlmId();
-      prompt = await this.#aiPromptPipeline.generatePrompt(
+      const generatedActionPrompt = await this.#aiPromptPipeline.generatePrompt(
         actor,
         turnContext,
         availableActions
       );
+      actionPrompt =
+        typeof generatedActionPrompt === 'string' ? generatedActionPrompt : null;
     } catch (error) {
       const normalizedError = normalizeError(error);
       errors.push(normalizedError.message || String(normalizedError));
@@ -725,7 +749,9 @@ class GameEngine {
     }
 
     await this.#dispatchPromptPreview({
-      prompt,
+      moodPrompt,
+      actionPrompt,
+      prompt: actionPrompt,
       actorId,
       actorName,
       llmId,

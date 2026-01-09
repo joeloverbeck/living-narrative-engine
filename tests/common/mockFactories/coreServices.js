@@ -64,6 +64,10 @@ const simpleFactories = {
   createMockAIPromptContentProvider: ['getPromptData'],
   createMockPromptBuilder: ['build'],
   createMockAIPromptPipeline: ['generatePrompt'],
+  createMockMoodUpdatePromptPipeline: {
+    methods: ['generateMoodUpdatePrompt'],
+    defaults: { generateMoodUpdatePrompt: jest.fn().mockResolvedValue('') },
+  },
   createMockTurnActionChoicePipeline: ['buildChoices'],
   createMockEntityDisplayDataProvider: ['getEntityName'],
   createMockLLMConfigurationManager: {
@@ -317,6 +321,7 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
+  createMockMoodUpdatePromptPipeline,
   createMockTurnActionChoicePipeline,
   createMockEntityDisplayDataProvider,
   createMockLLMConfigurationManager,

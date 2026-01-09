@@ -4,7 +4,12 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { COMPONENT_ADDED_ID } from '../constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  COMPONENT_ADDED_ID,
+  MOOD_STATE_UPDATED_ID,
+  TURN_STARTED_ID,
+} from '../constants/eventIds.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -22,6 +27,8 @@ export class MoodSexualPersistenceListener {
   #entityManager;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {Set<string>} */
+  #moodUpdatedThisTurn = new Set();
 
   /**
    * Creates an instance of the listener.
@@ -55,15 +62,47 @@ export class MoodSexualPersistenceListener {
   }
 
   /**
-   * Handles ACTION_DECIDED_ID events.
+   * Handles ACTION_DECIDED_ID and MOOD_STATE_UPDATED_ID events.
    *
-   * @param {{ type: string, payload: { actorId: string, extractedData?: { moodUpdate?: object, sexualUpdate?: object } } }} event
-   *   The event containing mood/sexual state data from the LLM response.
+   * @param {{ type?: string, payload?: { actorId?: string, extractedData?: { moodUpdate?: object, sexualUpdate?: object }, moodUpdate?: object, sexualUpdate?: object } }} event
+   *   The event containing mood/sexual state data from the LLM response or Phase 1 persistence.
    */
   handleEvent(event) {
+    // TURN_STARTED_ID doesn't require a payload - it resets tracking state
+    if (event?.type === TURN_STARTED_ID) {
+      this.#moodUpdatedThisTurn.clear();
+      this.#logger.debug(
+        'MoodSexualPersistenceListener: Turn started - cleared tracking set'
+      );
+      return;
+    }
+
     if (!event || !event.payload) return;
 
+    if (event.type === MOOD_STATE_UPDATED_ID) {
+      const { actorId } = event.payload;
+      if (!actorId) return;
+      this.#moodUpdatedThisTurn.add(actorId);
+      this.#logger.debug(
+        `MoodSexualPersistenceListener: Mood already updated for ${actorId}`
+      );
+      return;
+    }
+
+    if (event.type !== ACTION_DECIDED_ID) {
+      return;
+    }
+
     const { actorId, extractedData } = event.payload;
+    if (!actorId) return;
+
+    if (this.#moodUpdatedThisTurn.has(actorId)) {
+      this.#logger.debug(
+        `MoodSexualPersistenceListener: Skipping mood for ${actorId} - already updated`
+      );
+      this.#moodUpdatedThisTurn.delete(actorId);
+      return;
+    }
 
     if (!extractedData?.moodUpdate && !extractedData?.sexualUpdate) {
       return;
@@ -101,9 +140,9 @@ export class MoodSexualPersistenceListener {
   /**
    * Apply mood update to the entity's mood component.
    *
-   * @param {import('../entities/entity.js').default} entity
-   * @param {string} actorId
-   * @param {{ valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }} moodUpdate
+   * @param {import('../entities/entity.js').default} entity - Actor entity.
+   * @param {string} actorId - Actor identifier.
+   * @param {{ valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }} moodUpdate - New mood axes.
    */
   #applyMoodUpdate(entity, actorId, moodUpdate) {
     if (!entity.hasComponent(MOOD_COMPONENT_ID)) {
@@ -139,9 +178,9 @@ export class MoodSexualPersistenceListener {
    * Apply sexual state update to the entity's sexual_state component.
    * Preserves baseline_libido (trait value, not updated by LLM).
    *
-   * @param {import('../entities/entity.js').default} entity
-   * @param {string} actorId
-   * @param {{ sex_excitation: number, sex_inhibition: number }} sexualUpdate
+   * @param {import('../entities/entity.js').default} entity - Actor entity.
+   * @param {string} actorId - Actor identifier.
+   * @param {{ sex_excitation: number, sex_inhibition: number }} sexualUpdate - New sexual state values.
    */
   #applySexualUpdate(entity, actorId, sexualUpdate) {
     if (!entity.hasComponent(SEXUAL_STATE_COMPONENT_ID)) {

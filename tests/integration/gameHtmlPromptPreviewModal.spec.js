@@ -34,6 +34,25 @@ describe('game.html Prompt Preview modal', () => {
     expect(metadataContainer.contains(metaActions)).toBe(true);
   });
 
+  it('includes the tabbed prompt panels required by PromptPreviewModal', () => {
+    const dom = new JSDOM(gameHtml);
+    const { document } = dom.window;
+
+    const tabList = document.querySelector('#llm-prompt-debug-tablist');
+    const moodTab = document.querySelector('#llm-prompt-debug-tab-mood');
+    const actionTab = document.querySelector('#llm-prompt-debug-tab-action');
+    const moodPanel = document.querySelector('#llm-prompt-debug-panel-mood');
+    const actionPanel = document.querySelector(
+      '#llm-prompt-debug-panel-action'
+    );
+
+    expect(tabList).not.toBeNull();
+    expect(moodTab).not.toBeNull();
+    expect(actionTab).not.toBeNull();
+    expect(moodPanel).not.toBeNull();
+    expect(actionPanel).not.toBeNull();
+  });
+
   it('uses a wide modal layout suitable for long prompts', () => {
     const styles = [
       readFixture('css/components/_modals.css'),

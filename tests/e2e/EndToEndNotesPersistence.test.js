@@ -11,8 +11,8 @@ import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { LlmJsonService } from '../../src/llms/llmJsonService.js';
 import {
-  LLM_TURN_ACTION_RESPONSE_SCHEMA,
-  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
 } from '../../src/turns/schemas/llmOutputSchemas.js';
 import Entity from '../../src/entities/entity.js';
 import EntityDefinition from '../../src/entities/entityDefinition.js';
@@ -171,8 +171,8 @@ describe('End-to-End Notes Persistence Flow', () => {
       logger: logger,
       preloadSchemas: [
         {
-          schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
-          id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          schema: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
+          id: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
         },
       ],
     });
@@ -200,19 +200,6 @@ describe('End-to-End Notes Persistence Flow', () => {
       chosenIndex: 1,
       speech: '',
       thoughts: 'thinking',
-      moodUpdate: {
-        valence: 0,
-        arousal: 0,
-        agency_control: 0,
-        threat: 0,
-        engagement: 0,
-        future_expectancy: 0,
-        self_evaluation: 0,
-      },
-      sexualUpdate: {
-        sex_excitation: 0,
-        sex_inhibition: 0,
-      },
       notes: [
         {
           text: 'Remember the password',

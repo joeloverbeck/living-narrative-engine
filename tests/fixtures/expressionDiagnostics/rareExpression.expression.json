@@ -1,0 +1,17 @@
+{
+  "id": "test:rare_trigger",
+  "description": "Expression that triggers rarely (<1% of the time)",
+  "priority": 100,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.joy" }, 0.9] },
+          { ">=": [{ "var": "emotions.confidence" }, 0.9] },
+          { "<=": [{ "var": "emotions.fear" }, 0.1] }
+        ]
+      }
+    }
+  ],
+  "_comment": "Multiple high thresholds make this rare"
+}

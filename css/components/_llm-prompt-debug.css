@@ -24,7 +24,7 @@
 
 #llm-prompt-debug-content-container {
   flex-grow: 1;
-  overflow: hidden;
+  overflow: auto;
   margin-bottom: var(--spacing-md);
   border: var(--border-width) solid var(--border-color-subtle);
   border-radius: var(--border-radius-sm);
@@ -32,11 +32,51 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Ensure it has a height, though flex-grow in modal-content should handle it if parent is flex column */
-  min-height: 200px;
+  /* Critical for flex overflow to work properly */
+  min-height: 0;
 }
 
-#llm-prompt-debug-content {
+.prompt-preview-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width) solid var(--border-color-subtle);
+  background-color: var(--primary-bg-color);
+}
+
+.prompt-preview-tab-button {
+  appearance: none;
+  border: var(--border-width) solid transparent;
+  background-color: transparent;
+  color: var(--secondary-text-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+}
+
+.prompt-preview-tab-button[aria-selected='true'] {
+  background-color: var(--primary-bg-color);
+  border-color: var(--accent-color-primary);
+  color: var(--primary-text-color);
+}
+
+.prompt-preview-tab-button:focus-visible {
+  outline: 2px solid var(--accent-color-primary);
+  outline-offset: 2px;
+}
+
+.prompt-preview-panels {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.prompt-preview-panel {
   font-family: 'Roboto Mono', monospace;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -49,9 +89,10 @@
   height: 100%;
   width: 100%;
   box-sizing: border-box;
+  min-height: 0;
 }
 
-#llm-prompt-debug-content:focus-visible {
+.prompt-preview-panel:focus-visible {
   outline: 2px solid var(--accent-color-primary);
   outline-offset: -2px;
 }
@@ -93,6 +134,6 @@
 }
 
 /* Loading State Styles */
-#llm-prompt-debug-content.loading {
+.prompt-preview-panel.loading {
   opacity: 0.6;
 }

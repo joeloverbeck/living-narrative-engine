@@ -14,6 +14,7 @@ export const LLM_SUGGESTED_ACTION_ID = 'core:suggested_action';
 
 // **New, canonical event** fired for both AI and human turns:
 export const ACTION_DECIDED_ID = 'core:action_decided';
+export const MOOD_STATE_UPDATED_ID = 'core:mood_state_updated';
 
 export const ATTEMPT_ACTION_ID = 'core:attempt_action';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';

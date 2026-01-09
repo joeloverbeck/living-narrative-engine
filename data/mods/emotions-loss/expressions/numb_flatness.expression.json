@@ -70,7 +70,7 @@
                             {
                                 "var": "emotions.despair"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -86,7 +86,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -169,5 +169,6 @@
         "withdrawal",
         "low_arousal",
         "low_engagement"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

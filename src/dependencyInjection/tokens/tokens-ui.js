@@ -50,6 +50,7 @@ export const uiTokens = freeze({
   EmotionalStatePanel: 'EmotionalStatePanel',
   SexualStatePanel: 'SexualStatePanel',
   DamageEventMessageRenderer: 'DamageEventMessageRenderer',
+  ExpressionMessageRenderer: 'ExpressionMessageRenderer',
   // Damage Simulator Components
   DamageSimulatorUI: 'DamageSimulatorUI',
   HierarchicalAnatomyRenderer: 'HierarchicalAnatomyRenderer',

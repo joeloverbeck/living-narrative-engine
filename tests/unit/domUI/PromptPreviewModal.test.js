@@ -92,7 +92,29 @@ describe('PromptPreviewModal', () => {
       '#llm-prompt-debug-modal': { id: 'modal' },
       '#llm-prompt-debug-close-button': { id: 'close-btn' },
       '#llm-prompt-debug-status': { id: 'status', textContent: '' },
-      '#llm-prompt-debug-content': { id: 'content', textContent: '' },
+      '#llm-prompt-debug-tablist': { id: 'tablist', hidden: false },
+      '#llm-prompt-debug-tab-mood': {
+        id: 'tab-mood',
+        setAttribute: jest.fn(),
+        tabIndex: -1,
+      },
+      '#llm-prompt-debug-tab-action': {
+        id: 'tab-action',
+        setAttribute: jest.fn(),
+        tabIndex: 0,
+      },
+      '#llm-prompt-debug-panel-mood': {
+        id: 'panel-mood',
+        textContent: '',
+        hidden: false,
+        classList: { add: jest.fn(), remove: jest.fn() },
+      },
+      '#llm-prompt-debug-panel-action': {
+        id: 'panel-action',
+        textContent: '',
+        hidden: false,
+        classList: { add: jest.fn(), remove: jest.fn() },
+      },
       '#llm-prompt-copy-button': {
         id: 'copy-btn',
         addEventListener: jest.fn(),
@@ -181,13 +203,57 @@ describe('PromptPreviewModal', () => {
       modal.show(payload);
 
       expect(mockShow).toHaveBeenCalled();
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe(
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
         'This is a test prompt.'
       );
       expect(mockElements['#llm-prompt-meta-actor'].textContent).toBe('Hero');
       expect(mockElements['#llm-prompt-meta-llm'].textContent).toBe('gpt-4');
       expect(mockElements['#llm-prompt-meta-actions'].textContent).toBe('5');
       expect(mockClearStatusMessage).toHaveBeenCalled();
+    });
+
+    it('should render two-phase prompts in tabs', () => {
+      const payload = {
+        moodPrompt: 'Mood prompt content',
+        actionPrompt: 'Action prompt content',
+        actorName: 'Hero',
+        llmId: 'gpt-4',
+        actionCount: 2,
+      };
+
+      modal.show(payload);
+
+      expect(mockElements['#llm-prompt-debug-tablist'].hidden).toBe(false);
+      expect(mockElements['#llm-prompt-debug-panel-mood'].textContent).toBe(
+        'Mood prompt content'
+      );
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
+        'Action prompt content'
+      );
+      expect(mockElements['#llm-prompt-debug-panel-mood'].hidden).toBe(true);
+      expect(mockElements['#llm-prompt-debug-panel-action'].hidden).toBe(
+        false
+      );
+    });
+
+    it('should switch panels when mood tab is clicked', () => {
+      const payload = {
+        moodPrompt: 'Mood prompt content',
+        actionPrompt: 'Action prompt content',
+      };
+
+      modal.show(payload);
+
+      const calls = mockAddDomListener.mock.calls;
+      const tabCall = calls.find(
+        (c) => c[0] === mockElements['#llm-prompt-debug-tab-mood']
+      );
+      const clickHandler = tabCall[2];
+
+      clickHandler();
+
+      expect(mockElements['#llm-prompt-debug-panel-mood'].hidden).toBe(false);
+      expect(mockElements['#llm-prompt-debug-panel-action'].hidden).toBe(true);
     });
 
     it('should handle missing payload gracefully', () => {
@@ -197,7 +263,9 @@ describe('PromptPreviewModal', () => {
         'No data received.',
         'error'
       );
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
+        ''
+      );
     });
 
     it('should display errors if present', () => {
@@ -209,7 +277,9 @@ describe('PromptPreviewModal', () => {
         'Errors: Error 1; Error 2',
         'error'
       );
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
+        ''
+      );
     });
 
     it('should display partial prompt with errors', () => {
@@ -222,7 +292,7 @@ describe('PromptPreviewModal', () => {
         'Errors: Something went wrong',
         'error'
       );
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe(
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
         'Partial prompt'
       );
     });
@@ -246,7 +316,9 @@ describe('PromptPreviewModal', () => {
         'info'
       );
       // content is cleared via _clearContent implicitly? No, explicit call in setLoading
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
+      expect(mockElements['#llm-prompt-debug-panel-action'].textContent).toBe(
+        ''
+      );
       expect(mockShow).toHaveBeenCalled();
     });
 
@@ -260,7 +332,8 @@ describe('PromptPreviewModal', () => {
 
   describe('Copy Functionality', () => {
     it('should copy text to clipboard on button click', async () => {
-      mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
+      mockElements['#llm-prompt-debug-panel-action'].textContent =
+        'Text to copy';
 
       const calls = mockAddDomListener.mock.calls;
       const copyCall = calls.find(
@@ -280,7 +353,8 @@ describe('PromptPreviewModal', () => {
     });
 
     it('should handle copy errors', async () => {
-      mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
+      mockElements['#llm-prompt-debug-panel-action'].textContent =
+        'Text to copy';
       navigator.clipboard.writeText.mockRejectedValue(new Error('Copy failed'));
 
       const calls = mockAddDomListener.mock.calls;
@@ -299,7 +373,7 @@ describe('PromptPreviewModal', () => {
     });
 
     it('should warn if nothing to copy', async () => {
-      mockElements['#llm-prompt-debug-content'].textContent = '';
+      mockElements['#llm-prompt-debug-panel-action'].textContent = '';
       const calls = mockAddDomListener.mock.calls;
       const copyCall = calls.find(
         (c) => c[0] === mockElements['#llm-prompt-copy-button']

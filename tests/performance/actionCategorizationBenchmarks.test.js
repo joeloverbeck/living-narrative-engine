@@ -82,6 +82,7 @@ describe('Action Categorization Performance Benchmarks', () => {
         getCoreTaskDescriptionText: () => 'Core task',
         getCharacterPortrayalGuidelines: () => 'Guidelines',
         getNc21ContentPolicyText: () => 'Policy',
+        getMoodUpdateInstructionText: () => '',
         getFinalLlmInstructionText: () => 'Instructions',
       },
       perceptionLogFormatter: { format: () => 'Log' },

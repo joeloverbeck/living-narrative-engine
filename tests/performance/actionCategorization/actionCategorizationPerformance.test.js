@@ -58,6 +58,7 @@ describe('Action Categorization Performance Regression', () => {
         getCoreTaskDescriptionText: () => 'Core task',
         getCharacterPortrayalGuidelines: () => 'Guidelines',
         getNc21ContentPolicyText: () => 'Policy',
+        getMoodUpdateInstructionText: () => '',
         getFinalLlmInstructionText: () => 'Instructions',
       },
       perceptionLogFormatter: { format: () => 'Log' },

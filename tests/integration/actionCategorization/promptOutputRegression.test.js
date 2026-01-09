@@ -56,6 +56,7 @@ describe('AI Prompt Output Regression', () => {
         getCharacterPortrayalGuidelines: () => 'Character guidelines',
         getNc21ContentPolicyText: () => 'Content policy',
         getFinalLlmInstructionText: () => 'Final instructions',
+        getMoodUpdateInstructionText: () => 'Mood update instructions',
       },
       perceptionLogFormatter: { format: () => 'Formatted perception log' },
       gameStateValidationService: { validate: () => ({ isValid: true }) },

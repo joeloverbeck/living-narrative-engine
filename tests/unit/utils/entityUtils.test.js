@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
+import {
+  getEntityDisplayName,
+  extractEntityId,
+} from '../../../src/utils/entityUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 class MockEntity {
@@ -70,5 +73,56 @@ describe('getEntityDisplayName', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       'getEntityDisplayName: Received invalid or non-entity object (ID: x1). Using ID.'
     );
+  });
+});
+
+describe('extractEntityId', () => {
+  it('returns string ID when given a string', () => {
+    expect(extractEntityId('actor-123')).toBe('actor-123');
+  });
+
+  it('returns undefined for empty string (empty string is not a valid entity ID)', () => {
+    expect(extractEntityId('')).toBeUndefined();
+  });
+
+  it('returns id property when given an entity object', () => {
+    const entity = { id: 'actor-456', name: 'Test Entity' };
+    expect(extractEntityId(entity)).toBe('actor-456');
+  });
+
+  it('returns id property when given a MockEntity', () => {
+    const entity = new MockEntity('mock-entity-1');
+    expect(extractEntityId(entity)).toBe('mock-entity-1');
+  });
+
+  it('returns undefined for null', () => {
+    expect(extractEntityId(null)).toBeUndefined();
+  });
+
+  it('returns undefined for undefined', () => {
+    expect(extractEntityId(undefined)).toBeUndefined();
+  });
+
+  it('returns undefined for objects without id property', () => {
+    expect(extractEntityId({ name: 'test' })).toBeUndefined();
+  });
+
+  it('returns undefined for objects with non-string id', () => {
+    expect(extractEntityId({ id: 123 })).toBeUndefined();
+    expect(extractEntityId({ id: null })).toBeUndefined();
+    expect(extractEntityId({ id: { nested: 'value' } })).toBeUndefined();
+  });
+
+  it('returns undefined for number inputs', () => {
+    expect(extractEntityId(123)).toBeUndefined();
+  });
+
+  it('returns undefined for boolean inputs', () => {
+    expect(extractEntityId(true)).toBeUndefined();
+    expect(extractEntityId(false)).toBeUndefined();
+  });
+
+  it('returns undefined for array inputs', () => {
+    expect(extractEntityId(['actor-1'])).toBeUndefined();
   });
 });

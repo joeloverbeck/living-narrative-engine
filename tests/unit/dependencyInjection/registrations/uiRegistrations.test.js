@@ -178,6 +178,7 @@ describe('registerUI - main orchestration function', () => {
         `UI Registrations: Eagerly instantiated ${tokens.SexualStatePanel}.`,
         `UI Registrations: Eagerly instantiated ${tokens.EmotionalStatePanel}.`,
         `UI Registrations: Eagerly instantiated ${tokens.DamageEventMessageRenderer}.`,
+        `UI Registrations: Eagerly instantiated ${tokens.ExpressionMessageRenderer}.`,
         'UI Registrations: Complete.',
       ]);
     });

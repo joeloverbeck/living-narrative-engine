@@ -10,7 +10,7 @@ import { describe, it, expect } from '@jest/globals';
 import corePromptText from '../../../data/prompts/corePromptText.json';
 
 describe('Mood and Sexual State Update Prompt Instructions', () => {
-  const promptText = corePromptText.finalLlmInstructionText;
+  const promptText = corePromptText.moodUpdateOnlyInstructionText;
 
   describe('Section Header', () => {
     it('should contain the EMOTIONAL + SEXUAL STATE UPDATE section header', () => {
@@ -212,21 +212,16 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
   describe('Token Efficiency', () => {
     it('should keep the mood/sexual update section under 800 tokens (approximately 3200 characters)', () => {
-      // Extract just the mood/sexual update section
+      // The moodUpdateOnlyInstructionText is dedicated to mood/sexual updates
+      // Verify start marker exists
       const startMarker = 'EMOTIONAL + SEXUAL STATE UPDATE';
-      const endMarker = 'Now, based on all the information provided';
-
       const startIndex = promptText.indexOf(startMarker);
-      const endIndex = promptText.indexOf(endMarker);
-
       expect(startIndex).toBeGreaterThan(-1);
-      expect(endIndex).toBeGreaterThan(startIndex);
 
-      const moodSexualSection = promptText.substring(startIndex, endIndex);
-
+      // Measure the entire dedicated mood update text
       // Rough estimate: 4 characters per token on average
       // 800 tokens * 4 = 3200 characters max
-      expect(moodSexualSection.length).toBeLessThan(3200);
+      expect(promptText.length).toBeLessThan(3200);
     });
   });
 

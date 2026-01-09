@@ -58,9 +58,19 @@ describe('LLM Prompt Debug Panel Markup (LLMPRODEBPAN-001)', () => {
     expect(title).not.toBeNull();
     expect(title.textContent.trim()).toBe('LLM Prompt Preview');
 
-    const content = modal.querySelector('#llm-prompt-debug-content');
-    expect(content).not.toBeNull();
-    expect(content.tagName).toBe('PRE');
+    const tabList = modal.querySelector('#llm-prompt-debug-tablist');
+    const moodTab = modal.querySelector('#llm-prompt-debug-tab-mood');
+    const actionTab = modal.querySelector('#llm-prompt-debug-tab-action');
+    const moodPanel = modal.querySelector('#llm-prompt-debug-panel-mood');
+    const actionPanel = modal.querySelector('#llm-prompt-debug-panel-action');
+
+    expect(tabList).not.toBeNull();
+    expect(moodTab).not.toBeNull();
+    expect(actionTab).not.toBeNull();
+    expect(moodPanel).not.toBeNull();
+    expect(actionPanel).not.toBeNull();
+    expect(moodPanel.tagName).toBe('PRE');
+    expect(actionPanel.tagName).toBe('PRE');
 
     const metadata = modal.querySelector('#llm-prompt-debug-metadata');
     expect(metadata).not.toBeNull();

@@ -66,6 +66,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
         getCharacterPortrayalGuidelines: jest.fn(() => 'Guidelines'),
         getNc21ContentPolicyText: jest.fn(() => 'Policy'),
         getFinalLlmInstructionText: jest.fn(() => 'Instructions'),
+        getMoodUpdateInstructionText: jest.fn(() => 'Mood Update Instructions'),
       },
       perceptionLogFormatter: {
         format: jest.fn(() => 'Formatted log'),
@@ -348,6 +349,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
           getCharacterPortrayalGuidelines: jest.fn(() => 'Guidelines'),
           getNc21ContentPolicyText: jest.fn(() => 'Policy'),
           getFinalLlmInstructionText: jest.fn(() => 'Instructions'),
+          getMoodUpdateInstructionText: jest.fn(() => 'Mood Update Instructions'),
         },
         perceptionLogFormatter: { format: jest.fn(() => 'Log') },
         gameStateValidationService: {

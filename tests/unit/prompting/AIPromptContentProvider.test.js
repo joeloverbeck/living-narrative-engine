@@ -101,6 +101,9 @@ describe('AIPromptContentProvider', () => {
         .mockReturnValue(MOCK_PORTRAYAL),
       getNc21ContentPolicyText: jest.fn().mockReturnValue(MOCK_POLICY),
       getFinalLlmInstructionText: jest.fn().mockReturnValue(MOCK_FINAL_INSTR),
+      getMoodUpdateInstructionText: jest
+        .fn()
+        .mockReturnValue('Mocked Mood Update Instructions'),
     };
 
     mockPerceptionLogFormatterInstance = {

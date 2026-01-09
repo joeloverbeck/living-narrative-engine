@@ -38,7 +38,7 @@
                                     {
                                         "var": "emotions.fatigue"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -46,7 +46,7 @@
                                     {
                                         "var": "emotions.numbness"
                                     },
-                                    0.30
+                                    0.3
                                 ]
                             }
                         ]
@@ -204,5 +204,6 @@
         "low_energy",
         "disengagement",
         "flat_affect"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

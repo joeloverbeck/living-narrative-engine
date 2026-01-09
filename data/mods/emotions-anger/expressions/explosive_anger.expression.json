@@ -1,108 +1,109 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-anger:explosive_anger",
-  "description": "Sustained, visible rage state (lingering fury after a snap)",
-  "priority": 85,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.anger"
-              },
-              0.75
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "emotions.rage"
-              },
-              0.60
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              -10
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.anger"
-                      },
-                      {
-                        "var": "previousEmotions.anger"
-                      }
-                    ]
-                  },
-                  0.15
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anger:explosive_anger",
+    "description": "Sustained, visible rage state (lingering fury after a snap)",
+    "priority": 85,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.75
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anger"
+                                            }
+                                        ]
+                                    },
+                                    0.15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.rage"
+                                            },
+                                            {
+                                                "var": "previousEmotions.rage"
+                                            }
+                                        ]
+                                    },
+                                    0.15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.rage"
-                      },
-                      {
-                        "var": "previousEmotions.rage"
-                      }
-                    ]
-                  },
-                  0.15
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousMoodAxes.agency_control"
-                      },
-                      {
-                        "var": "moodAxes.agency_control"
-                      }
-                    ]
-                  },
-                  15
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires very high anger+rage with arousal and reduced control, plus a recent spike (anger/rage/control drop)."
-    }
-  ],
-  "actor_description": "It tips. One more ounce and the lid is gone—heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",
-  "description_text": "{actor} detonates—voice surging into a shout, movements cutting sharp through the air. Their face flushes, neck tendons standing out, body pitching forward as if the anger has weight and momentum of its own.",
-  "alternate_descriptions": {
-    "auditory": "I hear a sudden rise in volume—raw, forceful shouting that arrives faster than context. Words slam into each other, powered more by breath and pressure than clarity.",
-    "tactile": "I sense a tense, vibrating stillness in someone's posture—like a coiled spring you can feel in the air."
-  },
-  "tags": [
-    "anger",
-    "rage",
-    "explosive",
-    "sustained"
-  ]
+            },
+            "failure_message": "Requires very high anger+rages with high arousal and assertive agency, plus a recent spike (anger/rage) or a notable composure drop."
+        }
+    ],
+    "actor_description": "It tips. One more ounce and the lid is gone—heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",
+    "description_text": "{actor} detonates—voice surging into a shout, movements cutting sharp through the air. Their face flushes, neck tendons standing out, body pitching forward as if the anger has weight and momentum of its own.",
+    "alternate_descriptions": {
+        "auditory": "I hear a sudden rise in volume—raw, forceful shouting that arrives faster than context. Words slam into each other, powered more by breath and pressure than clarity.",
+        "tactile": "I sense a tense, vibrating stillness in someone's posture—like a coiled spring you can feel in the air."
+    },
+    "tags": [
+        "anger",
+        "rage",
+        "explosive",
+        "sustained"
+    ],
+    "diagnosticStatus": "normal"
 }

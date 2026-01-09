@@ -64,7 +64,7 @@
                             {
                                 "var": "emotions.fascination"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -114,7 +114,7 @@
                             {
                                 "var": "emotions.grief"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -122,7 +122,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -130,7 +130,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.40
+                            0.4
                         ]
                     }
                 ]
@@ -149,5 +149,6 @@
         "disinterest",
         "low_engagement",
         "impatient"
-    ]
+    ],
+    "diagnosticStatus": "frequent"
 }

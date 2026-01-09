@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.disgust"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -123,5 +123,6 @@
         "intense",
         "withdrawal",
         "visible"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

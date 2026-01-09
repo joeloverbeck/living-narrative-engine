@@ -81,8 +81,12 @@ import { LocationSummaryProvider } from '../../data/providers/locationSummaryPro
 import { AIGameStateProvider } from '../../turns/services/AIGameStateProvider.js';
 import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider.js';
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
+import { MoodResponseProcessor } from '../../turns/services/MoodResponseProcessor.js';
+import { MoodPersistenceService } from '../../ai/services/MoodPersistenceService.js';
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
+import { MoodUpdatePromptPipeline } from '../../prompting/MoodUpdatePromptPipeline.js';
+import { TwoPhaseDecisionOrchestrator } from '../../turns/orchestrators/TwoPhaseDecisionOrchestrator.js';
 import { SHUTDOWNABLE, INITIALIZABLE } from '../tags.js';
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
@@ -400,6 +404,28 @@ export function registerAITurnPipeline(registrar, logger) {
       })
   );
   registrar.singletonFactory(
+    tokens.MoodResponseProcessor,
+    (c) =>
+      new MoodResponseProcessor({
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        llmJsonService: c.resolve(tokens.LlmJsonService),
+      })
+  );
+  registrar.singletonFactory(
+    tokens.IMoodPersistenceService,
+    (c) =>
+      new MoodPersistenceService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IMoodPersistenceService}.`
+  );
+  registrar.singletonFactory(
     tokens.IAIFallbackActionFactory,
     (c) => new AIFallbackActionFactory({ logger: c.resolve(tokens.ILogger) })
   );
@@ -418,17 +444,40 @@ export function registerAITurnPipeline(registrar, logger) {
       logger: c.resolve(tokens.ILogger),
     });
   });
+
+  registrar.singletonFactory(tokens.MoodUpdatePromptPipeline, (c) => {
+    return new MoodUpdatePromptPipeline({
+      llmAdapter: c.resolve(tokens.LLMAdapter),
+      gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
+      promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
+      promptBuilder: c.resolve(tokens.IPromptBuilder),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
   logger.debug(
-    `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
+    `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline} and ${tokens.MoodUpdatePromptPipeline}.`
+  );
+
+  registrar.singletonFactory(
+    tokens.TwoPhaseDecisionOrchestrator,
+    (c) =>
+      new TwoPhaseDecisionOrchestrator({
+        moodUpdatePipeline: c.resolve(tokens.MoodUpdatePromptPipeline),
+        moodResponseProcessor: c.resolve(tokens.MoodResponseProcessor),
+        moodPersistenceService: c.resolve(tokens.IMoodPersistenceService),
+        aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+        llmAdapter: c.resolve(tokens.LLMAdapter),
+        llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   registrar.singletonFactory(
     tokens.ILLMChooser,
     (c) =>
       new LLMChooser({
-        promptPipeline: c.resolve(tokens.IAIPromptPipeline),
-        llmAdapter: c.resolve(tokens.LLMAdapter),
-        responseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+        twoPhaseOrchestrator: c.resolve(tokens.TwoPhaseDecisionOrchestrator),
         logger: c.resolve(tokens.ILogger),
       })
   );

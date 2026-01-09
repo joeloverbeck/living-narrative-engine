@@ -376,7 +376,7 @@
         "future_expectancy": -0.2
       },
       "gates": [
-        "arousal <= -0.40",
+        "arousal <= -0.30",
         "engagement <= -0.15"
       ]
     },

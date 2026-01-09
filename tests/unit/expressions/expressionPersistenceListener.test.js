@@ -4,6 +4,11 @@ import {
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import {
+  ACTION_DECIDED_ID,
+  MOOD_STATE_UPDATED_ID,
+  TURN_STARTED_ID,
+} from '../../../src/constants/eventIds.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -38,13 +43,26 @@ const createEvent = ({ actorId = 'actor-1', moodUpdate, sexualUpdate } = {}) => 
   }
 
   return {
-    type: 'core:action_decided',
+    type: ACTION_DECIDED_ID,
     payload: {
       actorId,
       extractedData,
     },
   };
 };
+
+const createMoodStateUpdatedEvent = ({
+  actorId = 'actor-1',
+  moodUpdate,
+  sexualUpdate,
+} = {}) => ({
+  type: MOOD_STATE_UPDATED_ID,
+  payload: {
+    actorId,
+    moodUpdate,
+    sexualUpdate,
+  },
+});
 
 describe('ExpressionPersistenceListener', () => {
   let expressionContextBuilder;
@@ -74,7 +92,7 @@ describe('ExpressionPersistenceListener', () => {
 
   it('should skip when event has no actorId', async () => {
     await listener.handleEvent({
-      type: 'core:action_decided',
+      type: ACTION_DECIDED_ID,
       payload: { extractedData: { moodUpdate: { valence: 1 } } },
     });
 
@@ -86,7 +104,7 @@ describe('ExpressionPersistenceListener', () => {
 
   it('should skip when event has no mood or sexual updates', async () => {
     await listener.handleEvent({
-      type: 'core:action_decided',
+      type: ACTION_DECIDED_ID,
       payload: { actorId: 'actor-1', extractedData: {} },
     });
 
@@ -96,7 +114,42 @@ describe('ExpressionPersistenceListener', () => {
     expect(listener.getTurnCounter()).toBe(0);
   });
 
-  it('should process events regardless of type when updates are present', async () => {
+  it('should evaluate expressions on MOOD_STATE_UPDATED_ID events', async () => {
+    const moodUpdate = { valence: 5 };
+    expressionContextBuilder.buildContext.mockReturnValue({
+      emotions: {},
+      sexualStates: {},
+      moodAxes: {},
+    });
+
+    await listener.handleEvent(createMoodStateUpdatedEvent({ moodUpdate }));
+
+    expect(expressionContextBuilder.buildContext).toHaveBeenCalledWith(
+      'actor-1',
+      moodUpdate,
+      null,
+      null
+    );
+    expect(listener.getTurnCounter()).toBe(1);
+  });
+
+  it('should skip ACTION_DECIDED_ID after MOOD_STATE_UPDATED_ID and clear tracking', async () => {
+    const moodUpdate = { valence: 5 };
+    expressionContextBuilder.buildContext.mockReturnValue({
+      emotions: {},
+      sexualStates: {},
+      moodAxes: {},
+    });
+
+    await listener.handleEvent(createMoodStateUpdatedEvent({ moodUpdate }));
+    await listener.handleEvent(createEvent({ moodUpdate }));
+    await listener.handleEvent(createEvent({ moodUpdate }));
+
+    expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(2);
+    expect(listener.getTurnCounter()).toBe(2);
+  });
+
+  it('should skip unrelated event types', async () => {
     const moodUpdate = { valence: 5 };
     expressionContextBuilder.buildContext.mockReturnValue({
       emotions: {},
@@ -112,13 +165,8 @@ describe('ExpressionPersistenceListener', () => {
       },
     });
 
-    expect(expressionContextBuilder.buildContext).toHaveBeenCalledWith(
-      'actor-1',
-      moodUpdate,
-      null,
-      null
-    );
-    expect(listener.getTurnCounter()).toBe(1);
+    expect(expressionContextBuilder.buildContext).not.toHaveBeenCalled();
+    expect(listener.getTurnCounter()).toBe(0);
   });
 
   it('should build context from mood and sexual state data', async () => {
@@ -492,5 +540,67 @@ describe('ExpressionPersistenceListener', () => {
       expressionContextBuilder.buildContext.mock.calls[1];
     expect(previousState).toBeNull();
     expect(listener.getTurnCounter()).toBe(1);
+  });
+
+  describe('handleEvent - TURN_STARTED_ID reset', () => {
+    it('clears expression evaluated tracking set on TURN_STARTED_ID', async () => {
+      const moodUpdate = { valence: 5 };
+      expressionContextBuilder.buildContext.mockReturnValue({
+        emotions: {},
+        sexualStates: {},
+        moodAxes: {},
+      });
+
+      // MOOD_STATE_UPDATED_ID marks actor as evaluated this turn
+      await listener.handleEvent(createMoodStateUpdatedEvent({ moodUpdate }));
+
+      // TURN_STARTED_ID resets tracking
+      await listener.handleEvent({ type: TURN_STARTED_ID });
+
+      // Now ACTION_DECIDED_ID should process (not skip)
+      await listener.handleEvent(createEvent({ moodUpdate }));
+
+      // buildContext called twice: once for MOOD_STATE_UPDATED, once for ACTION_DECIDED
+      expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(2);
+    });
+
+    it('logs debug message on TURN_STARTED_ID', async () => {
+      await listener.handleEvent({ type: TURN_STARTED_ID });
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'ExpressionPersistenceListener: Turn started - cleared tracking set'
+      );
+    });
+
+    it('multi-turn scenario clears tracking between turns', async () => {
+      const moodUpdate = { valence: 5 };
+      expressionContextBuilder.buildContext.mockReturnValue({
+        emotions: {},
+        sexualStates: {},
+        moodAxes: {},
+      });
+
+      // Turn 1: MOOD_STATE_UPDATED marks actor
+      await listener.handleEvent(createMoodStateUpdatedEvent({ moodUpdate }));
+      expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(1);
+
+      // Turn 2 starts - clears tracking
+      await listener.handleEvent({ type: TURN_STARTED_ID });
+
+      // Turn 2: MOOD_STATE_UPDATED can mark actor again
+      await listener.handleEvent(createMoodStateUpdatedEvent({ moodUpdate }));
+      expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(2);
+
+      // ACTION_DECIDED should be skipped (already evaluated this turn)
+      await listener.handleEvent(createEvent({ moodUpdate }));
+      expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(2);
+
+      // Turn 3 starts - clears tracking again
+      await listener.handleEvent({ type: TURN_STARTED_ID });
+
+      // Now ACTION_DECIDED should process
+      await listener.handleEvent(createEvent({ moodUpdate }));
+      expect(expressionContextBuilder.buildContext).toHaveBeenCalledTimes(3);
+    });
   });
 });

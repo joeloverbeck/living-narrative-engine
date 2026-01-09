@@ -132,9 +132,12 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       const contentPolicyIndex = prompt.indexOf('<content_policy>');
       const taskIndex = prompt.indexOf('<task_definition>');
       const personaIndex = prompt.indexOf('<character_persona>');
+      const portrayalIndex = prompt.indexOf('<portrayal_guidelines>');
+      const goalsIndex = prompt.indexOf('<goals>');
       const worldIndex = prompt.indexOf('<world_context>');
       const perceptionIndex = prompt.indexOf('<perception_log>');
       const thoughtsIndex = prompt.indexOf('<thoughts>');
+      const notesIndex = prompt.indexOf('<notes>');
       const choicesIndex = prompt.indexOf('<available_actions_info>');
 
       // All required elements should be present
@@ -152,13 +155,31 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       // PHASE 2-3: Task and character identity
       expect(taskIndex).toBeLessThan(personaIndex);
 
-      // PHASE 4: World state
-      expect(personaIndex).toBeLessThan(worldIndex);
+      // PHASE 4: World state (portrayal + optional goals precede world)
+      if (portrayalIndex >= 0) {
+        expect(personaIndex).toBeLessThan(portrayalIndex);
+      }
+      if (goalsIndex >= 0) {
+        const referenceIndex =
+          portrayalIndex >= 0 ? portrayalIndex : personaIndex;
+        expect(referenceIndex).toBeLessThan(goalsIndex);
+      }
+      const contextStartIndex =
+        goalsIndex >= 0
+          ? goalsIndex
+          : portrayalIndex >= 0
+            ? portrayalIndex
+            : personaIndex;
+      expect(contextStartIndex).toBeLessThan(worldIndex);
       expect(worldIndex).toBeLessThan(perceptionIndex);
 
       // PHASE 5: Execution context
       if (thoughtsIndex >= 0) {
         expect(perceptionIndex).toBeLessThan(thoughtsIndex);
+      }
+      if (notesIndex >= 0) {
+        expect(thoughtsIndex).toBeLessThan(notesIndex);
+        expect(notesIndex).toBeLessThan(choicesIndex);
       }
       expect(choicesIndex).toBeGreaterThan(0);
     });

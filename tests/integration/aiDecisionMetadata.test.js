@@ -15,10 +15,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // --- System Under Test imports ---------------------------------------------
 // ⚠️ PATH‑TO – please fix to real locations in your project
 import { LLMChooser } from '../../src/turns/adapters/llmChooser.js';
-import {
-  createMockLogger,
-  createMockAIPromptPipeline,
-} from '../common/mockFactories.js';
+import { createMockLogger } from '../common/mockFactories.js';
 
 // ---------------------------------------------------------------------------
 // Lightweight helpers (no behaviour)
@@ -31,9 +28,7 @@ const fakeComposite = (idx = 1) => ({ index: idx, command: `CMD_${idx}` });
 // 1. UNIT – LLMChooser.choose ------------------------------------------------
 // ---------------------------------------------------------------------------
 describe('LLMChooser.choose – metadata propagation', () => {
-  let promptPipeline;
-  let llmAdapter;
-  let responseProcessor;
+  let twoPhaseOrchestrator;
   let logger;
   /** @type {LLMChooser} */
   let chooser;
@@ -41,21 +36,20 @@ describe('LLMChooser.choose – metadata propagation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    promptPipeline = createMockAIPromptPipeline('PROMPT');
-    llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{"ok":1}') };
-    responseProcessor = {
-      processResponse: jest.fn().mockResolvedValue({
-        success: true,
-        action: { chosenIndex: 3, speech: 'hello' },
-        extractedData: { thoughts: 'thinking', notes: ['n1', 'n2'] },
+    twoPhaseOrchestrator = {
+      orchestrate: jest.fn().mockResolvedValue({
+        index: 3,
+        speech: 'hello',
+        thoughts: 'thinking',
+        notes: ['n1', 'n2'],
+        moodUpdate: null,
+        sexualUpdate: null,
       }),
     };
     logger = createMockLogger();
 
     chooser = new LLMChooser({
-      promptPipeline,
-      llmAdapter,
-      responseProcessor,
+      twoPhaseOrchestrator,
       logger,
     });
   });
@@ -78,10 +72,13 @@ describe('LLMChooser.choose – metadata propagation', () => {
   });
 
   it('returns notes:null when they are omitted', async () => {
-    responseProcessor.processResponse.mockResolvedValueOnce({
-      success: true,
-      action: { chosenIndex: 2, speech: 'hi' },
-      extractedData: { thoughts: 'pondering' },
+    twoPhaseOrchestrator.orchestrate.mockResolvedValueOnce({
+      index: 2,
+      speech: 'hi',
+      thoughts: 'pondering',
+      notes: null,
+      moodUpdate: null,
+      sexualUpdate: null,
     });
 
     const out = await chooser.choose({

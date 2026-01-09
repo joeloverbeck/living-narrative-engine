@@ -85,6 +85,7 @@ class ExpressionDispatcher {
         contextualData: {
           source: 'expression_system',
           expressionId: expression?.id ?? null,
+          tags: expression?.tags ?? [],
         },
       };
 

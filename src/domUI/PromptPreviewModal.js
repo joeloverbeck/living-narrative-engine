@@ -10,6 +10,8 @@ import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js'
 
 /**
  * @typedef {object} PromptPreviewPayload
+ * @property {string} [moodPrompt] - The assembled mood update prompt text.
+ * @property {string} [actionPrompt] - The assembled action decision prompt text.
  * @property {string} [prompt] - The assembled prompt text.
  * @property {string} [actorId] - The ID of the acting actor.
  * @property {string} [actorName] - The display name of the acting actor.
@@ -45,7 +47,11 @@ export class PromptPreviewModal extends BaseModalRenderer {
       closeButton: '#llm-prompt-debug-close-button',
       statusMessageElement: '#llm-prompt-debug-status',
       // Custom elements for this modal
-      contentArea: '#llm-prompt-debug-content',
+      tabList: '#llm-prompt-debug-tablist',
+      tabMoodButton: '#llm-prompt-debug-tab-mood',
+      tabActionButton: '#llm-prompt-debug-tab-action',
+      panelMood: '#llm-prompt-debug-panel-mood',
+      panelAction: '#llm-prompt-debug-panel-action',
       copyButton: '#llm-prompt-copy-button',
       metaActor: '#llm-prompt-meta-actor',
       metaLlm: '#llm-prompt-meta-llm',
@@ -60,6 +66,7 @@ export class PromptPreviewModal extends BaseModalRenderer {
     });
 
     this.domElementFactory = domElementFactory;
+    this._activeTab = 'action';
 
     // Bind the copy button listener
     if (this.elements.copyButton) {
@@ -69,6 +76,18 @@ export class PromptPreviewModal extends BaseModalRenderer {
     } else {
       this.logger.warn(
         `${this._logPrefix} Copy button (#llm-prompt-copy-button) not found.`
+      );
+    }
+
+    if (this.elements.tabMoodButton) {
+      this._addDomListener(this.elements.tabMoodButton, 'click', () =>
+        this._setActiveTab('mood')
+      );
+    }
+
+    if (this.elements.tabActionButton) {
+      this._addDomListener(this.elements.tabActionButton, 'click', () =>
+        this._setActiveTab('action')
       );
     }
   }
@@ -91,6 +110,7 @@ export class PromptPreviewModal extends BaseModalRenderer {
    * @private
    */
   _renderPayload(payload) {
+    this._setPanelsLoading(false);
     if (!payload) {
       this._displayStatusMessage('No data received.', 'error');
       this._clearContent();
@@ -106,21 +126,64 @@ export class PromptPreviewModal extends BaseModalRenderer {
       // But usually a partial prompt is better than nothing for debugging.
     }
 
-    if (payload.prompt) {
-      if (this.elements.contentArea) {
-        this.elements.contentArea.textContent = payload.prompt;
+    const hasMoodPromptKey = Object.prototype.hasOwnProperty.call(
+      payload,
+      'moodPrompt'
+    );
+    const hasActionPromptKey = Object.prototype.hasOwnProperty.call(
+      payload,
+      'actionPrompt'
+    );
+    const isTwoPhasePayload = hasMoodPromptKey || hasActionPromptKey;
+    const moodPrompt =
+      typeof payload.moodPrompt === 'string' ? payload.moodPrompt : null;
+    const actionPrompt =
+      typeof payload.actionPrompt === 'string'
+        ? payload.actionPrompt
+        : typeof payload.prompt === 'string'
+          ? payload.prompt
+          : null;
+
+    if (isTwoPhasePayload) {
+      this._setTabVisibility(true);
+      this._setPanelText(
+        this.elements.panelMood,
+        moodPrompt ?? 'No mood prompt generated.'
+      );
+      this._setPanelText(
+        this.elements.panelAction,
+        actionPrompt ?? 'No action prompt generated.'
+      );
+      const hasBothPrompts = Boolean(moodPrompt && actionPrompt);
+      const nextTab = hasBothPrompts
+        ? this._activeTab || 'action'
+        : actionPrompt
+          ? 'action'
+          : 'mood';
+      this._setActiveTab(nextTab);
+
+      if (
+        !moodPrompt &&
+        !actionPrompt &&
+        (!payload.errors || payload.errors.length === 0)
+      ) {
+        this._displayStatusMessage('No prompts generated.', 'warning');
+      } else if (!payload.errors || payload.errors.length === 0) {
+        this._clearStatusMessage();
       }
-      // If we have a prompt, we might want to clear any previous "loading" or "error" status
-      // unless we explicitly want to show the errors alongside the prompt.
-      // If there are no errors, clear status.
+    } else if (actionPrompt) {
+      this._setTabVisibility(false);
+      this._setPanelText(this.elements.panelAction, actionPrompt);
+      this._setPanelText(this.elements.panelMood, '');
+      this._setPanelVisibility(this.elements.panelMood, false);
+      this._setPanelVisibility(this.elements.panelAction, true);
+      this._setActiveTab('action');
+
       if (!payload.errors || payload.errors.length === 0) {
         this._clearStatusMessage();
       }
     } else if (!payload.errors || payload.errors.length === 0) {
-      // No prompt and no errors?
-      if (this.elements.contentArea) {
-        this.elements.contentArea.textContent = '';
-      }
+      this._clearContent();
       this._displayStatusMessage('No prompt generated.', 'warning');
     }
 
@@ -157,9 +220,10 @@ export class PromptPreviewModal extends BaseModalRenderer {
    * @private
    */
   _clearContent() {
-    if (this.elements.contentArea) {
-      this.elements.contentArea.textContent = '';
-    }
+    this._setPanelText(this.elements.panelMood, '');
+    this._setPanelText(this.elements.panelAction, '');
+    this._setPanelVisibility(this.elements.panelMood, true);
+    this._setPanelVisibility(this.elements.panelAction, true);
     if (this.elements.metaActor) this.elements.metaActor.textContent = '-';
     if (this.elements.metaLlm) this.elements.metaLlm.textContent = '-';
     if (this.elements.metaActions) this.elements.metaActions.textContent = '-';
@@ -173,14 +237,15 @@ export class PromptPreviewModal extends BaseModalRenderer {
    * @async
    */
   async _handleCopy() {
-    if (!this.elements.contentArea) {
+    const panel = this._getActivePanel();
+    if (!panel) {
       this.logger.error(
-        `${this._logPrefix} Cannot copy: Content area element not found.`
+        `${this._logPrefix} Cannot copy: Active prompt panel element not found.`
       );
       return;
     }
 
-    const textToCopy = this.elements.contentArea.textContent;
+    const textToCopy = panel.textContent;
     if (!textToCopy) {
       this._displayStatusMessage('Nothing to copy.', 'warning');
       return;
@@ -218,7 +283,8 @@ export class PromptPreviewModal extends BaseModalRenderer {
   setLoading(isLoading) {
     if (isLoading) {
       this._displayStatusMessage('Generating prompt...', 'info');
-      this._clearContent(); // Optional: clear old content while loading
+      this._clearContent();
+      this._setPanelsLoading(true);
       // If not already visible, show it?
       // The caller might call show() then setLoading(true), or just setLoading(true) implies show().
       // For now, assume the caller handles visibility if they want to show the "Loading" modal.
@@ -240,6 +306,64 @@ export class PromptPreviewModal extends BaseModalRenderer {
       ) {
         this._clearStatusMessage();
       }
+      this._setPanelsLoading(false);
     }
+  }
+
+  _setPanelsLoading(isLoading) {
+    [this.elements.panelMood, this.elements.panelAction].forEach((panel) => {
+      if (!panel) {
+        return;
+      }
+      if (isLoading) {
+        panel.classList.add('loading');
+      } else {
+        panel.classList.remove('loading');
+      }
+    });
+  }
+
+  _setPanelText(panel, text) {
+    if (panel) {
+      panel.textContent = text;
+    }
+  }
+
+  _setPanelVisibility(panel, shouldShow) {
+    if (panel) {
+      panel.hidden = !shouldShow;
+    }
+  }
+
+  _setTabVisibility(isVisible) {
+    if (!this.elements.tabList) {
+      return;
+    }
+    this.elements.tabList.hidden = !isVisible;
+  }
+
+  _setActiveTab(tabName) {
+    this._activeTab = tabName;
+    const isMood = tabName === 'mood';
+    const moodButton = this.elements.tabMoodButton;
+    const actionButton = this.elements.tabActionButton;
+
+    if (moodButton) {
+      moodButton.setAttribute('aria-selected', isMood ? 'true' : 'false');
+      moodButton.tabIndex = isMood ? 0 : -1;
+    }
+    if (actionButton) {
+      actionButton.setAttribute('aria-selected', isMood ? 'false' : 'true');
+      actionButton.tabIndex = isMood ? -1 : 0;
+    }
+
+    this._setPanelVisibility(this.elements.panelMood, isMood);
+    this._setPanelVisibility(this.elements.panelAction, !isMood);
+  }
+
+  _getActivePanel() {
+    return this._activeTab === 'mood'
+      ? this.elements.panelMood
+      : this.elements.panelAction;
   }
 }

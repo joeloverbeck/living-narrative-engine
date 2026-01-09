@@ -22,6 +22,7 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
       getCharacterPortrayalGuidelines: () => '',
       getNc21ContentPolicyText: () => '',
       getFinalLlmInstructionText: () => '',
+      getMoodUpdateInstructionText: () => '',
     };
     const perceptionLogFormatter = { format: () => [] };
     const gameStateValidationService = {

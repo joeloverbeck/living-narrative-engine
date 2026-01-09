@@ -24,6 +24,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
       getCharacterPortrayalGuidelines: () => 'PORTRAY_GUIDE',
       getNc21ContentPolicyText: () => 'POLICY_TEXT',
       getFinalLlmInstructionText: () => 'FINAL_INSTR',
+      getMoodUpdateInstructionText: () => 'MOOD_UPDATE_INSTR',
     };
 
     dummyPerceptionLogFormatter = {
