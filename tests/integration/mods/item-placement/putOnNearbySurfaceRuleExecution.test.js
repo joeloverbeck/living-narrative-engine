@@ -16,16 +16,16 @@ import eventIsActionPutOnNearbySurface from '../../../../data/mods/item-placemen
  * Creates a standardized seated container interaction scenario for putting items.
  *
  * @param {object} options - Scenario configuration options
- * @param {string} [options.actorName='Alice'] - Name for the actor
- * @param {string} [options.locationId='tavern'] - Location for the scenario
- * @param {string} [options.furnitureId='stool-1'] - ID for the furniture actor sits on
- * @param {string} [options.nearbyFurnitureId='table-1'] - ID for nearby furniture with container
- * @param {string} [options.containerId='bowl-1'] - ID for the container on nearby furniture
- * @param {Array<string>} [options.containerContents=[]] - Items already inside the container
- * @param {boolean} [options.isOpen=true] - Whether container is open
- * @param {Array<string>} [options.actorInventory=['apple-1']] - Items actor has in inventory
- * @param {number} [options.containerMaxItems=10] - Max items container can hold
- * @param {number} [options.containerMaxWeight=50] - Max weight container can hold
+ * @param {string} [options.actorName] - Name for the actor
+ * @param {string} [options.locationId] - Location for the scenario
+ * @param {string} [options.furnitureId] - ID for the furniture actor sits on
+ * @param {string} [options.nearbyFurnitureId] - ID for nearby furniture with container
+ * @param {string} [options.containerId] - ID for the container on nearby furniture
+ * @param {Array<string>} [options.containerContents] - Items already inside the container
+ * @param {boolean} [options.isOpen] - Whether container is open
+ * @param {Array<string>} [options.actorInventory] - Items actor has in inventory
+ * @param {number} [options.containerMaxItems] - Max items container can hold
+ * @param {number} [options.containerMaxWeight] - Max weight container can hold
  * @returns {object} Object with room, actor, furniture, nearbyFurniture, container, and item entities
  */
 function setupPutOnSurfaceScenario({

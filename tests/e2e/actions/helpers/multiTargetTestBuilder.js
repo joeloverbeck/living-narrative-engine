@@ -17,11 +17,10 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
  * This is the standard approach for multi-target action tests.
  *
  * @param {object} options - Configuration options
- * @param {string[]} [options.mods=['core']] - Mods to load
- * @param {boolean} [options.stubLLM=true] - Whether to stub the LLM adapter
- * @param {object} [options.entityDefinitions={}] - Custom entity definitions to register
+ * @param {string[]} [options.mods] - Mods to load
+ * @param {boolean} [options.stubLLM] - Whether to stub the LLM adapter
+ * @param {object} [options.entityDefinitions] - Custom entity definitions to register
  * @returns {Promise<object>} Test context with real services
- *
  * @example
  * const ctx = await createMultiTargetTestContext({
  *   mods: ['core', 'positioning'],

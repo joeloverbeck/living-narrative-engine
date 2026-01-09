@@ -14,10 +14,11 @@ export class IPromptBuilder {
    * @async
    * @param {string} llmId - The identifier of the LLM configuration to use.
    * @param {PromptData} promptData - The structured data for the prompt.
+   * @param {{isMoodUpdatePrompt?: boolean}} [options] - Optional build options.
    * @returns {Promise<string>} A promise that resolves to the final prompt string.
    * @throws {Error} If the method is not implemented or if critical errors occur during prompt building.
    */
-  async build(llmId, promptData) {
+  async build(llmId, promptData, options) {
     throw new Error("Method 'build(llmId, promptData)' must be implemented.");
   }
 }

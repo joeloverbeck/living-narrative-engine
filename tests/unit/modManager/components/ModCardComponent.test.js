@@ -21,6 +21,7 @@ describe('ModCardComponent', () => {
 
   /**
    * Create a mock mod metadata object
+   *
    * @param {Partial<import('../../../../src/modManager/services/ModDiscoveryService.js').ModMetadata>} [overrides]
    * @returns {import('../../../../src/modManager/services/ModDiscoveryService.js').ModMetadata}
    */
@@ -39,6 +40,7 @@ describe('ModCardComponent', () => {
 
   /**
    * Create a display info object
+   *
    * @param {Partial<import('../../../../src/modManager/components/ModCardComponent.js').ModDisplayInfo>} [overrides]
    * @returns {import('../../../../src/modManager/components/ModCardComponent.js').ModDisplayInfo}
    */

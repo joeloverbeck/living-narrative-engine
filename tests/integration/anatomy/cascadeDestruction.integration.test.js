@@ -234,6 +234,11 @@ describe('Cascade destruction integration', () => {
     expect(findEvent(PART_DESTROYED_EVENT_ID, parts.heart)).toBeFalsy();
   });
 
+  /**
+   *
+   * @param type
+   * @param partId
+   */
   function findEvent(type, partId = null) {
     return dispatchedEvents.find((event) => {
       if (event.type !== type) return false;
@@ -242,6 +247,11 @@ describe('Cascade destruction integration', () => {
     });
   }
 
+  /**
+   *
+   * @param type
+   * @param partId
+   */
   function findEventIndex(type, partId = null) {
     return dispatchedEvents.findIndex((event) => {
       if (event.type !== type) return false;
@@ -250,6 +260,11 @@ describe('Cascade destruction integration', () => {
     });
   }
 
+  /**
+   *
+   * @param partId
+   * @param expectedHealth
+   */
   function expectPartHealth(partId, expectedHealth) {
     const health = entityManager.getComponentData(
       partId,
@@ -258,6 +273,9 @@ describe('Cascade destruction integration', () => {
     expect(health.currentHealth).toBe(expectedHealth);
   }
 
+  /**
+   *
+   */
   function buildExecutionContext() {
     return {
       evaluationContext: { context: {} },
@@ -265,6 +283,10 @@ describe('Cascade destruction integration', () => {
     };
   }
 
+  /**
+   *
+   * @param registry
+   */
   function registerEntityDefinitions(registry) {
     if (!registry.get('entityDefinitions', 'test:actor')) {
       registry.store(
@@ -288,6 +310,10 @@ describe('Cascade destruction integration', () => {
     }
   }
 
+  /**
+   *
+   * @param validator
+   */
   async function registerAnatomySchemas(validator) {
     const schemaIds = [
       ANATOMY_BODY_COMPONENT_ID,
@@ -316,6 +342,10 @@ describe('Cascade destruction integration', () => {
     }
   }
 
+  /**
+   *
+   * @param options
+   */
   async function createActorWithTorsoOrgans(options = {}) {
     const { healthOverrides = {}, vitalOrgans = {} } = options;
     const ids = partsByName();
@@ -385,6 +415,10 @@ describe('Cascade destruction integration', () => {
     };
   }
 
+  /**
+   *
+   * @param options
+   */
   async function createActorWithHeadAndBrain(options = {}) {
     const { healthOverrides = {} } = options;
     const actorId = await createActorEntity('actor-head');
@@ -415,6 +449,10 @@ describe('Cascade destruction integration', () => {
     };
   }
 
+  /**
+   *
+   * @param instanceId
+   */
   async function createActorEntity(instanceId) {
     const actor = await entityManager.createEntityInstance('test:actor', {
       instanceId,
@@ -422,6 +460,10 @@ describe('Cascade destruction integration', () => {
     return actor.id;
   }
 
+  /**
+   *
+   * @param instanceId
+   */
   async function createPartEntity(instanceId) {
     const part = await entityManager.createEntityInstance('test:part', {
       instanceId,
@@ -429,6 +471,12 @@ describe('Cascade destruction integration', () => {
     return part.id;
   }
 
+  /**
+   *
+   * @param actorId
+   * @param rootPartId
+   * @param partsMap
+   */
   async function addActorMetadata(actorId, rootPartId, partsMap) {
     await entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
       text: 'Test Actor',
@@ -447,6 +495,11 @@ describe('Cascade destruction integration', () => {
     });
   }
 
+  /**
+   *
+   * @param partId
+   * @param options
+   */
   async function addPart(partId, options) {
     const {
       subType,
@@ -482,6 +535,10 @@ describe('Cascade destruction integration', () => {
     }
   }
 
+  /**
+   *
+   * @param currentHealthOverride
+   */
   function buildHealthData(currentHealthOverride) {
     const maxHealth = 100;
     const currentHealth =
@@ -496,6 +553,9 @@ describe('Cascade destruction integration', () => {
     };
   }
 
+  /**
+   *
+   */
   function partsByName() {
     return {
       torso: 'part-torso',

@@ -68,4 +68,42 @@ export const CHARACTER_PROMPT_TEMPLATE = `<system_constraints>
 
 {assistantResponsePrefix}`;
 
+export const MOOD_UPDATE_PROMPT_TEMPLATE = `<system_constraints>
+{actionTagRulesContent}
+
+{finalInstructionsContent}
+</system_constraints>
+
+<content_policy>
+{contentPolicyContent}
+</content_policy>
+
+<task_definition>
+{taskDefinitionContent}
+</task_definition>
+
+<character_persona>
+{characterPersonaContent}
+</character_persona>
+
+<portrayal_guidelines>
+{portrayalGuidelinesContent}
+</portrayal_guidelines>
+
+{goalsSection}
+
+<world_context>
+{worldContextContent}
+</world_context>
+
+{perceptionLogVoiceGuidance}
+
+<perception_log>
+{perceptionLogContent}
+</perception_log>
+
+{thoughtsSection}
+
+{assistantResponsePrefix}`;
+
 export default CHARACTER_PROMPT_TEMPLATE;

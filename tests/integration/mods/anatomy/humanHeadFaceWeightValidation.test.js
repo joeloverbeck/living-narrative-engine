@@ -6,7 +6,6 @@
  * This test ensures the invariants from DISBODPARSPA-011 are maintained:
  * - All human head/face entities (brain, eye variants) have core:weight
  * - Weights are positive numbers within realistic ranges
- *
  * @see tickets/DISBODPARSPA-011-weight-human-head-face.md
  */
 
@@ -21,6 +20,7 @@ const DEFINITIONS_PATH = path.resolve(
 
 /**
  * Helper to load entity JSON file
+ *
  * @param {string} filename - Entity file name
  * @returns {object} Parsed JSON
  */
@@ -32,6 +32,7 @@ function loadEntityFile(filename) {
 
 /**
  * Helper to get weight from entity
+ *
  * @param {object} entity - Entity definition object
  * @returns {number|undefined} Weight value or undefined
  */

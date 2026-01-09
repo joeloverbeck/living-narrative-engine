@@ -136,7 +136,8 @@ export class MoodUpdatePromptPipeline {
 
     const finalPromptString = await this.#promptBuilder.build(
       currentLlmId,
-      promptData
+      promptData,
+      { isMoodUpdatePrompt: true }
     );
 
     if (!finalPromptString) {

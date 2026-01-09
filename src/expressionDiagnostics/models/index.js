@@ -7,3 +7,4 @@
 export { default as AxisInterval } from './AxisInterval.js';
 export { default as GateConstraint, VALID_OPERATORS } from './GateConstraint.js';
 export { default as DiagnosticResult } from './DiagnosticResult.js';
+export { default as WitnessState } from './WitnessState.js';

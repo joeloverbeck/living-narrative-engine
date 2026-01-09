@@ -10,6 +10,10 @@ describe('Legacy Payload Validation', () => {
   const MODS_DIR = path.join(process.cwd(), 'data/mods');
 
   // Helper to recursively find JSON files
+  /**
+   *
+   * @param dir
+   */
   async function findJsonFiles(dir) {
     const results = [];
     const list = await readdir(dir);
@@ -26,6 +30,11 @@ describe('Legacy Payload Validation', () => {
   }
 
   // Helper to find APPLY_DAMAGE operations in an object
+  /**
+   *
+   * @param obj
+   * @param operations
+   */
   function findApplyDamageOperations(obj, operations = []) {
     if (!obj || typeof obj !== 'object') return operations;
 
@@ -44,6 +53,10 @@ describe('Legacy Payload Validation', () => {
     return operations;
   }
 
+  /**
+   *
+   * @param op
+   */
   function validateApplyDamage(op) {
     const warnings = [];
     if (op.amount !== undefined) {

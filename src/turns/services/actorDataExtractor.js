@@ -294,10 +294,16 @@ class ActorDataExtractor extends IActorDataExtractor {
     const sexualStateText =
       this.#emotionCalculatorService.formatSexualStatesForPrompt(sexualStates);
 
+    const sexVariables = {
+      sex_excitation: sexualComponent.sex_excitation,
+      sex_inhibition: sexualComponent.sex_inhibition,
+    };
+
     return {
       moodAxes,
       emotionalStateText,
       sexualState,
+      sexVariables,
       sexualStateText,
     };
   }

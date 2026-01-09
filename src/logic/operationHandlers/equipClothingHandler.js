@@ -198,6 +198,10 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Writes boolean result to context when a result variable is provided.
    *
+   * @param resultVariable
+   * @param value
+   * @param executionContext
+   * @param logger
    * @private
    */
   #writeResult(resultVariable, value, executionContext, logger) {
@@ -217,6 +221,7 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Flattens equipped items to a Set of item IDs.
    *
+   * @param entityId
    * @private
    */
   #getEquippedSet(entityId) {
@@ -246,6 +251,8 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Calculates which items were removed from equipment during the operation.
    *
+   * @param entityId
+   * @param equippedBefore
    * @private
    */
   #findDisplacedItems(entityId, equippedBefore) {
@@ -264,6 +271,9 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Removes a clothing item from any known inventory component.
    *
+   * @param entityId
+   * @param itemId
+   * @param logger
    * @private
    */
   async #removeFromInventory(entityId, itemId, logger) {
@@ -290,6 +300,10 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Places a displaced item based on destination preference.
    *
+   * @param entityId
+   * @param itemId
+   * @param destination
+   * @param logger
    * @private
    */
   async #placeDisplacedItem(entityId, itemId, destination, logger) {
@@ -309,6 +323,10 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Removes an item from a specific inventory component if present.
    *
+   * @param entityId
+   * @param itemId
+   * @param componentId
+   * @param logger
    * @private
    */
   async #stripFromInventoryComponent(entityId, itemId, componentId, logger) {
@@ -342,6 +360,10 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Adds an item to inventory if the component exists.
    *
+   * @param entityId
+   * @param itemId
+   * @param componentId
+   * @param logger
    * @private
    */
   async #addToInventory(entityId, itemId, componentId, logger) {
@@ -372,6 +394,9 @@ class EquipClothingHandler extends ComponentOperationHandler {
   /**
    * Places an item at the actor's location.
    *
+   * @param entityId
+   * @param itemId
+   * @param logger
    * @private
    */
   async #placeOnGround(entityId, itemId, logger) {

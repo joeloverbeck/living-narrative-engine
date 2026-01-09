@@ -16,6 +16,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * Required DOM element IDs from HTML structure
+ *
  * @readonly
  */
 const ELEMENT_IDS = Object.freeze({
@@ -31,6 +32,7 @@ const ELEMENT_IDS = Object.freeze({
 
 /**
  * UI state constants
+ *
  * @readonly
  */
 const UI_STATES = Object.freeze({
@@ -42,6 +44,7 @@ const UI_STATES = Object.freeze({
 
 /**
  * Event types for child component coordination
+ *
  * @readonly
  */
 const UI_EVENTS = Object.freeze({
@@ -77,10 +80,10 @@ class DamageSimulatorUI {
   /** @type {string} */
   #currentState;
 
-  /** @type {Object|null} */
+  /** @type {object | null} */
   #currentEntityData;
 
-  /** @type {Map<string, Object>} */
+  /** @type {Map<string, object>} */
   #childComponents;
 
   /** @type {Object<string, HTMLElement|null>} */
@@ -150,6 +153,7 @@ class DamageSimulatorUI {
 
   /**
    * Initialize the UI - bind events, populate selectors
+   *
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -169,6 +173,7 @@ class DamageSimulatorUI {
 
   /**
    * Handle entity selection from dropdown
+   *
    * @param {string} definitionId - Entity definition ID to load
    * @returns {Promise<void>}
    */
@@ -239,7 +244,8 @@ class DamageSimulatorUI {
 
   /**
    * Get current loaded entity data
-   * @returns {Object|null} Current entity data or null if none loaded
+   *
+   * @returns {object | null} Current entity data or null if none loaded
    */
   getCurrentEntityData() {
     return this.#currentEntityData;
@@ -247,6 +253,7 @@ class DamageSimulatorUI {
 
   /**
    * Get current UI state
+   *
    * @returns {string} Current state (idle, loading, loaded, error)
    */
   getCurrentState() {
@@ -255,6 +262,7 @@ class DamageSimulatorUI {
 
   /**
    * Refresh anatomy display with current entity
+   *
    * @returns {Promise<void>}
    */
   async refreshAnatomyDisplay() {
@@ -288,8 +296,9 @@ class DamageSimulatorUI {
 
   /**
    * Set a child component for later tickets
+   *
    * @param {string} name - Component name: 'anatomyRenderer' | 'damageComposer' | 'analytics' | 'executionService' | 'historyTracker' | 'deathMonitor' | 'multiHitSimulator'
-   * @param {Object} component - Child component instance
+   * @param {object} component - Child component instance
    */
   setChildComponent(name, component) {
     const validNames = [
@@ -312,8 +321,9 @@ class DamageSimulatorUI {
 
   /**
    * Get a child component by name
+   *
    * @param {string} name - Component name
-   * @returns {Object|undefined} Child component or undefined
+   * @returns {object | undefined} Child component or undefined
    */
   getChildComponent(name) {
     return this.#childComponents.get(name);
@@ -321,6 +331,7 @@ class DamageSimulatorUI {
 
   /**
    * Bind DOM elements from HTML structure
+   *
    * @private
    */
   #bindDomElements() {
@@ -343,6 +354,7 @@ class DamageSimulatorUI {
 
   /**
    * Setup event listeners on DOM elements
+   *
    * @private
    */
   #setupEventListeners() {
@@ -363,6 +375,7 @@ class DamageSimulatorUI {
 
   /**
    * Setup apply damage button click handler
+   *
    * @private
    */
   #setupApplyDamageButton() {
@@ -379,6 +392,7 @@ class DamageSimulatorUI {
 
   /**
    * Setup target mode radio button listeners
+   *
    * @private
    */
   #setupTargetModeListeners() {
@@ -402,6 +416,7 @@ class DamageSimulatorUI {
 
   /**
    * Handle apply damage button click
+   *
    * @private
    */
   async #handleApplyDamage() {
@@ -471,6 +486,7 @@ class DamageSimulatorUI {
 
   /**
    * Get selected target mode from radio buttons
+   *
    * @private
    * @returns {string} 'random' or 'specific'
    */
@@ -483,6 +499,7 @@ class DamageSimulatorUI {
 
   /**
    * Get selected target part ID from dropdown
+   *
    * @private
    * @returns {string|null} Part ID or null
    */
@@ -493,6 +510,7 @@ class DamageSimulatorUI {
 
   /**
    * Enable or disable the apply damage button
+   *
    * @private
    * @param {boolean} enabled - Whether to enable the button
    */
@@ -505,6 +523,7 @@ class DamageSimulatorUI {
 
   /**
    * Populate the target part dropdown with entity parts
+   *
    * @private
    */
   #populateTargetPartDropdown() {
@@ -539,6 +558,7 @@ class DamageSimulatorUI {
 
   /**
    * Populate entity selector dropdown
+   *
    * @private
    * @returns {Promise<void>}
    */
@@ -576,6 +596,7 @@ class DamageSimulatorUI {
 
   /**
    * Set the current UI state
+   *
    * @private
    * @param {string} newState - New state to transition to
    */
@@ -589,6 +610,7 @@ class DamageSimulatorUI {
 
   /**
    * Show loading state in UI
+   *
    * @private
    */
   #showLoadingState() {
@@ -601,6 +623,7 @@ class DamageSimulatorUI {
 
   /**
    * Show error state in UI
+   *
    * @private
    * @param {Error} error - Error to display
    */
@@ -614,9 +637,10 @@ class DamageSimulatorUI {
 
   /**
    * Emit an event through the event bus
+   *
    * @private
    * @param {string} eventType - Event type to emit
-   * @param {Object} payload - Event payload
+   * @param {object} payload - Event payload
    */
   #emitEvent(eventType, payload) {
     this.#eventBus.dispatch(eventType, payload);
@@ -624,8 +648,9 @@ class DamageSimulatorUI {
 
   /**
    * Render anatomy data using the anatomyRenderer child component.
+   *
    * @private
-   * @param {Object|null} anatomyData - Anatomy tree data
+   * @param {object | null} anatomyData - Anatomy tree data
    */
   #renderAnatomy(anatomyData) {
     const renderer = this.#childComponents.get('anatomyRenderer');
@@ -659,8 +684,9 @@ class DamageSimulatorUI {
 
   /**
    * Convert hierarchy nodes to partInfos format for overall health calculation.
+   *
    * @private
-   * @param {Object|null} anatomyData
+   * @param {object | null} anatomyData
    * @returns {Array<{healthPercentage: number, healthCalculationWeight: number, vitalOrganCap: {threshold: number, capValue: number}|null}>}
    */
   #buildPartInfosFromHierarchy(anatomyData) {
@@ -702,6 +728,7 @@ class DamageSimulatorUI {
 
   /**
    * Calculate health percentage from node health data.
+   *
    * @private
    * @param {{current: number, max: number}} health
    * @returns {number}
@@ -717,6 +744,7 @@ class DamageSimulatorUI {
 
   /**
    * Extract health calculation weight from anatomy:part data.
+   *
    * @private
    * @param {object|undefined} partComponent
    * @returns {number}
@@ -728,6 +756,7 @@ class DamageSimulatorUI {
 
   /**
    * Extract vital organ cap data when anatomy:vital_organ is present.
+   *
    * @private
    * @param {object|undefined} vitalComponent
    * @returns {{threshold: number, capValue: number}|null}
@@ -751,6 +780,7 @@ class DamageSimulatorUI {
 
   /**
    * Clear current entity state
+   *
    * @private
    */
   #clearCurrentEntity() {
@@ -781,6 +811,7 @@ class DamageSimulatorUI {
 
   /**
    * Escape HTML characters to prevent XSS
+   *
    * @private
    * @param {string} unsafeString - String to escape
    * @returns {string} Escaped string

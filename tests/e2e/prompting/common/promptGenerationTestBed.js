@@ -206,6 +206,14 @@ export class PromptGenerationTestBed {
     const systemInitializer = this.container.resolve(tokens.SystemInitializer);
     await systemInitializer.initializeAll();
 
+    // Ensure prompt static content is initialized even if tagging changes
+    const promptStaticContentService = this.container.resolve(
+      aiTokens.IPromptStaticContentService
+    );
+    if (typeof promptStaticContentService.initialize === 'function') {
+      await promptStaticContentService.initialize();
+    }
+
     // Mock the LLM Configuration Manager to return our test LLM configurations
     const llmConfigManager = this.container.resolve(
       aiTokens.ILLMConfigurationManager
@@ -1208,6 +1216,10 @@ export class PromptGenerationTestBed {
             'ACTION TAG RULES:\n- Wrap only *visible, externally observable actions* in single asterisks.\n- The asterisk block must contain NO internal thoughts, emotions, private reasoning, or hidden information.\n- Use third-person present tense inside asterisks (e.g., *crosses arms*, *narrows her eyes*).\n- If it cannot be seen or heard by other characters, it does NOT belong between asterisks.',
           moodUpdateOnlyInstructionText:
             'MOOD UPDATE ONLY:\n- Update the character\'s emotional state based on recent events and current context.\n- Focus on how the moment changes feelings, not on action selection.\n- Keep the update concise and grounded in observable circumstances.',
+          moodUpdateTaskDefinitionText:
+            'MOOD UPDATE TASK:\n1. Update the character\'s emotional state based on recent events.\n2. Keep the update concise and focused on observable circumstances.',
+          moodUpdatePortrayalGuidelinesTemplate:
+            'BEING {{name}} (MOOD UPDATE):\n- Stay in first-person.\n- Describe feelings in a grounded, specific way.\n- Avoid action selection or dialogue.',
         },
       };
     }

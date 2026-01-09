@@ -11,6 +11,9 @@ import { LLM_SUGGESTED_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 const UPDATE_ACTIONS_EVENT = 'core:update_available_actions';
 
+/**
+ *
+ */
 function createEventDispatcher() {
   const handlers = new Map();
 
@@ -31,6 +34,9 @@ function createEventDispatcher() {
   };
 }
 
+/**
+ *
+ */
 function createActionCategorizationService() {
   return {
     extractNamespace: jest.fn(() => null),

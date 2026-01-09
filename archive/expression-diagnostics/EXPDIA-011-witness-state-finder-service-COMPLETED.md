@@ -36,6 +36,17 @@ For rare expressions, random sampling rarely produces a triggering state. Guided
 
 ## Implementation Details
 
+### Assumptions Corrected (2026-01-09)
+
+The following assumptions were corrected based on codebase analysis:
+
+| Original Assumption | Corrected | Rationale |
+|---------------------|-----------|-----------|
+| `expressionEvaluator` dependency | Removed | Other diagnostics services use `jsonLogic` directly |
+| `dataRegistry.getLookupData(id)` | `dataRegistry.get('lookups', id)` | Match actual IDataRegistry interface |
+| `WitnessState.SEXUAL_RANGE` (singular) | `WitnessState.SEXUAL_RANGES[axis]` | Per-axis ranges exist in model |
+| Constructor deps: `{ expressionEvaluator, dataRegistry, logger }` | `{ dataRegistry, logger }` | Match existing service pattern |
+
 ### WitnessStateFinder Service
 
 ```javascript
@@ -46,6 +57,7 @@ For rare expressions, random sampling rarely produces a triggering state. Guided
 
 import WitnessState from '../models/WitnessState.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  * @typedef {Object} SearchConfig
@@ -68,9 +80,6 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 class WitnessStateFinder {
   /** @type {object} */
-  #expressionEvaluator;
-
-  /** @type {object} */
   #dataRegistry;
 
   /** @type {object} */
@@ -87,22 +96,17 @@ class WitnessStateFinder {
 
   /**
    * @param {Object} deps
-   * @param {object} deps.expressionEvaluator - IExpressionEvaluatorService
    * @param {object} deps.dataRegistry - IDataRegistry
    * @param {object} deps.logger - ILogger
    */
-  constructor({ expressionEvaluator, dataRegistry, logger }) {
-    validateDependency(expressionEvaluator, 'IExpressionEvaluatorService', logger, {
-      requiredMethods: ['evaluateWithContext']
-    });
+  constructor({ dataRegistry, logger }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getLookupData']
+      requiredMethods: ['get']
     });
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error']
     });
 
-    this.#expressionEvaluator = expressionEvaluator;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
   }
@@ -210,7 +214,6 @@ class WitnessStateFinder {
    */
   #evaluatePrerequisite(prereq, context) {
     try {
-      const jsonLogic = require('json-logic-js');
       const passed = jsonLogic.apply(prereq.logic, context);
 
       if (passed) {
@@ -290,10 +293,11 @@ class WitnessStateFinder {
 
     for (const axis of WitnessState.SEXUAL_AXES) {
       if (Math.random() < 0.5) {
+        const range = WitnessState.SEXUAL_RANGES[axis];
         const delta = (Math.random() - 0.5) * 2 * magnitude;
         sexual[axis] = Math.max(
-          WitnessState.SEXUAL_RANGE.min,
-          Math.min(WitnessState.SEXUAL_RANGE.max, sexual[axis] + delta)
+          range.min,
+          Math.min(range.max, sexual[axis] + delta)
         );
       }
     }
@@ -335,18 +339,18 @@ class WitnessStateFinder {
     // Calculate emotions from mood
     const emotions = this.#calculateEmotions(normalizedMood);
 
-    // Convert sexual state to [0, 1]
-    const normalizedSexual = {};
-    for (const axis of WitnessState.SEXUAL_AXES) {
-      normalizedSexual[axis] = state.sexual[axis] / 100;
-    }
+    // Calculate sexualArousal from raw sexual state (derived value)
+    const sexualArousal = this.#calculateSexualArousal(state.sexual);
 
-    const sexualStates = this.#calculateSexualStates(normalizedSexual);
+    // Calculate sexual states, passing the derived sexualArousal for prototype weights
+    const sexualStates = this.#calculateSexualStates(state.sexual, sexualArousal);
 
     return {
-      mood: normalizedMood,
+      mood: state.mood,
+      moodAxes: state.mood, // Alias for expressions that check moodAxes.*
       emotions,
-      sexualStates
+      sexualStates,
+      sexualArousal
     };
   }
 
@@ -355,7 +359,7 @@ class WitnessStateFinder {
    * @private
    */
   #calculateEmotions(mood) {
-    const lookup = this.#dataRegistry.getLookupData('core:emotion_prototypes');
+    const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
     if (!lookup?.entries) return {};
 
     const emotions = {};
@@ -376,12 +380,32 @@ class WitnessStateFinder {
   }
 
   /**
+   * Calculate sexual arousal from raw sexual state
+   * @private
+   */
+  #calculateSexualArousal(sexual) {
+    // sexualArousal = clamp01(sex_excitation/100 - sex_inhibition/100 + baseline_libido/100)
+    const excitation = sexual.sex_excitation / 100;
+    const inhibition = sexual.sex_inhibition / 100;
+    const baseline = sexual.baseline_libido / 100;
+    return Math.max(0, Math.min(1, excitation - inhibition + baseline));
+  }
+
+  /**
    * Calculate sexual state intensities
    * @private
    */
-  #calculateSexualStates(sexual) {
-    const lookup = this.#dataRegistry.getLookupData('core:sexual_prototypes');
+  #calculateSexualStates(sexual, sexualArousal) {
+    const lookup = this.#dataRegistry.get('lookups', 'core:sexual_prototypes');
     if (!lookup?.entries) return {};
+
+    // Normalize sexual values for prototype calculations
+    const normalizedSexual = {
+      sex_excitation: sexual.sex_excitation / 100,
+      sex_inhibition: sexual.sex_inhibition / 100,
+      baseline_libido: sexual.baseline_libido / 100,
+      sexual_arousal: sexualArousal
+    };
 
     const states = {};
     for (const [id, prototype] of Object.entries(lookup.entries)) {
@@ -389,8 +413,8 @@ class WitnessStateFinder {
         let sum = 0;
         let weightSum = 0;
         for (const [axis, weight] of Object.entries(prototype.weights)) {
-          if (sexual[axis] !== undefined) {
-            sum += sexual[axis] * weight;
+          if (normalizedSexual[axis] !== undefined) {
+            sum += normalizedSexual[axis] * weight;
             weightSum += Math.abs(weight);
           }
         }
@@ -462,7 +486,6 @@ npm run test:unit -- tests/unit/expressionDiagnostics/services/witnessStateFinde
 ### Unit Test Coverage Requirements
 
 **witnessStateFinder.test.js:**
-- Constructor throws if expressionEvaluator is missing
 - Constructor throws if dataRegistry is missing
 - Constructor throws if logger is missing
 - `findWitness()` returns found=true for always-true expression
@@ -504,13 +527,52 @@ npm run typecheck
 
 ## Definition of Done
 
-- [ ] `WitnessStateFinder.js` created with simulated annealing
-- [ ] `services/index.js` updated with export
-- [ ] DI token added to `tokens-diagnostics.js`
-- [ ] Service registered in `expressionDiagnosticsRegistrations.js`
-- [ ] Unit tests cover search algorithm
-- [ ] Tests verify witness finding for easy expressions
-- [ ] Tests verify nearestMiss for impossible expressions
-- [ ] JSDoc documentation complete
-- [ ] All tests pass
-- [ ] No modifications to WitnessState model
+- [x] `WitnessStateFinder.js` created with simulated annealing
+- [x] `services/index.js` updated with export
+- [x] DI token added to `tokens-diagnostics.js`
+- [x] Service registered in `expressionDiagnosticsRegistrations.js`
+- [x] Unit tests cover search algorithm
+- [x] Tests verify witness finding for easy expressions
+- [x] Tests verify nearestMiss for impossible expressions
+- [x] JSDoc documentation complete
+- [x] All tests pass
+- [x] No modifications to WitnessState model
+
+---
+
+## Outcome (2026-01-09)
+
+### Implementation Summary
+
+Successfully implemented the WitnessStateFinder service with simulated annealing algorithm for finding satisfying states (witnesses) for expressions.
+
+### Files Modified/Created
+
+| File | Change |
+|------|--------|
+| `src/expressionDiagnostics/services/WitnessStateFinder.js` | **Created** - Full service implementation |
+| `src/expressionDiagnostics/services/index.js` | **Modified** - Added barrel export |
+| `src/dependencyInjection/tokens/tokens-diagnostics.js` | **Modified** - Added `IWitnessStateFinder` token |
+| `src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js` | **Modified** - Added factory registration |
+| `tests/unit/expressionDiagnostics/services/witnessStateFinder.test.js` | **Created** - 52 unit tests |
+
+### Implementation Notes
+
+1. **Dependencies**: Used `{ dataRegistry, logger }` pattern matching existing diagnostics services (no expressionEvaluator needed)
+2. **JSON Logic**: Imported and used `jsonLogic` directly like MonteCarloSimulator
+3. **Sexual Ranges**: Used `WitnessState.SEXUAL_RANGES[axis]` for per-axis bounds (corrected from ticket's singular assumption)
+4. **Lookup Interface**: Used `dataRegistry.get('lookups', id)` (corrected from `getLookupData()`)
+5. **Edge Case Fix**: Added null check for prerequisites without `logic` property to prevent `JSON.stringify(undefined)` errors
+
+### Test Results
+
+- **52 tests passing**
+- **99.34% statement coverage** on WitnessStateFinder.js
+- **100% function coverage**
+- Tests cover: constructor validation, fitness scoring, config options, penalty calculation, neighbor generation, violated clauses tracking, context building, edge cases, and complex expressions
+
+### Deviations from Ticket
+
+1. Added debug logging at search start to satisfy `#logger` usage (ESLint compliance)
+2. Added null check for `prereq.logic` in `#getViolatedClauses()` to handle prerequisites without logic property gracefully
+3. Changed JSDoc return type from `*` to `unknown` for `#getNestedValue()` (ESLint compliance)

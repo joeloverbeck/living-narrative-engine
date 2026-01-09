@@ -7,6 +7,13 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
 const DEFAULT_CAPACITY = { maxWeight: 50, maxItems: 10 };
 
+/**
+ *
+ * @param id
+ * @param name
+ * @param fuelType
+ * @param options
+ */
 function buildLightSource(id, name, fuelType, options = {}) {
   const builder = new ModEntityBuilder(id)
     .withName(name)

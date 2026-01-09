@@ -4,7 +4,6 @@
  * Provides canonical validation logic for recipient/exclusion list handling
  * across all perception-related operation handlers. Enforces mutual exclusivity
  * between recipientIds and excludedActorIds with consistent 'error' mode behavior.
- *
  * @see specs/perception_event_logging_refactor.md - R1: Unified Routing Policy Service
  * @see src/logic/operationHandlers/dispatchPerceptibleEventHandler.js
  * @see src/logic/operationHandlers/addPerceptionLogEntryHandler.js

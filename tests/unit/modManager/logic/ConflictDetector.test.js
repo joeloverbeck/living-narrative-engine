@@ -21,6 +21,7 @@ describe('ConflictDetector', () => {
 
   /**
    * Create mock mods for testing
+   *
    * @returns {Array<{id: string, name: string, version: string, description: string, author: string, dependencies: Array<{id: string, version: string}>, conflicts: string[], incompatibleVersions?: Record<string, string[]>}>}
    */
   const createMockMods = () => [

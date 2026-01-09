@@ -42,6 +42,7 @@ const validSexualUpdate = {
 
 /**
  * Creates a minimal valid response with all required fields.
+ *
  * @param {object} overrides - Fields to override or add.
  * @returns {object} Valid response object.
  */

@@ -180,7 +180,9 @@ describe('PromptBuilder (template-based)', () => {
     expect(prompt).not.toContain('<goals>');
 
     // Non-conditional sections should still have wrapper tags even when empty
-    expect(prompt).toContain('<perception_log>\n\n</perception_log>');
+    expect(prompt).toContain(
+      '<perception_log>\n[No recent events]\n</perception_log>'
+    );
   });
 
   test('eliminates empty conditional sections to save tokens', async () => {
@@ -327,7 +329,8 @@ describe('PromptBuilder (template-based)', () => {
 
     expect(prompt).toBe('MOCK PROMPT OUTPUT');
     expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(
-      SAMPLE_PROMPT_DATA
+      SAMPLE_PROMPT_DATA,
+      { isMoodUpdatePrompt: false }
     );
     expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith({
       mocked: 'data',

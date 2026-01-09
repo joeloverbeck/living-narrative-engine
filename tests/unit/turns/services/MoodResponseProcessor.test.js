@@ -43,6 +43,7 @@ const validSexualUpdate = {
 
 /**
  * Creates a minimal valid mood response payload.
+ *
  * @param {object} overrides - Fields to override or add.
  * @returns {object} Valid response object.
  */

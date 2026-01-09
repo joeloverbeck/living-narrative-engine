@@ -17,6 +17,13 @@ const SUBMERGED_COMPONENT = 'liquids-states:submerged';
 const HYPOXIC_COMPONENT = 'breathing:hypoxic';
 const ANOXIA_COMPONENT = 'breathing:unconscious_anoxia';
 
+/**
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param dataRegistry
+ */
 function createHandlers(entityManager, eventBus, logger, dataRegistry) {
   const safeEventDispatcher = {
     dispatch: (eventType, payload) => {

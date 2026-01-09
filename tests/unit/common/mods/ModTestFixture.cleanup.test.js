@@ -12,6 +12,10 @@ describe('ModTestFixture cleanup robustness', () => {
   /**
    * Simulates the cleanup pattern from ModTestFixture
    * to test error handling behavior in isolation.
+   *
+   * @param root0
+   * @param root0.scopeTracerThrows
+   * @param root0.testEnvThrows
    */
   function createMockFixture({
     scopeTracerThrows = false,
@@ -45,6 +49,9 @@ describe('ModTestFixture cleanup robustness', () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
     // Simulate the cleanup function pattern from ModTestFixture
+    /**
+     *
+     */
     function cleanup() {
       // disableDiagnostics() equivalent (assumed not to throw)
       callOrder.push('disableDiagnostics');

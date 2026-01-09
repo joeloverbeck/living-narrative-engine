@@ -5,7 +5,10 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
-import { CHARACTER_PROMPT_TEMPLATE } from './templates/characterPromptTemplate.js';
+import {
+  CHARACTER_PROMPT_TEMPLATE,
+  MOOD_UPDATE_PROMPT_TEMPLATE,
+} from './templates/characterPromptTemplate.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
@@ -100,6 +103,15 @@ export class PromptTemplateService {
   }
 
   /**
+   * Get the mood update prompt template
+   *
+   * @returns {string} The mood update prompt template
+   */
+  getMoodUpdateTemplate() {
+    return MOOD_UPDATE_PROMPT_TEMPLATE;
+  }
+
+  /**
    * Process the character prompt template with provided data
    *
    * @param {Record<string, string>} promptData - Data to substitute in template
@@ -110,6 +122,20 @@ export class PromptTemplateService {
       'PromptTemplateService: Processing character prompt template'
     );
     const template = this.getCharacterTemplate();
+    return this.processTemplate(template, promptData);
+  }
+
+  /**
+   * Process the mood update prompt template with provided data
+   *
+   * @param {Record<string, string>} promptData - Data to substitute in template
+   * @returns {string} Processed prompt ready for LLM
+   */
+  processMoodUpdatePrompt(promptData) {
+    this.#logger.debug(
+      'PromptTemplateService: Processing mood update prompt template'
+    );
+    const template = this.getMoodUpdateTemplate();
     return this.processTemplate(template, promptData);
   }
 }

@@ -111,7 +111,7 @@ export class ErrorRecoveryTestBed {
     }
 
     // Create e2e test environment with container-based services
-    // eslint-disable-next-line no-undef
+     
     this.env = await createE2ETestEnvironment({ stubLLM: true });
     this.facades = { logger: this.env.services.logger };
     this.logger = this.env.services.logger;

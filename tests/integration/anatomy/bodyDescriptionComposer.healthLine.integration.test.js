@@ -26,6 +26,10 @@ describe('BodyDescriptionComposer health line integration', () => {
     };
   });
 
+  /**
+   *
+   * @param componentStore
+   */
   function createEntityManager(componentStore) {
     return {
       hasComponent(entityId, componentId) {
@@ -46,6 +50,10 @@ describe('BodyDescriptionComposer health line integration', () => {
     };
   }
 
+  /**
+   *
+   * @param partsByActor
+   */
   function createBodyGraphService(partsByActor) {
     return {
       getAllParts(bodyComponentOrBody, actorId) {
@@ -66,6 +74,10 @@ describe('BodyDescriptionComposer health line integration', () => {
     };
   }
 
+  /**
+   *
+   * @param partSpecs
+   */
   function createComposer(partSpecs) {
     const componentStore = {};
     const partIds = partSpecs.map((spec) => spec.id);

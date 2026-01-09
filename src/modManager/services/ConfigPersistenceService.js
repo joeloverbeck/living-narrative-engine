@@ -4,13 +4,13 @@
  */
 
 /**
- * @typedef {Object} GameConfig
+ * @typedef {object} GameConfig
  * @property {string[]} mods - Array of mod IDs
  * @property {string} startWorld - World ID in format modId:worldId
  */
 
 /**
- * @typedef {Object} SaveResult
+ * @typedef {object} SaveResult
  * @property {boolean} success
  * @property {string} message
  * @property {GameConfig} [config]
@@ -18,7 +18,7 @@
  */
 
 /**
- * @typedef {Object} ILogger
+ * @typedef {object} ILogger
  * @property {function(string, ...any): void} debug - Debug level logging
  * @property {function(string, ...any): void} info - Info level logging
  * @property {function(string, ...any): void} warn - Warning level logging
@@ -52,7 +52,7 @@ export class ConfigPersistenceService {
   #pendingSave;
 
   /**
-   * @param {Object} options
+   * @param {object} options
    * @param {ILogger} options.logger - Logger instance
    * @param {string} [options.apiBaseUrl] - Base URL for API
    */
@@ -67,6 +67,7 @@ export class ConfigPersistenceService {
 
   /**
    * Get default API URL from build-time environment variables
+   *
    * @returns {string}
    */
   #getDefaultApiUrl() {
@@ -87,6 +88,7 @@ export class ConfigPersistenceService {
 
   /**
    * Load current game configuration from backend
+   *
    * @returns {Promise<GameConfig>}
    */
   async loadConfig() {
@@ -122,6 +124,7 @@ export class ConfigPersistenceService {
 
   /**
    * Save game configuration to backend
+   *
    * @param {GameConfig} config - Configuration to save
    * @returns {Promise<SaveResult>}
    */
@@ -202,6 +205,7 @@ export class ConfigPersistenceService {
 
   /**
    * Validate configuration before saving
+   *
    * @param {GameConfig} config
    * @returns {{valid: boolean, error?: string}}
    */
@@ -238,6 +242,7 @@ export class ConfigPersistenceService {
 
   /**
    * Check if a save is currently in progress
+   *
    * @returns {boolean}
    */
   isSaving() {
@@ -257,6 +262,7 @@ export class ConfigPersistenceService {
 
   /**
    * Check if configuration has changed from saved state
+   *
    * @param {GameConfig} current - Current UI state
    * @param {GameConfig} saved - Last saved state
    * @returns {boolean}

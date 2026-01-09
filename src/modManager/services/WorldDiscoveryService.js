@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {Object} WorldInfo
+ * @typedef {object} WorldInfo
  * @property {string} id - Full world ID (modId:worldId)
  * @property {string} modId - Source mod ID
  * @property {string} worldId - World identifier within mod
@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {Object} ModMetadata
+ * @typedef {object} ModMetadata
  * @property {string} id - Mod identifier
  * @property {string} name - Display name
  * @property {string} description - Mod description
@@ -22,7 +22,7 @@
  */
 
 /**
- * @typedef {Object} ILogger
+ * @typedef {object} ILogger
  * @property {function(string, ...any): void} debug - Debug level logging
  * @property {function(string, ...any): void} info - Info level logging
  * @property {function(string, ...any): void} warn - Warning level logging
@@ -30,7 +30,7 @@
  */
 
 /**
- * @typedef {Object} IModDiscoveryService
+ * @typedef {object} IModDiscoveryService
  * @property {function(): Promise<ModMetadata[]>} getModsWithWorlds - Get mods that have worlds
  */
 
@@ -46,7 +46,7 @@ export class WorldDiscoveryService {
   #modDiscoveryService;
 
   /**
-   * @param {Object} options
+   * @param {object} options
    * @param {ILogger} options.logger - Logger instance
    * @param {IModDiscoveryService} options.modDiscoveryService - ModDiscoveryService instance
    */
@@ -63,6 +63,7 @@ export class WorldDiscoveryService {
 
   /**
    * Get available worlds from a set of active mods
+   *
    * @param {string[]} activeModIds - Currently active mod IDs
    * @returns {Promise<WorldInfo[]>}
    */
@@ -99,6 +100,7 @@ export class WorldDiscoveryService {
 
   /**
    * Create world entries from mod metadata
+   *
    * @param {ModMetadata} mod - Mod metadata
    * @returns {WorldInfo[]}
    */
@@ -121,6 +123,7 @@ export class WorldDiscoveryService {
 
   /**
    * Create world entry from mod metadata world list
+   *
    * @param {ModMetadata} mod - Mod metadata
    * @param {{id: string, name: string, description: string}} world - World metadata
    * @returns {WorldInfo}
@@ -143,6 +146,7 @@ export class WorldDiscoveryService {
 
   /**
    * Validate that a world ID is available from active mods
+   *
    * @param {string} worldId - Full world ID (modId:worldId)
    * @param {string[]} activeModIds - Currently active mod IDs
    * @returns {Promise<boolean>}
@@ -154,6 +158,7 @@ export class WorldDiscoveryService {
 
   /**
    * Parse a world ID into its components
+   *
    * @param {string} worldId - Full world ID (modId:worldId)
    * @returns {{modId: string, worldId: string}|null}
    */

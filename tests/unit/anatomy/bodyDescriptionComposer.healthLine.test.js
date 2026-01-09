@@ -10,6 +10,14 @@ describe('BodyDescriptionComposer - Health Line', () => {
     error: jest.fn(),
   };
 
+  /**
+   *
+   * @param root0
+   * @param root0.injurySummary
+   * @param root0.healthNarrative
+   * @param root0.equipmentText
+   * @param root0.injuryNarrativeFormatterService
+   */
   function createComposer({
     injurySummary,
     healthNarrative = 'Perfect health.',
@@ -63,6 +71,9 @@ describe('BodyDescriptionComposer - Health Line', () => {
     });
   }
 
+  /**
+   *
+   */
   function createBodyEntity() {
     return {
       id: 'entity-1',

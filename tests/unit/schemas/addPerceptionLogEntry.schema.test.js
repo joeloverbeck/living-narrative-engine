@@ -40,8 +40,9 @@ describe('addPerceptionLogEntry.schema', () => {
 
   /**
    * Helper to create a valid base operation with required fields
-   * @param {Object} overrides - Properties to override or add
-   * @returns {Object} Complete operation object
+   *
+   * @param {object} overrides - Properties to override or add
+   * @returns {object} Complete operation object
    */
   const createOperation = (overrides = {}) => ({
     type: 'ADD_PERCEPTION_LOG_ENTRY',

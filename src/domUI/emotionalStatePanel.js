@@ -6,7 +6,6 @@
  * Subscribes to TURN_STARTED_ID to refresh the current actor's emotional state.
  * Subscribes to COMPONENT_ADDED_ID to refresh when mood component changes.
  * Uses EmotionCalculatorService to calculate emotions and format them for display.
- *
  * @see tickets/MOOANDSEXAROSYS-009-emotional-state-panel.md
  */
 
@@ -78,7 +77,7 @@ const AXIS_ORDER = [
  * - Each bar shows negative values extending left, positive values extending right
  * - Calculated emotions text below the bars
  *
- * @extends BoundDomRendererBase
+ * @augments BoundDomRendererBase
  */
 export class EmotionalStatePanel extends BoundDomRendererBase {
   /** @type {IEntityManager} */

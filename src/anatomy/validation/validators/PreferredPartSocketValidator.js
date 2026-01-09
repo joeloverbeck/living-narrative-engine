@@ -7,6 +7,12 @@ import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 const CHECK_NAME = 'preferred_part_sockets';
 
+/**
+ *
+ * @param targetMap
+ * @param slotName
+ * @param preferId
+ */
 function addPreferredId(targetMap, slotName, preferId) {
   if (!slotName || !preferId) {
     return;
@@ -24,6 +30,10 @@ function addPreferredId(targetMap, slotName, preferId) {
   targetMap.get(normalizedSlot).add(preferId);
 }
 
+/**
+ *
+ * @param blueprint
+ */
 function buildParentSocketRequirements(blueprint) {
   const parentRequirements = new Map();
   const allSlots = {
@@ -55,6 +65,14 @@ function buildParentSocketRequirements(blueprint) {
   return parentRequirements;
 }
 
+/**
+ *
+ * @param recipe
+ * @param blueprint
+ * @param dataRegistry
+ * @param slotGenerator
+ * @param logger
+ */
 function collectPreferredIds(
   recipe,
   blueprint,
@@ -102,6 +120,11 @@ function collectPreferredIds(
   return preferred;
 }
 
+/**
+ *
+ * @param dataRegistry
+ * @param entityId
+ */
 function getEntityDefinition(dataRegistry, entityId) {
   if (!dataRegistry || !entityId) {
     return undefined;

@@ -105,6 +105,7 @@ const MOUTH_OPERATION_TYPES = new Set([
  * Types that use "type" property but are NOT operation types.
  * These are used in action schema structures like chanceOfSuccess.modifiers,
  * and damage_entry.type values in APPLY_DAMAGE operations.
+ *
  * @see data/schemas/action.schema.json - chanceModifier definition
  * @see data/schemas/operations/applyDamage.schema.json - damage_entry.type values
  */

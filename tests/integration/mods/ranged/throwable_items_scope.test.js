@@ -24,6 +24,7 @@ describe('ranged:throwable_items scope', () => {
 
   /**
    * Normalizes scope results to an array of entity IDs
+   *
    * @param {Set} resultSet - The Set returned by scope resolution
    * @returns {string[]} - Array of entity IDs
    */
@@ -101,6 +102,7 @@ describe('ranged:throwable_items scope', () => {
 
   /**
    * Helper to set up entity manager with custom operators
+   *
    * @param {Array} entities - Entities to add to the manager
    * @returns {object} - Runtime context with entityManager and jsonLogicEval
    */

@@ -7,7 +7,6 @@
  * - Speech rule includes alternate_descriptions for sensory fallbacks
  * - Thought rule does NOT include actor_description (thoughts go via DISPATCH_THOUGHT)
  * - Both rules dispatch perceptible events (log entry creation handled by log_perceptible_events.rule.json)
- *
  * @see tickets/DISPEREVEUPG-007-core.md
  */
 

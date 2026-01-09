@@ -32,6 +32,8 @@ const ROOM_ID = 'room1';
 /**
  * Builds a safe dispatcher that mirrors the EventBus dispatch signature.
  * The production ApplyDamageHandler expects a safe dispatcher wrapper.
+ *
+ * @param eventBus
  */
 const createSafeDispatcher = (eventBus) => ({
   dispatch: (eventType, payload) => eventBus.dispatch(eventType, payload),
@@ -39,6 +41,9 @@ const createSafeDispatcher = (eventBus) => ({
 
 /**
  * Helper to convert a mod entity definition into a ModEntityBuilder instance.
+ *
+ * @param id
+ * @param definition
  */
 const buildWeaponFromDefinition = (id, definition) => {
   const builder = new ModEntityBuilder(id);
@@ -50,6 +55,11 @@ const buildWeaponFromDefinition = (id, definition) => {
 
 /**
  * Creates a simple target anatomy (torso only) and attacker/weapon trio.
+ *
+ * @param root0
+ * @param root0.weaponBuilder
+ * @param root0.weaponId
+ * @param root0.attackSkill
  */
 const createCombatants = ({ weaponBuilder, weaponId, attackSkill = 80 }) => {
   const torso = new ModEntityBuilder('target-torso')
@@ -96,6 +106,11 @@ const createCombatants = ({ weaponBuilder, weaponId, attackSkill = 80 }) => {
 /**
  * Registers real handlers for APPLY_DAMAGE and RESOLVE_OUTCOME to make the
  * rule execution deterministic and feature-complete for these tests.
+ *
+ * @param root0
+ * @param root0.testEnv
+ * @param root0.safeDispatcher
+ * @param root0.forcedOutcome
  */
 const installRealHandlers = ({
   testEnv,

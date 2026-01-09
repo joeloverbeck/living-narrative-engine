@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
+/**
+ *
+ * @param markdown
+ * @param heading
+ */
 function extractSection(markdown, heading) {
   const start = markdown.indexOf(`## ${heading}`);
   if (start === -1) return null;
@@ -15,6 +20,10 @@ function extractSection(markdown, heading) {
     : remainder.slice(0, `## ${heading}`.length + nextHeadingIndex + 1);
 }
 
+/**
+ *
+ * @param markdown
+ */
 function extractJsonCodeBlocks(markdown) {
   const blocks = [];
   const regex = /```json\s*([\s\S]*?)\s*```/g;

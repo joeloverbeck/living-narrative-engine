@@ -24,7 +24,7 @@ describe('core:suggested_action event schema', () => {
     const valid = validateDef(suggestedActionEvent);
     if (!valid) {
       // Helpful debugging if this fails in CI
-      // eslint-disable-next-line no-console
+       
       console.error(validateDef.errors);
     }
     expect(valid).toBe(true);

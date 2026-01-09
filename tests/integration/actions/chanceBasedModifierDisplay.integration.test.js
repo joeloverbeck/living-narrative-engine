@@ -16,6 +16,7 @@ import OutcomeDeterminerService from '../../../src/combat/services/OutcomeDeterm
 
 /**
  * Creates a mock logger
+ *
  * @returns {object} Mock logger
  */
 function createMockLogger() {
@@ -29,6 +30,7 @@ function createMockLogger() {
 
 /**
  * Creates a mock base formatter
+ *
  * @returns {object} Mock base formatter with format method
  */
 function createMockBaseFormatter() {

@@ -112,6 +112,12 @@ describe('First-Aid body part scopes', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param actorId
+   * @param bodyData
+   * @param locationId
+   */
   function createActorWithBody(actorId, bodyData, locationId = 'test:location') {
     entityManager.addEntity({
       id: actorId,
@@ -125,6 +131,15 @@ describe('First-Aid body part scopes', () => {
     return entityManager.getEntityInstance(actorId);
   }
 
+  /**
+   *
+   * @param partId
+   * @param root0
+   * @param root0.currentHealth
+   * @param root0.maxHealth
+   * @param root0.bleeding
+   * @param root0.vitalOrganType
+   */
   function createBodyPart(
     partId,
     { currentHealth, maxHealth, bleeding = false, vitalOrganType = null }
@@ -160,6 +175,12 @@ describe('First-Aid body part scopes', () => {
     return entityManager.getEntityInstance(partId);
   }
 
+  /**
+   *
+   * @param actorId
+   * @param bodyComponent
+   * @param partIds
+   */
   function setupBodyGraphService(actorId, bodyComponent, partIds) {
     mockBodyGraphService.getAllParts.mockImplementation((bodyComp, entityId) => {
       if (entityId === actorId) {

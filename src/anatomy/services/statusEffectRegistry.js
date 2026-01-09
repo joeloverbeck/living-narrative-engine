@@ -68,6 +68,7 @@ class StatusEffectRegistry extends BaseService {
 
   /**
    * Returns a status-effect definition by ID.
+   *
    * @param {string} effectId
    * @returns {any | undefined}
    */
@@ -78,6 +79,7 @@ class StatusEffectRegistry extends BaseService {
 
   /**
    * Returns all status-effect definitions.
+   *
    * @returns {any[]}
    */
   getAll() {
@@ -87,6 +89,7 @@ class StatusEffectRegistry extends BaseService {
 
   /**
    * Returns the apply order array, if provided.
+   *
    * @returns {string[]}
    */
   getApplyOrder() {

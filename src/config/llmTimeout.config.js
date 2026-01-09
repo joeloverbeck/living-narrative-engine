@@ -18,6 +18,11 @@ export const llmTimeoutConfig = {
   },
 };
 
+/**
+ *
+ * @param target
+ * @param source
+ */
 function deepMerge(target, source) {
   const result = { ...target };
   for (const key of Object.keys(source || {})) {
@@ -31,6 +36,10 @@ function deepMerge(target, source) {
   return result;
 }
 
+/**
+ *
+ * @param policy
+ */
 function normalizePolicy(policy) {
   const allowed = new Set(['autoAccept', 'autoWait', 'noop']);
   if (allowed.has(policy)) return policy;

@@ -45,6 +45,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
 
   /**
    * Helper to flush pending microtasks
+   *
    * @returns {Promise<void>}
    */
   const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));

@@ -11,16 +11,15 @@ import { findSimilar } from './suggestionUtils.js';
  * Get suggestions for a missing condition ID
  *
  * @param {string} missingConditionId - The condition ID that was not found
- * @param {Map<string, Object>|Array<string>|Array<Object>} registry - Available conditions
- * @param {Object} [options]
- * @param {number} [options.maxSuggestions=3] - Maximum suggestions to return
+ * @param {Map<string, object> | Array<string> | Array<object>} registry - Available conditions
+ * @param {object} [options]
+ * @param {number} [options.maxSuggestions] - Maximum suggestions to return
  * @returns {string[]} - Array of similar condition IDs, sorted by similarity
  *   (same namespace prioritized)
  * @example
  * // With array of strings
  * getSuggestions('core:actorr', ['core:actor', 'core:target', 'positioning:close'])
  * // returns ['core:actor', 'core:target']
- *
  * @example
  * // With array of objects
  * getSuggestions('positioning:close', [
@@ -49,7 +48,7 @@ export function getSuggestions(missingConditionId, registry, options = {}) {
 /**
  * Extract condition IDs from various registry formats
  *
- * @param {Map<string, Object>|Array<string>|Array<Object>|null|undefined} registry
+ * @param {Map<string, object> | Array<string> | Array<object> | null | undefined} registry
  * @returns {string[]} Array of condition ID strings
  * @private
  */
@@ -76,7 +75,7 @@ function extractConditionIds(registry) {
  *
  * @param {string} input - Input string to match
  * @param {string[]} candidates - Candidate strings
- * @param {Object} options - Options
+ * @param {object} options - Options
  * @param {number} options.maxSuggestions - Maximum suggestions
  * @returns {string[]} Suggestions sorted by similarity with same namespace first
  * @private

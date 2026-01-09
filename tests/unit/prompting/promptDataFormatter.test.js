@@ -32,6 +32,11 @@ ${THOUGHTS_GUIDANCE_TEXT}
 </thoughts>`;
 };
 
+const buildMoodThoughtsSection = (thoughtsContent = '') => {
+  const list = thoughtsContent || '[No recent thoughts]';
+  return `<thoughts>\n${list}\n</thoughts>`;
+};
+
 describe('PromptDataFormatter - Conditional Section Rendering', () => {
   let formatter;
   let mockLogger;
@@ -136,6 +141,35 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
     });
   });
 
+  describe('formatMoodUpdateThoughtsSection', () => {
+    test('returns placeholder wrapper when thoughts array is empty', () => {
+      const result = formatter.formatMoodUpdateThoughtsSection([]);
+      expect(result).toBe(buildMoodThoughtsSection());
+    });
+
+    test('returns placeholder wrapper when thoughts array is null/undefined', () => {
+      expect(formatter.formatMoodUpdateThoughtsSection(null)).toBe(
+        buildMoodThoughtsSection()
+      );
+      expect(formatter.formatMoodUpdateThoughtsSection(undefined)).toBe(
+        buildMoodThoughtsSection()
+      );
+    });
+
+    test('returns minimal XML section when thoughts exist', () => {
+      const thoughts = [
+        { text: 'First thought', timestamp: '2024-01-01' },
+        { text: 'Second thought', timestamp: '2024-01-02' },
+      ];
+
+      const result = formatter.formatMoodUpdateThoughtsSection(thoughts);
+
+      expect(result).toBe(
+        buildMoodThoughtsSection('- First thought\n- Second thought')
+      );
+    });
+  });
+
   describe('formatThoughtsSection - Enhanced Functionality', () => {
     test('enhanced section contains anti-repetition instructions', () => {
       const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
@@ -228,6 +262,32 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
+    });
+
+    test('uses mood-specific formatting when isMoodUpdatePrompt is true', () => {
+      const promptData = {
+        characterName: 'Amaia Castillo',
+        thoughtsArray: [{ text: 'Mood thought', timestamp: '2024-01-01' }],
+        notesArray: [{ text: 'Existing note', timestamp: '2024-01-01' }],
+      };
+
+      const result = formatter.formatPromptData(promptData, {
+        isMoodUpdatePrompt: true,
+      });
+
+      expect(result.thoughtsSection).toBe(
+        buildMoodThoughtsSection('- Mood thought')
+      );
+      expect(result.notesVoiceGuidance).toBe('');
+    });
+
+    test('mood prompts still render thoughts wrapper when empty', () => {
+      const result = formatter.formatPromptData(
+        { thoughtsArray: [] },
+        { isMoodUpdatePrompt: true }
+      );
+
+      expect(result.thoughtsSection).toBe(buildMoodThoughtsSection());
     });
 
     test('leaves thoughtsVoiceGuidance empty (guidance is embedded in thoughtsSection)', () => {

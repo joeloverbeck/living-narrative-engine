@@ -13,6 +13,7 @@ describe('HierarchicalAnatomyRenderer', () => {
 
   /**
    * Create a mock anatomy tree node for testing
+   *
    * @param {object} overrides - Properties to override
    * @returns {object} Mock AnatomyTreeNode
    */

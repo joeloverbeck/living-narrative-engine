@@ -1442,13 +1442,14 @@ describe('DeathConditionMonitor', () => {
 
 /**
  * Create a vital organ part for testing
+ *
  * @param {string} id - Part ID
  * @param {string} name - Part name
  * @param {string} organType - Organ type (brain, heart, spine)
  * @param {number} currentHealth - Current health
  * @param {number} maxHealth - Max health
  * @param {boolean} killOnDestroy - Kill on destroy flag
- * @returns {Object} Part object
+ * @returns {object} Part object
  */
 function createVitalOrganPart(
   id,
@@ -1478,7 +1479,8 @@ function createVitalOrganPart(
 
 /**
  * Create anatomy data with multiple vital organs
- * @returns {Object} Anatomy data with brain and heart
+ *
+ * @returns {object} Anatomy data with brain and heart
  */
 function createAnatomyDataWithVitalOrgans() {
   return {

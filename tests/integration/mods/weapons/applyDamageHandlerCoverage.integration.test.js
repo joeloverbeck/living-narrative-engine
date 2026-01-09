@@ -23,6 +23,7 @@ const eventIsActionApplyDamageTest = {
 
 /**
  * Creates a test rule with specified APPLY_DAMAGE parameters
+ *
  * @param {object} applyDamageParams - Parameters for APPLY_DAMAGE operation
  * @param {Array} [setupActions] - Additional setup actions before APPLY_DAMAGE
  * @returns {object} Rule definition
@@ -46,6 +47,7 @@ function createTestRule(applyDamageParams, setupActions = []) {
 
 /**
  * Creates standard test entities (actor, target with body part)
+ *
  * @returns {object} Entity definitions
  */
 function createStandardEntities() {

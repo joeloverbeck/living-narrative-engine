@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {Object} ModDisplayInfo
+ * @typedef {object} ModDisplayInfo
  * @property {'explicit'|'dependency'|'core'|'inactive'} status
  * @property {boolean} isExplicit
  * @property {boolean} isDependency
@@ -19,7 +19,7 @@ export class ModCardComponent {
   #logger;
 
   /**
-   * @param {Object} options
+   * @param {object} options
    * @param {{debug: (msg: string, ...args: unknown[]) => void}} options.logger
    */
   constructor({ logger }) {
@@ -31,9 +31,10 @@ export class ModCardComponent {
 
   /**
    * Create a mod card element
+   *
    * @param {import('../services/ModDiscoveryService.js').ModMetadata} mod
    * @param {ModDisplayInfo} displayInfo
-   * @param {((modId: string) => string)|null} [getModName=null] - Optional function to resolve mod ID to name
+   * @param {((modId: string) => string)|null} [getModName] - Optional function to resolve mod ID to name
    * @returns {HTMLElement}
    */
   createCard(mod, displayInfo, getModName = null) {
@@ -118,6 +119,7 @@ export class ModCardComponent {
 
   /**
    * Update an existing card's state without re-rendering
+   *
    * @param {HTMLElement} card
    * @param {ModDisplayInfo} displayInfo
    */
@@ -166,6 +168,7 @@ export class ModCardComponent {
 
   /**
    * Add conflict indicator to card
+   *
    * @param {HTMLElement} card
    * @param {string[]} conflictingMods
    */
@@ -195,6 +198,7 @@ export class ModCardComponent {
 
   /**
    * Remove conflict indicator from card
+   *
    * @param {HTMLElement} card
    */
   removeConflictIndicator(card) {
@@ -207,6 +211,7 @@ export class ModCardComponent {
 
   /**
    * Get CSS classes for card based on status
+   *
    * @param {ModDisplayInfo} displayInfo
    * @returns {string}
    */
@@ -233,6 +238,7 @@ export class ModCardComponent {
 
   /**
    * Create checkbox element
+   *
    * @param {string} modId
    * @param {boolean} isActive
    * @param {boolean} isCore
@@ -258,6 +264,7 @@ export class ModCardComponent {
 
   /**
    * Create lock icon element
+   *
    * @returns {HTMLSpanElement}
    */
   #createLockIcon() {
@@ -270,6 +277,7 @@ export class ModCardComponent {
 
   /**
    * Create status badge element
+   *
    * @param {ModDisplayInfo} displayInfo
    * @returns {HTMLSpanElement|null}
    */
@@ -308,6 +316,7 @@ export class ModCardComponent {
 
   /**
    * Create worlds badge element
+   *
    * @returns {HTMLSpanElement}
    */
   #createWorldsBadge() {
@@ -320,8 +329,9 @@ export class ModCardComponent {
 
   /**
    * Create dependencies element
+   *
    * @param {Array<{id: string, version: string}>} dependencies
-   * @param {((modId: string) => string)|null} [getModName=null] - Optional function to resolve mod ID to name
+   * @param {((modId: string) => string)|null} [getModName] - Optional function to resolve mod ID to name
    * @returns {HTMLSpanElement|null}
    */
   #createDependenciesElement(dependencies, getModName = null) {
@@ -376,6 +386,7 @@ export class ModCardComponent {
 
   /**
    * Generate accessible label for card
+   *
    * @param {import('../services/ModDiscoveryService.js').ModMetadata} mod
    * @param {ModDisplayInfo} displayInfo
    * @returns {string}

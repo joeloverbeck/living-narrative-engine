@@ -7,7 +7,6 @@
  * 2. Lit locations (canal_vestibule, concordance_salon, outer_service_yard, service_stair)
  *    do NOT have the naturally_dark component
  * 3. Darkness descriptions meet quality requirements
- *
  * @see LIGSYSDES-007 for ticket details
  */
 

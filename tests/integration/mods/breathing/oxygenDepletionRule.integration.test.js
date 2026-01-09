@@ -14,6 +14,13 @@ const ORGAN_COMPONENT = 'breathing-states:respiratory_organ';
 const PART_COMPONENT = 'anatomy:part';
 const SUBMERGED_COMPONENT = 'liquids-states:submerged';
 
+/**
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param dataRegistry
+ */
 function createHandlers(entityManager, eventBus, logger, dataRegistry) {
   const safeEventDispatcher = {
     dispatch: (eventType, payload) => {

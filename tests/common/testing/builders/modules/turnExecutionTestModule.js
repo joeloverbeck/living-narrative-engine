@@ -21,6 +21,7 @@ let _cachedEnvironmentPresets = null;
 
 /**
  * Get cached LLM configurations (created once, frozen for safety)
+ *
  * @returns {object} Frozen config objects by strategy
  */
 function getCachedLLMConfigs() {
@@ -89,6 +90,7 @@ function getCachedLLMConfigs() {
 
 /**
  * Get cached environment presets (created once, frozen for safety)
+ *
  * @returns {object} Frozen preset objects by name
  */
 function getCachedEnvironmentPresets() {

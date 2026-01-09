@@ -10,7 +10,6 @@
  *   node scripts/migratePerceptionTypes.js --dry-run   # Preview changes
  *   node scripts/migratePerceptionTypes.js             # Apply changes
  *   node scripts/migratePerceptionTypes.js --report    # Generate migration report only
- *
  * @see specs/perceptionType-consolidation.md
  */
 
@@ -137,6 +136,7 @@ const CONTEXT_MAPPINGS = {
 
 /**
  * Walk directory recursively and find JSON files
+ *
  * @param {string} dirPath
  * @param {string[]} extensions
  * @returns {string[]}
@@ -167,6 +167,7 @@ function walkDirectory(dirPath, extensions = ['.json']) {
 
 /**
  * Determine mod folder from file path
+ *
  * @param {string} filePath
  * @returns {string}
  */
@@ -178,6 +179,7 @@ function getModFolder(filePath) {
 
 /**
  * Get new type for a generic type based on context
+ *
  * @param {string} legacyType
  * @param {string} modFolder
  * @returns {string}
@@ -201,6 +203,7 @@ function getContextAwareMapping(legacyType, modFolder) {
 
 /**
  * Get new type for a legacy type
+ *
  * @param {string} legacyType
  * @param {string} filePath
  * @returns {string|null}
@@ -223,6 +226,7 @@ function getNewType(legacyType, filePath) {
 
 /**
  * Check if type is a new dotted format
+ *
  * @param {string} type
  * @returns {boolean}
  */
@@ -232,8 +236,10 @@ function isNewFormat(type) {
 
 /**
  * Find all perception_type occurrences in JSON content
+ *
  * @param {object} obj
  * @param {string} filePath
+ * @param currentPath
  * @returns {Array<{path: string, oldType: string, newType: string}>}
  */
 function findPerceptionTypes(obj, filePath, currentPath = '') {
@@ -274,6 +280,7 @@ function findPerceptionTypes(obj, filePath, currentPath = '') {
 
 /**
  * Apply migrations to JSON content
+ *
  * @param {object} obj
  * @param {Array<{path: string, oldType: string, newType: string}>} migrations
  * @returns {object}
@@ -310,6 +317,9 @@ function applyMigrations(obj, migrations) {
 // MAIN EXECUTION
 // ============================================================================
 
+/**
+ *
+ */
 function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');

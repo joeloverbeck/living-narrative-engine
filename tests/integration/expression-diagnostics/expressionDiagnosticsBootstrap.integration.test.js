@@ -198,6 +198,9 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       const expressionStatusService = sharedContainer.resolve(
         diagnosticsTokens.IExpressionStatusService
       );
+      const witnessStateFinder = sharedContainer.resolve(
+        diagnosticsTokens.IWitnessStateFinder
+      );
 
       // Create controller instance (should not throw)
       const controller = new ExpressionDiagnosticsController({
@@ -208,6 +211,7 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
         monteCarloSimulator,
         failureExplainer,
         expressionStatusService,
+        witnessStateFinder,
       });
 
       expect(controller).toBeDefined();

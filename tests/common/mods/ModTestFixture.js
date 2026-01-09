@@ -1082,11 +1082,9 @@ class BaseModTestFixture {
    * @param {Set<string>|((context: object) => Set<string>)} resolverOrResult - Either:
    *   - A Set of entity IDs to return
    *   - A function (context) => Set<string> for dynamic resolution
-   *
    * @example
    * // Static result
    * fixture.mockScope('my:scope', new Set(['entity-1', 'entity-2']));
-   *
    * @example
    * // Dynamic resolver
    * fixture.mockScope('my:scope', (context) => {

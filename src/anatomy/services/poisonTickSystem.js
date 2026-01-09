@@ -7,7 +7,6 @@
  *
  * Poison can be scoped to part or entity level. When scoped to entity,
  * the component is on the root entity rather than an individual part.
- *
  * @see specs/damage-types-and-special-effects.md
  */
 
@@ -83,6 +82,7 @@ class PoisonTickSystem extends BaseService {
 
   /**
    * Subscribe to turn ended events.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -97,6 +97,7 @@ class PoisonTickSystem extends BaseService {
 
   /**
    * Handle turn ended event - process all poison effects.
+   *
    * @private
    */
   async #handleTurnEnded() {

@@ -30,10 +30,10 @@ const cachedContainers = new Map();
  * Uses reference counting to track usage and enable proper cleanup.
  *
  * @param {string} containerKey - Unique key for this container group
- * @param {object} [options={}] - Container creation options
- * @param {boolean} [options.stubLLM=true] - Whether to stub LLM
- * @param {boolean} [options.loadMods=false] - Whether to load mods
- * @param {string[]} [options.mods=['core']] - Mods to load
+ * @param {object} [options] - Container creation options
+ * @param {boolean} [options.stubLLM] - Whether to stub LLM
+ * @param {boolean} [options.loadMods] - Whether to load mods
+ * @param {string[]} [options.mods] - Mods to load
  * @returns {Promise<object>} The E2E test environment
  * @example
  * // In beforeAll

@@ -270,6 +270,10 @@ export class AnatomyOrchestrator extends BaseService {
   }
 }
 
+/**
+ *
+ * @param slotToPartMappings
+ */
 function mapSlotToPartMappings(slotToPartMappings) {
   if (!slotToPartMappings) {
     return {};

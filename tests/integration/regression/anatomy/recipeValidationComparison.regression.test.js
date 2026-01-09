@@ -48,6 +48,7 @@ let sharedAnatomyTestBed = null;
 /**
  * Creates runtime overrides that reuse the shared container and skip expensive mod loading.
  * This dramatically reduces test time by avoiding repeated mod loading.
+ *
  * @param {object} [additionalOverrides] - Additional runtime overrides to merge
  * @returns {object} Runtime overrides with shared container factory
  */
@@ -431,7 +432,7 @@ describe('Recipe usage detection', () => {
  *
  * @param {string} recipePath - Path to the recipe file
  * @param {object} [options] - Comparison options
- * @param {boolean} [options.useSharedContext=true] - Whether to use shared context
+ * @param {boolean} [options.useSharedContext] - Whether to use shared context
  * @param {Function} [options.transformValidatorDeps] - Transform validator dependencies (forces fresh context)
  * @param {object} [options.cliOptions] - CLI options to pass
  * @param {object} [options.runtimeOverrides] - Additional runtime overrides

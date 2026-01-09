@@ -14,6 +14,7 @@ const ANATOMY_CREATURES_PATH = join(
 
 /**
  * Helper to load and validate entity JSON
+ *
  * @param {string} filename
  * @returns {object}
  */

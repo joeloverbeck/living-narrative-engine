@@ -7,7 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import DiagnosticResult from '../models/DiagnosticResult.js';
 
 /**
- * @typedef {Object} FailureExplanation
+ * @typedef {object} FailureExplanation
  * @property {string} summary - One-line summary
  * @property {string} detail - Detailed explanation
  * @property {string} severity - 'critical' | 'high' | 'medium' | 'low'
@@ -15,7 +15,7 @@ import DiagnosticResult from '../models/DiagnosticResult.js';
  */
 
 /**
- * @typedef {Object} BlockerAnalysis
+ * @typedef {object} BlockerAnalysis
  * @property {string} clauseDescription
  * @property {number} failureRate
  * @property {number} averageViolation
@@ -36,7 +36,7 @@ class FailureExplainer {
   #logger;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry for prototype lookups
    * @param {object} deps.logger - ILogger
    */
@@ -54,6 +54,7 @@ class FailureExplainer {
 
   /**
    * Analyze clause failures and generate explanations
+   *
    * @param {import('./MonteCarloSimulator.js').ClauseResult[]} clauseFailures
    * @param {object} [context] - Additional context (expression, etc.)
    * @returns {BlockerAnalysis[]}
@@ -84,8 +85,9 @@ class FailureExplainer {
 
   /**
    * Get top N blockers
+   *
    * @param {import('./MonteCarloSimulator.js').ClauseResult[]} clauseFailures
-   * @param {number} [n=3] - Number of top blockers
+   * @param {number} [n] - Number of top blockers
    * @returns {BlockerAnalysis[]}
    */
   getTopBlockers(clauseFailures, n = 3) {
@@ -95,6 +97,7 @@ class FailureExplainer {
 
   /**
    * Generate overall summary for an expression
+   *
    * @param {number} triggerRate
    * @param {BlockerAnalysis[]} blockers
    * @returns {string}
@@ -126,6 +129,7 @@ class FailureExplainer {
   /**
    * Analyze blockers with hierarchical breakdown support.
    * Returns enhanced blocker data including hierarchical tree and worst offenders.
+   *
    * @param {import('./MonteCarloSimulator.js').ClauseResult[]} clauseFailures
    * @param {object} [context] - Additional context
    * @returns {Array<BlockerAnalysis & {hasHierarchy: boolean, hierarchicalBreakdown: object|null, worstOffenders: Array}>}
@@ -176,8 +180,9 @@ class FailureExplainer {
   /**
    * Flatten a hierarchical tree to a sorted list of leaf nodes.
    * Filters to only include nodes above the minimum failure rate threshold.
+   *
    * @param {object} tree - Hierarchical breakdown tree (from toJSON)
-   * @param {number} [minFailureRate=0] - Minimum failure rate to include
+   * @param {number} [minFailureRate] - Minimum failure rate to include
    * @returns {Array<{id: string, description: string, failureRate: number, averageViolation: number, severity: string, depth: number}>}
    */
   flattenHierarchy(tree, minFailureRate = 0) {
@@ -192,6 +197,7 @@ class FailureExplainer {
 
   /**
    * Recursively collect leaf nodes from hierarchical tree.
+   *
    * @private
    * @param {object} node - Current tree node
    * @param {Array} results - Array to collect results into
@@ -225,9 +231,11 @@ class FailureExplainer {
 
   /**
    * Generate explanation for a single clause failure
+   *
    * @private
    * @param {import('./MonteCarloSimulator.js').ClauseResult} clause
    * @param {object} context
+   * @param _context
    * @returns {FailureExplanation}
    */
   #generateExplanation(clause, _context) {
@@ -259,6 +267,7 @@ class FailureExplainer {
 
   /**
    * Parse clause description into structured data
+   *
    * @private
    * @param {string} description
    * @returns {{type: string, [key: string]: any}}
@@ -294,6 +303,7 @@ class FailureExplainer {
 
   /**
    * Generate detailed explanation for threshold failures
+   *
    * @private
    * @param {{type: string, variable: string, operator: string, threshold: number}} parsed
    * @param {import('./MonteCarloSimulator.js').ClauseResult} clause
@@ -323,6 +333,7 @@ class FailureExplainer {
 
   /**
    * Generate suggestions for threshold failures
+   *
    * @private
    * @param {{type: string, variable: string, operator: string, threshold: number}} parsed
    * @param {import('./MonteCarloSimulator.js').ClauseResult} clause
@@ -358,6 +369,7 @@ class FailureExplainer {
 
   /**
    * Categorize severity based on failure rate
+   *
    * @private
    * @param {number} failureRate
    * @returns {'critical' | 'high' | 'medium' | 'low'}
@@ -371,6 +383,7 @@ class FailureExplainer {
 
   /**
    * Get emotion prototype from registry
+   *
    * @private
    * @param {string} emotionId
    * @returns {object|null}
@@ -382,6 +395,7 @@ class FailureExplainer {
 
   /**
    * Describe prototype weights in human-readable form
+   *
    * @private
    * @param {Object<string, number>} weights
    * @returns {string}

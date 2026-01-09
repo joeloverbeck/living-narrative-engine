@@ -204,10 +204,10 @@ import ModCardComponent from '../../../src/modManager/components/ModCardComponen
  * Helper function to setup DOM elements for tests
  *
  * @param {object} options - Configuration options
- * @param {boolean} [options.modList=false] - Whether to create mod-list element
- * @param {boolean} [options.summaryPanel=false] - Whether to create summary-panel element
- * @param {boolean} [options.worldList=false] - Whether to create world-list element
- * @param {boolean} [options.backButton=false] - Whether to create back-button element
+ * @param {boolean} [options.modList] - Whether to create mod-list element
+ * @param {boolean} [options.summaryPanel] - Whether to create summary-panel element
+ * @param {boolean} [options.worldList] - Whether to create world-list element
+ * @param {boolean} [options.backButton] - Whether to create back-button element
  * @returns {{ elements: object, getBackButton: () => HTMLElement|null }} DOM elements and getter
  */
 function setupDOMElements({

@@ -78,7 +78,7 @@ export class PromptDataFormatter {
       this.#logger.debug(
         'PromptDataFormatter: No perception log entries to format'
       );
-      return '';
+      return '[No recent events]';
     }
 
     const entries = perceptionLogArray
@@ -90,6 +90,13 @@ export class PromptDataFormatter {
       })
       .filter((content) => content.trim().length > 0) // Remove empty entries
       .join('\n');
+
+    if (!entries) {
+      this.#logger.debug(
+        'PromptDataFormatter: No valid perception log entries after filtering'
+      );
+      return '[No recent events]';
+    }
 
     this.#logger.debug(
       `PromptDataFormatter: Formatted ${perceptionLogArray.length} perception log entries with simplified format`
@@ -398,9 +405,22 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
   }
 
   /**
+   * Format thoughts section for mood updates (no guidance)
+   *
+   * @param {Array<{text: string, timestamp: string}>} thoughtsArray - Array of thoughts
+   * @returns {string} Complete thoughts section with XML tags
+   */
+  formatMoodUpdateThoughtsSection(thoughtsArray) {
+    const content = this.formatThoughts(thoughtsArray);
+    const thoughtsList = content || '[No recent thoughts]';
+    return `<thoughts>\n${thoughtsList}\n</thoughts>`;
+  }
+
+  /**
    * Formats voice guidance for thoughts section
    *
    * @param {Array} thoughtsArray - Array of thought objects
+   * @param _thoughtsArray
    * @returns {string} Voice guidance or empty string if no thoughts
    */
   formatThoughtsVoiceGuidance(_thoughtsArray) {
@@ -492,13 +512,17 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
    * Format all complex prompt data into a flat object for template substitution
    *
    * @param {object} promptData - The prompt data object from AIPromptContentProvider
+   * @param {object} [options] - Formatting options
+   * @param {boolean} [options.isMoodUpdatePrompt=false] - Enable mood update formatting
    * @returns {Record<string, string>} Formatted data ready for template substitution
    */
-  formatPromptData(promptData) {
+  formatPromptData(promptData, options = {}) {
     if (!promptData || typeof promptData !== 'object') {
       this.#logger.error('PromptDataFormatter: Invalid prompt data provided');
       return {};
     }
+
+    const { isMoodUpdatePrompt = false } = options;
 
     // Start with the simple string fields, applying processing hints where needed
     const formattedData = {
@@ -557,13 +581,15 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
     formattedData.thoughtsVoiceGuidance = this.formatThoughtsVoiceGuidance(
       promptData.thoughtsArray || []
     );
-    formattedData.thoughtsSection = this.formatThoughtsSection(
-      promptData.thoughtsArray || []
-    );
-    formattedData.notesVoiceGuidance = this.formatNotesVoiceGuidance(
-      promptData.notesArray || [],
-      promptData.characterName
-    );
+    formattedData.thoughtsSection = isMoodUpdatePrompt
+      ? this.formatMoodUpdateThoughtsSection(promptData.thoughtsArray || [])
+      : this.formatThoughtsSection(promptData.thoughtsArray || []);
+    formattedData.notesVoiceGuidance = isMoodUpdatePrompt
+      ? ''
+      : this.formatNotesVoiceGuidance(
+          promptData.notesArray || [],
+          promptData.characterName
+        );
     formattedData.notesSection = this.formatNotesSection(
       promptData.notesArray || []
     );

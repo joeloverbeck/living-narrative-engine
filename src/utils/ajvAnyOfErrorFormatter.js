@@ -170,6 +170,7 @@ function extractFailingData(rootData, error) {
 
 /**
  * Standard JSON Logic operators as defined by json-logic.
+ *
  * @see http://jsonlogic.com/operations.html
  */
 const STANDARD_JSON_LOGIC_OPERATORS = new Set([

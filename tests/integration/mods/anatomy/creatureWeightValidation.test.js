@@ -7,7 +7,6 @@
  * This test ensures the invariants from DISBODPARSPA-014 are maintained:
  * - All creature entities have core:weight
  * - Weights are positive numbers within realistic ranges for each creature type
- *
  * @see tickets/DISBODPARSPA-014-weight-creatures.md
  */
 
@@ -22,6 +21,7 @@ const DEFINITIONS_PATH = path.resolve(
 
 /**
  * Helper to load entity JSON file
+ *
  * @param {string} filename - Entity file name
  * @returns {object} Parsed JSON
  */
@@ -33,6 +33,7 @@ function loadEntityFile(filename) {
 
 /**
  * Helper to get weight from entity
+ *
  * @param {object} entity - Entity definition object
  * @returns {number|undefined} Weight value or undefined
  */

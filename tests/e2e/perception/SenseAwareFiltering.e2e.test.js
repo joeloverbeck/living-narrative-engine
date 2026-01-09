@@ -18,6 +18,7 @@ import logPerceptibleEventsRule from '../../../data/mods/core/rules/log_percepti
 
 /**
  * Helper to await all pending event dispatches
+ *
  * @param {object} testEnv - Test environment with eventBus mock
  * @param {number} startIndex - Index to start awaiting from
  */
@@ -33,6 +34,7 @@ async function awaitDispatches(testEnv, startIndex) {
 
 /**
  * Creates a mock SensoryCapabilityService
+ *
  * @param {object} overrides - Entity-specific sensory capability overrides
  * @returns {object} Mock sensory capability service
  */
@@ -64,6 +66,7 @@ function createMockSensoryCapabilityService(overrides = {}) {
 
 /**
  * Creates a mock LightingStateService
+ *
  * @param {object} locationStates - Location-specific lighting states { locationId: { isLit: boolean } }
  * @returns {object} Mock lighting state service
  */
@@ -80,6 +83,7 @@ function createMockLightingStateService(locationStates = {}) {
 
 /**
  * Creates a handler factory that wires PerceptionFilterService
+ *
  * @param {object} options - Configuration options
  * @param {object} options.sensoryOverrides - Entity sensory capability overrides
  * @param {object} options.lightingStates - Location lighting state overrides

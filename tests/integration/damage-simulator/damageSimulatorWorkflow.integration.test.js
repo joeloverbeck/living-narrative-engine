@@ -30,13 +30,13 @@ import {
 } from '../../common/damage-simulator/damageSimulatorTestFixtures.js';
 
 describe('Damage Simulator Workflow', () => {
-  /** @type {Object} */
+  /** @type {object} */
   let logger;
-  /** @type {Object} */
+  /** @type {object} */
   let dispatcher;
   /** @type {SimpleEntityManager} */
   let entityManager;
-  /** @type {Object} */
+  /** @type {object} */
   let ids;
   /** @type {DamageExecutionService} */
   let executionService;
@@ -44,7 +44,7 @@ describe('Damage Simulator Workflow', () => {
   let historyTracker;
   /** @type {HTMLElement} */
   let container;
-  /** @type {Object} */
+  /** @type {object} */
   let operationInterpreter;
 
   beforeEach(async () => {

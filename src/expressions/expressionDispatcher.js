@@ -122,6 +122,8 @@ class ExpressionDispatcher {
 
   /**
    * Get actor's current location ID.
+   *
+   * @param actorId
    * @private
    */
   #getActorLocationId(actorId) {
@@ -138,6 +140,8 @@ class ExpressionDispatcher {
 
   /**
    * Get actor's display name.
+   *
+   * @param actorId
    * @private
    */
   #getActorName(actorId) {
@@ -154,6 +158,9 @@ class ExpressionDispatcher {
 
   /**
    * Replace placeholders in description text.
+   *
+   * @param text
+   * @param values
    * @private
    */
   #replacePlaceholders(text, values) {
@@ -168,6 +175,9 @@ class ExpressionDispatcher {
 
   /**
    * Replace placeholders in alternate descriptions.
+   *
+   * @param alternateDescriptions
+   * @param values
    * @private
    */
   #replaceAlternateDescriptions(alternateDescriptions, values) {

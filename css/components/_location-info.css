@@ -6,6 +6,7 @@
   font-size: var(--font-size-h2);
   color: var(--primary-text-color);
   margin: 0 0 var(--spacing-md) 0;
+  text-align: center;
 }
 
 #location-description-display {
@@ -20,6 +21,10 @@
   list-style: none;
   padding-left: 0;
   margin: var(--spacing-sm) 0;
+}
+
+#location-exits-display {
+  text-align: center;
 }
 
 #location-exits-display li,

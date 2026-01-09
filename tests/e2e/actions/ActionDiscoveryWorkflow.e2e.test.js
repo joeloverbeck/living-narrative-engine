@@ -56,7 +56,8 @@ describe('Complete Action Discovery Workflow E2E', () => {
 
   /**
    * Clears all entities to ensure test isolation between tests
-   * @param {Object} entityMgr - The entity manager instance
+   *
+   * @param {object} entityMgr - The entity manager instance
    */
   function clearAllEntities(entityMgr) {
     entityMgr.clearAll();

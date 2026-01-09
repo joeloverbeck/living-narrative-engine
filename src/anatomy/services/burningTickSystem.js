@@ -7,7 +7,6 @@
  *
  * Burning supports stacking: stackedCount and tickDamage can accumulate
  * when canStack is true on the damage type definition.
- *
  * @see specs/damage-types-and-special-effects.md
  */
 
@@ -83,6 +82,7 @@ class BurningTickSystem extends BaseService {
 
   /**
    * Subscribe to turn ended events.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -97,6 +97,7 @@ class BurningTickSystem extends BaseService {
 
   /**
    * Handle turn ended event - process all burning effects.
+   *
    * @private
    */
   async #handleTurnEnded() {

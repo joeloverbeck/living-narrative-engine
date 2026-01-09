@@ -9,6 +9,7 @@ import {
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import { TraitsRewriterError } from '../../../../src/characterBuilder/errors/TraitsRewriterError.js';
+import * as clipboardUtils from '../../../../src/domUI/helpers/clipboardUtils.js';
 
 jest.mock('../../../../src/utils/dependencyUtils.js', () => ({
   validateDependency: jest.fn(),
@@ -259,7 +260,8 @@ describe('TraitsRewriterController', () => {
 
     URL.createObjectURL = jest.fn(() => 'blob:123');
     URL.revokeObjectURL = jest.fn();
-    navigator.clipboard = { writeText: jest.fn().mockResolvedValue() };
+    // Mock the clipboard utility
+    jest.spyOn(clipboardUtils, 'copyToClipboard').mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -444,8 +446,41 @@ describe('TraitsRewriterController', () => {
     );
     expect(displayEnhancer.generateExportFilename).toHaveBeenCalled();
     expect(URL.createObjectURL).toHaveBeenCalled();
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+    expect(clipboardUtils.copyToClipboard).toHaveBeenCalledWith(
       'formatted export'
+    );
+  });
+
+  it('shows error when clipboard copy fails', async () => {
+    // Mock clipboard to fail
+    clipboardUtils.copyToClipboard.mockResolvedValue(false);
+
+    controller._cacheElements();
+    controller._setupEventListeners();
+
+    elements['character-definition'].value = JSON.stringify({
+      components: {
+        'core:name': 'Ada',
+        'core:personality': ['curious'],
+      },
+    });
+    const inputHandler = listeners.find((l) => l.type === 'input').handler;
+    await inputHandler();
+
+    const generateHandler = listeners.find(
+      (l) => l.type === 'click' && l.element.id === 'rewrite-traits-button'
+    ).handler;
+    await generateHandler();
+
+    const copyHandler = listeners.find(
+      (l) => l.type === 'click' && l.element.id === 'copy-traits-button'
+    ).handler;
+
+    await copyHandler();
+
+    expect(clipboardUtils.copyToClipboard).toHaveBeenCalled();
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      'TraitsRewriterController: Copy to clipboard failed'
     );
   });
 

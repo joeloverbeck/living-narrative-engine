@@ -17,6 +17,7 @@ import DamageAnalyticsPanel from '../../../../src/domUI/damage-simulator/DamageA
 
 /**
  * Creates a mock event bus for testing.
+ *
  * @returns {object} Mock event bus with subscribe and dispatch methods.
  */
 function createMockEventBus() {
@@ -50,6 +51,7 @@ function createMockEventBus() {
 
 /**
  * Creates a mock logger for testing.
+ *
  * @returns {object} Mock logger with all required methods.
  */
 function createMockLogger() {
@@ -63,6 +65,7 @@ function createMockLogger() {
 
 /**
  * Creates a mock HitProbabilityCalculator for testing.
+ *
  * @returns {object} Mock calculator with expected methods.
  */
 function createMockHitProbabilityCalculator() {

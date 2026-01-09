@@ -26,6 +26,8 @@ import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServi
 
 /**
  * Builds a safe dispatcher that mirrors the EventBus dispatch signature.
+ *
+ * @param eventBus
  */
 const createSafeDispatcher = (eventBus) => ({
   dispatch: (eventType, payload) => eventBus.dispatch(eventType, payload),
@@ -34,6 +36,8 @@ const createSafeDispatcher = (eventBus) => ({
 /**
  * Creates a target entity with multiple distinct body parts (Head, Torso, Arms, Legs)
  * to ensure hit distribution can be tested.
+ *
+ * @param roomId
  */
 const createMultiPartTarget = (roomId) => {
   const parts = [];

@@ -193,6 +193,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       expect(result.emotionalState).toHaveProperty('moodAxes');
       expect(result.emotionalState).toHaveProperty('emotionalStateText');
       expect(result.emotionalState).toHaveProperty('sexualState');
+      expect(result.emotionalState).toHaveProperty('sexVariables');
       expect(result.emotionalState).toHaveProperty('sexualStateText');
     });
 
@@ -256,6 +257,10 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       expect(result.emotionalState.sexualState.sex_excitation).toBe(50);
       expect(result.emotionalState.sexualState.sex_inhibition).toBe(15);
       expect(result.emotionalState.sexualState.baseline_libido).toBe(-10);
+      expect(result.emotionalState.sexVariables).toEqual({
+        sex_excitation: 50,
+        sex_inhibition: 15,
+      });
     });
 
     test('should call calculateEmotions with mood axes and sexual arousal', () => {

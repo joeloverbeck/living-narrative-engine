@@ -47,6 +47,9 @@ describe('Go Action - Perception Routing', () => {
   let customEntityManager;
   let events = [];
 
+  /**
+   *
+   */
   function setupListener() {
     events = [];
     testEnv.eventBus.subscribe('*', (event) => {
@@ -54,6 +57,13 @@ describe('Go Action - Perception Routing', () => {
     });
   }
 
+  /**
+   *
+   * @param entityManager
+   * @param eventBus
+   * @param logger
+   * @param safeEventDispatcher
+   */
   function createHandlers(
     entityManager,
     eventBus,

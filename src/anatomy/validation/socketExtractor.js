@@ -43,10 +43,18 @@ export function extractSocketsFromEntity(entity) {
 
 let socketExtractorLogger = console;
 
+/**
+ *
+ * @param logger
+ */
 export function setSocketExtractorLogger(logger) {
   socketExtractorLogger = logger || null;
 }
 
+/**
+ *
+ * @param id
+ */
 function extractNamespaceFromId(id) {
   if (typeof id !== 'string') {
     return null;
@@ -208,6 +216,7 @@ async function extractSlotChildSockets(
  * @param {object} structureTemplate - Structure template definition
  * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
  * @param {object} dataRegistry - Data registry for entity lookups
+ * @param preferredNamespace
  * @returns {Promise<void>}
  * @private
  */
@@ -252,6 +261,7 @@ async function extractStructureTemplateSockets(
  * @param {object} limbSet - LimbSet definition from structure template
  * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
  * @param {object} dataRegistry - Data registry for entity lookups
+ * @param preferredNamespace
  * @returns {Promise<void>}
  * @private
  */
@@ -318,6 +328,7 @@ async function extractLimbSetSockets(
  * @param {object} appendage - Appendage definition from structure template
  * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
  * @param {object} dataRegistry - Data registry for entity lookups
+ * @param preferredNamespace
  * @returns {Promise<void>}
  * @private
  */
@@ -601,6 +612,7 @@ function resolveSlotDefinition(slotConfig, library) {
  * @param {object} blueprint - Blueprint definition with compose instruction
  * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
  * @param {object} dataRegistry - Data registry for part lookups
+ * @param preferredNamespace
  * @returns {Promise<void>}
  * @private
  */

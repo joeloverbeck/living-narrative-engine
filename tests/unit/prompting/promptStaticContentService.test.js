@@ -11,9 +11,11 @@ const mockLogger = {
 const promptData = {
   coreTaskDescriptionText: 'Core text',
   characterPortrayalGuidelinesTemplate: 'Guidelines for {{name}}',
+  moodUpdatePortrayalGuidelinesTemplate: 'Mood guidelines for {{name}}',
   nc21ContentPolicyText: 'Policy',
   finalLlmInstructionText: 'Final',
   moodUpdateOnlyInstructionText: 'Mood update instructions',
+  moodUpdateTaskDefinitionText: 'Mood task definition',
 };
 
 describe('PromptStaticContentService', () => {
@@ -52,10 +54,17 @@ describe('PromptStaticContentService', () => {
     );
   });
 
+  it('provides mood update task definition text from loaded data', () => {
+    expect(service.getMoodUpdateTaskDefinitionText()).toBe(
+      promptData.moodUpdateTaskDefinitionText
+    );
+  });
+
   it('returns empty string if moodUpdateOnlyInstructionText is missing from data', async () => {
     const dataWithoutMood = {
       coreTaskDescriptionText: 'Core text',
       characterPortrayalGuidelinesTemplate: 'Guidelines for {{name}}',
+      moodUpdatePortrayalGuidelinesTemplate: 'Mood guidelines for {{name}}',
       nc21ContentPolicyText: 'Policy',
       finalLlmInstructionText: 'Final',
     };
@@ -73,6 +82,11 @@ describe('PromptStaticContentService', () => {
   it('substitutes the character name in portrayal guidelines', () => {
     const text = service.getCharacterPortrayalGuidelines('Alice');
     expect(text).toBe('Guidelines for Alice');
+  });
+
+  it('substitutes the character name in mood update portrayal guidelines', () => {
+    const text = service.getMoodUpdatePortrayalGuidelines('Alice');
+    expect(text).toBe('Mood guidelines for Alice');
   });
 
   it('throws if accessed before initialization', () => {

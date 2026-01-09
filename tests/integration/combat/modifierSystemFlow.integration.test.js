@@ -14,6 +14,7 @@ import OutcomeDeterminerService from '../../../src/combat/services/OutcomeDeterm
 
 /**
  * Creates a mock logger
+ *
  * @returns {object} Mock logger
  */
 function createMockLogger() {

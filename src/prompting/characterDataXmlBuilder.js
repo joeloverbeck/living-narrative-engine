@@ -69,7 +69,7 @@ class CharacterDataXmlBuilder {
    * @returns {string} Complete XML string with decorated comments and semantic sections
    * @throws {TypeError} If characterData is null or undefined
    */
-  buildCharacterDataXml(characterData) {
+  buildCharacterDataXml(characterData, options = {}) {
     if (characterData === null || characterData === undefined) {
       throw new TypeError(
         'characterData is required and cannot be null or undefined'
@@ -169,7 +169,10 @@ class CharacterDataXmlBuilder {
     }
 
     // Section 6: Current State (recency effect)
-    const currentStateSection = this.#buildCurrentStateSection(characterData);
+    const currentStateSection = this.#buildCurrentStateSection(
+      characterData,
+      options
+    );
     if (currentStateSection) {
       parts.push('');
       parts.push(
@@ -206,7 +209,7 @@ class CharacterDataXmlBuilder {
   #buildIdentityPrimingComment() {
     return this.#xmlBuilder.decoratedComment(
       [
-        'THIS IS YOUR IDENTITY. Every thought, action, and word stems from this.',
+        'THIS IS YOUR IDENTITY. Every emotion, thought, action, and word stems from this.',
         'Embody this character completely. You ARE this person.',
       ],
       'primary',
@@ -615,7 +618,7 @@ class CharacterDataXmlBuilder {
    * @param {object} data - Character data
    * @returns {string} Current state section XML or empty string
    */
-  #buildCurrentStateSection(data) {
+  #buildCurrentStateSection(data, options = {}) {
     const elements = [];
 
     // Physical condition (placed first for prominence per spec)
@@ -629,7 +632,10 @@ class CharacterDataXmlBuilder {
     // Inner state (emotional + sexual) - MOOANDSEXAROSYS-005
     if (data.emotionalState) {
       this.#validateEmotionalState(data);
-      const innerStateContent = this.#buildInnerStateSection(data.emotionalState);
+      const innerStateContent = this.#buildInnerStateSection(
+        data.emotionalState,
+        options
+      );
       elements.push(innerStateContent);
     }
 
@@ -849,13 +855,49 @@ class CharacterDataXmlBuilder {
   }
 
   /**
+   * Formats mood axes into a compact string for the prompt.
+   *
+   * @param {object} moodAxes - Mood axis values
+   * @returns {string} Formatted mood axis string
+   */
+  #formatMoodAxes(moodAxes) {
+    const axisOrder = [
+      'valence',
+      'arousal',
+      'agency_control',
+      'threat',
+      'engagement',
+      'future_expectancy',
+      'self_evaluation',
+    ];
+    const parts = axisOrder
+      .filter((key) => typeof moodAxes?.[key] === 'number')
+      .map((key) => `${key}: ${moodAxes[key]}`);
+    return parts.join(', ');
+  }
+
+  /**
+   * Formats sex variables into a compact string for the prompt.
+   *
+   * @param {object} sexVariables - Sexual axis values
+   * @returns {string} Formatted sex variables string
+   */
+  #formatSexVariables(sexVariables) {
+    const parts = ['sex_excitation', 'sex_inhibition']
+      .filter((key) => typeof sexVariables?.[key] === 'number')
+      .map((key) => `${key}: ${sexVariables[key]}`);
+    return parts.join(', ');
+  }
+
+  /**
    * Builds the inner state XML section containing emotional and sexual state.
    * Follows same pattern as #buildPhysicalConditionSection (uses #wrapSection and wrap(tag, content, 2)).
    *
    * @param {object} emotionalState - EmotionalStateDTO from ActorDataExtractor
+   * @param {object} [options] - Formatting options
    * @returns {string} Inner state section XML
    */
-  #buildInnerStateSection(emotionalState) {
+  #buildInnerStateSection(emotionalState, options = {}) {
     const parts = [];
 
     // Always include emotional_state (required due to validation)
@@ -880,6 +922,34 @@ class CharacterDataXmlBuilder {
           2
         )
       );
+    }
+
+    if (options.includeMoodAxes && emotionalState.moodAxes) {
+      const moodAxesText = this.#formatMoodAxes(emotionalState.moodAxes);
+      if (moodAxesText) {
+        parts.push(
+          this.#xmlBuilder.wrap(
+            'mood_axes',
+            this.#xmlBuilder.escape(moodAxesText),
+            2
+          )
+        );
+      }
+    }
+
+    if (options.includeMoodAxes && emotionalState.sexVariables) {
+      const sexVariablesText = this.#formatSexVariables(
+        emotionalState.sexVariables
+      );
+      if (sexVariablesText) {
+        parts.push(
+          this.#xmlBuilder.wrap(
+            'sex_variables',
+            this.#xmlBuilder.escape(sexVariablesText),
+            2
+          )
+        );
+      }
     }
 
     return this.#wrapSection('inner_state', parts);

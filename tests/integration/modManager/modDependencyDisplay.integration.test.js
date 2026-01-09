@@ -298,6 +298,7 @@ describe('Mod Dependency Display Integration', () => {
 
   /**
    * Helper to get mod card element by mod ID
+   *
    * @param {string} modId
    * @returns {HTMLElement|null}
    */
@@ -308,6 +309,7 @@ describe('Mod Dependency Display Integration', () => {
 
   /**
    * Helper to get checkbox element from mod card
+   *
    * @param {string} modId
    * @returns {HTMLInputElement|null}
    */
@@ -318,6 +320,7 @@ describe('Mod Dependency Display Integration', () => {
 
   /**
    * Helper to get badge text from mod card
+   *
    * @param {string} modId
    * @returns {string|null}
    */
@@ -464,6 +467,7 @@ describe('Mod Dependency Display Integration', () => {
   describe('Dependency Name Display', () => {
     /**
      * Helper to get dependencies element from mod card
+     *
      * @param {string} modId
      * @returns {HTMLElement|null}
      */

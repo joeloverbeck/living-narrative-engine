@@ -38,6 +38,8 @@ const OBSERVER_ID = 'npc:observer';
 
 /**
  * Create a minimally-valid log entry for testing.
+ *
+ * @param id
  */
 const makeEntry = (id = '1') => ({
   descriptionText: `Event-${id}`,

@@ -988,7 +988,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
 
           // Entity is not expected to have core:position at all
 
-          // eslint-disable-next-line jest/no-conditional-expect
+           
 
           expect(pos).toBeUndefined();
 

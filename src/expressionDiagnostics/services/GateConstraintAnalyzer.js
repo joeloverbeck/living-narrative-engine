@@ -34,7 +34,7 @@ class GateConstraintAnalyzer {
   #logger;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry for prototype lookups
    * @param {object} deps.logger - ILogger
    */

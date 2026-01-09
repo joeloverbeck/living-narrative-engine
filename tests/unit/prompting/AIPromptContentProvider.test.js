@@ -568,7 +568,9 @@ describe('AIPromptContentProvider', () => {
       expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(
         DEFAULT_FALLBACK_CHARACTER_NAME
       );
-      expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(minimalDto);
+      expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(minimalDto, {
+        includeMoodAxes: false,
+      });
       expect(getWorldContextContentSpy).toHaveBeenCalledWith(minimalDto);
       expect(getAvailableActionsInfoContentSpy).toHaveBeenCalledWith(
         minimalDto
@@ -657,7 +659,9 @@ describe('AIPromptContentProvider', () => {
 
       // Verify that the internal (spied) getter methods were called correctly
       expect(getTaskDefinitionContentSpy).toHaveBeenCalled();
-      expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(fullDto);
+      expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(fullDto, {
+        includeMoodAxes: false,
+      });
       expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(
         testCharName
       );
@@ -756,7 +760,7 @@ describe('AIPromptContentProvider', () => {
         // Verify the builder was called with the actorPromptData
         expect(
           mockCharacterDataXmlBuilder.buildCharacterDataXml
-        ).toHaveBeenCalledWith(dto.actorPromptData);
+        ).toHaveBeenCalledWith(dto.actorPromptData, {});
         // Verify XML output is returned (from mock)
         expect(result).toContain('<character_data>');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
@@ -799,7 +803,7 @@ describe('AIPromptContentProvider', () => {
         // The builder is called with the actorPromptData; builder handles default name internally
         expect(
           mockCharacterDataXmlBuilder.buildCharacterDataXml
-        ).toHaveBeenCalledWith(dto.actorPromptData);
+        ).toHaveBeenCalledWith(dto.actorPromptData, {});
         // Verify we get XML output from the mock
         expect(result).toContain('<character_data>');
       });
@@ -840,7 +844,7 @@ describe('AIPromptContentProvider', () => {
         // Verify builder receives all data; builder handles optional attributes internally
         expect(
           mockCharacterDataXmlBuilder.buildCharacterDataXml
-        ).toHaveBeenCalledWith(dto.actorPromptData);
+        ).toHaveBeenCalledWith(dto.actorPromptData, {});
         // Verify we get XML output from the mock
         expect(result).toContain('<character_data>');
       });

@@ -125,6 +125,9 @@ describe('Damage Application Mechanics', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   *
+   */
   async function seedAnatomy() {
     await entityManager.addComponent(ids.actor, BODY_COMPONENT_ID, {
       recipeId: 'test:humanoid',
@@ -216,6 +219,10 @@ describe('Damage Application Mechanics', () => {
     });
   }
 
+  /**
+   *
+   * @param eventId
+   */
   function getEventPayloads(eventId) {
     return dispatcher.dispatch.mock.calls
       .filter(([id]) => id === eventId)

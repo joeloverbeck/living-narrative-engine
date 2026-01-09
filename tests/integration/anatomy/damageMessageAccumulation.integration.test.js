@@ -1,6 +1,7 @@
 /**
  * Integration tests for Damage Message Accumulation feature.
  * Validates that damage messages are accumulated and composed into unified narratives.
+ *
  * @see specs/injury-reporting-and-user-interface.md
  */
 

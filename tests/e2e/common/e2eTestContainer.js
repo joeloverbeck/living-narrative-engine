@@ -6,7 +6,6 @@
  *
  * Supports optional mod loading for true end-to-end testing against real
  * game content and production services.
- *
  * @see reports/facade-architecture-analysis.md
  */
 
@@ -175,6 +174,7 @@ function createLLMStub(defaultResponse) {
  * Module-level cache for preloaded mod environments.
  * Used to share expensive mod loading across tests in the same file.
  * Key: JSON-stringified mods array, Value: cached registry data snapshot
+ *
  * @type {Map<string, {registrySnapshot: Map<string, Map<string, any>>}>}
  */
 const modEnvironmentCache = new Map();
@@ -187,7 +187,7 @@ const modEnvironmentCache = new Map();
  * via the preloadedModEnvironment option.
  *
  * @param {string[]} mods - Which mods to preload
- * @param {string} [worldName='testworld'] - World name for mod loading context
+ * @param {string} [worldName] - World name for mod loading context
  * @returns {Promise<{registrySnapshot: Map<string, Map<string, any>>}>} Cached mod environment
  * @example
  * let cachedModEnv;
@@ -268,17 +268,16 @@ export function clearModEnvironmentCache() {
  * local filesystem access (no network required).
  *
  * @param {object} options - Configuration options
- * @param {boolean} [options.stubLLM=true] - Whether to stub LLM calls
+ * @param {boolean} [options.stubLLM] - Whether to stub LLM calls
  * @param {object} [options.defaultLLMResponse] - Default LLM stub response
- * @param {boolean} [options.loadMods=false] - Whether to load real mods from filesystem
- * @param {string[]} [options.mods=['core']] - Which mods to load (requires loadMods=true)
- * @param {string} [options.worldName='testworld'] - World name for mod loading context
+ * @param {boolean} [options.loadMods] - Whether to load real mods from filesystem
+ * @param {string[]} [options.mods] - Which mods to load (requires loadMods=true)
+ * @param {string} [options.worldName] - World name for mod loading context
  * @param {object} [options.preloadedModEnvironment] - Cached mod environment from preloadModEnvironment()
  * @returns {Promise<E2ETestEnvironment>} The test environment
  * @example
  * // Basic usage with mock helpers
  * const env = await createE2ETestEnvironment({ stubLLM: true });
- *
  * @example
  * // True e2e with real mods
  * const env = await createE2ETestEnvironment({
@@ -286,7 +285,6 @@ export function clearModEnvironmentCache() {
  *   mods: ['core', 'positioning'],
  *   stubLLM: true
  * });
- *
  * @example
  * // Optimized: Shared mod loading across tests
  * let cachedModEnv;
@@ -392,9 +390,9 @@ export async function createE2ETestEnvironment(options = {}) {
      * Mirrors the facade pattern: entityService.createTestActor({name, location, components})
      *
      * @param {object} config - Actor configuration
-     * @param {string} [config.name='Test Actor'] - Actor name
-     * @param {string} [config.location='test:location'] - Location ID
-     * @param {object} [config.components={}] - Additional components
+     * @param {string} [config.name] - Actor name
+     * @param {string} [config.location] - Location ID
+     * @param {object} [config.components] - Additional components
      * @returns {Promise<string>} Created entity ID
      */
     async createTestActor(config = {}) {
@@ -428,7 +426,7 @@ export async function createE2ETestEnvironment(options = {}) {
      *
      * @param {object} config - Entity configuration
      * @param {string} config.type - Entity definition type
-     * @param {object} [config.initialData={}] - Initial component data
+     * @param {object} [config.initialData] - Initial component data
      * @returns {Promise<string>} Created entity ID
      */
     async createEntity(config = {}) {
@@ -506,7 +504,7 @@ export async function createE2ETestEnvironment(options = {}) {
      * @param {object} config - Action configuration
      * @param {string} config.actionId - Action ID to execute
      * @param {string} config.actorId - Actor performing the action
-     * @param {object} [config.targets={}] - Target entities
+     * @param {object} [config.targets] - Target entities
      * @returns {Promise<object>} Execution result with success property
      */
     async executeAction(config) {

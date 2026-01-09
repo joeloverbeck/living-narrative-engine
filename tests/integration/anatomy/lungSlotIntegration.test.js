@@ -32,6 +32,7 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
 
   /**
    * Creates actor and generates anatomy
+   *
    * @param {string} recipeId
    * @returns {Promise<{id: string, bodyComponent: object}>}
    */
@@ -47,6 +48,7 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
 
   /**
    * Gets lung parts from body component
+   *
    * @param {object} bodyComponent
    * @returns {{left: string|undefined, right: string|undefined}}
    */
@@ -76,6 +78,7 @@ describe('Lung Slot Integration - OXYDROSYS-007', () => {
 
   /**
    * Loads cat folk anatomy assets from disk for real-world regression coverage.
+   *
    * @param {AnatomyIntegrationTestBed} activeTestBed
    */
   async function loadCatFolkRecipeData(activeTestBed) {

@@ -39,7 +39,7 @@ import { hasValidEntityId } from './utils/entityPathResolver.js';
 /** @typedef {import('../locations/services/lightingStateService.js').LightingStateService} LightingStateService */
 
 /**
- * @typedef {Object} OperatorDependencies
+ * @typedef {object} OperatorDependencies
  * @property {IEntityManager} entityManager
  * @property {ILogger} logger
  * @property {BodyGraphService} [bodyGraphService]
@@ -47,11 +47,11 @@ import { hasValidEntityId } from './utils/entityPathResolver.js';
  */
 
 /**
- * @typedef {Object} OperatorInstances
- * @property {Map<string, Object>} operators - Map of operator name to instance
+ * @typedef {object} OperatorInstances
+ * @property {Map<string, object>} operators - Map of operator name to instance
  * @property {IsSocketCoveredOperator} isSocketCoveredOp - Socket covered operator (for external access)
  * @property {SocketExposureOperator} socketExposureOp - Socket exposure operator (for external access)
- * @property {Array<Object>} operatorsWithCaches - Operators that have caches to clear
+ * @property {Array<object>} operatorsWithCaches - Operators that have caches to clear
  */
 
 /**
@@ -76,6 +76,7 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates all operator instances.
+   *
    * @returns {OperatorInstances}
    */
   createOperators() {
@@ -142,6 +143,9 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates body part related operators.
+   *
+   * @param operators
+   * @param deps
    * @private
    */
   #createBodyOperators(operators, deps) {
@@ -156,6 +160,10 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates equipment/slot related operators.
+   *
+   * @param operators
+   * @param deps
+   * @param operatorsWithCaches
    * @private
    * @returns {{ isSocketCoveredOp: IsSocketCoveredOperator, socketExposureOp: SocketExposureOperator }}
    */
@@ -179,6 +187,12 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates accessibility operator (depends on slot/socket operators).
+   *
+   * @param operators
+   * @param deps
+   * @param root0
+   * @param root0.isSlotExposedOp
+   * @param root0.socketExposureOp
    * @private
    */
   #createAccessibilityOperator(operators, deps, { isSlotExposedOp, socketExposureOp }) {
@@ -194,6 +208,9 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates furniture related operators.
+   *
+   * @param operators
+   * @param deps
    * @private
    */
   #createFurnitureOperators(operators, deps) {
@@ -207,6 +224,9 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates component operators.
+   *
+   * @param operators
+   * @param deps
    * @private
    */
   #createComponentOperators(operators, deps) {
@@ -215,6 +235,9 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates grabbing related operators.
+   *
+   * @param operators
+   * @param deps
    * @private
    */
   #createGrabbingOperators(operators, deps) {
@@ -225,6 +248,9 @@ export class OperatorRegistryFactory {
 
   /**
    * Creates lighting related operators.
+   *
+   * @param operators
+   * @param deps
    * @private
    */
   #createLightingOperators(operators, deps) {
@@ -238,6 +264,7 @@ export class OperatorRegistryFactory {
   /**
    * Creates the get_component_value inline function operator.
    * This is a special case - not a class-based operator.
+   *
    * @private
    * @returns {Function}
    */
@@ -279,6 +306,7 @@ export class OperatorRegistryFactory {
 
   /**
    * Gets the list of all operator names that the factory creates.
+   *
    * @returns {string[]}
    */
   static getOperatorNames() {

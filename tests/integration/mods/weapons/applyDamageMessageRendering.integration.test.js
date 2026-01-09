@@ -18,6 +18,7 @@ import { DamageEventMessageRenderer } from '../../../../src/domUI/damageEventMes
 
 /**
  * Creates a mock logger for testing
+ *
  * @returns {object} Mock logger with jest functions
  */
 const createMockLogger = () => ({
@@ -29,6 +30,7 @@ const createMockLogger = () => ({
 
 /**
  * Creates a mock entity manager for testing
+ *
  * @param {object} componentData - Map of entityId -> componentId -> data
  * @returns {object} Mock entity manager
  */

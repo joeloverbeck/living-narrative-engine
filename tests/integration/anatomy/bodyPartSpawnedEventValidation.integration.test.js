@@ -2,7 +2,6 @@
  * @file Integration test for anatomy:body_part_spawned event validation
  * Validates that the event schema accepts null orientation values and
  * that the DismemberedBodyPartSpawner properly awaits entity creation.
- *
  * @see tickets/DISBODPARSPA-000-overview.md
  * @see src/anatomy/services/dismemberedBodyPartSpawner.js
  * @see data/mods/anatomy/events/body_part_spawned.event.json

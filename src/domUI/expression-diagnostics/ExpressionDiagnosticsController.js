@@ -4,6 +4,8 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import DiagnosticResult from '../../expressionDiagnostics/models/DiagnosticResult.js';
+import WitnessState from '../../expressionDiagnostics/models/WitnessState.js';
+import { copyToClipboard } from '../helpers/clipboardUtils.js';
 
 class ExpressionDiagnosticsController {
   #logger;
@@ -13,10 +15,12 @@ class ExpressionDiagnosticsController {
   #monteCarloSimulator;
   #failureExplainer;
   #expressionStatusService;
+  #witnessStateFinder;
 
   #selectedExpression = null;
   #currentResult = null;
   #expressionStatuses = [];
+  #currentWitnessState = null;
 
   // DOM elements
   #expressionSelect;
@@ -41,6 +45,19 @@ class ExpressionDiagnosticsController {
   #blockersTbody;
   // Problematic Expressions DOM elements
   #problematicPillsContainer;
+  // Witness State DOM elements
+  #findWitnessBtn;
+  #witnessStatus;
+  #witnessResults;
+  #witnessResultLabel;
+  #copyWitnessBtn;
+  #moodDisplay;
+  #sexualDisplay;
+  #witnessJsonContent;
+  #violatedClauses;
+  #violatedClausesList;
+  #fitnessFill;
+  #fitnessValue;
 
   constructor({
     logger,
@@ -50,6 +67,7 @@ class ExpressionDiagnosticsController {
     monteCarloSimulator,
     failureExplainer,
     expressionStatusService,
+    witnessStateFinder,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -72,6 +90,9 @@ class ExpressionDiagnosticsController {
     validateDependency(expressionStatusService, 'IExpressionStatusService', logger, {
       requiredMethods: ['scanAllStatuses', 'updateStatus', 'getProblematicExpressions'],
     });
+    validateDependency(witnessStateFinder, 'IWitnessStateFinder', logger, {
+      requiredMethods: ['findWitness'],
+    });
 
     this.#logger = logger;
     this.#expressionRegistry = expressionRegistry;
@@ -80,6 +101,7 @@ class ExpressionDiagnosticsController {
     this.#monteCarloSimulator = monteCarloSimulator;
     this.#failureExplainer = failureExplainer;
     this.#expressionStatusService = expressionStatusService;
+    this.#witnessStateFinder = witnessStateFinder;
   }
 
   async initialize() {
@@ -120,6 +142,19 @@ class ExpressionDiagnosticsController {
     this.#problematicPillsContainer = document.getElementById(
       'problematic-pills-container'
     );
+    // Witness State elements
+    this.#findWitnessBtn = document.getElementById('find-witness-btn');
+    this.#witnessStatus = document.getElementById('witness-status');
+    this.#witnessResults = document.getElementById('witness-results');
+    this.#witnessResultLabel = document.getElementById('witness-result-label');
+    this.#copyWitnessBtn = document.getElementById('copy-witness-btn');
+    this.#moodDisplay = document.getElementById('mood-display');
+    this.#sexualDisplay = document.getElementById('sexual-display');
+    this.#witnessJsonContent = document.getElementById('witness-json-content');
+    this.#violatedClauses = document.getElementById('violated-clauses');
+    this.#violatedClausesList = document.getElementById('violated-clauses-list');
+    this.#fitnessFill = document.getElementById('fitness-fill');
+    this.#fitnessValue = document.getElementById('fitness-value');
   }
 
   #setupEventListeners() {
@@ -133,6 +168,14 @@ class ExpressionDiagnosticsController {
 
     this.#runMcBtn?.addEventListener('click', async () => {
       await this.#runMonteCarloSimulation();
+    });
+
+    this.#findWitnessBtn?.addEventListener('click', async () => {
+      await this.#findWitness();
+    });
+
+    this.#copyWitnessBtn?.addEventListener('click', async () => {
+      await this.#copyWitnessToClipboard();
     });
   }
 
@@ -177,6 +220,7 @@ class ExpressionDiagnosticsController {
       this.#expressionDescription.textContent = '';
       this.#runStaticBtn.disabled = true;
       if (this.#runMcBtn) this.#runMcBtn.disabled = true;
+      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = true;
       this.#resetResults();
       return;
     }
@@ -189,10 +233,12 @@ class ExpressionDiagnosticsController {
         this.#selectedExpression.description || 'No description available';
       this.#runStaticBtn.disabled = false;
       if (this.#runMcBtn) this.#runMcBtn.disabled = false;
+      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = false;
     } else {
       this.#expressionDescription.textContent = 'Expression not found';
       this.#runStaticBtn.disabled = true;
       if (this.#runMcBtn) this.#runMcBtn.disabled = true;
+      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = true;
     }
 
     this.#resetResults();
@@ -206,6 +252,21 @@ class ExpressionDiagnosticsController {
     this.#gateConflictsSection.hidden = true;
     this.#thresholdsSection.hidden = true;
     this.#resetMonteCarloResults();
+    this.#resetWitnessResults();
+  }
+
+  #resetWitnessResults() {
+    this.#currentWitnessState = null;
+    if (this.#witnessResults) this.#witnessResults.hidden = true;
+    if (this.#witnessStatus) this.#witnessStatus.textContent = '';
+    if (this.#witnessResultLabel) this.#witnessResultLabel.textContent = '';
+    if (this.#moodDisplay) this.#moodDisplay.innerHTML = '';
+    if (this.#sexualDisplay) this.#sexualDisplay.innerHTML = '';
+    if (this.#witnessJsonContent) this.#witnessJsonContent.textContent = '';
+    if (this.#violatedClauses) this.#violatedClauses.hidden = true;
+    if (this.#violatedClausesList) this.#violatedClausesList.innerHTML = '';
+    if (this.#fitnessFill) this.#fitnessFill.style.width = '0%';
+    if (this.#fitnessValue) this.#fitnessValue.textContent = '--';
   }
 
   #resetMonteCarloResults() {
@@ -864,6 +925,264 @@ class ExpressionDiagnosticsController {
     } catch (error) {
       this.#logger.error('Failed to persist expression status:', error);
     }
+  }
+
+  // ========== Witness State Methods ==========
+
+  /**
+   * Find a witness state that triggers the selected expression.
+   *
+   * @private
+   */
+  async #findWitness() {
+    if (!this.#selectedExpression) return;
+
+    this.#logger.info(
+      `Finding witness state for: ${this.#selectedExpression.id}`
+    );
+
+    // Disable button and show searching status
+    if (this.#findWitnessBtn) {
+      this.#findWitnessBtn.disabled = true;
+      this.#findWitnessBtn.textContent = 'Searching...';
+    }
+    if (this.#witnessStatus) {
+      this.#witnessStatus.textContent = 'Searching for witness state...';
+    }
+
+    try {
+      const result = await this.#witnessStateFinder.findWitness(
+        this.#selectedExpression,
+        {
+          onProgress: (completed, total) => {
+            if (this.#findWitnessBtn) {
+              const pct = Math.round((completed / total) * 100);
+              this.#findWitnessBtn.textContent = `Searching... ${pct}%`;
+            }
+          },
+        }
+      );
+
+      this.#displayWitnessResult(result);
+    } catch (error) {
+      this.#logger.error('Witness state search failed:', error);
+      if (this.#witnessStatus) {
+        this.#witnessStatus.textContent = `Error: ${error.message}`;
+      }
+    } finally {
+      // Re-enable button
+      if (this.#findWitnessBtn) {
+        this.#findWitnessBtn.disabled = false;
+        this.#findWitnessBtn.textContent = 'Find Witness State';
+      }
+    }
+  }
+
+  /**
+   * Display the witness search result.
+   *
+   * @private
+   * @param {object} result - The search result from WitnessStateFinder
+   */
+  #displayWitnessResult(result) {
+    if (!this.#witnessResults) return;
+
+    this.#witnessResults.hidden = false;
+
+    // Set result label based on whether witness was found
+    if (this.#witnessResultLabel) {
+      if (result.found) {
+        this.#witnessResultLabel.textContent = '✅ Witness Found';
+        this.#witnessResultLabel.className = 'result-label result-found';
+      } else {
+        this.#witnessResultLabel.textContent = '⚠️ Nearest Miss';
+        this.#witnessResultLabel.className = 'result-label result-miss';
+      }
+    }
+
+    // Clear status text since we now have results
+    if (this.#witnessStatus) {
+      this.#witnessStatus.textContent = '';
+    }
+
+    // Get the state to display (witness if found, nearestMiss otherwise)
+    const state = result.found ? result.witness : result.nearestMiss;
+    this.#currentWitnessState = state;
+
+    // Display mood axes
+    if (state) {
+      this.#displayMoodAxes(state.mood);
+      this.#displaySexualAxes(state.sexual);
+
+      // Display JSON
+      if (this.#witnessJsonContent) {
+        this.#witnessJsonContent.textContent = state.toClipboardJSON();
+      }
+    }
+
+    // Display violated clauses if not found
+    if (!result.found && result.violatedClauses?.length > 0) {
+      if (this.#violatedClauses) this.#violatedClauses.hidden = false;
+      if (this.#violatedClausesList) {
+        this.#violatedClausesList.innerHTML = '';
+        for (const clause of result.violatedClauses) {
+          const li = document.createElement('li');
+          li.textContent = clause;
+          this.#violatedClausesList.appendChild(li);
+        }
+      }
+    } else {
+      if (this.#violatedClauses) this.#violatedClauses.hidden = true;
+    }
+
+    // Display fitness
+    this.#displayFitness(result.bestFitness);
+  }
+
+  /**
+   * Display mood axes in the grid.
+   *
+   * @private
+   * @param {object} mood - The mood state object
+   */
+  #displayMoodAxes(mood) {
+    if (!this.#moodDisplay || !mood) return;
+
+    this.#moodDisplay.innerHTML = '';
+
+    for (const axis of WitnessState.MOOD_AXES) {
+      const value = mood[axis];
+      if (value === undefined) continue;
+
+      const item = document.createElement('div');
+      item.className = `axis-item ${this.#getValueClass(value, true)}`;
+      item.innerHTML = `
+        <span class="axis-name">${axis}</span>
+        <span class="axis-value">${value.toFixed(2)}</span>
+      `;
+      this.#moodDisplay.appendChild(item);
+    }
+  }
+
+  /**
+   * Display sexual state axes in the grid.
+   *
+   * @private
+   * @param {object} sexual - The sexual state object
+   */
+  #displaySexualAxes(sexual) {
+    if (!this.#sexualDisplay || !sexual) return;
+
+    this.#sexualDisplay.innerHTML = '';
+
+    for (const axis of WitnessState.SEXUAL_AXES) {
+      const value = sexual[axis];
+      if (value === undefined) continue;
+
+      const item = document.createElement('div');
+      item.className = `axis-item ${this.#getValueClass(value, false)}`;
+      item.innerHTML = `
+        <span class="axis-name">${axis}</span>
+        <span class="axis-value">${value.toFixed(2)}</span>
+      `;
+      this.#sexualDisplay.appendChild(item);
+    }
+  }
+
+  /**
+   * Get CSS class for value color coding.
+   *
+   * @private
+   * @param {number} value - The axis value (0-1)
+   * @param {boolean} isMood - Whether this is a mood axis (vs sexual)
+   * @returns {string} CSS class for color coding
+   */
+  #getValueClass(value, isMood) {
+    // For mood: low (0-0.33), mid (0.34-0.66), high (0.67-1.0)
+    // For sexual: same ranges but different visual meaning
+    const prefix = isMood ? 'mood' : 'sexual';
+    if (value <= 0.33) return `${prefix}-low`;
+    if (value <= 0.66) return `${prefix}-mid`;
+    return `${prefix}-high`;
+  }
+
+  /**
+   * Display fitness score with visual bar.
+   *
+   * @private
+   * @param {number} fitness - The fitness score (0-1)
+   */
+  #displayFitness(fitness) {
+    if (this.#fitnessFill) {
+      const percentage = Math.min(100, Math.max(0, fitness * 100));
+      this.#fitnessFill.style.width = `${percentage}%`;
+
+      // Apply color class based on fitness level
+      this.#fitnessFill.className = 'fitness-fill';
+      if (fitness >= 1.0) {
+        this.#fitnessFill.classList.add('fitness-perfect');
+      } else if (fitness >= 0.8) {
+        this.#fitnessFill.classList.add('fitness-high');
+      } else if (fitness >= 0.5) {
+        this.#fitnessFill.classList.add('fitness-medium');
+      } else {
+        this.#fitnessFill.classList.add('fitness-low');
+      }
+    }
+
+    if (this.#fitnessValue) {
+      this.#fitnessValue.textContent = fitness.toFixed(3);
+    }
+  }
+
+  /**
+   * Copy current witness state to clipboard.
+   * Uses the centralized clipboard utility for fallback support.
+   *
+   * @private
+   */
+  async #copyWitnessToClipboard() {
+    if (!this.#currentWitnessState) {
+      this.#showCopyFeedback('No witness state to copy');
+      return;
+    }
+
+    const json = this.#currentWitnessState.toClipboardJSON();
+    const success = await copyToClipboard(json);
+    this.#showCopyFeedback(success ? 'Copied to clipboard!' : 'Copy failed');
+  }
+
+  /**
+   * Show temporary feedback message for copy operation.
+   * Immediately displays the feedback toast with accessibility support.
+   *
+   * @private
+   * @param {string} message - The message to display
+   */
+  #showCopyFeedback(message) {
+    // Create toast element with accessibility attributes
+    const toast = document.createElement('div');
+    toast.className = 'copy-feedback show';
+    toast.textContent = message;
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+
+    // Find witness panel to position toast relative to it
+    const witnessPanel = document.getElementById('witness-section');
+    if (witnessPanel) {
+      witnessPanel.appendChild(toast);
+    } else {
+      document.body.appendChild(toast);
+    }
+
+    // Remove after visible duration
+    setTimeout(() => {
+      toast.classList.remove('show');
+      // Remove element after fade-out transition completes
+      toast.addEventListener('transitionend', () => toast.remove(), {
+        once: true,
+      });
+    }, 2000);
   }
 }
 

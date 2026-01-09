@@ -19,6 +19,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * Damage severity thresholds for CSS class assignment.
+ *
  * @type {Readonly<{MINOR: number, MODERATE: number, SEVERE: number}>}
  */
 const SEVERITY_THRESHOLDS = Object.freeze({
@@ -187,7 +188,7 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
    * Determines the CSS class based on damage severity.
    *
    * @private
-   * @param {number} [damageAmount=0] - The amount of damage.
+   * @param {number} [damageAmount] - The amount of damage.
    * @returns {string} The CSS class string.
    */
   #getSeverityCssClass(damageAmount = 0) {

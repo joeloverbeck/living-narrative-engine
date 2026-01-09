@@ -43,12 +43,12 @@ export class TargetComponentValidator {
   }
 
   /**
-   * @typedef {Object} TargetComponentValidationResult
+   * @typedef {object} TargetComponentValidationResult
    * @property {boolean} valid
    * @property {string} [reason]
    * @property {object} [filteredTargets]
    * @property {Array<{role: string, targetId: string|null, component: string|null}>} [removedTargets]
-   * @property {Object} [details] - Only present when includeDetails: true
+   * @property {object} [details] - Only present when includeDetails: true
    * @property {Array<{entityId: string, forbiddenComponentsPresent: string[]}>} [details.rejectedEntities]
    * @property {string} [details.targetRole]
    */
@@ -58,8 +58,8 @@ export class TargetComponentValidator {
    *
    * @param {object} actionDef - Action definition with forbidden_components
    * @param {object} targetEntities - Object with target entities by role
-   * @param {Object} [options] - Validation options
-   * @param {boolean} [options.includeDetails=false] - Include detailed rejection info
+   * @param {object} [options] - Validation options
+   * @param {boolean} [options.includeDetails] - Include detailed rejection info
    * @returns {TargetComponentValidationResult} Validation result
    */
   validateTargetComponents(actionDef, targetEntities, options = {}) {
@@ -133,8 +133,8 @@ export class TargetComponentValidator {
    *
    * @param {Entity|object} entity - Entity to validate
    * @param {Array<string>} forbiddenComponents - List of forbidden component IDs
-   * @param {Object} [options] - Validation options
-   * @param {boolean} [options.includeAllForbidden=false] - If true, collect all forbidden components instead of stopping at first
+   * @param {object} [options] - Validation options
+   * @param {boolean} [options.includeAllForbidden] - If true, collect all forbidden components instead of stopping at first
    * @returns {{valid: boolean, component?: string, forbiddenComponentsPresent?: string[]}} Validation result
    */
   validateEntityComponents(entity, forbiddenComponents, options = {}) {

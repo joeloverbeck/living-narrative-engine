@@ -10,7 +10,7 @@
 // ============================================================================
 
 /**
- * @typedef {Object} PerceptionTypeMetadata
+ * @typedef {object} PerceptionTypeMetadata
  * @property {string} type - The canonical type identifier (e.g., 'communication.speech')
  * @property {string} category - The category this type belongs to
  * @property {string} displayLabel - Human-readable label
@@ -24,6 +24,7 @@
 /**
  * Registry of all valid perception types with their metadata.
  * New types use dotted notation: category.type
+ *
  * @type {Object<string, PerceptionTypeMetadata>}
  */
 export const PERCEPTION_TYPE_REGISTRY = {
@@ -428,7 +429,7 @@ export const PERCEPTION_TYPE_REGISTRY = {
 // ============================================================================
 
 /**
- * @typedef {Object} PerceptionCategoryMetadata
+ * @typedef {object} PerceptionCategoryMetadata
  * @property {string} displayLabel - Human-readable category name
  * @property {string} cssClassPrefix - CSS class prefix for category styling
  * @property {string} themeColor - Hex color for theming (WCAG AA compliant)
@@ -437,6 +438,7 @@ export const PERCEPTION_TYPE_REGISTRY = {
 /**
  * Registry of perception categories with theming metadata.
  * Colors are WCAG AA compliant on parchment background (#fff8e6).
+ *
  * @type {Object<string, PerceptionCategoryMetadata>}
  */
 export const PERCEPTION_CATEGORIES = {
@@ -524,6 +526,7 @@ export const PERCEPTION_CATEGORIES = {
 /**
  * Build legacy type lookup from registry.
  * Maps legacy snake_case types to new dotted types.
+ *
  * @type {Map<string, string>}
  */
 const LEGACY_TYPE_MAP = new Map();
@@ -546,6 +549,7 @@ LEGACY_TYPE_MAP.set('action_target_general', 'physical.target_action');
 
 /**
  * Check if a perception type is valid (either new or legacy).
+ *
  * @param {string} type - The perception type to validate
  * @returns {boolean} True if the type is valid
  */
@@ -558,6 +562,7 @@ export function isValidPerceptionType(type) {
 
 /**
  * Check if a perception type is a new-format type (dotted notation).
+ *
  * @param {string} type - The perception type to check
  * @returns {boolean} True if the type uses new dotted notation
  */
@@ -567,6 +572,7 @@ export function isNewFormatType(type) {
 
 /**
  * Check if a perception type is a legacy type.
+ *
  * @param {string} type - The perception type to check
  * @returns {boolean} True if the type is a legacy format
  */
@@ -577,6 +583,7 @@ export function isLegacyType(type) {
 /**
  * Get metadata for a perception type.
  * Automatically resolves legacy types to their new equivalents.
+ *
  * @param {string} type - The perception type
  * @returns {PerceptionTypeMetadata|null} The metadata or null if not found
  */
@@ -599,6 +606,7 @@ export function getPerceptionTypeMetadata(type) {
 
 /**
  * Get metadata for a perception category.
+ *
  * @param {string} category - The category name
  * @returns {PerceptionCategoryMetadata|null} The metadata or null if not found
  */
@@ -608,6 +616,7 @@ export function getCategoryMetadata(category) {
 
 /**
  * Get the new type mapping for a legacy type.
+ *
  * @param {string} legacyType - The legacy type name
  * @returns {string|null} The new type name or null if not a legacy type
  */
@@ -624,6 +633,7 @@ export function getLegacyTypeMapping(legacyType) {
 
 /**
  * Get all valid new-format perception types.
+ *
  * @returns {string[]} Array of all valid type identifiers
  */
 export function getAllValidTypes() {
@@ -632,6 +642,7 @@ export function getAllValidTypes() {
 
 /**
  * Get all types in a specific category.
+ *
  * @param {string} category - The category name
  * @returns {string[]} Array of type identifiers in the category
  */
@@ -643,6 +654,7 @@ export function getTypesByCategory(category) {
 
 /**
  * Get all category names.
+ *
  * @returns {string[]} Array of category names
  */
 export function getAllCategories() {
@@ -652,6 +664,7 @@ export function getAllCategories() {
 /**
  * Suggest the nearest valid type for an invalid type.
  * Uses simple string matching heuristics.
+ *
  * @param {string} invalidType - The invalid type to find suggestions for
  * @returns {string|null} The suggested type or null if no good match
  */
@@ -712,6 +725,7 @@ export function suggestNearestType(invalidType) {
 /**
  * Normalize a perception type to its canonical new-format form.
  * Converts legacy types to new format; returns new types unchanged.
+ *
  * @param {string} type - The perception type
  * @returns {string|null} The normalized type or null if invalid
  */
@@ -730,6 +744,7 @@ export function normalizePerceptionType(type) {
 
 /**
  * Get CSS classes for a perception type (both type and category classes).
+ *
  * @param {string} type - The perception type
  * @returns {{typeClass: string|null, categoryClass: string|null}} CSS class names
  */
@@ -753,6 +768,7 @@ export function getCssClasses(type) {
 /**
  * Get the primary sense required for a perception type.
  * Automatically resolves legacy types to their new equivalents.
+ *
  * @param {string} type - Perception type (new or legacy format)
  * @returns {string|null} Primary sense category or null if type not found
  */
@@ -764,6 +780,7 @@ export function getPrimarySense(type) {
 /**
  * Get fallback senses for a perception type.
  * Automatically resolves legacy types to their new equivalents.
+ *
  * @param {string} type - Perception type (new or legacy format)
  * @returns {string[]} Array of fallback senses in priority order, empty array if type not found
  */
@@ -774,6 +791,7 @@ export function getFallbackSenses(type) {
 
 /**
  * Check if perception type requires visual sense as primary.
+ *
  * @param {string} type - Perception type
  * @returns {boolean} True if visual is the primary sense, false otherwise
  */
@@ -783,6 +801,7 @@ export function requiresVisual(type) {
 
 /**
  * Check if perception type is omniscient (always delivered regardless of senses).
+ *
  * @param {string} type - Perception type
  * @returns {boolean} True if omniscient (error types), false otherwise
  */

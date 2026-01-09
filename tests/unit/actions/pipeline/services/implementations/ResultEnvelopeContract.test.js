@@ -4,6 +4,9 @@ import { PipelineResult } from '../../../../../../src/actions/pipeline/PipelineR
 import { TargetResolutionService } from '../../../../../../src/actions/targetResolutionService.js';
 import { ActionResult } from '../../../../../../src/actions/core/actionResult.js';
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     debug: jest.fn(),
@@ -13,6 +16,9 @@ function createMockLogger() {
   };
 }
 
+/**
+ *
+ */
 function createCoordinator() {
   return new TargetResolutionCoordinator({
     dependencyResolver: {

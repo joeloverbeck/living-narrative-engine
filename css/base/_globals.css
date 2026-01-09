@@ -11,6 +11,7 @@ body {
   flex-direction: column;
   min-height: 100vh;
   overflow-y: auto;
+  padding-bottom: var(--footer-height); /* Reserve space for fixed footer */
 }
 
 @media (max-width: 1024px) {

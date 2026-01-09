@@ -25,6 +25,10 @@ const CREATURE_DEFINITIONS_PATH = path.resolve(
   'data/mods/anatomy-creatures/entities/definitions'
 );
 
+/**
+ *
+ * @param filename
+ */
 function resolveDefinitionPath(filename) {
   const creaturePath = path.join(CREATURE_DEFINITIONS_PATH, filename);
   if (fs.existsSync(creaturePath)) {

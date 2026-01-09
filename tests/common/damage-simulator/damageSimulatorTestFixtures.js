@@ -66,7 +66,8 @@ export const TEST_ENTITY_IDS = Object.freeze({
 
 /**
  * Creates a mock logger matching the ILogger interface
- * @returns {Object} Mock logger with jest.fn() for each method
+ *
+ * @returns {object} Mock logger with jest.fn() for each method
  */
 export function createMockLogger() {
   return {
@@ -79,7 +80,8 @@ export function createMockLogger() {
 
 /**
  * Creates a mock event dispatcher
- * @returns {Object} Mock dispatcher with jest.fn() dispatch method
+ *
+ * @returns {object} Mock dispatcher with jest.fn() dispatch method
  */
 export function createMockDispatcher() {
   return {
@@ -91,7 +93,8 @@ export function createMockDispatcher() {
 
 /**
  * Creates mock anatomy data for testing
- * @returns {Object} Anatomy data with parts array
+ *
+ * @returns {object} Anatomy data with parts array
  */
 export function createMockAnatomyData() {
   return {
@@ -135,10 +138,11 @@ export function createMockAnatomyData() {
 /**
  * Seeds a SimpleEntityManager with test anatomy data.
  * Follows the pattern from damage-application.integration.test.js
+ *
  * @param {SimpleEntityManager} entityManager - Entity manager to seed
- * @param {Object} [options] - Configuration options
+ * @param {object} [options] - Configuration options
  * @param {string} [options.actorId] - Actor entity ID
- * @returns {Promise<Object>} Object containing entity IDs
+ * @returns {Promise<object>} Object containing entity IDs
  */
 export async function seedTestAnatomy(entityManager, options = {}) {
   const ids = {
@@ -218,7 +222,8 @@ export async function seedTestAnatomy(entityManager, options = {}) {
 /**
  * Creates a damage simulator test context with real services and mocked boundaries.
  * This is the main entry point for integration tests.
- * @returns {Promise<Object>} Test context with services and cleanup function
+ *
+ * @returns {Promise<object>} Test context with services and cleanup function
  */
 export async function createDamageSimulatorTestContext() {
   const logger = createMockLogger();
@@ -240,6 +245,7 @@ export async function createDamageSimulatorTestContext() {
 
 /**
  * Helper function to wait for a specified duration
+ *
  * @param {number} ms - Milliseconds to wait
  * @returns {Promise<void>}
  */
@@ -249,8 +255,9 @@ export function delay(ms) {
 
 /**
  * Creates a valid simulation configuration for MultiHitSimulator
- * @param {Object} [overrides] - Configuration overrides
- * @returns {Object} Simulation configuration
+ *
+ * @param {object} [overrides] - Configuration overrides
+ * @returns {object} Simulation configuration
  */
 export function createSimulationConfig(overrides = {}) {
   return {
@@ -267,7 +274,8 @@ export function createSimulationConfig(overrides = {}) {
 
 /**
  * Mock hit probability weight utilities for testing
- * @returns {Object} Mock hitProbabilityWeightUtils
+ *
+ * @returns {object} Mock hitProbabilityWeightUtils
  */
 export function createMockHitProbabilityWeightUtils() {
   return {

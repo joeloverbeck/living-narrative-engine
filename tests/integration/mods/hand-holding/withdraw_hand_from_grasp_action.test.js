@@ -13,6 +13,7 @@ import holdHandAction from '../../../../data/mods/hand-holding/actions/hold_hand
 
 /**
  * Helper function to check if an entity has hand anatomy parts.
+ *
  * @param {object} entity - The entity to check
  * @param {object} entityManager - The entity manager instance
  * @returns {boolean} True if the entity has hand body parts

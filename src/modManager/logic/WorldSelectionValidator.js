@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {Object} WorldValidationResult
+ * @typedef {object} WorldValidationResult
  * @property {boolean} valid - Whether current selection is still valid
  * @property {string|null} selectedWorld - Current or suggested world
  * @property {string|null} previousWorld - World that was invalidated
@@ -13,8 +13,8 @@
  */
 
 /**
- * @typedef {Object} WorldSelectionValidatorOptions
- * @property {Object} logger
+ * @typedef {object} WorldSelectionValidatorOptions
+ * @property {object} logger
  * @property {import('../services/WorldDiscoveryService.js').WorldDiscoveryService} worldDiscoveryService
  */
 
@@ -41,6 +41,7 @@ export class WorldSelectionValidator {
 
   /**
    * Validate and potentially update world selection after mod changes
+   *
    * @param {string} currentWorld - Currently selected world ID
    * @param {string[]} newActiveMods - New list of active mods (load order)
    * @returns {Promise<WorldValidationResult>}
@@ -94,6 +95,7 @@ export class WorldSelectionValidator {
 
   /**
    * Validate a specific world selection
+   *
    * @param {string} worldId - World ID to validate
    * @param {string[]} activeMods - Current active mods
    * @returns {Promise<{valid: boolean, error: string|null}>}
@@ -128,6 +130,7 @@ export class WorldSelectionValidator {
 
   /**
    * Check if a world would become invalid if a mod is deactivated
+   *
    * @param {string} worldId - Currently selected world
    * @param {string} modToDeactivate - Mod being deactivated
    * @returns {boolean}
@@ -143,6 +146,7 @@ export class WorldSelectionValidator {
 
   /**
    * Select the best alternative world
+   *
    * @param {string} previousWorld - World that was invalidated
    * @param {import('../services/WorldDiscoveryService.js').WorldInfo[]} availableWorlds
    * @returns {import('../services/WorldDiscoveryService.js').WorldInfo}
@@ -175,6 +179,7 @@ export class WorldSelectionValidator {
 
   /**
    * Extract world name from ID for display
+   *
    * @param {string} worldId
    * @returns {string}
    */
@@ -185,6 +190,7 @@ export class WorldSelectionValidator {
 
   /**
    * Get warning message if deactivating a mod would affect world selection
+   *
    * @param {string} currentWorld - Currently selected world
    * @param {string} modToDeactivate - Mod being deactivated
    * @param {string[]} remainingMods - Mods that would remain active

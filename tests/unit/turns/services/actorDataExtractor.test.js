@@ -29,6 +29,7 @@ const DEFAULT_DESCRIPTION = 'No description available.'; // Already ends with a 
 
 /**
  * Creates default mood component data for tests.
+ *
  * @returns {object} Mood component data
  */
 function createMoodComponent() {
@@ -45,6 +46,7 @@ function createMoodComponent() {
 
 /**
  * Creates default sexual state component data for tests.
+ *
  * @returns {object} Sexual state component data
  */
 function createSexualStateComponent() {
@@ -57,6 +59,7 @@ function createSexualStateComponent() {
 
 /**
  * Creates a mock emotionCalculatorService with default return values.
+ *
  * @returns {object} Mock emotion calculator service
  */
 function createMockEmotionCalculatorService() {
@@ -71,6 +74,7 @@ function createMockEmotionCalculatorService() {
 
 /**
  * Creates a minimal valid actor state with required emotional components.
+ *
  * @param {object} [overrides] - Additional component overrides
  * @returns {object} Actor state
  */

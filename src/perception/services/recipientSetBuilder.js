@@ -2,7 +2,6 @@
  * @file RecipientSetBuilder
  *
  * Builds recipient sets for perception events, centralizing routing logic.
- *
  * @see specs/perception_event_logging_refactor.md - R3: Recipient Set Building Extraction
  */
 
@@ -48,7 +47,7 @@ class RecipientSetBuilder {
    * @param {string[]} [options.explicitRecipients] - Explicit recipient list
    * @param {string[]} [options.excludedActors] - Actors to exclude
    * @param {string} [options.traceId] - For logging correlation
-   * @param {boolean} [options.deterministic=false] - When true, return sorted array
+   * @param {boolean} [options.deterministic] - When true, return sorted array
    * @returns {RecipientSetResult}
    */
   build({

@@ -58,7 +58,7 @@ export class ActionExecutionTracingTestBed {
     }
 
     // Create e2e test environment with container-based services
-    // eslint-disable-next-line no-undef
+     
     this.env = await createE2ETestEnvironment({ stubLLM: true });
 
     // Create facade-compatible interface using environment services and helpers

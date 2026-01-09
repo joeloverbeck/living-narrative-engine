@@ -28,19 +28,19 @@ import {
 } from '../../common/damage-simulator/damageSimulatorTestFixtures.js';
 
 describe('Analytics Accuracy', () => {
-  /** @type {Object} */
+  /** @type {object} */
   let logger;
-  /** @type {Object} */
+  /** @type {object} */
   let dispatcher;
   /** @type {DamageAnalyticsPanel} */
   let analyticsPanel;
   /** @type {HitProbabilityCalculator} */
   let hitCalculator;
-  /** @type {Object} */
+  /** @type {object} */
   let anatomyData;
   /** @type {HTMLElement} */
   let container;
-  /** @type {Object} */
+  /** @type {object} */
   let hitProbabilityWeightUtils;
 
   beforeEach(() => {

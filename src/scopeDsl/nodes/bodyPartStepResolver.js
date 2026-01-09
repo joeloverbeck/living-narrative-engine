@@ -30,6 +30,7 @@ export default function createBodyPartStepResolver({
 
   /**
    * Mapping of recognized body part field names to their modes
+   *
    * @type {Object<string, string>}
    */
   const BODY_PART_FIELDS = {

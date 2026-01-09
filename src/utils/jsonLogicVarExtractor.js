@@ -39,14 +39,12 @@ export function extractVarPath(node) {
  * Traverses the entire expression tree to find all `{ "var": "..." }` nodes.
  *
  * @param {*} node - JSON Logic node to traverse
- * @param {string[]} [paths=[]] - Accumulator array for collected paths
+ * @param {string[]} [paths] - Accumulator array for collected paths
  * @returns {string[]} Array of all variable paths found in the expression
- *
  * @example
  * // Simple comparison
  * collectVarPaths({ ">=": [{ "var": "emotions.joy" }, 0.5] });
  * // Returns: ["emotions.joy"]
- *
  * @example
  * // Complex AND logic
  * collectVarPaths({

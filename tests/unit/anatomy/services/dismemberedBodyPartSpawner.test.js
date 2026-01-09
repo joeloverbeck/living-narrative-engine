@@ -229,6 +229,8 @@ describe('DismemberedBodyPartSpawner', () => {
     /**
      * Helper to create event structure matching what the event bus dispatches.
      * The event bus wraps payloads with { type, payload } structure.
+     *
+     * @param payload
      */
     const createEvent = (payload) => ({
       type: 'anatomy:dismembered',

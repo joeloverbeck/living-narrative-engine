@@ -11,6 +11,10 @@ const DEFAULT_ROLLS = 200000;
 const DEFAULT_SIGMA = 5;
 const DEFAULT_CHANCES = [10, 30, 50, 60, 80, 95];
 
+/**
+ *
+ * @param argv
+ */
 function parseArgs(argv) {
   const args = new Map();
   for (const token of argv) {
@@ -27,16 +31,30 @@ function parseArgs(argv) {
   return args;
 }
 
+/**
+ *
+ * @param value
+ * @param fallback
+ */
 function parseNumber(value, fallback) {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ *
+ * @param value
+ * @param fallback
+ */
 function parseFloatValue(value, fallback) {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ *
+ * @param value
+ */
 function parseChances(value) {
   if (!value) {
     return DEFAULT_CHANCES;
@@ -48,12 +66,24 @@ function parseChances(value) {
   return filtered.length > 0 ? filtered : DEFAULT_CHANCES;
 }
 
+/**
+ *
+ * @param p
+ * @param trials
+ * @param sigma
+ */
 function sigmaBound(p, trials, sigma) {
   const variance = p * (1 - p);
   const std = Math.sqrt(variance / trials);
   return sigma * std;
 }
 
+/**
+ *
+ * @param observed
+ * @param expected
+ * @param std
+ */
 function zScore(observed, expected, std) {
   if (std === 0) {
     return 0;
@@ -61,10 +91,21 @@ function zScore(observed, expected, std) {
   return (observed - expected) / std;
 }
 
+/**
+ *
+ * @param value
+ */
 function formatPercent(value) {
   return `${(value * 100).toFixed(3)}%`;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.trials
+ * @param root0.sigma
+ * @param root0.chances
+ */
 function runChanceTests({ trials, sigma, chances }) {
   const failures = [];
 
@@ -153,6 +194,12 @@ function runChanceTests({ trials, sigma, chances }) {
   return failures;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.rolls
+ * @param root0.sigma
+ */
 function runRollUniformityTest({ rolls, sigma }) {
   const counts = new Array(101).fill(0);
   let sum = 0;
@@ -245,6 +292,9 @@ function runRollUniformityTest({ rolls, sigma }) {
   return failures;
 }
 
+/**
+ *
+ */
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const trials = parseNumber(args.get('trials'), DEFAULT_TRIALS);

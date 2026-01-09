@@ -583,7 +583,7 @@ class InjuryAggregationService extends BaseService {
   /**
    * Gets weight for health calculation from part info.
    *
-   * @param {Object} partInfo - Part info object with healthCalculationWeight
+   * @param {object} partInfo - Part info object with healthCalculationWeight
    * @returns {number} Weight value (defaults to 1 if not specified)
    * @private
    */

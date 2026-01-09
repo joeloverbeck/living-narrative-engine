@@ -9,7 +9,6 @@
  *
  * Note: Humanoid utility entity tests are in:
  * tests/integration/mods/anatomy/utilityEntityWeightValidation.test.js
- *
  * @see tickets/DISBODPARSPA-015-weight-utility.md
  */
 

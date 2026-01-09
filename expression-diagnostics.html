@@ -43,9 +43,11 @@
           <button id="run-static-btn" class="action-button" disabled>
             Run Static Analysis
           </button>
+          <button id="find-witness-btn" class="action-button" disabled>
+            Find Witness State
+          </button>
           <!-- Future buttons will be added here -->
           <!-- <button id="run-monte-carlo-btn">Run Monte Carlo</button> -->
-          <!-- <button id="find-witness-btn">Find Witness</button> -->
           <!-- <button id="run-all-btn">Run All</button> -->
         </div>
       </section>
@@ -150,6 +152,56 @@
               </thead>
               <tbody id="blockers-tbody"></tbody>
             </table>
+          </div>
+        </section>
+
+        <!-- Witness State Section -->
+        <section class="panel witness-panel" id="witness-section">
+          <h2>Witness State Finder</h2>
+          <p class="section-description">
+            Find a concrete state that would trigger this expression.
+          </p>
+
+          <div class="witness-controls">
+            <span id="witness-status" class="status-text"></span>
+          </div>
+
+          <div id="witness-results" class="results-container" hidden>
+            <div class="witness-header">
+              <span id="witness-result-label" class="result-label"></span>
+              <button id="copy-witness-btn" class="btn btn-secondary btn-small">
+                Copy to Clipboard
+              </button>
+            </div>
+
+            <div class="witness-content">
+              <h3>Mood Axes</h3>
+              <div id="mood-display" class="axis-grid">
+                <!-- Populated dynamically -->
+              </div>
+
+              <h3>Sexual State</h3>
+              <div id="sexual-display" class="axis-grid">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <div id="witness-json" class="json-display">
+              <pre id="witness-json-content"></pre>
+            </div>
+
+            <div id="violated-clauses" class="violated-clauses" hidden>
+              <h4>Violated Clauses (Nearest Miss)</h4>
+              <ul id="violated-clauses-list"></ul>
+            </div>
+
+            <div id="fitness-display" class="fitness-display">
+              <label>Fitness Score:</label>
+              <div class="fitness-bar">
+                <div id="fitness-fill" class="fitness-fill"></div>
+              </div>
+              <span id="fitness-value">--</span>
+            </div>
           </div>
         </section>
       </div>

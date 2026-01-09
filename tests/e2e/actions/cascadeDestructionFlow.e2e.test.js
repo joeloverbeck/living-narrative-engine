@@ -173,6 +173,11 @@ describe('cascade destruction flow e2e', () => {
     );
   });
 
+  /**
+   *
+   * @param type
+   * @param predicate
+   */
   function findEvent(type, predicate) {
     return dispatchedEvents.find((event) => {
       if (event.type !== type) return false;
@@ -183,6 +188,11 @@ describe('cascade destruction flow e2e', () => {
     });
   }
 
+  /**
+   *
+   * @param type
+   * @param partId
+   */
   function findEventIndex(type, partId = null) {
     return dispatchedEvents.findIndex((event) => {
       if (event.type !== type) return false;
@@ -191,6 +201,11 @@ describe('cascade destruction flow e2e', () => {
     });
   }
 
+  /**
+   *
+   * @param partId
+   * @param expectedHealth
+   */
   function expectPartHealth(partId, expectedHealth) {
     const health = entityManager.getComponentData(
       partId,
@@ -199,6 +214,9 @@ describe('cascade destruction flow e2e', () => {
     expect(health.currentHealth).toBe(expectedHealth);
   }
 
+  /**
+   *
+   */
   function buildExecutionContext() {
     return {
       evaluationContext: { context: {} },
@@ -206,6 +224,10 @@ describe('cascade destruction flow e2e', () => {
     };
   }
 
+  /**
+   *
+   * @param registry
+   */
   function registerEntityDefinitions(registry) {
     if (!registry.get('entityDefinitions', 'test:actor')) {
       registry.store(
@@ -229,6 +251,10 @@ describe('cascade destruction flow e2e', () => {
     }
   }
 
+  /**
+   *
+   * @param validator
+   */
   async function registerAnatomySchemas(validator) {
     const schemaIds = [
       ANATOMY_BODY_COMPONENT_ID,
@@ -257,6 +283,10 @@ describe('cascade destruction flow e2e', () => {
     }
   }
 
+  /**
+   *
+   * @param options
+   */
   async function createActorWithTorsoOrgans(options = {}) {
     const { healthOverrides = {}, vitalOrgans = {} } = options;
     const ids = partsByName();
@@ -326,6 +356,10 @@ describe('cascade destruction flow e2e', () => {
     };
   }
 
+  /**
+   *
+   * @param instanceId
+   */
   async function createActorEntity(instanceId) {
     const actor = await entityManager.createEntityInstance('test:actor', {
       instanceId,
@@ -333,6 +367,10 @@ describe('cascade destruction flow e2e', () => {
     return actor.id;
   }
 
+  /**
+   *
+   * @param instanceId
+   */
   async function createPartEntity(instanceId) {
     const part = await entityManager.createEntityInstance('test:part', {
       instanceId,
@@ -340,6 +378,12 @@ describe('cascade destruction flow e2e', () => {
     return part.id;
   }
 
+  /**
+   *
+   * @param actorId
+   * @param rootPartId
+   * @param partsMap
+   */
   async function addActorMetadata(actorId, rootPartId, partsMap) {
     await entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
       text: 'Test Actor',
@@ -358,6 +402,11 @@ describe('cascade destruction flow e2e', () => {
     });
   }
 
+  /**
+   *
+   * @param partId
+   * @param options
+   */
   async function addPart(partId, options) {
     const {
       subType,
@@ -393,6 +442,10 @@ describe('cascade destruction flow e2e', () => {
     }
   }
 
+  /**
+   *
+   * @param currentHealthOverride
+   */
   function buildHealthData(currentHealthOverride) {
     const maxHealth = 100;
     const currentHealth =
@@ -407,6 +460,9 @@ describe('cascade destruction flow e2e', () => {
     };
   }
 
+  /**
+   *
+   */
   function partsByName() {
     return {
       torso: 'part-torso',

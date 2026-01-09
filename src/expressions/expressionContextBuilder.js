@@ -124,6 +124,7 @@ class ExpressionContextBuilder {
    *
    * @param {Map<string, number>} stateMap
    * @param {'emotions'|'sexualStates'} kind
+   * @param expectedKeys
    * @private
    */
   #assertStateCoverage(stateMap, kind, expectedKeys) {
@@ -172,7 +173,7 @@ class ExpressionContextBuilder {
    * @param {object|Map<string, number>|null} previousValues
    * @param {string[]} expectedKeys
    * @param {string} label
-   * @param {string} [sourceLabel='prototype lookup']
+   * @param {string} [sourceLabel]
    * @returns {Record<string, number>}
    * @private
    */

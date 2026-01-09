@@ -7,7 +7,6 @@
  * - Uses shared container pattern (beforeAll instead of beforeEach)
  * - Skips async config loading (loadAndApplyLoggerConfig, loadAndApplyTraceConfig)
  * - Tests only verify service resolution, not config loading behavior
- *
  * @see tests/integration/configuration/OPTIMIZATION.md
  * @see tests/common/configuration/containerConfigTestHelpers.js
  */
@@ -48,7 +47,7 @@ describe('Dependency Injection Container Configuration', () => {
     container = await createContainerConfigTestContainer();
 
     setupTime = monitor.end();
-    // eslint-disable-next-line no-console
+     
     console.log(`[containerConfig.test] Container setup took ${setupTime.toFixed(2)}ms`);
   });
 

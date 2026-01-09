@@ -337,6 +337,7 @@ describe('handle_punch_target rule', () => {
   describe('attack tracking (attack-states:attacked_by)', () => {
     /**
      * Helper to find the attack tracking operations in a branch
+     *
      * @param {Array} actions - The then_actions array from a branch
      * @returns {{ conditionalAdd: object|undefined, modifyArray: object|undefined }}
      */

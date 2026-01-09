@@ -96,6 +96,8 @@ function createTestLogger() {
 
 /**
  * Factory for ActionLoader with test dependencies
+ *
+ * @param fileMap
  */
 function createActionLoader(fileMap) {
   const logger = createTestLogger();

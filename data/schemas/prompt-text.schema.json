@@ -10,7 +10,9 @@
     "nc21ContentPolicyText": { "type": "string" },
     "finalLlmInstructionText": { "type": "string" },
     "actionTagRulesContent": { "type": "string" },
-    "moodUpdateOnlyInstructionText": { "type": "string" }
+    "moodUpdateOnlyInstructionText": { "type": "string" },
+    "moodUpdateTaskDefinitionText": { "type": "string" },
+    "moodUpdatePortrayalGuidelinesTemplate": { "type": "string" }
   },
   "required": [
     "coreTaskDescriptionText",
@@ -18,7 +20,9 @@
     "nc21ContentPolicyText",
     "finalLlmInstructionText",
     "actionTagRulesContent",
-    "moodUpdateOnlyInstructionText"
+    "moodUpdateOnlyInstructionText",
+    "moodUpdateTaskDefinitionText",
+    "moodUpdatePortrayalGuidelinesTemplate"
   ],
   "additionalProperties": false
 }

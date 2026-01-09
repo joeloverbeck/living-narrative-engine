@@ -67,6 +67,16 @@ export const VITAL_ORGAN_TYPES = new Set(
 
 /**
  * Instantiates an authored part definition into an entity object.
+ *
+ * @param definition
+ * @param id
+ * @param root0
+ * @param root0.parentId
+ * @param root0.socketId
+ * @param root0.healthOverride
+ * @param root0.killOnDestroy
+ * @param root0.name
+ * @param root0.extraComponents
  */
 export const instantiatePart = (
   definition,

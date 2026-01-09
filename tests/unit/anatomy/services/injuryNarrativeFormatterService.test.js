@@ -1596,6 +1596,10 @@ describe('InjuryNarrativeFormatterService', () => {
 
     describe('bleeding grouping', () => {
       // Helper function for creating bleeding-focused summaries
+      /**
+       *
+       * @param bleedingConfigs
+       */
       function createSummaryWithBleedingParts(bleedingConfigs) {
         const bleedingParts = bleedingConfigs.map((config, index) => ({
           partEntityId: `part-${index}`,
@@ -2828,6 +2832,10 @@ describe('InjuryNarrativeFormatterService', () => {
   });
 
   // Helper functions to create test data
+  /**
+   *
+   * @param state
+   */
   function createSummaryWithInjury(state) {
     return {
       entityId: 'entity-1',
@@ -2849,6 +2857,10 @@ describe('InjuryNarrativeFormatterService', () => {
     };
   }
 
+  /**
+   *
+   * @param overrides
+   */
   function createBaseSummary(overrides = {}) {
     return {
       entityId: 'entity-1',
@@ -2865,6 +2877,9 @@ describe('InjuryNarrativeFormatterService', () => {
     };
   }
 
+  /**
+   *
+   */
   function createSummaryWithDestroyed() {
     return {
       entityId: 'entity-1',
@@ -2893,6 +2908,10 @@ describe('InjuryNarrativeFormatterService', () => {
     };
   }
 
+  /**
+   *
+   * @param severity
+   */
   function createSummaryWithBleeding(severity) {
     return {
       entityId: 'entity-1',
@@ -2921,6 +2940,10 @@ describe('InjuryNarrativeFormatterService', () => {
     };
   }
 
+  /**
+   *
+   * @param pronoun
+   */
   function createBasicDamageEvent(pronoun) {
     return {
       entityName: 'Test Entity',

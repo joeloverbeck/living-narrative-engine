@@ -7,15 +7,15 @@ class MultiHitSimulatorView {
   /** @type {HTMLElement|null} */
   #containerElement;
 
-  /** @type {Object} */
+  /** @type {object} */
   #eventHandlers;
 
-  /** @type {Object} */
+  /** @type {object} */
   #logger;
 
   /**
    * @param {HTMLElement|null} containerElement - DOM container
-   * @param {Object} logger - Logger instance
+   * @param {object} logger - Logger instance
    */
   constructor(containerElement, logger = console) {
     this.#containerElement = containerElement;
@@ -25,7 +25,8 @@ class MultiHitSimulatorView {
 
   /**
    * Renders the simulation UI.
-   * @param {Object} defaults - Simulation defaults
+   *
+   * @param {object} defaults - Simulation defaults
    */
   render(defaults) {
     if (!this.#containerElement) return;
@@ -115,7 +116,8 @@ class MultiHitSimulatorView {
 
   /**
    * Binds event handlers for UI controls.
-   * @param {Object} handlers - { onRun, onStop }
+   *
+   * @param {object} handlers - { onRun, onStop }
    */
   bindEventListeners(handlers = {}) {
     this.#eventHandlers = handlers;
@@ -165,7 +167,8 @@ class MultiHitSimulatorView {
 
   /**
    * Updates progress display.
-   * @param {Object} progress - Simulation progress
+   *
+   * @param {object} progress - Simulation progress
    */
   updateProgress(progress) {
     const container = this.#containerElement;
@@ -185,7 +188,8 @@ class MultiHitSimulatorView {
 
   /**
    * Updates results display.
-   * @param {Object} results - Simulation results
+   *
+   * @param {object} results - Simulation results
    */
   updateResults(results) {
     const container = this.#containerElement;
@@ -213,6 +217,7 @@ class MultiHitSimulatorView {
 
   /**
    * Updates control states (enabled/disabled).
+   *
    * @param {boolean} isRunning
    */
   updateControlsState(isRunning) {
@@ -233,6 +238,7 @@ class MultiHitSimulatorView {
 
   /**
    * Updates focus part dropdown options.
+   *
    * @param {Array<{id: string, name: string}>} parts
    */
   updateFocusPartOptions(parts) {
@@ -259,6 +265,7 @@ class MultiHitSimulatorView {
 
   /**
    * Handle run button click.
+   *
    * @private
    */
   async #handleRunClick() {

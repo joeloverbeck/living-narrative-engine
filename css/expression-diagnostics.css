@@ -474,3 +474,230 @@
   opacity: 0.7;
   pointer-events: none;
 }
+
+/* ========================= */
+/* Witness State Section     */
+/* ========================= */
+
+.witness-panel {
+  grid-column: 1 / -1;
+}
+
+.section-description {
+  color: var(--secondary-text-color);
+  margin-bottom: 1rem;
+}
+
+.witness-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.status-text {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+}
+
+.witness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.result-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.result-label.found {
+  color: #27ae60;
+}
+
+.result-label.not-found {
+  color: #e67e22;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-secondary {
+  background: var(--secondary-bg-color);
+  color: var(--primary-text-color);
+}
+
+.btn-secondary:hover {
+  background: var(--button-hover-bg-color);
+}
+
+.btn-small {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Axis Display Grid */
+.witness-content h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--secondary-text-color);
+}
+
+.axis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.axis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+}
+
+.axis-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.axis-value {
+  font-family: var(--mono-font, monospace);
+  font-size: 0.875rem;
+}
+
+.axis-value.positive {
+  color: #27ae60;
+}
+
+.axis-value.negative {
+  color: #c0392b;
+}
+
+.axis-value.neutral {
+  color: var(--secondary-text-color);
+}
+
+/* JSON Display */
+.json-display {
+  margin-top: 1rem;
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.json-display pre {
+  padding: 1rem;
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: var(--mono-font, monospace);
+}
+
+/* Violated Clauses */
+.violated-clauses {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+}
+
+.violated-clauses h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+}
+
+.violated-clauses ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.violated-clauses li {
+  font-size: 0.875rem;
+  color: var(--primary-text-color);
+  margin-bottom: 0.25rem;
+}
+
+/* Fitness Display */
+.fitness-display {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fitness-display label {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  min-width: 100px;
+}
+
+.fitness-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 200px;
+}
+
+.fitness-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.fitness-fill.perfect {
+  background: #27ae60;
+}
+
+.fitness-fill.good {
+  background: #2980b9;
+}
+
+.fitness-fill.poor {
+  background: #e67e22;
+}
+
+.fitness-fill.bad {
+  background: #c0392b;
+}
+
+#fitness-value {
+  font-family: var(--mono-font, monospace);
+  font-size: 0.875rem;
+  min-width: 50px;
+}
+
+/* Copy Feedback Toast */
+.copy-feedback {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.copy-feedback.show {
+  opacity: 1;
+  transform: translateY(0);
+}

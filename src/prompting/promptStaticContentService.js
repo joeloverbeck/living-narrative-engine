@@ -75,12 +75,30 @@ export class PromptStaticContentService extends IPromptStaticContentService {
   }
 
   /**
+   * @returns {string}
+   */
+  getMoodUpdateTaskDefinitionText() {
+    this.#ensureInitialized();
+    return this.#promptData.moodUpdateTaskDefinitionText ?? '';
+  }
+
+  /**
    * @param {string} characterName
    * @returns {string}
    */
   getCharacterPortrayalGuidelines(characterName) {
     this.#ensureInitialized();
     const template = this.#promptData.characterPortrayalGuidelinesTemplate;
+    return template.replace(/{{name}}/g, characterName);
+  }
+
+  /**
+   * @param {string} characterName
+   * @returns {string}
+   */
+  getMoodUpdatePortrayalGuidelines(characterName) {
+    this.#ensureInitialized();
+    const template = this.#promptData.moodUpdatePortrayalGuidelinesTemplate ?? '';
     return template.replace(/{{name}}/g, characterName);
   }
 

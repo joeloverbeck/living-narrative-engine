@@ -284,6 +284,7 @@ class BuildSystem {
    * Run esbuild command
    *
    * @param {Array<string>} args - Command arguments
+   * @param command
    * @returns {Promise<void>}
    */
   runEsbuild(args, command) {

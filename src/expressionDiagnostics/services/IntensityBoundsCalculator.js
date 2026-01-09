@@ -7,14 +7,14 @@ import { AxisInterval } from '../models/index.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
- * @typedef {Object} IntensityBounds
+ * @typedef {object} IntensityBounds
  * @property {number} min - Minimum achievable intensity [0, 1]
  * @property {number} max - Maximum achievable intensity [0, 1]
  * @property {boolean} isUnbounded - True if no constraints applied
  */
 
 /**
- * @typedef {Object} ThresholdReachability
+ * @typedef {object} ThresholdReachability
  * @property {boolean} isReachable - True if threshold can be achieved
  * @property {number} threshold - Required threshold
  * @property {number} maxPossible - Maximum achievable intensity
@@ -34,7 +34,7 @@ class IntensityBoundsCalculator {
   #logger;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry for prototype lookups
    * @param {object} deps.logger - ILogger
    */

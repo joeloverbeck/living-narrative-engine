@@ -53,8 +53,10 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   }
 
   /**
-   * @param {Object} context - Execution context
-   * @returns {Promise<Object>} Updated context
+   * @param {object} context - Execution context
+   * @param params
+   * @param executionContext
+   * @returns {Promise<object>} Updated context
    */
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
@@ -160,6 +162,10 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
 
   /**
    * Safely removes a component, ignoring errors if component doesn't exist.
+   *
+   * @param entityId
+   * @param componentType
+   * @param logger
    */
   async #safeRemoveComponent(entityId, componentType, logger) {
     try {

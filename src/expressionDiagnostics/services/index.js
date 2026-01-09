@@ -9,3 +9,4 @@ export { default as IntensityBoundsCalculator } from './IntensityBoundsCalculato
 export { default as MonteCarloSimulator } from './MonteCarloSimulator.js';
 export { default as FailureExplainer } from './FailureExplainer.js';
 export { default as ExpressionStatusService } from './ExpressionStatusService.js';
+export { default as WitnessStateFinder } from './WitnessStateFinder.js';

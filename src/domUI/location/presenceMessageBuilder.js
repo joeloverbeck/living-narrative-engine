@@ -6,6 +6,7 @@
 
 /**
  * Three-tier presence sensing messages for darkness.
+ *
  * @constant {Object<string, string>}
  */
 const PRESENCE_MESSAGES = {

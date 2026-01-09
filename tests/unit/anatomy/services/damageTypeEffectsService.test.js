@@ -5,6 +5,8 @@ import DamageTypeEffectsService from '../../../../src/anatomy/services/damageTyp
  * Creates mock applicators for testing DamageTypeEffectsService.
  * These mocks simulate the real applicator behavior to preserve existing test coverage.
  * The mocks use the dispatchStrategy passed to them for proper session/immediate mode handling.
+ *
+ * @param mockEntityManager
  */
 function createMockApplicators(mockEntityManager) {
   return {

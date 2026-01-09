@@ -28,6 +28,7 @@ import {
 
 /**
  * CSS class constants matching damage-simulator.css
+ *
  * @readonly
  */
 const CSS_CLASSES = Object.freeze({
@@ -56,12 +57,14 @@ const CSS_CLASSES = Object.freeze({
 
 /**
  * Component ID for respiratory organs that have oxygen capacity
+ *
  * @readonly
  */
 const RESPIRATORY_COMPONENT = 'breathing-states:respiratory_organ';
 
 /**
  * Health thresholds for color coding
+ *
  * @readonly
  */
 const HEALTH_THRESHOLDS = Object.freeze({
@@ -170,6 +173,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Create the overall health bar header element.
+   *
    * @private
    * @returns {HTMLElement}
    */
@@ -276,6 +280,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render empty state when no hierarchy data.
+   *
    * @private
    */
   #renderEmptyState() {
@@ -287,6 +292,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Recursively render a node and its children.
+   *
    * @private
    * @param {AnatomyTreeNode} node - Node to render
    * @param {number} depth - Current depth in hierarchy
@@ -352,6 +358,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render the header section with name and expand toggle.
+   *
    * @private
    * @param {AnatomyTreeNode} node - Node data
    * @param {boolean} hasChildren - Whether node has children
@@ -381,6 +388,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Handle expand/collapse toggle click.
+   *
    * @private
    * @param {Event} event - Click event
    * @param {AnatomyTreeNode} node - Node being toggled
@@ -402,6 +410,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render health bar section.
+   *
    * @private
    * @param {{current: number, max: number}} health - Health data
    * @returns {DocumentFragment} Fragment containing health bar elements
@@ -434,6 +443,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Calculate health percentage.
+   *
    * @private
    * @param {{current: number, max: number}} health - Health data
    * @returns {number} Percentage (0-100)
@@ -445,6 +455,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Update health bar color based on percentage.
+   *
    * @private
    * @param {HTMLElement} element - Health bar fill element
    * @param {number} percentage - Health percentage
@@ -469,6 +480,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Format health text.
+   *
    * @private
    * @param {{current: number, max: number}} health - Health data
    * @returns {string} Formatted health string
@@ -479,6 +491,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render components section (mechanical only).
+   *
    * @private
    * @param {{[key: string]: object}} components - Components map
    * @returns {HTMLElement|null} Components section or null if empty
@@ -514,6 +527,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Filter to mechanical components only (exclude descriptors).
+   *
    * @private
    * @param {{[key: string]: object}} components - All components
    * @returns {{[key: string]: object}} Filtered components
@@ -542,6 +556,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Format component display text.
+   *
    * @private
    * @param {string} componentId - Component ID
    * @param {object} componentData - Component data
@@ -559,6 +574,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Extract oxygen data from respiratory component if present.
+   *
    * @private
    * @param {{[key: string]: object}} components - Components map
    * @returns {{current: number, max: number}|null} Oxygen data or null
@@ -579,6 +595,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render oxygen bar section.
+   *
    * @private
    * @param {{current: number, max: number}} oxygenData - Oxygen data
    * @returns {HTMLElement} Oxygen section element
@@ -611,6 +628,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Calculate oxygen percentage.
+   *
    * @private
    * @param {{current: number, max: number}} oxygenData - Oxygen data
    * @returns {number} Percentage (0-100)
@@ -622,6 +640,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Format oxygen text display.
+   *
    * @private
    * @param {{current: number, max: number}} oxygenData - Oxygen data
    * @returns {string} Formatted oxygen string
@@ -632,6 +651,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Update oxygen display for an existing element.
+   *
    * @private
    * @param {HTMLElement} element - Part card element
    * @param {{current: number, max: number}|null} oxygenData - New oxygen data
@@ -674,6 +694,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Render status effects section.
+   *
    * @private
    * @param {Array<{type: string, data: object}>} effects - Active effects
    * @returns {HTMLElement} Effects section element
@@ -695,6 +716,7 @@ class HierarchicalAnatomyRenderer {
 
   /**
    * Update effects display for an existing element.
+   *
    * @private
    * @param {HTMLElement} element - Part card element
    * @param {Array<{type: string, data: object}>} effects - New effects list

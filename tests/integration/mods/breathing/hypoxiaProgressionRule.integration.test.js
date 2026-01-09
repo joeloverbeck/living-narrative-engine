@@ -21,6 +21,13 @@ import hypoxiaProgressionRule from '../../../../data/mods/breathing/rules/handle
 const ACTOR_ID = 'test:actor';
 const HYPOXIC_COMPONENT = 'breathing:hypoxic';
 
+/**
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param dataRegistry
+ */
 function createHandlers(entityManager, eventBus, logger, dataRegistry) {
   return {
     DISPATCH_EVENT: new DispatchEventHandler({

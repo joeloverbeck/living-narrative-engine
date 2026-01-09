@@ -3,7 +3,6 @@
  *
  * Extracts common validation and normalization logic used by both
  * AddPerceptionLogEntryHandler and DispatchPerceptibleEventHandler.
- *
  * @see src/logic/operationHandlers/addPerceptionLogEntryHandler.js
  * @see src/logic/operationHandlers/dispatchPerceptibleEventHandler.js
  */
@@ -117,8 +116,8 @@ export function validateRecipientExclusionExclusivity(
  * @param {string} options.timestamp - ISO timestamp string.
  * @param {string} options.perceptionType - Category of perceptible event.
  * @param {string} options.actorId - Entity primarily responsible.
- * @param {string|null} [options.targetId=null] - Optional target entity.
- * @param {string[]} [options.involvedEntities=[]] - Optional other entity IDs.
+ * @param {string|null} [options.targetId] - Optional target entity.
+ * @param {string[]} [options.involvedEntities] - Optional other entity IDs.
  * @returns {object} Standardized log entry object.
  */
 export function buildLogEntry({

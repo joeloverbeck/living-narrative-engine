@@ -3,8 +3,8 @@
  */
 
 /**
- * @typedef {Object} CascadeAnimatorOptions
- * @property {Object} logger
+ * @typedef {object} CascadeAnimatorOptions
+ * @property {object} logger
  * @property {number} [staggerDelay=150] - Delay between each card animation (ms)
  * @property {number} [animationDuration=300] - Duration of each animation (ms)
  */
@@ -30,6 +30,7 @@ export class CascadeAnimator {
 
   /**
    * Animate activation cascade
+   *
    * @param {string} primaryModId - The mod user clicked to activate
    * @param {string[]} dependencyIds - Dependencies being auto-activated
    * @param {(modId: string) => HTMLElement|null} getCardElement - Function to get card element
@@ -72,6 +73,7 @@ export class CascadeAnimator {
 
   /**
    * Animate deactivation cascade
+   *
    * @param {string} primaryModId - The mod user clicked to deactivate
    * @param {string[]} orphanedIds - Dependents being auto-deactivated
    * @param {(modId: string) => HTMLElement|null} getCardElement
@@ -110,6 +112,7 @@ export class CascadeAnimator {
 
   /**
    * Highlight a dependency chain on hover
+   *
    * @param {string} modId - Mod being hovered
    * @param {string[]} dependencyChain - All dependencies in chain
    * @param {(modId: string) => HTMLElement|null} getCardElement
@@ -125,6 +128,7 @@ export class CascadeAnimator {
 
   /**
    * Remove dependency chain highlight
+   *
    * @param {string[]} dependencyChain
    * @param {(modId: string) => HTMLElement|null} getCardElement
    */
@@ -139,6 +143,7 @@ export class CascadeAnimator {
 
   /**
    * Animate a single card
+   *
    * @param {HTMLElement} card
    * @param {string} animationType
    * @param {string} modId
@@ -182,6 +187,7 @@ export class CascadeAnimator {
 
   /**
    * Cancel existing animations for mods
+   *
    * @param {string[]} modIds
    */
   #cancelExistingAnimations(modIds) {
@@ -192,6 +198,7 @@ export class CascadeAnimator {
 
   /**
    * Promisified delay
+   *
    * @param {number} ms
    * @returns {Promise<void>}
    */
@@ -201,6 +208,7 @@ export class CascadeAnimator {
 
   /**
    * Check if any animations are currently running
+   *
    * @returns {boolean}
    */
   isAnimating() {

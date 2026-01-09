@@ -51,6 +51,7 @@ jest.mock(
 
 /**
  * Helper to flush pending microtasks without fixed delay
+ *
  * @returns {Promise<void>}
  */
 const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
@@ -199,7 +200,8 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
   /**
    * Creates a fresh mock CharacterBuilderService for each test
-   * @returns {Object} Mock service with all required methods
+   *
+   * @returns {object} Mock service with all required methods
    */
   const createMockCharacterBuilderService = () => {
     const mockConcepts = [
