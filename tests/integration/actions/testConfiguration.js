@@ -12,9 +12,9 @@ import { performance } from 'perf_hooks';
  * This replaces createMockFacades() for integration tests.
  *
  * @param {object} options - Configuration options
- * @param {boolean} [options.loadMods=false] - Whether to load real mods
- * @param {string[]} [options.mods=['core']] - Mods to load if loadMods is true
- * @param {boolean} [options.stubLLM=true] - Whether to stub LLM calls
+ * @param {boolean} [options.loadMods] - Whether to load real mods
+ * @param {string[]} [options.mods] - Mods to load if loadMods is true
+ * @param {boolean} [options.stubLLM] - Whether to stub LLM calls
  * @returns {Promise<object>} Integration test context
  */
 export async function createIntegrationTestContext(options = {}) {

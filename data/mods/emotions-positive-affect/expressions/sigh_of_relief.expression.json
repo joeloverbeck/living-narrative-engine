@@ -126,5 +126,6 @@
         "tension_release",
         "fear_resolution",
         "safety"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

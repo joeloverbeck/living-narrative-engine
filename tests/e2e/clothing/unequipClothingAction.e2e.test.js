@@ -28,7 +28,7 @@ describe('Clothing Actions E2E - Unequip Clothing', () => {
 
   beforeEach(async () => {
     // Create e2e test environment with container-based services
-    // eslint-disable-next-line no-undef
+     
     env = await createE2ETestEnvironment({ stubLLM: true });
 
     testBed = createTestBed();

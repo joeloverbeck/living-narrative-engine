@@ -2,7 +2,6 @@
  * @file Base class for JSON Logic operators.
  * Provides common functionality for error handling, logging, and entity resolution.
  * Matches pattern established by BaseBodyPartOperator, BaseFurnitureOperator, etc.
- *
  * @see BaseBodyPartOperator.js
  * @see BaseFurnitureOperator.js
  * @see BaseEquipmentOperator.js
@@ -23,7 +22,7 @@ export class BaseOperator {
   operatorName;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {import('../../../interfaces/coreServices.js').IEntityManager} dependencies.entityManager
    * @param {import('../../../interfaces/coreServices.js').ILogger} dependencies.logger
    * @param {string} operatorName - Name used in error messages
@@ -47,7 +46,7 @@ export class BaseOperator {
    * Subclasses override evaluateInternal() for their logic.
    *
    * @param {*} params - Operator parameters
-   * @param {Object} context - Evaluation context
+   * @param {object} context - Evaluation context
    * @returns {*} Result of evaluation
    */
   evaluate(params, context) {
@@ -62,9 +61,8 @@ export class BaseOperator {
   /**
    * @abstract
    * Internal evaluation logic. Must be implemented by subclasses.
-   *
    * @param {*} params - Operator parameters
-   * @param {Object} context - Evaluation context
+   * @param {object} context - Evaluation context
    * @returns {*} Result of evaluation
    */
   evaluateInternal(params, context) {

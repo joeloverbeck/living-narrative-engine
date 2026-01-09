@@ -2,7 +2,6 @@
  * @file HierarchicalClauseNode - Tree node model for tracking per-condition statistics
  * in expression prerequisite evaluation. Used by MonteCarloSimulator to provide
  * granular breakdown of clause failures within AND/OR blocks.
- *
  * @see MonteCarloSimulator.js - Builds and evaluates these trees
  * @see FailureExplainer.js - Analyzes trees for reporting
  */
@@ -25,7 +24,7 @@ class HierarchicalClauseNode {
   /** @type {string} Human-readable description */
   #description;
 
-  /** @type {Object|null} JSON Logic for leaf nodes */
+  /** @type {object | null} JSON Logic for leaf nodes */
   #logic;
 
   /** @type {HierarchicalClauseNode[]} Child nodes for compound types */
@@ -41,12 +40,12 @@ class HierarchicalClauseNode {
   #violationSum;
 
   /**
-   * @param {Object} params
+   * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
    * @param {NodeType} params.nodeType - 'and', 'or', or 'leaf'
    * @param {string} params.description - Human-readable description
-   * @param {Object|null} [params.logic=null] - JSON Logic for leaf nodes
-   * @param {HierarchicalClauseNode[]} [params.children=[]] - Child nodes
+   * @param {object | null} [params.logic] - JSON Logic for leaf nodes
+   * @param {HierarchicalClauseNode[]} [params.children] - Child nodes
    */
   constructor({ id, nodeType, description, logic = null, children = [] }) {
     if (typeof id !== 'string' || id.length === 0) {
@@ -88,7 +87,7 @@ class HierarchicalClauseNode {
     return this.#description;
   }
 
-  /** @returns {Object|null} */
+  /** @returns {object | null} */
   get logic() {
     return this.#logic;
   }
@@ -115,6 +114,7 @@ class HierarchicalClauseNode {
 
   /**
    * Computed failure rate (0-1).
+   *
    * @returns {number}
    */
   get failureRate() {
@@ -125,6 +125,7 @@ class HierarchicalClauseNode {
 
   /**
    * Computed average violation magnitude.
+   *
    * @returns {number}
    */
   get averageViolation() {
@@ -133,6 +134,7 @@ class HierarchicalClauseNode {
 
   /**
    * Whether this is a compound node (AND/OR).
+   *
    * @returns {boolean}
    */
   get isCompound() {
@@ -141,8 +143,9 @@ class HierarchicalClauseNode {
 
   /**
    * Record an evaluation result for this node.
+   *
    * @param {boolean} passed - Whether the node evaluated to true
-   * @param {number} [violation=0] - Violation magnitude if failed
+   * @param {number} [violation] - Violation magnitude if failed
    */
   recordEvaluation(passed, violation = 0) {
     this.#evaluationCount++;
@@ -168,7 +171,8 @@ class HierarchicalClauseNode {
 
   /**
    * Serialize to plain object for JSON transport.
-   * @returns {Object}
+   *
+   * @returns {object}
    */
   toJSON() {
     return {
@@ -187,7 +191,8 @@ class HierarchicalClauseNode {
   /**
    * Create a HierarchicalClauseNode from a plain object (e.g., from toJSON).
    * Note: This creates a read-only snapshot without the ability to record new evaluations.
-   * @param {Object} obj
+   *
+   * @param {object} obj
    * @returns {HierarchicalClauseNode}
    */
   static fromJSON(obj) {

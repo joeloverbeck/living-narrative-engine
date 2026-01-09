@@ -8,7 +8,6 @@
  * 2. ACTION_DECIDED_ID event fires with moodUpdate/sexualUpdate
  * 3. MoodSexualPersistenceListener persists updates to entity
  * 4. Next prompt generation reflects the NEW values in emotionalStateText
- *
  * @see tickets/MOOANDSEXAROSYS - Original mood/sexual arousal system implementation
  */
 
@@ -182,6 +181,8 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
 
   /**
    * Creates an actor entity with mood and sexual_state components.
+   *
+   * @param overrides
    */
   async function createActorWithMoodAndSexualState(overrides = {}) {
     return await testBed.createActorEntity({
@@ -199,6 +200,8 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
   /**
    * Builds actor state and extracts prompt data in one flow.
    * Note: emotionalStateText is nested inside promptData.emotionalState
+   *
+   * @param actor
    */
   function buildActorStateAndExtractPromptData(actor) {
     const actorState = actorStateProvider.build(actor, logger);

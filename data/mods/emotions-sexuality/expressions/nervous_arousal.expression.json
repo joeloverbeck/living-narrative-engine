@@ -52,7 +52,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -78,7 +78,7 @@
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -136,7 +136,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -151,7 +151,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -182,5 +182,6 @@
         "arousal",
         "hesitation",
         "self_doubt"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

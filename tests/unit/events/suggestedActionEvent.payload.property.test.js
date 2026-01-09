@@ -152,7 +152,7 @@ describe('core:suggested_action payload schema (property)', () => {
       fc.property(payloadArb, (payload) => {
         const valid = validatePayload(payload);
         if (!valid) {
-          // eslint-disable-next-line no-console
+           
           console.error(validatePayload.errors);
         }
         expect(valid).toBe(true);

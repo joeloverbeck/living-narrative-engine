@@ -4,14 +4,13 @@
  * Determines which senses (sight, hearing, smell, touch) are available based on
  * functioning sensory organs. Supports manual override via perception:sensory_capability
  * component.
- *
  * @see specs/sense-aware-perceptible-events.spec.md
  */
 
 import { validateDependency, ensureValidLogger } from '../../utils/index.js';
 
 /**
- * @typedef {Object} SensoryCapabilities
+ * @typedef {object} SensoryCapabilities
  * @property {boolean} canSee - Has at least one functioning eye
  * @property {boolean} canHear - Has at least one functioning ear
  * @property {boolean} canSmell - Has at least one functioning nose
@@ -46,10 +45,10 @@ class SensoryCapabilityService {
   /**
    * Create a SensoryCapabilityService instance.
    *
-   * @param {Object} deps - Dependencies
-   * @param {Object} deps.entityManager - Entity manager for component access
-   * @param {Object} deps.bodyGraphService - Service for anatomy queries
-   * @param {Object} deps.logger - Logger service
+   * @param {object} deps - Dependencies
+   * @param {object} deps.entityManager - Entity manager for component access
+   * @param {object} deps.bodyGraphService - Service for anatomy queries
+   * @param {object} deps.logger - Logger service
    */
   constructor({ entityManager, bodyGraphService, logger }) {
     this.#logger = ensureValidLogger(logger, 'SensoryCapabilityService');
@@ -144,7 +143,7 @@ class SensoryCapabilityService {
   /**
    * Check if entity has at least one functioning part with the given sensory affordance.
    *
-   * @param {Object} bodyComponent - The anatomy:body component data
+   * @param {object} bodyComponent - The anatomy:body component data
    * @param {string} entityId - The entity ID for the actor
    * @param {string} affordanceComponentId - Component ID to check for (e.g., 'anatomy:provides_sight')
    * @returns {boolean} True if at least one functioning part with this affordance exists
@@ -221,7 +220,7 @@ class SensoryCapabilityService {
   /**
    * Build capabilities object from manual override component.
    *
-   * @param {Object} override - The perception:sensory_capability component data
+   * @param {object} override - The perception:sensory_capability component data
    * @returns {SensoryCapabilities} Capabilities from override values
    * @private
    */

@@ -68,6 +68,12 @@ function nodeFileFetch(identifier) {
   })();
 }
 
+/**
+ *
+ * @param label
+ * @param missingIds
+ * @param availableIds
+ */
 function formatMissingMessage(label, missingIds, availableIds) {
   const lines = [`Missing ${label} IDs:`];
   for (const missingId of missingIds) {
@@ -87,6 +93,13 @@ function formatMissingMessage(label, missingIds, availableIds) {
   return lines.join('\n');
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.label
+ * @param root0.ids
+ * @param root0.registryIds
+ */
 function assertIdsPresent({ label, ids, registryIds }) {
   const missing = ids.filter((id) => !registryIds.has(id));
   if (missing.length > 0) {
@@ -94,12 +107,19 @@ function assertIdsPresent({ label, ids, registryIds }) {
   }
 }
 
+/**
+ *
+ */
 async function listModDirectories() {
   const modsDir = path.join(process.cwd(), 'data', 'mods');
   const entries = await fs.readdir(modsDir, { withFileTypes: true });
   return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 }
 
+/**
+ *
+ * @param modDir
+ */
 async function readModManifest(modDir) {
   const manifestCandidates = ['mod-manifest.json', 'mod.manifest.json'];
   for (const filename of manifestCandidates) {
@@ -114,6 +134,10 @@ async function readModManifest(modDir) {
   return null;
 }
 
+/**
+ *
+ * @param availableMods
+ */
 async function buildEventIdToModIdMap(availableMods) {
   const map = new Map();
   for (const modId of availableMods) {
@@ -139,6 +163,11 @@ async function buildEventIdToModIdMap(availableMods) {
   return map;
 }
 
+/**
+ *
+ * @param values
+ * @param availableMods
+ */
 function collectModIds(values, availableMods) {
   const modIds = new Set();
   for (const value of values) {

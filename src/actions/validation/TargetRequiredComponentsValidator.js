@@ -13,10 +13,10 @@ import {
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
- * @typedef {Object} TargetRequiredValidationResult
+ * @typedef {object} TargetRequiredValidationResult
  * @property {boolean} valid
  * @property {string} [reason]
- * @property {Object} [details] - Only present when includeDetails: true
+ * @property {object} [details] - Only present when includeDetails: true
  * @property {Array<{entityId: string, requiredComponentsMissing: string[]}>} [details.rejectedEntities]
  * @property {string} [details.targetRole]
  */
@@ -47,8 +47,8 @@ class TargetRequiredComponentsValidator {
    *
    * @param {object} actionDef - Action definition with required_components
    * @param {object} targetEntities - Resolved target entities map
-   * @param {Object} [options] - Validation options
-   * @param {boolean} [options.includeDetails=false] - Include detailed rejection info
+   * @param {object} [options] - Validation options
+   * @param {boolean} [options.includeDetails] - Include detailed rejection info
    * @returns {TargetRequiredValidationResult} Validation result
    * @example
    * // Action with primary target requirements

@@ -68,10 +68,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 5 services (Phase 1 + Phase 2 + ExpressionStatusService)', () => {
+    it('should register exactly 6 services (Phase 1 + Phase 2 + ExpressionStatusService + Phase 3)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(5);
+      expect(mockContainer.register).toHaveBeenCalledTimes(6);
     });
 
     it('should register ExpressionStatusService', () => {
@@ -79,6 +79,16 @@ describe('expressionDiagnosticsRegistrations', () => {
 
       expect(mockContainer.register).toHaveBeenCalledWith(
         diagnosticsTokens.IExpressionStatusService,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register WitnessStateFinder', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IWitnessStateFinder,
         expect.any(Function),
         expect.any(Object)
       );
@@ -145,7 +155,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(5);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(6);
     });
   });
 
@@ -205,6 +215,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       expect(diagnosticsTokens.IExpressionStatusService).toBe(
         'IExpressionStatusService'
       );
+    });
+
+    it('should export IWitnessStateFinder token', () => {
+      expect(diagnosticsTokens.IWitnessStateFinder).toBe('IWitnessStateFinder');
     });
 
     it('should be frozen', () => {

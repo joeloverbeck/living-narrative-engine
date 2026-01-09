@@ -213,6 +213,15 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
     jest.restoreAllMocks();
   });
 
+  /**
+   *
+   * @param partId
+   * @param root0
+   * @param root0.ownerId
+   * @param root0.parentId
+   * @param root0.currentHealth
+   * @param root0.maxHealth
+   */
   function createBodyPart(
     partId,
     { ownerId, parentId, currentHealth, maxHealth }
@@ -243,6 +252,11 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
     });
   }
 
+  /**
+   *
+   * @param actorId
+   * @param bodyComponent
+   */
   function createActorWithBody(actorId, bodyComponent) {
     entityManager.addEntity({
       id: actorId,
@@ -256,6 +270,9 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
     return entityManager.getEntityInstance(actorId);
   }
 
+  /**
+   *
+   */
   function createExecutionContext() {
     return {
       evaluationContext: { context: {} },

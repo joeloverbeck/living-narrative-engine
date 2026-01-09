@@ -11,6 +11,7 @@ import IntensityBoundsCalculator from '../../expressionDiagnostics/services/Inte
 import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarloSimulator.js';
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
+import WitnessStateFinder from '../../expressionDiagnostics/services/WitnessStateFinder.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -88,8 +89,18 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IExpressionStatusService}`);
 
+  // Phase 3 - Witness Finding
+  registrar.singletonFactory(
+    diagnosticsTokens.IWitnessStateFinder,
+    (c) =>
+      new WitnessStateFinder({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IWitnessStateFinder}`);
+
   // Note: Additional services will be registered as they're implemented
-  // - IWitnessStateFinder (EXPDIA-011)
   // - ISmtSolver (EXPDIA-013)
   // - IThresholdSuggester (EXPDIA-015)
 

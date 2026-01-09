@@ -79,12 +79,13 @@ export class TwoPhaseDecisionOrchestrator {
 
   /**
    * Execute two-phase decision flow.
-   * @param {Object} params
-   * @param {Object} params.actor - Actor entity
-   * @param {Object} params.context - Turn context
+   *
+   * @param {object} params
+   * @param {object} params.actor - Actor entity
+   * @param {object} params.context - Turn context
    * @param {Array} params.actions - Available actions
    * @param {AbortSignal} [params.abortSignal] - Optional abort signal
-   * @returns {Promise<Object>} Decision result matching LLMChooser.choose() return type
+   * @returns {Promise<object>} Decision result matching LLMChooser.choose() return type
    */
   async orchestrate({ actor, context, actions, abortSignal }) {
     this.#logger.debug(

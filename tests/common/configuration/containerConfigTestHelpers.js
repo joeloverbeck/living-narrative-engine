@@ -6,7 +6,6 @@
  * - Create container ONCE in beforeAll instead of beforeEach
  * - Skip async config loading (loadAndApplyLoggerConfig, loadAndApplyTraceConfig)
  * - These tests only verify service resolution, not config loading behavior
- *
  * @see tests/integration/configuration/OPTIMIZATION.md
  */
 

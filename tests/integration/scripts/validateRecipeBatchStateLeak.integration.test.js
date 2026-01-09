@@ -7,7 +7,6 @@
  * When validating recipes in batch, the AnatomyBlueprintRepository singleton's cache
  * persists between validations. If recipe A uses blueprint type X and recipe B uses
  * blueprint type Y, cached data from A can corrupt validation of B.
- *
  * @see https://github.com/joeloverbeck/living-narrative-engine/issues/TBD
  */
 

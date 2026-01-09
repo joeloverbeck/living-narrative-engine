@@ -29,6 +29,7 @@ const createMockLLMConfigService = (configs = {}) => ({
 
 const createMockTemplateService = () => ({
   processCharacterPrompt: jest.fn().mockReturnValue('MOCK_TEMPLATE_OUTPUT'),
+  processMoodUpdatePrompt: jest.fn().mockReturnValue('MOCK_MOOD_OUTPUT'),
 });
 
 const createMockDataFormatter = () => ({
@@ -349,7 +350,8 @@ describe('PromptBuilder - Unit Tests', () => {
       await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
       expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(
-        SAMPLE_PROMPT_DATA
+        SAMPLE_PROMPT_DATA,
+        { isMoodUpdatePrompt: false }
       );
     });
 
@@ -362,6 +364,26 @@ describe('PromptBuilder - Unit Tests', () => {
       expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith(
         formattedData
       );
+    });
+
+    test('should route mood prompts through mood template', async () => {
+      const formattedData = { formatted: 'mood-data' };
+      mockDataFormatter.formatPromptData.mockReturnValue(formattedData);
+
+      await builder.build('test-llm', SAMPLE_PROMPT_DATA, {
+        isMoodUpdatePrompt: true,
+      });
+
+      expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(
+        SAMPLE_PROMPT_DATA,
+        { isMoodUpdatePrompt: true }
+      );
+      expect(mockTemplateService.processMoodUpdatePrompt).toHaveBeenCalledWith(
+        formattedData
+      );
+      expect(
+        mockTemplateService.processCharacterPrompt
+      ).not.toHaveBeenCalled();
     });
 
     test('should return template service output', async () => {

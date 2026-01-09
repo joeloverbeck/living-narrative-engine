@@ -22,6 +22,11 @@ function registerGuideHandAction(fixture) {
   fixture.testEnv.actionIndex.buildIndex([guideHandAction]);
 }
 
+/**
+ *
+ * @param entityId
+ * @param fixture
+ */
 function entityHasHands(entityId, fixture) {
   const entity = fixture.entityManager.getEntityInstance(entityId);
   if (!entity) {

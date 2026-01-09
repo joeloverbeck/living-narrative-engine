@@ -83,6 +83,7 @@ class DamageResolutionService {
    * @param {boolean} params.isTopLevel - Whether this is the initial call (not propagated)
    * @param {Function} params.applyDamage - Callback for recursive propagation (applyDamageHandler.execute)
    * @param {import('../../interfaces/coreServices.js').ILogger} [params.log] - Logger to use (defaults to injected logger)
+   * @param params.rng
    * @returns {Promise<void>}
    */
   async resolve({

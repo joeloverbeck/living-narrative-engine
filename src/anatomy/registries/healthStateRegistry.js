@@ -147,7 +147,7 @@ export function isValidState(stateId) {
  * Get states sorted by severity order (ascending: healthy -> destroyed)
  * or descending (destroyed -> healthy).
  *
- * @param {boolean} [ascending=true] - Whether to sort by ascending severity
+ * @param {boolean} [ascending] - Whether to sort by ascending severity
  * @returns {string[]} Array of state IDs sorted by severity
  */
 export function getStateOrder(ascending = true) {

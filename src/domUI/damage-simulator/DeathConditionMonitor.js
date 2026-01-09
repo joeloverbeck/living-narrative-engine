@@ -12,6 +12,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * Event types for death condition monitoring
+ *
  * @readonly
  */
 const EVENTS = Object.freeze({
@@ -22,6 +23,7 @@ const EVENTS = Object.freeze({
 
 /**
  * Health status thresholds (as percentages)
+ *
  * @readonly
  */
 const THRESHOLDS = Object.freeze({
@@ -31,6 +33,7 @@ const THRESHOLDS = Object.freeze({
 
 /**
  * Status classifications for vital organs
+ *
  * @readonly
  */
 const STATUS = Object.freeze({
@@ -41,7 +44,7 @@ const STATUS = Object.freeze({
 });
 
 /**
- * @typedef {Object} VitalOrganStatus
+ * @typedef {object} VitalOrganStatus
  * @property {string} partId - Entity ID of the vital organ part
  * @property {string} partName - Display name of the part
  * @property {string} organType - Type: brain | heart | spine
@@ -53,7 +56,7 @@ const STATUS = Object.freeze({
  */
 
 /**
- * @typedef {Object} DeathConditionSummary
+ * @typedef {object} DeathConditionSummary
  * @property {boolean} isDead - True if any vital organ is destroyed
  * @property {boolean} isInDanger - True if any vital organ is critical (1 hit from death)
  * @property {Array<VitalOrganStatus>} vitalOrgans - Status of all vital organs
@@ -80,7 +83,7 @@ class DeathConditionMonitor {
   /** @type {Array<VitalOrganStatus>} */
   #vitalOrgans;
 
-  /** @type {Object|null} */
+  /** @type {object | null} */
   #currentDamageConfig;
 
   /** @type {Array<Function>} */
@@ -97,7 +100,7 @@ class DeathConditionMonitor {
   static STATUS = STATUS;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {HTMLElement} dependencies.containerElement - Container to render into
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event bus for subscriptions
    * @param {ILogger} dependencies.logger - Logger instance
@@ -129,8 +132,9 @@ class DeathConditionMonitor {
 
   /**
    * Set the entity to monitor for death conditions
+   *
    * @param {string} entityId - Entity instance ID
-   * @param {Object} anatomyData - Extracted anatomy data
+   * @param {object} anatomyData - Extracted anatomy data
    */
   setEntity(entityId, anatomyData) {
     this.#currentEntityId = entityId;
@@ -143,7 +147,8 @@ class DeathConditionMonitor {
 
   /**
    * Update damage configuration for hits-until-death calculations
-   * @param {Object} damageEntry - Damage type and amount configuration
+   *
+   * @param {object} damageEntry - Damage type and amount configuration
    * @param {number} multiplier - Damage multiplier
    */
   updateDamageConfig(damageEntry, multiplier) {
@@ -154,6 +159,7 @@ class DeathConditionMonitor {
 
   /**
    * Get current death condition summary
+   *
    * @returns {DeathConditionSummary}
    */
   getDeathConditionSummary() {
@@ -174,7 +180,8 @@ class DeathConditionMonitor {
 
   /**
    * Check if entity would die from a specific damage application
-   * @param {Object} damageEntry - Damage configuration to test
+   *
+   * @param {object} damageEntry - Damage configuration to test
    * @param {string} [targetPartId] - Specific part to target (optional)
    * @returns {boolean} True if damage would cause death
    */
@@ -251,6 +258,7 @@ class DeathConditionMonitor {
 
   /**
    * Subscribe to relevant events
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -299,8 +307,9 @@ class DeathConditionMonitor {
 
   /**
    * Extract vital organs from anatomy data recursively
+   *
    * @private
-   * @param {Object} anatomyData - Anatomy tree data
+   * @param {object} anatomyData - Anatomy tree data
    */
   #extractVitalOrgans(anatomyData) {
     this.#vitalOrgans = [];
@@ -351,6 +360,7 @@ class DeathConditionMonitor {
 
   /**
    * Calculate hits until death for a given health amount
+   *
    * @private
    * @param {number} currentHealth - Current health value
    * @returns {number} Estimated hits until destruction
@@ -373,6 +383,7 @@ class DeathConditionMonitor {
 
   /**
    * Recalculate hits until death for all vital organs
+   *
    * @private
    */
   #recalculateHitsUntilDeath() {
@@ -387,6 +398,7 @@ class DeathConditionMonitor {
 
   /**
    * Determine status for a single part
+   *
    * @private
    * @param {number} healthPercent - Health as percentage (0-100)
    * @param {number} currentHealth - Absolute current health
@@ -407,6 +419,7 @@ class DeathConditionMonitor {
 
   /**
    * Determine overall status based on all vital organs
+   *
    * @private
    * @param {DeathConditionSummary} summary - Current summary
    * @returns {string} Overall status
@@ -429,6 +442,7 @@ class DeathConditionMonitor {
 
   /**
    * Get icon for status
+   *
    * @private
    * @param {string} status - Status classification
    * @returns {string} Emoji icon
@@ -448,6 +462,7 @@ class DeathConditionMonitor {
 
   /**
    * Get label for status
+   *
    * @private
    * @param {string} status - Status classification
    * @returns {string} Human-readable label
@@ -467,6 +482,7 @@ class DeathConditionMonitor {
 
   /**
    * Render the list of vital organs
+   *
    * @private
    * @returns {string} HTML string
    */
@@ -492,6 +508,7 @@ class DeathConditionMonitor {
 
   /**
    * Render a single vital organ item
+   *
    * @private
    * @param {VitalOrganStatus} organ - Vital organ status
    * @returns {string} HTML string
@@ -521,6 +538,7 @@ class DeathConditionMonitor {
 
   /**
    * Get icon for organ type
+   *
    * @private
    * @param {string} organType - Type of organ
    * @returns {string} Emoji icon
@@ -540,6 +558,7 @@ class DeathConditionMonitor {
 
   /**
    * Format hits until death text
+   *
    * @private
    * @param {VitalOrganStatus} organ - Vital organ status
    * @returns {string} Formatted text
@@ -559,6 +578,7 @@ class DeathConditionMonitor {
 
   /**
    * Render death alert if applicable
+   *
    * @private
    * @param {DeathConditionSummary} summary - Current summary
    * @returns {string} HTML string
@@ -591,6 +611,7 @@ class DeathConditionMonitor {
 
   /**
    * Bind event listeners for panel interactions
+   *
    * @private
    */
   #bindPanelEvents() {
@@ -608,6 +629,7 @@ class DeathConditionMonitor {
 
   /**
    * Toggle panel collapse state
+   *
    * @private
    */
   #toggleCollapse() {
@@ -617,6 +639,7 @@ class DeathConditionMonitor {
 
   /**
    * Escape HTML characters to prevent XSS
+   *
    * @private
    * @param {string} unsafeString - String to escape
    * @returns {string} Escaped string

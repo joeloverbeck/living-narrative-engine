@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
+/**
+ *
+ * @param id
+ * @param subType
+ * @param root0
+ * @param root0.description
+ * @param root0.visibilityRules
+ * @param root0.socketId
+ * @param root0.name
+ */
 function createPart(
   id,
   subType,

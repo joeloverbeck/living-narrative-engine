@@ -20,6 +20,7 @@ import {
 
 /**
  * Event types emitted by the simulator
+ *
  * @readonly
  */
 const SIMULATION_EVENTS = Object.freeze({
@@ -31,6 +32,7 @@ const SIMULATION_EVENTS = Object.freeze({
 
 /**
  * Default simulation configuration
+ *
  * @readonly
  */
 const DEFAULTS = Object.freeze({
@@ -45,23 +47,24 @@ const DEFAULTS = Object.freeze({
 
 /**
  * Valid target modes
+ *
  * @readonly
  */
 const TARGET_MODES = Object.freeze(['random', 'round-robin', 'focus']);
 
 /**
- * @typedef {Object} SimulationConfig
+ * @typedef {object} SimulationConfig
  * @property {number} hitCount - Number of hits (1-100)
  * @property {number} delayMs - Delay between hits in milliseconds
  * @property {string} targetMode - 'random' | 'round-robin' | 'focus'
  * @property {string|null} focusPartId - Part ID for focus mode
- * @property {Object} damageEntry - Damage configuration to apply
+ * @property {object} damageEntry - Damage configuration to apply
  * @property {number} multiplier - Damage multiplier
  * @property {string} entityId - Target entity ID
  */
 
 /**
- * @typedef {Object} SimulationResult
+ * @typedef {object} SimulationResult
  * @property {boolean} completed - Whether simulation ran to completion
  * @property {number} hitsExecuted - Number of hits performed
  * @property {number} totalDamage - Total damage dealt
@@ -72,7 +75,7 @@ const TARGET_MODES = Object.freeze(['random', 'round-robin', 'focus']);
  */
 
 /**
- * @typedef {Object} SimulationProgress
+ * @typedef {object} SimulationProgress
  * @property {number} currentHit - Current hit number
  * @property {number} totalHits - Total hits planned
  * @property {number} percentComplete - Percentage complete (0-100)
@@ -127,7 +130,7 @@ class MultiHitSimulator {
   static TARGET_MODES = TARGET_MODES;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {HTMLElement} dependencies.containerElement - DOM container for rendering
    * @param {DamageExecutionService} dependencies.damageExecutionService - Damage execution service
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
@@ -173,6 +176,7 @@ class MultiHitSimulator {
 
   /**
    * Configure simulation parameters
+   *
    * @param {SimulationConfig} config - Simulation configuration
    * @throws {Error} If configuration is invalid
    */
@@ -261,6 +265,7 @@ class MultiHitSimulator {
 
   /**
    * Start the simulation
+   *
    * @returns {Promise<SimulationResult>} Simulation results
    * @throws {Error} If already running or not configured
    */
@@ -451,6 +456,7 @@ class MultiHitSimulator {
 
   /**
    * Check if simulation is running
+   *
    * @returns {boolean} True if running
    */
   isRunning() {
@@ -459,6 +465,7 @@ class MultiHitSimulator {
 
   /**
    * Get current simulation progress
+   *
    * @returns {SimulationProgress} Current progress
    */
   getProgress() {
@@ -467,6 +474,7 @@ class MultiHitSimulator {
 
   /**
    * Get targetable parts for the current entity
+   *
    * @returns {Array<{id: string, name: string, weight: number}>} Targetable parts
    */
   getTargetableParts() {
@@ -476,7 +484,8 @@ class MultiHitSimulator {
   /**
    * Resolves the part ID from damage result or selector target.
    * Fallback order: result.targetPartId > selectorTarget > 'unknown'
-   * @param {Object} result - Damage result object
+   *
+   * @param {object} result - Damage result object
    * @param {string|null} selectorTarget - Target from TargetSelector
    * @returns {string} Resolved part ID
    */
@@ -500,6 +509,8 @@ class MultiHitSimulator {
 
   /**
    * Handle run request from the view
+   *
+   * @param config
    * @private
    */
   async #handleRunRequest(config) {
@@ -533,6 +544,7 @@ class MultiHitSimulator {
 
   /**
    * Update the progress display
+   *
    * @private
    */
   #updateProgressDisplay() {
@@ -541,6 +553,7 @@ class MultiHitSimulator {
 
   /**
    * Update the results display
+   *
    * @private
    * @param {SimulationResult} results - Simulation results
    */
@@ -554,6 +567,7 @@ class MultiHitSimulator {
 
   /**
    * Update controls enabled/disabled state based on running status
+   *
    * @private
    */
   #updateControlsState() {
@@ -562,6 +576,7 @@ class MultiHitSimulator {
 
   /**
    * Create a cancellable delay
+   *
    * @private
    * @param {number} ms - Delay in milliseconds
    * @returns {Promise<void>}
@@ -583,6 +598,7 @@ class MultiHitSimulator {
 
   /**
    * Assert invariants in non-production environments.
+   *
    * @private
    * @param {boolean} condition - Condition that must hold
    * @param {string} message - Invariant description
@@ -597,10 +613,11 @@ class MultiHitSimulator {
 
   /**
    * Set entity and damage configuration from external source
-   * @param {Object} options
+   *
+   * @param {object} options
    * @param {string} options.entityId - Entity ID to target
-   * @param {Object} options.damageEntry - Damage entry configuration
-   * @param {number} [options.multiplier=1] - Damage multiplier
+   * @param {object} options.damageEntry - Damage entry configuration
+   * @param {number} [options.multiplier] - Damage multiplier
    */
   setEntityConfig({ entityId, damageEntry, multiplier = 1 }) {
     this.#logger.debug('[MultiHitSimulator] Setting entity config', {
@@ -637,6 +654,7 @@ class MultiHitSimulator {
 
   /**
    * Update the focus part dropdown with available parts
+   *
    * @private
    */
   #updateFocusPartOptions() {

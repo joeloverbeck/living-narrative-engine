@@ -52,6 +52,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Optional for backward compatibility
    * @param {ISafeEventDispatcher} [deps.eventBus] - Event bus for publishing anatomy generation events
    * @param {AnatomySocketIndex} [deps.socketIndex] - Socket index for anatomy structure lookups
+   * @param deps.seededDamageApplier
    */
   constructor({
     entityManager,

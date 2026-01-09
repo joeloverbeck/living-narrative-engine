@@ -366,6 +366,10 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     return actor;
   }
 
+  /**
+   *
+   * @param entityId
+   */
   function addHairAnatomy(entityId) {
     const rootId = `${entityId}:head`;
     const hairId = `${entityId}:hair`;

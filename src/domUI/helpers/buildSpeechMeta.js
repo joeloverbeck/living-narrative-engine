@@ -31,6 +31,15 @@ import {
  * @property {*} [copyAll.notes] - Notes to include in copy-all (defaults to notes param).
  */
 
+/**
+ *
+ * @param root0
+ * @param root0.bubbleType
+ * @param root0.isPlayer
+ * @param root0.hasSpeech
+ * @param root0.hasThoughts
+ * @param root0.hasNotes
+ */
 function buildCopyAllLabel({
   bubbleType = 'speech',
   isPlayer = false,

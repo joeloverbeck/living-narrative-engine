@@ -26,6 +26,10 @@ describe('socketExtractor - hierarchical extraction', () => {
   // Helper Factories
   // ============================================================================
 
+  /**
+   *
+   * @param options
+   */
   function createMockRegistry(options = {}) {
     const {
       entities = [],
@@ -58,6 +62,12 @@ describe('socketExtractor - hierarchical extraction', () => {
     };
   }
 
+  /**
+   *
+   * @param id
+   * @param subType
+   * @param sockets
+   */
   function createEntityWithSockets(id, subType, sockets) {
     return {
       id,
@@ -68,6 +78,11 @@ describe('socketExtractor - hierarchical extraction', () => {
     };
   }
 
+  /**
+   *
+   * @param id
+   * @param subType
+   */
   function createEntityWithoutSockets(id, subType) {
     return {
       id,

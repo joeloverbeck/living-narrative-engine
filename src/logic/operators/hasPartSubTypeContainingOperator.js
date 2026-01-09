@@ -83,6 +83,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
 
   /**
    * Normalizes optional options parameter.
+   *
    * @param {unknown} rawOptions
    * @returns {{matchWholeWord: boolean, matchAtEnd: boolean}}
    */
@@ -103,6 +104,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
 
   /**
    * Matches substring on word boundaries (start/end or separated by non-alphanumeric characters).
+   *
    * @param {string} partType
    * @param {string} lowerSubstring
    * @returns {boolean}

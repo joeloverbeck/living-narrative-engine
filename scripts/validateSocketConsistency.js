@@ -14,6 +14,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // CLI Arguments parsing
+/**
+ *
+ */
 function parseArgs() {
   const args = process.argv.slice(2);
   const config = {
@@ -38,6 +41,9 @@ function parseArgs() {
   return config;
 }
 
+/**
+ *
+ */
 function showHelp() {
   console.log(`
 Socket Consistency Validation (Category-Based)
@@ -66,6 +72,7 @@ Examples:
 
 /**
  * Gets socket IDs from an entity
+ *
  * @param {object} entity - Entity definition
  * @returns {string[]} Sorted array of socket IDs
  */
@@ -76,6 +83,7 @@ function getSocketIds(entity) {
 
 /**
  * Loads socket categories configuration
+ *
  * @param {string} configPath - Path to socketCategories.json
  * @returns {object|null} Categories config or null if not found
  */
@@ -94,6 +102,7 @@ function loadCategoriesConfig(configPath) {
 
 /**
  * Infers which socket categories apply to an entity based on inference rules
+ *
  * @param {object} entity - Entity definition
  * @param {object} categoriesConfig - Categories configuration
  * @returns {Set<string>} Set of category names that apply to this entity
@@ -156,6 +165,7 @@ function inferCategoriesForEntity(entity, categoriesConfig) {
 
 /**
  * Validates an entity against its inferred categories
+ *
  * @param {object} entity - Entity definition
  * @param {object} categoriesConfig - Categories configuration
  * @returns {object} Validation result with missing sockets by category
@@ -188,6 +198,9 @@ function validateEntityCategories(entity, categoriesConfig) {
 }
 
 // Main execution
+/**
+ *
+ */
 async function main() {
   const cliConfig = parseArgs();
 

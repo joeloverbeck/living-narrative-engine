@@ -122,6 +122,9 @@
  * @property {number} sexualState.sex_inhibition - Sexual inhibition level [0..100]
  * @property {number} sexualState.baseline_libido - Baseline libido [-50..50]
  * @property {number} sexualState.sexual_arousal - Calculated arousal [0..1]
+ * @property {object} sexVariables - Raw sexual axis values for continuity
+ * @property {number} sexVariables.sex_excitation - Sexual excitation level [0..100]
+ * @property {number} sexVariables.sex_inhibition - Sexual inhibition level [0..100]
  * @property {string} sexualStateText - Formatted sexual states for prompt
  */
 

@@ -10,7 +10,6 @@
  * - moderate: turnsInState 3-4
  * - severe: turnsInState 5-6
  * - unconscious: turnsInState 7+
- *
  * @see brainstorming/oxygen-drowning-system.md
  */
 
@@ -100,6 +99,7 @@ class HypoxiaTickSystem extends BaseService {
 
   /**
    * Subscribe to turn ended events.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -114,6 +114,7 @@ class HypoxiaTickSystem extends BaseService {
 
   /**
    * Handle turn ended event - process all hypoxia effects.
+   *
    * @private
    */
   async #handleTurnEnded() {

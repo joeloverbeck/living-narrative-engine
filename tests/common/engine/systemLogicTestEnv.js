@@ -4,7 +4,6 @@
  * Provides factory functions to create test environments (`testEnv`) for
  * testing mod rules, actions, and conditions. The `testEnv` object provides
  * access to all core engine services needed for integration testing.
- *
  * @module tests/common/engine/systemLogicTestEnv
  * @see tests/common/mods/ModTestFixture.js - High-level test fixture factory
  * @see specs/test-infrastructure-robustness.md - API specification
@@ -42,32 +41,23 @@ import { TestEnvPropertyError } from '../errors/testEnvPropertyError.js';
 /**
  * Test environment object providing access to engine services.
  *
- * @typedef {Object} TestEnv
- *
+ * @typedef {object} TestEnv
  * @property {EventBus} eventBus - Central event dispatch system.
  *   Use `eventBus.dispatch({ type, payload })` to trigger events.
- *
  * @property {any[]} events - Array of all dispatched events.
  *   Useful for assertions: `expect(events).toContainEqual({ type: 'MY_EVENT', ... })`
- *
  * @property {OperationRegistry} operationRegistry - Registry of operation handlers.
  *   Access registered handlers for direct testing.
- *
  * @property {OperationInterpreter} operationInterpreter - Executes operation sequences.
  *   Use for testing operation execution without full rule context.
- *
  * @property {JsonLogicEvaluationService} jsonLogic - JSON Logic evaluation service.
  *   Evaluates conditions: `jsonLogic.evaluate(logic, context)`
- *
  * @property {SystemLogicInterpreter} systemLogicInterpreter - Rule execution engine.
  *   Processes rules in response to events.
- *
  * @property {SystemLogicInterpreter} systemLogicOrchestrator - Alias for systemLogicInterpreter.
  *   Provided for backward compatibility.
- *
  * @property {BodyGraphService} bodyGraphService - Body graph operations.
  *   Access and manipulate character body structures.
- *
  * @property {EntityManager} entityManager - Entity CRUD operations.
  *   Create, read, update, delete entities and components.
  *
@@ -186,12 +176,10 @@ function wrapWithStrictProxy(testEnv) {
  * @param {import('ajv').default|null} [options.schemaValidator] - Optional AJV instance for rule validation (SCHVALTESINT-003)
  * @param {boolean} [options.validateOnSetup] - Validate rules on setup when schemaValidator is provided
  * @returns {TestEnv} Configured test environment
- *
  * @example
  * // Basic usage
  * const testEnv = createBaseRuleEnvironment({ createHandlers, entities: [], rules: [] });
  * const entity = testEnv.entityManager.createEntity('test-entity');
- *
  * @example
  * // With initial entities
  * const testEnv = createBaseRuleEnvironment({
@@ -201,7 +189,6 @@ function wrapWithStrictProxy(testEnv) {
  *   ],
  *   rules: []
  * });
- *
  * @example
  * // Accessing scope resolver (note: NOT scopeResolver)
  * const result = testEnv.unifiedScopeResolver.resolveSync('my:scope', {
@@ -357,6 +344,11 @@ export function createBaseRuleEnvironment({
     'thunder',
   ]);
 
+  /**
+   *
+   * @param candidate
+   * @param accumulator
+   */
   function collectOperationTypes(candidate, accumulator) {
     if (!candidate) {
       return;
@@ -383,6 +375,11 @@ export function createBaseRuleEnvironment({
     }
   }
 
+  /**
+   *
+   * @param operationRegistry
+   * @param ruleset
+   */
   function validateOperationCoverage(operationRegistry, ruleset) {
     if (!ruleset || ruleset.length === 0) {
       return;
@@ -1554,9 +1551,8 @@ export function createBaseRuleEnvironment({
  * components using the provided entities. Preserves scope resolver overrides.
  *
  * @param {TestEnv} env - Environment to reset
- * @param {Array<{id:string,components:object}>} [newEntities=[]] - Entities to load
+ * @param {Array<{id:string,components:object}>} [newEntities] - Entities to load
  *   after reset
- *
  * @example
  * // Reset with new entities
  * resetRuleEnvironment(testEnv, [
@@ -1609,7 +1605,6 @@ export function resetRuleEnvironment(env, newEntities = []) {
  * @param {object} [params.targets] - Multi-target format targets
  * @param {string} [params.originalInput] - Original input (defaults to generated)
  * @returns {object} Properly formatted event payload
- *
  * @example
  * // Legacy single-target format
  * const payload = createAttemptActionPayload({
@@ -1617,7 +1612,6 @@ export function resetRuleEnvironment(env, newEntities = []) {
  *   actionId: 'mod:attack',
  *   targetId: 'enemy-1'
  * });
- *
  * @example
  * // Multi-target format
  * const payload = createAttemptActionPayload({
@@ -1683,7 +1677,6 @@ export function createAttemptActionPayload({
  * @param {object} [options.eventBus] - Event bus instance to use
  * @param {() => object} [options.createEventBus] - Event bus factory
  * @returns {TestEnv} Enhanced test environment with convenience methods
- *
  * @example
  * // Dispatch action and check events
  * const testEnv = createRuleTestEnvironment({ createHandlers, entities, rules });
@@ -1691,7 +1684,6 @@ export function createAttemptActionPayload({
  * expect(testEnv.events).toContainEqual(
  *   expect.objectContaining({ type: 'ACTION_COMPLETED' })
  * );
- *
  * @example
  * // Reset environment between tests
  * testEnv.reset([{ id: 'new-actor', components: { 'core:actor': {} } }]);

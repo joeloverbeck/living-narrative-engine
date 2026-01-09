@@ -14,8 +14,9 @@ describe('SensoryCapabilityService', () => {
 
   /**
    * Helper to create a mock part health component
+   *
    * @param {string} state - Health state
-   * @returns {Object} Part health component data
+   * @returns {object} Part health component data
    */
   const createHealthComponent = (state = 'healthy') => ({
     currentHealth: state === 'destroyed' ? 0 : 10,
@@ -25,8 +26,9 @@ describe('SensoryCapabilityService', () => {
 
   /**
    * Helper to create a mock body component
+   *
    * @param {string} rootId - Root entity ID
-   * @returns {Object} Body component data
+   * @returns {object} Body component data
    */
   const createBodyComponent = (rootId = 'body-root') => ({
     body: { root: rootId },

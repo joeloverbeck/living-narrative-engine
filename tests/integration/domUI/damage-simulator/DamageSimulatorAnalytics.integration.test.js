@@ -11,6 +11,7 @@ import DamageAnalyticsPanel from '../../../../src/domUI/damage-simulator/DamageA
 
 /**
  * Creates a mock event bus for testing.
+ *
  * @returns {object} Mock event bus with subscribe and dispatch methods.
  */
 function createMockEventBus() {
@@ -45,6 +46,7 @@ function createMockEventBus() {
 
 /**
  * Creates a mock logger for testing.
+ *
  * @returns {object} Mock logger with all required methods.
  */
 function createMockLogger() {
@@ -58,6 +60,7 @@ function createMockLogger() {
 
 /**
  * Creates sample anatomy data for testing.
+ *
  * @returns {object} Anatomy data with parts array.
  */
 function createSampleAnatomyData() {
@@ -75,6 +78,7 @@ function createSampleAnatomyData() {
 
 /**
  * Creates sample damage configuration for testing.
+ *
  * @returns {object} Damage entry configuration.
  */
 function createSampleDamageConfig() {

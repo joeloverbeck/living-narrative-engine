@@ -47,6 +47,10 @@ describe('anatomy-visualizer entrypoint error handling', () => {
     sharedBootstrapContext = null;
   });
 
+  /**
+   *
+   * @param wrapPostInitHook
+   */
   async function mockBootstrapWithSharedContext(wrapPostInitHook = null) {
     const bootstrapperModule = await import(
       '../../../src/bootstrapper/CommonBootstrapper.js'

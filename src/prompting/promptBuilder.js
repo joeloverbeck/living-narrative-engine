@@ -2,7 +2,7 @@
  * @module PromptBuilder
  * @description Simplified prompt builder that uses template substitution instead of assemblers
  *
- * Public API surface remains **unchanged**: `async build(llmId, promptData)`.
+ * Public API surface remains backwards compatible: `async build(llmId, promptData)`.
  */
 
 /* eslint-env es2022 */
@@ -82,7 +82,7 @@ export class PromptBuilder extends IPromptBuilder {
    *
    * @inheritdoc
    */
-  async build(llmId, promptData) {
+  async build(llmId, promptData, options = {}) {
     this.#logger.debug(`PromptBuilder.build called for llmId='${llmId}'.`);
 
     if (!llmId || typeof llmId !== 'string') {
@@ -107,11 +107,17 @@ export class PromptBuilder extends IPromptBuilder {
       return '';
     }
 
+    const { isMoodUpdatePrompt = false } = options;
+
     // 2️⃣  Format the prompt data into a flat object for template substitution
-    const formattedData = this.#dataFormatter.formatPromptData(promptData);
+    const formattedData = this.#dataFormatter.formatPromptData(promptData, {
+      isMoodUpdatePrompt,
+    });
 
     // 3️⃣  Process the character prompt template
-    const prompt = this.#templateService.processCharacterPrompt(formattedData);
+    const prompt = isMoodUpdatePrompt
+      ? this.#templateService.processMoodUpdatePrompt(formattedData)
+      : this.#templateService.processCharacterPrompt(formattedData);
 
     this.#logger.debug(
       `PromptBuilder.build: Completed. Final prompt length = ${prompt.length}.`

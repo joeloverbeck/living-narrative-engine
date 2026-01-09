@@ -81,8 +81,9 @@ export class JsonLogicCustomOperators extends BaseService {
 
   /**
    * Creates a wrapper function for class-based operators.
+   *
    * @private
-   * @param {Object} operator - Operator instance with evaluate method
+   * @param {object} operator - Operator instance with evaluate method
    * @returns {Function} Wrapper function for JSON Logic
    */
   #createOperatorWrapper(operator) {

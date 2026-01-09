@@ -37,13 +37,13 @@ import {
 } from '../../common/damage-simulator/damageSimulatorTestFixtures.js';
 
 describe('Multi-Hit Simulation', () => {
-  /** @type {Object} */
+  /** @type {object} */
   let logger;
-  /** @type {Object} */
+  /** @type {object} */
   let dispatcher;
   /** @type {SimpleEntityManager} */
   let entityManager;
-  /** @type {Object} */
+  /** @type {object} */
   let ids;
   /** @type {MultiHitSimulator} */
   let simulator;

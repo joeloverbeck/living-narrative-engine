@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {Object} ConflictInfo
+ * @typedef {object} ConflictInfo
  * @property {string} modA - First conflicting mod ID
  * @property {string} modB - Second conflicting mod ID
  * @property {'declared'|'version'|'resource'} type - Type of conflict
@@ -12,15 +12,15 @@
  */
 
 /**
- * @typedef {Object} ConflictReport
+ * @typedef {object} ConflictReport
  * @property {boolean} hasConflicts
  * @property {ConflictInfo[]} conflicts
  * @property {Map<string, string[]>} modConflicts - Map of modId to conflicting mod IDs
  */
 
 /**
- * @typedef {Object} ConflictDetectorOptions
- * @property {Object} logger
+ * @typedef {object} ConflictDetectorOptions
+ * @property {object} logger
  */
 
 /**
@@ -41,6 +41,7 @@ export class ConflictDetector {
 
   /**
    * Detect all conflicts among a set of mods
+   *
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} mods - All available mods
    * @param {string[]} activeMods - Currently active mod IDs
    * @returns {ConflictReport}
@@ -100,6 +101,7 @@ export class ConflictDetector {
 
   /**
    * Check if activating a mod would cause conflicts
+   *
    * @param {string} modId - Mod to check
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} mods - All mods
    * @param {string[]} currentActiveMods - Current active mods
@@ -115,6 +117,7 @@ export class ConflictDetector {
 
   /**
    * Get all mods that conflict with a specific mod
+   *
    * @param {string} modId
    * @param {import('../services/ModDiscoveryService.js').ModMetadata[]} mods
    * @param {string[]} activeMods
@@ -127,6 +130,7 @@ export class ConflictDetector {
 
   /**
    * Get a warning message for activation conflicts
+   *
    * @param {ConflictInfo[]} conflicts
    * @returns {string|null}
    */
@@ -146,6 +150,7 @@ export class ConflictDetector {
 
   /**
    * Check version-based conflicts
+   *
    * @param {import('../services/ModDiscoveryService.js').ModMetadata} mod
    * @param {Map<string, import('../services/ModDiscoveryService.js').ModMetadata>} modMap
    * @param {string[]} activeMods
@@ -177,6 +182,7 @@ export class ConflictDetector {
 
   /**
    * Check if a version matches incompatibility patterns
+   *
    * @param {string} version
    * @param {string[]} patterns - Version patterns (e.g., "1.x", ">=2.0")
    * @returns {boolean}
@@ -216,6 +222,7 @@ export class ConflictDetector {
 
   /**
    * Simple version comparison
+   *
    * @param {string} a
    * @param {string} b
    * @returns {number} -1 if a < b, 0 if equal, 1 if a > b
@@ -237,6 +244,7 @@ export class ConflictDetector {
 
   /**
    * Add a conflict to the modConflicts map
+   *
    * @param {Map<string, string[]>} map
    * @param {string} modId
    * @param {string} conflictId
@@ -253,6 +261,7 @@ export class ConflictDetector {
 
   /**
    * Remove duplicate conflicts (A-B and B-A are the same)
+   *
    * @param {ConflictInfo[]} conflicts
    * @returns {ConflictInfo[]}
    */

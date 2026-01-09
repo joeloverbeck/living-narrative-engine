@@ -2,7 +2,6 @@
  * @file Integration test verifying all status effect events have definitions.
  * Reproduces the issue where ValidatedEventDispatcher warned about missing event definitions
  * for anatomy:fractured, anatomy:burning_started, etc.
- *
  * @see https://github.com/joeloverbeck/living-narrative-engine/issues/XXX
  */
 

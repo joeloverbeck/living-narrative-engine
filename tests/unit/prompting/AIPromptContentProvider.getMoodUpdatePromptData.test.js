@@ -19,9 +19,9 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
   let modActionMetadataProvider;
   let chanceTextTranslator;
 
-  const MOOD_UPDATE_INSTRUCTION_TEXT = 'MOOD_UPDATE_ONLY_INSTRUCTIONS';
-  const TASK_DEFINITION = 'TASK_DEF';
-  const PORTRAYAL_GUIDELINES = 'PORTRAYAL_GUIDELINES';
+  const MOOD_UPDATE_INSTRUCTION_TEXT =
+    'MOOD_UPDATE_ONLY_INSTRUCTIONS for [CHARACTER_NAME]';
+  const MOOD_TASK_DEFINITION = 'MOOD_TASK_DEF for [CHARACTER_NAME]';
   const CONTENT_POLICY = 'CONTENT_POLICY';
 
   beforeEach(() => {
@@ -33,8 +33,12 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
     };
 
     promptStaticContentService = {
-      getCoreTaskDescriptionText: jest.fn(() => TASK_DEFINITION),
-      getCharacterPortrayalGuidelines: jest.fn(() => PORTRAYAL_GUIDELINES),
+      getCoreTaskDescriptionText: jest.fn(() => 'TASK_DEF'),
+      getMoodUpdateTaskDefinitionText: jest.fn(() => MOOD_TASK_DEFINITION),
+      getCharacterPortrayalGuidelines: jest.fn(() => 'ACTION_GUIDELINES'),
+      getMoodUpdatePortrayalGuidelines: jest.fn(
+        (characterName) => `Mood guidelines for ${characterName}`
+      ),
       getNc21ContentPolicyText: jest.fn(() => CONTENT_POLICY),
       getFinalLlmInstructionText: jest.fn(() => 'FINAL_INSTRUCTIONS'),
       getMoodUpdateInstructionText: jest.fn(() => MOOD_UPDATE_INSTRUCTION_TEXT),
@@ -137,12 +141,14 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
       expect(result.availableActionsInfoContent).toBe('');
     });
 
-    test('finalInstructionsContent uses mood-only instruction text', async () => {
+    test('finalInstructionsContent uses mood-only instruction text with name substitution', async () => {
       const gameStateDto = makeBaseDto({});
 
       const result = await provider.getMoodUpdatePromptData(gameStateDto, logger);
 
-      expect(result.finalInstructionsContent).toBe(MOOD_UPDATE_INSTRUCTION_TEXT);
+      expect(result.finalInstructionsContent).toBe(
+        'MOOD_UPDATE_ONLY_INSTRUCTIONS for TestActor'
+      );
       expect(promptStaticContentService.getMoodUpdateInstructionText).toHaveBeenCalled();
     });
   });
@@ -165,8 +171,35 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
 
       const result = await provider.getMoodUpdatePromptData(gameStateDto, logger);
 
-      expect(characterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalled();
+      expect(characterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
+        gameStateDto.actorPromptData,
+        { includeMoodAxes: true }
+      );
       expect(result.characterPersonaContent).toContain('Mock XML');
+    });
+
+    test('taskDefinitionContent uses mood update task definition with name substitution', async () => {
+      const gameStateDto = makeBaseDto({});
+
+      const result = await provider.getMoodUpdatePromptData(gameStateDto, logger);
+
+      expect(result.taskDefinitionContent).toBe('MOOD_TASK_DEF for TestActor');
+      expect(
+        promptStaticContentService.getMoodUpdateTaskDefinitionText
+      ).toHaveBeenCalled();
+    });
+
+    test('portrayalGuidelinesContent uses mood update portrayal guidelines', async () => {
+      const gameStateDto = makeBaseDto({});
+
+      const result = await provider.getMoodUpdatePromptData(gameStateDto, logger);
+
+      expect(result.portrayalGuidelinesContent).toBe(
+        'Mood guidelines for TestActor'
+      );
+      expect(
+        promptStaticContentService.getMoodUpdatePortrayalGuidelines
+      ).toHaveBeenCalledWith('TestActor');
     });
 
     test('worldContextContent is populated', async () => {
@@ -318,7 +351,9 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
       const regularResult = await provider.getPromptData(gameStateDto, logger);
 
       // Mood method uses mood-specific instructions
-      expect(moodResult.finalInstructionsContent).toBe(MOOD_UPDATE_INSTRUCTION_TEXT);
+      expect(moodResult.finalInstructionsContent).toBe(
+        'MOOD_UPDATE_ONLY_INSTRUCTIONS for TestActor'
+      );
 
       // Regular method uses standard final instructions
       expect(regularResult.finalInstructionsContent).toBe('FINAL_INSTRUCTIONS');

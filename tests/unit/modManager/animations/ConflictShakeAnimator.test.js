@@ -77,6 +77,7 @@ describe('ConflictShakeAnimator', () => {
 
   /**
    * Helper to advance timers and flush microtasks
+   *
    * @param {number} ms - milliseconds to advance
    */
   const advanceTimersAndFlush = async (ms) => {

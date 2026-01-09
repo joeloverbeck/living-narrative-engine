@@ -10,6 +10,11 @@ import holdHandAction from '../../../../data/mods/hand-holding/actions/hold_hand
 
 const ACTION_ID = 'hand-holding:hold_hand';
 
+/**
+ *
+ * @param entity
+ * @param entityManager
+ */
 function entityHasHands(entity, entityManager) {
   if (!entity || !entity.components) {
     return false;

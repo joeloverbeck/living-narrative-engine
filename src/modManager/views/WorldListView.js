@@ -124,6 +124,7 @@ export class WorldListView {
 
   /**
    * Update selected class on world options
+   *
    * @param {string} worldId
    */
   #updateSelectedClass(worldId) {
@@ -142,7 +143,8 @@ export class WorldListView {
 
   /**
    * Render the world list
-   * @param {Object} options
+   *
+   * @param {object} options
    * @param {import('../services/WorldDiscoveryService.js').WorldInfo[]} options.worlds
    * @param {string|null} options.selectedWorld - Currently selected world ID
    * @param {boolean} options.isLoading
@@ -174,6 +176,7 @@ export class WorldListView {
 
   /**
    * Render world options as radio buttons
+   *
    * @param {import('../services/WorldDiscoveryService.js').WorldInfo[]} worlds
    * @param {string|null} selectedWorld
    */
@@ -214,6 +217,7 @@ export class WorldListView {
 
   /**
    * Create a world option element
+   *
    * @param {import('../services/WorldDiscoveryService.js').WorldInfo} world
    * @param {boolean} isSelected
    * @returns {HTMLElement}
@@ -248,6 +252,7 @@ export class WorldListView {
 
   /**
    * Update the details panel for selected world
+   *
    * @param {import('../services/WorldDiscoveryService.js').WorldInfo[]} worlds
    * @param {string|null} selectedWorld
    */
@@ -277,6 +282,7 @@ export class WorldListView {
 
   /**
    * Set validation state for visual feedback
+   *
    * @param {'error'|'success'|'none'} type
    */
   setValidationState(type) {
@@ -295,6 +301,7 @@ export class WorldListView {
 
   /**
    * Capitalize first letter
+   *
    * @param {string} str
    * @returns {string}
    */
@@ -304,6 +311,7 @@ export class WorldListView {
 
   /**
    * Escape HTML to prevent XSS
+   *
    * @param {string} text
    * @returns {string}
    */
@@ -315,6 +323,7 @@ export class WorldListView {
 
   /**
    * Get currently selected world ID
+   *
    * @returns {string|null}
    */
   getSelectedWorld() {

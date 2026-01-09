@@ -4,13 +4,13 @@
  */
 
 /**
- * @typedef {Object} ModDependency
+ * @typedef {object} ModDependency
  * @property {string} id - Dependency mod ID
  * @property {string} version - SemVer version range required
  */
 
 /**
- * @typedef {Object} ModMetadata
+ * @typedef {object} ModMetadata
  * @property {string} id - Mod identifier
  * @property {string} name - Display name
  * @property {string} version - SemVer version
@@ -24,7 +24,7 @@
  */
 
 /**
- * @typedef {Object} ModDiscoveryResponse
+ * @typedef {object} ModDiscoveryResponse
  * @property {boolean} success
  * @property {ModMetadata[]} mods
  * @property {number} count
@@ -33,7 +33,7 @@
  */
 
 /**
- * @typedef {Object} ILogger
+ * @typedef {object} ILogger
  * @property {function(string, ...any): void} debug - Debug level logging
  * @property {function(string, ...any): void} info - Info level logging
  * @property {function(string, ...any): void} warn - Warning level logging
@@ -72,7 +72,7 @@ export class ModDiscoveryService {
   #cacheDuration;
 
   /**
-   * @param {Object} options
+   * @param {object} options
    * @param {ILogger} options.logger - Logger instance
    * @param {string} [options.apiBaseUrl] - Base URL for API (default: from env)
    * @param {number} [options.cacheDuration] - Cache duration in ms (default: 60000)
@@ -90,6 +90,7 @@ export class ModDiscoveryService {
 
   /**
    * Get default API URL from build-time environment variables
+   *
    * @returns {string}
    */
   #getDefaultApiUrl() {
@@ -110,8 +111,9 @@ export class ModDiscoveryService {
 
   /**
    * Fetch all available mods from the backend
-   * @param {Object} [options]
-   * @param {boolean} [options.bypassCache=false] - Skip cache and fetch fresh
+   *
+   * @param {object} [options]
+   * @param {boolean} [options.bypassCache] - Skip cache and fetch fresh
    * @returns {Promise<ModMetadata[]>}
    */
   async discoverMods({ bypassCache = false } = {}) {
@@ -154,6 +156,7 @@ export class ModDiscoveryService {
 
   /**
    * Get a specific mod by ID
+   *
    * @param {string} modId - Mod identifier
    * @returns {Promise<ModMetadata|null>}
    */
@@ -164,6 +167,7 @@ export class ModDiscoveryService {
 
   /**
    * Get mods that have worlds
+   *
    * @returns {Promise<ModMetadata[]>}
    */
   async getModsWithWorlds() {
@@ -182,6 +186,7 @@ export class ModDiscoveryService {
 
   /**
    * Check if cache is still valid
+   *
    * @returns {boolean}
    */
   #isCacheValid() {

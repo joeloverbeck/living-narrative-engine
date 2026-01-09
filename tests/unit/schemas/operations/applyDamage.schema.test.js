@@ -58,7 +58,7 @@ describe('APPLY_DAMAGE operation schema', () => {
 
     const isValid = validate(operation);
     if (!isValid) {
-      // eslint-disable-next-line no-console
+       
       console.error(validate.errors);
     }
     expect(isValid).toBe(true);

@@ -4,7 +4,6 @@
  * Processes entities with the anatomy:bleeding component each turn,
  * applying tick damage and decrementing duration. Removes the component
  * and emits stopped events when duration expires or part is destroyed.
- *
  * @see specs/damage-types-and-special-effects.md
  */
 
@@ -80,6 +79,7 @@ class BleedingTickSystem extends BaseService {
 
   /**
    * Subscribe to turn ended events.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -94,6 +94,7 @@ class BleedingTickSystem extends BaseService {
 
   /**
    * Handle turn ended event - process all bleeding effects.
+   *
    * @private
    */
   async #handleTurnEnded() {

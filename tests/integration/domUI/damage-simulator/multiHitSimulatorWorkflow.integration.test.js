@@ -12,6 +12,12 @@ const DEFAULT_PARTS = [
   { id: 'part-3', name: 'Arms', weight: 1 },
 ];
 
+/**
+ *
+ * @param root0
+ * @param root0.parts
+ * @param root0.applyDamageImpl
+ */
 function createDependencies({ parts = DEFAULT_PARTS, applyDamageImpl } = {}) {
   const events = [];
   const eventBus = {
@@ -47,6 +53,9 @@ function createDependencies({ parts = DEFAULT_PARTS, applyDamageImpl } = {}) {
   return { eventBus, logger, damageExecutionService, events };
 }
 
+/**
+ *
+ */
 function createContainer() {
   const container = document.createElement('div');
   document.body.appendChild(container);

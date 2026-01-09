@@ -188,5 +188,6 @@
         "danger",
         "conflict",
         "exhilaration"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

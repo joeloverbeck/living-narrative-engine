@@ -8,7 +8,7 @@
  * Fisher-Yates shuffle algorithm (in-place, modifies array)
  *
  * @param {Array} array - Array to shuffle
- * @param {function(): number} [randomFn=Math.random] - Random function returning [0, 1)
+ * @param {function(): number} [randomFn] - Random function returning [0, 1)
  * @returns {Array} The same array reference, shuffled
  */
 export function shuffleInPlace(array, randomFn = Math.random) {
@@ -28,7 +28,7 @@ export function shuffleInPlace(array, randomFn = Math.random) {
  * Creates a new shuffled copy of an array (does not modify original)
  *
  * @param {Array} array - Array to shuffle
- * @param {function(): number} [randomFn=Math.random] - Random function returning [0, 1)
+ * @param {function(): number} [randomFn] - Random function returning [0, 1)
  * @returns {Array} New shuffled array
  */
 export function shuffle(array, randomFn = Math.random) {

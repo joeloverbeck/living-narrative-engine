@@ -95,6 +95,10 @@
   --spacing-lg: calc(2 * var(--spacing-unit)); /* 16px */
   --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
 
+  /* Layout Heights (for fixed header/footer calculations) */
+  --ticker-height: 90px;
+  --footer-height: 70px;
+
   /* Borders */
   --border-radius-xs: 2px;
   --border-radius-sm: 4px;
@@ -147,6 +151,8 @@
     --spacing-md: 8px;
     --spacing-sm: 6px;
     --spacing-xs: 4px;
+    --ticker-height: 70px;
+    --footer-height: 100px; /* Taller for stacked layout */
   }
 }
 

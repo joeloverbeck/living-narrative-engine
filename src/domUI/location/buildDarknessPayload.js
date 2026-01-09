@@ -10,6 +10,7 @@
 
 /**
  * Default description shown when a location has no custom darkness description.
+ *
  * @constant {string}
  */
 const DEFAULT_DARKNESS_DESCRIPTION = "You're in pitch darkness.";

@@ -1293,6 +1293,8 @@ describe('MultiHitSimulator', () => {
   describe('#handleRunClick edge cases', () => {
     /**
      * Create a container that captures event handlers for direct invocation
+     *
+     * @param overrides
      */
     const createHandlerCapturingContainer = (overrides = {}) => {
       const eventListeners = {};

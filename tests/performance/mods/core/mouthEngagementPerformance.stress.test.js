@@ -80,6 +80,11 @@ describe('Mouth Engagement - Stress Tests', () => {
   });
 
   // Helper function to create test actor with mouth
+  /**
+   *
+   * @param id
+   * @param name
+   */
   async function createTestActorWithMouth(id, name = 'Test Actor') {
     await entityManager.createEntity(id);
     await entityManager.addComponent(id, NAME_COMPONENT_ID, { text: name });
@@ -116,6 +121,9 @@ describe('Mouth Engagement - Stress Tests', () => {
 
   /**
    * Create a batch of actors with mouths concurrently.
+   *
+   * @param count
+   * @param options
    */
   async function createActorBatch(count, options = {}) {
     const { idPrefix = 'actor', namePrefix = 'Actor' } = options;
@@ -139,6 +147,11 @@ describe('Mouth Engagement - Stress Tests', () => {
   };
 
   // Helper to process operations in batches
+  /**
+   *
+   * @param operations
+   * @param batchSize
+   */
   async function processBatch(operations, batchSize = 50) {
     const results = [];
     for (let i = 0; i < operations.length; i += batchSize) {

@@ -613,6 +613,7 @@ class VisualizationComposer {
 
   /**
    * Resets name tracking for a new visualization.
+   *
    * @private
    */
   #resetNameTracking() {

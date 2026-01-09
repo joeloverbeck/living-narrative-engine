@@ -67,6 +67,8 @@ const createBaseDependencies = () => ({
 
 /**
  * Create mock cliche data for testing
+ *
+ * @param overrides
  */
 const createMockClicheData = (overrides = {}) => ({
   id: 'cliche-1',
@@ -92,6 +94,8 @@ const createMockClicheData = (overrides = {}) => ({
 
 /**
  * Create mock CoreMotivation data
+ *
+ * @param overrides
  */
 const createMockMotivationData = (overrides = {}) => ({
   id: 'motivation-1',

@@ -135,6 +135,14 @@ export class EmotionDisplayConfigLoader {
   }
 }
 
+/**
+ *
+ * @param value
+ * @param defaultValue
+ * @param fieldName
+ * @param path
+ * @param logWarn
+ */
 function resolvePositiveInt(value, defaultValue, fieldName, path, logWarn) {
   if (value === undefined) {
     return defaultValue;

@@ -5,8 +5,9 @@
 
 /**
  * Creates a throwing actor fixture with ranged skill
- * @param {Object} overrides - Override default values
- * @returns {Object} Actor entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Actor entity fixture
  */
 export const createThrowingActorFixture = (overrides = {}) => ({
   id: overrides.id || 'throwing-actor',
@@ -22,8 +23,9 @@ export const createThrowingActorFixture = (overrides = {}) => ({
 
 /**
  * Creates a target actor fixture with defense skill
- * @param {Object} overrides - Override default values
- * @returns {Object} Target entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Target entity fixture
  */
 export const createTargetActorFixture = (overrides = {}) => ({
   id: overrides.id || 'target-actor',
@@ -38,8 +40,9 @@ export const createTargetActorFixture = (overrides = {}) => ({
 
 /**
  * Creates a portable item fixture (no damage capabilities - weight-based damage)
- * @param {Object} overrides - Override default values
- * @returns {Object} Portable item entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Portable item entity fixture
  */
 export const createPortableItemFixture = (overrides = {}) => ({
   id: overrides.id || 'rock-001',
@@ -52,8 +55,9 @@ export const createPortableItemFixture = (overrides = {}) => ({
 
 /**
  * Creates a weapon fixture with damage capabilities
- * @param {Object} overrides - Override default values
- * @returns {Object} Weapon entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Weapon entity fixture
  */
 export const createWeaponFixture = (overrides = {}) => ({
   id: overrides.id || 'dagger-001',
@@ -69,8 +73,9 @@ export const createWeaponFixture = (overrides = {}) => ({
 
 /**
  * Creates a furniture fixture (non-actor entity for fumble tests)
- * @param {Object} overrides - Override default values
- * @returns {Object} Furniture entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Furniture entity fixture
  */
 export const createFurnitureFixture = (overrides = {}) => ({
   id: overrides.id || 'furniture-001',
@@ -84,8 +89,9 @@ export const createFurnitureFixture = (overrides = {}) => ({
 
 /**
  * Creates a location fixture
- * @param {Object} overrides - Override default values
- * @returns {Object} Location entity fixture
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Location entity fixture
  */
 export const createLocationFixture = (overrides = {}) => ({
   id: overrides.id || 'test-location',
@@ -98,8 +104,9 @@ export const createLocationFixture = (overrides = {}) => ({
 
 /**
  * Creates a wielding actor fixture (actor with item wielded)
- * @param {Object} overrides - Override default values
- * @returns {Object} Actor entity fixture with wielding component
+ *
+ * @param {object} overrides - Override default values
+ * @returns {object} Actor entity fixture with wielding component
  */
 export const createWieldingActorFixture = (overrides = {}) => ({
   id: overrides.id || 'wielding-actor',
@@ -118,9 +125,10 @@ export const createWieldingActorFixture = (overrides = {}) => ({
 
 /**
  * Creates an actor with a forbidden component (for testing action unavailability)
+ *
  * @param {string} forbiddenComponent - The forbidden component to add
- * @param {Object} overrides - Override default values
- * @returns {Object} Actor entity fixture with forbidden component
+ * @param {object} overrides - Override default values
+ * @returns {object} Actor entity fixture with forbidden component
  */
 export const createActorWithForbiddenComponent = (
   forbiddenComponent,
@@ -140,8 +148,9 @@ export const createActorWithForbiddenComponent = (
 
 /**
  * Creates a standard test scenario with thrower, target, item, and location
- * @param {Object} options - Configuration options
- * @returns {Object} Complete test scenario with all entities
+ *
+ * @param {object} options - Configuration options
+ * @returns {object} Complete test scenario with all entities
  */
 export const createStandardThrowScenario = (options = {}) => {
   const locationId = options.locationId || 'test-location';
@@ -162,8 +171,9 @@ export const createStandardThrowScenario = (options = {}) => {
 
 /**
  * Creates a fumble test scenario with furniture for collateral damage
- * @param {Object} options - Configuration options
- * @returns {Object} Test scenario with furniture entity
+ *
+ * @param {object} options - Configuration options
+ * @returns {object} Test scenario with furniture entity
  */
 export const createFumbleScenario = (options = {}) => {
   const locationId = options.locationId || 'test-location';

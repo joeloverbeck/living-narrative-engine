@@ -6,7 +6,6 @@
  * Subscribes to TURN_STARTED_ID to refresh the current actor's injury status.
  * Uses InjuryAggregationService to collect injury data and
  * InjuryNarrativeFormatterService to format it as first-person narrative.
- *
  * @see specs/injury-reporting-and-user-interface.md section 7.1
  */
 
@@ -28,7 +27,7 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
  * - First-person narrative of current injuries
  * - Handles healthy, injured, dying, and dead states
  *
- * @extends BoundDomRendererBase
+ * @augments BoundDomRendererBase
  */
 export class InjuryStatusPanel extends BoundDomRendererBase {
   /** @type {InjuryAggregationService} */

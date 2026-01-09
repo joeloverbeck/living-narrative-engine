@@ -32,6 +32,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /**
  * Priority levels for diagnostic statuses (lower = higher priority)
  * Used to sort problematic expressions for display
+ *
  * @type {Record<string, number>}
  */
 const STATUS_PRIORITY = Object.freeze({
@@ -45,12 +46,14 @@ const STATUS_PRIORITY = Object.freeze({
 
 /**
  * Statuses that should NOT be displayed in the problematic expressions panel
+ *
  * @type {Set<string>}
  */
 const NON_PROBLEMATIC_STATUSES = new Set(['normal', 'frequent']);
 
 /**
  * Status display colors for UI rendering
+ *
  * @type {Record<string, string>}
  */
 const STATUS_COLORS = Object.freeze({
@@ -83,9 +86,9 @@ class ExpressionStatusService {
   #baseUrl;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {object} deps.logger - ILogger instance
-   * @param {string} [deps.baseUrl='http://localhost:3001'] - LLM proxy server base URL
+   * @param {string} [deps.baseUrl] - LLM proxy server base URL
    */
   constructor({ logger, baseUrl = 'http://localhost:3001' }) {
     validateDependency(logger, 'ILogger', logger, {
@@ -178,6 +181,7 @@ class ExpressionStatusService {
 
   /**
    * Update the diagnostic status for an expression file
+   *
    * @param {string} filePath - Relative path to expression file
    * @param {string} status - New diagnostic status value
    * @returns {Promise<UpdateStatusResult>}
@@ -258,6 +262,7 @@ class ExpressionStatusService {
 
   /**
    * Scan all expression files and return their diagnostic statuses
+   *
    * @returns {Promise<ScanStatusesResult>}
    */
   async scanAllStatuses() {
@@ -330,8 +335,9 @@ class ExpressionStatusService {
   /**
    * Get problematic expressions sorted by priority
    * Filters out NORMAL and FREQUENT statuses
+   *
    * @param {ExpressionStatusInfo[]} expressions - All expression status info
-   * @param {number} [maxCount=10] - Maximum number to return
+   * @param {number} [maxCount] - Maximum number to return
    * @returns {ExpressionStatusInfo[]}
    */
   getProblematicExpressions(expressions, maxCount = 10) {
@@ -355,6 +361,7 @@ class ExpressionStatusService {
 
   /**
    * Get the display color for a diagnostic status
+   *
    * @param {string|null} status - Diagnostic status
    * @returns {string} - CSS color value
    */
@@ -364,6 +371,7 @@ class ExpressionStatusService {
 
   /**
    * Get priority value for a status
+   *
    * @param {string|null} status - Diagnostic status
    * @returns {number} - Priority (lower = higher priority)
    */
@@ -373,6 +381,7 @@ class ExpressionStatusService {
 
   /**
    * Check if a status is considered problematic
+   *
    * @param {string|null} status - Diagnostic status
    * @returns {boolean}
    */

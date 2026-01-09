@@ -13,7 +13,7 @@ import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
  */
 
 /**
- * @typedef {Object} SimulationConfig
+ * @typedef {object} SimulationConfig
  * @property {number} sampleCount - Number of samples (default 10000)
  * @property {DistributionType} distribution - Distribution type
  * @property {boolean} trackClauses - Track per-clause failures
@@ -24,24 +24,24 @@ import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
  */
 
 /**
- * @typedef {Object} UnseededVarWarning
+ * @typedef {object} UnseededVarWarning
  * @property {string} path - The problematic variable path
  * @property {'unknown_root' | 'unknown_nested_key' | 'invalid_nesting'} reason - Category of issue
  * @property {string} suggestion - Human-readable explanation
  */
 
 /**
- * @typedef {Object} ClauseResult
+ * @typedef {object} ClauseResult
  * @property {string} clauseDescription
  * @property {number} failureCount
  * @property {number} failureRate
  * @property {number} averageViolation
  * @property {number} clauseIndex
- * @property {Object|null} [hierarchicalBreakdown] - Tree structure for compound clauses
+ * @property {object | null} [hierarchicalBreakdown] - Tree structure for compound clauses
  */
 
 /**
- * @typedef {Object} SimulationResult
+ * @typedef {object} SimulationResult
  * @property {number} triggerRate - Probability of triggering [0, 1]
  * @property {number} triggerCount - Number of successful triggers
  * @property {number} sampleCount - Total samples evaluated
@@ -64,7 +64,7 @@ class MonteCarloSimulator {
   #logger;
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry
    * @param {object} deps.logger - ILogger
    */
@@ -82,12 +82,14 @@ class MonteCarloSimulator {
 
   /**
    * Run Monte Carlo simulation for an expression
+   *
    * @param {object} expression - Expression to evaluate
    * @param {SimulationConfig} [config]
    * @returns {SimulationResult}
    */
   /**
    * Run Monte Carlo simulation for an expression
+   *
    * @param {object} expression - Expression to evaluate
    * @param {SimulationConfig} [config]
    * @returns {Promise<SimulationResult>}
@@ -191,9 +193,10 @@ class MonteCarloSimulator {
 
   /**
    * Generate random state based on distribution
+   *
    * @private
    * @param {DistributionType} distribution
-   * @returns {{mood: Object, sexual: Object}}
+   * @returns {{mood: object, sexual: object}}
    */
   #generateRandomState(distribution) {
     const moodAxes = ['valence', 'arousal', 'agency_control', 'threat', 'engagement', 'future_expectancy', 'self_evaluation'];
@@ -217,6 +220,7 @@ class MonteCarloSimulator {
 
   /**
    * Sample a value from the specified distribution
+   *
    * @private
    * @param {DistributionType} distribution
    * @param {number} min
@@ -241,6 +245,7 @@ class MonteCarloSimulator {
 
   /**
    * Initialize clause tracking data structure with hierarchical breakdown
+   *
    * @private
    * @param {object} expression
    * @returns {Array}
@@ -266,6 +271,7 @@ class MonteCarloSimulator {
 
   /**
    * Describe a clause in human-readable form
+   *
    * @private
    * @param {object} prerequisite
    * @returns {string}
@@ -300,9 +306,10 @@ class MonteCarloSimulator {
 
   /**
    * Evaluate expression with clause tracking (includes hierarchical breakdown)
+   *
    * @private
    * @param {object} expression
-   * @param {{mood: Object, sexual: Object}} state
+   * @param {{mood: object, sexual: object}} state
    * @param {Array|null} clauseTracking
    * @returns {{triggered: boolean}}
    */
@@ -345,9 +352,10 @@ class MonteCarloSimulator {
 
   /**
    * Build evaluation context from state
+   *
    * @private
-   * @param {{mood: Object, sexual: Object}} state
-   * @returns {Object}
+   * @param {{mood: object, sexual: object}} state
+   * @returns {object}
    */
   #buildContext(state) {
     // Calculate emotions from mood using prototypes
@@ -379,9 +387,10 @@ class MonteCarloSimulator {
 
   /**
    * Calculate emotion intensities from mood axes
+   *
    * @private
-   * @param {Object} mood - Mood axes in [-100, 100] scale
-   * @returns {Object}
+   * @param {object} mood - Mood axes in [-100, 100] scale
+   * @returns {object}
    */
   #calculateEmotions(mood) {
     const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
@@ -415,8 +424,9 @@ class MonteCarloSimulator {
   /**
    * Calculate sexual arousal from sexual state properties.
    * Mirrors EmotionCalculatorService.calculateSexualArousal()
+   *
    * @private
-   * @param {Object} sexual - Sexual state with sex_excitation, sex_inhibition, baseline_libido
+   * @param {object} sexual - Sexual state with sex_excitation, sex_inhibition, baseline_libido
    * @returns {number} - Arousal in [0, 1] range
    */
   #calculateSexualArousal(sexual) {
@@ -434,10 +444,11 @@ class MonteCarloSimulator {
 
   /**
    * Calculate sexual state intensities
+   *
    * @private
-   * @param {Object} sexual - Raw sexual state with sex_excitation, sex_inhibition, baseline_libido
+   * @param {object} sexual - Raw sexual state with sex_excitation, sex_inhibition, baseline_libido
    * @param {number} sexualArousal - Pre-calculated sexual arousal in [0, 1] range
-   * @returns {Object}
+   * @returns {object}
    */
   #calculateSexualStates(sexual, sexualArousal) {
     const lookup = this.#dataRegistry.get('lookups', 'core:sexual_prototypes');
@@ -474,6 +485,7 @@ class MonteCarloSimulator {
 
   /**
    * Evaluate a single prerequisite
+   *
    * @private
    * @param {object} prereq
    * @param {object} context
@@ -489,6 +501,7 @@ class MonteCarloSimulator {
 
   /**
    * Evaluate all prerequisites
+   *
    * @private
    * @param {object} expression
    * @param {object} context
@@ -507,6 +520,7 @@ class MonteCarloSimulator {
 
   /**
    * Estimate violation magnitude for a failed prerequisite
+   *
    * @private
    * @param {object} prereq
    * @param {object} context
@@ -531,6 +545,7 @@ class MonteCarloSimulator {
 
   /**
    * Get nested value from object using dot notation
+   *
    * @private
    * @param {object} obj
    * @param {string} path
@@ -542,6 +557,7 @@ class MonteCarloSimulator {
 
   /**
    * Finalize clause results with rates and hierarchical breakdown
+   *
    * @private
    * @param {Array} clauseTracking
    * @param {number} sampleCount
@@ -564,6 +580,7 @@ class MonteCarloSimulator {
 
   /**
    * Calculate Wilson score confidence interval
+   *
    * @private
    * @param {number} rate
    * @param {number} n
@@ -586,6 +603,7 @@ class MonteCarloSimulator {
 
   /**
    * Get z-score for confidence level
+   *
    * @private
    * @param {number} level
    * @returns {number}
@@ -600,8 +618,9 @@ class MonteCarloSimulator {
 
   /**
    * Create zeroed emotions object from prototypes
+   *
    * @private
-   * @returns {Object}
+   * @returns {object}
    */
   #createZeroedEmotions() {
     const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
@@ -611,8 +630,9 @@ class MonteCarloSimulator {
 
   /**
    * Create zeroed sexual states object from prototypes
+   *
    * @private
-   * @returns {Object}
+   * @returns {object}
    */
   #createZeroedSexualStates() {
     const lookup = this.#dataRegistry.get('lookups', 'core:sexual_prototypes');
@@ -622,8 +642,9 @@ class MonteCarloSimulator {
 
   /**
    * Create zeroed mood axes object
+   *
    * @private
-   * @returns {Object}
+   * @returns {object}
    */
   #createZeroedMoodAxes() {
     return {
@@ -643,6 +664,7 @@ class MonteCarloSimulator {
 
   /**
    * Build a hierarchical tracking tree from a JSON Logic expression.
+   *
    * @private
    * @param {object} logic - The JSON Logic object
    * @param {string} pathPrefix - Path prefix for node IDs
@@ -697,6 +719,7 @@ class MonteCarloSimulator {
 
   /**
    * Describe a leaf condition in human-readable form.
+   *
    * @private
    * @param {object} logic
    * @returns {string}
@@ -720,6 +743,7 @@ class MonteCarloSimulator {
 
   /**
    * Describe an operand (left or right side of comparison).
+   *
    * @private
    * @param {*} operand
    * @returns {string}
@@ -754,6 +778,7 @@ class MonteCarloSimulator {
   /**
    * Recursively evaluate a hierarchical tree node and update stats.
    * Evaluates ALL children (no short-circuit) to collect accurate stats.
+   *
    * @private
    * @param {HierarchicalClauseNode} node
    * @param {object} context
@@ -806,6 +831,7 @@ class MonteCarloSimulator {
 
   /**
    * Evaluate a leaf condition directly.
+   *
    * @private
    * @param {object} logic
    * @param {object} context
@@ -821,6 +847,7 @@ class MonteCarloSimulator {
 
   /**
    * Estimate violation magnitude for a leaf condition.
+   *
    * @private
    * @param {object} logic
    * @param {object} context
@@ -874,6 +901,7 @@ class MonteCarloSimulator {
 
   /**
    * Resolve a value from context (handles {var: "path"}, literals, and expressions).
+   *
    * @private
    * @param {*} expr
    * @param {object} context
@@ -900,6 +928,7 @@ class MonteCarloSimulator {
 
   /**
    * Build the set of known context keys from static definitions and prototype registries.
+   *
    * @private
    * @returns {{ topLevel: Set<string>, nestedKeys: Record<string, Set<string>>, scalarKeys: Set<string> }}
    */
@@ -983,6 +1012,7 @@ class MonteCarloSimulator {
 
   /**
    * Validate a single variable path against known context keys.
+   *
    * @private
    * @param {string} path - The variable path to validate (e.g., "emotions.joy")
    * @param {{ topLevel: Set<string>, nestedKeys: Record<string, Set<string>>, scalarKeys: Set<string> }} knownKeys
@@ -1034,6 +1064,7 @@ class MonteCarloSimulator {
 
   /**
    * Validate all variable paths in an expression's prerequisites.
+   *
    * @private
    * @param {object} expression - Expression with prerequisites array
    * @returns {{ warnings: UnseededVarWarning[] }}

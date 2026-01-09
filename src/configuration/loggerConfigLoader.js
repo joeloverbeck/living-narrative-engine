@@ -216,10 +216,18 @@ export class LoggerConfigLoader {
   }
 }
 
+/**
+ *
+ * @param value
+ */
 function isUrlLike(value) {
   return /^https?:\/\//i.test(value) || /^file:\/\//i.test(value);
 }
 
+/**
+ *
+ * @param filePath
+ */
 async function readConfigFromFile(filePath) {
   if (!isNodeEnvironment()) {
     throw new Error('readConfigFromFile is only supported in Node.js');

@@ -85,18 +85,33 @@ const RIGID_PARTS = [
 
 const DAMAGE_TYPE = 'bludgeoning';
 
+/**
+ *
+ * @param relativePath
+ */
 async function loadJson(relativePath) {
   const filePath = path.resolve(process.cwd(), relativePath);
   const raw = await fs.readFile(filePath, 'utf8');
   return JSON.parse(raw);
 }
 
+/**
+ *
+ * @param dataRegistry
+ * @param definitionPath
+ */
 async function loadEntityDefinition(dataRegistry, definitionPath) {
   const definition = await loadJson(definitionPath);
   dataRegistry.store('entityDefinitions', definition.id, definition);
   return definition.id;
 }
 
+/**
+ *
+ * @param entityManager
+ * @param dataRegistry
+ * @param definitionPath
+ */
 async function createPartInstance(entityManager, dataRegistry, definitionPath) {
   const definitionId = await loadEntityDefinition(dataRegistry, definitionPath);
   const instanceId = `${definitionId}-instance`;
@@ -104,6 +119,9 @@ async function createPartInstance(entityManager, dataRegistry, definitionPath) {
   return instanceId;
 }
 
+/**
+ *
+ */
 async function createDamageHarness() {
   const logger = {
     debug: jest.fn(),
@@ -227,6 +245,13 @@ async function createDamageHarness() {
   };
 }
 
+/**
+ *
+ * @param handler
+ * @param entityId
+ * @param partId
+ * @param amount
+ */
 async function applyFractureDamage(handler, entityId, partId, amount) {
   await handler.execute(
     {

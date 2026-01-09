@@ -21,8 +21,8 @@ export const diagnosticsTokens = freeze({
   // Status Persistence
   IExpressionStatusService: 'IExpressionStatusService',
 
-  // Phase 3 - Witness Finding (to be added in EXPDIA-011)
-  // IWitnessStateFinder: 'IWitnessStateFinder',
+  // Phase 3 - Witness Finding
+  IWitnessStateFinder: 'IWitnessStateFinder',
 
   // Phase 4 - SMT Solver (to be added in EXPDIA-013)
   // ISmtSolver: 'ISmtSolver',

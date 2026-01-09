@@ -11,6 +11,7 @@ import {
   jest,
 } from '@jest/globals';
 import ExpressionDiagnosticsController from '../../../../src/domUI/expression-diagnostics/ExpressionDiagnosticsController.js';
+import * as clipboardUtils from '../../../../src/domUI/helpers/clipboardUtils.js';
 
 describe('ExpressionDiagnosticsController', () => {
   let mockLogger;
@@ -20,6 +21,7 @@ describe('ExpressionDiagnosticsController', () => {
   let mockMonteCarloSimulator;
   let mockFailureExplainer;
   let mockExpressionStatusService;
+  let mockWitnessStateFinder;
 
   beforeEach(() => {
     // Set up the DOM structure directly in Jest's jsdom environment
@@ -29,6 +31,7 @@ describe('ExpressionDiagnosticsController', () => {
       </select>
       <p id="expression-description"></p>
       <button id="run-static-btn" disabled>Run Static Analysis</button>
+      <button id="find-witness-btn" disabled>Find Witness State</button>
       <div id="status-indicator" class="status-indicator status-unknown">
         <span class="status-emoji">⚪</span>
         <span class="status-label">Not Analyzed</span>
@@ -78,6 +81,22 @@ describe('ExpressionDiagnosticsController', () => {
           <table id="blockers-table">
             <tbody id="blockers-tbody"></tbody>
           </table>
+        </div>
+      </section>
+      <!-- Witness State Section -->
+      <section id="witness-section">
+        <span id="witness-status"></span>
+        <div id="witness-results" hidden>
+          <span id="witness-result-label" class="result-label"></span>
+          <button id="copy-witness-btn">Copy to Clipboard</button>
+          <div id="mood-display" class="axis-grid"></div>
+          <div id="sexual-display" class="axis-grid"></div>
+          <pre id="witness-json-content"></pre>
+          <div id="violated-clauses" hidden>
+            <ul id="violated-clauses-list"></ul>
+          </div>
+          <div id="fitness-fill" class="fitness-fill"></div>
+          <span id="fitness-value">--</span>
         </div>
       </section>
     `;
@@ -145,6 +164,33 @@ describe('ExpressionDiagnosticsController', () => {
       }),
       updateStatus: jest.fn().mockResolvedValue({ success: true }),
       getProblematicExpressions: jest.fn().mockReturnValue([]),
+    };
+
+    mockWitnessStateFinder = {
+      findWitness: jest.fn().mockResolvedValue({
+        found: true,
+        witness: {
+          mood: {
+            valence: 0.5,
+            arousal: 0.6,
+            agency_control: 0.4,
+            threat: 0.2,
+            engagement: 0.7,
+            future_expectancy: 0.5,
+            self_evaluation: 0.6,
+          },
+          sexual: {
+            sex_excitation: 0.3,
+            sex_inhibition: 0.4,
+            baseline_libido: 0.5,
+          },
+          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
+        },
+        nearestMiss: null,
+        bestFitness: 1.0,
+        iterationsUsed: 100,
+        violatedClauses: [],
+      }),
     };
   });
 
@@ -248,6 +294,37 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: null,
+          witnessStateFinder: mockWitnessStateFinder,
+        });
+      }).toThrow();
+    });
+
+    it('throws if witnessStateFinder is missing', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: null,
+        });
+      }).toThrow();
+    });
+
+    it('throws if witnessStateFinder lacks required methods', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: { someMethod: jest.fn() },
         });
       }).toThrow();
     });
@@ -318,6 +395,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
         });
       }).not.toThrow();
     });
@@ -333,6 +411,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -359,6 +438,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -378,6 +458,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -398,6 +479,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -419,6 +501,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -443,6 +526,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -482,6 +566,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -510,6 +595,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -536,6 +622,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -564,6 +651,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -601,6 +689,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -641,6 +730,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -693,6 +783,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -722,6 +813,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -751,6 +843,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -770,6 +863,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -797,6 +891,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -830,6 +925,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -873,6 +969,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -911,6 +1008,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -941,6 +1039,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -958,6 +1057,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -980,6 +1080,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1006,6 +1107,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1039,6 +1141,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1069,6 +1172,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1098,6 +1202,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1125,6 +1230,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1153,6 +1259,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1192,6 +1299,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1228,6 +1336,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1264,6 +1373,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1308,6 +1418,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1338,6 +1449,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1369,6 +1481,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1407,6 +1520,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1426,6 +1540,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1454,6 +1569,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1487,6 +1603,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1520,6 +1637,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1563,6 +1681,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1599,6 +1718,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1635,6 +1755,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1684,6 +1805,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1730,6 +1852,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1775,6 +1898,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1825,6 +1949,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1863,6 +1988,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1888,6 +2014,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1913,6 +2040,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1936,6 +2064,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1958,6 +2087,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1978,6 +2108,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -1999,6 +2130,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2036,6 +2168,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2073,6 +2206,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2098,6 +2232,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2123,6 +2258,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2160,6 +2296,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2182,6 +2319,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2206,6 +2344,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2227,6 +2366,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2248,6 +2388,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2270,6 +2411,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2313,6 +2455,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2352,6 +2495,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2389,6 +2533,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2427,6 +2572,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2463,6 +2609,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2506,6 +2653,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2544,6 +2692,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2598,6 +2747,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2656,6 +2806,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2707,6 +2858,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2743,6 +2895,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2785,6 +2938,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2832,6 +2986,7 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
       });
 
       await controller.initialize();
@@ -2851,6 +3006,546 @@ describe('ExpressionDiagnosticsController', () => {
       // updateStatus should have been called and completed
       expect(operationOrder).toContain('updateStatus-start');
       expect(operationOrder).toContain('updateStatus-end');
+    });
+  });
+
+  describe('Witness State Finder', () => {
+    it('Find Witness button is disabled when no expression selected', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      expect(findWitnessBtn.disabled).toBe(true);
+    });
+
+    it('Find Witness button is enabled when expression selected', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      expect(findWitnessBtn.disabled).toBe(false);
+    });
+
+    it('Find Witness button triggers search and shows results when witness found', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(mockWitnessStateFinder.findWitness).toHaveBeenCalled();
+
+      const witnessResults = document.getElementById('witness-results');
+      expect(witnessResults.hidden).toBe(false);
+
+      const resultLabel = document.getElementById('witness-result-label');
+      expect(resultLabel.textContent).toContain('Witness Found');
+    });
+
+    it('shows "Nearest Miss" label when witness not found', async () => {
+      mockWitnessStateFinder.findWitness.mockResolvedValue({
+        found: false,
+        witness: null,
+        nearestMiss: {
+          mood: { valence: 0.5, arousal: 0.5, agency_control: 0.5, threat: 0.5, engagement: 0.5, future_expectancy: 0.5, self_evaluation: 0.5 },
+          sexual: { arousal: 0.5, desire: 0.5, satisfaction: 0.5 },
+          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
+        },
+        bestFitness: 0.85,
+        iterationsUsed: 1000,
+        violatedClauses: ['condition1 failed', 'condition2 failed'],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const resultLabel = document.getElementById('witness-result-label');
+      expect(resultLabel.textContent).toContain('Nearest Miss');
+    });
+
+    it('displays violated clauses when witness not found', async () => {
+      mockWitnessStateFinder.findWitness.mockResolvedValue({
+        found: false,
+        witness: null,
+        nearestMiss: {
+          mood: { valence: 0.5, arousal: 0.5, agency_control: 0.5, threat: 0.5, engagement: 0.5, future_expectancy: 0.5, self_evaluation: 0.5 },
+          sexual: { arousal: 0.5, desire: 0.5, satisfaction: 0.5 },
+          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
+        },
+        bestFitness: 0.85,
+        iterationsUsed: 1000,
+        violatedClauses: ['condition1 failed', 'condition2 failed'],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const violatedClauses = document.getElementById('violated-clauses');
+      expect(violatedClauses.hidden).toBe(false);
+
+      const clausesList = document.getElementById('violated-clauses-list');
+      expect(clausesList.children.length).toBe(2);
+    });
+
+    it('hides violated clauses section when witness is found', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const violatedClauses = document.getElementById('violated-clauses');
+      expect(violatedClauses.hidden).toBe(true);
+    });
+
+    it('displays fitness score in the UI', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const fitnessValue = document.getElementById('fitness-value');
+      expect(fitnessValue.textContent).toBe('1.000');
+
+      const fitnessFill = document.getElementById('fitness-fill');
+      expect(fitnessFill.style.width).toBe('100%');
+    });
+
+    it('populates mood axes display', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const moodDisplay = document.getElementById('mood-display');
+      // Should have 7 mood axes
+      expect(moodDisplay.children.length).toBe(7);
+    });
+
+    it('populates sexual state display', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const sexualDisplay = document.getElementById('sexual-display');
+      // Should have 3 sexual axes
+      expect(sexualDisplay.children.length).toBe(3);
+    });
+
+    it('displays JSON in witness JSON content area', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const jsonContent = document.getElementById('witness-json-content');
+      expect(jsonContent.textContent).toBe('{"mood":{},"sexual":{}}');
+    });
+
+    it('resets witness results when expression selection changes', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      // Select first expression and run witness finder
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify results are shown
+      expect(document.getElementById('witness-results').hidden).toBe(false);
+
+      // Change expression (clears selection)
+      select.value = '';
+      select.dispatchEvent(new Event('change'));
+
+      // Results should be reset/hidden
+      expect(document.getElementById('witness-results').hidden).toBe(true);
+      expect(document.getElementById('fitness-value').textContent).toBe('--');
+    });
+
+    it('handles search errors gracefully', async () => {
+      mockWitnessStateFinder.findWitness.mockRejectedValue(
+        new Error('Search algorithm failed')
+      );
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const witnessStatus = document.getElementById('witness-status');
+      expect(witnessStatus.textContent).toContain('Error');
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('button shows searching state during search', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+
+      // The button text should be restored after the search completes
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // After completion, button should be re-enabled
+      expect(findWitnessBtn.disabled).toBe(false);
+      expect(findWitnessBtn.textContent).toBe('Find Witness State');
+    });
+
+    it('copy button calls clipboard utility', async () => {
+      // Mock the copyToClipboard utility
+      const mockCopyToClipboard = jest
+        .spyOn(clipboardUtils, 'copyToClipboard')
+        .mockResolvedValue(true);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      // First find a witness
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Then copy
+      const copyBtn = document.getElementById('copy-witness-btn');
+      await copyBtn.click();
+
+      // Give time for async clipboard operation
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(mockCopyToClipboard).toHaveBeenCalledWith('{"mood":{},"sexual":{}}');
+      mockCopyToClipboard.mockRestore();
+    });
+
+    it('copy button shows feedback immediately with accessibility attributes', async () => {
+      // Mock the copyToClipboard utility
+      const mockCopyToClipboard = jest
+        .spyOn(clipboardUtils, 'copyToClipboard')
+        .mockResolvedValue(true);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      // First find a witness
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Then copy
+      const copyBtn = document.getElementById('copy-witness-btn');
+      await copyBtn.click();
+
+      // Give time for async clipboard operation
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Check that feedback toast has proper accessibility attributes
+      const toast = document.querySelector('.copy-feedback');
+      expect(toast).toBeTruthy();
+      expect(toast.getAttribute('role')).toBe('status');
+      expect(toast.getAttribute('aria-live')).toBe('polite');
+      expect(toast.classList.contains('show')).toBe(true);
+      expect(toast.textContent).toBe('Copied to clipboard!');
+
+      mockCopyToClipboard.mockRestore();
+    });
+
+    it('copy button shows failure feedback when clipboard fails', async () => {
+      // Mock the copyToClipboard utility to return failure
+      const mockCopyToClipboard = jest
+        .spyOn(clipboardUtils, 'copyToClipboard')
+        .mockResolvedValue(false);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+      });
+
+      await controller.initialize();
+
+      const select = document.getElementById('expression-select');
+      select.value = 'expr:test1';
+      select.dispatchEvent(new Event('change'));
+
+      // First find a witness
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Then copy
+      const copyBtn = document.getElementById('copy-witness-btn');
+      await copyBtn.click();
+
+      // Give time for async clipboard operation
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Check that failure feedback is shown
+      const toast = document.querySelector('.copy-feedback');
+      expect(toast).toBeTruthy();
+      expect(toast.textContent).toBe('Copy failed');
+
+      mockCopyToClipboard.mockRestore();
     });
   });
 });

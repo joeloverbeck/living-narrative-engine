@@ -97,6 +97,7 @@ class ResolveOutcomeHandler {
    * @param {object} dependencies - Dependencies object.
    * @param {object} dependencies.chanceCalculationService - Service for orchestrating chance calculations.
    * @param {ILogger} dependencies.logger - The logging service instance.
+   * @param dependencies.gameDataRepository
    * @throws {Error} If any dependency is missing or invalid.
    */
   constructor({ chanceCalculationService, logger, gameDataRepository = null }) {

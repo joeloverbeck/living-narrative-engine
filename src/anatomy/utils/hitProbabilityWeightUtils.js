@@ -7,6 +7,7 @@
 /**
  * Default weight for parts without explicit hit_probability_weight.
  * Matches the schema default in part.component.json.
+ *
  * @type {number}
  */
 export const DEFAULT_HIT_PROBABILITY_WEIGHT = 1.0;

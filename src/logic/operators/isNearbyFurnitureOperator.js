@@ -29,9 +29,9 @@ export class IsNearbyFurnitureOperator {
   #logger;
 
   /**
-   * @param {Object} params - Dependencies
-   * @param {Object} params.entityManager - Entity manager for lookups
-   * @param {Object} params.logger - Logger instance
+   * @param {object} params - Dependencies
+   * @param {object} params.entityManager - Entity manager for lookups
+   * @param {object} params.logger - Logger instance
    */
   constructor({ entityManager, logger }) {
     validateDependency(entityManager, 'IEntityManager', logger, {
@@ -46,7 +46,7 @@ export class IsNearbyFurnitureOperator {
    * Evaluates whether the entity IS the nearby furniture.
    *
    * @param {Array} args - [entityId]
-   * @param {Object} context - Evaluation context containing actor
+   * @param {object} context - Evaluation context containing actor
    * @returns {boolean} True if entity is nearby furniture
    */
   evaluate(args, context) {

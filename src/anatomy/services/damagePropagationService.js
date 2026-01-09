@@ -84,6 +84,7 @@ class DamagePropagationService extends BaseService {
    * @param {string} damageTypeId - Type of damage (e.g., 'slashing', 'piercing')
    * @param {string} ownerEntityId - Entity ID of the character that owns the parts
    * @param {Array|object} propagationRules - Propagation rules (array or object format)
+   * @param rngProvider
    * @returns {PropagationResult[]} Array of results for each part that should receive propagated damage
    */
   propagateDamage(
@@ -177,6 +178,7 @@ class DamagePropagationService extends BaseService {
    * @param {number} params.damageAmount - Amount of damage
    * @param {string} params.damageTypeId - Damage type
    * @param {string} params.ownerEntityId - Owner entity ID
+   * @param params.rngProvider
    * @returns {PropagationResult|null} Result if propagation should occur, null otherwise
    * @private
    */
@@ -306,6 +308,7 @@ class DamagePropagationService extends BaseService {
    *
    * @param {object} rule - The propagation rule
    * @param {string} damageTypeId - The damage type for modifier lookup
+   * @param rngProvider
    * @returns {boolean} True if the probability check passes
    * @private
    */

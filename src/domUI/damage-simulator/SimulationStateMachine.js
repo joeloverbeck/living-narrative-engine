@@ -46,6 +46,7 @@ class SimulationStateMachine {
 
   /**
    * Attempts transition to new state.
+   *
    * @param {string} newState - Target state
    * @throws {Error} If transition is invalid
    */
@@ -64,6 +65,7 @@ class SimulationStateMachine {
 
   /**
    * Checks if transition is valid without performing it.
+   *
    * @param {string} newState - Target state
    * @returns {boolean}
    */

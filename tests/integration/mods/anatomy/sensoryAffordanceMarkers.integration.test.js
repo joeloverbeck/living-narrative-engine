@@ -14,6 +14,10 @@ const ANATOMY_DEFINITIONS_PATH = path.resolve(
   'data/mods/anatomy/entities/definitions'
 );
 
+/**
+ *
+ * @param filename
+ */
 function loadEntityFile(filename) {
   const filePath = path.join(ANATOMY_DEFINITIONS_PATH, filename);
   const content = fs.readFileSync(filePath, 'utf-8');

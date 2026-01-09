@@ -2,7 +2,6 @@
  * @file Integration test for DismemberedBodyPartSpawner weight retrieval
  * Verifies that the spawner correctly retrieves weight from entity definitions
  * via the core:weight component, not from the anatomy:part component.
- *
  * @see src/anatomy/services/dismemberedBodyPartSpawner.js
  * @see data/mods/anatomy/entities/definitions/human_breast_c_cup_soft.entity.json
  */

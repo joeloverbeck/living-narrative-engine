@@ -74,6 +74,10 @@ export async function executeEventPublication(context, dependencies) {
   }
 }
 
+/**
+ *
+ * @param slotToPartMappings
+ */
 function normalizeSlotToPartMappings(slotToPartMappings) {
   if (!slotToPartMappings) {
     return {};

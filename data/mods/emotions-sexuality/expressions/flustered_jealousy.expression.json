@@ -232,5 +232,6 @@
         "possessive",
         "social",
         "tension"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

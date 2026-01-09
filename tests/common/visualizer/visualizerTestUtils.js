@@ -157,14 +157,14 @@ export const TEST_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
  * Shared bootstrap context for test suites.
  * Allows expensive bootstrap to be performed once per suite, not per test.
  *
- * @typedef {Object} SharedBootstrapContext
- * @property {Object} bootstrapper - CommonBootstrapper instance
- * @property {Object} container - DI container
- * @property {Object} services - Resolved services from bootstrap
- * @property {Object} entityManager - Entity manager service
- * @property {Object} registry - Entity registry service
- * @property {Object} eventDispatcher - Event dispatcher service
- * @property {Object} logger - Logger service
+ * @typedef {object} SharedBootstrapContext
+ * @property {object} bootstrapper - CommonBootstrapper instance
+ * @property {object} container - DI container
+ * @property {object} services - Resolved services from bootstrap
+ * @property {object} entityManager - Entity manager service
+ * @property {object} registry - Entity registry service
+ * @property {object} eventDispatcher - Event dispatcher service
+ * @property {object} logger - Logger service
  * @property {Function} fetchMock - The fetch mock function
  */
 
@@ -221,7 +221,7 @@ export async function performSharedBootstrap() {
  * expensive stateless services (entity manager, registry, etc.).
  *
  * @param {SharedBootstrapContext} context - Shared bootstrap context
- * @returns {Promise<Object>} Fresh AnatomyVisualizerUI instance
+ * @returns {Promise<object>} Fresh AnatomyVisualizerUI instance
  */
 export async function createFreshUIInstance(context) {
   const { default: AnatomyVisualizerUI } = await import(

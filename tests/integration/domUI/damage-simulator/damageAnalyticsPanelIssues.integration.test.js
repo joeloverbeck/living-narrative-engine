@@ -17,6 +17,7 @@ import path from 'path';
 
 /**
  * Creates a mock event bus for testing.
+ *
  * @returns {object} Mock event bus with subscribe and dispatch methods.
  */
 function createMockEventBus() {
@@ -50,6 +51,7 @@ function createMockEventBus() {
 
 /**
  * Creates a mock logger for testing.
+ *
  * @returns {object} Mock logger with all required methods.
  */
 function createMockLogger() {
@@ -63,6 +65,7 @@ function createMockLogger() {
 
 /**
  * Creates a mock HitProbabilityCalculator for testing Issue 2.
+ *
  * @returns {object} Mock calculator with expected methods.
  */
 function createMockHitProbabilityCalculator() {
@@ -101,6 +104,7 @@ function createMockHitProbabilityCalculator() {
 
 /**
  * Creates sample anatomy data for testing.
+ *
  * @returns {object} Anatomy data with parts array including component data for weights.
  */
 function createSampleAnatomyData() {
@@ -166,6 +170,7 @@ function createSampleAnatomyData() {
 
 /**
  * Creates sample damage configuration for testing.
+ *
  * @returns {object} Damage entry configuration.
  */
 function createSampleDamageConfig() {

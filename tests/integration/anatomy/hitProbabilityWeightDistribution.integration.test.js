@@ -12,6 +12,7 @@ import {
 
 /**
  * Simulates weighted random selection matching the logic in resolveHitLocationHandler.
+ *
  * @param {Array<{id: string, weight: number}>} candidateParts
  * @returns {string} Selected part ID
  */

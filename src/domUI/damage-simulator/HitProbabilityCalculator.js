@@ -7,14 +7,14 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
- * @typedef {Object} PartData
+ * @typedef {object} PartData
  * @property {string} id - Part identifier
  * @property {string} name - Human-readable part name
- * @property {Object|null} component - The anatomy:part component data
+ * @property {object | null} component - The anatomy:part component data
  */
 
 /**
- * @typedef {Object} PartProbability
+ * @typedef {object} PartProbability
  * @property {string} partId - Part identifier
  * @property {string} partName - Human-readable part name
  * @property {number} weight - Raw weight value
@@ -23,7 +23,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
- * @typedef {Object} BarData
+ * @typedef {object} BarData
  * @property {string} partId - Part identifier
  * @property {string} label - Display label
  * @property {number} percentage - Probability percentage
@@ -32,15 +32,15 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  */
 
 /**
- * @typedef {Object} VisualizationData
+ * @typedef {object} VisualizationData
  * @property {Array<BarData>} bars - Bar chart data
  * @property {number} maxProbability - Highest probability value
  * @property {number} totalParts - Number of parts
  */
 
 /**
- * @typedef {Object} HitProbabilityWeightUtils
- * @property {function(Object|null): number} getEffectiveHitWeight
+ * @typedef {object} HitProbabilityWeightUtils
+ * @property {function(object | null): number} getEffectiveHitWeight
  * @property {function(Array): Array} filterEligibleHitTargets
  * @property {number} DEFAULT_HIT_PROBABILITY_WEIGHT
  */
@@ -52,13 +52,13 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 class HitProbabilityCalculator {
   /** @type {HitProbabilityWeightUtils} */
   #hitProbabilityWeightUtils;
-  /** @type {Object} */
+  /** @type {object} */
   #logger;
 
   /**
-   * @param {Object} dependencies
+   * @param {object} dependencies
    * @param {HitProbabilityWeightUtils} dependencies.hitProbabilityWeightUtils - Weight utilities module
-   * @param {Object} dependencies.logger - Logger instance
+   * @param {object} dependencies.logger - Logger instance
    */
   constructor({ hitProbabilityWeightUtils, logger }) {
     validateDependency(hitProbabilityWeightUtils, 'hitProbabilityWeightUtils', logger, {
@@ -74,6 +74,7 @@ class HitProbabilityCalculator {
 
   /**
    * Calculate hit probabilities for all parts.
+   *
    * @param {Array<PartData>} parts - Parts with weight data
    * @returns {Array<PartProbability>} Sorted by probability (highest first)
    */
@@ -120,6 +121,7 @@ class HitProbabilityCalculator {
 
   /**
    * Get probability distribution visualization data.
+   *
    * @param {Array<PartProbability>} probabilities - Calculated probabilities
    * @returns {VisualizationData}
    */
@@ -151,6 +153,7 @@ class HitProbabilityCalculator {
 
   /**
    * Calculate cumulative probability up to and including the specified part.
+   *
    * @param {Array<PartProbability>} probabilities - Sorted probabilities array
    * @param {string} partId - Target part ID
    * @returns {number} Cumulative probability percentage (0-100)
@@ -175,6 +178,7 @@ class HitProbabilityCalculator {
 
   /**
    * Get parts above probability threshold.
+   *
    * @param {Array<PartProbability>} probabilities - Calculated probabilities
    * @param {number} threshold - Minimum percentage (0-100)
    * @returns {Array<PartProbability>} Filtered parts
@@ -190,6 +194,7 @@ class HitProbabilityCalculator {
 
   /**
    * Determine probability tier based on percentage.
+   *
    * @private
    * @param {number} percentage - Probability percentage
    * @returns {string} 'high' | 'medium' | 'low' | 'none'
@@ -203,6 +208,7 @@ class HitProbabilityCalculator {
 
   /**
    * Get CSS color class for tier.
+   *
    * @private
    * @param {string} tier - Probability tier
    * @returns {string} CSS class name

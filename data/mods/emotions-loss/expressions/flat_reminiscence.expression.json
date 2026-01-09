@@ -1,0 +1,226 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-loss:flat_reminiscence",
+    "description": "Flat reminiscence—memories surface without bite or warmth; the past is present, but it doesn’t hook. A dull, listless recall that reads like distance rather than longing.",
+    "priority": 71,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.apathy"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.numbness"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.disappointment"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.nostalgia"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.70
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            -5
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            -5
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a dip into low-energy, mildly disengaged recall with low future expectancy. Blocks true nostalgic capture (nostalgia high) and blocks acute threat/anger states. Fires on a notable drop in engagement or future expectancy to prevent spam."
+        }
+    ],
+    "actor_description": "A memory comes up—clear enough, like a photograph held at arm’s length. I can name the place, the faces, the small details, but it doesn’t tug the way it should. No sweetness, no ache—just this muted replay, as if my mind is thumbing through old pages because there’s nothing better to do. I’m here, but only technically. The present feels thin; the future feels even thinner.",
+    "description_text": "{actor} grows distant in a flat way, gaze slipping past what’s in front of them. Their expression doesn’t brighten or crumple—just dulls, like a thought has pulled them sideways. They pause mid-action, then resume with reduced urgency, responding a beat late as if their mind is replaying something old without really feeling it.",
+    "alternate_descriptions": {
+        "auditory": "{actor}'s voice goes level and slightly slower, with small pauses that feel unmotivated—like they’re reading from memory rather than speaking from the moment.",
+        "tactile": "There’s a subtle drop in readiness—shoulders slacken, hands move more mechanically, as if effort and interest both got turned down a notch.",
+        "limited": "{actor} seems briefly preoccupied, attention drifting to something internal."
+    },
+    "tags": [
+        "loss",
+        "flat",
+        "reminiscence",
+        "distance",
+        "low_energy",
+        "hopelessness",
+        "withdrawal"
+    ],
+    "diagnosticStatus": "unknown"
+}

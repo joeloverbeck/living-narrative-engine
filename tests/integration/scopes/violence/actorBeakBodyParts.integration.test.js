@@ -106,6 +106,10 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
   /**
    * Helper to create an actor entity with anatomy:body component
+   *
+   * @param actorId
+   * @param bodyData
+   * @param locationId
    */
   function createActorWithBody(
     actorId,
@@ -126,6 +130,10 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
   /**
    * Helper to create a body part entity
+   *
+   * @param partId
+   * @param subType
+   * @param hasDamageCapabilities
    */
   function createBodyPart(partId, subType, hasDamageCapabilities = true) {
     const components = {
@@ -164,6 +172,10 @@ describe('Actor Beak Body Parts Scope Integration Tests', () => {
 
   /**
    * Helper to configure mock body graph service to return body parts
+   *
+   * @param bodyComponent
+   * @param actorId
+   * @param partIds
    */
   function setupMockBodyGraphService(bodyComponent, actorId, partIds) {
     mockBodyGraphService.getAllParts.mockImplementation(

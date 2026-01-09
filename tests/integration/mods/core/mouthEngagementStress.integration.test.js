@@ -71,6 +71,7 @@ describe('Mouth Engagement - Integration Tests', () => {
 
   /**
    * Creates a test actor with mouth anatomy
+   *
    * @param {string} id - Actor ID
    * @param {string} name - Actor name
    * @returns {Promise<{id: string, mouthId: string}>}

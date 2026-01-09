@@ -3,8 +3,8 @@
  */
 
 /**
- * @typedef {Object} ConflictShakeAnimatorOptions
- * @property {Object} logger
+ * @typedef {object} ConflictShakeAnimatorOptions
+ * @property {object} logger
  * @property {number} [shakeDuration=400] - Duration of shake animation (ms)
  * @property {number} [conflictHighlightDuration=2000] - How long to highlight conflicting mods (ms)
  */
@@ -30,6 +30,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Shake a card to indicate activation blocked
+   *
    * @param {HTMLElement} card - Card element to shake
    * @param {string} modId - Mod ID for tracking
    * @returns {Promise<void>}
@@ -63,6 +64,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Shake and highlight conflicting mods
+   *
    * @param {string} attemptedModId - Mod that couldn't be activated
    * @param {string[]} conflictingModIds - Mods causing the conflict
    * @param {(modId: string) => HTMLElement|null} getCardElement
@@ -99,6 +101,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Highlight a conflicting card
+   *
    * @param {HTMLElement} card
    * @param {string} modId
    */
@@ -109,6 +112,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Clear conflict highlights from cards
+   *
    * @param {string[]} modIds
    * @param {(modId: string) => HTMLElement|null} getCardElement
    */
@@ -126,6 +130,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Clear all conflict highlights
+   *
    * @param {(modId: string) => HTMLElement|null} getCardElement
    */
   clearAllHighlights(getCardElement) {
@@ -140,6 +145,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Add permanent conflict indicator to a card
+   *
    * @param {HTMLElement} card
    */
   addConflictBadge(card) {
@@ -160,6 +166,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Remove conflict indicator from a card
+   *
    * @param {HTMLElement} card
    */
   removeConflictBadge(card) {
@@ -171,6 +178,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Promisified delay
+   *
    * @param {number} ms
    * @returns {Promise<void>}
    */
@@ -180,6 +188,7 @@ export class ConflictShakeAnimator {
 
   /**
    * Check if there are active highlights
+   *
    * @returns {boolean}
    */
   hasActiveHighlights() {

@@ -21,6 +21,13 @@ import anoxicDamageRule from '../../../../data/mods/breathing/rules/handle_anoxi
 const ACTOR_ID = 'test:actor';
 const UNCONSCIOUS_ANOXIA_COMPONENT = 'breathing:unconscious_anoxia';
 
+/**
+ *
+ * @param entityManager
+ * @param eventBus
+ * @param logger
+ * @param dataRegistry
+ */
 function createHandlers(entityManager, eventBus, logger, dataRegistry) {
   return {
     DISPATCH_EVENT: new DispatchEventHandler({

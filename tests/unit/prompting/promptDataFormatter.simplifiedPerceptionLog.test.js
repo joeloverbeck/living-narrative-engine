@@ -119,18 +119,20 @@ describe('PromptDataFormatter - Simplified Perception Log Enhancement', () => {
       expect(result).toBe('Valid entry\nAnother valid entry');
     });
 
-    test('should return empty string for empty array', () => {
+    test('should return placeholder for empty array', () => {
       const result = formatter.formatPerceptionLog([]);
 
-      expect(result).toBe('');
+      expect(result).toBe('[No recent events]');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'PromptDataFormatter: No perception log entries to format'
       );
     });
 
-    test('should return empty string for null/undefined input', () => {
-      expect(formatter.formatPerceptionLog(null)).toBe('');
-      expect(formatter.formatPerceptionLog(undefined)).toBe('');
+    test('should return placeholder for null/undefined input', () => {
+      expect(formatter.formatPerceptionLog(null)).toBe('[No recent events]');
+      expect(formatter.formatPerceptionLog(undefined)).toBe(
+        '[No recent events]'
+      );
     });
 
     test('should filter out invalid entries', () => {

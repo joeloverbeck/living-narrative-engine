@@ -86,6 +86,10 @@ function createMockEntityManager() {
   };
 }
 
+/**
+ *
+ * @param mockEntityManager
+ */
 function createMockEffectApplicators(mockEntityManager) {
   const effectIds = {
     dismember: 'dismembered',

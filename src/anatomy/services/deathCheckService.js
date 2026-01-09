@@ -124,7 +124,7 @@ class DeathCheckService extends BaseService {
    * 2. If overall health is below 10% → enters dying state
    *
    * @param {string} entityId - Entity to check
-   * @param {string|null} [damageCauserId=null] - Entity that caused the damage (for killedBy)
+   * @param {string|null} [damageCauserId] - Entity that caused the damage (for killedBy)
    * @returns {DeathCheckResult} Result with isDead, isDying, deathInfo
    */
   checkDeathConditions(entityId, damageCauserId = null) {
@@ -211,7 +211,7 @@ class DeathCheckService extends BaseService {
    * This enables proper event ordering where injury narratives can be dispatched before death events.
    *
    * @param {string} entityId - Entity to check
-   * @param {string|null} [damageCauserId=null] - Entity that caused the damage (for killedBy)
+   * @param {string|null} [damageCauserId] - Entity that caused the damage (for killedBy)
    * @returns {DeathEvaluation} Evaluation result with state and finalization parameters
    */
   evaluateDeathConditions(entityId, damageCauserId = null) {

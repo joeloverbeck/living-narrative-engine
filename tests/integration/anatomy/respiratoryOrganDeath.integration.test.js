@@ -13,7 +13,6 @@
  * - Death message is correctly included
  * - Order of destruction is symmetric
  * - Heart/brain/spine death still works alongside lung mechanics
- *
  * @see src/anatomy/services/deathCheckService.js
  * @see data/mods/anatomy/entities/definitions/human_lung_left.entity.json
  * @see data/mods/anatomy/entities/definitions/human_lung_right.entity.json

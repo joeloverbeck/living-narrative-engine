@@ -8,7 +8,6 @@
  * Dispatch SKIPPED. Errors: [root]: must NOT have additional properties
  *
  * Root cause: poisonApplicator.js sends `scope` property not defined in schema.
- *
  * @see poisonApplicator.js - Sends poisoned_started event with scope property
  * @see poisonTickSystem.js - Sends poisoned_stopped event with scope property
  */

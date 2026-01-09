@@ -44,6 +44,7 @@ const createMockDispatcher = () => ({
 
 /**
  * Creates a mock entity manager with configurable entity data.
+ *
  * @param {Map<string, object>} entities - Map of entityId -> entity data
  * @param {Set<string>} entitiesInLocation - Set of entity IDs in location
  */
@@ -92,6 +93,7 @@ const createMockEntityManager = (entities = new Map(), entitiesInLocation = new 
 
 /**
  * Creates a mock sensory capability service.
+ *
  * @param {Map<string, object>} capabilities - Map of entityId -> sensory capabilities
  */
 const createMockSensoryCapabilityService = (capabilities = new Map()) => ({
@@ -107,6 +109,7 @@ const createMockSensoryCapabilityService = (capabilities = new Map()) => ({
 
 /**
  * Creates a mock lighting state service.
+ *
  * @param {string} defaultLighting - Default lighting state ('dark', 'normal', etc.)
  */
 const createMockLightingStateService = (defaultLighting = 'normal') => ({
@@ -118,6 +121,8 @@ const createMockLightingStateService = (defaultLighting = 'normal') => ({
 
 /**
  * Creates a full test environment with all services wired together.
+ *
+ * @param config
  */
 const createTestEnvironment = (config = {}) => {
   const {

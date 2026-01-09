@@ -1,12 +1,16 @@
 /* css/layout/_footer.css */
 
 #bottom-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100; /* Match ticker z-index */
   display: flex;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-lg);
   background-color: var(--secondary-bg-color);
   color: var(--primary-text-color);
-  flex-shrink: 0;
   border-top: var(--border-width) solid var(--panel-border-color);
 }
 

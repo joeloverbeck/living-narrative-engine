@@ -10,6 +10,13 @@ import linkArmsAction from '../../../../data/mods/affection-embracing/actions/li
 
 const ACTION_ID = 'affection-embracing:link_arms';
 
+/**
+ *
+ * @param id
+ * @param name
+ * @param location
+ * @param partners
+ */
 function createActorWithArms(id, name, location, partners = []) {
   const torsoId = `${id}-torso`;
   const armId = `${id}-arm`;

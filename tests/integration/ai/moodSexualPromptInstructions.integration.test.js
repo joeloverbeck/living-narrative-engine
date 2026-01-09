@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for mood and sexual state update LLM prompt instructions
- * @description Validates the MOOANDSEXAROSYS-008 prompt additions for emotional/sexual state updates
- * @version 1.0.0
+ * @description Validates the moodUpdateOnlyInstructionText prompt additions for emotional/sexual state updates
+ * @version 2.0.0
  * @see data/prompts/corePromptText.json
  * @see specs/mood-and-sexual-arousal-system.md
  */
@@ -19,15 +19,39 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       );
     });
 
-    it('should indicate absolute values not deltas', () => {
-      expect(promptText).toContain(
-        'Output the new absolute numeric values (not deltas)'
-      );
+    it('should indicate absolute values in the header', () => {
+      // The header itself indicates "ABSOLUTE VALUES"
+      expect(promptText).toContain('ABSOLUTE VALUES');
     });
 
     it('should reference moodUpdate and sexualUpdate fields', () => {
       expect(promptText).toContain('moodUpdate');
       expect(promptText).toContain('sexualUpdate');
+    });
+  });
+
+  describe('PRIMARY RULE Section', () => {
+    it('should contain PRIMARY RULE (SUBJECTIVE APPRAISAL) section', () => {
+      expect(promptText).toContain('PRIMARY RULE (SUBJECTIVE APPRAISAL)');
+    });
+
+    it('should emphasize character-specific interpretation', () => {
+      expect(promptText).toContain('*experiences* and *interprets*');
+      expect(promptText).toContain('persona');
+    });
+  });
+
+  describe('STARTING POINT / CONTINUITY Section', () => {
+    it('should contain STARTING POINT / CONTINUITY section', () => {
+      expect(promptText).toContain('STARTING POINT / CONTINUITY');
+    });
+
+    it('should mention inertia concept', () => {
+      expect(promptText).toContain('inertia');
+    });
+
+    it('should mention saturation concept', () => {
+      expect(promptText).toContain('saturation');
     });
   });
 
@@ -108,6 +132,16 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
     });
   });
 
+  describe('CHARACTER LENS Section', () => {
+    it('should contain CHARACTER LENS section', () => {
+      expect(promptText).toContain('CHARACTER LENS');
+    });
+
+    it('should mention appraisal rules', () => {
+      expect(promptText).toContain('appraisal rules');
+    });
+  });
+
   describe('SEX VARIABLES Section', () => {
     it('should contain SEX VARIABLES section', () => {
       expect(promptText).toContain('SEX VARIABLES');
@@ -120,15 +154,13 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
     it('should define sex_inhibition as brake', () => {
       expect(promptText).toContain('sex_inhibition (brake)');
-      expect(promptText).toContain(
-        'suppressed by danger, shame, anxiety'
-      );
+      expect(promptText).toContain('suppression due to threat, shame, anxiety');
     });
   });
 
-  describe('UPDATE HEURISTICS Section', () => {
-    it('should contain UPDATE HEURISTICS section', () => {
-      expect(promptText).toContain('UPDATE HEURISTICS');
+  describe('DEFAULT UPDATE HEURISTICS Section', () => {
+    it('should contain DEFAULT UPDATE HEURISTICS section', () => {
+      expect(promptText).toContain('DEFAULT UPDATE HEURISTICS');
     });
 
     it('should provide heuristic for being attacked/threatened', () => {
@@ -143,7 +175,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
     it('should provide heuristic for loss/grief', () => {
       expect(promptText).toContain('Loss/grief');
-      expect(promptText).toContain('Valence down, Arousal often down');
+      expect(promptText).toContain('Valence down');
+      expect(promptText).toContain('Arousal often down');
     });
 
     it('should provide heuristic for public humiliation', () => {
@@ -157,38 +190,25 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
     });
   });
 
-  describe('SEX UPDATE HEURISTICS Section', () => {
-    it('should contain SEX UPDATE HEURISTICS section', () => {
-      expect(promptText).toContain('SEX UPDATE HEURISTICS');
+  describe('SEX UPDATE RULE Section', () => {
+    it('should contain SEX UPDATE RULE (PERSONA-BOUND) section', () => {
+      expect(promptText).toContain('SEX UPDATE RULE (PERSONA-BOUND)');
     });
 
-    it('should provide heuristic for increasing sex_inhibition', () => {
+    it('should mention character-specific sex changes', () => {
+      expect(promptText).toContain('highly character-specific');
+    });
+
+    it('should provide guidance for increasing sex_inhibition', () => {
       expect(promptText).toContain('Increase sex_inhibition');
-      expect(promptText).toContain('high Threat');
-      expect(promptText).toContain('negative Self-evaluation');
-      expect(promptText).toContain('disgust/distress');
+      expect(promptText).toContain('threat/safety loss');
+      expect(promptText).toContain('shame/exposure');
+      expect(promptText).toContain('disgust/repulsion');
     });
 
-    it('should provide heuristic for decreasing sex_inhibition', () => {
-      expect(promptText).toContain('Decrease sex_inhibition');
-      expect(promptText).toContain('low Threat');
-      expect(promptText).toContain('improved Self-evaluation');
-      expect(promptText).toContain('calm trust');
-    });
-
-    it('should provide heuristic for increasing sex_excitation', () => {
+    it('should provide guidance for increasing sex_excitation', () => {
       expect(promptText).toContain('Increase sex_excitation');
-      expect(promptText).toContain('attraction/intimacy cues');
-      expect(promptText).toContain('positive Valence');
-      expect(promptText).toContain('high Engagement');
-    });
-
-    it('should provide heuristic for decreasing sex_excitation', () => {
-      expect(promptText).toContain('Decrease sex_excitation');
-      expect(promptText).toContain('danger');
-      expect(promptText).toContain('disgust');
-      expect(promptText).toContain('shame');
-      expect(promptText).toContain('exhaustion');
+      expect(promptText).toContain('safety + consent + trust/intimacy cues');
     });
   });
 
@@ -197,21 +217,42 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('TYPICAL CHANGE MAGNITUDES');
     });
 
-    it('should define mild event magnitude', () => {
-      expect(promptText).toContain('Mild event: 5-15 points');
+    it('should define mild change magnitude', () => {
+      expect(promptText).toContain('Mild');
+      expect(promptText).toContain('0-10');
     });
 
-    it('should define strong event magnitude', () => {
-      expect(promptText).toContain('Strong event: 15-35 points');
+    it('should define strong change magnitude', () => {
+      expect(promptText).toContain('Strong');
+      expect(promptText).toContain('10-30');
     });
 
-    it('should define extreme event magnitude', () => {
-      expect(promptText).toContain('Extreme event: 35-60 points');
+    it('should define extreme change magnitude', () => {
+      expect(promptText).toContain('Extreme');
+      expect(promptText).toContain('30-60');
+    });
+  });
+
+  describe('OUTPUT FORMAT Section', () => {
+    it('should contain OUTPUT FORMAT section', () => {
+      expect(promptText).toContain('OUTPUT FORMAT');
+    });
+
+    it('should specify JSON-only output', () => {
+      expect(promptText).toContain('ONLY a JSON object');
+    });
+
+    it('should show expected moodUpdate structure', () => {
+      expect(promptText).toContain('"moodUpdate"');
+    });
+
+    it('should show expected sexualUpdate structure', () => {
+      expect(promptText).toContain('"sexualUpdate"');
     });
   });
 
   describe('Token Efficiency', () => {
-    it('should keep the mood/sexual update section under 800 tokens (approximately 3200 characters)', () => {
+    it('should keep the mood/sexual update section under 1200 tokens (approximately 4800 characters)', () => {
       // The moodUpdateOnlyInstructionText is dedicated to mood/sexual updates
       // Verify start marker exists
       const startMarker = 'EMOTIONAL + SEXUAL STATE UPDATE';
@@ -220,8 +261,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
       // Measure the entire dedicated mood update text
       // Rough estimate: 4 characters per token on average
-      // 800 tokens * 4 = 3200 characters max
-      expect(promptText.length).toBeLessThan(3200);
+      // 1200 tokens * 4 = 4800 characters max (adjusted for new comprehensive prompt)
+      expect(promptText.length).toBeLessThan(4800);
     });
   });
 
@@ -229,25 +270,33 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
     it('should have all required sections in logical order', () => {
       const rangesIndex = promptText.indexOf('RANGES');
       const axisDefIndex = promptText.indexOf('AXIS DEFINITIONS');
+      const characterLensIndex = promptText.indexOf('CHARACTER LENS');
+      const defaultHeuristicsIndex = promptText.indexOf(
+        'DEFAULT UPDATE HEURISTICS'
+      );
       const sexVarsIndex = promptText.indexOf('SEX VARIABLES');
-      const updateHeuristicsIndex = promptText.indexOf('UPDATE HEURISTICS');
-      const sexHeuristicsIndex = promptText.indexOf('SEX UPDATE HEURISTICS');
+      const sexUpdateRuleIndex = promptText.indexOf('SEX UPDATE RULE');
       const magnitudesIndex = promptText.indexOf('TYPICAL CHANGE MAGNITUDES');
+      const outputIndex = promptText.indexOf('OUTPUT FORMAT');
 
       // All sections must exist
       expect(rangesIndex).toBeGreaterThan(-1);
       expect(axisDefIndex).toBeGreaterThan(-1);
+      expect(characterLensIndex).toBeGreaterThan(-1);
+      expect(defaultHeuristicsIndex).toBeGreaterThan(-1);
       expect(sexVarsIndex).toBeGreaterThan(-1);
-      expect(updateHeuristicsIndex).toBeGreaterThan(-1);
-      expect(sexHeuristicsIndex).toBeGreaterThan(-1);
+      expect(sexUpdateRuleIndex).toBeGreaterThan(-1);
       expect(magnitudesIndex).toBeGreaterThan(-1);
+      expect(outputIndex).toBeGreaterThan(-1);
 
       // Sections should appear in logical order
       expect(rangesIndex).toBeLessThan(axisDefIndex);
-      expect(axisDefIndex).toBeLessThan(sexVarsIndex);
-      expect(sexVarsIndex).toBeLessThan(updateHeuristicsIndex);
-      expect(updateHeuristicsIndex).toBeLessThan(sexHeuristicsIndex);
-      expect(sexHeuristicsIndex).toBeLessThan(magnitudesIndex);
+      expect(axisDefIndex).toBeLessThan(characterLensIndex);
+      expect(characterLensIndex).toBeLessThan(defaultHeuristicsIndex);
+      expect(defaultHeuristicsIndex).toBeLessThan(sexVarsIndex);
+      expect(sexVarsIndex).toBeLessThan(sexUpdateRuleIndex);
+      expect(sexUpdateRuleIndex).toBeLessThan(magnitudesIndex);
+      expect(magnitudesIndex).toBeLessThan(outputIndex);
     });
   });
 });

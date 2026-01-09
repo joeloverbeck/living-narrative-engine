@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
 import { ChanceTextTranslator } from '../../../src/prompting/ChanceTextTranslator.js';
 
+/**
+ *
+ */
 function createMockLogger() {
   return {
     debug: jest.fn(),
@@ -11,6 +14,9 @@ function createMockLogger() {
   };
 }
 
+/**
+ *
+ */
 function createMockStaticContentService() {
   return {
     getCoreTaskDescriptionText: jest.fn().mockReturnValue(''),
@@ -21,6 +27,10 @@ function createMockStaticContentService() {
   };
 }
 
+/**
+ *
+ * @param content
+ */
 function extractFirstActionLine(content) {
   return content
     .split('\n')

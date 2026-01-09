@@ -41,6 +41,7 @@ class ExpressionRegistry extends BaseService {
 
   /**
    * Get all loaded expressions.
+   *
    * @returns {object[]}
    */
   getAllExpressions() {
@@ -50,6 +51,7 @@ class ExpressionRegistry extends BaseService {
 
   /**
    * Get expression by ID.
+   *
    * @param {string} expressionId
    * @returns {object | null}
    */
@@ -65,6 +67,7 @@ class ExpressionRegistry extends BaseService {
 
   /**
    * Get expressions by tag for pre-filtering.
+   *
    * @param {string} tag
    * @returns {object[]}
    */
@@ -93,6 +96,7 @@ class ExpressionRegistry extends BaseService {
 
   /**
    * Get expressions sorted by priority (descending).
+   *
    * @returns {object[]}
    */
   getExpressionsByPriority() {

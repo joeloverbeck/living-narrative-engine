@@ -11,6 +11,7 @@ describe('rise_to_surface visibility modifiers', () => {
 
   /**
    * Helper to find a modifier by visibility level.
+   *
    * @param {string} visibility - The visibility level to search for
    * @returns {object|undefined} The modifier object or undefined
    */

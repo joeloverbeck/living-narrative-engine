@@ -9,6 +9,9 @@ describe('systemLogicTestEnv cleanup robustness', () => {
   /**
    * Simulates the cleanup pattern from systemLogicTestEnv
    * to test error handling behavior in isolation.
+   *
+   * @param root0
+   * @param root0.interpreterThrows
    */
   function createMockEnv({ interpreterThrows = false } = {}) {
     const callOrder = [];
@@ -32,6 +35,9 @@ describe('systemLogicTestEnv cleanup robustness', () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
     // Simulate the cleanup function pattern from systemLogicTestEnv
+    /**
+     *
+     */
     function cleanup() {
       let cleanupError = null;
 

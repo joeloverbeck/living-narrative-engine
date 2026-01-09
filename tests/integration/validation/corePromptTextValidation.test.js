@@ -55,6 +55,11 @@ describe('Core Prompt Text Validation', () => {
       expect(promptTextData).toHaveProperty('nc21ContentPolicyText');
       expect(promptTextData).toHaveProperty('finalLlmInstructionText');
       expect(promptTextData).toHaveProperty('actionTagRulesContent');
+      expect(promptTextData).toHaveProperty('moodUpdateOnlyInstructionText');
+      expect(promptTextData).toHaveProperty('moodUpdateTaskDefinitionText');
+      expect(promptTextData).toHaveProperty(
+        'moodUpdatePortrayalGuidelinesTemplate'
+      );
     });
 
     it('should have string values for all fields', async () => {
@@ -73,6 +78,13 @@ describe('Core Prompt Text Validation', () => {
       expect(typeof promptTextData.nc21ContentPolicyText).toBe('string');
       expect(typeof promptTextData.finalLlmInstructionText).toBe('string');
       expect(typeof promptTextData.actionTagRulesContent).toBe('string');
+      expect(typeof promptTextData.moodUpdateOnlyInstructionText).toBe(
+        'string'
+      );
+      expect(typeof promptTextData.moodUpdateTaskDefinitionText).toBe('string');
+      expect(typeof promptTextData.moodUpdatePortrayalGuidelinesTemplate).toBe(
+        'string'
+      );
     });
   });
 });

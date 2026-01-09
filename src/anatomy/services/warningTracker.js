@@ -14,6 +14,7 @@ class WarningTracker extends BaseService {
 
   /**
    * Log a warning only once per category+key combination.
+   *
    * @param {string} category
    * @param {string} key
    * @param {string} message
@@ -28,6 +29,7 @@ class WarningTracker extends BaseService {
 
   /**
    * Check if a warning has been issued.
+   *
    * @param {string} category
    * @param {string} key
    * @returns {boolean}
@@ -46,6 +48,7 @@ class WarningTracker extends BaseService {
 
   /**
    * Clear warnings for a specific category (for testing).
+   *
    * @param {string} category
    */
   clearCategory(category) {

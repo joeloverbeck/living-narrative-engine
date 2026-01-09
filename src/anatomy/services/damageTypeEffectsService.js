@@ -10,7 +10,6 @@
  * 3. Bleed attach
  * 4. Burn attach
  * 5. Poison attach
- *
  * @see specs/damage-types-and-special-effects.md
  */
 

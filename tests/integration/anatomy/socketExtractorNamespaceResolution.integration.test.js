@@ -24,6 +24,7 @@ const projectRoot = path.join(__dirname, '../../..');
 
 /**
  * Load a recipe file from disk
+ *
  * @param {string} recipePath - Path relative to project root
  * @returns {object} Parsed recipe
  */

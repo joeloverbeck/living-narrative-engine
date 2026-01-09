@@ -43,6 +43,10 @@ describe('MoodUpdatePromptPipeline', () => {
     defaultContext = {};
   });
 
+  /**
+   *
+   * @param overrides
+   */
   function createPipeline(overrides = {}) {
     return new MoodUpdatePromptPipeline({
       llmAdapter: overrides.llmAdapter ?? mockLlmAdapter,
@@ -54,6 +58,10 @@ describe('MoodUpdatePromptPipeline', () => {
     });
   }
 
+  /**
+   *
+   * @param options
+   */
   function setupMockSuccess(options = {}) {
     const {
       llmId = 'test-llm-id',
@@ -176,7 +184,7 @@ describe('MoodUpdatePromptPipeline', () => {
       ).toHaveBeenCalledWith(gameState, mockLogger);
     });
 
-    test('calls promptBuilder.build() with llmId and promptData', async () => {
+    test('calls promptBuilder.build() with llmId, promptData, and mood option', async () => {
       const llmId = 'specific-llm';
       const promptData = { specific: 'data' };
       setupMockSuccess({ llmId, promptData });
@@ -184,7 +192,9 @@ describe('MoodUpdatePromptPipeline', () => {
 
       await pipeline.generateMoodUpdatePrompt(defaultActor, defaultContext);
 
-      expect(mockPromptBuilder.build).toHaveBeenCalledWith(llmId, promptData);
+      expect(mockPromptBuilder.build).toHaveBeenCalledWith(llmId, promptData, {
+        isMoodUpdatePrompt: true,
+      });
     });
 
     test('returns string result from promptBuilder', async () => {

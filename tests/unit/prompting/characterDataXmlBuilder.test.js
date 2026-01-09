@@ -707,6 +707,9 @@ describe('CharacterDataXmlBuilder', () => {
       // Check for decorated comment - contains IDENTITY priming text
       expect(result).toContain('<!--');
       expect(result).toContain('IDENTITY');
+      expect(result).toContain(
+        'Every emotion, thought, action, and word stems from this.'
+      );
     });
 
     it('should include section comments with correct format', () => {
@@ -1229,6 +1232,57 @@ describe('CharacterDataXmlBuilder', () => {
         expect(result).toContain('<sexual_state>');
         expect(result).toContain('&lt;suppressed&gt;');
         expect(result).toContain('&amp; "conflicted"');
+      });
+
+      it('should include mood_axes and sex_variables when includeMoodAxes is true', () => {
+        const moodAxesCharacter = {
+          name: 'Axes Character',
+          emotionalState: {
+            moodAxes: {
+              valence: 5,
+              arousal: -10,
+              agency_control: 15,
+              threat: -5,
+              engagement: 20,
+              future_expectancy: 30,
+              self_evaluation: -25,
+            },
+            emotionalStateText: 'steady: mild',
+            sexVariables: { sex_excitation: 40, sex_inhibition: 60 },
+            sexualStateText: '',
+          },
+        };
+
+        const result = builder.buildCharacterDataXml(moodAxesCharacter, {
+          includeMoodAxes: true,
+        });
+
+        expect(result).toContain('<mood_axes>');
+        expect(result).toContain('valence: 5');
+        expect(result).toContain('arousal: -10');
+        expect(result).toContain('self_evaluation: -25');
+        expect(result).toContain('<sex_variables>');
+        expect(result).toContain('sex_excitation: 40');
+        expect(result).toContain('sex_inhibition: 60');
+      });
+
+      it('should omit mood_axes and sex_variables when includeMoodAxes is false', () => {
+        const moodAxesCharacter = {
+          name: 'Axes Character',
+          emotionalState: {
+            moodAxes: { valence: 5, arousal: -10 },
+            emotionalStateText: 'steady: mild',
+            sexVariables: { sex_excitation: 40, sex_inhibition: 60 },
+            sexualStateText: '',
+          },
+        };
+
+        const result = builder.buildCharacterDataXml(moodAxesCharacter, {
+          includeMoodAxes: false,
+        });
+
+        expect(result).not.toContain('<mood_axes>');
+        expect(result).not.toContain('<sex_variables>');
       });
     });
 

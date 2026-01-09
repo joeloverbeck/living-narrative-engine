@@ -30,7 +30,7 @@ describe('Facing-aware action availability E2E', () => {
 
   beforeEach(async () => {
     // Create e2e test environment with container-based services
-    // eslint-disable-next-line no-undef
+     
     env = await createE2ETestEnvironment({ stubLLM: true });
 
     // Create facade-compatible interface using environment services and helpers

@@ -18,6 +18,7 @@ const EVENTS_DIR = path.join(
 
 /**
  * Helper to load and parse an event definition JSON file
+ *
  * @param {string} eventId - The event ID (e.g., 'core:damage_simulator_execution_started')
  * @returns {object|null} The parsed event definition or null if not found
  */

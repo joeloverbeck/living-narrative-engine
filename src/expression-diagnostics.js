@@ -10,6 +10,9 @@ import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 let controller = null;
 
+/**
+ *
+ */
 async function initialize() {
   const bootstrapper = new CommonBootstrapper();
 
@@ -43,6 +46,9 @@ async function initialize() {
         const expressionStatusService = container.resolve(
           diagnosticsTokens.IExpressionStatusService
         );
+        const witnessStateFinder = container.resolve(
+          diagnosticsTokens.IWitnessStateFinder
+        );
 
         // Initialize controller
         controller = new ExpressionDiagnosticsController({
@@ -53,6 +59,7 @@ async function initialize() {
           monteCarloSimulator,
           failureExplainer,
           expressionStatusService,
+          witnessStateFinder,
         });
 
         await controller.initialize();

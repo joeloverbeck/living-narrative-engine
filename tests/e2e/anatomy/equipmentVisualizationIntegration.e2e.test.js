@@ -125,6 +125,8 @@ describe('Equipment Visualization Integration E2E Tests', () => {
 
   /**
    * Helper to select an entity by its definition ID.
+   *
+   * @param entityDefId
    */
   async function selectEntity(entityDefId) {
     const selector = document.getElementById('entity-selector');
@@ -134,6 +136,10 @@ describe('Equipment Visualization Integration E2E Tests', () => {
 
   /**
    * Helper to wait for a specific visualizer state.
+   *
+   * @param ui
+   * @param targetState
+   * @param timeout
    */
   async function waitForState(ui, targetState, timeout = TEST_TIMEOUT_MS) {
     await waitForCondition(() => {

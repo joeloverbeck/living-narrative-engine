@@ -469,7 +469,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     try {
       const baseValues = {
         taskDefinitionContent: this.getTaskDefinitionContent(),
-        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto),
+        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, {
+          includeMoodAxes: false,
+        }),
         portrayalGuidelinesContent:
           this.getCharacterPortrayalGuidelinesContent(characterName),
         contentPolicyContent: this.getContentPolicyContent(),
@@ -510,7 +512,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {AIGameStateDTO} gameState - The game state DTO.
    * @returns {string} Formatted character persona content.
    */
-  getCharacterPersonaContent(gameState) {
+  getCharacterPersonaContent(gameState, options = {}) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting character persona content with XML structure.'
     );
@@ -542,7 +544,10 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     // Use CharacterDataXmlBuilder for XML structure
     try {
       const formattedPersona =
-        this.#characterDataXmlBuilder.buildCharacterDataXml(actorPromptData);
+        this.#characterDataXmlBuilder.buildCharacterDataXml(
+          actorPromptData,
+          options
+        );
 
       if (!formattedPersona || formattedPersona.trim().length === 0) {
         this.#logger.warn(
@@ -911,10 +916,30 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @param {string} characterName - Name of the character.
+   * @returns {string} The mood update task definition text.
+   */
+  getMoodUpdateTaskDefinitionContent(characterName) {
+    const template =
+      this.#promptStaticContentService.getMoodUpdateTaskDefinitionText();
+    return template.replace(/\[CHARACTER_NAME\]/g, characterName);
+  }
+
+  /**
+   * @param {string} characterName - Name of the character.
    * @returns {string} The portrayal guidelines text.
    */
   getCharacterPortrayalGuidelinesContent(characterName) {
     return this.#promptStaticContentService.getCharacterPortrayalGuidelines(
+      characterName
+    );
+  }
+
+  /**
+   * @param {string} characterName - Name of the character.
+   * @returns {string} The mood update portrayal guidelines text.
+   */
+  getMoodUpdatePortrayalGuidelinesContent(characterName) {
+    return this.#promptStaticContentService.getMoodUpdatePortrayalGuidelines(
       characterName
     );
   }
@@ -934,10 +959,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
+   * @param {string} characterName - Name of the character.
    * @returns {string} The mood-only update instruction text for Phase 1 prompts.
    */
-  getMoodUpdateInstructionsContent() {
-    return this.#promptStaticContentService.getMoodUpdateInstructionText();
+  getMoodUpdateInstructionsContent(characterName) {
+    const template =
+      this.#promptStaticContentService.getMoodUpdateInstructionText();
+    return template.replace(/\[CHARACTER_NAME\]/g, characterName);
   }
 
   /**
@@ -971,15 +999,20 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     let promptData;
     try {
       const baseValues = {
-        taskDefinitionContent: this.getTaskDefinitionContent(),
-        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto),
+        taskDefinitionContent: this.getMoodUpdateTaskDefinitionContent(
+          characterName
+        ),
+        characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, {
+          includeMoodAxes: true,
+        }),
         portrayalGuidelinesContent:
-          this.getCharacterPortrayalGuidelinesContent(characterName),
+          this.getMoodUpdatePortrayalGuidelinesContent(characterName),
         contentPolicyContent: this.getContentPolicyContent(),
         worldContextContent: this.getWorldContextContent(gameStateDto),
         availableActionsInfoContent: '', // Empty for mood-only prompt
         userInputContent: currentUserInput,
-        finalInstructionsContent: this.getMoodUpdateInstructionsContent(),
+        finalInstructionsContent:
+          this.getMoodUpdateInstructionsContent(characterName),
         perceptionLogArray: perceptionLogArray,
         characterName: characterName,
         locationName: locationName,

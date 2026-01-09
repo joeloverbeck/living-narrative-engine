@@ -7,7 +7,6 @@
  * @file Integration tests for the injury reporting flow.
  * Tests the full flow from damage application through injury aggregation
  * to narrative formatting.
- *
  * @see src/anatomy/services/injuryAggregationService.js
  * @see src/anatomy/services/injuryNarrativeFormatterService.js
  * @see tickets/INJREPANDUSEINT-013-integration-tests.md

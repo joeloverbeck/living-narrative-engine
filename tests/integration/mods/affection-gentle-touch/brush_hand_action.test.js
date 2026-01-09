@@ -10,6 +10,13 @@ import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.
 import brushHandRule from '../../../../data/mods/affection-gentle-touch/rules/handle_brush_hand.rule.json';
 import eventIsActionBrushHand from '../../../../data/mods/affection-gentle-touch/conditions/event-is-action-brush-hand.condition.json';
 
+/**
+ *
+ * @param id
+ * @param name
+ * @param location
+ * @param partners
+ */
 function createActorWithHandAnatomy(id, name, location, partners = []) {
   const torsoId = `${id}-torso`;
   const handId = `${id}-hand`;

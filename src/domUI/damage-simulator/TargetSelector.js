@@ -34,6 +34,7 @@ class TargetSelector {
 
   /**
    * Get the next target part ID based on the targeting mode
+   *
    * @returns {string|null} Part ID or null for weighted random
    */
   getNextTarget() {

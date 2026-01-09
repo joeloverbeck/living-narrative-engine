@@ -184,6 +184,33 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
     });
   });
 
+  describe('processMoodUpdatePrompt with mood template', () => {
+    test('omits notes and available actions sections for mood prompts', () => {
+      const promptData = {
+        taskDefinitionContent: 'Test mood task',
+        characterPersonaContent: 'Test character',
+        portrayalGuidelinesContent: 'Test guidelines',
+        contentPolicyContent: 'Test policy',
+        worldContextContent: 'Test world',
+        perceptionLogContent: 'Test perception',
+        thoughtsSection: '<thoughts>\n- Mood thought\n</thoughts>',
+        notesSection: '<notes>\n- Should not appear\n</notes>',
+        availableActionsInfoContent: 'Should not appear',
+        finalInstructionsContent: 'Mood instructions',
+        assistantResponsePrefix: '\n',
+      };
+
+      const result = service.processMoodUpdatePrompt(promptData);
+
+      expect(result).toContain('<thoughts>\n- Mood thought\n</thoughts>');
+      expect(result).not.toContain('<notes>');
+      expect(result).not.toContain('<available_actions_info>');
+      expect(result).toContain(
+        '<task_definition>\nTest mood task\n</task_definition>'
+      );
+    });
+  });
+
   describe('Token efficiency validation', () => {
     test('empty sections save tokens by not generating XML tags', () => {
       const templateWithEmptySections = `{thoughtsSection}\n{notesSection}\n{goalsSection}`;

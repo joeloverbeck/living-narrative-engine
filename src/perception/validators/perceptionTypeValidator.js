@@ -18,7 +18,7 @@ import {
 // ============================================================================
 
 /**
- * @typedef {Object} ValidationResult
+ * @typedef {object} ValidationResult
  * @property {boolean} isValid - Whether the type is valid
  * @property {string|null} normalizedType - The normalized type (new format)
  * @property {boolean} isDeprecated - Whether the type is a deprecated legacy type
@@ -32,8 +32,9 @@ import {
 
 /**
  * Validate a perception type and return detailed validation result.
+ *
  * @param {string} type - The perception type to validate
- * @param {Object} [context={}] - Optional context for error messages
+ * @param {object} [context] - Optional context for error messages
  * @param {string} [context.source] - Source of the type (e.g., 'rule file', 'handler')
  * @param {string} [context.file] - File path if applicable
  * @returns {ValidationResult} The validation result
@@ -88,9 +89,10 @@ export function validatePerceptionType(type, context = {}) {
 
 /**
  * Create a detailed error message for an invalid perception type.
+ *
  * @param {string} invalidType - The invalid type
  * @param {string|null} suggestion - A suggested alternative
- * @param {Object} [context={}] - Optional context
+ * @param {object} [context] - Optional context
  * @returns {string} The error message
  */
 export function createInvalidTypeMessage(invalidType, suggestion, context = {}) {
@@ -118,9 +120,10 @@ export function createInvalidTypeMessage(invalidType, suggestion, context = {}) 
 
 /**
  * Create a deprecation warning message for a legacy type.
+ *
  * @param {string} legacyType - The deprecated legacy type
  * @param {string} newType - The new type to use instead
- * @param {Object} [context={}] - Optional context
+ * @param {object} [context] - Optional context
  * @returns {string} The warning message
  */
 export function createDeprecationWarning(legacyType, newType, context = {}) {
@@ -143,8 +146,9 @@ export function createDeprecationWarning(legacyType, newType, context = {}) {
 
 /**
  * Create a generic error message with context.
+ *
  * @param {string} message - The base message
- * @param {Object} [context={}] - Optional context
+ * @param {object} [context] - Optional context
  * @returns {string} The formatted message
  */
 function createErrorMessage(message, context = {}) {
@@ -164,6 +168,7 @@ function createErrorMessage(message, context = {}) {
 /**
  * Format all valid types as a readable message.
  * Groups types by category for better readability.
+ *
  * @returns {string} Formatted message listing all valid types
  */
 export function formatValidTypesMessage() {
@@ -190,8 +195,9 @@ export function formatValidTypesMessage() {
 /**
  * Validate perception type and throw if invalid.
  * Use this for strict validation where invalid types should halt execution.
+ *
  * @param {string} type - The perception type to validate
- * @param {Object} [context={}] - Optional context for error messages
+ * @param {object} [context] - Optional context for error messages
  * @throws {Error} If the type is invalid
  * @returns {{normalizedType: string, isDeprecated: boolean}} Validation info
  */
@@ -211,8 +217,9 @@ export function assertValidPerceptionType(type, context = {}) {
 /**
  * Batch validate multiple perception types.
  * Useful for validating entire files or configurations.
+ *
  * @param {string[]} types - Array of perception types to validate
- * @param {Object} [context={}] - Optional context for error messages
+ * @param {object} [context] - Optional context for error messages
  * @returns {{valid: string[], invalid: Array<{type: string, error: string}>, deprecated: string[]}}
  */
 export function validatePerceptionTypes(types, context = {}) {

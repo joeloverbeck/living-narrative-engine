@@ -18,7 +18,7 @@ Expressions use a numeric priority system where **higher numbers = higher priori
 | 40-49 | 2 | Low-intensity awareness |
 | 50-59 | 5 | Moderate engagement |
 | 60-69 | 14 | Active emotional states |
-| 70-79 | 27 | Elevated emotional responses |
+| 70-79 | 28 | Elevated emotional responses |
 | 80-89 | 17 | Intense emotional states |
 | 90-95 | 7 | Peak intensity expressions |
 
@@ -112,7 +112,7 @@ Expressions related to fear, anxiety, and responses to perceived danger.
 | 89 | `emotions-threat-response:terror_spike` | Sudden, sustained surge of terror—intense fear that clamps the body and narrows cognition without fully tipping into panic or freeze |
 | 92 | `emotions-threat-response:panic_onset` | Escalating terror overwhelming coping ability |
 
-### emotions-loss (12 expressions)
+### emotions-loss (13 expressions)
 
 Expressions of grief, sadness, and responses to loss or disappointment.
 
@@ -122,6 +122,7 @@ Expressions of grief, sadness, and responses to loss or disappointment.
 | 68 | `emotions-loss:nostalgic_distance` | Bittersweet reminiscence where the past feels closer than the present |
 | 69 | `emotions-loss:fatigue_drag` | Heavy, low-energy slump where effort feels costly |
 | 70 | `emotions-loss:quiet_grief` | Subdued mourning held close to the heart |
+| 71 | `emotions-loss:flat_reminiscence` | Flat reminiscence—memories surface without bite or warmth; a dull, listless recall |
 | 72 | `emotions-loss:apathy_blank` | Low-energy motivational shutdown where caring goes offline |
 | 73 | `emotions-loss:numb_flatness` | Blunted affect and emotional muting without full dissociation |
 | 75 | `emotions-loss:tearful_sorrow` | Open weeping from emotional pain |
@@ -198,6 +199,7 @@ All expressions sorted by priority for quick reference:
 | 70 | `quiet_grief` | emotions-loss |
 | 71 | `enthusiastic_energy` | emotions-positive-affect |
 | 71 | `sensual_enjoyment` | emotions-sexuality |
+| 71 | `flat_reminiscence` | emotions-loss |
 | 72 | `fascinated_lock_on` | emotions-attention |
 | 72 | `tearful_gratitude` | emotions-affiliation |
 | 72 | `seductive_confidence` | emotions-sexuality |
@@ -283,10 +285,10 @@ Based on current coverage, these emotional areas may benefit from additional exp
 
 ## Statistics
 
-- **Total expressions**: 74
+- **Total expressions**: 75
 - **Number of mods**: 8
 - **Priority range**: 32-95
-- **Average expressions per mod**: 9.25
+- **Average expressions per mod**: 9.375
 
 ---
 

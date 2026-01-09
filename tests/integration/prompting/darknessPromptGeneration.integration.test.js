@@ -9,6 +9,7 @@ import { PRESENCE_MESSAGES } from '../../../src/domUI/location/presenceMessageBu
 
 /**
  * Creates a mock logger for testing.
+ *
  * @returns {object} Mock logger with jest functions
  */
 function createLogger() {
@@ -22,11 +23,12 @@ function createLogger() {
 
 /**
  * Creates a game state DTO with a dark location.
+ *
  * @param {object} options - Configuration options
- * @param {boolean} [options.isLit=false] - Whether location is lit
- * @param {string|null} [options.descriptionInDarkness=null] - Sensory description
- * @param {Array} [options.characters=[]] - Characters in location
- * @param {Array} [options.exits=[]] - Exits from location
+ * @param {boolean} [options.isLit] - Whether location is lit
+ * @param {string|null} [options.descriptionInDarkness] - Sensory description
+ * @param {Array} [options.characters] - Characters in location
+ * @param {Array} [options.exits] - Exits from location
  * @returns {object} Game state DTO for testing
  */
 function createDarkLocationGameState({
@@ -60,6 +62,7 @@ function createDarkLocationGameState({
 
 /**
  * Creates a mock safe event dispatcher for testing.
+ *
  * @returns {object} Mock event dispatcher
  */
 function createMockEventDispatcher() {
@@ -70,6 +73,7 @@ function createMockEventDispatcher() {
 
 /**
  * Creates a mock static content service for testing.
+ *
  * @returns {object} Mock static content service
  */
 function createMockStaticContentService() {
@@ -84,6 +88,7 @@ function createMockStaticContentService() {
 
 /**
  * Creates a mock character data XML builder for testing.
+ *
  * @returns {object} Mock XML builder
  */
 function createMockCharacterDataXmlBuilder() {
@@ -97,6 +102,7 @@ function createMockCharacterDataXmlBuilder() {
 
 /**
  * Creates a mock mod action metadata provider for testing.
+ *
  * @returns {object} Mock metadata provider
  */
 function createMockModActionMetadataProvider() {
@@ -107,6 +113,7 @@ function createMockModActionMetadataProvider() {
 
 /**
  * Creates a minimal AIPromptContentProvider for integration testing.
+ *
  * @returns {object} Contains provider and dependencies
  */
 function createContentProvider() {

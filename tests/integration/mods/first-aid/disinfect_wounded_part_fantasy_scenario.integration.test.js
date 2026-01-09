@@ -42,6 +42,10 @@ const scopePaths = {
   ),
 };
 
+/**
+ *
+ * @param scopeName
+ */
 function loadScopeDefinition(scopeName) {
   const path = scopePaths[scopeName];
   const content = readFileSync(path, 'utf8');
@@ -55,6 +59,10 @@ function loadScopeDefinition(scopeName) {
   return definition;
 }
 
+/**
+ *
+ * @param testEnv
+ */
 function attachCoreConditions(testEnv) {
   const coreConditions = {
     'core:entity-at-location': coreEntityAtLocation,
@@ -73,6 +81,10 @@ function attachCoreConditions(testEnv) {
   };
 }
 
+/**
+ *
+ * @param testEnv
+ */
 function createProductionScopeResolver(testEnv) {
   const scopeRegistry = new ScopeRegistry();
   scopeRegistry.initialize({
@@ -214,6 +226,9 @@ function createProductionScopeResolver(testEnv) {
   return resolver;
 }
 
+/**
+ *
+ */
 function buildEntities() {
   const room = ModEntityScenarios.createRoom(ROOM_ID, "Aldous' kitchen");
 
@@ -310,7 +325,7 @@ describe('fantasy: Aldous kitchen disinfect scenario (production scopes)', () =>
       baseContext
     );
     // Debug to aid failures if scope returns empty
-    // eslint-disable-next-line no-console
+     
     console.log('nearby scope result', nearby);
     expect(nearby.success).toBe(true);
     expect(Array.from(nearby.value)).toContain(PATIENT_ID);

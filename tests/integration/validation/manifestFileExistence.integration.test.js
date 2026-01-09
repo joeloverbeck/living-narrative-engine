@@ -202,6 +202,7 @@ describe('Manifest File Existence Validation', () => {
 
 /**
  * Files to ignore when scanning directories for unregistered content
+ *
  * @type {string[]}
  */
 const IGNORED_FILES = [
@@ -214,12 +215,14 @@ const IGNORED_FILES = [
 
 /**
  * File extensions to ignore (temporary/backup files)
+ *
  * @type {string[]}
  */
 const IGNORED_EXTENSIONS = ['.swp', '.bak', '.tmp', '.orig'];
 
 /**
  * Content categories and their expected file patterns
+ *
  * @type {Object<string, {directory: string, pattern: RegExp}>}
  */
 const CONTENT_CATEGORIES = {

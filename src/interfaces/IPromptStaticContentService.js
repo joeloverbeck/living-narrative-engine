@@ -18,6 +18,17 @@ export class IPromptStaticContentService {
   }
 
   /**
+   * Returns the mood update task definition text.
+   *
+   * @returns {string}
+   */
+  getMoodUpdateTaskDefinitionText() {
+    throw new Error(
+      "Method 'getMoodUpdateTaskDefinitionText()' must be implemented."
+    );
+  }
+
+  /**
    * Returns character portrayal guidelines.
    *
    * @param {string} characterName - The name of the character.
@@ -26,6 +37,18 @@ export class IPromptStaticContentService {
   getCharacterPortrayalGuidelines(characterName) {
     throw new Error(
       "Method 'getCharacterPortrayalGuidelines()' must be implemented."
+    );
+  }
+
+  /**
+   * Returns mood update portrayal guidelines.
+   *
+   * @param {string} characterName - The name of the character.
+   * @returns {string}
+   */
+  getMoodUpdatePortrayalGuidelines(characterName) {
+    throw new Error(
+      "Method 'getMoodUpdatePortrayalGuidelines()' must be implemented."
     );
   }
 

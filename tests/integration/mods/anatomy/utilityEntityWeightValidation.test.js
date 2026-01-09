@@ -10,7 +10,6 @@
  *
  * Note: Creature entity tests (cephalopods, spiders, tortoises) are in:
  * tests/integration/mods/anatomy-creatures/creatureEntityWeightValidation.test.js
- *
  * @see tickets/DISBODPARSPA-015-weight-utility.md
  */
 

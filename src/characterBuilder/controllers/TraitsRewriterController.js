@@ -9,6 +9,7 @@ import { BaseCharacterBuilderController } from './BaseCharacterBuilderController
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 import { TraitsRewriterError } from '../errors/TraitsRewriterError.js';
+import { copyToClipboard } from '../../domUI/helpers/clipboardUtils.js';
 
 /**
  * @typedef {import('./BaseCharacterBuilderController.js').BaseCharacterBuilderController} BaseCharacterBuilderController
@@ -585,7 +586,8 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Copy all traits to clipboard
+   * Copy all traits to clipboard.
+   * Uses centralized clipboard utility for fallback support.
    *
    * @private
    * @returns {Promise<void>}
@@ -595,29 +597,21 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       return;
     }
 
-    try {
-      // Format as text for clipboard
-      const textContent = this.#traitsRewriterDisplayEnhancer.formatForExport(
-        this.#lastGeneratedTraits.rewrittenTraits,
-        'text'
-      );
+    // Format as text for clipboard
+    const textContent = this.#traitsRewriterDisplayEnhancer.formatForExport(
+      this.#lastGeneratedTraits.rewrittenTraits,
+      'text'
+    );
 
-      // Use clipboard API
-      await navigator.clipboard.writeText(textContent);
+    const success = await copyToClipboard(textContent);
 
-      // Show success feedback
+    if (success) {
       this.#showCopySuccess();
-
-      this.logger.info(
-        'TraitsRewriterController: Copy to clipboard successful'
-      );
-    } catch (error) {
-      this.logger.error(
-        'TraitsRewriterController: Copy to clipboard failed',
-        error
-      );
+      this.logger.info('TraitsRewriterController: Copy to clipboard successful');
+    } else {
+      this.logger.error('TraitsRewriterController: Copy to clipboard failed');
       this.#displayError(
-        new TraitsRewriterError('Copy failed', 'COPY_FAILED', { error })
+        new TraitsRewriterError('Copy failed', 'COPY_FAILED', {})
       );
     }
   }

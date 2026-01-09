@@ -18,8 +18,9 @@ import {
 
 /**
  * Creates mock dependencies for the orchestrator.
- * @param {Object} overrides - Dependencies to override
- * @returns {Object} Mock dependencies
+ *
+ * @param {object} overrides - Dependencies to override
+ * @returns {object} Mock dependencies
  */
 const createDeps = (overrides = {}) => {
   const deps = {
