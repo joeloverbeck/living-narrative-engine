@@ -68,6 +68,66 @@
                             {
                                 ">=": [
                                     {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    5
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.compassion"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
                                         "var": "moodAxes.engagement"
                                     },
                                     10
@@ -80,15 +140,15 @@
                                     },
                                     0.35
                                 ]
-                            }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.gratitude"
                             },
-                            0.5
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    20
+                                ]
+                            }
                         ]
                     },
                     {
@@ -129,5 +189,5 @@
         "apology",
         "urgency"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

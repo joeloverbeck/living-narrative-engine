@@ -302,3 +302,10 @@
   color: var(--primary-text-color);
   text-decoration: none;
 }
+
+/* Affect traits panel note */
+.es-panel-note {
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  margin-top: var(--spacing-sm);
+}

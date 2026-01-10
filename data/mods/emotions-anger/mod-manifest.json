@@ -11,7 +11,9 @@
       "cold_fury.expression.json",
       "explosive_anger.expression.json",
       "frustration_spiral.expression.json",
+      "hurt_anger.expression.json",
       "mild_irritation.expression.json",
+      "protective_anger.expression.json",
       "rage_surge.expression.json",
       "suppressed_rage.expression.json"
     ]

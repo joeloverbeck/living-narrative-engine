@@ -45,6 +45,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -35
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.shame"
@@ -132,5 +140,5 @@
         "self_assured",
         "positive"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

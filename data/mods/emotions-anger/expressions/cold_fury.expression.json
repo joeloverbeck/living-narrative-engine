@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.32
+                            0.35
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.3
+                            0.28
                         ]
                     },
                     {
@@ -58,9 +58,17 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.lonely_yearning"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -84,7 +92,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -102,7 +110,7 @@
                                     {
                                         "var": "emotions.contempt"
                                     },
-                                    0.2
+                                    0.20
                                 ]
                             },
                             {
@@ -169,6 +177,21 @@
                                     },
                                     10
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
                             }
                         ]
                     }
@@ -187,5 +210,5 @@
         "controlled",
         "focused"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

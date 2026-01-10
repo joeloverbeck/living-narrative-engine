@@ -24,19 +24,43 @@
                         ]
                     },
                     {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            20
-                        ]
-                    },
-                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
                             },
                             0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
                         ]
                     },
                     {
@@ -218,5 +242,5 @@
         "reduced_agency",
         "trance_like"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

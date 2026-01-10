@@ -204,12 +204,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            0
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Wistful disappointment: disappointment + sadness with low arousal, negative valence, and not in rage/despair/grief collapse. Change-gate can be classic disappointment shift OR a lonely-yearning surge OR a meaningful drop in connection emotions OR a hope drop-so ‘missed connection' disappointment reads correctly."
+            "failure_message": "Wistful disappointment: disappointment + sadness with low arousal, negative valence, and not in rage/despair/grief collapse. Adds affiliation-drop / affiliation-crossing as an extra ‘missed connection’ pathway even when bonding emotions are gated low by disengagement."
         }
     ],
     "actor_description": "I really thought it would go another way. The hope I'd been holding doesn't shatter-it just folds in on itself, neat and final. My chest feels heavy, like I swallowed a small stone, and my thoughts keep circling the same simple verdict: not this time. I'm not gearing up to fight; I'm letting the loss settle, tasting the dull ache of what could've been. Even my body moves slower, as if it doesn't see the point in hurrying.",
@@ -224,5 +259,5 @@
         "wistful",
         "nostalgia"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

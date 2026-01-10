@@ -32,11 +32,27 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.threat"
                             },
-                            35
+                            25
                         ]
                     },
                     {
@@ -44,7 +60,15 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            55
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -20
                         ]
                     },
                     {
@@ -77,6 +101,14 @@
                                 "var": "emotions.anger"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.5
                         ]
                     },
                     {
@@ -136,5 +168,5 @@
         "composure",
         "control"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

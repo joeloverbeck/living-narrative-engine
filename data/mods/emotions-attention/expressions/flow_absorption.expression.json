@@ -24,6 +24,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -212,5 +220,5 @@
         "absorption",
         "low_self_consciousness"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -58,9 +58,25 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.threat"
                             },
-                            0.25
+                            40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -30
                         ]
                     },
                     {
@@ -94,22 +110,6 @@
                     {
                         "<": [
                             {
-                                "var": "emotions.nostalgia"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.grief"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
                                 "var": "emotions.despair"
                             },
                             0.7
@@ -118,41 +118,9 @@
                     {
                         "<": [
                             {
-                                "var": "emotions.terror"
+                                "var": "emotions.dissociation"
                             },
-                            0.3
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.15
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.alarm"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.rage"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.anger"
-                            },
-                            0.55
+                            0.35
                         ]
                     },
                     {
@@ -206,12 +174,27 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires low-energy, mildly disengaged recall with low future expectancy, and explicitly blocks lonely_yearning so memories don't have 'ache/bite' in this beat. Fires on a notable drop in engagement or future expectancy to prevent spam."
+            "failure_message": "Low-energy, mildly disengaged recall with low future expectancy and a ‘distance’ interpersonal tone (affiliation not warm). Adds threat cap so this isn’t happening under danger. Fires on an expectancy/engagement drop or an affiliation drop to prevent spam."
         }
     ],
     "actor_description": "A memory comes up-clear enough, like a photograph held at arm's length. I can name the place, the faces, the small details, but it doesn't tug the way it should. No sweetness, no ache-just this muted replay, as if my mind is thumbing through old pages because there's nothing better to do. I'm here, but only technically. The present feels thin; the future feels even thinner.",
@@ -230,5 +213,5 @@
         "hopelessness",
         "withdrawal"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -52,19 +52,43 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
-                                "var": "moodAxes.agency_control"
+                                "var": "moodAxes.engagement"
                             },
                             15
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.threat"
                             },
-                            0.4
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            15
                         ]
                     },
                     {
@@ -163,7 +187,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and reduced control; excludes dissociation and stays below panic/freeze/terror/hypervigilance. Caps lonely_yearning so 'aching preoccupation' doesn't muddy an overloaded-pressure beat; gated by stress/arousal increase."
+            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and engagement with threat in the stress band (and non-positive valence). Excludes dissociation and stays below panic/freeze/terror/hypervigilance. Gated by stress/arousal increase."
         }
     ],
     "actor_description": "My mind fills up faster than it can empty. Thoughts stack, priorities blur, and everything starts arriving with the same sharp insistence. I can feel my body trying to sprint while my attention keeps snagging—breath quick, shoulders tight, jaw set. I want to force the moment to behave, and the strain shows in how little room I have left for anything else.",

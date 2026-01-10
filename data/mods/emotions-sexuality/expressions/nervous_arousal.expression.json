@@ -34,6 +34,22 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.threat"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.agency_control"
                             },
                             10
@@ -164,7 +180,7 @@
                     }
                 ]
             },
-            "failure_message": "Performance anxiety with threat + low control, but capped below panic so it stays fluttery/awkward excitement rather than spiraling."
+            "failure_message": "Performance anxiety with social-threat range + low control/self-evaluation, and not strongly hostile/detached; capped below panic so it stays fluttery/awkward rather than spiraling."
         }
     ],
     "actor_description": "My body is ahead of me-heat, pulse, wanting-while my mind keeps tapping the brakes. What if I mess this up? What if they notice too much? I can feel myself monitoring everything at once: breath, hands, the space between us, what my face is doing. The desire doesn't vanish-it sharpens-but it comes laced with a thin panic, like standing too close to an edge. I want to lean in, and in the same instant I'm already rehearsing how to retreat.",
@@ -183,5 +199,5 @@
         "hesitation",
         "self_doubt"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

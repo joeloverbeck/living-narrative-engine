@@ -20,7 +20,23 @@
                             {
                                 "var": "sexualArousal"
                             },
-                            0.35
+                            0.4
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
                         ]
                     },
                     {
@@ -84,7 +100,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            35
+                            25
                         ]
                     },
                     {
@@ -175,5 +191,5 @@
         "teasing",
         "arousal"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

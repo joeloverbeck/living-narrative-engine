@@ -5,6 +5,19 @@
 
 import { Router } from 'express';
 
+export const EXPRESSION_ROUTE_DEFINITIONS = [
+  {
+    method: 'post',
+    path: '/update-status',
+    handler: 'handleUpdateStatus',
+  },
+  {
+    method: 'get',
+    path: '/scan-statuses',
+    handler: 'handleScanStatuses',
+  },
+];
+
 /**
  * Creates Express router with expression diagnostic status routes.
  * @param {object} expressionStatusController - Controller instance for handling requests
@@ -13,12 +26,11 @@ import { Router } from 'express';
 export const createExpressionRoutes = (expressionStatusController) => {
   const router = Router();
 
-  router.post('/update-status', (req, res) =>
-    expressionStatusController.handleUpdateStatus(req, res)
-  );
-  router.get('/scan-statuses', (req, res) =>
-    expressionStatusController.handleScanStatuses(req, res)
-  );
+  EXPRESSION_ROUTE_DEFINITIONS.forEach(({ method, path, handler }) => {
+    router[method](path, (req, res) =>
+      expressionStatusController[handler](req, res)
+    );
+  });
 
   return router;
 };

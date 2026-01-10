@@ -141,11 +141,13 @@ class MonteCarloSimulator {
 
       // Process chunk synchronously (fast enough not to block)
       for (let i = processed; i < chunkEnd; i++) {
-        const { current, previous } = this.#generateRandomState(distribution);
+        const { current, previous, affectTraits } =
+          this.#generateRandomState(distribution);
         const result = this.#evaluateWithTracking(
           expression,
           current,
           previous,
+          affectTraits,
           clauseTracking
         );
 
@@ -201,10 +203,21 @@ class MonteCarloSimulator {
    *
    * @private
    * @param {DistributionType} distribution - The sampling distribution to use
-   * @returns {{current: {mood: object, sexual: object}, previous: {mood: object, sexual: object}}}
+   * @returns {{current: {mood: object, sexual: object}, previous: {mood: object, sexual: object}, affectTraits: {affective_empathy: number, cognitive_empathy: number, harm_aversion: number}}}
    */
   #generateRandomState(distribution) {
-    const moodAxes = ['valence', 'arousal', 'agency_control', 'threat', 'engagement', 'future_expectancy', 'self_evaluation'];
+    // 8 mood axes (affiliation added for AFFTRAANDAFFAXI spec)
+    const moodAxes = [
+      'valence',
+      'arousal',
+      'agency_control',
+      'threat',
+      'engagement',
+      'future_expectancy',
+      'self_evaluation',
+      'affiliation',
+    ];
+    const traitAxes = ['affective_empathy', 'cognitive_empathy', 'harm_aversion'];
 
     // Generate previous state first (fully random)
     const previousMood = {};
@@ -219,6 +232,13 @@ class MonteCarloSimulator {
     previousSexual.sex_excitation = Math.round(this.#sampleValue(distribution, 0, 100));
     previousSexual.sex_inhibition = Math.round(this.#sampleValue(distribution, 0, 100));
     previousSexual.baseline_libido = Math.round(this.#sampleValue(distribution, -50, 50));
+
+    // Generate affect traits (stable - same for current and previous)
+    // Traits are personality characteristics, not momentary states
+    const affectTraits = {};
+    for (const axis of traitAxes) {
+      affectTraits[axis] = Math.round(this.#sampleValue(distribution, 0, 100));
+    }
 
     // Generate current state as previous + gaussian delta (correlated temporal states)
     // This enables "persistence-style" expressions that check deltas between previous and current
@@ -261,6 +281,7 @@ class MonteCarloSimulator {
     return {
       current: { mood: currentMood, sexual: currentSexual },
       previous: { mood: previousMood, sexual: previousSexual },
+      affectTraits, // Same for current and previous (personality is stable)
     };
   }
 
@@ -374,12 +395,19 @@ class MonteCarloSimulator {
    * @param {object} expression - The expression to evaluate
    * @param {{mood: object, sexual: object}} currentState - Current mood/sexual state
    * @param {{mood: object, sexual: object}} previousState - Previous mood/sexual state (for temporal comparisons)
+   * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} affectTraits - Affect traits for emotion calculation
    * @param {Array|null} clauseTracking - Tracking array for clause failures
    * @returns {{triggered: boolean}}
    */
-  #evaluateWithTracking(expression, currentState, previousState, clauseTracking) {
-    // Build context from current and previous states
-    const context = this.#buildContext(currentState, previousState);
+  #evaluateWithTracking(
+    expression,
+    currentState,
+    previousState,
+    affectTraits,
+    clauseTracking
+  ) {
+    // Build context from current, previous states, and affect traits
+    const context = this.#buildContext(currentState, previousState, affectTraits);
 
     // Evaluate each prerequisite separately for tracking
     if (clauseTracking && expression?.prerequisites) {
@@ -424,12 +452,14 @@ class MonteCarloSimulator {
    * @private
    * @param {{mood: object, sexual: object}} currentState - Current mood and sexual state
    * @param {{mood: object, sexual: object}} previousState - Previous mood and sexual state
-   * @returns {object} Context object with moodAxes, emotions, sexualStates, and their previous counterparts
+   * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} [affectTraits] - Affect traits for gate checking
+   * @returns {object} Context object with moodAxes, emotions, sexualStates, affectTraits, and their previous counterparts
    */
-  #buildContext(currentState, previousState) {
+  #buildContext(currentState, previousState, affectTraits = null) {
     // Calculate current emotions from current mood using prototypes
     // Note: #calculateEmotions normalizes mood from [-100,100] to [-1,1] internally
-    const emotions = this.#calculateEmotions(currentState.mood);
+    // Now passes affectTraits for gate checking
+    const emotions = this.#calculateEmotions(currentState.mood, affectTraits);
 
     // Calculate current sexualArousal from raw sexual state (derived value)
     const sexualArousal = this.#calculateSexualArousal(currentState.sexual);
@@ -439,7 +469,7 @@ class MonteCarloSimulator {
 
     // Calculate previous emotions from previous mood (NOT zeroed!)
     // This enables "persistence-style" expressions like lingering_guilt
-    const previousEmotions = this.#calculateEmotions(previousState.mood);
+    const previousEmotions = this.#calculateEmotions(previousState.mood, affectTraits);
 
     // Calculate previous sexual arousal and states from previous state
     const previousSexualArousal = this.#calculateSexualArousal(previousState.sexual);
@@ -451,6 +481,13 @@ class MonteCarloSimulator {
     // Previous mood axes directly from previous state
     const previousMoodAxes = previousState.mood;
 
+    // Default affect traits for backwards compatibility
+    const defaultTraits = {
+      affective_empathy: 50,
+      cognitive_empathy: 50,
+      harm_aversion: 50,
+    };
+
     return {
       mood: currentState.mood,
       moodAxes: currentState.mood, // Alias for expressions that check moodAxes.*
@@ -461,6 +498,7 @@ class MonteCarloSimulator {
       previousSexualStates,
       previousMoodAxes,
       previousSexualArousal, // Derived value for previous state arousal comparisons
+      affectTraits: affectTraits ?? defaultTraits, // Include affect traits in context
     };
   }
 
@@ -529,9 +567,10 @@ class MonteCarloSimulator {
    *
    * @private
    * @param {object} mood - Mood axes in [-100, 100] scale
+   * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} [affectTraits] - Affect traits for gate checking and weights
    * @returns {object}
    */
-  #calculateEmotions(mood) {
+  #calculateEmotions(mood, affectTraits = null) {
     const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
     if (!lookup?.entries) return {};
 
@@ -542,11 +581,27 @@ class MonteCarloSimulator {
       normalizedMood[axis] = value / 100;
     }
 
+    // Normalize affect traits from [0, 100] to [0, 1]
+    const traits = affectTraits ?? {
+      affective_empathy: 50,
+      cognitive_empathy: 50,
+      harm_aversion: 50,
+    };
+    const normalizedTraits = {
+      affective_empathy: traits.affective_empathy / 100,
+      cognitive_empathy: traits.cognitive_empathy / 100,
+      harm_aversion: traits.harm_aversion / 100,
+    };
+
+    // Combine normalized axes for gate checking and weight calculation
+    const allNormalizedAxes = { ...normalizedMood, ...normalizedTraits };
+
     const emotions = {};
     for (const [id, prototype] of Object.entries(lookup.entries)) {
       // Check gates first - emotion intensity is 0 if any gate fails
       // This matches EmotionCalculatorService.#calculatePrototypeIntensity() behavior
-      if (!this.#checkGates(prototype.gates, normalizedMood)) {
+      // Gates can now reference trait axes (e.g., "affective_empathy >= 0.25")
+      if (!this.#checkGates(prototype.gates, allNormalizedAxes)) {
         emotions[id] = 0;
         continue;
       }
@@ -555,8 +610,9 @@ class MonteCarloSimulator {
         let sum = 0;
         let weightSum = 0;
         for (const [axis, weight] of Object.entries(prototype.weights)) {
-          if (normalizedMood[axis] !== undefined) {
-            sum += normalizedMood[axis] * weight;
+          // Check both mood axes and trait axes
+          if (allNormalizedAxes[axis] !== undefined) {
+            sum += allNormalizedAxes[axis] * weight;
             weightSum += Math.abs(weight);
           }
         }
@@ -1055,41 +1111,37 @@ class MonteCarloSimulator {
       'previousSexualStates',
       'previousMoodAxes',
       'previousSexualArousal',
+      'affectTraits', // NEW: Affect traits are now seeded
     ]);
 
     // Keys that are scalar (cannot have nested properties)
     const scalarKeys = new Set(['sexualArousal', 'previousSexualArousal']);
 
+    // All 8 mood axes (affiliation added for AFFTRAANDAFFAXI spec)
+    const moodAxisSet = new Set([
+      'valence',
+      'arousal',
+      'agency_control',
+      'threat',
+      'engagement',
+      'future_expectancy',
+      'self_evaluation',
+      'affiliation',
+    ]);
+
     // Nested keys for each category (from prototypes + hardcoded mood axes)
     const nestedKeys = {
-      mood: new Set([
-        'valence',
-        'arousal',
-        'agency_control',
-        'threat',
-        'engagement',
-        'future_expectancy',
-        'self_evaluation',
-      ]),
-      moodAxes: new Set([
-        'valence',
-        'arousal',
-        'agency_control',
-        'threat',
-        'engagement',
-        'future_expectancy',
-        'self_evaluation',
-      ]),
-      previousMoodAxes: new Set([
-        'valence',
-        'arousal',
-        'agency_control',
-        'threat',
-        'engagement',
-        'future_expectancy',
-        'self_evaluation',
-      ]),
+      mood: moodAxisSet,
+      moodAxes: new Set(moodAxisSet),
+      previousMoodAxes: new Set(moodAxisSet),
     };
+
+    // Affect traits nested keys
+    nestedKeys.affectTraits = new Set([
+      'affective_empathy',
+      'cognitive_empathy',
+      'harm_aversion',
+    ]);
 
     // Get dynamic keys from emotion prototypes
     const emotionLookup = this.#dataRegistry.get(

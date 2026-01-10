@@ -40,6 +40,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.freeze"
@@ -224,5 +232,5 @@
         "vulnerability",
         "sexual"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

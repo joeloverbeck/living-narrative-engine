@@ -187,5 +187,5 @@
         "quiet_tension",
         "readiness"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

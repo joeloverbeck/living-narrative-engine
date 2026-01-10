@@ -78,6 +78,7 @@ describe('ExpressionContextBuilder', () => {
       engagement: 5,
       future_expectancy: -15,
       self_evaluation: 8,
+      affiliation: 0,
     };
 
     const result = builder.buildContext(
@@ -107,6 +108,7 @@ describe('ExpressionContextBuilder', () => {
           engagement: 0,
           future_expectancy: 0,
           self_evaluation: 0,
+          affiliation: 0,
         },
       })
     );
@@ -161,6 +163,7 @@ describe('ExpressionContextBuilder', () => {
       engagement: 80,
       future_expectancy: 45,
       self_evaluation: 60,
+      affiliation: 35,
     };
 
     const result = builder.buildContext(
@@ -223,6 +226,7 @@ describe('ExpressionContextBuilder', () => {
       engagement: 0,
       future_expectancy: 0,
       self_evaluation: 0,
+      affiliation: 0,
     });
   });
 
@@ -241,6 +245,7 @@ describe('ExpressionContextBuilder', () => {
         engagement: 4,
         future_expectancy: 5,
         self_evaluation: 6,
+        affiliation: 7,
       },
     };
 
@@ -321,6 +326,7 @@ describe('ExpressionContextBuilder', () => {
       engagement: 0,
       future_expectancy: 0,
       self_evaluation: 0,
+      affiliation: 0,
     });
   });
 
@@ -439,6 +445,7 @@ describe('ExpressionContextBuilder', () => {
         engagement: 0,
         future_expectancy: 0,
         self_evaluation: 0,
+        affiliation: 0,
       },
     };
 
@@ -467,6 +474,7 @@ describe('ExpressionContextBuilder', () => {
         engagement: 0,
         future_expectancy: 0,
         self_evaluation: 0,
+        affiliation: 0,
         extra_axis: 5,
       },
     };
@@ -479,5 +487,100 @@ describe('ExpressionContextBuilder', () => {
         previousState
       )
     ).toThrow('[ExpressionContextBuilder] previousMoodAxes keys do not match');
+  });
+
+  // ============================================
+  // Affiliation Axis Tests (8th mood axis)
+  // ============================================
+
+  describe('affiliation axis support', () => {
+    it('should include affiliation in moodAxes', () => {
+      const moodData = {
+        valence: 10,
+        arousal: 20,
+        agency_control: 30,
+        threat: -10,
+        engagement: 5,
+        future_expectancy: -15,
+        self_evaluation: 8,
+        affiliation: 25,
+      };
+
+      const result = builder.buildContext(
+        'actor-1',
+        moodData,
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 5 }
+      );
+
+      expect(result.moodAxes.affiliation).toBe(25);
+    });
+
+    it('should include affiliation in previousMoodAxes when provided', () => {
+      const previousState = {
+        emotions: { joy: 0.1 },
+        sexualStates: { sexual_lust: 0.2, aroused_with_shame: 0.0 },
+        moodAxes: {
+          valence: 5,
+          arousal: 1,
+          agency_control: 2,
+          threat: 3,
+          engagement: 4,
+          future_expectancy: 5,
+          self_evaluation: 6,
+          affiliation: 15,
+        },
+      };
+
+      const result = builder.buildContext(
+        'actor-1',
+        { valence: 10, affiliation: 25 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 },
+        previousState
+      );
+
+      expect(result.previousMoodAxes.affiliation).toBe(15);
+    });
+
+    it('should initialize previousMoodAxes.affiliation to 0 when previous state is null', () => {
+      const result = builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 },
+        null
+      );
+
+      expect(result.previousMoodAxes.affiliation).toBe(0);
+    });
+
+    it('should default affiliation to 0 when not provided in mood data', () => {
+      const result = builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      );
+
+      expect(result.moodAxes.affiliation).toBe(0);
+    });
+
+    it('should handle negative affiliation values', () => {
+      const moodData = {
+        valence: 10,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: -50,
+      };
+
+      const result = builder.buildContext(
+        'actor-1',
+        moodData,
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      );
+
+      expect(result.moodAxes.affiliation).toBe(-50);
+    });
   });
 });

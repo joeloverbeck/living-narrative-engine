@@ -16,11 +16,19 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -5
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.empathic_distress"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -61,6 +69,14 @@
                                 "var": "emotions.rage"
                             },
                             0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.40
                         ]
                     },
                     {
@@ -171,5 +187,5 @@
         "care",
         "supportive"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

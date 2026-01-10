@@ -92,6 +92,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
       engagement: 0,
       future_expectancy: 0,
       self_evaluation: 0,
+      affiliation: 0,
     },
     'core:notes': { notes: [] },
     'core:goals': { goals: [] },
@@ -105,6 +106,11 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
       sex_excitation: 0,
       sex_inhibition: 0,
       baseline_libido: 0,
+    },
+    'core:affect_traits': {
+      affective_empathy: 50,
+      cognitive_empathy: 50,
+      harm_aversion: 50,
     },
     'core:strengths': { text: 'I am good at problem solving' },
     'core:visible': { isVisible: true },
@@ -203,6 +209,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:short_term_memory': {},
     'core:speech_patterns': {},
     'core:sexual_state': {},
+    'core:affect_traits': {}, // Missing all required fields
     'core:strengths': {},
     'core:visible': {},
     'core:weaknesses': {},

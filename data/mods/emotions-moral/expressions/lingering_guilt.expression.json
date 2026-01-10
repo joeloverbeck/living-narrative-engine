@@ -80,6 +80,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -5
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.shame"
@@ -158,5 +166,5 @@
         "minor_mistake",
         "lingering"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

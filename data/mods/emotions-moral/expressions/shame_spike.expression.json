@@ -64,6 +64,22 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            25
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [
@@ -144,5 +160,5 @@
         "acute",
         "avoidance"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

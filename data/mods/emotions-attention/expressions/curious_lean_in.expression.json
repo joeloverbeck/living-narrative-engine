@@ -24,6 +24,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.fear"
@@ -36,7 +52,7 @@
                             {
                                 "var": "emotions.suspicion"
                             },
-                            0.55
+                            0.5
                         ]
                     },
                     {
@@ -157,5 +173,5 @@
         "inquiry",
         "observable"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

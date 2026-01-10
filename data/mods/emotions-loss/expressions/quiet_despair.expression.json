@@ -56,6 +56,33 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -112,6 +139,16 @@
                                                 "var": "emotions.hope"
                                             }
                                         ]
+                                    },
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
                                     }
                                 ]
                             },
@@ -120,7 +157,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high despair + numbness + low hope with low arousal/engagement (quiet shutdown), not anger/frustration-driven; excludes significant dissociation so dissociation owns 'checked out' scenes; requires a notable worsening shift."
+            "failure_message": "Requires high despair + numbness + low hope with low arousal/engagement (quiet shutdown), not anger/frustration-driven; adds low/declining affiliation to signal interpersonal withdrawal. Excludes significant dissociation so dissociation owns ‘checked out’ scenes; requires a notable worsening shift."
         }
     ],
     "actor_description": "Something in me stops reaching. The future doesn't look bad so much as… blank-like a hallway with the lights out. My thoughts slow, heavy and unspecific. Even my breathing feels distant, like I'm listening to it from another room. I could speak, probably. I just can't find a reason that feels real.",
@@ -134,5 +171,5 @@
         "hopelessness",
         "withdrawal"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

@@ -20,7 +20,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            45
+                            50
                         ]
                     },
                     {
@@ -28,7 +28,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            30
+                            55
                         ]
                     },
                     {
@@ -42,9 +42,17 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.valence"
                             },
-                            0.3
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
                         ]
                     },
                     {
@@ -53,14 +61,6 @@
                                 "var": "emotions.freeze"
                             },
                             0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.numbness"
-                            },
-                            0.6
                         ]
                     },
                     {
@@ -157,7 +157,7 @@
                     }
                 ]
             },
-            "failure_message": "Panic onset is a change-event: panic must be present and grounded in elevated threat/arousal with felt loss of control, while excluding freeze/shutdown branches. Caps lonely_yearning so panic owns attention when it triggers. Fires only on real onset (panic spike/crossing, sharp agency drop, or abrupt threat/arousal surge)."
+            "failure_message": "Panic onset is a change-event: panic must be present and grounded in very high threat/arousal with felt loss of control (negative valence, attention online), while excluding freeze/shutdown branches. Fires only on real onset (panic spike/crossing, sharp agency drop, or abrupt threat/arousal surge)."
         }
     ],
     "actor_description": "It snaps on like a breaker. My heart starts hammering with no warm-up and my breath turns useless-too fast, too shallow, like I can't get enough air no matter how much I take. The world narrows into signals and edges. My thoughts stop being sentences and become one repeating instruction: move, now-except I can't decide where 'safe' even is.",
@@ -172,5 +172,5 @@
         "acute",
         "fear"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

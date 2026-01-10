@@ -18,8 +18,15 @@ const TEST_PORT = 3002;
 describe('Health Check Endpoint Diagnosis', () => {
   let app;
   let server;
+  let originalEnv;
 
   beforeAll((done) => {
+    originalEnv = { ...process.env };
+    process.env.READINESS_CRITICAL_HEAP_PERCENT = '1000';
+    process.env.READINESS_CRITICAL_HEAP_TOTAL_MB = '100000';
+    process.env.READINESS_CRITICAL_HEAP_USED_MB = '100000';
+    process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT = '1000';
+
     const { app: expressApp } = buildHealthRoutesApp({
       llmConfigService: createOperationalLlmConfigService(),
       cacheService: createCacheService(),
@@ -34,8 +41,12 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   afterAll((done) => {
     if (server) {
-      server.close(done);
+      server.close(() => {
+        process.env = originalEnv;
+        done();
+      });
     } else {
+      process.env = originalEnv;
       done();
     }
   });

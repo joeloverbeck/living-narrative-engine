@@ -3,8 +3,6 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import path from 'node:path';
-import { readFile, readdir } from 'node:fs/promises';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 import {
   buildStateMap,
@@ -21,48 +19,57 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
-const EXPRESSIONS_DIRS = [
-  path.resolve(
-    process.cwd(),
-    'data',
-    'mods',
-    'emotions-anger',
-    'expressions'
-  ),
-  path.resolve(
-    process.cwd(),
-    'data',
-    'mods',
-    'emotions-positive-affect',
-    'expressions'
-  ),
-  path.resolve(
-    process.cwd(),
-    'data',
-    'mods',
-    'emotions-attention',
-    'expressions'
-  ),
-];
+const createExpressions = (dataRegistry) => {
+  const expressions = [
+    createTestExpression({
+      id: 'emotions-anger:rage_surge',
+      priority: 200,
+      prerequisites: [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'emotions.anger' }, 0.6] },
+              { '>=': [{ var: 'emotions.rage' }, 0.6] },
+            ],
+          },
+        },
+      ],
+      descriptionText: '{actor} erupts with rage.',
+      actorDescription: 'A furious expression flashes across their face.',
+    }),
+    createTestExpression({
+      id: 'emotions-anger:seething_anger',
+      priority: 100,
+      prerequisites: [
+        {
+          logic: { '>=': [{ var: 'emotions.anger' }, 0.5] },
+        },
+      ],
+      descriptionText: '{actor} seethes quietly.',
+      actorDescription: 'A tight, simmering glare.',
+    }),
+    createTestExpression({
+      id: 'emotions-positive-affect:quiet_contentment',
+      priority: 120,
+      prerequisites: [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'emotions.contentment' }, 0.55] },
+              { '>=': [{ var: 'emotions.calm' }, 0.45] },
+              { '<=': [{ var: 'moodAxes.arousal' }, 25] },
+            ],
+          },
+        },
+      ],
+      descriptionText: '{actor} settles into quiet contentment.',
+      actorDescription: 'A calm, easy smile.',
+    }),
+  ];
 
-const loadExpressions = async (dataRegistry) => {
-  const expressions = [];
-
-  for (const dir of EXPRESSIONS_DIRS) {
-    const files = await readdir(dir);
-
-    for (const file of files) {
-      if (!file.endsWith('.expression.json')) {
-        continue;
-      }
-
-      const expression = JSON.parse(
-        await readFile(path.join(dir, file), 'utf-8')
-      );
-      dataRegistry.store('expressions', expression.id, expression);
-      expressions.push(expression);
-    }
-  }
+  expressions.forEach((expression) => {
+    dataRegistry.store('expressions', expression.id, expression);
+  });
 
   return expressions;
 };
@@ -138,7 +145,7 @@ describe('Expression Flow - Integration', () => {
     registerExpressionServices(container);
 
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    const loadedExpressions = await loadExpressions(dataRegistry);
+    const loadedExpressions = createExpressions(dataRegistry);
 
     emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
     ({ emotionKeys, sexualKeys } = collectExpressionStateKeys(loadedExpressions));

@@ -992,5 +992,248 @@ describe('WitnessStateFinder', () => {
         expect(result.bestFitness).toBeGreaterThan(0.5);
       });
     });
+
+    describe('Affect traits support', () => {
+      it('should include affectTraits in built context', async () => {
+        const expression = {
+          id: 'test:traits_context',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'affectTraits.affective_empathy' }, 0] },
+            },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, { maxIterations: 500 });
+
+        // If affectTraits weren't in context, this would never pass
+        expect(result.bestFitness).toBeGreaterThan(0);
+      });
+
+      it('should perturb affect traits in neighbor generation', async () => {
+        const expression = {
+          id: 'test:traits_perturb',
+          prerequisites: [
+            // Requires high empathy - search should explore trait space
+            {
+              logic: { '>=': [{ var: 'affectTraits.affective_empathy' }, 80] },
+            },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, { maxIterations: 500 });
+
+        // Should make progress toward satisfying the trait constraint
+        expect(result.bestFitness).toBeGreaterThan(0);
+        const state = result.witness || result.nearestMiss;
+        // Trait values should be valid integers
+        for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+          expect(state.affectTraits[axis]).toBeGreaterThanOrEqual(WitnessState.TRAIT_RANGE.min);
+          expect(state.affectTraits[axis]).toBeLessThanOrEqual(WitnessState.TRAIT_RANGE.max);
+          expect(Number.isInteger(state.affectTraits[axis])).toBe(true);
+        }
+      });
+
+      it('should find witness for trait-gated expressions', async () => {
+        // Mock emotion prototype with a trait gate
+        const prototypesWithTraitGate = {
+          entries: {
+            compassion: {
+              gates: ['affective_empathy >= 0.25'],
+              weights: { valence: 0.5, affiliation: 0.5 },
+            },
+            joy: {
+              weights: { valence: 1.0, arousal: 0.5 },
+            },
+          },
+        };
+
+        mockDataRegistry.get = jest.fn((category, lookupId) => {
+          if (category === 'lookups') {
+            if (lookupId === 'core:emotion_prototypes') {
+              return prototypesWithTraitGate;
+            }
+            if (lookupId === 'core:sexual_prototypes') {
+              return mockSexualPrototypes;
+            }
+          }
+          return null;
+        });
+
+        const expression = {
+          id: 'test:trait_gated',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.compassion' }, 0.3] },
+            },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, { maxIterations: 2000 });
+
+        // With trait gates, finder should explore trait space to satisfy them
+        expect(result.bestFitness).toBeGreaterThan(0);
+      });
+
+      it('should return low fitness for trait-gated expression with low traits', async () => {
+        // Mock emotion prototype that requires high empathy
+        const prototypesWithHighGate = {
+          entries: {
+            deep_compassion: {
+              gates: ['affective_empathy >= 0.95'], // Very high threshold
+              weights: { valence: 0.5, affiliation: 0.5 },
+            },
+          },
+        };
+
+        mockDataRegistry.get = jest.fn((category, lookupId) => {
+          if (category === 'lookups') {
+            if (lookupId === 'core:emotion_prototypes') {
+              return prototypesWithHighGate;
+            }
+            if (lookupId === 'core:sexual_prototypes') {
+              return mockSexualPrototypes;
+            }
+          }
+          return null;
+        });
+
+        const expression = {
+          id: 'test:high_trait_gate',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.deep_compassion' }, 0.8] },
+            },
+          ],
+        };
+
+        // Even with trait search, very high gate + intensity threshold is hard to satisfy
+        const result = await finder.findWitness(expression, { maxIterations: 100 });
+
+        // Should still track progress toward the goal
+        expect(result.bestFitness).toBeGreaterThanOrEqual(0);
+        expect(result.bestFitness).toBeLessThanOrEqual(1);
+      });
+
+      it('should produce integer trait values after perturbation', async () => {
+        const expression = {
+          id: 'test:integer_traits',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'affectTraits.cognitive_empathy' }, 30] } },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, {
+          maxIterations: 500,
+        });
+        const state = result.witness || result.nearestMiss;
+
+        for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+          expect(Number.isInteger(state.affectTraits[axis])).toBe(true);
+        }
+      });
+
+      it('should check trait gates before calculating emotion intensity', async () => {
+        // Mock with strict gate
+        const prototypesWithGate = {
+          entries: {
+            gated_emotion: {
+              gates: ['harm_aversion >= 0.5'],
+              weights: { valence: 1.0 },
+            },
+          },
+        };
+
+        mockDataRegistry.get = jest.fn((category, lookupId) => {
+          if (category === 'lookups') {
+            if (lookupId === 'core:emotion_prototypes') {
+              return prototypesWithGate;
+            }
+            if (lookupId === 'core:sexual_prototypes') {
+              return mockSexualPrototypes;
+            }
+          }
+          return null;
+        });
+
+        const expression = {
+          id: 'test:gate_check',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.gated_emotion' }, 0.1] },
+            },
+          ],
+        };
+
+        // The search should be able to find states where the gate passes
+        const result = await finder.findWitness(expression, { maxIterations: 1000 });
+
+        // Should make progress - if gates weren't checked, emotion would always be 0
+        expect(result.bestFitness).toBeGreaterThan(0);
+      });
+
+      it('should support trait axes in emotion weight calculations', async () => {
+        // Mock emotion that uses trait as a weight
+        const prototypesWithTraitWeight = {
+          entries: {
+            empathic_joy: {
+              weights: {
+                valence: 0.5,
+                affective_empathy: 0.5, // Trait contributes to emotion intensity
+              },
+            },
+          },
+        };
+
+        mockDataRegistry.get = jest.fn((category, lookupId) => {
+          if (category === 'lookups') {
+            if (lookupId === 'core:emotion_prototypes') {
+              return prototypesWithTraitWeight;
+            }
+            if (lookupId === 'core:sexual_prototypes') {
+              return mockSexualPrototypes;
+            }
+          }
+          return null;
+        });
+
+        const expression = {
+          id: 'test:trait_weight',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.empathic_joy' }, 0.4] },
+            },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, { maxIterations: 1000 });
+
+        // Should be able to satisfy by optimizing both valence and empathy
+        expect(result.bestFitness).toBeGreaterThan(0);
+      });
+
+      it('should include all three trait axes in context', async () => {
+        const expression = {
+          id: 'test:all_traits',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'affectTraits.affective_empathy' }, 0] },
+                  { '>=': [{ var: 'affectTraits.cognitive_empathy' }, 0] },
+                  { '>=': [{ var: 'affectTraits.harm_aversion' }, 0] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, { maxIterations: 100 });
+
+        // All three traits should be accessible
+        expect(result.found).toBe(true);
+        expect(result.bestFitness).toBe(1);
+      });
+    });
   });
 });

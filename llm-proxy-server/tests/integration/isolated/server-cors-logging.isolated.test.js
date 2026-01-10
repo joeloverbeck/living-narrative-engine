@@ -13,6 +13,7 @@ import {
   jest,
 } from '@jest/globals';
 import path from 'node:path';
+import net from 'node:net';
 import { createProxyServer } from '../../../src/core/server.js';
 
 describe('Server CORS Configuration Logging (Isolated)', () => {
@@ -20,7 +21,18 @@ describe('Server CORS Configuration Logging (Isolated)', () => {
   let originalEnv;
   let mockLogger;
 
-  beforeEach(() => {
+  const getAvailablePort = async () => {
+    const server = net.createServer();
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const { port } = server.address();
+    await new Promise((resolve) => server.close(resolve));
+    return port;
+  };
+
+  beforeEach(async () => {
     // Backup original environment
     originalEnv = { ...process.env };
 
@@ -48,6 +60,7 @@ describe('Server CORS Configuration Logging (Isolated)', () => {
 
     // Set test environment
     process.env.NODE_ENV = 'test';
+    process.env.PROXY_PORT = String(await getAvailablePort());
 
     // Set path to test LLM config file (relative to project root)
     process.env.LLM_CONFIG_PATH = path.resolve(

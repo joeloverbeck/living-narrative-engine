@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:affect_traits",
+  "description": "Stable personality traits affecting empathy and moral emotion capacity. Unlike mood (transient states), these traits rarely change and represent enduring character attributes.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "affective_empathy": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "Capacity to feel what others feel. Allows emotional resonance with others' joy, pain, distress. (0=absent, 50=average, 100=hyper-empathic)"
+      },
+      "cognitive_empathy": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "Ability to understand others' perspectives intellectually. Can be high even when affective empathy is low. (0=none, 50=average, 100=exceptional)"
+      },
+      "harm_aversion": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "Aversion to causing harm to others. Modulates guilt and inhibits cruelty. (0=enjoys harm, 50=normal aversion, 100=extreme aversion)"
+      }
+    },
+    "required": ["affective_empathy", "cognitive_empathy", "harm_aversion"],
+    "additionalProperties": false
+  }
+}

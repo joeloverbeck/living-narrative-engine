@@ -24,6 +24,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            80
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.freeze"
@@ -85,26 +101,6 @@
                                 "var": "emotions.panic"
                             },
                             0.15
-                        ]
-                    },
-                    {
-                        "and": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "moodAxes.arousal"
-                                    },
-                                    -10
-                                ]
-                            },
-                            {
-                                "<=": [
-                                    {
-                                        "var": "moodAxes.arousal"
-                                    },
-                                    70
-                                ]
-                            }
                         ]
                     },
                     {
@@ -171,5 +167,5 @@
         "absorption",
         "observable"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

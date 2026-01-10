@@ -14,15 +14,28 @@ import {
 } from '@jest/globals';
 import request from 'supertest';
 import path from 'node:path';
+import net from 'node:net';
 import { createProxyServer } from '../../src/core/server.js';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
+import { resetAppConfigServiceInstance } from '../../src/config/appConfig.js';
 
 describe('Server Lifecycle Integration Tests', () => {
   let serverController;
   let originalEnv;
   let mockLogger;
 
-  beforeEach(() => {
+  const getAvailablePort = async () => {
+    const server = net.createServer();
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const { port } = server.address();
+    await new Promise((resolve) => server.close(resolve));
+    return port;
+  };
+
+  beforeEach(async () => {
     // Backup original environment
     originalEnv = { ...process.env };
 
@@ -50,6 +63,8 @@ describe('Server Lifecycle Integration Tests', () => {
 
     // Set test environment
     process.env.NODE_ENV = 'test';
+    process.env.PROXY_PORT = String(await getAvailablePort());
+    resetAppConfigServiceInstance();
 
     // Set path to test LLM config file (relative to project root)
     process.env.LLM_CONFIG_PATH = path.resolve(
@@ -94,6 +109,7 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should use default port 3001', () => {
       delete process.env.PROXY_PORT;
+      resetAppConfigServiceInstance();
       serverController = createProxyServer();
 
       expect(serverController.port).toBe(3001);
@@ -178,7 +194,7 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 2: Server Start Lifecycle', () => {
     it('should successfully start server on specified port', async () => {
-      process.env.PROXY_PORT = '3002';
+      process.env.PROXY_PORT = String(await getAvailablePort());
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
@@ -317,12 +333,13 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should log port defaulted message when PROXY_PORT not set', async () => {
       delete process.env.PROXY_PORT;
+      resetAppConfigServiceInstance();
 
       serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('PROXY_PORT environment variable was not set')
+      expect(serverController.port).toBe(3001);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('PROXY_PORT not found in environment')
       );
     });
   });

@@ -112,7 +112,15 @@
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            -5
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -35
                         ]
                     },
                     {
@@ -233,5 +241,5 @@
         "social",
         "tension"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

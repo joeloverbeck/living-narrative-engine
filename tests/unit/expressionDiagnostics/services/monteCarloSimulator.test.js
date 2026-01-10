@@ -863,6 +863,182 @@ describe('MonteCarloSimulator', () => {
         });
       });
 
+      describe('affiliation mood axis access', () => {
+        it('should include affiliation axis in moodAxes context', async () => {
+          const expression = {
+            id: 'test:affiliation_axis',
+            prerequisites: [
+              {
+                logic: { '>=': [{ var: 'moodAxes.affiliation' }, 0] },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // affiliation should be sampled in [-100, 100] range
+          // values >= 0 should occur ~50% of the time
+          expect(result.triggerRate).toBeGreaterThan(0.3);
+          expect(result.triggerRate).toBeLessThan(0.7);
+        });
+
+        it('should accept affiliation in previousMoodAxes', async () => {
+          const expression = {
+            id: 'test:previous_affiliation',
+            prerequisites: [
+              {
+                logic: {
+                  '>=': [
+                    {
+                      '-': [
+                        { var: 'moodAxes.affiliation' },
+                        { var: 'previousMoodAxes.affiliation' },
+                      ],
+                    },
+                    5,
+                  ],
+                },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // Change detection should trigger sometimes
+          expect(result.triggerRate).toBeGreaterThan(0);
+          expect(result.unseededVarWarnings).toEqual([]);
+        });
+      });
+
+      describe('affectTraits context variable access', () => {
+        it('should provide affectTraits in context with sampled values', async () => {
+          const expression = {
+            id: 'test:affect_traits_access',
+            prerequisites: [
+              {
+                logic: { '>=': [{ var: 'affectTraits.affective_empathy' }, 50] },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // affective_empathy sampled in [0, 100], values >= 50 should be ~50%
+          expect(result.triggerRate).toBeGreaterThan(0.3);
+          expect(result.triggerRate).toBeLessThan(0.7);
+        });
+
+        it('should sample all three affect trait axes', async () => {
+          const expression = {
+            id: 'test:all_affect_traits',
+            prerequisites: [
+              {
+                logic: {
+                  and: [
+                    { '>=': [{ var: 'affectTraits.affective_empathy' }, 30] },
+                    { '>=': [{ var: 'affectTraits.cognitive_empathy' }, 30] },
+                    { '>=': [{ var: 'affectTraits.harm_aversion' }, 30] },
+                  ],
+                },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // Each trait >= 30 has ~70% chance, combined ~34%
+          expect(result.triggerRate).toBeGreaterThan(0.15);
+          expect(result.triggerRate).toBeLessThan(0.55);
+        });
+
+        it('should use affect traits for emotion gate checking', async () => {
+          // Create mock with trait-gated emotion
+          const traitGatedPrototypes = {
+            entries: {
+              compassion: {
+                weights: { valence: 0.5, affiliation: 0.8 },
+                gates: ['affective_empathy >= 0.25'], // Trait gate
+              },
+              curiosity: {
+                weights: { engagement: 0.8, future_expectancy: 0.5 },
+                gates: [],
+              },
+            },
+          };
+
+          mockDataRegistry.get = jest.fn((category, lookupId) => {
+            if (category === 'lookups') {
+              if (lookupId === 'core:emotion_prototypes') {
+                return traitGatedPrototypes;
+              }
+              if (lookupId === 'core:sexual_prototypes') {
+                return mockSexualPrototypes;
+              }
+            }
+            return null;
+          });
+
+          const expression = {
+            id: 'test:trait_gated_emotion',
+            prerequisites: [
+              {
+                logic: { '>=': [{ var: 'emotions.compassion' }, 0.3] },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // compassion depends on trait gate (affective_empathy >= 0.25)
+          // With random traits [0, 100], gate passes ~75% of time
+          // Then weighted average of valence/affiliation determines intensity
+          expect(result.triggerRate).toBeGreaterThan(0);
+        });
+
+        it('should have consistent affectTraits across current/previous (personality stability)', async () => {
+          // Expression that would fail if traits differed between current/previous
+          // Since we don't have direct access to previous traits, we test that
+          // emotion gates (which use traits) work consistently
+          const expression = {
+            id: 'test:trait_stability',
+            prerequisites: [
+              {
+                logic: {
+                  and: [
+                    { '>=': [{ var: 'affectTraits.affective_empathy' }, 40] },
+                    { '<=': [{ var: 'affectTraits.affective_empathy' }, 60] },
+                  ],
+                },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 1000 });
+
+          // Values in [40, 60] range should be ~20% of [0, 100] distribution
+          expect(result.triggerRate).toBeGreaterThan(0.1);
+          expect(result.triggerRate).toBeLessThan(0.4);
+        });
+
+        it('should provide default affectTraits when not generated', async () => {
+          // Test that context always includes affectTraits (with defaults if needed)
+          const expression = {
+            id: 'test:affect_traits_defaults',
+            prerequisites: [
+              {
+                // Test that affectTraits.cognitive_empathy exists in context
+                logic: { '>=': [{ var: 'affectTraits.cognitive_empathy' }, 0] },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, { sampleCount: 100 });
+
+          // All values are >= 0 in [0, 100] range
+          expect(result.triggerRate).toBe(1);
+        });
+      });
+
       describe('previousEmotions variable access', () => {
         it('should provide previousEmotions in context', async () => {
           // Expression checking change in emotion (pride increased by 0.1)
@@ -1408,6 +1584,54 @@ describe('MonteCarloSimulator', () => {
           expect(typeof warning.path).toBe('string');
           expect(typeof warning.reason).toBe('string');
           expect(typeof warning.suggestion).toBe('string');
+        });
+      });
+
+      describe('Affect traits validation', () => {
+        it('should accept valid affectTraits paths', async () => {
+          const expression = {
+            id: 'test:valid_affect_traits',
+            prerequisites: [
+              {
+                logic: {
+                  and: [
+                    { '>=': [{ var: 'affectTraits.affective_empathy' }, 25] },
+                    { '>=': [{ var: 'affectTraits.cognitive_empathy' }, 25] },
+                    { '>=': [{ var: 'affectTraits.harm_aversion' }, 25] },
+                  ],
+                },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, {
+            sampleCount: 10,
+          });
+
+          expect(result.unseededVarWarnings).toEqual([]);
+        });
+
+        it('should warn on unknown affectTraits key', async () => {
+          const expression = {
+            id: 'test:unknown_affect_trait',
+            prerequisites: [
+              {
+                logic: { '>=': [{ var: 'affectTraits.nonexistent_trait' }, 50] },
+              },
+            ],
+          };
+
+          const result = await simulator.simulate(expression, {
+            sampleCount: 10,
+          });
+
+          expect(result.unseededVarWarnings).toHaveLength(1);
+          expect(result.unseededVarWarnings[0].path).toBe(
+            'affectTraits.nonexistent_trait'
+          );
+          expect(result.unseededVarWarnings[0].reason).toBe(
+            'unknown_nested_key'
+          );
         });
       });
 

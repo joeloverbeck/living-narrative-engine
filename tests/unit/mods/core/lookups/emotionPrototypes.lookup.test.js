@@ -99,10 +99,15 @@ describe('core:emotion_prototypes lookup', () => {
       'engagement',
       'future_expectancy',
       'self_evaluation',
+      'affiliation',
       'sexual_arousal',
       'sex_excitation',
       'sex_inhibition',
       'sexual_inhibition',
+      // Affect trait axes (from core:affect_traits component)
+      'affective_empathy',
+      'cognitive_empathy',
+      'harm_aversion',
     ];
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
@@ -131,7 +136,7 @@ describe('core:emotion_prototypes lookup', () => {
 
   describe('gate validation', () => {
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|affective_empathy|cognitive_empathy|affiliation|harm_aversion)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       if (emotionData.gates) {
@@ -189,6 +194,110 @@ describe('core:emotion_prototypes lookup', () => {
 
     it('love_attachment should include sexual_arousal weight', () => {
       expect(lookupData.entries.love_attachment.weights.sexual_arousal).toBeDefined();
+    });
+
+    describe('compassion affect trait integration', () => {
+      it('compassion should include affective_empathy weight', () => {
+        expect(lookupData.entries.compassion.weights.affective_empathy).toBeDefined();
+        expect(lookupData.entries.compassion.weights.affective_empathy).toBe(0.8);
+      });
+
+      it('compassion should include affiliation weight', () => {
+        expect(lookupData.entries.compassion.weights.affiliation).toBeDefined();
+        expect(lookupData.entries.compassion.weights.affiliation).toBe(0.4);
+      });
+
+      it('compassion should have affective_empathy gate', () => {
+        expect(lookupData.entries.compassion.gates).toContain(
+          'affective_empathy >= 0.25'
+        );
+      });
+
+      it('compassion should not have self_evaluation weight (removed)', () => {
+        expect(lookupData.entries.compassion.weights.self_evaluation).toBeUndefined();
+      });
+
+      it('compassion should have reduced engagement weight (0.70 not 0.85)', () => {
+        expect(lookupData.entries.compassion.weights.engagement).toBe(0.7);
+      });
+    });
+
+    describe('empathic_distress affect trait integration', () => {
+      it('empathic_distress should include affective_empathy weight', () => {
+        expect(
+          lookupData.entries.empathic_distress.weights.affective_empathy
+        ).toBeDefined();
+        expect(lookupData.entries.empathic_distress.weights.affective_empathy).toBe(
+          0.9
+        );
+      });
+
+      it('empathic_distress should have affective_empathy gate', () => {
+        expect(lookupData.entries.empathic_distress.gates).toContain(
+          'affective_empathy >= 0.30'
+        );
+      });
+
+      it('empathic_distress should have reduced engagement weight (0.75 not 0.90)', () => {
+        expect(lookupData.entries.empathic_distress.weights.engagement).toBe(0.75);
+      });
+
+      it('empathic_distress should preserve all original weights', () => {
+        const weights = lookupData.entries.empathic_distress.weights;
+        expect(weights.valence).toBe(-0.75);
+        expect(weights.arousal).toBe(0.6);
+        expect(weights.agency_control).toBe(-0.6);
+        expect(weights.self_evaluation).toBe(-0.2);
+        expect(weights.future_expectancy).toBe(-0.2);
+        expect(weights.threat).toBe(0.15);
+      });
+
+      it('empathic_distress should preserve all original gates', () => {
+        const gates = lookupData.entries.empathic_distress.gates;
+        expect(gates).toContain('engagement >= 0.35');
+        expect(gates).toContain('valence <= -0.20');
+        expect(gates).toContain('arousal >= 0.10');
+        expect(gates).toContain('agency_control <= 0.10');
+      });
+    });
+
+    describe('guilt affect trait integration', () => {
+      it('guilt should include affective_empathy weight', () => {
+        expect(lookupData.entries.guilt.weights.affective_empathy).toBeDefined();
+        expect(lookupData.entries.guilt.weights.affective_empathy).toBe(0.45);
+      });
+
+      it('guilt should include harm_aversion weight', () => {
+        expect(lookupData.entries.guilt.weights.harm_aversion).toBeDefined();
+        expect(lookupData.entries.guilt.weights.harm_aversion).toBe(0.55);
+      });
+
+      it('guilt should have affective_empathy gate', () => {
+        expect(lookupData.entries.guilt.gates).toContain(
+          'affective_empathy >= 0.15'
+        );
+      });
+
+      it('guilt should have reduced self_evaluation weight (-0.6 not -0.7)', () => {
+        expect(lookupData.entries.guilt.weights.self_evaluation).toBe(-0.6);
+      });
+
+      it('guilt should preserve original valence weight', () => {
+        expect(lookupData.entries.guilt.weights.valence).toBe(-0.4);
+      });
+
+      it('guilt should preserve original agency_control weight', () => {
+        expect(lookupData.entries.guilt.weights.agency_control).toBe(0.2);
+      });
+
+      it('guilt should preserve original engagement weight', () => {
+        expect(lookupData.entries.guilt.weights.engagement).toBe(0.2);
+      });
+
+      it('guilt should preserve original gates', () => {
+        expect(lookupData.entries.guilt.gates).toContain('self_evaluation <= -0.10');
+        expect(lookupData.entries.guilt.gates).toContain('valence <= -0.10');
+      });
     });
   });
 

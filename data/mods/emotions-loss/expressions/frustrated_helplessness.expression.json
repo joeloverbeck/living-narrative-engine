@@ -24,19 +24,19 @@
                         ]
                     },
                     {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            5
-                        ]
-                    },
-                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
                             },
                             0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -114,6 +114,33 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -142,12 +169,27 @@
                                     },
                                     -10
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires frustration + very low agency plus bleak expectancy signals and enough engagement to show struggle; explicitly excludes dissociation (checked-out) and caps numbness to avoid quiet shutdown; excludes freeze and needs a notable worsening shift."
+            "failure_message": "Requires frustration + very low agency plus bleak expectancy signals and enough engagement to show struggle; adds low/declining affiliation to cue ‘snapping/withdrawing’ rather than warm co-regulation; excludes dissociation and caps numbness; excludes freeze and needs a notable worsening shift."
         }
     ],
     "actor_description": "I push and the world doesn't move. The same wall, every time. Heat climbs my neck; my hands clench like they're trying to become tools. I can feel my mind searching for leverage-anything to grab-and coming back empty. The worst part is the wasted energy: all this drive, nowhere it can actually go.",
@@ -163,5 +205,5 @@
         "despair",
         "trapped"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

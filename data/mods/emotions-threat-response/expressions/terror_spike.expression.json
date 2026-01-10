@@ -22,7 +22,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            45
+                            50
                         ]
                     },
                     {
@@ -44,9 +44,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.valence"
                             },
-                            0.3
+                            -10
                         ]
                     },
                     {
@@ -153,7 +153,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high terror with high threat + arousal (acute mobilized fear) while keeping attention online; stays short of panic and excludes freeze/dissociation. Caps lonely_yearning so 'aching preoccupation' doesn't coexist with tunnel-survival terror; gated by terror spike/crossing or sharp threat jump."
+            "failure_message": "Requires high terror with very high threat + mobilized arousal (acute fear) while keeping attention online; ensures clearly negative valence; excludes dissociation and freeze; caps panic so this stays 'terror spike' rather than panic onset. Gated by terror spike/crossing or sharp threat jump."
         }
     ],
     "alternate_descriptions": {
@@ -170,5 +170,5 @@
         "brace_response",
         "escape_scan"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

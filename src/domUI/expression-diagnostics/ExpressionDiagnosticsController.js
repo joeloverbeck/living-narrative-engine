@@ -55,6 +55,10 @@ class ExpressionDiagnosticsController {
   #blockersTbody;
   // Problematic Expressions DOM elements
   #problematicPillsContainer;
+  #problematicErrorBanner;
+  #problematicErrorTitle;
+  #problematicErrorMessage;
+  #problematicErrorGuidance;
   // Witness State DOM elements
   #findWitnessBtn;
   #witnessStatus;
@@ -63,6 +67,7 @@ class ExpressionDiagnosticsController {
   #copyWitnessBtn;
   #moodDisplay;
   #sexualDisplay;
+  #traitsDisplay;
   #witnessJsonContent;
   #violatedClauses;
   #violatedClausesList;
@@ -181,6 +186,7 @@ class ExpressionDiagnosticsController {
     this.#copyWitnessBtn = document.getElementById('copy-witness-btn');
     this.#moodDisplay = document.getElementById('mood-display');
     this.#sexualDisplay = document.getElementById('sexual-display');
+    this.#traitsDisplay = document.getElementById('traits-display');
     this.#witnessJsonContent = document.getElementById('witness-json-content');
     this.#violatedClauses = document.getElementById('violated-clauses');
     this.#violatedClausesList = document.getElementById('violated-clauses-list');
@@ -834,8 +840,14 @@ class ExpressionDiagnosticsController {
       const scanResult = await this.#expressionStatusService.scanAllStatuses();
       if (scanResult.success) {
         this.#expressionStatuses = scanResult.expressions || [];
+        this.#clearProblematicError();
       } else {
         this.#logger.warn('ExpressionStatusService: Scan failed', scanResult);
+        this.#showProblematicError({
+          errorType: scanResult.errorType,
+          message: scanResult.message,
+          context: 'scan',
+        });
         this.#expressionStatuses = [];
       }
 
@@ -863,6 +875,11 @@ class ExpressionDiagnosticsController {
       this.#updateDropdownStatuses();
     } catch (error) {
       this.#logger.error('Failed to load problematic expressions:', error);
+      this.#showProblematicError({
+        errorType: 'unknown',
+        message: 'Failed to load expression statuses.',
+        context: 'scan',
+      });
       this.#problematicPillsContainer.innerHTML =
         '<p class="placeholder-text">Failed to load expression statuses.</p>';
     } finally {
@@ -938,6 +955,109 @@ class ExpressionDiagnosticsController {
       
       this.#problematicPillsContainer.appendChild(pill);
     }
+  }
+
+  #ensureProblematicErrorBanner() {
+    if (this.#problematicErrorBanner) {
+      return this.#problematicErrorBanner;
+    }
+
+    if (!this.#problematicPillsContainer) {
+      return null;
+    }
+
+    let banner = document.getElementById('expression-diagnostics-error-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'expression-diagnostics-error-banner';
+      banner.className = 'diagnostics-error-banner';
+      banner.setAttribute('role', 'status');
+      banner.setAttribute('aria-live', 'polite');
+      banner.hidden = true;
+
+      const title = document.createElement('div');
+      title.className = 'diagnostics-error-title';
+
+      const message = document.createElement('div');
+      message.className = 'diagnostics-error-message';
+
+      const guidance = document.createElement('div');
+      guidance.className = 'diagnostics-error-guidance';
+
+      banner.append(title, message, guidance);
+      this.#problematicPillsContainer.parentElement?.insertBefore(
+        banner,
+        this.#problematicPillsContainer
+      );
+    }
+
+    this.#problematicErrorBanner = banner;
+    this.#problematicErrorTitle = banner.querySelector(
+      '.diagnostics-error-title'
+    );
+    this.#problematicErrorMessage = banner.querySelector(
+      '.diagnostics-error-message'
+    );
+    this.#problematicErrorGuidance = banner.querySelector(
+      '.diagnostics-error-guidance'
+    );
+
+    return banner;
+  }
+
+  #getGuidanceForErrorType(errorType) {
+    switch (errorType) {
+      case 'connection_refused':
+        return 'Start the LLM proxy server and confirm it is running at the configured URL.';
+      case 'cors_blocked':
+        return 'Check PROXY_ALLOWED_ORIGIN and ensure the client origin is allowed.';
+      case 'timeout':
+        return 'Check server logs and retry once the proxy is responsive.';
+      case 'server_error':
+        return 'Inspect server logs for the underlying error.';
+      case 'validation_error':
+        return 'Verify the request data and server version match expected schema.';
+      case 'unknown':
+      default:
+        return 'Review the browser console and server logs for more details.';
+    }
+  }
+
+  #showProblematicError({ errorType, message, context }) {
+    const banner = this.#ensureProblematicErrorBanner();
+    if (!banner) return;
+
+    const title =
+      context === 'update'
+        ? 'Expression status update failed'
+        : 'Expression status scan failed';
+
+    if (this.#problematicErrorTitle) {
+      this.#problematicErrorTitle.textContent = title;
+    }
+    if (this.#problematicErrorMessage) {
+      this.#problematicErrorMessage.textContent =
+        message || 'Request failed. Please try again.';
+    }
+    if (this.#problematicErrorGuidance) {
+      this.#problematicErrorGuidance.textContent =
+        this.#getGuidanceForErrorType(errorType);
+    }
+
+    banner.dataset.errorType = errorType || 'unknown';
+    banner.hidden = false;
+  }
+
+  #clearProblematicError() {
+    if (!this.#problematicErrorBanner) return;
+
+    this.#problematicErrorBanner.hidden = true;
+    this.#problematicErrorBanner.dataset.errorType = '';
+    if (this.#problematicErrorTitle) this.#problematicErrorTitle.textContent = '';
+    if (this.#problematicErrorMessage)
+      this.#problematicErrorMessage.textContent = '';
+    if (this.#problematicErrorGuidance)
+      this.#problematicErrorGuidance.textContent = '';
   }
 
   #getExpressionName(expressionId) {
@@ -1055,10 +1175,21 @@ class ExpressionDiagnosticsController {
     }
 
     try {
-      await this.#expressionStatusService.updateStatus(
+      const updateResult = await this.#expressionStatusService.updateStatus(
         filePath,
         status
       );
+      if (!updateResult.success) {
+        this.#logger.warn('ExpressionStatusService: Update failed', updateResult);
+        this.#showProblematicError({
+          errorType: updateResult.errorType,
+          message: updateResult.message,
+          context: 'update',
+        });
+        return;
+      }
+
+      this.#clearProblematicError();
       this.#logger.info(
         `Persisted status '${status}' for ${this.#selectedExpression.id}`
       );
@@ -1085,6 +1216,11 @@ class ExpressionDiagnosticsController {
       this.#refreshProblematicPillsFromCache();
     } catch (error) {
       this.#logger.error('Failed to persist expression status:', error);
+      this.#showProblematicError({
+        errorType: 'unknown',
+        message: error.message || 'Failed to persist expression status.',
+        context: 'update',
+      });
     }
   }
 
@@ -1170,10 +1306,11 @@ class ExpressionDiagnosticsController {
     const state = result.found ? result.witness : result.nearestMiss;
     this.#currentWitnessState = state;
 
-    // Display mood axes
+    // Display mood, sexual, and affect trait axes
     if (state) {
       this.#displayMoodAxes(state.mood);
       this.#displaySexualAxes(state.sexual);
+      this.#displayAffectTraits(state.affectTraits);
 
       // Display JSON
       if (this.#witnessJsonContent) {
@@ -1247,6 +1384,32 @@ class ExpressionDiagnosticsController {
         <span class="axis-value">${value.toFixed(2)}</span>
       `;
       this.#sexualDisplay.appendChild(item);
+    }
+  }
+
+  /**
+   * Display affect trait axes in the grid.
+   *
+   * @private
+   * @param {object} affectTraits - The affect traits object
+   */
+  #displayAffectTraits(affectTraits) {
+    if (!this.#traitsDisplay || !affectTraits) return;
+
+    this.#traitsDisplay.innerHTML = '';
+
+    for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+      const value = affectTraits[axis];
+      if (value === undefined) continue;
+
+      const item = document.createElement('div');
+      // Affect traits use 0-100 range, so isBipolar=false (like sexual axes)
+      item.className = `axis-item ${this.#getValueClass(value, false)}`;
+      item.innerHTML = `
+        <span class="axis-name">${axis}</span>
+        <span class="axis-value">${value.toFixed(2)}</span>
+      `;
+      this.#traitsDisplay.appendChild(item);
     }
   }
 

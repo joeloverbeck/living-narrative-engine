@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.5
+                            0.50
                         ]
                     },
                     {
@@ -28,7 +28,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.2
+                            0.20
                         ]
                     },
                     {
@@ -52,7 +52,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            10
+                            -15
                         ]
                     },
                     {
@@ -113,5 +113,5 @@
         "annoyance",
         "mild"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

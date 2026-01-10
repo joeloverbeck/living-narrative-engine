@@ -18,7 +18,7 @@ Expressions use a numeric priority system where **higher numbers = higher priori
 | 40-49 | 2 | Low-intensity awareness |
 | 50-59 | 5 | Moderate engagement |
 | 60-69 | 14 | Active emotional states |
-| 70-79 | 28 | Elevated emotional responses |
+| 70-79 | 30 | Elevated emotional responses |
 | 80-89 | 17 | Intense emotional states |
 | 90-95 | 7 | Peak intensity expressions |
 
@@ -81,7 +81,7 @@ Expressions related to personal power, competence, and self-determination.
 | 76 | `emotions-agency:determined_focus` | Resolute commitment to achieving a goal |
 | 82 | `emotions-agency:triumphant_release` | Victorious exultation after overcoming challenge |
 
-### emotions-anger (6 expressions)
+### emotions-anger (8 expressions)
 
 Expressions of frustration, irritation, and rage across intensity levels.
 
@@ -89,6 +89,8 @@ Expressions of frustration, irritation, and rage across intensity levels.
 |----------|----|----|
 | 36 | `emotions-anger:mild_irritation` | Low-level annoyance that hasn't escalated |
 | 76 | `emotions-anger:frustration_spiral` | Mounting irritation as obstacles persist |
+| 78 | `emotions-anger:hurt_anger` | Affiliative anger with pain underneath—betrayal, rejection, or grief-adjacent hurt |
+| 79 | `emotions-anger:protective_anger` | Warm, connected hostility aimed outward to defend someone valued |
 | 80 | `emotions-anger:cold_fury` | Controlled, icy anger beneath the surface |
 | 84 | `emotions-anger:suppressed_rage` | Intense anger being forcibly contained |
 | 85 | `emotions-anger:explosive_anger` | Sudden violent outburst of rage |
@@ -223,7 +225,9 @@ All expressions sorted by priority for quick reference:
 | 77 | `intense_desire` | emotions-sexuality |
 | 78 | `awed_transfixion` | emotions-positive-affect |
 | 78 | `startle_flinch` | emotions-threat-response |
+| 78 | `hurt_anger` | emotions-anger |
 | 79 | `stress_overload` | emotions-threat-response |
+| 79 | `protective_anger` | emotions-anger |
 | 80 | `cold_fury` | emotions-anger |
 | 82 | `triumphant_release` | emotions-agency |
 | 82 | `shame_spike` | emotions-moral |
@@ -282,13 +286,14 @@ Based on current coverage, these emotional areas may benefit from additional exp
 - **Trust/Distrust** (50-70 range): No expressions for building or breaking trust
 - **Embarrassment** (60-80 range): Distinct from shame; social awkwardness, self-consciousness
 - **Envy** (60-80 range): Only `flustered_jealousy` exists in sexuality context; consider general envy
+- **Suspicious watchfulness** (low affiliation + moderate threat + suspicion high)
 
 ## Statistics
 
-- **Total expressions**: 75
+- **Total expressions**: 77
 - **Number of mods**: 8
 - **Priority range**: 32-95
-- **Average expressions per mod**: 9.375
+- **Average expressions per mod**: 9.625
 
 ---
 

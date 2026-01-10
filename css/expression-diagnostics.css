@@ -482,6 +482,26 @@
   margin: 0 0 1rem 0;
 }
 
+.diagnostics-error-banner {
+  background: var(--error-bg-color);
+  border: 1px solid var(--error-text-color);
+  color: var(--error-text-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.diagnostics-error-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.diagnostics-error-message,
+.diagnostics-error-guidance {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
 /* Pills Container */
 .pills-container {
   display: flex;

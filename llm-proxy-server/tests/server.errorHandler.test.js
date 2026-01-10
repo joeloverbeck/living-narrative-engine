@@ -42,7 +42,7 @@ beforeEach(() => {
     on: jest.fn(function (event, handler) {
       return this;
     }),
-    address: jest.fn(() => ({ port: 3001 })),
+    address: jest.fn(() => ({ port: 0 })),
   };
 
   app = {
@@ -172,7 +172,7 @@ beforeEach(() => {
   // Mock appConfig
   const appConfigServiceMock = {
     getAllowedOriginsArray: jest.fn(() => []),
-    getProxyPort: jest.fn(() => 3001),
+    getProxyPort: jest.fn(() => 0),
     isProxyPortDefaulted: jest.fn(() => false),
     getProxyAllowedOrigin: jest.fn(() => ''),
     getProxyProjectRootPathForApiKeyFiles: jest.fn(() => '/keys'),

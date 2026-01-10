@@ -68,6 +68,50 @@
                             {
                                 ">=": [
                                     {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
                                         "-": [
                                             {
                                                 "var": "emotions.grief"
@@ -119,7 +163,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires strong grief with significant sadness, helplessness (low agency), and attention stuck on the loss. Blocks shutdown/detachment from dominating and blocks panic from hijacking the beat. Triggers on a moderate spike or a threshold crossing."
+            "failure_message": "Strong grief with sadness, reduced agency, and attention stuck on the loss. Adds an attachment/connection signature (affiliation or bonding emotions) so ‘grief break’ reads as relational loss rather than generic low mood. Blocks shutdown/detachment and panic hijack. Triggers on spike or crossing."
         }
     ],
     "actor_description": "It finally gets through the dam. My throat tightens and my chest caves like something heavy sat down on it. I try to breathe around it and can't. Tears spill before I've chosen them; my face is hot, my hands shake, and there's a raw, humiliating helplessness to it-like my body is grieving out loud without my permission.",
@@ -135,5 +179,5 @@
         "acute",
         "breakdown"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

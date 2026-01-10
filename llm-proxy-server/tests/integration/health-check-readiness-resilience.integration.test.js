@@ -140,7 +140,14 @@ describe('health check readiness resilience integration', () => {
   });
 
   it('returns detailed readiness results when all dependencies are healthy', async () => {
-    const { requestAgent, cleanup } = await startReadinessApp();
+    const { requestAgent, cleanup } = await startReadinessApp({
+      envOverrides: {
+        READINESS_CRITICAL_HEAP_TOTAL_MB: '100000',
+        READINESS_CRITICAL_HEAP_USED_MB: '100000',
+        READINESS_CRITICAL_HEAP_PERCENT: '1000',
+        READINESS_CRITICAL_HEAP_LIMIT_PERCENT: '1000',
+      },
+    });
     registerCleanup(cleanup);
 
     const response = await requestAgent.get('/health/ready');
