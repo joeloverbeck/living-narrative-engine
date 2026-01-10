@@ -68,6 +68,30 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.stress"
@@ -157,5 +181,5 @@
         "amusement",
         "fun"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -12,6 +12,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
+import net from 'node:net';
 import { createProxyServer } from '../../../src/core/server.js';
 
 describe('Server API Key Path Logging (Isolated)', () => {
@@ -19,7 +20,18 @@ describe('Server API Key Path Logging (Isolated)', () => {
   let originalEnv;
   let mockLogger;
 
-  beforeEach(() => {
+  const getAvailablePort = async () => {
+    const server = net.createServer();
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const { port } = server.address();
+    await new Promise((resolve) => server.close(resolve));
+    return port;
+  };
+
+  beforeEach(async () => {
     // Backup original environment
     originalEnv = { ...process.env };
 
@@ -47,6 +59,7 @@ describe('Server API Key Path Logging (Isolated)', () => {
 
     // Set test environment
     process.env.NODE_ENV = 'test';
+    process.env.PROXY_PORT = String(await getAvailablePort());
   });
 
   afterEach(async () => {

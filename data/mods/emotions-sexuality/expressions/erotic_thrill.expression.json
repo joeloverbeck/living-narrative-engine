@@ -28,7 +28,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            20
+                            30
                         ]
                     },
                     {
@@ -189,5 +189,5 @@
         "conflict",
         "exhilaration"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

@@ -20,7 +20,23 @@
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            10
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.65
                         ]
                     },
                     {
@@ -172,5 +188,5 @@
         "present",
         "observable"
     ],
-    "diagnosticStatus": "frequent"
+    "diagnosticStatus": "unknown"
 }

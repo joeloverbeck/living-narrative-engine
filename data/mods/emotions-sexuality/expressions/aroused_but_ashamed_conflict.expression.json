@@ -78,6 +78,14 @@
                     {
                         ">=": [
                             {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.threat"
                             },
                             5
@@ -125,7 +133,7 @@
                     }
                 ]
             },
-            "failure_message": "Arousal-with-shame plus negative self-evaluation and mild threat, with social-freeze-explicitly capped below panic so it reads as 'caught/embarrassed,' not 'threat-collapse.'"
+            "failure_message": "Arousal-with-shame plus negative self-evaluation and mild-to-moderate (often social) threat; requires not being strongly hostile/detached. Freeze is present but capped; explicitly capped below panic so it reads as 'caught/embarrassed,' not 'threat-collapse.'"
         },
         {
             "logic": {
@@ -200,5 +208,5 @@
         "suppression",
         "tension"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

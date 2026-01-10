@@ -36,7 +36,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            -5
+                            5
                         ]
                     },
                     {
@@ -61,6 +61,14 @@
                                 "var": "emotions.fear"
                             },
                             0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -142,5 +150,5 @@
         "focus",
         "resolve"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

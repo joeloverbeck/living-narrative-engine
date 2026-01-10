@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.irritation"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -32,11 +32,19 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            20
+                            10
                         ]
                     },
                     {
@@ -44,7 +52,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.65
+                            0.55
                         ]
                     },
                     {
@@ -60,7 +68,7 @@
                             {
                                 "var": "emotions.fatigue"
                             },
-                            0.8
+                            0.80
                         ]
                     }
                 ]
@@ -96,7 +104,7 @@
                                     }
                                 ]
                             },
-                            0.1
+                            0.10
                         ]
                     },
                     {
@@ -121,7 +129,7 @@
                                     {
                                         "var": "previousEmotions.frustration"
                                     },
-                                    0.8
+                                    0.80
                                 ]
                             },
                             {
@@ -129,7 +137,7 @@
                                     {
                                         "var": "emotions.frustration"
                                     },
-                                    0.8
+                                    0.80
                                 ]
                             }
                         ]
@@ -150,5 +158,5 @@
         "spiral",
         "escalation"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -171,5 +171,5 @@
         "fear_resolution",
         "safety"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

@@ -28,6 +28,14 @@
                             {
                                 "var": "moodAxes.threat"
                             },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
                             20
                         ]
                     },
@@ -37,14 +45,6 @@
                                 "var": "moodAxes.engagement"
                             },
                             15
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.lonely_yearning"
-                            },
-                            0.35
                         ]
                     },
                     {
@@ -131,7 +131,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires hypervigilance+fear with meaningful threat and sustained attention (engagement floor); explicitly excludes dissociation; stays below panic and excludes freeze so scanning remains active; additionally caps lonely_yearning so preoccupied longing doesn't compete with threat-monitoring dominance; gated by a shift into scanning mode (crossing/spike or threat jump)."
+            "failure_message": "Requires hypervigilance+fear with credible threat and mobilized arousal plus sustained attention; explicitly excludes dissociation; stays below panic and excludes freeze so scanning remains active; gated by crossing/spike into scanning or a threat jump."
         }
     ],
     "actor_description": "I can't let my attention rest. Every small sound feels like it's trying to become a bigger one. My eyes keep jumping on their own-doorways, corners, hands, exits-running loops as if I can prevent the bad thing by seeing it first. It's exhausting, but stopping feels worse, like the moment I relax is the moment I get hit.",
@@ -147,5 +147,5 @@
         "alert",
         "watchful"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -24,6 +24,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.shame"
@@ -123,5 +131,5 @@
         "pride",
         "release"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

@@ -106,10 +106,18 @@
                             },
                             25
                         ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -30
+                        ]
                     }
                 ]
             },
-            "failure_message": "Requires high sadness with low numbness and low dissociation; needs a grief/disappointment/lonely-yearning flavor; arousal must be in a crying-compatible band (not collapsed/flat, not manic)."
+            "failure_message": "Requires high sadness with low numbness and low dissociation; needs a grief/disappointment/lonely-yearning flavor; arousal must be in a crying-compatible band (not collapsed/flat, not manic). Affiliation floor prevents ‘hostile coldness’ reads during crying."
         },
         {
             "logic": {
@@ -193,10 +201,25 @@
                             },
                             12
                         ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousMoodAxes.affiliation"
+                                    },
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
                     }
                 ]
             },
-            "failure_message": "Change-gate: requires a sadness crossing/spike, grief spike, lonely-yearning spike, or a sharp self-worth dip so crying doesn't spam while sadness stays high."
+            "failure_message": "Change-gate: requires a sadness crossing/spike, grief spike, lonely-yearning spike, sharp self-worth dip, or a sharp affiliation drop so crying doesn't spam while sadness stays high."
         }
     ],
     "actor_description": "The tears don't ask permission. My throat tightens and suddenly my eyes are hot-like my body found the truth before I did. I try to swallow it down, to keep my face steady, and that only makes it worse. Breath catches. Chest aches. The smallest thought-one image, one sentence-tips me over the edge again. I'm not performing it. I'm not choosing it. It's just grief leaking out through the only place it can fit, and I can feel myself folding inward around whatever hurts.",
@@ -211,5 +234,5 @@
         "sorrow",
         "tears"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

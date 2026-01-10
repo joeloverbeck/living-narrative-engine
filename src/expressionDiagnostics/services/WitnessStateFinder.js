@@ -299,11 +299,12 @@ class WitnessStateFinder {
   #generateNeighbor(state, temperature, config) {
     const mood = { ...state.mood };
     const sexual = { ...state.sexual };
+    const affectTraits = { ...state.affectTraits };
 
     // Perturbation magnitude based on temperature
     const magnitude = temperature * (config.useDynamicsConstraints ? 10 : 50);
 
-    // Perturb a random subset of axes
+    // Perturb a random subset of mood axes
     for (const axis of WitnessState.MOOD_AXES) {
       if (Math.random() < 0.5) {
         const delta = (Math.random() - 0.5) * 2 * magnitude;
@@ -318,6 +319,7 @@ class WitnessStateFinder {
       }
     }
 
+    // Perturb a random subset of sexual axes
     for (const axis of WitnessState.SEXUAL_AXES) {
       if (Math.random() < 0.5) {
         const range = WitnessState.SEXUAL_RANGES[axis];
@@ -330,9 +332,25 @@ class WitnessStateFinder {
       }
     }
 
+    // Perturb a random subset of affect trait axes
+    for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+      if (Math.random() < 0.5) {
+        const delta = (Math.random() - 0.5) * 2 * magnitude;
+        const rawValue = affectTraits[axis] + delta;
+        // Round to integer and clamp to valid range [0, 100]
+        affectTraits[axis] = Math.round(
+          Math.max(
+            WitnessState.TRAIT_RANGE.min,
+            Math.min(WitnessState.TRAIT_RANGE.max, rawValue)
+          )
+        );
+      }
+    }
+
     return new WitnessState({
       mood,
       sexual,
+      affectTraits,
       fitness: 0,
       isExact: false,
     });
@@ -366,14 +384,20 @@ class WitnessStateFinder {
    * @private
    */
   #buildContext(state) {
-    // Convert to normalized form [-1, 1] for emotion calculations
+    // Convert mood to normalized form [-1, 1] for emotion calculations
     const normalizedMood = {};
     for (const axis of WitnessState.MOOD_AXES) {
       normalizedMood[axis] = state.mood[axis] / 100;
     }
 
-    // Calculate emotions from mood
-    const emotions = this.#calculateEmotions(normalizedMood);
+    // Normalize affect traits from [0, 100] to [0, 1]
+    const normalizedTraits = {};
+    for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+      normalizedTraits[axis] = state.affectTraits[axis] / 100;
+    }
+
+    // Calculate emotions from mood with trait support for gates and weights
+    const emotions = this.#calculateEmotions(normalizedMood, normalizedTraits);
 
     // Calculate sexualArousal from raw sexual state (derived value)
     const sexualArousal = this.#calculateSexualArousal(state.sexual);
@@ -387,28 +411,42 @@ class WitnessStateFinder {
       emotions,
       sexualStates,
       sexualArousal,
+      // Include affect traits for trait-based expression prerequisites
+      affectTraits: state.affectTraits,
     };
   }
 
   /**
-   * Calculate emotion intensities from mood.
+   * Calculate emotion intensities from mood with trait support.
    *
-   * @param {object} mood - Normalized mood axes [-1, 1]
+   * @param {object} normalizedMood - Normalized mood axes [-1, 1]
+   * @param {object} [normalizedTraits] - Normalized affect traits [0, 1]
    * @returns {object} Emotion intensities
    * @private
    */
-  #calculateEmotions(mood) {
+  #calculateEmotions(normalizedMood, normalizedTraits = {}) {
     const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
     if (!lookup?.entries) return {};
 
+    // Combine normalized axes for gate checking and weight calculation
+    const allNormalizedAxes = { ...normalizedMood, ...normalizedTraits };
+
     const emotions = {};
     for (const [id, prototype] of Object.entries(lookup.entries)) {
+      // Check gates first - emotion intensity is 0 if any gate fails
+      // Gates can now reference trait axes (e.g., "affective_empathy >= 0.25")
+      if (!this.#checkGates(prototype.gates, allNormalizedAxes)) {
+        emotions[id] = 0;
+        continue;
+      }
+
       if (prototype.weights) {
         let sum = 0;
         let weightSum = 0;
         for (const [axis, weight] of Object.entries(prototype.weights)) {
-          if (mood[axis] !== undefined) {
-            sum += mood[axis] * weight;
+          // Check both mood axes and trait axes
+          if (allNormalizedAxes[axis] !== undefined) {
+            sum += allNormalizedAxes[axis] * weight;
             weightSum += Math.abs(weight);
           }
         }
@@ -482,6 +520,66 @@ class WitnessStateFinder {
    */
   #getNestedValue(obj, path) {
     return path.split('.').reduce((o, k) => o?.[k], obj);
+  }
+
+  /**
+   * Parse a gate string into its components.
+   * Gate format: "axis operator value" (e.g., "affective_empathy >= 0.25")
+   *
+   * @private
+   * @param {string} gate - Gate string to parse
+   * @returns {{axis: string, operator: string, value: number} | null} Parsed gate object or null if invalid
+   */
+  #parseGate(gate) {
+    const match = gate.match(/^(\w+)\s*(>=|<=|>|<|==)\s*(-?\d+\.?\d*)$/);
+    if (!match) return null;
+    return { axis: match[1], operator: match[2], value: parseFloat(match[3]) };
+  }
+
+  /**
+   * Check if all gates pass for a prototype.
+   * Gates must ALL pass for the emotion to be calculated; otherwise intensity = 0.
+   * This matches EmotionCalculatorService.#checkGates() behavior.
+   *
+   * @private
+   * @param {string[] | undefined} gates - Array of gate strings
+   * @param {object} normalizedAxes - Normalized axis values (in [-1, 1] or [0, 1] range)
+   * @returns {boolean} - True if all gates pass or no gates defined
+   */
+  #checkGates(gates, normalizedAxes) {
+    if (!gates || !Array.isArray(gates) || gates.length === 0) return true;
+
+    for (const gate of gates) {
+      const parsed = this.#parseGate(gate);
+      if (!parsed) continue;
+
+      const { axis, operator, value } = parsed;
+      const axisValue = normalizedAxes[axis];
+      if (axisValue === undefined) continue;
+
+      let passes;
+      switch (operator) {
+        case '>=':
+          passes = axisValue >= value;
+          break;
+        case '<=':
+          passes = axisValue <= value;
+          break;
+        case '>':
+          passes = axisValue > value;
+          break;
+        case '<':
+          passes = axisValue < value;
+          break;
+        case '==':
+          passes = Math.abs(axisValue - value) < 0.0001;
+          break;
+        default:
+          passes = true;
+      }
+      if (!passes) return false;
+    }
+    return true;
   }
 
   /**

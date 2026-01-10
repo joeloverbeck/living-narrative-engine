@@ -20,7 +20,15 @@
                             {
                                 "var": "sexualArousal"
                             },
-                            0.35
+                            0.4
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
                         ]
                     },
                     {
@@ -144,7 +152,7 @@
                     }
                 ]
             },
-            "failure_message": "Chosen surrender supported by trust/affection; caps freeze and caps panic hard so reduced agency reads as consented yielding, not threat paralysis."
+            "failure_message": "Chosen surrender supported by trust/affection and a non-hostile affiliative stance; caps freeze and caps panic hard so reduced agency reads as consented yielding, not threat paralysis."
         }
     ],
     "actor_description": "I stop bracing. Something in me loosens-jaw, shoulders, the constant urge to steer-and the relief is part of the pleasure. I can feel my breathing deepen, my body warmer and more responsive, like it's answering a pace I don't have to set. Being guided feels safe enough to enjoy.",
@@ -160,5 +168,5 @@
         "yielding",
         "receptive"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

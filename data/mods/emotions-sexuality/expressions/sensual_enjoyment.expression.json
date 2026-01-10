@@ -20,7 +20,7 @@
                             {
                                 "var": "sexualArousal"
                             },
-                            0.32
+                            0.35
                         ]
                     },
                     {
@@ -162,5 +162,5 @@
         "relaxed",
         "enjoyment"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

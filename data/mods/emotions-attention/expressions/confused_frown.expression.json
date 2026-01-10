@@ -101,9 +101,17 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.agency_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.threat"
                             },
-                            70
+                            60
                         ]
                     }
                 ]
@@ -123,5 +131,5 @@
         "uncertainty",
         "cognitive"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

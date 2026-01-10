@@ -1019,7 +1019,7 @@ describe('Server - Comprehensive Tests', () => {
       );
       expect(corsMock).toHaveBeenCalledWith({
         origin: ['https://example.com'],
-        methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
+        methods: ['GET', HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
         allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
       });
     });

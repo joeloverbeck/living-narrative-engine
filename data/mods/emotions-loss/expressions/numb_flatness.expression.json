@@ -20,22 +20,6 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
-                            },
-                            0.22
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "moodAxes.engagement"
                             },
                             -20
@@ -66,11 +50,30 @@
                         ]
                     },
                     {
-                        "<": [
+                        "or": [
                             {
-                                "var": "emotions.dissociation"
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    15
+                                ]
                             },
-                            0.35
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
                         ]
                     },
                     {
@@ -79,30 +82,6 @@
                                 "var": "emotions.despair"
                             },
                             0.6
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.grief"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.terror"
-                            },
-                            0.5
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.18
                         ]
                     },
                     {
@@ -156,12 +135,27 @@
                                     },
                                     -12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires dominant numbness with low engagement/arousal and mild-negative valence; hard-excludes dissociation and caps threat so this is 'flat without acute danger' rather than trauma shutdown; also caps grief/despair/panic/terror and excludes freeze; explicitly blocks lonely_yearning so 'aching preoccupation' doesn't coexist with 'signal muted'; needs a spike/crossing or notable engagement drop to avoid spam."
+            "failure_message": "Requires dominant numbness with low engagement/arousal and mildly negative valence; uses affiliation (low or sharply dropping) to encode ‘signal muted + social detachment’ directly. Keeps despair capped so deeper hopelessness owns the higher-tier beats. Needs a spike/crossing or notable engagement/affiliation drop to avoid spam."
         }
     ],
     "alternate_descriptions": {
@@ -178,5 +172,5 @@
         "low_arousal",
         "low_engagement"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

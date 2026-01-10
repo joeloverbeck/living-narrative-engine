@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.75
+                            0.70
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.6
+                            0.55
                         ]
                     },
                     {
@@ -42,9 +42,25 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.affiliation"
                             },
-                            0.3
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -93,12 +109,42 @@
                                     },
                                     15
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    20
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires very high anger+rages with high arousal and assertive agency, plus a recent spike (anger/rage) or a notable composure drop."
+            "failure_message": "Requires high anger+rage with high arousal and assertive agency, low-to-neutral affiliation, and a recent spike (anger/rage/arousal) or a notable control/affiliation drop."
         }
     ],
     "actor_description": "It tips. One more ounce and the lid is gone-heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",
@@ -113,5 +159,5 @@
         "explosive",
         "sustained"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

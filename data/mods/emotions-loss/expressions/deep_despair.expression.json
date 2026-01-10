@@ -72,6 +72,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            20
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -124,6 +132,21 @@
                                     },
                                     0.9
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
                             }
                         ]
                     }
@@ -141,5 +164,5 @@
         "despair",
         "hopelessness"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

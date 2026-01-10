@@ -20,7 +20,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            30
+                            35
                         ]
                     },
                     {
@@ -36,7 +36,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            25
+                            40
                         ]
                     },
                     {
@@ -52,45 +52,13 @@
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            0
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.lonely_yearning"
-                            },
-                            0.3
+                            5
                         ]
                     },
                     {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.determination"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.numbness"
-                            },
-                            0.6
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
                             },
                             0.35
                         ]
@@ -151,7 +119,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires tonic immobility with high threat and very low agency; keeps awareness online and excludes dissociation; caps panic so this stays in the freeze band. Caps lonely_yearning so the freeze lock-up owns narrative attention. Gated by freeze spike/crossing or sharp agency drop."
+            "failure_message": "Requires tonic immobility with high threat and very low agency; keeps arousal in the freeze-capable band and awareness online; explicitly excludes dissociation; gated by freeze spike/crossing or a sharp agency drop."
         }
     ],
     "actor_description": "I go still. Not calm-caught. My breath thins and my muscles forget how to follow instructions. I'm aware of everything at once-the room, the sounds, the space behind me-but I can't turn that awareness into movement. The only thing my body seems sure about is: don't be noticed, don't make a sound, don't give the threat a reason.",
@@ -165,5 +133,5 @@
         "acute",
         "paralysis"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

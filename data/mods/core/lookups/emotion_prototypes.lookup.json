@@ -63,6 +63,26 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "affective_empathy": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "cognitive_empathy": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "affiliation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "harm_aversion": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -414,7 +434,8 @@
         "valence": -0.8,
         "engagement": -0.5,
         "future_expectancy": -0.3,
-        "arousal": -0.2
+        "arousal": -0.2,
+        "affiliation": -0.3
       },
       "gates": [
         "valence <= -0.15",
@@ -429,7 +450,8 @@
         "self_evaluation": -0.25,
         "agency_control": -0.15,
         "arousal": 0.10,
-        "threat": -0.25
+        "threat": -0.25,
+        "affiliation": 0.90
       },
       "gates": [
         "engagement >= 0.25",
@@ -447,7 +469,8 @@
         "future_expectancy": -0.45,
         "arousal": -0.10,
         "threat": -0.25,
-        "agency_control": -0.15
+        "agency_control": -0.15,
+        "affiliation": 0.5
       },
       "gates": [
         "engagement >= 0.20",
@@ -666,7 +689,8 @@
         "valence": -0.25,
         "agency_control": 0.10,
         "future_expectancy": -0.10,
-        "self_evaluation": 0.00
+        "self_evaluation": 0.00,
+        "affiliation": -0.2
       },
       "gates": [
         "threat >= 0.15",
@@ -705,7 +729,8 @@
         "valence": -0.8,
         "arousal": 0.8,
         "agency_control": 0.7,
-        "threat": 0.3
+        "threat": 0.3,
+        "affiliation": -0.3
       },
       "gates": [
         "valence <= -0.15",
@@ -717,7 +742,8 @@
         "valence": -0.9,
         "arousal": 1.0,
         "agency_control": 0.8,
-        "threat": 0.4
+        "threat": 0.4,
+        "affiliation": -0.4
       },
       "gates": [
         "valence <= -0.25",
@@ -747,7 +773,8 @@
         "valence": -0.6,
         "agency_control": 0.8,
         "engagement": -0.2,
-        "self_evaluation": 0.2
+        "self_evaluation": 0.2,
+        "affiliation": -0.5
       },
       "gates": [
         "valence <= -0.10",
@@ -759,7 +786,8 @@
         "valence": -0.9,
         "arousal": 0.4,
         "engagement": -0.3,
-        "threat": 0.2
+        "threat": 0.2,
+        "affiliation": -0.6
       },
       "gates": [
         "valence <= -0.25"
@@ -848,14 +876,19 @@
     },
     "guilt": {
       "weights": {
-        "self_evaluation": -0.7,
+        "self_evaluation": -0.6,
         "valence": -0.4,
         "agency_control": 0.2,
-        "engagement": 0.2
+        "engagement": 0.2,
+        "affective_empathy": 0.45,
+        "harm_aversion": 0.55,
+        "cognitive_empathy": 0.40
       },
       "gates": [
         "self_evaluation <= -0.10",
-        "valence <= -0.10"
+        "valence <= -0.10",
+        "affective_empathy >= 0.15",
+        "cognitive_empathy >= 0.10"
       ]
     },
     "regret": {
@@ -902,7 +935,8 @@
         "arousal": 0.4,
         "agency_control": -0.2,
         "self_evaluation": -0.4,
-        "engagement": 0.3
+        "engagement": 0.3,
+        "affiliation": -0.2
       },
       "gates": [
         "self_evaluation <= -0.05",
@@ -934,7 +968,8 @@
         "valence": -0.6,
         "agency_control": -0.2,
         "engagement": 0.4,
-        "self_evaluation": -0.25
+        "self_evaluation": -0.25,
+        "affiliation": -0.3
       },
       "gates": [
         "threat >= 0.20",
@@ -947,7 +982,8 @@
         "valence": 0.4,
         "threat": -0.5,
         "agency_control": 0.2,
-        "engagement": 0.2
+        "engagement": 0.2,
+        "affiliation": 0.4
       },
       "gates": [
         "threat <= 0.40"
@@ -958,7 +994,8 @@
         "valence": 0.6,
         "engagement": 0.5,
         "self_evaluation": 0.3,
-        "arousal": 0.2
+        "arousal": 0.2,
+        "affiliation": 0.3
       },
       "gates": [
         "engagement >= 0.10",
@@ -973,7 +1010,8 @@
         "arousal": 0.35,
         "threat": -0.50,
         "self_evaluation": 0.10,
-        "future_expectancy": 0.15
+        "future_expectancy": 0.15,
+        "affiliation": 0.5
       },
       "gates": [
         "valence >= 0.35",
@@ -987,7 +1025,8 @@
         "valence": 0.8,
         "threat": -0.3,
         "self_evaluation": 0.2,
-        "agency_control": 0.1
+        "agency_control": 0.1,
+        "affiliation": 0.3
       },
       "gates": [
         "valence >= 0.20"
@@ -999,7 +1038,8 @@
         "arousal": 0.2,
         "threat": -0.4,
         "engagement": 0.3,
-        "sexual_arousal": 0.15
+        "sexual_arousal": 0.15,
+        "affiliation": 0.6
       },
       "gates": [
         "valence >= 0.10",
@@ -1012,7 +1052,8 @@
         "engagement": 0.6,
         "future_expectancy": 0.4,
         "threat": -0.2,
-        "sexual_arousal": 0.10
+        "sexual_arousal": 0.10,
+        "affiliation": 0.7
       },
       "gates": [
         "engagement >= 0.10",
@@ -1022,33 +1063,40 @@
     "compassion": {
       "weights": {
         "valence": 0.15,
-        "engagement": 0.85,
-        "self_evaluation": 0.25,
+        "engagement": 0.70,
         "threat": -0.35,
-        "agency_control": 0.10
+        "agency_control": 0.10,
+        "affiliation": 0.40,
+        "affective_empathy": 0.80,
+        "cognitive_empathy": 0.40
       },
       "gates": [
         "engagement >= 0.30",
         "valence >= -0.20",
         "valence <= 0.35",
-        "threat <= 0.50"
+        "threat <= 0.50",
+        "affective_empathy >= 0.25",
+        "cognitive_empathy >= 0.15"
       ]
     },
     "empathic_distress": {
       "weights": {
         "valence": -0.75,
         "arousal": 0.60,
-        "engagement": 0.90,
+        "engagement": 0.75,
         "agency_control": -0.60,
         "self_evaluation": -0.20,
         "future_expectancy": -0.20,
-        "threat": 0.15
+        "threat": 0.15,
+        "affective_empathy": 0.90,
+        "affiliation": 0.30
       },
       "gates": [
         "engagement >= 0.35",
         "valence <= -0.20",
         "arousal >= 0.10",
-        "agency_control <= 0.10"
+        "agency_control <= 0.10",
+        "affective_empathy >= 0.30"
       ]
     },
     "hatred": {

@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.gratitude"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -31,11 +31,27 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.lonely_yearning"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -68,7 +84,7 @@
                                     {
                                         "var": "emotions.relief"
                                     },
-                                    0.4
+                                    0.40
                                 ]
                             }
                         ]
@@ -104,7 +120,7 @@
                                     {
                                         "var": "emotions.affection"
                                     },
-                                    0.5
+                                    0.50
                                 ]
                             },
                             {
@@ -162,7 +178,7 @@
                             {
                                 "var": "emotions.hatred"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -178,7 +194,7 @@
                             {
                                 "var": "emotions.disgust"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -186,7 +202,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.3
+                            0.30
                         ]
                     }
                 ]
@@ -205,5 +221,5 @@
         "thankful",
         "positive"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

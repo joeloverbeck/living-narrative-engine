@@ -327,16 +327,23 @@ describe('MetricsService advanced integration', () => {
   });
 
   it('captures operational metrics across rate limiting, security, API key, and health flows', async () => {
-    await request(app)
-      .get('/limited')
-      .set('x-content-type-options', 'nosniff')
-      .set('x-frame-options', 'DENY')
-      .set('x-xss-protection', '1; mode=block')
-      .set(
-        'strict-transport-security',
-        'max-age=63072000; includeSubDomains; preload'
-      )
-      .expect(200);
+    const originalEnv = { ...process.env };
+    process.env.READINESS_CRITICAL_HEAP_PERCENT = '1000';
+    process.env.READINESS_CRITICAL_HEAP_TOTAL_MB = '100000';
+    process.env.READINESS_CRITICAL_HEAP_USED_MB = '100000';
+    process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT = '1000';
+
+    try {
+      await request(app)
+        .get('/limited')
+        .set('x-content-type-options', 'nosniff')
+        .set('x-frame-options', 'DENY')
+        .set('x-xss-protection', '1; mode=block')
+        .set(
+          'strict-transport-security',
+          'max-age=63072000; includeSubDomains; preload'
+        )
+        .expect(200);
 
     await request(app)
       .get('/limited')
@@ -444,5 +451,8 @@ describe('MetricsService advanced integration', () => {
     metricsService.clear();
     const clearedMetrics = await metricsService.getMetrics();
     expect(typeof clearedMetrics).toBe('string');
+    } finally {
+      process.env = originalEnv;
+    }
   });
 });

@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -36,6 +36,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.arousal"
@@ -46,9 +54,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.arousal"
                             },
-                            0.35
+                            45
                         ]
                     },
                     {
@@ -78,7 +86,7 @@
                                     {
                                         "var": "emotions.calm"
                                     },
-                                    0.2
+                                    0.20
                                 ]
                             },
                             {
@@ -86,7 +94,7 @@
                                     {
                                         "var": "emotions.confidence"
                                     },
-                                    0.2
+                                    0.20
                                 ]
                             }
                         ]
@@ -167,5 +175,5 @@
         "restraint",
         "trapped"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

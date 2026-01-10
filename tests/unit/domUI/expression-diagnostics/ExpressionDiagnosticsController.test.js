@@ -88,6 +88,14 @@ function getDropdownValue() {
   return selected?.dataset.value || '';
 }
 
+/**
+ * Helper to get the problematic panel error banner.
+ * @returns {HTMLElement|null}
+ */
+function getProblematicErrorBanner() {
+  return document.getElementById('expression-diagnostics-error-banner');
+}
+
 describe('ExpressionDiagnosticsController', () => {
   let mockLogger;
   let mockExpressionRegistry;
@@ -178,6 +186,7 @@ describe('ExpressionDiagnosticsController', () => {
           <button id="copy-witness-btn">Copy to Clipboard</button>
           <div id="mood-display" class="axis-grid"></div>
           <div id="sexual-display" class="axis-grid"></div>
+          <div id="traits-display" class="axis-grid"></div>
           <pre id="witness-json-content"></pre>
           <div id="violated-clauses" hidden>
             <ul id="violated-clauses-list"></ul>
@@ -297,13 +306,23 @@ describe('ExpressionDiagnosticsController', () => {
             engagement: 0.7,
             future_expectancy: 0.5,
             self_evaluation: 0.6,
+            affiliation: 0.3,
           },
           sexual: {
             sex_excitation: 0.3,
             sex_inhibition: 0.4,
             baseline_libido: 0.5,
           },
-          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
+          affectTraits: {
+            affective_empathy: 50,
+            cognitive_empathy: 60,
+            harm_aversion: 45,
+          },
+          toClipboardJSON: jest
+            .fn()
+            .mockReturnValue(
+              '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
+            ),
         },
         nearestMiss: null,
         bestFitness: 1.0,
@@ -2381,6 +2400,36 @@ describe('ExpressionDiagnosticsController', () => {
   });
 
   describe('Problematic Expressions Panel', () => {
+    it('shows error banner when scan response reports failure', async () => {
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: false,
+        errorType: 'cors_blocked',
+        message: 'CORS blocked',
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      const banner = getProblematicErrorBanner();
+      expect(banner).toBeTruthy();
+      expect(banner.hidden).toBe(false);
+      expect(banner.dataset.errorType).toBe('cors_blocked');
+      expect(banner.textContent).toContain('CORS blocked');
+      expect(banner.textContent).toContain('PROXY_ALLOWED_ORIGIN');
+    });
+
     it('loads problematic expressions panel on initialize', async () => {
       mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
         { id: 'expr:problem1', diagnosticStatus: 'impossible' },
@@ -2748,6 +2797,10 @@ describe('ExpressionDiagnosticsController', () => {
 
       const pillsContainer = document.getElementById('problematic-pills-container');
       expect(pillsContainer.innerHTML).toContain('Failed to load expression statuses');
+      const banner = getProblematicErrorBanner();
+      expect(banner).toBeTruthy();
+      expect(banner.hidden).toBe(false);
+      expect(banner.textContent).toContain('Failed to load expression statuses');
     });
 
     it('removes loading class after successful load', async () => {
@@ -3053,6 +3106,51 @@ describe('ExpressionDiagnosticsController', () => {
   });
 
   describe('Status persistence', () => {
+    it('shows error banner when persistence response fails', async () => {
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/test1.expression.json', diagnosticStatus: 'unknown' },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([]);
+      mockExpressionStatusService.updateStatus.mockResolvedValue({
+        success: false,
+        errorType: 'timeout',
+        message: 'Request timed out',
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const runStaticBtn = document.getElementById('run-static-btn');
+      runStaticBtn.click();
+
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
+      await mockExpressionStatusService.updateStatus.mock.results[0]?.value;
+      await Promise.resolve();
+
+      const banner = getProblematicErrorBanner();
+      expect(banner).toBeTruthy();
+      expect(banner.hidden).toBe(false);
+      expect(banner.dataset.errorType).toBe('timeout');
+      expect(banner.textContent).toContain('Request timed out');
+      expect(banner.textContent).toContain('retry');
+    });
+
     it('persists status after static analysis', async () => {
       mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
         success: true,
@@ -3911,8 +4009,8 @@ describe('ExpressionDiagnosticsController', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const moodDisplay = document.getElementById('mood-display');
-      // Should have 7 mood axes
-      expect(moodDisplay.children.length).toBe(7);
+      // Should have 8 mood axes (including affiliation)
+      expect(moodDisplay.children.length).toBe(8);
     });
 
     it('populates sexual state display', async () => {
@@ -3967,7 +4065,37 @@ describe('ExpressionDiagnosticsController', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const jsonContent = document.getElementById('witness-json-content');
-      expect(jsonContent.textContent).toBe('{"mood":{},"sexual":{}}');
+      expect(jsonContent.textContent).toBe(
+        '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
+      );
+    });
+
+    it('populates affect traits display', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const findWitnessBtn = document.getElementById('find-witness-btn');
+      findWitnessBtn.click();
+
+      // Wait for async findWitness to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const traitsDisplay = document.getElementById('traits-display');
+      // Should have 3 affect trait axes
+      expect(traitsDisplay.children.length).toBe(3);
     });
 
     it('resets witness results when expression selection changes', async () => {
@@ -4103,7 +4231,9 @@ describe('ExpressionDiagnosticsController', () => {
       // Give time for async clipboard operation
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(mockCopyToClipboard).toHaveBeenCalledWith('{"mood":{},"sexual":{}}');
+      expect(mockCopyToClipboard).toHaveBeenCalledWith(
+        '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
+      );
       mockCopyToClipboard.mockRestore();
     });
 

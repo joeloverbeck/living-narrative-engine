@@ -19,6 +19,7 @@ const createMoodData = (overrides = {}) => ({
   engagement: 0,
   future_expectancy: 0,
   self_evaluation: 0,
+  affiliation: 0,
   ...overrides,
 });
 

@@ -74,6 +74,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -5
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.grief"
@@ -155,12 +163,27 @@
                                     },
                                     0.08
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Bittersweet reminiscence: nostalgia-driven inward drift with low arousal and moderate absorption. Lonely-yearning can ‘pull' this state on with a smaller nostalgia baseline, and a lonely-yearning surge can serve as the change-gate."
+            "failure_message": "Bittersweet reminiscence: nostalgia-driven inward drift with low arousal and moderate absorption. Adds a mild non-hostile affiliation floor so this stays ‘warm/distant’ rather than cold detachment; affiliation rise can also serve as a change-gate."
         }
     ],
     "alternate_descriptions": {
@@ -177,5 +200,5 @@
         "bittersweet",
         "withdrawal"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

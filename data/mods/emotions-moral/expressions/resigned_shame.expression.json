@@ -114,6 +114,22 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -162,5 +178,5 @@
         "chronic",
         "self_worth"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

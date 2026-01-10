@@ -124,5 +124,5 @@
         "withdrawal",
         "visible"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

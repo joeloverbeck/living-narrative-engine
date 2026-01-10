@@ -45,7 +45,7 @@ beforeEach(() => {
     on: jest.fn(function (event, handler) {
       return this;
     }),
-    address: jest.fn(() => ({ port: port || 3001 })),
+    address: jest.fn(() => ({ port: port || 0 })),
   };
 
   app = {
@@ -91,7 +91,7 @@ beforeEach(() => {
   }));
 
   allowedOriginsArray = [];
-  port = 3001;
+  port = 0;
   const appConfigServiceMock = {
     getAllowedOriginsArray: jest.fn(() => allowedOriginsArray),
     getProxyPort: jest.fn(() => port),
@@ -279,7 +279,7 @@ describe('server initialization', () => {
 
     expect(corsMock).toHaveBeenCalledWith({
       origin: allowedOriginsArray,
-      methods: ['POST', 'OPTIONS'],
+      methods: ['GET', 'POST', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'X-Title', 'HTTP-Referer'],
     });
     expect(serverController.app.use).toHaveBeenCalledWith('cors-mw');

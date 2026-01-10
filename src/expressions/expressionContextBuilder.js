@@ -16,6 +16,7 @@ const MOOD_AXES_KEYS = [
   'engagement',
   'future_expectancy',
   'self_evaluation',
+  'affiliation',
 ];
 
 class ExpressionContextBuilder {

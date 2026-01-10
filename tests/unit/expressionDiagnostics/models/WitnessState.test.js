@@ -21,6 +21,7 @@ function createValidMood(overrides = {}) {
     engagement: 0,
     future_expectancy: 0,
     self_evaluation: 0,
+    affiliation: 0,
     ...overrides,
   };
 }
@@ -455,7 +456,7 @@ describe('WitnessState Model', () => {
       expect(display).toContain('sex_excitation: 76.0');
     });
 
-    it('should include all 7 mood axes', () => {
+    it('should include all 8 mood axes', () => {
       const state = new WitnessState({
         mood: createValidMood(),
         sexual: createValidSexual(),
@@ -470,6 +471,21 @@ describe('WitnessState Model', () => {
       expect(display).toContain('engagement');
       expect(display).toContain('future_expectancy');
       expect(display).toContain('self_evaluation');
+      expect(display).toContain('affiliation');
+    });
+
+    it('should include all 3 affect trait axes', () => {
+      const state = new WitnessState({
+        mood: createValidMood(),
+        sexual: createValidSexual(),
+      });
+
+      const display = state.toDisplayString();
+
+      expect(display).toContain('Affect Traits:');
+      expect(display).toContain('affective_empathy');
+      expect(display).toContain('cognitive_empathy');
+      expect(display).toContain('harm_aversion');
     });
 
     it('should include all 3 sexual axes', () => {
@@ -799,8 +815,8 @@ describe('WitnessState Model', () => {
       expect(Object.isFrozen(WitnessState.SEXUAL_RANGES)).toBe(true);
     });
 
-    it('MOOD_AXES should contain all 7 axes', () => {
-      expect(WitnessState.MOOD_AXES).toHaveLength(7);
+    it('MOOD_AXES should contain all 8 axes', () => {
+      expect(WitnessState.MOOD_AXES).toHaveLength(8);
       expect(WitnessState.MOOD_AXES).toContain('valence');
       expect(WitnessState.MOOD_AXES).toContain('arousal');
       expect(WitnessState.MOOD_AXES).toContain('agency_control');
@@ -808,6 +824,27 @@ describe('WitnessState Model', () => {
       expect(WitnessState.MOOD_AXES).toContain('engagement');
       expect(WitnessState.MOOD_AXES).toContain('future_expectancy');
       expect(WitnessState.MOOD_AXES).toContain('self_evaluation');
+      expect(WitnessState.MOOD_AXES).toContain('affiliation');
+    });
+
+    it('AFFECT_TRAIT_AXES should be frozen', () => {
+      expect(Object.isFrozen(WitnessState.AFFECT_TRAIT_AXES)).toBe(true);
+    });
+
+    it('TRAIT_RANGE should be frozen', () => {
+      expect(Object.isFrozen(WitnessState.TRAIT_RANGE)).toBe(true);
+    });
+
+    it('AFFECT_TRAIT_AXES should contain all 3 trait axes', () => {
+      expect(WitnessState.AFFECT_TRAIT_AXES).toHaveLength(3);
+      expect(WitnessState.AFFECT_TRAIT_AXES).toContain('affective_empathy');
+      expect(WitnessState.AFFECT_TRAIT_AXES).toContain('cognitive_empathy');
+      expect(WitnessState.AFFECT_TRAIT_AXES).toContain('harm_aversion');
+    });
+
+    it('TRAIT_RANGE should be [0, 100]', () => {
+      expect(WitnessState.TRAIT_RANGE.min).toBe(0);
+      expect(WitnessState.TRAIT_RANGE.max).toBe(100);
     });
 
     it('SEXUAL_AXES should contain all 3 axes', () => {
@@ -834,6 +871,358 @@ describe('WitnessState Model', () => {
       expect(WitnessState.SEXUAL_RANGES.baseline_libido).toEqual({
         min: -50,
         max: 50,
+      });
+    });
+  });
+
+  describe('Affect Traits', () => {
+    describe('Default Traits', () => {
+      it('should use default traits (50) when affectTraits not provided', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+        });
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 50,
+          cognitive_empathy: 50,
+          harm_aversion: 50,
+        });
+      });
+
+      it('should use default traits when affectTraits is null', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: null,
+        });
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 50,
+          cognitive_empathy: 50,
+          harm_aversion: 50,
+        });
+      });
+    });
+
+    describe('Custom Traits', () => {
+      it('should accept custom affectTraits', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 25,
+            cognitive_empathy: 75,
+            harm_aversion: 10,
+          },
+        });
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 25,
+          cognitive_empathy: 75,
+          harm_aversion: 10,
+        });
+      });
+
+      it('should accept boundary values (0 and 100)', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 0,
+            cognitive_empathy: 100,
+            harm_aversion: 50,
+          },
+        });
+
+        expect(state.affectTraits.affective_empathy).toBe(0);
+        expect(state.affectTraits.cognitive_empathy).toBe(100);
+      });
+    });
+
+    describe('Trait Validation', () => {
+      it('should throw if trait value is below 0', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              affectTraits: {
+                affective_empathy: -1,
+                cognitive_empathy: 50,
+                harm_aversion: 50,
+              },
+            })
+        ).toThrow(
+          'Affect trait axis "affective_empathy" must be in range [0, 100], got -1'
+        );
+      });
+
+      it('should throw if trait value is above 100', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              affectTraits: {
+                affective_empathy: 50,
+                cognitive_empathy: 101,
+                harm_aversion: 50,
+              },
+            })
+        ).toThrow(
+          'Affect trait axis "cognitive_empathy" must be in range [0, 100], got 101'
+        );
+      });
+
+      it('should throw if trait value is not a number', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              affectTraits: {
+                affective_empathy: 'high',
+                cognitive_empathy: 50,
+                harm_aversion: 50,
+              },
+            })
+        ).toThrow('Affect trait axis "affective_empathy" must be a number');
+      });
+
+      it('should throw if trait value is NaN', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              affectTraits: {
+                affective_empathy: 50,
+                cognitive_empathy: NaN,
+                harm_aversion: 50,
+              },
+            })
+        ).toThrow('Affect trait axis "cognitive_empathy" must be a number');
+      });
+
+      it('should throw if trait value is a decimal', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              affectTraits: {
+                affective_empathy: 50,
+                cognitive_empathy: 50,
+                harm_aversion: 50.5,
+              },
+            })
+        ).toThrow('Affect trait axis "harm_aversion" must be an integer');
+      });
+    });
+
+    describe('getTraitAxis()', () => {
+      it('should return correct value for existing trait', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 25,
+            cognitive_empathy: 75,
+            harm_aversion: 10,
+          },
+        });
+
+        expect(state.getTraitAxis('affective_empathy')).toBe(25);
+        expect(state.getTraitAxis('cognitive_empathy')).toBe(75);
+        expect(state.getTraitAxis('harm_aversion')).toBe(10);
+      });
+
+      it('should return undefined for non-existent trait', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+        });
+
+        expect(state.getTraitAxis('nonexistent')).toBeUndefined();
+      });
+    });
+
+    describe('affectTraits getter immutability', () => {
+      it('should return copy, not reference', () => {
+        const originalTraits = {
+          affective_empathy: 30,
+          cognitive_empathy: 70,
+          harm_aversion: 40,
+        };
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: originalTraits,
+        });
+
+        const retrievedTraits = state.affectTraits;
+        retrievedTraits.affective_empathy = 999;
+
+        expect(state.affectTraits.affective_empathy).toBe(30);
+      });
+    });
+
+    describe('withChanges() for affectTraits', () => {
+      it('should create new instance with modified trait values', () => {
+        const original = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 50,
+            cognitive_empathy: 50,
+            harm_aversion: 50,
+          },
+        });
+
+        const modified = original.withChanges({
+          affectTraits: { affective_empathy: 80 },
+        });
+
+        expect(modified).not.toBe(original);
+        expect(modified.affectTraits.affective_empathy).toBe(80);
+        expect(modified.affectTraits.cognitive_empathy).toBe(50);
+        expect(modified.affectTraits.harm_aversion).toBe(50);
+        expect(original.affectTraits.affective_empathy).toBe(50);
+      });
+    });
+
+    describe('Serialization', () => {
+      it('toJSON should include affectTraits', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 25,
+            cognitive_empathy: 75,
+            harm_aversion: 40,
+          },
+        });
+
+        const json = state.toJSON();
+
+        expect(json).toHaveProperty('affectTraits');
+        expect(json.affectTraits).toEqual({
+          affective_empathy: 25,
+          cognitive_empathy: 75,
+          harm_aversion: 40,
+        });
+      });
+
+      it('toClipboardJSON should include affectTraits', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 30,
+            cognitive_empathy: 60,
+            harm_aversion: 90,
+          },
+        });
+
+        const parsed = JSON.parse(state.toClipboardJSON());
+
+        expect(parsed).toHaveProperty('affectTraits');
+        expect(parsed.affectTraits.affective_empathy).toBe(30);
+      });
+
+      it('fromJSON should use defaults if affectTraits missing (backwards compatibility)', () => {
+        const json = {
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+        };
+
+        const state = WitnessState.fromJSON(json);
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 50,
+          cognitive_empathy: 50,
+          harm_aversion: 50,
+        });
+      });
+
+      it('fromJSON should preserve affectTraits when present', () => {
+        const json = {
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 10,
+            cognitive_empathy: 90,
+            harm_aversion: 5,
+          },
+        };
+
+        const state = WitnessState.fromJSON(json);
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 10,
+          cognitive_empathy: 90,
+          harm_aversion: 5,
+        });
+      });
+
+      it('roundtrip should preserve affectTraits', () => {
+        const original = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+          affectTraits: {
+            affective_empathy: 15,
+            cognitive_empathy: 85,
+            harm_aversion: 35,
+          },
+        });
+
+        const roundtripped = WitnessState.fromJSON(original.toJSON());
+
+        expect(roundtripped.affectTraits).toEqual(original.affectTraits);
+      });
+    });
+
+    describe('createRandom() for traits', () => {
+      it('should generate valid trait values within range', () => {
+        for (let i = 0; i < 100; i++) {
+          const state = WitnessState.createRandom();
+
+          for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+            expect(state.affectTraits[axis]).toBeGreaterThanOrEqual(0);
+            expect(state.affectTraits[axis]).toBeLessThanOrEqual(100);
+          }
+        }
+      });
+
+      it('should generate integer values for traits', () => {
+        for (let i = 0; i < 100; i++) {
+          const state = WitnessState.createRandom();
+
+          for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+            expect(Number.isInteger(state.affectTraits[axis])).toBe(true);
+          }
+        }
+      });
+    });
+
+    describe('createNeutral() for traits', () => {
+      it('should set all traits to 50 (average human baseline)', () => {
+        const state = WitnessState.createNeutral();
+
+        expect(state.affectTraits).toEqual({
+          affective_empathy: 50,
+          cognitive_empathy: 50,
+          harm_aversion: 50,
+        });
+      });
+
+      it('should produce integer values for traits', () => {
+        const state = WitnessState.createNeutral();
+
+        for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
+          expect(Number.isInteger(state.affectTraits[axis])).toBe(true);
+        }
       });
     });
   });

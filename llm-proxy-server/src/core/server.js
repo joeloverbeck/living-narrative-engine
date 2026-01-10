@@ -54,9 +54,13 @@ import { ModScannerService } from '../services/modScannerService.js';
 import { createGameConfigRoutes } from '../routes/gameConfigRoutes.js';
 import { GameConfigController } from '../handlers/gameConfigController.js';
 import { GameConfigService } from '../services/gameConfigService.js';
-import { createExpressionRoutes } from '../routes/expressionRoutes.js';
+import {
+  createExpressionRoutes,
+  EXPRESSION_ROUTE_DEFINITIONS,
+} from '../routes/expressionRoutes.js';
 import { ExpressionStatusController } from '../handlers/expressionStatusController.js';
 import { ExpressionFileService } from '../services/expressionFileService.js';
+import { validateRouteMethodsAgainstCors } from '../utils/corsValidation.js';
 
 const shutdownSignals = ['SIGTERM', 'SIGINT', 'SIGHUP'];
 
@@ -172,6 +176,15 @@ export function createProxyServer(options = {}) {
       methods: ['GET', HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
       allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
     };
+    validateRouteMethodsAgainstCors(
+      EXPRESSION_ROUTE_DEFINITIONS,
+      corsOptions.methods,
+      {
+        logger: proxyLogger,
+        throwOnMismatch: isDevelopmentLikeEnv,
+        context: 'expression routes',
+      }
+    );
     app.use(cors(corsOptions));
     proxyLogger.debug('CORS middleware applied successfully');
   } else if (isDevelopmentLikeEnv) {

@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "previousEmotions.rage"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -40,11 +40,38 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
-                                "var": "emotions.lonely_yearning"
+                                "var": "moodAxes.agency_control"
                             },
-                            0.3
+                            0
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            }
                         ]
                     },
                     {
@@ -67,12 +94,12 @@
                                     }
                                 ]
                             },
-                            0.2
+                            0.20
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires crossing into rage with arousal and anger present, but not already at explosive anger levels."
+            "failure_message": "Requires crossing into rage with anger present, arousal up, and either low affiliation or a sharp affiliation drop; not already at sustained explosive levels."
         }
     ],
     "actor_description": "It comes up fast-heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting-how every other thought is being shoved out to make room for the urge to hit back.",
@@ -86,5 +113,5 @@
         "explosive",
         "acute"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

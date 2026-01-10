@@ -145,6 +145,7 @@ class ExpressionsSimulatorController {
     this.#elements = {
       moodInputs: this.#containerElement.querySelector('#es-mood-inputs'),
       sexualInputs: this.#containerElement.querySelector('#es-sexual-inputs'),
+      traitsInputs: this.#containerElement.querySelector('#es-traits-inputs'),
       moodDerived: this.#containerElement.querySelector('#es-mood-derived'),
       sexualDerived: this.#containerElement.querySelector('#es-sexual-derived'),
       recordButton: this.#containerElement.querySelector('#es-record-button'),
@@ -174,6 +175,11 @@ class ExpressionsSimulatorController {
     if (!this.#elements.sexualInputs) {
       this.#logger.warn(
         '[ExpressionsSimulator] Sexual inputs container missing (#es-sexual-inputs).'
+      );
+    }
+    if (!this.#elements.traitsInputs) {
+      this.#logger.warn(
+        '[ExpressionsSimulator] Affect traits inputs container missing (#es-traits-inputs).'
       );
     }
     if (!this.#elements.moodDerived) {
@@ -241,10 +247,12 @@ class ExpressionsSimulatorController {
   #initializeState() {
     const moodSchema = this.#getComponentSchema('core:mood');
     const sexualSchema = this.#getComponentSchema('core:sexual_state');
+    const traitsSchema = this.#getComponentSchema('core:affect_traits');
 
     this.#state = {
       currentMood: this.#buildDefaultState(moodSchema),
       currentSexualState: this.#buildDefaultState(sexualSchema),
+      currentAffectTraits: this.#buildDefaultState(traitsSchema),
       recordedPreviousState: null,
       actorId: null,
       observerId: null,
@@ -273,6 +281,11 @@ class ExpressionsSimulatorController {
       componentId: 'core:sexual_state',
       targetElement: this.#elements?.sexualInputs,
       stateKey: 'currentSexualState',
+    });
+    this.#renderComponentInputs({
+      componentId: 'core:affect_traits',
+      targetElement: this.#elements?.traitsInputs,
+      stateKey: 'currentAffectTraits',
     });
   }
 
@@ -445,11 +458,13 @@ class ExpressionsSimulatorController {
   #updateDerivedOutputs() {
     const moodData = this.#state?.currentMood || {};
     const sexualStateData = this.#state?.currentSexualState || {};
+    const affectTraitsData = this.#state?.currentAffectTraits || {};
 
     const emotions = this.#emotionCalculatorService.calculateEmotions(
       moodData,
       null,
-      sexualStateData
+      sexualStateData,
+      affectTraitsData
     );
     const emotionItems = this.#emotionCalculatorService.getTopEmotions(emotions);
 

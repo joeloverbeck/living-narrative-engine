@@ -18,6 +18,14 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             -10
@@ -82,7 +90,7 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             },
                             {
@@ -94,6 +102,21 @@
                                             },
                                             {
                                                 "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
                                             }
                                         ]
                                     },
@@ -136,14 +159,13 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             }
                         ]
                     }
                 ]
-            },
-            "failure_message": "Requires withdrawn_isolation dominant + low engagement (disconnection), negative valence, low connection-emotions, explicitly excludes lonely_yearning (aching reach), caps below despair, and needs a withdrawal/engagement drop/connection drop change-gate to avoid constant firing."
+            }
         }
     ],
     "actor_description": "The room has people in it, noise in it-maybe even faces turned my way-and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",
@@ -153,5 +175,5 @@
         "isolation",
         "disconnection"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

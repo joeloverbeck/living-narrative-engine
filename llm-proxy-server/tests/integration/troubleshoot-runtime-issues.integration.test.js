@@ -141,6 +141,13 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
 
   describe('Health Check Middleware Integration', () => {
     it('should have health check middleware that calls correct LLM config methods', async () => {
+      const originalEnv = { ...process.env };
+
+      process.env.READINESS_CRITICAL_HEAP_PERCENT = '1000';
+      process.env.READINESS_CRITICAL_HEAP_TOTAL_MB = '100000';
+      process.env.READINESS_CRITICAL_HEAP_USED_MB = '100000';
+      process.env.READINESS_CRITICAL_HEAP_LIMIT_PERCENT = '1000';
+
       // This test verifies the fix for health check middleware LLM config count bug
       const { createReadinessCheck } = await import(
         '../../src/middleware/healthCheck.js'
@@ -181,8 +188,9 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
         json: jest.fn(),
       };
 
-      // Execute the middleware
-      await readinessCheck(mockReq, mockRes);
+      try {
+        // Execute the middleware
+        await readinessCheck(mockReq, mockRes);
 
       // Verify the middleware called the correct methods
       expect(mockLlmConfigService.isOperational).toHaveBeenCalled();
@@ -200,8 +208,11 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
       const llmConfigDep = responseData.details.dependencies.find(
         (dep) => dep.name === 'llmConfigService'
       );
-      expect(llmConfigDep).toBeDefined();
-      expect(llmConfigDep.details.configuredLlms).toBe(4);
+        expect(llmConfigDep).toBeDefined();
+        expect(llmConfigDep.details.configuredLlms).toBe(4);
+      } finally {
+        process.env = originalEnv;
+      }
     });
   });
 });

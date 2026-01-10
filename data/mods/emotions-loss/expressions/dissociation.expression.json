@@ -26,17 +26,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.lonely_yearning"
-                            },
-                            0.3
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "moodAxes.engagement"
                             },
-                            -15
+                            -20
                         ]
                     },
                     {
@@ -45,6 +37,49 @@
                                 "var": "moodAxes.agency_control"
                             },
                             -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
                         ]
                     },
                     {
@@ -117,12 +152,27 @@
                                     },
                                     -10
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a dissociation + numbness state with a sharp engagement drop and reduced control. Excludes strong freeze (handled by freeze_response) and high panic (handled by panic_onset), and avoids boredom-driven flatness. Explicitly caps lonely_yearning to prevent 'aching preoccupation' from coexisting with detachment/offline attention."
+            "failure_message": "Requires dissociation + numbness with reduced control and meaningful social detachment (low affiliation or a sharp affiliation drop). Adds explicit threat/arousal band consistent with dissociation gating. Excludes strong freeze/panic and avoids boredom-driven flatness. Triggers only on a dissociation/numbness spike or a sharp engagement/affiliation drop."
         }
     ],
     "actor_description": "Everything goes a half-step unreal. Sounds flatten. The edges of things feel far away, like I'm watching through glass. I know what I should feel, what I should do, but it doesn't connect-there's a delay between thought and body, and even the thought is dimmer than it should be. I'm still here… but I'm not all the way inside it.",
@@ -136,5 +186,5 @@
         "detachment",
         "acute"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

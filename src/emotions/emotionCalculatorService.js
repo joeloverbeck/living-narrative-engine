@@ -30,6 +30,13 @@ import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
  */
 
 /**
+ * @typedef {object} AffectTraits
+ * @property {number} affective_empathy - Capacity to feel what others feel [0..100]
+ * @property {number} cognitive_empathy - Ability to understand others' perspectives [0..100]
+ * @property {number} harm_aversion - Aversion to causing harm [0..100]
+ */
+
+/**
  * @typedef {object} EmotionPrototype
  * @property {{[key: string]: number}} weights - Weight coefficients for each axis [-1..1]
  * @property {string[]} [gates] - Prerequisite conditions (e.g., "valence >= 0.20")
@@ -58,6 +65,20 @@ const INTENSITY_LEVELS = [
 const EMOTION_PROTOTYPES_LOOKUP_ID = 'core:emotion_prototypes';
 /** Lookup ID for sexual prototypes */
 const SEXUAL_PROTOTYPES_LOOKUP_ID = 'core:sexual_prototypes';
+/** Component ID for affect traits */
+const AFFECT_TRAITS_COMPONENT_ID = 'core:affect_traits';
+
+/**
+ * Default affect trait values for entities without the affect_traits component.
+ * Values of 50 represent "average human" baseline.
+ *
+ * @type {Readonly<{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}>}
+ */
+const DEFAULT_AFFECT_TRAITS = Object.freeze({
+  affective_empathy: 50,
+  cognitive_empathy: 50,
+  harm_aversion: 50,
+});
 
 /**
  * Clamps a value to the range [0, 1]
@@ -213,21 +234,32 @@ class EmotionCalculatorService {
   }
 
   /**
-   * Resolves axis values across mood and sexual axes.
+   * Resolves axis values across mood, sexual, and trait axes.
+   *
+   * Resolution order: trait axes → sexual axes → mood axes
+   * This allows trait gates to work correctly.
    *
    * @param {string} axis - Axis name
    * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
    * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
+   * @param {{[key: string]: number}} [traitAxes={}] - Normalized affect trait axes
    * @returns {number} Resolved axis value
    */
-  #resolveAxisValue(axis, normalizedAxes, sexualAxes) {
+  #resolveAxisValue(axis, normalizedAxes, sexualAxes, traitAxes = {}) {
     const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
 
+    // Check trait axes first (affective_empathy, cognitive_empathy, harm_aversion)
+    if (Object.prototype.hasOwnProperty.call(traitAxes, resolvedAxis)) {
+      return traitAxes[resolvedAxis];
+    }
+
+    // Then sexual axes
     if (Object.prototype.hasOwnProperty.call(sexualAxes, resolvedAxis)) {
       // Value guaranteed to be a number from #normalizeSexualAxes (uses clamp01)
       return sexualAxes[resolvedAxis];
     }
 
+    // Finally mood axes (including affiliation axis)
     return normalizedAxes[resolvedAxis] ?? 0;
   }
 
@@ -237,9 +269,10 @@ class EmotionCalculatorService {
    * @param {string[]|undefined} gates - Array of gate conditions
    * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
    * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
+   * @param {{[key: string]: number}} [traitAxes={}] - Normalized affect trait axes
    * @returns {boolean} True if all gates pass
    */
-  #checkGates(gates, normalizedAxes, sexualAxes) {
+  #checkGates(gates, normalizedAxes, sexualAxes, traitAxes = {}) {
     if (!gates || !Array.isArray(gates) || gates.length === 0) {
       return true;
     }
@@ -258,7 +291,8 @@ class EmotionCalculatorService {
       const axisValue = this.#resolveAxisValue(
         axis,
         normalizedAxes,
-        sexualAxes
+        sexualAxes,
+        traitAxes
       );
 
       // Evaluate the gate condition
@@ -296,11 +330,12 @@ class EmotionCalculatorService {
    * @param {EmotionPrototype} prototype - Emotion/sexual prototype
    * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
    * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
+   * @param {{[key: string]: number}} [traitAxes={}] - Normalized affect trait axes
    * @returns {number} Intensity value in [0..1]
    */
-  #calculatePrototypeIntensity(prototype, normalizedAxes, sexualAxes) {
-    // Check gates first
-    if (!this.#checkGates(prototype.gates, normalizedAxes, sexualAxes)) {
+  #calculatePrototypeIntensity(prototype, normalizedAxes, sexualAxes, traitAxes = {}) {
+    // Check gates first (including trait gates)
+    if (!this.#checkGates(prototype.gates, normalizedAxes, sexualAxes, traitAxes)) {
       return 0;
     }
 
@@ -316,7 +351,8 @@ class EmotionCalculatorService {
       const axisValue = this.#resolveAxisValue(
         axis,
         normalizedAxes,
-        sexualAxes
+        sexualAxes,
+        traitAxes
       );
 
       rawSum += axisValue * weight;
@@ -403,6 +439,34 @@ class EmotionCalculatorService {
 
       if (typeof sexualState.sex_excitation === 'number') {
         normalized.sex_excitation = clamp01(sexualState.sex_excitation / 100);
+      }
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Normalizes affect traits from [0..100] to [0..1].
+   * Uses default values (50 = average human) for missing properties.
+   *
+   * @param {AffectTraits|null|undefined} affectTraits - Raw affect traits data
+   * @returns {{[key: string]: number}} Normalized trait values in [0..1]
+   */
+  #normalizeAffectTraits(affectTraits) {
+    const normalized = {};
+    const traits = affectTraits ?? DEFAULT_AFFECT_TRAITS;
+
+    for (const [trait, value] of Object.entries(traits)) {
+      if (typeof value === 'number') {
+        // Normalize [0..100] to [0..1], clamp to valid range
+        normalized[trait] = Math.max(0, Math.min(1, value / 100));
+      }
+    }
+
+    // Ensure all default traits are present with defaults if missing
+    for (const [trait, defaultValue] of Object.entries(DEFAULT_AFFECT_TRAITS)) {
+      if (normalized[trait] === undefined) {
+        normalized[trait] = defaultValue / 100;
       }
     }
 
@@ -520,12 +584,13 @@ class EmotionCalculatorService {
   /**
    * Calculates emotion intensities from mood data.
    *
-   * @param {MoodData} moodData - Mood axis values
+   * @param {MoodData} moodData - Mood axis values (including affiliation)
    * @param {number|null} sexualArousal - Calculated sexual arousal value
    * @param {SexualState|null|undefined} sexualState - Sexual state data
+   * @param {AffectTraits|null|undefined} [affectTraits] - Affect trait values (optional)
    * @returns {Map<string, number>} Map of emotion name to intensity
    */
-  calculateEmotions(moodData, sexualArousal, sexualState) {
+  calculateEmotions(moodData, sexualArousal, sexualState, affectTraits = null) {
     const result = new Map();
 
     const prototypes = this.#ensureEmotionPrototypes();
@@ -538,12 +603,14 @@ class EmotionCalculatorService {
 
     const normalizedAxes = this.#normalizeMoodAxes(moodData);
     const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
+    const traitAxes = this.#normalizeAffectTraits(affectTraits);
 
     for (const [emotionName, prototype] of Object.entries(prototypes)) {
       const intensity = this.#calculatePrototypeIntensity(
         prototype,
         normalizedAxes,
-        sexualAxes
+        sexualAxes,
+        traitAxes
       );
       result.set(emotionName, intensity);
     }

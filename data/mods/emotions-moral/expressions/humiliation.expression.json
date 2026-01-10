@@ -78,6 +78,22 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.numbness"
                             },
                             0.55
@@ -149,5 +165,5 @@
         "fear",
         "exposure"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }
