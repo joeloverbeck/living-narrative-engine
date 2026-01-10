@@ -49,6 +49,9 @@ async function initialize() {
         const witnessStateFinder = container.resolve(
           diagnosticsTokens.IWitnessStateFinder
         );
+        const pathSensitiveAnalyzer = container.resolve(
+          diagnosticsTokens.IPathSensitiveAnalyzer
+        );
 
         // Initialize controller
         controller = new ExpressionDiagnosticsController({
@@ -60,6 +63,7 @@ async function initialize() {
           failureExplainer,
           expressionStatusService,
           witnessStateFinder,
+          pathSensitiveAnalyzer,
         });
 
         await controller.initialize();

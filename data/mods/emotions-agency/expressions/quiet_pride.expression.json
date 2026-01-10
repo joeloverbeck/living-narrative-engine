@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-agency:quiet_pride",
-    "description": "Subtle, self-assured satisfaction—an internal 'I did that' settling into confident posture.",
+    "description": "Subtle, self-assured satisfaction-an internal 'I did that' settling into confident posture.",
     "priority": 61,
     "prerequisites": [
         {
@@ -120,10 +120,10 @@
             }
         }
     ],
-    "actor_description": "It lands in me like a click—quiet, mechanical certainty. My body believes it before my mind tries to argue it down: shoulders set, spine lengthening, breath deeper. I don't feel the need to announce anything. I just know, cleanly, that I did what I said I would do. The satisfaction isn't loud—it's steady, like weight finally balanced where it belongs.",
-    "description_text": "{actor} straightens almost imperceptibly, as if a string has been drawn through their posture. The expression that follows is small—corner of the mouth, a brief lift of the chin—but it holds. They look less scattered, more centered, like a person who has confirmed something about themselves.",
+    "actor_description": "It lands in me like a click-quiet, mechanical certainty. My body believes it before my mind tries to argue it down: shoulders set, spine lengthening, breath deeper. I don't feel the need to announce anything. I just know, cleanly, that I did what I said I would do. The satisfaction isn't loud-it's steady, like weight finally balanced where it belongs.",
+    "description_text": "{actor} straightens almost imperceptibly, as if a string has been drawn through their posture. The expression that follows is small-corner of the mouth, a brief lift of the chin-but it holds. They look less scattered, more centered, like a person who has confirmed something about themselves.",
     "alternate_descriptions": {
-        "auditory": "I hear a slow exhale that sounds earned, followed by a quiet, involuntary sound—half hum, half laugh—kept deliberately small."
+        "auditory": "I hear a slow exhale that sounds earned, followed by a quiet, involuntary sound-half hum, half laugh-kept deliberately small."
     },
     "tags": [
         "pride",

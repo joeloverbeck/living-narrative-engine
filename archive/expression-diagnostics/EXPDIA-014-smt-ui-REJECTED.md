@@ -1,5 +1,13 @@
 # EXPDIA-014: Add SMT Analysis to UI with Unsat Core Display
 
+> **STATUS: REJECTED (2026-01-09)**
+>
+> **Reason**: Depends on EXPDIA-013 (SmtSolver service) which was rejected. The existing UI already surfaces static analysis conflicts and Monte Carlo results, which provide equivalent diagnostic value without the 5MB Z3 WASM dependency.
+>
+> See analysis: `.claude/plans/binary-strolling-wolf.md`
+
+---
+
 ## Summary
 
 Add SMT solver integration to the Expression Diagnostics page with "Run SMT Analysis" button, loading indicator during Z3 initialization, SAT/UNSAT result display, and human-readable unsat core presentation for impossible expressions.

@@ -204,6 +204,16 @@ class InMemoryDataRegistry {
   }
 
   /**
+   * Retrieves lookup data by its namespaced ID.
+   *
+   * @param {string} lookupId - The lookup ID (e.g., 'core:emotion_prototypes')
+   * @returns {object | undefined} The lookup data or undefined if not found
+   */
+  getLookupData(lookupId) {
+    return this.get('lookups', lookupId);
+  }
+
+  /**
    * @param {string} type
    * @param {string} id
    * @returns {string | null}

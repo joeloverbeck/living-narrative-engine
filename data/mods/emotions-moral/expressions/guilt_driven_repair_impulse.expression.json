@@ -118,10 +118,10 @@
             }
         }
     ],
-    "actor_description": "The moment keeps replaying, sharp as a splinter under the skin. It isn't just bad—it feels mine. My chest tightens with a simple, relentless logic: do something. Fix what I can, admit what I did, offer whatever repairs are still possible. I catch myself scanning for an opening—an apology, a task, a gesture—anything that turns this weight into motion.",
-    "description_text": "{actor} becomes purposefully restless—hovering, stepping in too quickly, trying to make themselves useful. They speak with a careful urgency, offering help and explanations that arrive a beat too fast. Their attention keeps darting to the person they wronged, searching for a sign the damage can still be repaired.",
+    "actor_description": "The moment keeps replaying, sharp as a splinter under the skin. It isn't just bad-it feels mine. My chest tightens with a simple, relentless logic: do something. Fix what I can, admit what I did, offer whatever repairs are still possible. I catch myself scanning for an opening-an apology, a task, a gesture-anything that turns this weight into motion.",
+    "description_text": "{actor} becomes purposefully restless-hovering, stepping in too quickly, trying to make themselves useful. They speak with a careful urgency, offering help and explanations that arrive a beat too fast. Their attention keeps darting to the person they wronged, searching for a sign the damage can still be repaired.",
     "alternate_descriptions": {
-        "auditory": "I hear a rush of words—apologies, clarifications, offers—stacked on top of each other like someone can't bear a gap in the air."
+        "auditory": "I hear a rush of words-apologies, clarifications, offers-stacked on top of each other like someone can't bear a gap in the air."
     },
     "tags": [
         "guilt",

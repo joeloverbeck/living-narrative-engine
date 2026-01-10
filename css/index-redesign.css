@@ -296,6 +296,118 @@
 }
 
 /* =========================
+   Rose Theme (Anatomy Visualizer)
+   Contrast: 7.8:1 default, 4.6:1 hover
+   ========================= */
+
+.nav-button--rose {
+  background: #fce4ec;
+  border-color: #e91e63;
+  color: #880e4f;
+}
+
+.nav-button--rose:hover {
+  background: #e91e63;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--rose:focus {
+  outline: 3px solid #e91e63;
+  outline-offset: 2px;
+}
+
+.nav-button--rose:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Crimson Theme (Damage Simulator)
+   Contrast: 7.2:1 default, 5.5:1 hover
+   ========================= */
+
+.nav-button--crimson {
+  background: #ffebee;
+  border-color: #d32f2f;
+  color: #b71c1c;
+}
+
+.nav-button--crimson:hover {
+  background: #d32f2f;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--crimson:focus {
+  outline: 3px solid #d32f2f;
+  outline-offset: 2px;
+}
+
+.nav-button--crimson:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Amber Theme (Expression Simulator)
+   Contrast: 4.8:1 default, 8.6:1 hover
+   ========================= */
+
+.nav-button--amber {
+  background: #fff8e1;
+  border-color: #ffc107;
+  color: #e65100;
+}
+
+.nav-button--amber:hover {
+  background: #ffc107;
+  color: #3e2723;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--amber:focus {
+  outline: 3px solid #ffc107;
+  outline-offset: 2px;
+}
+
+.nav-button--amber:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Indigo Theme (Expression Diagnostics)
+   Contrast: 10.2:1 default, 5.8:1 hover
+   ========================= */
+
+.nav-button--indigo {
+  background: #e8eaf6;
+  border-color: #3f51b5;
+  color: #1a237e;
+}
+
+.nav-button--indigo:hover {
+  background: #3f51b5;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--indigo:focus {
+  outline: 3px solid #3f51b5;
+  outline-offset: 2px;
+}
+
+.nav-button--indigo:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
    Responsive Design - Tablet
    ========================= */
 

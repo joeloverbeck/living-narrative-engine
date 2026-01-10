@@ -119,10 +119,10 @@
             }
         }
     ],
-    "actor_description": "Something in me clicks into place. The world stops being a wall and turns into a set of handles—ways to grab, ways to try. I can almost feel the idea forming behind my eyes, not as words yet but as shape and pressure, like a door unlatching. My body comes along for it: breath fuller, posture rising without permission. I want to move. I want to make a first attempt before the feeling cools.",
-    "description_text": "{actor} looks abruptly more awake—eyes widening a fraction, attention sharpening. Their posture lifts as if an invisible string has tightened; movements get purposeful, a little quicker, like they’ve just found a workable angle on something that was stuck.",
+    "actor_description": "Something in me clicks into place. The world stops being a wall and turns into a set of handles-ways to grab, ways to try. I can almost feel the idea forming behind my eyes, not as words yet but as shape and pressure, like a door unlatching. My body comes along for it: breath fuller, posture rising without permission. I want to move. I want to make a first attempt before the feeling cools.",
+    "description_text": "{actor} looks abruptly more awake-eyes widening a fraction, attention sharpening. Their posture lifts as if an invisible string has tightened; movements get purposeful, a little quicker, like they've just found a workable angle on something that was stuck.",
     "alternate_descriptions": {
-        "olfactory": "The air around someone is less stale with stress—less sharp sweat, more dry warmth, like a person who’s stopped bracing and started moving again."
+        "olfactory": "The air around someone is less stale with stress-less sharp sweat, more dry warmth, like a person who's stopped bracing and started moving again."
     },
     "tags": [
         "engagement",

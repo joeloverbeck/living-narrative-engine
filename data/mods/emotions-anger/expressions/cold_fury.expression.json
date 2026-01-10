@@ -58,6 +58,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
                             0.25
@@ -168,8 +176,8 @@
             }
         }
     ],
-    "actor_description": "The heat drains out and leaves something cleaner behind it. I get very still. My thoughts line up like tools on a table—what matters, what doesn't, what I'll do and when. My jaw locks, my voice wants to go flat. I'm not here to explode. I'm here to choose the moment.",
-    "description_text": "{actor} goes unnervingly controlled—face smoothed, eyes hard and steady, movements economical. There's no flailing anger in them; the restraint reads as intentional, like they're holding something back on purpose.",
+    "actor_description": "The heat drains out and leaves something cleaner behind it. I get very still. My thoughts line up like tools on a table-what matters, what doesn't, what I'll do and when. My jaw locks, my voice wants to go flat. I'm not here to explode. I'm here to choose the moment.",
+    "description_text": "{actor} goes unnervingly controlled-face smoothed, eyes hard and steady, movements economical. There's no flailing anger in them; the restraint reads as intentional, like they're holding something back on purpose.",
     "alternate_descriptions": {
         "tactile": "The air feels tight; a body held in restraint, tension coiled rather than spilled."
     },
@@ -179,5 +187,5 @@
         "controlled",
         "focused"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "normal"
 }

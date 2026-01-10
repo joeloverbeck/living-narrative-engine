@@ -159,11 +159,11 @@
             }
         }
     ],
-    "actor_description": "Something hooks me. My attention gathers itself without effort—like a hand closing around a thread. The noise of everything else doesn’t vanish, but it drops a few steps back, turning into background texture. I can feel my body cooperate: shoulders settle, breath evens, eyes track. Little connections start snapping into place—that relates to that—and I’m suddenly more awake than I was a moment ago.",
-    "description_text": "{actor} angles toward the point of interest—subtle at first, then unmistakable. Their gaze steadies; their movements get economical, as if they don’t want to waste motion. They blink less, listen more. Even their stillness looks active, like they’re catching details on purpose.",
+    "actor_description": "Something hooks me. My attention gathers itself without effort-like a hand closing around a thread. The noise of everything else doesn't vanish, but it drops a few steps back, turning into background texture. I can feel my body cooperate: shoulders settle, breath evens, eyes track. Little connections start snapping into place-that relates to that-and I'm suddenly more awake than I was a moment ago.",
+    "description_text": "{actor} angles toward the point of interest-subtle at first, then unmistakable. Their gaze steadies; their movements get economical, as if they don't want to waste motion. They blink less, listen more. Even their stillness looks active, like they're catching details on purpose.",
     "alternate_descriptions": {
-        "auditory": "I hear breathing slow into a steady rhythm. There are small, timed sounds—an “mm,” a quiet intake—like someone is following along closely and doesn’t want to interrupt.",
-        "olfactory": "The air carries warm skin and a faint, clean sweat note—focused presence rather than stress—like someone has leaned in and stayed there."
+        "auditory": "I hear breathing slow into a steady rhythm. There are small, timed sounds-an “mm,” a quiet intake-like someone is following along closely and doesn't want to interrupt.",
+        "olfactory": "The air carries warm skin and a faint, clean sweat note-focused presence rather than stress-like someone has leaned in and stayed there."
     },
     "tags": [
         "engagement",

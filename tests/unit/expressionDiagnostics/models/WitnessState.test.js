@@ -442,16 +442,16 @@ describe('WitnessState Model', () => {
   describe('toDisplayString()', () => {
     it('should format mood and sexual values correctly', () => {
       const state = new WitnessState({
-        mood: createValidMood({ valence: 42.5, threat: -15.123 }),
-        sexual: createValidSexual({ sex_excitation: 75.999 }),
+        mood: createValidMood({ valence: 43, threat: -15 }),
+        sexual: createValidSexual({ sex_excitation: 76 }),
       });
 
       const display = state.toDisplayString();
 
       expect(display).toContain('Mood:');
       expect(display).toContain('Sexual:');
-      expect(display).toContain('valence: 42.5');
-      expect(display).toContain('threat: -15.1');
+      expect(display).toContain('valence: 43.0');
+      expect(display).toContain('threat: -15.0');
       expect(display).toContain('sex_excitation: 76.0');
     });
 
@@ -683,6 +683,102 @@ describe('WitnessState Model', () => {
 
       expect(state.fitness).toBe(0);
       expect(state.isExact).toBe(false);
+    });
+  });
+
+  describe('Integer Constraints', () => {
+    describe('createRandom() integer enforcement', () => {
+      it('should generate integer values for all mood axes', () => {
+        // Run multiple iterations to ensure statistical coverage
+        for (let i = 0; i < 100; i++) {
+          const state = WitnessState.createRandom();
+          for (const axis of WitnessState.MOOD_AXES) {
+            expect(Number.isInteger(state.mood[axis])).toBe(true);
+          }
+        }
+      });
+
+      it('should generate integer values for all sexual axes', () => {
+        for (let i = 0; i < 100; i++) {
+          const state = WitnessState.createRandom();
+          for (const axis of WitnessState.SEXUAL_AXES) {
+            expect(Number.isInteger(state.sexual[axis])).toBe(true);
+          }
+        }
+      });
+
+      it('should maintain valid ranges after rounding', () => {
+        for (let i = 0; i < 100; i++) {
+          const state = WitnessState.createRandom();
+          for (const axis of WitnessState.MOOD_AXES) {
+            expect(state.mood[axis]).toBeGreaterThanOrEqual(
+              WitnessState.MOOD_RANGE.min
+            );
+            expect(state.mood[axis]).toBeLessThanOrEqual(
+              WitnessState.MOOD_RANGE.max
+            );
+          }
+          for (const axis of WitnessState.SEXUAL_AXES) {
+            const range = WitnessState.SEXUAL_RANGES[axis];
+            expect(state.sexual[axis]).toBeGreaterThanOrEqual(range.min);
+            expect(state.sexual[axis]).toBeLessThanOrEqual(range.max);
+          }
+        }
+      });
+    });
+
+    describe('createNeutral() integer enforcement', () => {
+      it('should produce integer values for all axes', () => {
+        const state = WitnessState.createNeutral();
+        for (const axis of WitnessState.MOOD_AXES) {
+          expect(Number.isInteger(state.mood[axis])).toBe(true);
+        }
+        for (const axis of WitnessState.SEXUAL_AXES) {
+          expect(Number.isInteger(state.sexual[axis])).toBe(true);
+        }
+      });
+    });
+
+    describe('Validation rejects decimals', () => {
+      it('should throw if mood axis has decimal value', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood({ valence: 42.5 }),
+              sexual: createValidSexual(),
+            })
+        ).toThrow('Mood axis "valence" must be an integer');
+      });
+
+      it('should throw if sexual axis has decimal value', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual({ sex_excitation: 75.5 }),
+            })
+        ).toThrow('Sexual axis "sex_excitation" must be an integer');
+      });
+
+      it('should throw for very small decimal values', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood({ arousal: 0.001 }),
+              sexual: createValidSexual(),
+            })
+        ).toThrow('Mood axis "arousal" must be an integer');
+      });
+
+      it('should accept integer values (no false positives)', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood({ valence: 42 }),
+              sexual: createValidSexual({ sex_excitation: 75 }),
+            })
+        ).not.toThrow();
+      });
     });
   });
 

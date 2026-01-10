@@ -162,10 +162,10 @@
             }
         }
     ],
-    "actor_description": "There's a spark here—bright, not desperate—and I want to play with it. I catch myself holding eye contact a beat too long, letting the pause do the work. The heat in me feels easy, almost funny, like I've got room to tease instead of needing to take. I want to test the distance: lean in, back off, watch what it does to them. My smile keeps slipping out on its own, and my voice wants to soften—hooking words, making them land like a touch.",
-    "description_text": "{actor} watches with a mischievous steadiness—glances that linger, then slip away like bait. They angle closer, then drift back, leaving space that feels deliberate. A half-smile tugs at their mouth, and their posture stays open and inviting, like they're daring someone to step into the game.",
+    "actor_description": "There's a spark here-bright, not desperate-and I want to play with it. I catch myself holding eye contact a beat too long, letting the pause do the work. The heat in me feels easy, almost funny, like I've got room to tease instead of needing to take. I want to test the distance: lean in, back off, watch what it does to them. My smile keeps slipping out on its own, and my voice wants to soften-hooking words, making them land like a touch.",
+    "description_text": "{actor} watches with a mischievous steadiness-glances that linger, then slip away like bait. They angle closer, then drift back, leaving space that feels deliberate. A half-smile tugs at their mouth, and their posture stays open and inviting, like they're daring someone to step into the game.",
     "alternate_descriptions": {
-        "auditory": "I hear a voice go low and playful—words stretched just slightly, laughter tucked under them like a secret.",
+        "auditory": "I hear a voice go low and playful-words stretched just slightly, laughter tucked under them like a secret.",
         "tactile": "Someone's presence feels light, charged, teasing, like a playful tap meant to make me turn."
     },
     "tags": [

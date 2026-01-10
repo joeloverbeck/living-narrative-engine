@@ -238,13 +238,16 @@ class WitnessState {
     const sexual = {};
 
     for (const axis of MOOD_AXES) {
-      mood[axis] =
+      // Generate random float, then round to integer within range
+      const rawValue =
         MOOD_RANGE.min + Math.random() * (MOOD_RANGE.max - MOOD_RANGE.min);
+      mood[axis] = Math.round(rawValue);
     }
 
     for (const axis of SEXUAL_AXES) {
       const range = SEXUAL_RANGES[axis];
-      sexual[axis] = range.min + Math.random() * (range.max - range.min);
+      const rawValue = range.min + Math.random() * (range.max - range.min);
+      sexual[axis] = Math.round(rawValue);
     }
 
     return new WitnessState({ mood, sexual, fitness: 0, isExact: false });
@@ -260,12 +263,13 @@ class WitnessState {
     const sexual = {};
 
     for (const axis of MOOD_AXES) {
-      mood[axis] = 0;
+      mood[axis] = 0; // Already an integer
     }
 
     for (const axis of SEXUAL_AXES) {
       const range = SEXUAL_RANGES[axis];
-      sexual[axis] = (range.min + range.max) / 2;
+      // Use Math.round to handle any potential floating-point division
+      sexual[axis] = Math.round((range.min + range.max) / 2);
     }
 
     return new WitnessState({ mood, sexual, fitness: 0, isExact: false });
@@ -286,6 +290,11 @@ class WitnessState {
       const value = mood[axis];
       if (typeof value !== 'number' || Number.isNaN(value)) {
         throw new Error(`Mood axis "${axis}" must be a number`);
+      }
+      if (!Number.isInteger(value)) {
+        throw new Error(
+          `Mood axis "${axis}" must be an integer, got ${value}`
+        );
       }
       if (value < MOOD_RANGE.min || value > MOOD_RANGE.max) {
         throw new Error(
@@ -311,6 +320,11 @@ class WitnessState {
       const range = SEXUAL_RANGES[axis];
       if (typeof value !== 'number' || Number.isNaN(value)) {
         throw new Error(`Sexual axis "${axis}" must be a number`);
+      }
+      if (!Number.isInteger(value)) {
+        throw new Error(
+          `Sexual axis "${axis}" must be an integer, got ${value}`
+        );
       }
       if (value < range.min || value > range.max) {
         throw new Error(

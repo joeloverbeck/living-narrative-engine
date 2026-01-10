@@ -19,10 +19,10 @@
       <section class="panel expression-selection-panel">
         <h2>Expression Selection</h2>
         <div class="form-group">
-          <label for="expression-select">Select Expression:</label>
-          <select id="expression-select" class="form-select">
-            <option value="">-- Select an expression --</option>
-          </select>
+          <label id="expression-select-label" for="expression-select">Select Expression:</label>
+          <div id="expression-select-container" class="status-select-container">
+            <!-- StatusSelectDropdown renders here -->
+          </div>
         </div>
         <p id="expression-description" class="expression-description"></p>
       </section>
@@ -36,37 +36,25 @@
         </div>
       </section>
 
-      <!-- Analysis Controls Panel -->
-      <section class="panel analysis-controls-panel">
-        <h2>Analysis Controls</h2>
-        <div class="button-group">
-          <button id="run-static-btn" class="action-button" disabled>
-            Run Static Analysis
-          </button>
-          <button id="find-witness-btn" class="action-button" disabled>
-            Find Witness State
-          </button>
-          <!-- Future buttons will be added here -->
-          <!-- <button id="run-monte-carlo-btn">Run Monte Carlo</button> -->
-          <!-- <button id="run-all-btn">Run All</button> -->
+      <!-- Status Summary - Centered Prominent Display -->
+      <section class="panel status-summary-centered">
+        <div id="status-indicator" class="status-indicator status-unknown">
+          <span class="status-circle-large status-circle status-unknown"></span>
+          <span class="status-label">Not Analyzed</span>
         </div>
+        <p id="status-message" class="status-message"></p>
       </section>
 
       <!-- Results Area -->
       <div class="results-area">
-        <!-- Status Summary -->
-        <section class="panel status-panel">
-          <h2>Status Summary</h2>
-          <div id="status-indicator" class="status-indicator status-unknown">
-            <span class="status-emoji">⚪</span>
-            <span class="status-label">Not Analyzed</span>
-          </div>
-          <p id="status-message" class="status-message"></p>
-        </section>
-
         <!-- Static Analysis Details -->
         <section class="panel static-analysis-panel">
           <h2>Static Analysis Results</h2>
+          <div class="section-action-button">
+            <button id="run-static-btn" class="action-button" disabled>
+              Run Static Analysis
+            </button>
+          </div>
           <div id="static-results" class="results-content">
             <p class="placeholder-text">Run static analysis to see results.</p>
           </div>
@@ -105,6 +93,60 @@
           </table>
         </section>
 
+        <!-- Path-Sensitive Analysis Section -->
+        <section id="path-sensitive-results" class="panel path-sensitive-panel" hidden>
+          <div class="panel-header-row">
+            <h2>Path-Sensitive Analysis</h2>
+            <label class="toggle-switch" id="show-all-branches-toggle">
+              <input type="checkbox" id="show-all-branches">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Show All</span>
+            </label>
+          </div>
+
+          <div id="path-sensitive-summary" class="summary-card">
+            <span id="ps-status-indicator" class="status-indicator"></span>
+            <span id="ps-summary-message" class="summary-message"></span>
+          </div>
+
+          <div id="volume-indicator" class="volume-indicator hidden">
+            <span id="volume-emoji" class="volume-emoji"></span>
+            <span id="volume-label" class="volume-label">Feasibility Volume:</span>
+            <span id="volume-value" class="volume-value"></span>
+            <span id="volume-description" class="volume-description"></span>
+          </div>
+
+          <div id="branch-overview" class="branch-overview">
+            <span id="branch-count-display">Analyzing <span id="branch-count">0</span> branches...</span>
+            <span id="reachable-count-display"><span id="reachable-count">0</span> fully reachable</span>
+          </div>
+
+          <div id="branch-cards-container" class="branch-cards-container">
+            <!-- Branch cards will be inserted here dynamically -->
+          </div>
+
+          <details id="knife-edge-summary" class="knife-edge-summary" hidden>
+            <summary>
+              <span class="ke-icon">⚠️</span>
+              <span id="ke-count">0</span> Knife-Edge Constraint(s) Detected
+            </summary>
+            <table id="knife-edge-table" class="results-table">
+              <thead>
+                <tr>
+                  <th>Axis</th>
+                  <th>Interval</th>
+                  <th>Width</th>
+                  <th>Contributing Prototypes</th>
+                  <th>Branch</th>
+                </tr>
+              </thead>
+              <tbody id="knife-edge-tbody">
+                <!-- Knife-edge rows inserted dynamically -->
+              </tbody>
+            </table>
+          </details>
+        </section>
+
         <!-- Monte Carlo Section -->
         <section class="panel mc-panel" id="monte-carlo-section">
           <h2>Monte Carlo Simulation</h2>
@@ -129,7 +171,7 @@
           <div id="mc-results" class="mc-results" hidden>
             <div class="trigger-rate-display">
               <div class="rarity-indicator" id="mc-rarity-indicator">
-                <span class="rarity-emoji"></span>
+                <span class="rarity-circle status-circle"></span>
                 <span class="rarity-label"></span>
               </div>
               <div class="rate-details">
@@ -161,6 +203,11 @@
           <p class="section-description">
             Find a concrete state that would trigger this expression.
           </p>
+          <div class="section-action-button">
+            <button id="find-witness-btn" class="action-button" disabled>
+              Find Witness State
+            </button>
+          </div>
 
           <div class="witness-controls">
             <span id="witness-status" class="status-text"></span>
@@ -207,6 +254,42 @@
       </div>
     </main>
   </div>
+
+  <!-- Template for branch cards (hidden, cloned via JS) -->
+  <template id="branch-card-template">
+    <div class="branch-card" data-status="pending">
+      <div class="branch-card-header">
+        <span class="branch-status-icon"></span>
+        <span class="branch-title"></span>
+      </div>
+      <div class="branch-card-content">
+        <div class="branch-prototypes">
+          <strong>Required prototypes:</strong>
+          <span class="prototype-list"></span>
+        </div>
+        <div class="branch-thresholds" hidden>
+          <table class="threshold-table">
+            <thead>
+              <tr>
+                <th>Prototype</th>
+                <th>Required</th>
+                <th>Max Possible</th>
+                <th>Gap</th>
+              </tr>
+            </thead>
+            <tbody class="threshold-tbody">
+            </tbody>
+          </table>
+        </div>
+        <div class="branch-knife-edges" hidden>
+          <div class="ke-warning">
+            <span class="ke-icon">⚠️</span>
+            <span class="ke-message"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
 
   <script src="expression-diagnostics.js"></script>
 </body>

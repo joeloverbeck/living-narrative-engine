@@ -668,7 +668,11 @@
       "Skill(sc:design)",
       "Bash(mkdir:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs"
+      "mcp__context7__query-docs",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_wait_for"
     ],
     "deny": [],
     "ask": []

@@ -22,7 +22,7 @@
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.50
+                                    0.5
                                 ]
                             }
                         ]
@@ -40,7 +40,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -112,7 +112,7 @@
                             {
                                 "var": "emotions.fatigue"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -157,12 +157,12 @@
             "failure_message": "Requires sustained anxiety/unease with activated arousal/engagement (restless energy) while staying clearly pre-panic (panic capped low), below terror/hypervigilance, not collapsing into numb fatigue; explicitly excludes dissociation; excludes freeze so the expression remains mobile."
         }
     ],
-    "actor_description": "I can't get comfortable. My body keeps trying to do something—shift, check, adjust—like motion might keep the worry from landing. My thoughts don't sprint; they circle. The same few possibilities, each one sharpening a little as it comes around again. I notice my jaw set, my hands busy with nothing, my breath stuck high in my chest. Even when I tell myself it's fine, my nervous system doesn't believe me. I keep scanning for a problem I can fix, because the feeling itself won't sit still long enough to name.",
-    "description_text": "{actor} can't settle—small movements constantly restarting: fingers worrying at a seam, foot tapping, weight shifting. Their gaze keeps flicking to corners and exits, then away again, as if attention won't hold. Breathing stays shallow, and they look busy without getting anywhere.",
+    "actor_description": "I can't get comfortable. My body keeps trying to do something-shift, check, adjust-like motion might keep the worry from landing. My thoughts don't sprint; they circle. The same few possibilities, each one sharpening a little as it comes around again. I notice my jaw set, my hands busy with nothing, my breath stuck high in my chest. Even when I tell myself it's fine, my nervous system doesn't believe me. I keep scanning for a problem I can fix, because the feeling itself won't sit still long enough to name.",
+    "description_text": "{actor} can't settle-small movements constantly restarting: fingers worrying at a seam, foot tapping, weight shifting. Their gaze keeps flicking to corners and exits, then away again, as if attention won't hold. Breathing stays shallow, and they look busy without getting anywhere.",
     "alternate_descriptions": {
-        "auditory": "I hear stop-start movement nearby—soft footwork, fabric rustle, a breath that never fully empties.",
+        "auditory": "I hear stop-start movement nearby-soft footwork, fabric rustle, a breath that never fully empties.",
         "olfactory": "I smell a faint edge of stress-sweat, the kind that comes from holding yourself together.",
-        "tactile": "Someone's presence vibrates with contained tension—micro-movements, a restless shifting that you can feel through the air and proximity."
+        "tactile": "Someone's presence vibrates with contained tension-micro-movements, a restless shifting that you can feel through the air and proximity."
     },
     "tags": [
         "anxiety",
@@ -171,5 +171,6 @@
         "fidgeting",
         "moderate",
         "visible"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-sexuality:passionate_longing",
-    "description": "Passionate love expressing as a hungry-yet-tender longing—desire fused with warmth and a hint of surrender.",
+    "description": "Passionate love expressing as a hungry-yet-tender longing-desire fused with warmth and a hint of surrender.",
     "priority": 82,
     "prerequisites": [
         {
@@ -28,7 +28,7 @@
                             {
                                 "var": "sexualArousal"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -36,7 +36,7 @@
                             {
                                 "var": "emotions.love_attachment"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -44,7 +44,15 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.withdrawn_isolation"
+                            },
+                            0.65
                         ]
                     },
                     {
@@ -70,7 +78,15 @@
                                     {
                                         "var": "emotions.affection"
                                     },
-                                    0.50
+                                    0.5
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    0.35
                                 ]
                             }
                         ]
@@ -112,7 +128,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.10
+                            0.1
                         ]
                     }
                 ]
@@ -154,6 +170,36 @@
                     {
                         ">=": [
                             {
+                                "-": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    {
+                                        "var": "previousEmotions.lonely_yearning"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    {
+                                        "var": "previousEmotions.love_attachment"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "sexualStates.passion"
                             },
                             0.85
@@ -163,11 +209,11 @@
             }
         }
     ],
-    "actor_description": "It's not just desire; it's them. Heat pulls through me, but it's threaded with something softer—an ache in my chest, a hunger for closeness that feels almost steady. I keep imagining the small proofs of nearness: a touch that lingers, breath shared, the relief of not having to reach anymore. Even when I don't move, my attention keeps drifting back to them like a compass needle.",
-    "description_text": "{actor} lingers—eyes returning again and again with a warmth that doesn't blink away. Their movements slow and deliberate, as if they're giving themself time not to rush. They angle their body toward the focus of their longing without fully committing, holding a careful distance that reads like restraint, not indifference.",
+    "actor_description": "It's not just desire; it's them. Heat pulls through me, but it's threaded with something softer-an ache in my chest, a hunger for closeness that feels almost steady. I keep imagining the small proofs of nearness: a touch that lingers, breath shared, the relief of not having to reach anymore. Even when I don't move, my attention keeps drifting back to them like a compass needle.",
+    "description_text": "{actor} lingers-eyes returning again and again with a warmth that doesn't blink away. Their movements slow and deliberate, as if they're giving themself time not to rush. They angle their body toward the focus of their longing without fully committing, holding a careful distance that reads like restraint, not indifference.",
     "alternate_descriptions": {
         "auditory": "I hear breathing deepen and soften; when they speak, their voice loses its hard edges, turned gentle in a way that feels directed.",
-        "tactile": "I sense a warm orientation nearby—someone's whole presence subtly angled toward someone else, like a held-in step forward."
+        "tactile": "I sense a warm orientation nearby-someone's whole presence subtly angled toward someone else, like a held-in step forward."
     },
     "tags": [
         "love",
@@ -177,5 +223,6 @@
         "warmth",
         "vulnerability",
         "sexual"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

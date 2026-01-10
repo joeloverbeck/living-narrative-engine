@@ -144,11 +144,11 @@
             }
         }
     ],
-    "actor_description": "The energy comes up bright, like someone turned the lights on inside my ribs. Thoughts quicken and start connecting on their own—easy, playful, productive. I feel it in my hands and feet: the impulse to gesture, to move, to do something with this charge before it fades. My voice wants out of my throat. I’m not escaping anything; I’m leaning into it. Whatever’s next, I want to meet it at speed and leave a mark.",
-    "description_text": "{actor} lights up—steps quicker, gestures larger, attention snapping onto possibilities instead of problems. They lean into the moment as if it’s pulling them forward. Their expression stays open and quick, and their movements have a contagious tempo, like they’re already halfway into whatever comes next.",
+    "actor_description": "The energy comes up bright, like someone turned the lights on inside my ribs. Thoughts quicken and start connecting on their own-easy, playful, productive. I feel it in my hands and feet: the impulse to gesture, to move, to do something with this charge before it fades. My voice wants out of my throat. I'm not escaping anything; I'm leaning into it. Whatever's next, I want to meet it at speed and leave a mark.",
+    "description_text": "{actor} lights up-steps quicker, gestures larger, attention snapping onto possibilities instead of problems. They lean into the moment as if it's pulling them forward. Their expression stays open and quick, and their movements have a contagious tempo, like they're already halfway into whatever comes next.",
     "alternate_descriptions": {
-        "tactile": "Someone's presence gets warm and kinetic—small quick movements, a restless readiness to act.",
-        "olfactory": "There’s clean sweat and warm breath in the air—alive, energized, not sour with fear."
+        "tactile": "Someone's presence gets warm and kinetic-small quick movements, a restless readiness to act.",
+        "olfactory": "There's clean sweat and warm breath in the air-alive, energized, not sour with fear."
     },
     "tags": [
         "positive",

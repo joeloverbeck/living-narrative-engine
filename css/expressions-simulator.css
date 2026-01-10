@@ -182,6 +182,12 @@
   color: var(--secondary-text-color);
 }
 
+.es-matches-panel,
+.es-messages-panel {
+  flex: 1 1 calc(50% - var(--spacing-lg) / 2);
+  min-width: 280px;
+}
+
 .es-message-block {
   margin-top: var(--spacing-md);
   padding: var(--spacing-sm);

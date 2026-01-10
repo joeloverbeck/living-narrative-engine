@@ -122,11 +122,11 @@
             "failure_message": "Requires strong grief with significant sadness, helplessness (low agency), and attention stuck on the loss. Blocks shutdown/detachment from dominating and blocks panic from hijacking the beat. Triggers on a moderate spike or a threshold crossing."
         }
     ],
-    "actor_description": "It finally gets through the dam. My throat tightens and my chest caves like something heavy sat down on it. I try to breathe around it and can't. Tears spill before I've chosen them; my face is hot, my hands shake, and there's a raw, humiliating helplessness to it—like my body is grieving out loud without my permission.",
-    "description_text": "{actor} crumples around the feeling—shoulders folding inward, breath snagging in jagged pulls. Their face goes wet and bright with tears, the composure in their posture breaking into small, involuntary shudders that they can't quite hide.",
+    "actor_description": "It finally gets through the dam. My throat tightens and my chest caves like something heavy sat down on it. I try to breathe around it and can't. Tears spill before I've chosen them; my face is hot, my hands shake, and there's a raw, humiliating helplessness to it-like my body is grieving out loud without my permission.",
+    "description_text": "{actor} crumples around the feeling-shoulders folding inward, breath snagging in jagged pulls. Their face goes wet and bright with tears, the composure in their posture breaking into small, involuntary shudders that they can't quite hide.",
     "alternate_descriptions": {
-        "auditory": "I hear breath fracture into sobs—wet, uneven pulls that keep failing halfway through. If words come, they arrive broken, swallowed, reshaped by the body trying not to fall apart.",
-        "tactile": "Someone starts to shake in waves—small at first, then unstoppable. Their body has that unmistakable grief rhythm: tight, trembling pulses like the whole frame is trying to hold itself together."
+        "auditory": "I hear breath fracture into sobs-wet, uneven pulls that keep failing halfway through. If words come, they arrive broken, swallowed, reshaped by the body trying not to fall apart.",
+        "tactile": "Someone starts to shake in waves-small at first, then unstoppable. Their body has that unmistakable grief rhythm: tight, trembling pulses like the whole frame is trying to hold itself together."
     },
     "tags": [
         "grief",
@@ -135,5 +135,5 @@
         "acute",
         "breakdown"
     ],
-    "diagnosticStatus": "frequent"
+    "diagnosticStatus": "normal"
 }

@@ -156,9 +156,6 @@ class ExpressionsSimulatorController {
       ),
       triggerButton: this.#containerElement.querySelector('#es-trigger-button'),
       matchingList: this.#containerElement.querySelector('#es-matching-list'),
-      selectedExpression: this.#containerElement.querySelector(
-        '#es-selected-expression'
-      ),
       actorMessage: this.#containerElement.querySelector('#es-actor-message'),
       observerMessage: this.#containerElement.querySelector(
         '#es-observer-message'
@@ -212,11 +209,6 @@ class ExpressionsSimulatorController {
     if (!this.#elements.matchingList) {
       this.#logger.warn(
         '[ExpressionsSimulator] Matching list missing (#es-matching-list).'
-      );
-    }
-    if (!this.#elements.selectedExpression) {
-      this.#logger.warn(
-        '[ExpressionsSimulator] Selected expression output missing (#es-selected-expression).'
       );
     }
     if (!this.#elements.actorMessage) {
@@ -644,7 +636,6 @@ class ExpressionsSimulatorController {
   #initializeResults() {
     this.#renderExpressionTotal();
     this.#renderMatches([]);
-    this.#renderSelectedExpression(null);
     this.#renderEvaluationLog(null);
     this.#renderRecordedState(this.#state?.recordedPreviousState ?? null);
     this.#clearMessages();
@@ -862,7 +853,6 @@ class ExpressionsSimulatorController {
     this.#renderMatches(matches);
     this.#renderEvaluationLog(evaluations);
     const selectedExpression = matches[0] ?? null;
-    this.#renderSelectedExpression(selectedExpression);
 
     if (!selectedExpression) {
       this.#clearMessages();
@@ -953,27 +943,6 @@ class ExpressionsSimulatorController {
       item.textContent = `${expression?.id ?? 'unknown'}${priority}`;
       this.#elements.matchingList.appendChild(item);
     }
-  }
-
-  /**
-   * @param {object|null} expression
-   * @private
-   */
-  #renderSelectedExpression(expression) {
-    if (!this.#elements?.selectedExpression) {
-      return;
-    }
-
-    if (!expression) {
-      this.#elements.selectedExpression.textContent = 'None';
-      return;
-    }
-
-    const priority =
-      typeof expression.priority === 'number'
-        ? ` (priority ${expression.priority})`
-        : '';
-    this.#elements.selectedExpression.textContent = `${expression.id}${priority}`;
   }
 
   /**

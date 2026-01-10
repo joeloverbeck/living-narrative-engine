@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-sexuality:erotic_thrill",
-    "description": "Adrenaline-laced arousal: fear/threat present, but valence remains non-negative—danger registers as exciting rather than purely aversive.",
+    "description": "Adrenaline-laced arousal: fear/threat present, but valence remains non-negative-danger registers as exciting rather than purely aversive.",
     "priority": 75,
     "prerequisites": [
         {
@@ -173,12 +173,12 @@
             }
         }
     ],
-    "actor_description": "The danger doesn't push me back—it pulls. My pulse climbs into my throat, breath shallow and bright, like my body's trying to run and kiss at the same time. Everything sharpens: sound, heat, distance. I can feel the grin forming before I decide to make it. This is the edge, and I'm leaning into it.",
-    "description_text": "{actor} goes taut in a way that isn't fear—breath quick, posture subtly forward. Their attention locks on, pupils wide, as if risk has turned into a kind of invitation. There's a charged alertness in their stillness, the body's yes hiding inside its restraint.",
+    "actor_description": "The danger doesn't push me back-it pulls. My pulse climbs into my throat, breath shallow and bright, like my body's trying to run and kiss at the same time. Everything sharpens: sound, heat, distance. I can feel the grin forming before I decide to make it. This is the edge, and I'm leaning into it.",
+    "description_text": "{actor} goes taut in a way that isn't fear-breath quick, posture subtly forward. Their attention locks on, pupils wide, as if risk has turned into a kind of invitation. There's a charged alertness in their stillness, the body's yes hiding inside its restraint.",
     "alternate_descriptions": {
-        "auditory": "I catch a tight inhale and a small, unsteady exhale—too eager to be calm, too controlled to be panic.",
+        "auditory": "I catch a tight inhale and a small, unsteady exhale-too eager to be calm, too controlled to be panic.",
         "tactile": "Heat seems to radiate nearby; a faint tremor runs through the air like someone's holding perfectly still to keep from lunging.",
-        "olfactory": "I smell warm skin, a hint of sweat, and something faintly sweet—adrenaline turning into appetite."
+        "olfactory": "I smell warm skin, a hint of sweat, and something faintly sweet-adrenaline turning into appetite."
     },
     "tags": [
         "sexual",

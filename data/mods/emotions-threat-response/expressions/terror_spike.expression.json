@@ -1,9 +1,9 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-threat-response:terror_spike",
-    "description": "A sudden, sustained surge of terror—intense fear that clamps the body and narrows cognition without fully tipping into panic onset or total freeze.",
-    "actor_description": "Something in me lurches into pure alarm and stays there. My chest tightens, my breath goes thin, and my thoughts collapse into one blunt question: how do I survive the next few seconds? The room feels sharper and closer, like there’s not enough space to move without consequences. I can still act, but it’s action through a tunnel—fast, clumsy, and ruled by urgency.",
-    "description_text": "{actor} goes rigid for a beat, then moves with tight, urgent precision—eyes wide, breath shallow, voice edged or clipped. Their attention locks hard on exits, cover, and distance, as if the world has suddenly become dangerous in every direction.",
+    "description": "A sudden, sustained surge of terror-intense fear that clamps the body and narrows cognition without fully tipping into panic onset or total freeze.",
+    "actor_description": "Something in me lurches into pure alarm and stays there. My chest tightens, my breath goes thin, and my thoughts collapse into one blunt question: how do I survive the next few seconds? The room feels sharper and closer, like there's not enough space to move without consequences. I can still act, but it's action through a tunnel-fast, clumsy, and ruled by urgency.",
+    "description_text": "{actor} goes rigid for a beat, then moves with tight, urgent precision-eyes wide, breath shallow, voice edged or clipped. Their attention locks hard on exits, cover, and distance, as if the world has suddenly become dangerous in every direction.",
     "priority": 89,
     "prerequisites": [
         {
@@ -14,7 +14,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.72
+                            0.7
                         ]
                     },
                     {
@@ -42,6 +42,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -54,7 +62,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            -25
+                            -35
                         ]
                     },
                     {
@@ -62,7 +70,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.45
+                            0.55
                         ]
                     },
                     {
@@ -74,11 +82,11 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
                                 "var": "emotions.hypervigilance"
                             },
-                            0.80
+                            0.45
                         ]
                     },
                     {
@@ -86,7 +94,7 @@
                             {
                                 "var": "emotions.courage"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -103,7 +111,7 @@
                                             }
                                         ]
                                     },
-                                    0.12
+                                    0.1
                                 ]
                             },
                             {
@@ -113,7 +121,7 @@
                                             {
                                                 "var": "previousEmotions.terror"
                                             },
-                                            0.72
+                                            0.7
                                         ]
                                     },
                                     {
@@ -121,7 +129,7 @@
                                             {
                                                 "var": "emotions.terror"
                                             },
-                                            0.72
+                                            0.7
                                         ]
                                     }
                                 ]
@@ -138,19 +146,19 @@
                                             }
                                         ]
                                     },
-                                    12
+                                    10
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires high terror with high threat + arousal (acute mobilized fear) while keeping attention online (engagement floor) and explicitly excluding dissociation; stays short of panic (panic cap + agency not collapsing) and excludes freeze; gated by a terror spike/crossing or sharp threat-axis jump."
+            "failure_message": "Requires high terror with high threat + arousal (acute mobilized fear) while keeping attention online; stays short of panic and excludes freeze/dissociation. Caps lonely_yearning so 'aching preoccupation' doesn't coexist with tunnel-survival terror; gated by terror spike/crossing or sharp threat jump."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear breathing turn shallow and fast, a voice that comes out thinner than intended, and the tiny stutter of someone swallowing before they speak.",
-        "tactile": "It feels like the air tightens—gooseflesh, a cold prickle up the arms, muscles bracing as if expecting impact.",
+        "tactile": "It feels like the air tightens-gooseflesh, a cold prickle up the arms, muscles bracing as if expecting impact.",
         "limited": "A sudden, sustained jolt of fear snaps attention into a narrow, urgent tunnel."
     },
     "tags": [
@@ -161,5 +169,6 @@
         "tunnel_vision",
         "brace_response",
         "escape_scan"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

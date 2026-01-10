@@ -15,7 +15,6 @@ const buildContainer = () => {
       <div id="es-expression-total"></div>
       <button id="es-trigger-button" type="button"></button>
       <ul id="es-matching-list"></ul>
-      <div id="es-selected-expression"></div>
       <div id="es-actor-message"></div>
       <div id="es-observer-message"></div>
       <div id="es-evaluation-count"></div>
@@ -460,9 +459,6 @@ describe('ExpressionsSimulatorController', () => {
       'expr-high (priority 10)',
       'expr-low (priority 5)',
     ]);
-    expect(
-      document.getElementById('es-selected-expression').textContent
-    ).toBe('expr-high (priority 10)');
     expect(document.getElementById('es-actor-message').textContent).toBe(
       'actor message'
     );
@@ -776,7 +772,7 @@ describe('ExpressionsSimulatorController', () => {
     ).not.toBeNull();
   });
 
-  it('clears selection and messages when no matches exist', async () => {
+  it('clears messages when no matches exist', async () => {
     const controller = new ExpressionsSimulatorController(
       buildDependencies({
         expressionEvaluatorService: {
@@ -794,9 +790,6 @@ describe('ExpressionsSimulatorController', () => {
     triggerButton.click();
     await flushPromises();
 
-    expect(
-      document.getElementById('es-selected-expression').textContent
-    ).toBe('None');
     expect(document.getElementById('es-actor-message').textContent).toBe(
       'None'
     );

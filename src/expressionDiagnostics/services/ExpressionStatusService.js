@@ -5,6 +5,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { getStatusFillColor } from '../statusTheme.js';
 
 /**
  * @typedef {object} ExpressionStatusInfo
@@ -25,6 +26,13 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @typedef {object} ScanStatusesResult
  * @property {boolean} success - Whether the scan succeeded
  * @property {ExpressionStatusInfo[]} [expressions] - Expression statuses on success
+ * @property {string} [errorType] - Error classification on failure
+ * @property {string} [message] - Human-readable error message on failure
+ */
+
+/**
+ * @typedef {object} HealthCheckResult
+ * @property {boolean} success - Whether the health check succeeded
  * @property {string} [errorType] - Error classification on failure
  * @property {string} [message] - Human-readable error message on failure
  */
@@ -51,20 +59,6 @@ const STATUS_PRIORITY = Object.freeze({
  */
 const NON_PROBLEMATIC_STATUSES = new Set(['normal', 'frequent']);
 
-/**
- * Status display colors for UI rendering
- *
- * @type {Record<string, string>}
- */
-const STATUS_COLORS = Object.freeze({
-  unknown: '#6c757d', // gray
-  impossible: '#dc3545', // red
-  extremely_rare: '#fd7e14', // orange
-  rare: '#ffc107', // yellow
-  normal: '#28a745', // green
-  frequent: '#17a2b8', // blue
-});
-
 const ERROR_TYPES = Object.freeze({
   CONNECTION_REFUSED: 'connection_refused',
   CORS_BLOCKED: 'cors_blocked',
@@ -73,6 +67,9 @@ const ERROR_TYPES = Object.freeze({
   VALIDATION_ERROR: 'validation_error',
   UNKNOWN: 'unknown',
 });
+
+const HEALTH_CHECK_TIMEOUT_MS = 2000;
+const HEALTH_CHECK_CACHE_TTL_MS = 60000;
 
 /**
  * Service for managing expression diagnostic status persistence.
@@ -84,6 +81,9 @@ class ExpressionStatusService {
 
   /** @type {string} */
   #baseUrl;
+
+  /** @type {{ timestamp: number, result: HealthCheckResult } | null} */
+  #healthCheckCache;
 
   /**
    * @param {object} deps
@@ -97,6 +97,7 @@ class ExpressionStatusService {
 
     this.#logger = logger;
     this.#baseUrl = baseUrl;
+    this.#healthCheckCache = null;
     this.#logger.debug('ExpressionStatusService: Instance created', { baseUrl });
   }
 
@@ -179,6 +180,94 @@ class ExpressionStatusService {
     };
   }
 
+  #getCachedHealthCheck() {
+    if (!this.#healthCheckCache) {
+      return null;
+    }
+
+    const ageMs = Date.now() - this.#healthCheckCache.timestamp;
+    if (ageMs > HEALTH_CHECK_CACHE_TTL_MS) {
+      this.#healthCheckCache = null;
+      return null;
+    }
+
+    return this.#healthCheckCache.result;
+  }
+
+  #setHealthCheckCache(result) {
+    this.#healthCheckCache = {
+      timestamp: Date.now(),
+      result,
+    };
+  }
+
+  /**
+   * Perform a cached health check against the proxy server.
+   *
+   * @returns {Promise<HealthCheckResult>}
+   */
+  async checkServerHealth() {
+    const cached = this.#getCachedHealthCheck();
+    if (cached) {
+      return cached;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      HEALTH_CHECK_TIMEOUT_MS
+    );
+
+    try {
+      const response = await fetch(`${this.#baseUrl}/health/live`, {
+        method: 'HEAD',
+        signal: controller.signal,
+      });
+
+      if (response.type === 'opaque') {
+        const result = {
+          success: false,
+          errorType: ERROR_TYPES.CORS_BLOCKED,
+          message: this.#getCorsBlockedMessage(),
+        };
+        this.#setHealthCheckCache(result);
+        return result;
+      }
+
+      if (!response.ok) {
+        const { errorType, message } = this.#classifyResponseError(
+          response,
+          null
+        );
+        const result = {
+          success: false,
+          errorType,
+          message,
+        };
+        this.#setHealthCheckCache(result);
+        return result;
+      }
+
+      const result = { success: true };
+      this.#setHealthCheckCache(result);
+      return result;
+    } catch (error) {
+      const { errorType, message } = this.#classifyThrownError(
+        error,
+        HEALTH_CHECK_TIMEOUT_MS
+      );
+      const result = {
+        success: false,
+        errorType,
+        message,
+      };
+      this.#setHealthCheckCache(result);
+      return result;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   /**
    * Update the diagnostic status for an expression file
    *
@@ -187,6 +276,19 @@ class ExpressionStatusService {
    * @returns {Promise<UpdateStatusResult>}
    */
   async updateStatus(filePath, status) {
+    const healthCheck = await this.checkServerHealth();
+    if (!healthCheck.success) {
+      this.#logger.warn('ExpressionStatusService: Health check failed', {
+        errorType: healthCheck.errorType,
+        message: healthCheck.message,
+      });
+      return {
+        success: false,
+        errorType: healthCheck.errorType,
+        message: healthCheck.message,
+      };
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -266,6 +368,19 @@ class ExpressionStatusService {
    * @returns {Promise<ScanStatusesResult>}
    */
   async scanAllStatuses() {
+    const healthCheck = await this.checkServerHealth();
+    if (!healthCheck.success) {
+      this.#logger.warn('ExpressionStatusService: Health check failed', {
+        errorType: healthCheck.errorType,
+        message: healthCheck.message,
+      });
+      return {
+        success: false,
+        errorType: healthCheck.errorType,
+        message: healthCheck.message,
+      };
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -366,7 +481,7 @@ class ExpressionStatusService {
    * @returns {string} - CSS color value
    */
   getStatusColor(status) {
-    return STATUS_COLORS[status] || STATUS_COLORS.unknown;
+    return getStatusFillColor(status);
   }
 
   /**

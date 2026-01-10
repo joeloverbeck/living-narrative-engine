@@ -12,23 +12,15 @@
                             {
                                 "var": "sexualStates.sexual_confidence"
                             },
-                            0.62
+                            0.6
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "sexualArousal"
+                                "var": "moodAxes.engagement"
                             },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.15
+                            5
                         ]
                     },
                     {
@@ -36,15 +28,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            10
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.self_evaluation"
-                            },
-                            10
+                            5
                         ]
                     },
                     {
@@ -52,7 +36,23 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            45
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -30
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
                         ]
                     },
                     {
@@ -60,27 +60,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.05
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.confidence"
-                                    },
-                                    0.45
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.pride"
-                                    },
-                                    0.35
-                                ]
-                            }
+                            0.1
                         ]
                     },
                     {
@@ -88,7 +68,7 @@
                             {
                                 "var": "sexualStates.aroused_with_shame"
                             },
-                            0.35
+                            0.25
                         ]
                     },
                     {
@@ -96,23 +76,7 @@
                             {
                                 "var": "sexualStates.sexual_performance_anxiety"
                             },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.shame"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.embarrassment"
-                            },
-                            0.45
+                            0.25
                         ]
                     }
                 ]
@@ -122,18 +86,23 @@
             "logic": {
                 "or": [
                     {
-                        ">=": [
+                        "and": [
                             {
-                                "-": [
+                                "<": [
+                                    {
+                                        "var": "previousSexualStates.sexual_confidence"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
                                     {
                                         "var": "sexualStates.sexual_confidence"
                                     },
-                                    {
-                                        "var": "previousSexualStates.sexual_confidence"
-                                    }
+                                    0.6
                                 ]
-                            },
-                            0.06
+                            }
                         ]
                     },
                     {
@@ -148,11 +117,11 @@
             }
         }
     ],
-    "actor_description": "I feel composed in my own skin—warm, awake, and entirely unashamed of wanting. My breath slows on purpose. I can feel the control in small choices: where I place my weight, how long I hold a look, when I let a smile arrive. It isn't urgency. It's intention.",
-    "description_text": "{actor} moves with measured ease—shoulders relaxed, gaze steady, expressions held half a beat longer than necessary. Their confidence reads in the pacing of everything: slower turns, deliberate pauses, a smile that lands like an invitation rather than an accident.",
+    "actor_description": "I feel composed in my own skin-warm, awake, and entirely unashamed of wanting. My breath slows on purpose. I can feel the control in small choices: where I place my weight, how long I hold a look, when I let a smile arrive. It isn't urgency. It's intention.",
+    "description_text": "{actor} moves with measured ease-shoulders relaxed, gaze steady, expressions held half a beat longer than necessary. Their confidence reads in the pacing of everything: slower turns, deliberate pauses, a smile that lands like an invitation rather than an accident.",
     "alternate_descriptions": {
-        "auditory": "A voice drops a register—words spaced with deliberate pauses, as if the silence is part of the touch.",
-        "olfactory": "I smell clean warmth—skin, faint fragrance, and the quiet certainty of someone comfortable being desired."
+        "auditory": "A voice drops a register-words spaced with deliberate pauses, as if the silence is part of the touch.",
+        "olfactory": "I smell clean warmth-skin, faint fragrance, and the quiet certainty of someone comfortable being desired."
     },
     "tags": [
         "sexual",
@@ -160,5 +129,6 @@
         "seductive",
         "control",
         "swagger"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

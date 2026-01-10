@@ -132,10 +132,10 @@
             }
         }
     ],
-    "actor_description": "Heat climbs my neck and face like a rash. My stomach drops—empty, sick—and my thoughts tighten into one ugly sentence: they saw that. I can feel my posture trying to fold in on itself, shoulders up, chin down, as if smaller would mean safer. My mouth goes dry. I want to say something—anything—to cover it, but every word feels like it'll make the spotlight brighter.",
-    "description_text": "{actor} visibly contracts—shoulders rounding, chin dipping. Their gaze snaps down or away, and they touch their face or chest like they're checking whether they're exposed. A flush rises unevenly; their breathing turns shallow, as if they're bracing for impact.",
+    "actor_description": "Heat climbs my neck and face like a rash. My stomach drops-empty, sick-and my thoughts tighten into one ugly sentence: they saw that. I can feel my posture trying to fold in on itself, shoulders up, chin down, as if smaller would mean safer. My mouth goes dry. I want to say something-anything-to cover it, but every word feels like it'll make the spotlight brighter.",
+    "description_text": "{actor} visibly contracts-shoulders rounding, chin dipping. Their gaze snaps down or away, and they touch their face or chest like they're checking whether they're exposed. A flush rises unevenly; their breathing turns shallow, as if they're bracing for impact.",
     "alternate_descriptions": {
-        "auditory": "I hear a small, strangled sound—half laugh, half choke—followed by a sudden silence, like someone swallowed the rest of their sentence.",
+        "auditory": "I hear a small, strangled sound-half laugh, half choke-followed by a sudden silence, like someone swallowed the rest of their sentence.",
         "tactile": "A body pulls inward; the air feels tighter, as if someone's trying to occupy less space without moving."
     },
     "tags": [
@@ -144,5 +144,5 @@
         "acute",
         "avoidance"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "rare"
 }

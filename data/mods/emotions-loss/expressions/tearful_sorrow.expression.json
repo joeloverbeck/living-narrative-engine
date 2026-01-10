@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.sadness"
                             },
-                            0.65
+                            0.62
                         ]
                     },
                     {
@@ -76,24 +76,9 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.loneliness"
+                                        "var": "emotions.lonely_yearning"
                                     },
-                                    0.55
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.sadness"
-                                            },
-                                            {
-                                                "var": "previousEmotions.sadness"
-                                            }
-                                        ]
-                                    },
-                                    0.1
+                                    0.45
                                 ]
                             }
                         ]
@@ -103,7 +88,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            -5
+                            -25
                         ]
                     },
                     {
@@ -124,14 +109,101 @@
                     }
                 ]
             },
-            "failure_message": "Requires high sadness with low numbness and a grief/disappointment/loneliness flavor (or sadness spike), arousal in a crying-compatible band; explicitly blocks significant dissociation so checked-out states don't generate tearful affect beats."
+            "failure_message": "Requires high sadness with low numbness and low dissociation; needs a grief/disappointment/lonely-yearning flavor; arousal must be in a crying-compatible band (not collapsed/flat, not manic)."
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.sadness"
+                                    },
+                                    0.62
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    0.62
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    {
+                                        "var": "previousEmotions.sadness"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.grief"
+                                    },
+                                    {
+                                        "var": "previousEmotions.grief"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    {
+                                        "var": "previousEmotions.lonely_yearning"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousMoodAxes.self_evaluation"
+                                    },
+                                    {
+                                        "var": "moodAxes.self_evaluation"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Change-gate: requires a sadness crossing/spike, grief spike, lonely-yearning spike, or a sharp self-worth dip so crying doesn't spam while sadness stays high."
         }
     ],
-    "actor_description": "The tears don't ask permission. My throat tightens and suddenly my eyes are hot—like my body found the truth before I did. I try to swallow it down, to keep my face steady, and that only makes it worse. Breath catches. Chest aches. The smallest thought—one image, one sentence—tips me over the edge again. I'm not performing it. I'm not choosing it. It's just grief leaking out through the only place it can fit, and I can feel myself folding inward around whatever hurts.",
-    "description_text": "{actor} blinks hard, but their eyes glass over anyway. Their mouth tightens, chin trembling as they fight for control—and then the fight loses. A quiet hitching breath, shoulders drawing in, and tears gather and spill with the kind of inevitability that makes onlookers instinctively soften.",
+    "actor_description": "The tears don't ask permission. My throat tightens and suddenly my eyes are hot-like my body found the truth before I did. I try to swallow it down, to keep my face steady, and that only makes it worse. Breath catches. Chest aches. The smallest thought-one image, one sentence-tips me over the edge again. I'm not performing it. I'm not choosing it. It's just grief leaking out through the only place it can fit, and I can feel myself folding inward around whatever hurts.",
+    "description_text": "{actor} blinks hard, but their eyes glass over anyway. Their mouth tightens, chin trembling as they fight for control-and then the fight loses. A quiet hitching breath, shoulders drawing in, and tears gather and spill with the kind of inevitability that makes onlookers instinctively soften.",
     "alternate_descriptions": {
-        "auditory": "I hear a breath snag nearby—then a careful attempt to steady it, the thin sound of someone losing that battle.",
-        "tactile": "Someone is trembling—small, involuntary shakes that travel through their posture as if they're trying to hold themselves together from the inside."
+        "auditory": "I hear a breath snag nearby-then a careful attempt to steady it, the thin sound of someone losing that battle.",
+        "tactile": "Someone is trembling-small, involuntary shakes that travel through their posture as if they're trying to hold themselves together from the inside."
     },
     "tags": [
         "sadness",

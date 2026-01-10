@@ -44,6 +44,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -147,11 +155,11 @@
             }
         }
     ],
-    "actor_description": "It surges up hot and immediate, and I clamp down so hard it feels like biting metal. My jaw locks; my tongue presses against my teeth; my hands want to do something—hit, throw, shove—and I keep them still by force. I take a measured breath like it's a rule I have to follow, and the anger doesn't go away; it just gets packed tighter, louder, closer to the surface.",
-    "description_text": "{actor} holds themself unnaturally steady—jaw set, shoulders tight, movements clipped and over-controlled. Their face stays composed in a way that reads practiced rather than calm, and any words that come out arrive carefully shaped, as if they're managing an explosion one syllable at a time.",
+    "actor_description": "It surges up hot and immediate, and I clamp down so hard it feels like biting metal. My jaw locks; my tongue presses against my teeth; my hands want to do something-hit, throw, shove-and I keep them still by force. I take a measured breath like it's a rule I have to follow, and the anger doesn't go away; it just gets packed tighter, louder, closer to the surface.",
+    "description_text": "{actor} holds themself unnaturally steady-jaw set, shoulders tight, movements clipped and over-controlled. Their face stays composed in a way that reads practiced rather than calm, and any words that come out arrive carefully shaped, as if they're managing an explosion one syllable at a time.",
     "alternate_descriptions": {
-        "auditory": "I hear a hard swallow, breath measured through the nose, and the faint grind of teeth—silence with pressure behind it, like a door being held shut.",
-        "tactile": "The air feels charged. A body is rigid with restraint—heat, tension, and tiny tremors contained under stillness."
+        "auditory": "I hear a hard swallow, breath measured through the nose, and the faint grind of teeth-silence with pressure behind it, like a door being held shut.",
+        "tactile": "The air feels charged. A body is rigid with restraint-heat, tension, and tiny tremors contained under stillness."
     },
     "tags": [
         "anger",

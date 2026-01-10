@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-agency:triumphant_release",
-    "description": "A victory crest: pride and joy converge with energized relief—an outward sign of 'we did it.'",
+    "description": "A victory crest: pride and joy converge with energized relief-an outward sign of 'we did it.'",
     "priority": 82,
     "prerequisites": [
         {
@@ -109,12 +109,12 @@
             }
         }
     ],
-    "actor_description": "It lands—clean. For a second I'm not thinking, I'm feeling: heat in my chest, a sharp lift behind the ribs, the sudden lightness of pressure coming off. My shoulders drop like they were braced against something I stopped noticing. A laugh tries to get out; so does a shout. I taste salt and breath and the aftershock of effort, but underneath it is simple certainty: we won. I did that. The last few minutes rearrange themselves into something that was worth the strain.",
-    "description_text": "{actor} breaks open—tension giving way to a grin they don't bother to hide. Their posture expands, chest up, limbs looser, like a band snapped and the body remembered it has space. A sound escapes them—laughter, a shout, a sharp exhale that's half victory and half relief.",
+    "actor_description": "It lands-clean. For a second I'm not thinking, I'm feeling: heat in my chest, a sharp lift behind the ribs, the sudden lightness of pressure coming off. My shoulders drop like they were braced against something I stopped noticing. A laugh tries to get out; so does a shout. I taste salt and breath and the aftershock of effort, but underneath it is simple certainty: we won. I did that. The last few minutes rearrange themselves into something that was worth the strain.",
+    "description_text": "{actor} breaks open-tension giving way to a grin they don't bother to hide. Their posture expands, chest up, limbs looser, like a band snapped and the body remembered it has space. A sound escapes them-laughter, a shout, a sharp exhale that's half victory and half relief.",
     "alternate_descriptions": {
-        "auditory": "I hear a bright burst—laughter or a single victorious noise—followed by an exhale that sounds like pressure venting.",
-        "tactile": "A nearby presence suddenly gets bigger—energy spilling outward, movements wide and unguarded.",
-        "olfactory": "Warm breath and the salt of exertion drift by, but the acrid edge of stress is gone—lighter air, cleaner sweat."
+        "auditory": "I hear a bright burst-laughter or a single victorious noise-followed by an exhale that sounds like pressure venting.",
+        "tactile": "A nearby presence suddenly gets bigger-energy spilling outward, movements wide and unguarded.",
+        "olfactory": "Warm breath and the salt of exertion drift by, but the acrid edge of stress is gone-lighter air, cleaner sweat."
     },
     "tags": [
         "positive",

@@ -199,11 +199,11 @@
             }
         }
     ],
-    "actor_description": "The noise in my head drops out. My attention narrows until there’s only the next step, and my body keeps meeting it without hesitation. I’m not forcing anything—decisions arrive already made, corrections happen before they become mistakes, and time stops feeling like time. There’s a clean, quiet momentum to it, like I’m being pulled forward along a track I can finally trust.",
-    "description_text": "{actor} settles into a steady rhythm—minimal wasted motion, no visible searching, no second-guessing. Their focus holds without strain: eyes tracking precisely, hands moving with practiced economy, breathing even. They look absorbed in a way that’s hard to interrupt, as if the task has become the whole room.",
+    "actor_description": "The noise in my head drops out. My attention narrows until there's only the next step, and my body keeps meeting it without hesitation. I'm not forcing anything-decisions arrive already made, corrections happen before they become mistakes, and time stops feeling like time. There's a clean, quiet momentum to it, like I'm being pulled forward along a track I can finally trust.",
+    "description_text": "{actor} settles into a steady rhythm-minimal wasted motion, no visible searching, no second-guessing. Their focus holds without strain: eyes tracking precisely, hands moving with practiced economy, breathing even. They look absorbed in a way that's hard to interrupt, as if the task has become the whole room.",
     "alternate_descriptions": {
-        "auditory": "I hear a consistent cadence—small purposeful sounds without hesitation, breath keeping time like a metronome.",
-        "olfactory": "The air carries warm effort rather than stress—clean sweat, steady concentration, none of the sharp sour note of panic."
+        "auditory": "I hear a consistent cadence-small purposeful sounds without hesitation, breath keeping time like a metronome.",
+        "olfactory": "The air carries warm effort rather than stress-clean sweat, steady concentration, none of the sharp sour note of panic."
     },
     "tags": [
         "engagement",

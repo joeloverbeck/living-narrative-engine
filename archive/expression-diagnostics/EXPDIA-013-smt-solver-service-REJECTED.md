@@ -1,5 +1,17 @@
 # EXPDIA-013: Integrate Z3 WASM and Create SmtSolver Service
 
+> **STATUS: REJECTED (2026-01-09)**
+>
+> **Reason**: After analysis, the existing `PathSensitiveAnalyzer` and `MonteCarloSimulator` already provide equivalent functionality:
+> - PathSensitiveAnalyzer detects impossible expressions via empty axis intervals (mathematically equivalent to UNSAT)
+> - MonteCarloSimulator uses the exact same gate enforcement logic as production
+> - The proposed SMT encoding incorrectly models gate semantics (`Implies(emotion > 0, gate)` vs actual "IF gate fails THEN emotion = 0")
+> - Z3 WASM adds ~5MB bundle size for marginal benefit over existing tools
+>
+> See analysis: `.claude/plans/binary-strolling-wolf.md`
+
+---
+
 ## Summary
 
 Add Z3 WASM integration for formal verification of expression satisfiability. The SMT solver can mathematically prove expressions are impossible (returning an UNSAT core showing the conflicting constraints) or find satisfying assignments when possible.

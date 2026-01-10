@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.courage"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -28,7 +28,7 @@
                             {
                                 "var": "emotions.determination"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -36,7 +36,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -44,7 +44,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -117,7 +117,7 @@
                                     }
                                 ]
                             },
-                            0.10
+                            0.1
                         ]
                     },
                     {
@@ -148,7 +148,7 @@
                             {
                                 "var": "emotions.fatigue"
                             },
-                            0.70
+                            0.7
                         ]
                     }
                 ]
@@ -156,12 +156,12 @@
             "failure_message": "Requires courage + fear + determination with a real rise in resolve and credible threat signals; explicitly excludes panic (control collapse) via a low panic cap and an agency floor, excludes freeze, and avoids being flattened by numbness/fatigue."
         }
     ],
-    "actor_description": "The fear is still there—sharp, bright, insisting—but I stop negotiating with it. I draw one clean breath, set my jaw, and make my hands behave. My pulse bangs in my wrists. Fine. We're doing this scared.",
-    "description_text": "{actor} squares up like they've chosen a line and won't step back from it. Their breathing goes measured; their posture tightens into purpose. There's still fear in them—small tremors, a hard swallow—but their focus doesn't waver.",
+    "actor_description": "The fear is still there-sharp, bright, insisting-but I stop negotiating with it. I draw one clean breath, set my jaw, and make my hands behave. My pulse bangs in my wrists. Fine. We're doing this scared.",
+    "description_text": "{actor} squares up like they've chosen a line and won't step back from it. Their breathing goes measured; their posture tightens into purpose. There's still fear in them-small tremors, a hard swallow-but their focus doesn't waver.",
     "alternate_descriptions": {
-        "auditory": "I hear a controlled inhale, then a slow exhale—breathing that sounds like someone taking command of themselves.",
+        "auditory": "I hear a controlled inhale, then a slow exhale-breathing that sounds like someone taking command of themselves.",
         "olfactory": "I smell a clean spike of adrenaline-sweat, sharp but controlled.",
-        "tactile": "Someone's body goes rigid for a beat, then steadies—tension reorganizing into readiness instead of panic."
+        "tactile": "Someone's body goes rigid for a beat, then steadies-tension reorganizing into readiness instead of panic."
     },
     "tags": [
         "courage",
@@ -170,5 +170,6 @@
         "resolve",
         "bravery",
         "visible"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

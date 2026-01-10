@@ -110,11 +110,11 @@
             }
         }
     ],
-    "actor_description": "I don’t get it. I keep turning it over and it keeps coming back wrong. My brow tightens; I replay what I just saw or heard, hunting the missing step like it’s hiding in plain sight. The more I try to force it to click, the more it resists. I can feel my attention snagging—wait, how does that follow?—stuck at the point where the logic should bridge and doesn’t.",
+    "actor_description": "I don't get it. I keep turning it over and it keeps coming back wrong. My brow tightens; I replay what I just saw or heard, hunting the missing step like it's hiding in plain sight. The more I try to force it to click, the more it resists. I can feel my attention snagging-wait, how does that follow?-stuck at the point where the logic should bridge and doesn't.",
     "description_text": "{actor} pauses, brow creasing as they look from one thing to another. Their head tilts, then stills; their eyes track as if trying to map an invisible route. They hover on the verge of speaking and stop again, caught between questions.",
     "alternate_descriptions": {
-        "auditory": "I hear speech that starts, revises, and starts again—half-questions, little “wait—” sounds, the cadence of someone checking their own assumptions.",
-        "tactile": "Someone's body holds a searching tension—still, but not relaxed, like their attention is reaching for something it can’t quite grasp."
+        "auditory": "I hear speech that starts, revises, and starts again-half-questions, little “wait-” sounds, the cadence of someone checking their own assumptions.",
+        "tactile": "Someone's body holds a searching tension-still, but not relaxed, like their attention is reaching for something it can't quite grasp."
     },
     "tags": [
         "confusion",
@@ -123,5 +123,5 @@
         "uncertainty",
         "cognitive"
     ],
-    "diagnosticStatus": "frequent"
+    "diagnosticStatus": "normal"
 }

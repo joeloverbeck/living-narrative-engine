@@ -141,10 +141,11 @@ class MonteCarloSimulator {
 
       // Process chunk synchronously (fast enough not to block)
       for (let i = processed; i < chunkEnd; i++) {
-        const state = this.#generateRandomState(distribution);
+        const { current, previous } = this.#generateRandomState(distribution);
         const result = this.#evaluateWithTracking(
           expression,
-          state,
+          current,
+          previous,
           clauseTracking
         );
 
@@ -192,30 +193,75 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Generate random state based on distribution
+   * Generate correlated random state pairs based on distribution.
+   *
+   * Generates previous state randomly, then derives current state by adding
+   * Gaussian deltas. This enables "persistence-style" expressions that check
+   * previousEmotions, previousMoodAxes, or delta magnitudes.
    *
    * @private
-   * @param {DistributionType} distribution
-   * @returns {{mood: object, sexual: object}}
+   * @param {DistributionType} distribution - The sampling distribution to use
+   * @returns {{current: {mood: object, sexual: object}, previous: {mood: object, sexual: object}}}
    */
   #generateRandomState(distribution) {
     const moodAxes = ['valence', 'arousal', 'agency_control', 'threat', 'engagement', 'future_expectancy', 'self_evaluation'];
 
-    const mood = {};
-    const sexual = {};
+    // Generate previous state first (fully random)
+    const previousMood = {};
+    const previousSexual = {};
 
-    // Mood axes use [-100, 100] integer scale (matching core:mood component schema)
+    // Previous mood axes use [-100, 100] integer scale (matching core:mood component schema)
     for (const axis of moodAxes) {
-      mood[axis] = Math.round(this.#sampleValue(distribution, -100, 100));
+      previousMood[axis] = Math.round(this.#sampleValue(distribution, -100, 100));
     }
 
-    // Sexual axes use integer scale matching core:sexual_state component schema
-    // sex_excitation: [0, 100], sex_inhibition: [0, 100], baseline_libido: [-50, 50]
-    sexual.sex_excitation = Math.round(this.#sampleValue(distribution, 0, 100));
-    sexual.sex_inhibition = Math.round(this.#sampleValue(distribution, 0, 100));
-    sexual.baseline_libido = Math.round(this.#sampleValue(distribution, -50, 50));
+    // Previous sexual axes use integer scale matching core:sexual_state component schema
+    previousSexual.sex_excitation = Math.round(this.#sampleValue(distribution, 0, 100));
+    previousSexual.sex_inhibition = Math.round(this.#sampleValue(distribution, 0, 100));
+    previousSexual.baseline_libido = Math.round(this.#sampleValue(distribution, -50, 50));
 
-    return { mood, sexual };
+    // Generate current state as previous + gaussian delta (correlated temporal states)
+    // This enables "persistence-style" expressions that check deltas between previous and current
+    const currentMood = {};
+    const currentSexual = {};
+
+    // Mood delta: σ=15 gives ~68% of deltas within ±15 units (15% of full range)
+    // Increased from 10 to enable threshold-crossing expressions to trigger
+    const MOOD_DELTA_SIGMA = 15;
+    for (const axis of moodAxes) {
+      const delta = this.#sampleGaussianDelta(MOOD_DELTA_SIGMA);
+      const raw = previousMood[axis] + delta;
+      // Clamp to valid range [-100, 100]
+      currentMood[axis] = Math.round(Math.max(-100, Math.min(100, raw)));
+    }
+
+    // Sexual state deltas with appropriate sigma for their ranges
+    // Increased from σ=8 to σ=12 for excitation/inhibition to enable crossing gates
+    // Increased from σ=5 to σ=8 for libido proportionally
+    // sex_excitation and sex_inhibition: [0, 100], σ=12 (~12% of range)
+    // baseline_libido: [-50, 50], σ=8 (~8% of range)
+    const SEXUAL_DELTA_SIGMA = 12;
+    const LIBIDO_DELTA_SIGMA = 8;
+
+    const excitationDelta = this.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
+    currentSexual.sex_excitation = Math.round(
+      Math.max(0, Math.min(100, previousSexual.sex_excitation + excitationDelta))
+    );
+
+    const inhibitionDelta = this.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
+    currentSexual.sex_inhibition = Math.round(
+      Math.max(0, Math.min(100, previousSexual.sex_inhibition + inhibitionDelta))
+    );
+
+    const libidoDelta = this.#sampleGaussianDelta(LIBIDO_DELTA_SIGMA);
+    currentSexual.baseline_libido = Math.round(
+      Math.max(-50, Math.min(50, previousSexual.baseline_libido + libidoDelta))
+    );
+
+    return {
+      current: { mood: currentMood, sexual: currentSexual },
+      previous: { mood: previousMood, sexual: previousSexual },
+    };
   }
 
   /**
@@ -241,6 +287,23 @@ class MonteCarloSimulator {
 
     // Uniform distribution
     return min + Math.random() * (max - min);
+  }
+
+
+  /**
+   * Samples a Gaussian (normal) random delta centered at zero.
+   * Used for generating correlated temporal state pairs where
+   * current = previous + delta.
+   *
+   * @param {number} sigma - Standard deviation (default 10 for mood axes on [-100,100] scale)
+   * @returns {number} A random delta from N(0, sigma²)
+   */
+  #sampleGaussianDelta(sigma = 10) {
+    // Box-Muller transform for standard normal
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return z * sigma;
   }
 
   /**
@@ -308,14 +371,15 @@ class MonteCarloSimulator {
    * Evaluate expression with clause tracking (includes hierarchical breakdown)
    *
    * @private
-   * @param {object} expression
-   * @param {{mood: object, sexual: object}} state
-   * @param {Array|null} clauseTracking
+   * @param {object} expression - The expression to evaluate
+   * @param {{mood: object, sexual: object}} currentState - Current mood/sexual state
+   * @param {{mood: object, sexual: object}} previousState - Previous mood/sexual state (for temporal comparisons)
+   * @param {Array|null} clauseTracking - Tracking array for clause failures
    * @returns {{triggered: boolean}}
    */
-  #evaluateWithTracking(expression, state, clauseTracking) {
-    // Build context from state
-    const context = this.#buildContext(state);
+  #evaluateWithTracking(expression, currentState, previousState, clauseTracking) {
+    // Build context from current and previous states
+    const context = this.#buildContext(currentState, previousState);
 
     // Evaluate each prerequisite separately for tracking
     if (clauseTracking && expression?.prerequisites) {
@@ -351,38 +415,113 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Build evaluation context from state
+   * Build evaluation context from current and previous states
+   *
+   * Calculates derived emotions and sexual states from both current and previous
+   * mood/sexual axes, enabling "persistence-style" expressions that compare
+   * current vs previous values or check delta magnitudes.
    *
    * @private
-   * @param {{mood: object, sexual: object}} state
-   * @returns {object}
+   * @param {{mood: object, sexual: object}} currentState - Current mood and sexual state
+   * @param {{mood: object, sexual: object}} previousState - Previous mood and sexual state
+   * @returns {object} Context object with moodAxes, emotions, sexualStates, and their previous counterparts
    */
-  #buildContext(state) {
-    // Calculate emotions from mood using prototypes
+  #buildContext(currentState, previousState) {
+    // Calculate current emotions from current mood using prototypes
     // Note: #calculateEmotions normalizes mood from [-100,100] to [-1,1] internally
-    const emotions = this.#calculateEmotions(state.mood);
+    const emotions = this.#calculateEmotions(currentState.mood);
 
-    // Calculate sexualArousal from raw sexual state (derived value)
-    const sexualArousal = this.#calculateSexualArousal(state.sexual);
+    // Calculate current sexualArousal from raw sexual state (derived value)
+    const sexualArousal = this.#calculateSexualArousal(currentState.sexual);
 
-    // Calculate sexual states, passing the derived sexualArousal for prototype weights
-    const sexualStates = this.#calculateSexualStates(state.sexual, sexualArousal);
+    // Calculate current sexual states, passing the derived sexualArousal for prototype weights
+    const sexualStates = this.#calculateSexualStates(currentState.sexual, sexualArousal);
 
-    // Build previous states (zeroed for Monte Carlo - no temporal context)
-    const previousEmotions = this.#createZeroedEmotions();
-    const previousSexualStates = this.#createZeroedSexualStates();
-    const previousMoodAxes = this.#createZeroedMoodAxes();
+    // Calculate previous emotions from previous mood (NOT zeroed!)
+    // This enables "persistence-style" expressions like lingering_guilt
+    const previousEmotions = this.#calculateEmotions(previousState.mood);
+
+    // Calculate previous sexual arousal and states from previous state
+    const previousSexualArousal = this.#calculateSexualArousal(previousState.sexual);
+    const previousSexualStates = this.#calculateSexualStates(
+      previousState.sexual,
+      previousSexualArousal
+    );
+
+    // Previous mood axes directly from previous state
+    const previousMoodAxes = previousState.mood;
 
     return {
-      mood: state.mood,
-      moodAxes: state.mood, // Alias for expressions that check moodAxes.*
+      mood: currentState.mood,
+      moodAxes: currentState.mood, // Alias for expressions that check moodAxes.*
       emotions,
       sexualStates,
       sexualArousal, // Derived value available for expression evaluation
       previousEmotions,
       previousSexualStates,
       previousMoodAxes,
+      previousSexualArousal, // Derived value for previous state arousal comparisons
     };
+  }
+
+  /**
+   * Parse a gate string into its components.
+   * Gate format: "axis operator value" (e.g., "threat >= 0.30")
+   *
+   * @private
+   * @param {string} gate - Gate string to parse
+   * @returns {{axis: string, operator: string, value: number} | null}
+   */
+  #parseGate(gate) {
+    const match = gate.match(/^(\w+)\s*(>=|<=|>|<|==)\s*(-?\d+\.?\d*)$/);
+    if (!match) return null;
+    return { axis: match[1], operator: match[2], value: parseFloat(match[3]) };
+  }
+
+  /**
+   * Check if all gates pass for a prototype.
+   * Gates must ALL pass for the emotion to be calculated; otherwise intensity = 0.
+   * This matches EmotionCalculatorService.#checkGates() behavior.
+   *
+   * @private
+   * @param {string[] | undefined} gates - Array of gate strings
+   * @param {object} normalizedAxes - Normalized axis values (in [-1, 1] or [0, 1] range)
+   * @returns {boolean} - True if all gates pass or no gates defined
+   */
+  #checkGates(gates, normalizedAxes) {
+    if (!gates || !Array.isArray(gates) || gates.length === 0) return true;
+
+    for (const gate of gates) {
+      const parsed = this.#parseGate(gate);
+      if (!parsed) continue;
+
+      const { axis, operator, value } = parsed;
+      const axisValue = normalizedAxes[axis];
+      if (axisValue === undefined) continue;
+
+      let passes;
+      switch (operator) {
+        case '>=':
+          passes = axisValue >= value;
+          break;
+        case '<=':
+          passes = axisValue <= value;
+          break;
+        case '>':
+          passes = axisValue > value;
+          break;
+        case '<':
+          passes = axisValue < value;
+          break;
+        case '==':
+          passes = Math.abs(axisValue - value) < 0.0001;
+          break;
+        default:
+          passes = true;
+      }
+      if (!passes) return false;
+    }
+    return true;
   }
 
   /**
@@ -405,6 +544,13 @@ class MonteCarloSimulator {
 
     const emotions = {};
     for (const [id, prototype] of Object.entries(lookup.entries)) {
+      // Check gates first - emotion intensity is 0 if any gate fails
+      // This matches EmotionCalculatorService.#calculatePrototypeIntensity() behavior
+      if (!this.#checkGates(prototype.gates, normalizedMood)) {
+        emotions[id] = 0;
+        continue;
+      }
+
       if (prototype.weights) {
         let sum = 0;
         let weightSum = 0;
@@ -467,6 +613,13 @@ class MonteCarloSimulator {
 
     const states = {};
     for (const [id, prototype] of Object.entries(lookup.entries)) {
+      // Check gates first - state intensity is 0 if any gate fails
+      // This matches EmotionCalculatorService behavior for sexual states
+      if (!this.#checkGates(prototype.gates, normalizedAxes)) {
+        states[id] = 0;
+        continue;
+      }
+
       if (prototype.weights) {
         let sum = 0;
         let weightSum = 0;
@@ -614,48 +767,6 @@ class MonteCarloSimulator {
     if (level >= 0.95) return 1.96;
     if (level >= 0.9) return 1.645;
     return 1.96; // Default to 95%
-  }
-
-  /**
-   * Create zeroed emotions object from prototypes
-   *
-   * @private
-   * @returns {object}
-   */
-  #createZeroedEmotions() {
-    const lookup = this.#dataRegistry.get('lookups', 'core:emotion_prototypes');
-    if (!lookup?.entries) return {};
-    return Object.fromEntries(Object.keys(lookup.entries).map((k) => [k, 0]));
-  }
-
-  /**
-   * Create zeroed sexual states object from prototypes
-   *
-   * @private
-   * @returns {object}
-   */
-  #createZeroedSexualStates() {
-    const lookup = this.#dataRegistry.get('lookups', 'core:sexual_prototypes');
-    if (!lookup?.entries) return {};
-    return Object.fromEntries(Object.keys(lookup.entries).map((k) => [k, 0]));
-  }
-
-  /**
-   * Create zeroed mood axes object
-   *
-   * @private
-   * @returns {object}
-   */
-  #createZeroedMoodAxes() {
-    return {
-      valence: 0,
-      arousal: 0,
-      agency_control: 0,
-      threat: 0,
-      engagement: 0,
-      future_expectancy: 0,
-      self_evaluation: 0,
-    };
   }
 
   // ============================================================
@@ -943,10 +1054,11 @@ class MonteCarloSimulator {
       'previousEmotions',
       'previousSexualStates',
       'previousMoodAxes',
+      'previousSexualArousal',
     ]);
 
     // Keys that are scalar (cannot have nested properties)
-    const scalarKeys = new Set(['sexualArousal']);
+    const scalarKeys = new Set(['sexualArousal', 'previousSexualArousal']);
 
     // Nested keys for each category (from prototypes + hardcoded mood axes)
     const nestedKeys = {

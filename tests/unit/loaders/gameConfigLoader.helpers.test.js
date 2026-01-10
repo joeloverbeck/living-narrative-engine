@@ -96,7 +96,7 @@ describe('GameConfigLoader helper methods', () => {
           '/game.json',
           'game.json'
         )
-      ).toThrow('Schema ID for ‘game’ configuration type not configured.');
+      ).toThrow("Schema ID for 'game' configuration type not configured.");
       expect(logger.error).toHaveBeenCalledWith(
         "FATAL: Schema ID for 'game' configuration type not found in IConfiguration."
       );

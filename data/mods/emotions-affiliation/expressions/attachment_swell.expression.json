@@ -26,6 +26,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
                             0.18
@@ -94,10 +102,10 @@
             }
         }
     ],
-    "actor_description": "It comes on as warmth before it becomes thought—an easing under my ribs, like my body recognizes them as safe and important. My breathing slows without permission. My shoulders loosen. I feel pulled toward them in a simple, steady way. Not hunger. Not panic. Just this quiet certainty: you matter to me. I want to keep them close enough to protect, close enough to be useful. My voice goes softer. I find myself angling my body toward them like that's the most natural thing in the world.",
-    "description_text": "{actor} softens visibly—features easing, attention settling with unhurried steadiness. They orient toward the person they care about, closing distance by small degrees: a half-step nearer, a protective angle of the shoulders, a warmth in the face that doesn't ask permission.",
+    "actor_description": "It comes on as warmth before it becomes thought-an easing under my ribs, like my body recognizes them as safe and important. My breathing slows without permission. My shoulders loosen. I feel pulled toward them in a simple, steady way. Not hunger. Not panic. Just this quiet certainty: you matter to me. I want to keep them close enough to protect, close enough to be useful. My voice goes softer. I find myself angling my body toward them like that's the most natural thing in the world.",
+    "description_text": "{actor} softens visibly-features easing, attention settling with unhurried steadiness. They orient toward the person they care about, closing distance by small degrees: a half-step nearer, a protective angle of the shoulders, a warmth in the face that doesn't ask permission.",
     "alternate_descriptions": {
-        "tactile": "Someone's presence feels grounding—steady and warm, like someone has decided to stay."
+        "tactile": "Someone's presence feels grounding-steady and warm, like someone has decided to stay."
     },
     "tags": [
         "attachment",

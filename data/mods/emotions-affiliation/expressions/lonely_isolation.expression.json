@@ -10,9 +10,17 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.loneliness"
+                                "var": "emotions.withdrawn_isolation"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -10
                         ]
                     },
                     {
@@ -21,6 +29,14 @@
                                 "var": "moodAxes.valence"
                             },
                             -15
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.35
                         ]
                     },
                     {
@@ -59,14 +75,29 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.loneliness"
+                                                "var": "emotions.withdrawn_isolation"
                                             },
                                             {
-                                                "var": "previousEmotions.loneliness"
+                                                "var": "previousEmotions.withdrawn_isolation"
                                             }
                                         ]
                                     },
                                     0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
                                 ]
                             },
                             {
@@ -112,13 +143,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires loneliness dominant (with low connection emotions), mildly negative valence, not full despair, and a notable loneliness rise or connection-drop shift to avoid constant firing."
+            "failure_message": "Requires withdrawn_isolation dominant + low engagement (disconnection), negative valence, low connection-emotions, explicitly excludes lonely_yearning (aching reach), caps below despair, and needs a withdrawal/engagement drop/connection drop change-gate to avoid constant firing."
         }
     ],
-    "actor_description": "The room has people in it, noise in it—maybe even faces turned my way—and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",
-    "description_text": "{actor} drifts behind their own eyes. Their posture closes—shoulders in, hands kept near the body—as if they're taking up less space. They answer a beat late, when they answer at all, like the room is slightly out of range.",
+    "actor_description": "The room has people in it, noise in it-maybe even faces turned my way-and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",
+    "description_text": "{actor} drifts behind their own eyes. Their posture closes-shoulders in, hands kept near the body-as if they're taking up less space. They answer a beat late, when they answer at all, like the room is slightly out of range.",
     "tags": [
-        "loneliness",
+        "withdrawn_isolation",
         "isolation",
         "disconnection"
     ],

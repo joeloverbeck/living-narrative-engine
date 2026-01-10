@@ -96,12 +96,12 @@
             }
         }
     ],
-    "actor_description": "It hits like a lift under the ribs—too bright to hold neatly. My chest feels wide, my skin lightly charged, thoughts sprinting ahead of my mouth. I want to move, to speak, to share the fact of being alive right now. Even my laughter feels involuntary, like my body is leaking sunlight.",
-    "description_text": "{actor} looks lit from the inside—eyes bright, movements quick and expansive. They talk faster, gesture bigger, laugh easier, as if joy has overflowed its container and started steering their whole body.",
+    "actor_description": "It hits like a lift under the ribs-too bright to hold neatly. My chest feels wide, my skin lightly charged, thoughts sprinting ahead of my mouth. I want to move, to speak, to share the fact of being alive right now. Even my laughter feels involuntary, like my body is leaking sunlight.",
+    "description_text": "{actor} looks lit from the inside-eyes bright, movements quick and expansive. They talk faster, gesture bigger, laugh easier, as if joy has overflowed its container and started steering their whole body.",
     "alternate_descriptions": {
-        "auditory": "I hear a sudden laugh—unforced—and speech that comes out too fast, words tripping over themselves.",
+        "auditory": "I hear a sudden laugh-unforced-and speech that comes out too fast, words tripping over themselves.",
         "tactile": "The air feels busier; footsteps, shifting weight, and restless motion radiate like heat from a small fire.",
-        "olfactory": "I smell warm breath, a hint of sweat, and that clean edge of adrenaline—energy turning outward."
+        "olfactory": "I smell warm breath, a hint of sweat, and that clean edge of adrenaline-energy turning outward."
     },
     "tags": [
         "joy",
@@ -109,5 +109,5 @@
         "energy",
         "positive"
     ],
-    "diagnosticStatus": "frequent"
+    "diagnosticStatus": "normal"
 }

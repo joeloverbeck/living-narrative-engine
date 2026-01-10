@@ -60,6 +60,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -80,7 +88,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -155,7 +163,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and reduced control; explicitly excludes dissociation; stays below true panic (panic cap) so panic_onset can own the control-collapse moment; excludes freeze and uses a stress/arousal increase gate."
+            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and reduced control; excludes dissociation and stays below panic/freeze/terror/hypervigilance. Caps lonely_yearning so 'aching preoccupation' doesn't muddy an overloaded-pressure beat; gated by stress/arousal increase."
         }
     ],
     "actor_description": "My mind fills up faster than it can empty. Thoughts stack, priorities blur, and everything starts arriving with the same sharp insistence. I can feel my body trying to sprint while my attention keeps snagging—breath quick, shoulders tight, jaw set. I want to force the moment to behave, and the strain shows in how little room I have left for anything else.",

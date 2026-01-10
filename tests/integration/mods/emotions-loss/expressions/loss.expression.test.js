@@ -136,11 +136,39 @@ describe('Emotions loss expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
-      emotions: { sadness: 0.7, numbness: 0.2 },
+      emotions: {
+        sadness: 0.7,
+        numbness: 0.2,
+        dissociation: 0.1,
+        rage: 0.2,
+        terror: 0.2,
+        disgust: 0.2,
+        grief: 0.45,
+        disappointment: 0.2,
+        lonely_yearning: 0.2,
+      },
+      moodAxes: {
+        arousal: 10,
+        self_evaluation: 10,
+      },
     };
 
     const failingContext = {
-      emotions: { sadness: 0.7, numbness: 0.5 },
+      emotions: {
+        sadness: 0.7,
+        numbness: 0.5,
+        dissociation: 0.1,
+        rage: 0.2,
+        terror: 0.2,
+        disgust: 0.2,
+        grief: 0.45,
+        disappointment: 0.2,
+        lonely_yearning: 0.2,
+      },
+      moodAxes: {
+        arousal: 10,
+        self_evaluation: 10,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);
@@ -193,41 +221,57 @@ describe('Emotions loss expressions', () => {
     expect(jsonLogicService.evaluate(logic, failingContext)).toBe(false);
   });
 
-  it('lonely_isolation requires sufficient loneliness', () => {
+  it('lonely_isolation requires sufficient withdrawn_isolation', () => {
     const expression = expressionsById['emotions-affiliation:lonely_isolation'];
     const logic = expression.prerequisites[0].logic;
 
     const passingContext = {
       emotions: {
-        loneliness: 0.6,
+        withdrawn_isolation: 0.6,
         affection: 0.3,
-        love_attachment: 0.3,
-        trust: 0.3,
-        gratitude: 0.3,
+        love_attachment: 0.2,
+        trust: 0.2,
+        gratitude: 0.25,
         despair: 0.5,
+        lonely_yearning: 0.2,
       },
       moodAxes: {
+        engagement: -20,
         valence: -20,
       },
       previousEmotions: {
-        loneliness: 0.45,
+        withdrawn_isolation: 0.45,
+        affection: 0.4,
+        love_attachment: 0.4,
+        trust: 0.4,
+      },
+      previousMoodAxes: {
+        engagement: -5,
       },
     };
 
     const failingContext = {
       emotions: {
-        loneliness: 0.4,
+        withdrawn_isolation: 0.4,
         affection: 0.3,
-        love_attachment: 0.3,
-        trust: 0.3,
-        gratitude: 0.3,
+        love_attachment: 0.2,
+        trust: 0.2,
+        gratitude: 0.25,
         despair: 0.5,
+        lonely_yearning: 0.2,
       },
       moodAxes: {
+        engagement: -20,
         valence: -20,
       },
       previousEmotions: {
-        loneliness: 0.45,
+        withdrawn_isolation: 0.45,
+        affection: 0.4,
+        love_attachment: 0.4,
+        trust: 0.4,
+      },
+      previousMoodAxes: {
+        engagement: -5,
       },
     };
 

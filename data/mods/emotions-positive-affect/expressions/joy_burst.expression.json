@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-positive-affect:joy_burst",
-    "description": "A brief, spontaneous spike of joy that breaks through as a visible micro-celebration—light, bright, and hard to fully suppress.",
+    "description": "A brief, spontaneous spike of joy that breaks through as a visible micro-celebration-light, bright, and hard to fully suppress.",
     "priority": 74,
     "prerequisites": [
         {
@@ -114,11 +114,11 @@
             "failure_message": "Requires a clear upswing into high joy (not mixed with heavy grief/despair/numbness), with at least mild arousal/engagement consistent with a visible 'burst'."
         }
     ],
-    "actor_description": "It hits fast—like something unclenches behind my ribs. A laugh starts before I’ve decided to make one, and the air in my lungs turns light. For a second the world is simple. My face warms, my eyes sting with that clean, ridiculous brightness, and I can feel my body lean toward the moment instead of bracing away from it. I try to hold it in—out of habit—and it slips past anyway: the grin, the breath I didn’t realize I’d been rationing, the small rush of yes. I’m still me. Nothing’s solved. But right now my nervous system believes in good news.",
-    "description_text": "{actor} brightens all at once—like a light turning on behind their eyes. A grin breaks free, quick and unguarded, and a short laugh slips out before they can smooth it down. Their shoulders ease, posture loosening, as if something in them finally gave permission to feel good.",
+    "actor_description": "It hits fast-like something unclenches behind my ribs. A laugh starts before I've decided to make one, and the air in my lungs turns light. For a second the world is simple. My face warms, my eyes sting with that clean, ridiculous brightness, and I can feel my body lean toward the moment instead of bracing away from it. I try to hold it in-out of habit-and it slips past anyway: the grin, the breath I didn't realize I'd been rationing, the small rush of yes. I'm still me. Nothing's solved. But right now my nervous system believes in good news.",
+    "description_text": "{actor} brightens all at once-like a light turning on behind their eyes. A grin breaks free, quick and unguarded, and a short laugh slips out before they can smooth it down. Their shoulders ease, posture loosening, as if something in them finally gave permission to feel good.",
     "alternate_descriptions": {
-        "auditory": "I hear a sudden, clean laugh nearby—brief, involuntary, the kind that turns into a smile even in the dark.",
-        "tactile": "Someone close shifts with an easy looseness—breath deepening, tension leaving their body like a held string finally released."
+        "auditory": "I hear a sudden, clean laugh nearby-brief, involuntary, the kind that turns into a smile even in the dark.",
+        "tactile": "Someone close shifts with an easy looseness-breath deepening, tension leaving their body like a held string finally released."
     },
     "tags": [
         "positive",
