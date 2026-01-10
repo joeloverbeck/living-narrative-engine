@@ -1,0 +1,11 @@
+{
+  "id": "emotions-jealousy-possessiveness",
+  "version": "1.0.0",
+  "name": "emotions-jealousy-possessiveness",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "flustered_jealousy.expression.json"
+    ]
+  }
+}

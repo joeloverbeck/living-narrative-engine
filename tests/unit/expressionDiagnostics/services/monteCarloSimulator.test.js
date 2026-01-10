@@ -304,6 +304,83 @@ describe('MonteCarloSimulator', () => {
           );
         }
       });
+
+      it('should include violationP50 and violationP90 in clauseFailures', async () => {
+        const expression = {
+          id: 'test:percentiles',
+          prerequisites: [
+            {
+              // High threshold means many failures with varying violations
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.9] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 200,
+          trackClauses: true,
+        });
+
+        expect(result.clauseFailures.length).toBeGreaterThan(0);
+        const clause = result.clauseFailures[0];
+        expect(clause).toHaveProperty('violationP50');
+        expect(clause).toHaveProperty('violationP90');
+      });
+
+      it('should have percentiles that match hierarchicalBreakdown', async () => {
+        const expression = {
+          id: 'test:percentile_match',
+          prerequisites: [
+            {
+              // High threshold ensures failures for testing
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.95] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 500,
+          trackClauses: true,
+        });
+
+        // With high threshold, we expect failures and breakdown
+        expect(result.clauseFailures.length).toBeGreaterThan(0);
+        const clause = result.clauseFailures[0];
+        expect(clause.hierarchicalBreakdown).not.toBeNull();
+        // The percentiles should match the hierarchical tree's percentiles
+        expect(clause.violationP50).toBe(clause.hierarchicalBreakdown.violationP50);
+        expect(clause.violationP90).toBe(clause.hierarchicalBreakdown.violationP90);
+      });
+
+      it('should return numeric percentiles when violations are recorded', async () => {
+        const expression = {
+          id: 'test:numeric_percentiles',
+          prerequisites: [
+            {
+              // Very high threshold ensures many failures with numeric violations
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.99] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 500,
+          trackClauses: true,
+        });
+
+        // With very high threshold (0.99), almost all samples fail
+        expect(result.clauseFailures.length).toBeGreaterThan(0);
+        const clause = result.clauseFailures[0];
+        // With 500 samples and 0.99 threshold, we expect many failures
+        expect(clause.failureCount).toBeGreaterThan(0);
+        expect(clause.hierarchicalBreakdown).not.toBeNull();
+        expect(clause.hierarchicalBreakdown.violationSampleCount).toBeGreaterThan(0);
+        // Percentiles should be numbers
+        expect(typeof clause.violationP50).toBe('number');
+        expect(typeof clause.violationP90).toBe('number');
+        // P90 should be >= P50
+        expect(clause.violationP90).toBeGreaterThanOrEqual(clause.violationP50);
+      });
     });
 
     describe('Expression trigger rate characteristics', () => {
@@ -1709,6 +1786,633 @@ describe('MonteCarloSimulator', () => {
             'unknown_nested_key'
           );
         });
+      });
+    });
+
+    describe('Threshold extraction', () => {
+      it('should extract threshold from >= operator', async () => {
+        const expression = {
+          id: 'test:threshold-gte',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.55] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.55);
+        expect(tree.comparisonOperator).toBe('>=');
+        expect(tree.variablePath).toBe('emotions.joy');
+      });
+
+      it('should extract threshold from <= operator', async () => {
+        const expression = {
+          id: 'test:threshold-lte',
+          prerequisites: [{ logic: { '<=': [{ var: 'emotions.fear' }, 0.3] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.3);
+        expect(tree.comparisonOperator).toBe('<=');
+        expect(tree.variablePath).toBe('emotions.fear');
+      });
+
+      it('should extract threshold from > operator', async () => {
+        const expression = {
+          id: 'test:threshold-gt',
+          prerequisites: [{ logic: { '>': [{ var: 'emotions.joy' }, 0.7] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.7);
+        expect(tree.comparisonOperator).toBe('>');
+        expect(tree.variablePath).toBe('emotions.joy');
+      });
+
+      it('should extract threshold from < operator', async () => {
+        const expression = {
+          id: 'test:threshold-lt',
+          prerequisites: [{ logic: { '<': [{ var: 'emotions.fear' }, 0.2] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.2);
+        expect(tree.comparisonOperator).toBe('<');
+        expect(tree.variablePath).toBe('emotions.fear');
+      });
+
+      it('should extract threshold from == operator', async () => {
+        const expression = {
+          id: 'test:threshold-eq',
+          prerequisites: [{ logic: { '==': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.5);
+        expect(tree.comparisonOperator).toBe('==');
+        expect(tree.variablePath).toBe('emotions.joy');
+      });
+
+      it('should handle reversed operand order (threshold on left)', async () => {
+        const expression = {
+          id: 'test:threshold-reversed',
+          prerequisites: [{ logic: { '>=': [0.3, { var: 'emotions.fear' }] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(0.3);
+        expect(tree.comparisonOperator).toBe('<='); // reversed
+        expect(tree.variablePath).toBe('emotions.fear');
+      });
+
+      it('should return null threshold for boolean conditions', async () => {
+        const expression = {
+          id: 'test:boolean',
+          prerequisites: [{ logic: { var: 'hasComponent' } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBeNull();
+        expect(tree.comparisonOperator).toBeNull();
+        expect(tree.variablePath).toBeNull();
+      });
+
+      it('should return null threshold for string comparisons', async () => {
+        const expression = {
+          id: 'test:string',
+          prerequisites: [{ logic: { '==': [{ var: 'state' }, 'active'] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBeNull();
+      });
+
+      it('should extract thresholds for leaf nodes in compound AND conditions', async () => {
+        const expression = {
+          id: 'test:compound-and',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.5] },
+                  { '<=': [{ var: 'emotions.fear' }, 0.2] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // AND node itself has no threshold
+        expect(tree.thresholdValue).toBeNull();
+        expect(tree.comparisonOperator).toBeNull();
+
+        // But children do
+        expect(tree.children[0].thresholdValue).toBe(0.5);
+        expect(tree.children[0].comparisonOperator).toBe('>=');
+        expect(tree.children[0].variablePath).toBe('emotions.joy');
+
+        expect(tree.children[1].thresholdValue).toBe(0.2);
+        expect(tree.children[1].comparisonOperator).toBe('<=');
+        expect(tree.children[1].variablePath).toBe('emotions.fear');
+      });
+
+      it('should extract thresholds for leaf nodes in compound OR conditions', async () => {
+        const expression = {
+          id: 'test:compound-or',
+          prerequisites: [
+            {
+              logic: {
+                or: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.8] },
+                  { '>=': [{ var: 'emotions.curiosity' }, 0.6] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // OR node itself has no threshold
+        expect(tree.thresholdValue).toBeNull();
+
+        // But children do
+        expect(tree.children[0].thresholdValue).toBe(0.8);
+        expect(tree.children[1].thresholdValue).toBe(0.6);
+      });
+
+      it('should handle integer thresholds', async () => {
+        const expression = {
+          id: 'test:integer-threshold',
+          prerequisites: [{ logic: { '>=': [{ var: 'mood.valence' }, 50] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.thresholdValue).toBe(50);
+        expect(tree.comparisonOperator).toBe('>=');
+        expect(tree.variablePath).toBe('mood.valence');
+      });
+    });
+
+    describe('Observed value extraction', () => {
+      it('should extract and record observed values during leaf evaluation', async () => {
+        const expression = {
+          id: 'test:observed-value',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.55] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 100 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // maxObservedValue should be set (some value between 0 and ~1)
+        expect(tree.maxObservedValue).not.toBeNull();
+        expect(typeof tree.maxObservedValue).toBe('number');
+        expect(tree.maxObservedValue).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should record observed values for all evaluations (pass and fail)', async () => {
+        // Use a moderate threshold where some samples pass and some fail
+        const expression = {
+          id: 'test:mixed-results',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.35] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 500,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // Max observed should reflect values from both passing and failing samples
+        expect(tree.maxObservedValue).not.toBeNull();
+        // With 500 samples, we should see a reasonably high max
+        expect(tree.maxObservedValue).toBeGreaterThan(0);
+      });
+
+      it('should include maxObservedValue in clause results', async () => {
+        const expression = {
+          id: 'test:max-observed-field',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree).toHaveProperty('maxObservedValue');
+      });
+
+      it('should include observedP99 in clause results', async () => {
+        const expression = {
+          id: 'test:observed-p99-field',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree).toHaveProperty('observedP99');
+        expect(tree.observedP99).not.toBeNull();
+      });
+
+      it('should include ceilingGap in clause results', async () => {
+        const expression = {
+          id: 'test:ceiling-gap-field',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.9] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree).toHaveProperty('ceilingGap');
+        // With threshold of 0.9, ceiling gap should be positive (unreachable for most)
+        expect(tree.ceilingGap).not.toBeNull();
+        expect(tree.thresholdValue).toBe(0.9);
+      });
+
+      it('should have observedP99 <= maxObservedValue', async () => {
+        const expression = {
+          id: 'test:p99-vs-max',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree.observedP99).toBeLessThanOrEqual(tree.maxObservedValue);
+      });
+
+      it('should calculate positive ceilingGap for unreachable thresholds', async () => {
+        // Very high threshold that's unlikely to be reached
+        const expression = {
+          id: 'test:high-threshold',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.99] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // ceilingGap = threshold - maxObserved; positive means ceiling effect
+        expect(tree.ceilingGap).toBeGreaterThan(0);
+      });
+
+      it('should extract values from reversed operand order', async () => {
+        // Threshold on left: {">=":[0.3, {"var":"emotions.fear"}]}
+        const expression = {
+          id: 'test:reversed-operand',
+          prerequisites: [{ logic: { '>=': [0.3, { var: 'emotions.fear' }] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // Should still extract the variable value
+        expect(tree.maxObservedValue).not.toBeNull();
+      });
+
+      it('should not record observed values for boolean conditions', async () => {
+        // Boolean condition with no numeric comparison
+        const expression = {
+          id: 'test:boolean-condition',
+          prerequisites: [{ logic: { '!': { var: 'some.flag' } } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // No numeric extraction possible
+        expect(tree.maxObservedValue).toBeNull();
+      });
+    });
+
+    describe('near-miss rate tracking', () => {
+      it('should include near-miss metrics in clause results', async () => {
+        const expression = {
+          id: 'test:near-miss-fields',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        result.clauseFailures.forEach((clause) => {
+          expect(clause).toHaveProperty('nearMissRate');
+          expect(clause).toHaveProperty('nearMissEpsilon');
+        });
+      });
+
+      it('should include near-miss in hierarchical breakdown', async () => {
+        const expression = {
+          id: 'test:near-miss-breakdown',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        expect(tree).toHaveProperty('nearMissCount');
+        expect(tree).toHaveProperty('nearMissRate');
+        expect(tree).toHaveProperty('nearMissEpsilon');
+      });
+
+      it('should use emotions epsilon (0.05) for emotions variables', async () => {
+        const expression = {
+          id: 'test:emotions-epsilon',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // Epsilon for emotions domain should be 0.05
+        expect(tree.nearMissEpsilon).toBe(0.05);
+      });
+
+      it('should detect near-misses within epsilon of threshold', async () => {
+        // With uniform distribution [0,1] and threshold 0.5, epsilon 0.05
+        // roughly 10% of samples should be in [0.45, 0.55] range
+        const expression = {
+          id: 'test:near-miss-detection',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10000,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // With ±5% around threshold, expect ~10% near-miss rate
+        // Using wide tolerance since it's statistical (±5% variance expected)
+        expect(tree.nearMissRate).toBeGreaterThan(0.04);
+        expect(tree.nearMissRate).toBeLessThan(0.20);
+      });
+
+      it('should have zero near-miss rate for unreachable thresholds', async () => {
+        // Very high threshold means values are far from it
+        const expression = {
+          id: 'test:unreachable-threshold',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.99] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // Most samples should be far from threshold, low near-miss rate
+        expect(tree.nearMissRate).toBeLessThan(0.1);
+      });
+
+      it('should return null for nearMissRate without threshold metadata', async () => {
+        // Boolean condition with no threshold
+        const expression = {
+          id: 'test:no-threshold',
+          prerequisites: [{ logic: { '!': { var: 'some.flag' } } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // No threshold = no near-miss tracking
+        expect(tree.nearMissEpsilon).toBeNull();
+      });
+
+      it('should propagate near-miss metrics through AND compound clauses', async () => {
+        const expression = {
+          id: 'test:near-miss-compound',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.5] },
+                  { '>=': [{ var: 'emotions.fear' }, 0.3] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+
+        // Children should have near-miss tracking
+        expect(tree.children).toHaveLength(2);
+        expect(tree.children[0]).toHaveProperty('nearMissRate');
+        expect(tree.children[1]).toHaveProperty('nearMissRate');
+      });
+    });
+
+    describe('Last-mile rate tracking', () => {
+      it('should mark single-clause expressions with isSingleClause true', async () => {
+        const singleClauseExpression = {
+          id: 'test:single-clause',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(singleClauseExpression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        expect(result.clauseFailures).toHaveLength(1);
+        expect(result.clauseFailures[0].isSingleClause).toBe(true);
+      });
+
+      it('should mark multi-clause expressions with isSingleClause false', async () => {
+        const multiClauseExpression = {
+          id: 'test:multi-clause',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+            {
+              logic: { '>=': [{ var: 'emotions.fear' }, 0.3] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(multiClauseExpression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        expect(result.clauseFailures).toHaveLength(2);
+        result.clauseFailures.forEach((clause) => {
+          expect(clause.isSingleClause).toBe(false);
+        });
+      });
+
+      it('should include lastMileContext for multi-clause expressions', async () => {
+        const multiClauseExpression = {
+          id: 'test:last-mile-context',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+            {
+              logic: { '>=': [{ var: 'emotions.fear' }, 0.3] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(multiClauseExpression, {
+          sampleCount: 1000,
+          trackClauses: true,
+        });
+
+        result.clauseFailures.forEach((clause) => {
+          expect(clause).toHaveProperty('lastMileFailRate');
+          expect(clause.lastMileContext).toBeDefined();
+          expect(clause.lastMileContext).toHaveProperty('othersPassedCount');
+          expect(clause.lastMileContext).toHaveProperty('lastMileFailCount');
+        });
+      });
+
+      it('should have lastMileFailCount <= othersPassedCount invariant', async () => {
+        const multiClauseExpression = {
+          id: 'test:last-mile-invariant',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+            {
+              logic: { '>=': [{ var: 'emotions.fear' }, 0.3] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(multiClauseExpression, {
+          sampleCount: 1000,
+          trackClauses: true,
+        });
+
+        result.clauseFailures.forEach((clause) => {
+          expect(clause.lastMileContext.lastMileFailCount).toBeLessThanOrEqual(
+            clause.lastMileContext.othersPassedCount
+          );
+        });
+      });
+
+      it('should track last-mile rate in hierarchicalBreakdown', async () => {
+        const expression = {
+          id: 'test:last-mile-breakdown',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        const tree = result.clauseFailures[0].hierarchicalBreakdown;
+        expect(tree).toHaveProperty('lastMileFailRate');
+        expect(tree).toHaveProperty('lastMileFailCount');
+        expect(tree).toHaveProperty('othersPassedCount');
+        expect(tree).toHaveProperty('isSingleClause');
+      });
+
+      it('should have single-clause last-mile rate equal to failure rate', async () => {
+        const singleClauseExpression = {
+          id: 'test:single-last-mile',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(singleClauseExpression, {
+          sampleCount: 1000,
+          trackClauses: true,
+        });
+
+        const clause = result.clauseFailures[0];
+        // For single clause, every evaluation is a "last mile" scenario
+        // So othersPassedCount should equal sampleCount
+        expect(clause.lastMileContext.othersPassedCount).toBe(1000);
+
+        // And lastMileFailRate should equal failureRate
+        if (clause.failureRate > 0) {
+          expect(clause.lastMileFailRate).toBeCloseTo(clause.failureRate, 2);
+        }
+      });
+
+      it('should identify decisive blocker among multi-clause expressions', async () => {
+        // Create expression where one clause is much harder to satisfy
+        const expression = {
+          id: 'test:decisive-blocker',
+          prerequisites: [
+            {
+              // Easy: joy >= 0.2 (low threshold, usually passes)
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.2] },
+            },
+            {
+              // Hard: fear >= 0.8 (high threshold, rarely passes)
+              logic: { '>=': [{ var: 'emotions.fear' }, 0.8] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 2000,
+          trackClauses: true,
+        });
+
+        // The harder clause (high fear threshold) should have non-zero last-mile tracking
+        const hardClause = result.clauseFailures.find(
+          (c) => c.clauseDescription.includes('0.8') || c.failureRate > 0.5
+        );
+
+        expect(hardClause).toBeDefined();
+        // At least some samples should have the easy clause passing while hard fails
+        if (hardClause.lastMileContext.othersPassedCount > 0) {
+          expect(hardClause.lastMileContext.lastMileFailCount).toBeGreaterThan(
+            0
+          );
+        }
       });
     });
   });

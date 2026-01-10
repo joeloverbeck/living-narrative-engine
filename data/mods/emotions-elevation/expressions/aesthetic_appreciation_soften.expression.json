@@ -1,0 +1,188 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-elevation:aesthetic_appreciation_soften",
+    "description": "Aesthetic appreciation: calm engagement with a gentle, savoring quality-attention held without urgency, often with softened affect.",
+    "priority": 64,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.aesthetic_appreciation"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contentment"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.3
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.aesthetic_appreciation"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.aesthetic_appreciation"
+                                    },
+                                    0.6
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.aesthetic_appreciation"
+                                    },
+                                    {
+                                        "var": "previousEmotions.aesthetic_appreciation"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.aesthetic_appreciation"
+                                    },
+                                    0.82
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.aesthetic_appreciation"
+                                    },
+                                    0.82
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousMoodAxes.arousal"
+                                    },
+                                    {
+                                        "var": "moodAxes.arousal"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Something about it lands gentle. My attention stops scrambling and just rests-on shape, texture, the quiet rightness of how parts fit together. I feel my shoulders drop as if I'd been bracing without noticing; a slow exhale slides out of me like permission. I don't want to solve it or use it-I just want to stay with it for a moment and let the inside of my chest unclench.",
+    "description_text": "{actor} slows down as they take it in. Their face softens; their gaze lingers instead of darting, and their posture eases-shoulders lowering, hands loosening, movements turning unhurried and careful. They pause in a way that reads like savoring: not frozen, not distracted-simply letting the moment settle into them.",
+    "alternate_descriptions": {
+        "auditory": "I hear a long, quiet exhale, and then a small, almost involuntary hum-soft appreciation leaking out without words.",
+        "olfactory": "I sense mild warmth-skin, fabric, clean air-the faint comfort-smell of someone settling."
+    },
+    "tags": [
+        "engagement",
+        "aesthetic",
+        "soothing",
+        "savoring",
+        "calm_attention"
+    ],
+    "diagnosticStatus": "unknown"
+}

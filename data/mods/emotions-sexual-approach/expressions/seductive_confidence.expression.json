@@ -1,0 +1,134 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexual-approach:seductive_confidence",
+    "description": "Sexual confidence and control - aroused, self-assured, and deliberately seductive.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_confidence"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -30
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_shame"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_performance_anxiety"
+                            },
+                            0.25
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousSexualStates.sexual_confidence"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_confidence"
+                                    },
+                                    0.6
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_confidence"
+                            },
+                            0.82
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I feel composed in my own skin-warm, awake, and entirely unashamed of wanting. My breath slows on purpose. I can feel the control in small choices: where I place my weight, how long I hold a look, when I let a smile arrive. It isn't urgency. It's intention.",
+    "description_text": "{actor} moves with measured ease-shoulders relaxed, gaze steady, expressions held half a beat longer than necessary. Their confidence reads in the pacing of everything: slower turns, deliberate pauses, a smile that lands like an invitation rather than an accident.",
+    "alternate_descriptions": {
+        "auditory": "A voice drops a register-words spaced with deliberate pauses, as if the silence is part of the touch.",
+        "olfactory": "I smell clean warmth-skin, faint fragrance, and the quiet certainty of someone comfortable being desired."
+    },
+    "tags": [
+        "sexual",
+        "confidence",
+        "seductive",
+        "control",
+        "swagger"
+    ],
+    "diagnosticStatus": "unknown"
+}

@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'node:path';
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 import {
@@ -28,13 +29,23 @@ const MOOD_AXES_KEYS = [
   'affiliation',
 ];
 
-const EXPRESSIONS_DIR = path.resolve(
+const SEXUAL_DESIRE_DIR = path.resolve(
+  process.cwd(),
+  'data',
+  'mods',
+  'emotions-sexual-desire',
+  'expressions'
+);
+const LEGACY_SEXUALITY_DIR = path.resolve(
   process.cwd(),
   'data',
   'mods',
   'emotions-sexuality',
   'expressions'
 );
+const EXPRESSIONS_DIR = existsSync(SEXUAL_DESIRE_DIR)
+  ? SEXUAL_DESIRE_DIR
+  : LEGACY_SEXUALITY_DIR;
 
 const loadExpressions = async (dataRegistry) => {
   const files = await readdir(EXPRESSIONS_DIR);

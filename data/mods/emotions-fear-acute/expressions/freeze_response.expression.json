@@ -1,0 +1,137 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-fear-acute:freeze_response",
+    "description": "Acute freeze response triggered by sudden fear spike with low determination to act",
+    "priority": 88,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.freeze"
+                                            },
+                                            {
+                                                "var": "previousEmotions.freeze"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.freeze"
+                                            },
+                                            0.5
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.freeze"
+                                            },
+                                            0.5
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires tonic immobility with high threat and very low agency; keeps arousal in the freeze-capable band and awareness online; explicitly excludes dissociation; gated by freeze spike/crossing or a sharp agency drop."
+        }
+    ],
+    "actor_description": "I go still. Not calm-caught. My breath thins and my muscles forget how to follow instructions. I'm aware of everything at once-the room, the sounds, the space behind me-but I can't turn that awareness into movement. The only thing my body seems sure about is: don't be noticed, don't make a sound, don't give the threat a reason.",
+    "description_text": "{actor} stops moving like a switch flipped-posture locked, eyes fixed too wide, breathing reduced to small careful sips. They look present but unreachable, a prey-stillness that reads as instinct rather than choice.",
+    "alternate_descriptions": {
+        "auditory": "I hear the faintest sound of controlled breathing, like someone is trying to make their lungs quieter."
+    },
+    "tags": [
+        "fear",
+        "freeze",
+        "acute",
+        "paralysis"
+    ],
+    "diagnosticStatus": "unknown"
+}

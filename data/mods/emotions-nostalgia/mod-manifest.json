@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-nostalgia",
+  "version": "1.0.0",
+  "name": "Emotions - Nostalgia",
+  "description": "Memory-recall and reminiscence expressions with past-oriented emotional tone.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "flat_reminiscence.expression.json",
+      "nostalgic_distance.expression.json"
+    ]
+  }
+}

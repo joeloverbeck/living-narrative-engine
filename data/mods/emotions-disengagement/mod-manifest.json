@@ -1,0 +1,11 @@
+{
+  "id": "emotions-disengagement",
+  "version": "1.0.0",
+  "name": "emotions-disengagement",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "bored_disinterest.expression.json"
+    ]
+  }
+}

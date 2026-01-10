@@ -8,7 +8,9 @@ import path from 'node:path';
 import ConsoleLogger from '../../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 
-const EXPRESSIONS_DIR = path.resolve('data/mods/emotions-sexuality/expressions');
+const EXPRESSIONS_DIR = path.resolve(
+  'data/mods/emotions-sexual-conflict/expressions'
+);
 const EXPRESSION_FILE = 'aroused_but_ashamed_conflict.expression.json';
 
 describe('Emotions aroused-but-ashamed conflict prerequisites', () => {

@@ -50,6 +50,22 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.sympathy"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
                             0.40
@@ -144,7 +160,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high anger+rage with high arousal and assertive agency, low-to-neutral affiliation, and a recent spike (anger/rage/arousal) or a notable control/affiliation drop."
+            "failure_message": "Requires high anger+rage with high arousal and assertive agency, low-to-neutral affiliation, low sympathy/compassion, and a recent spike (anger/rage/arousal) or a notable control/affiliation drop."
         }
     ],
     "actor_description": "It tips. One more ounce and the lid is gone-heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",

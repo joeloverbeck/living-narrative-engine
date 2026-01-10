@@ -52,7 +52,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     }
   });
 
-  it('matches emotions-positive-affect:awed_transfixion with previous-state delta gates (A1)', async () => {
+  it('matches emotions-elevation:awed_transfixion with previous-state delta gates (A1)', async () => {
     const actorId = 'actor-a1';
     const expression = storeExpression(
       dataRegistry,
@@ -124,7 +124,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions-threat-response:horror_revulsion with threat/disgust spikes (A2)', async () => {
+  it('matches emotions-disgust:horror_revulsion with threat/disgust spikes (A2)', async () => {
     const actorId = 'actor-a2';
     const expression = storeExpression(
       dataRegistry,
@@ -226,7 +226,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions-threat-response:steeled_courage with rising courage or determination (A3)', async () => {
+  it('matches emotions-courage:steeled_courage with rising courage or determination (A3)', async () => {
     const actorId = 'actor-a3';
     const expression = storeExpression(
       dataRegistry,
@@ -308,7 +308,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions-positive-affect:sigh_of_relief with relief spike and fear drop (A4)', async () => {
+  it('matches emotions-calm:sigh_of_relief with relief spike and fear drop (A4)', async () => {
     const actorId = 'actor-a4';
     const expression = storeExpression(
       dataRegistry,
@@ -371,7 +371,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions-loss:dissociation with dissociation + numbness state and engagement drop (A5)', async () => {
+  it('matches emotions-dissociation:dissociation with dissociation + numbness state and engagement drop (A5)', async () => {
     const actorId = 'actor-a5';
     const expression = storeExpression(
       dataRegistry,
@@ -475,7 +475,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(matches.map((match) => match.id)).toContain(expression.id);
   });
 
-  it('matches emotions-sexuality:aroused_but_ashamed_conflict with sexual composites (B1)', async () => {
+  it('matches emotions-sexual-conflict:aroused_but_ashamed_conflict with sexual composites (B1)', async () => {
     const actorId = 'actor-b1';
     const expression = storeExpression(
       dataRegistry,

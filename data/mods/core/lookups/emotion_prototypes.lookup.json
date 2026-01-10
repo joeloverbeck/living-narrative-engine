@@ -1079,6 +1079,19 @@
         "cognitive_empathy >= 0.15"
       ]
     },
+    "sympathy": {
+      "weights": {
+        "cognitive_empathy": 0.8,
+        "valence": 0.3,
+        "engagement": 0.5,
+        "affiliation": 0.4,
+        "threat": -0.3
+      },
+      "gates": [
+        "cognitive_empathy >= 0.20",
+        "valence >= -0.10"
+      ]
+    },
     "empathic_distress": {
       "weights": {
         "valence": -0.75,

@@ -1312,3 +1312,141 @@
     margin-top: 0.25rem;
   }
 }
+
+/* ==========================================================================
+   ADVANCED METRICS - Structural CSS for MONCARADVMET-009
+   Visual styling (colors, badges, indicators) deferred to MONCARADVMET-010
+   ========================================================================== */
+
+/* Violation stats column structure */
+.violation-stats {
+  white-space: nowrap;
+}
+
+.violation-mean,
+.violation-percentiles,
+.near-miss {
+  display: block;
+  font-size: 0.9em;
+}
+
+/* Last-mile column structure */
+.last-mile-overall,
+.last-mile-decisive {
+  display: block;
+}
+
+.last-mile-na,
+.last-mile-single {
+  display: block;
+}
+
+/* Recommendation column structure */
+.recommendation-action {
+  font-size: 0.9em;
+}
+
+/* Hierarchical tree advanced metrics */
+.tree-percentiles,
+.tree-last-mile,
+.tree-ceiling {
+  font-size: 0.85em;
+  margin-left: 0.5em;
+}
+
+/* ==========================================================================
+   ADVANCED METRICS - Visual Styling (MONCARADVMET-010)
+   Color coding, badges, and indicators for scannable metrics
+   ========================================================================== */
+
+/* Near-miss rate severity colors */
+.near-miss.near-miss-high {
+  color: #22c55e; /* green - threshold tweaks will help */
+  font-weight: bold;
+}
+
+.near-miss.near-miss-moderate {
+  color: #eab308; /* yellow - tweaks may help */
+}
+
+.near-miss.near-miss-low {
+  color: #ef4444; /* red - need upstream changes */
+}
+
+.near-miss.near-miss-na {
+  color: var(--secondary-text-color, #6b7280);
+  font-style: italic;
+}
+
+/* Last-mile decisive blocker styling */
+.last-mile-decisive.decisive {
+  background-color: #fef3c7; /* amber background */
+  border-left: 3px solid #f59e0b;
+  padding: 0.25em 0.5em;
+  font-weight: bold;
+}
+
+/* Ceiling warning badge */
+.ceiling-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 0.125em 0.5em;
+  border-radius: 0.25em;
+  font-size: 0.85em;
+  margin-top: 0.25em;
+}
+
+/* Recommendation priority badges */
+.recommendation-action[data-priority="critical"] {
+  background-color: #dc2626;
+  color: white;
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+  font-weight: bold;
+}
+
+.recommendation-action[data-priority="high"] {
+  background-color: #f97316;
+  color: white;
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+}
+
+.recommendation-action[data-priority="medium"] {
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+}
+
+.recommendation-action[data-priority="low"] {
+  background-color: #6b7280;
+  color: white;
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+}
+
+/* Tree node visual enhancements */
+.tree-node[data-decisive="true"] {
+  background-color: #fef3c7;
+}
+
+.tree-node[data-ceiling="true"] {
+  background-color: #fee2e2;
+}
+
+.tree-failure-rate.high {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.tree-failure-rate.medium {
+  color: #f97316;
+}
+
+.tree-failure-rate.low {
+  color: #22c55e;
+}

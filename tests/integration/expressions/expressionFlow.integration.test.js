@@ -49,7 +49,7 @@ const createExpressions = (dataRegistry) => {
       actorDescription: 'A tight, simmering glare.',
     }),
     createTestExpression({
-      id: 'emotions-positive-affect:quiet_contentment',
+      id: 'emotions-calm:quiet_contentment',
       priority: 120,
       prerequisites: [
         {
@@ -234,7 +234,7 @@ describe('Expression Flow - Integration', () => {
 
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     const [, payload] = eventBus.dispatch.mock.calls[0];
-    expect(payload.contextualData.expressionId).toBe('emotions-positive-affect:quiet_contentment');
+    expect(payload.contextualData.expressionId).toBe('emotions-calm:quiet_contentment');
   });
 
   it('does not dispatch when no expressions match', async () => {

@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-dissociation",
+  "version": "1.0.0",
+  "name": "Emotions - Dissociation",
+  "description": "Protective disconnect expressions with distinct anti-collision gates.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "dissociation.expression.json"
+    ]
+  }
+}

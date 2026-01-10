@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-shutdown",
+  "version": "1.0.0",
+  "name": "Emotions - Shutdown",
+  "description": "Low engagement and muted affect expressions where the emotional system goes offline.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "apathy_blank.expression.json",
+      "numb_flatness.expression.json"
+    ]
+  }
+}

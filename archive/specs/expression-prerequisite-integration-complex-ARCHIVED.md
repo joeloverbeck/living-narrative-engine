@@ -27,35 +27,6 @@ Each test should:
 - Assert the computed values used by prerequisites (e.g., `context.emotions.disgust`).
 - Run `expressionEvaluatorService.evaluateAll(context)` and assert the target expression id is present.
 
-#### A1. emotions-positive-affect:awed_transfixion
-Expression: `data/mods/emotions/expressions/awed_transfixion.expression.json`
-Prereqs: awe >= 0.65, terror <= 0.35, rage <= 0.35, (surprise_startle >= 0.25 OR awe delta >= 0.12), and euphoria relationship.
-
-Current mood (raw axes):
-- valence: 60
-- arousal: 90
-- engagement: 90
-- agency_control: -60
-- threat: 10
-- future_expectancy: 20
-- self_evaluation: 0
-
-Previous mood (raw axes):
-- valence: 40
-- arousal: 60
-- engagement: 50
-- agency_control: -30
-- threat: 10
-- future_expectancy: 10
-- self_evaluation: 0
-
-Expected checks:
-- `context.emotions.awe >= 0.65`
-- `context.emotions.terror` undefined or < 0.35
-- `context.emotions.rage` undefined or < 0.35
-- `context.emotions.surprise_startle >= 0.25` OR `context.emotions.awe - previous.awe >= 0.12`
-- `context.emotions.euphoria` may be >= 0.65, but `awe >= euphoria + 0.05` should hold.
-
 #### A2. emotions:horror_revulsion
 Expression: `data/mods/emotions/expressions/horror_revulsion.expression.json`
 Prereqs: disgust >= 0.6, moodAxes.threat >= 0.25, moodAxes.valence <= -0.2, max(fear, alarm) >= 0.35, terror < 0.55, plus spike in disgust/threat/fear.
@@ -114,35 +85,6 @@ Expected checks:
 - `context.emotions.determination >= 0.40`
 - `context.emotions.terror < 0.60`
 - `max(courage delta, determination delta) >= 0.10`
-
-#### A4. emotions-positive-affect:sigh_of_relief
-Expression: `data/mods/emotions/expressions/sigh_of_relief.expression.json`
-Prereqs: relief >= 0.55, previous fear >= 0.25, current fear <= 0.20, relief delta >= 0.15, fear delta <= -0.20.
-
-Current mood (raw axes):
-- valence: 80
-- arousal: -10
-- threat: -80
-- agency_control: 0
-- engagement: 0
-- future_expectancy: 20
-- self_evaluation: 10
-
-Previous mood (raw axes):
-- valence: -40
-- arousal: 40
-- threat: 50
-- agency_control: -20
-- engagement: 10
-- future_expectancy: -10
-- self_evaluation: -10
-
-Expected checks:
-- `context.emotions.relief >= 0.55`
-- `previous.emotions.fear >= 0.25`
-- `context.emotions.fear` undefined or <= 0.20
-- `context.emotions.relief - previous.relief >= 0.15`
-- `context.emotions.fear - previous.fear <= -0.20`
 
 #### A5. emotions:dissociation
 Expression: `data/mods/emotions/expressions/dissociation.expression.json`

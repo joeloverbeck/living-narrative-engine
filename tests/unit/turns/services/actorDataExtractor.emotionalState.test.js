@@ -6,6 +6,7 @@ import {
   NAME_COMPONENT_ID,
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
+  AFFECT_TRAITS_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
@@ -31,6 +32,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       engagement: 60,
       future_expectancy: 25,
       self_evaluation: 35,
+      affiliation: 0,
       ...overrides,
     };
   }
@@ -46,6 +48,21 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       sex_excitation: 20,
       sex_inhibition: 10,
       baseline_libido: 5,
+      ...overrides,
+    };
+  }
+
+  /**
+   * Creates a valid affect traits component.
+   *
+   * @param {Partial<{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}>} [overrides] - Optional overrides
+   * @returns {object} Affect traits component data
+   */
+  function createAffectTraitsComponent(overrides = {}) {
+    return {
+      affective_empathy: 50,
+      cognitive_empathy: 50,
+      harm_aversion: 50,
       ...overrides,
     };
   }
@@ -197,7 +214,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       expect(result.emotionalState).toHaveProperty('sexualStateText');
     });
 
-    test('should include all 7 mood axis values in moodAxes', () => {
+    test('should include all 8 mood axis values in moodAxes', () => {
       const moodData = {
         valence: 70,
         arousal: 40,
@@ -206,6 +223,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         engagement: 80,
         future_expectancy: 45,
         self_evaluation: 60,
+        affiliation: 25,
       };
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
@@ -214,6 +232,26 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       const result = extractor.extractPromptData(actorState, 'actor-test');
 
       expect(result.emotionalState.moodAxes).toEqual(moodData);
+    });
+
+    test('should include affiliation axis in moodAxes', () => {
+      const moodData = {
+        valence: 70,
+        arousal: 40,
+        agency_control: 55,
+        threat: -30,
+        engagement: 80,
+        future_expectancy: 45,
+        self_evaluation: 60,
+        affiliation: 25,
+      };
+      const actorState = createValidActorState({
+        [MOOD_COMPONENT_ID]: moodData,
+      });
+
+      const result = extractor.extractPromptData(actorState, 'actor-test');
+
+      expect(result.emotionalState.moodAxes.affiliation).toBe(25);
     });
 
     test('should call calculateSexualArousal with sexual state component', () => {
@@ -263,7 +301,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       });
     });
 
-    test('should call calculateEmotions with mood axes and sexual arousal', () => {
+    test('should call calculateEmotions with mood axes, sexual arousal, and null affect traits when absent', () => {
       const moodData = createMoodComponent({ valence: 80 });
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
@@ -276,7 +314,8 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
         moodData,
         0.42,
-        sexualStateData
+        sexualStateData,
+        null
       );
     });
 
@@ -357,6 +396,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         engagement: -100,
         future_expectancy: 100,
         self_evaluation: -100,
+        affiliation: -100,
       };
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: extremeMoodData,
@@ -455,6 +495,143 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
 
       expect(result.healthState).toBeDefined();
       expect(result.emotionalState).toBeDefined();
+    });
+  });
+
+  describe('affect traits extraction', () => {
+    test('should pass affect traits to calculateEmotions when component present', () => {
+      const affectTraitsData = createAffectTraitsComponent({
+        affective_empathy: 75,
+        cognitive_empathy: 60,
+        harm_aversion: 80,
+      });
+      const moodData = createMoodComponent();
+      const actorState = createValidActorState({
+        [MOOD_COMPONENT_ID]: moodData,
+        [AFFECT_TRAITS_COMPONENT_ID]: affectTraitsData,
+      });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
+      mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.15);
+
+      extractor.extractPromptData(actorState, 'actor-with-traits');
+
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        moodData,
+        0.15,
+        sexualStateData,
+        affectTraitsData
+      );
+    });
+
+    test('should pass null to calculateEmotions when affect_traits component absent', () => {
+      const moodData = createMoodComponent();
+      const actorState = createValidActorState({
+        [MOOD_COMPONENT_ID]: moodData,
+        // No AFFECT_TRAITS_COMPONENT_ID
+      });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
+      mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.20);
+
+      extractor.extractPromptData(actorState, 'actor-no-traits');
+
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        moodData,
+        0.20,
+        sexualStateData,
+        null
+      );
+    });
+
+    test('should handle sociopath traits (low empathy values)', () => {
+      const sociopathTraits = createAffectTraitsComponent({
+        affective_empathy: 5,
+        cognitive_empathy: 70,
+        harm_aversion: 10,
+      });
+      const moodData = createMoodComponent();
+      const actorState = createValidActorState({
+        [MOOD_COMPONENT_ID]: moodData,
+        [AFFECT_TRAITS_COMPONENT_ID]: sociopathTraits,
+      });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
+      mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.10);
+
+      extractor.extractPromptData(actorState, 'actor-sociopath');
+
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        moodData,
+        0.10,
+        sexualStateData,
+        sociopathTraits
+      );
+    });
+
+    test('should handle hyper-empathic traits (high empathy values)', () => {
+      const hyperEmpathicTraits = createAffectTraitsComponent({
+        affective_empathy: 100,
+        cognitive_empathy: 95,
+        harm_aversion: 100,
+      });
+      const moodData = createMoodComponent();
+      const actorState = createValidActorState({
+        [MOOD_COMPONENT_ID]: moodData,
+        [AFFECT_TRAITS_COMPONENT_ID]: hyperEmpathicTraits,
+      });
+      const sexualStateData = actorState[SEXUAL_STATE_COMPONENT_ID];
+      mockEmotionCalculatorService.calculateSexualArousal.mockReturnValue(0.05);
+
+      extractor.extractPromptData(actorState, 'actor-hyper-empathic');
+
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        moodData,
+        0.05,
+        sexualStateData,
+        hyperEmpathicTraits
+      );
+    });
+
+    test('should handle affect traits with zero values', () => {
+      const zeroTraits = createAffectTraitsComponent({
+        affective_empathy: 0,
+        cognitive_empathy: 0,
+        harm_aversion: 0,
+      });
+      const actorState = createValidActorState({
+        [AFFECT_TRAITS_COMPONENT_ID]: zeroTraits,
+      });
+
+      // Should not throw - zero values are valid
+      const result = extractor.extractPromptData(actorState, 'actor-zero-traits');
+
+      expect(result.emotionalState).toBeDefined();
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Number),
+        expect.any(Object),
+        zeroTraits
+      );
+    });
+
+    test('should handle affect traits with maximum values', () => {
+      const maxTraits = createAffectTraitsComponent({
+        affective_empathy: 100,
+        cognitive_empathy: 100,
+        harm_aversion: 100,
+      });
+      const actorState = createValidActorState({
+        [AFFECT_TRAITS_COMPONENT_ID]: maxTraits,
+      });
+
+      // Should not throw - maximum values are valid
+      const result = extractor.extractPromptData(actorState, 'actor-max-traits');
+
+      expect(result.emotionalState).toBeDefined();
+      expect(mockEmotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Number),
+        expect.any(Object),
+        maxTraits
+      );
     });
   });
 });

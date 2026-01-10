@@ -106,23 +106,41 @@ class FailureExplainer {
     const ratePercent = (triggerRate * 100).toFixed(3);
     const { RARITY_THRESHOLDS } = DiagnosticResult;
 
+    let summary = '';
+
     if (triggerRate === 0) {
-      return `Expression never triggers. ${blockers.length > 0 ? `Primary blocker: ${blockers[0].clauseDescription}` : 'No specific blocker identified.'}`;
+      summary = `Expression never triggers. ${blockers.length > 0 ? `Primary blocker: ${blockers[0].clauseDescription}` : 'No specific blocker identified.'}`;
+    } else if (triggerRate < RARITY_THRESHOLDS.EXTREMELY_RARE) {
+      summary = `Expression is extremely rare (${ratePercent}%). Top blocker: ${blockers[0]?.clauseDescription || 'Unknown'}`;
+    } else if (triggerRate < RARITY_THRESHOLDS.RARE) {
+      summary = `Expression triggers rarely (${ratePercent}%). ${blockers.length} clause(s) frequently fail.`;
+    } else if (triggerRate < RARITY_THRESHOLDS.NORMAL) {
+      summary = `Expression triggers occasionally (${ratePercent}%). Consider adjusting thresholds.`;
+    } else {
+      summary = `Expression triggers at healthy rate (${ratePercent}%).`;
     }
 
-    if (triggerRate < RARITY_THRESHOLDS.EXTREMELY_RARE) {
-      return `Expression is extremely rare (${ratePercent}%). Top blocker: ${blockers[0]?.clauseDescription || 'Unknown'}`;
+    // NEW: Add advanced insights if available
+    const decisiveBlocker = blockers.find(
+      (b) => b.advancedAnalysis?.lastMileAnalysis?.isDecisive
+    );
+
+    if (decisiveBlocker) {
+      const lastMilePercent = (
+        (decisiveBlocker.lastMileFailRate ?? 0) * 100
+      ).toFixed(1);
+      summary += ` Focus on "${decisiveBlocker.clauseDescription}" (${lastMilePercent}% last-mile failure).`;
     }
 
-    if (triggerRate < RARITY_THRESHOLDS.RARE) {
-      return `Expression triggers rarely (${ratePercent}%). ${blockers.length} clause(s) frequently fail.`;
+    const ceilingBlocker = blockers.find(
+      (b) => b.advancedAnalysis?.ceilingAnalysis?.status === 'ceiling_detected'
+    );
+
+    if (ceilingBlocker) {
+      summary += ` Warning: "${ceilingBlocker.clauseDescription}" has a ceiling effect and cannot be triggered.`;
     }
 
-    if (triggerRate < RARITY_THRESHOLDS.NORMAL) {
-      return `Expression triggers occasionally (${ratePercent}%). Consider adjusting thresholds.`;
-    }
-
-    return `Expression triggers at healthy rate (${ratePercent}%).`;
+    return summary;
   }
 
 
@@ -146,35 +164,45 @@ class FailureExplainer {
       `FailureExplainer: Analyzing ${clauseFailures.length} clause failures with hierarchy`
     );
 
-    // Sort by failure rate descending
-    const sorted = [...clauseFailures].sort(
-      (a, b) => b.failureRate - a.failureRate
+    return (
+      clauseFailures
+        .map((clause) => {
+          const hasHierarchy =
+            clause.hierarchicalBreakdown !== null &&
+            clause.hierarchicalBreakdown !== undefined;
+
+          let worstOffenders = [];
+          if (hasHierarchy) {
+            worstOffenders = this.flattenHierarchy(
+              clause.hierarchicalBreakdown,
+              0.5
+            ).slice(0, 5);
+          }
+
+          return {
+            clauseDescription: clause.clauseDescription,
+            failureRate: clause.failureRate,
+            averageViolation: clause.averageViolation,
+            // Pass through new metrics for summary access
+            lastMileFailRate: clause.lastMileFailRate ?? null,
+            explanation: this.#generateExplanation(clause, context),
+            rank: 0, // Will be set after sort
+            severity: this.#categorizeSeverity(clause.failureRate),
+            // NEW: Advanced metrics analysis
+            advancedAnalysis: this.#analyzeAdvancedMetrics(clause),
+            // NEW: Priority score for sorting
+            priorityScore: this.#calculatePriorityScore(clause),
+            // Existing hierarchy fields
+            hasHierarchy,
+            hierarchicalBreakdown: clause.hierarchicalBreakdown || null,
+            worstOffenders,
+          };
+        })
+        // NEW: Sort by priority score (last-mile weighted)
+        .sort((a, b) => b.priorityScore - a.priorityScore)
+        // Re-rank after sorting
+        .map((blocker, index) => ({ ...blocker, rank: index + 1 }))
     );
-
-    return sorted.map((clause, index) => {
-      const hasHierarchy =
-        clause.hierarchicalBreakdown !== null &&
-        clause.hierarchicalBreakdown !== undefined;
-
-      let worstOffenders = [];
-      if (hasHierarchy) {
-        worstOffenders = this.flattenHierarchy(
-          clause.hierarchicalBreakdown,
-          0.5
-        ).slice(0, 5);
-      }
-
-      return {
-        clauseDescription: clause.clauseDescription,
-        failureRate: clause.failureRate,
-        averageViolation: clause.averageViolation,
-        explanation: this.#generateExplanation(clause, context),
-        rank: index + 1,
-        hasHierarchy,
-        hierarchicalBreakdown: clause.hierarchicalBreakdown || null,
-        worstOffenders,
-      };
-    });
   }
 
   /**
@@ -379,6 +407,283 @@ class FailureExplainer {
     if (failureRate >= 0.9) return 'high';
     if (failureRate >= 0.7) return 'medium';
     return 'low';
+  }
+
+  // ========================================================================
+  // Advanced Metrics Analysis Methods (MONCARADVMET-008)
+  // ========================================================================
+
+  /**
+   * Analyze violation percentile distribution
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{status: string, insight: string|null}}
+   */
+  #analyzePercentiles(clause) {
+    const { averageViolation, violationP50, violationP90 } = clause;
+
+    if (violationP50 === null || violationP50 === undefined) {
+      return { status: 'no_data', insight: null };
+    }
+
+    // Heavy-tailed: median much lower than mean
+    if (violationP50 < averageViolation * 0.5) {
+      return {
+        status: 'heavy_tail',
+        insight: 'Outliers are skewing the mean; most failures are minor',
+      };
+    }
+
+    // Some severe: p90 much higher than mean
+    if (violationP90 > averageViolation * 2) {
+      return {
+        status: 'some_severe',
+        insight: 'Some samples fail badly while most are moderate',
+      };
+    }
+
+    return {
+      status: 'normal',
+      insight: 'Violations are normally distributed; mean is trustworthy',
+    };
+  }
+
+  /**
+   * Analyze near-miss tunability
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{status: string, tunability: string|null, insight?: string}}
+   */
+  #analyzeNearMiss(clause) {
+    const { nearMissRate } = clause;
+
+    if (nearMissRate === null || nearMissRate === undefined) {
+      return { status: 'no_data', tunability: null };
+    }
+
+    if (nearMissRate > 0.1) {
+      return {
+        status: 'high',
+        tunability: 'high',
+        insight: 'Many samples are borderline; threshold tweaks will help',
+      };
+    }
+
+    if (nearMissRate < 0.02) {
+      return {
+        status: 'low',
+        tunability: 'low',
+        insight: 'Values are far from threshold; tune prototypes/gates instead',
+      };
+    }
+
+    return {
+      status: 'moderate',
+      tunability: 'moderate',
+      insight: 'Some samples are near threshold; tweaks may help',
+    };
+  }
+
+  /**
+   * Detect ceiling effects (threshold unreachable)
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{status: string, achievable: boolean|null, gap?: number, headroom?: number, insight?: string}}
+   */
+  #analyzeCeiling(clause) {
+    const { ceilingGap, maxObserved, thresholdValue } = clause;
+
+    if (
+      ceilingGap === null ||
+      ceilingGap === undefined ||
+      maxObserved === null ||
+      maxObserved === undefined
+    ) {
+      return { status: 'no_data', achievable: null };
+    }
+
+    if (ceilingGap > 0) {
+      return {
+        status: 'ceiling_detected',
+        achievable: false,
+        gap: ceilingGap,
+        insight: `Max observed (${maxObserved.toFixed(2)}) never reached threshold (${thresholdValue.toFixed(2)})`,
+      };
+    }
+
+    return {
+      status: 'achievable',
+      achievable: true,
+      headroom: -ceilingGap,
+      insight: `Threshold is achievable (max observed: ${maxObserved.toFixed(2)})`,
+    };
+  }
+
+  /**
+   * Analyze last-mile blocker status
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{status: string, isDecisive: boolean, insight?: string}}
+   */
+  #analyzeLastMile(clause) {
+    const { failureRate, lastMileFailRate, isSingleClause } = clause;
+
+    if (isSingleClause) {
+      return {
+        status: 'single_clause',
+        insight: 'This is the only clause; last-mile equals failure rate',
+        isDecisive: true,
+      };
+    }
+
+    if (lastMileFailRate === null || lastMileFailRate === undefined) {
+      return { status: 'no_data', isDecisive: false };
+    }
+
+    const ratio = lastMileFailRate / (failureRate || 1);
+
+    if (ratio > 1.5) {
+      return {
+        status: 'decisive_blocker',
+        isDecisive: true,
+        insight:
+          'This clause is the final obstacle when others pass - tune this first',
+      };
+    }
+
+    if (lastMileFailRate < 0.01) {
+      return {
+        status: 'rarely_decisive',
+        isDecisive: false,
+        insight: 'This clause rarely blocks alone; other clauses fail first',
+      };
+    }
+
+    return {
+      status: 'moderate',
+      isDecisive: false,
+      insight: 'This clause sometimes blocks alone',
+    };
+  }
+
+  /**
+   * Generate actionable recommendation based on advanced metrics
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{action: string, priority: string, message: string}}
+   */
+  #generateRecommendation(clause) {
+    const ceiling = this.#analyzeCeiling(clause);
+    const lastMile = this.#analyzeLastMile(clause);
+    const nearMiss = this.#analyzeNearMiss(clause);
+
+    // Priority 1: Ceiling effect (can't be fixed by tuning)
+    if (ceiling.status === 'ceiling_detected') {
+      return {
+        action: 'redesign',
+        priority: 'critical',
+        message:
+          'Threshold is unreachable - consider lowering or adjusting gates/prototypes',
+      };
+    }
+
+    // Priority 2: Decisive blocker with high tunability
+    if (lastMile.isDecisive && nearMiss.tunability === 'high') {
+      return {
+        action: 'tune_threshold',
+        priority: 'high',
+        message: 'TUNE THIS FIRST: Decisive blocker with many near-misses',
+      };
+    }
+
+    // Priority 3: Decisive blocker with low tunability
+    if (lastMile.isDecisive && nearMiss.tunability === 'low') {
+      return {
+        action: 'adjust_upstream',
+        priority: 'medium',
+        message:
+          'Decisive blocker but values are far from threshold - adjust prototypes',
+      };
+    }
+
+    // Priority 4: Not decisive
+    if (!lastMile.isDecisive) {
+      return {
+        action: 'lower_priority',
+        priority: 'low',
+        message: 'Other clauses fail first - tune those instead',
+      };
+    }
+
+    return {
+      action: 'investigate',
+      priority: 'medium',
+      message: 'Review clause configuration',
+    };
+  }
+
+  /**
+   * Aggregate all advanced metrics analyses
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {{percentileAnalysis: object, nearMissAnalysis: object, ceilingAnalysis: object, lastMileAnalysis: object, recommendation: object}}
+   */
+  #analyzeAdvancedMetrics(clause) {
+    return {
+      percentileAnalysis: this.#analyzePercentiles(clause),
+      nearMissAnalysis: this.#analyzeNearMiss(clause),
+      ceilingAnalysis: this.#analyzeCeiling(clause),
+      lastMileAnalysis: this.#analyzeLastMile(clause),
+      recommendation: this.#generateRecommendation(clause),
+    };
+  }
+
+  /**
+   * Calculate priority score for sorting blockers
+   * Higher score = tune this first
+   *
+   * Weighting:
+   * - Last-mile rate: 40%
+   * - Failure rate: 30%
+   * - Near-miss (tunability): 20%
+   * - Ceiling effect: 10% penalty if detected
+   *
+   * @private
+   * @param {object} clause - Clause result with advanced metrics
+   * @returns {number}
+   */
+  #calculatePriorityScore(clause) {
+    const { failureRate, lastMileFailRate, nearMissRate, ceilingGap } = clause;
+
+    let score = 0;
+
+    // Last-mile contribution (40%)
+    if (lastMileFailRate !== null && lastMileFailRate !== undefined) {
+      score += lastMileFailRate * 0.4;
+    } else {
+      score += (failureRate || 0) * 0.4; // Fallback to failure rate
+    }
+
+    // Failure rate contribution (30%)
+    score += (failureRate || 0) * 0.3;
+
+    // Near-miss tunability bonus (20%)
+    if (nearMissRate !== null && nearMissRate !== undefined && nearMissRate > 0.05) {
+      score += nearMissRate * 0.2;
+    }
+
+    // Ceiling penalty (reduce priority if unreachable)
+    if (ceilingGap !== null && ceilingGap !== undefined && ceilingGap > 0) {
+      score *= 0.5; // Halve priority - can't fix by tuning
+    }
+
+    return score;
   }
 
   /**

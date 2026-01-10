@@ -1,0 +1,158 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-joy-play:amused_chuckle",
+    "description": "Light amusement surfacing as a contained laugh or grin-socially readable, de-escalating, and safe.",
+    "priority": 62,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.amusement"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.curiosity"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.amusement"
+                                            },
+                                            {
+                                                "var": "emotions.curiosity"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.amusement"
+                                    },
+                                    {
+                                        "var": "previousEmotions.amusement"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.amusement"
+                                    },
+                                    0.75
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.amusement"
+                                    },
+                                    0.75
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "A laugh slips out before I can decide whether to keep it in-small, surprised, almost like a pressure valve popping. For a heartbeat the world tilts lighter; my chest loosens, my mouth pulls up on its own. Whatever was heavy a second ago isn't gone, but it's not sitting on me with the same weight.",
+    "description_text": "{actor} gives a brief, warm chuckle-more breath than sound at first-then a quick grin flashes and fades. Their shoulders drop a fraction, the tension in their face easing like a knot being untied with one practiced tug.",
+    "alternate_descriptions": {
+        "auditory": "I hear a short, quiet laugh-soft, warm, gone almost immediately-followed by an exhale that makes the air feel less tight."
+    },
+    "tags": [
+        "positive",
+        "amusement",
+        "social",
+        "deescalation"
+    ],
+    "diagnosticStatus": "unknown"
+}

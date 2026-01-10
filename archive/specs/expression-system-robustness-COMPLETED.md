@@ -35,7 +35,7 @@ Error: [ExpressionContextBuilder] sexualStates prototype lookup returned no keys
 ```
 
 ### How It Failed
-1. **Root cause**: Expressions in `emotions-anger`, `emotions-positive-affect`, `emotions-attention` mods don't reference any `sexualStates.*` variables
+1. **Root cause**: Expressions in `emotions-anger`, `emotions-attention` mods don't reference any `sexualStates.*` variables
 2. **Test utility behavior**: `collectExpressionStateKeys()` returns empty `sexualKeys` array when no expressions use sexual state variables
 3. **Mock setup**: Test set `getSexualPrototypeKeys.mockReturnValue([])` - an empty array
 4. **Validation failure**: `ExpressionContextBuilder.#assertStateCoverage()` throws when `expectedKeys.length === 0`

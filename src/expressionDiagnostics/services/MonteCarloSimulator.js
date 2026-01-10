@@ -7,6 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import jsonLogic from 'json-logic-js';
 import HierarchicalClauseNode from '../models/HierarchicalClauseNode.js';
 import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
+import { getEpsilonForVariable } from '../config/advancedMetricsConfig.js';
 
 /**
  * @typedef {'uniform' | 'gaussian'} DistributionType
@@ -36,6 +37,10 @@ import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
  * @property {number} failureCount
  * @property {number} failureRate
  * @property {number} averageViolation
+ * @property {number|null} violationP50 - Median violation
+ * @property {number|null} violationP90 - 90th percentile violation
+ * @property {number|null} nearMissRate - Proportion of samples within epsilon
+ * @property {number|null} nearMissEpsilon - The epsilon value used
  * @property {number} clauseIndex
  * @property {object | null} [hierarchicalBreakdown] - Tree structure for compound clauses
  */
@@ -350,6 +355,14 @@ class MonteCarloSimulator {
       });
     }
 
+    // Mark single-clause case for last-mile tracking
+    const isSingleClause = clauses.length === 1;
+    for (const clause of clauses) {
+      if (clause.hierarchicalTree) {
+        clause.hierarchicalTree.isSingleClause = isSingleClause;
+      }
+    }
+
     return clauses;
   }
 
@@ -409,15 +422,18 @@ class MonteCarloSimulator {
     // Build context from current, previous states, and affect traits
     const context = this.#buildContext(currentState, previousState, affectTraits);
 
-    // Evaluate each prerequisite separately for tracking
+    // Two-phase evaluation for last-mile tracking
     if (clauseTracking && expression?.prerequisites) {
+      // Phase 1: Evaluate all clauses and collect results
+      const clauseResults = [];
       for (let i = 0; i < expression.prerequisites.length; i++) {
         const prereq = expression.prerequisites[i];
         const clause = clauseTracking[i];
+        let passed;
 
         // Use hierarchical evaluation if tree exists
         if (clause.hierarchicalTree) {
-          const passed = this.#evaluateHierarchicalNode(
+          passed = this.#evaluateHierarchicalNode(
             clause.hierarchicalTree,
             context
           );
@@ -427,11 +443,32 @@ class MonteCarloSimulator {
           }
         } else {
           // Fallback to atomic evaluation
-          const passed = this.#evaluatePrerequisite(prereq, context);
+          passed = this.#evaluatePrerequisite(prereq, context);
           if (!passed) {
             clause.failureCount++;
             const violation = this.#estimateViolation(prereq, context);
             clause.violationSum += violation;
+          }
+        }
+
+        clauseResults.push({ clause, passed });
+      }
+
+      // Phase 2: Calculate last-mile for each clause
+      for (let i = 0; i < clauseResults.length; i++) {
+        const { clause: currentClause, passed: currentPassed } =
+          clauseResults[i];
+
+        // Check if all OTHER clauses passed
+        const othersPassed = clauseResults.every(
+          (result, j) => j === i || result.passed
+        );
+
+        if (othersPassed && currentClause.hierarchicalTree) {
+          currentClause.hierarchicalTree.recordOthersPassed();
+
+          if (!currentPassed) {
+            currentClause.hierarchicalTree.recordLastMileFail();
           }
         }
       }
@@ -765,6 +802,43 @@ class MonteCarloSimulator {
   }
 
   /**
+   * Extract ceiling data from the worst leaf in a hierarchical tree.
+   * For compound nodes (AND/OR), finds the leaf with the largest ceiling gap.
+   *
+   * @private
+   * @param {HierarchicalClauseNode|null} tree
+   * @returns {{ceilingGap: number|null, maxObserved: number|null, thresholdValue: number|null}}
+   */
+  #extractCeilingData(tree) {
+    if (!tree) {
+      return { ceilingGap: null, maxObserved: null, thresholdValue: null };
+    }
+
+    // For leaf nodes, extract directly
+    if (tree.nodeType === 'leaf') {
+      return {
+        ceilingGap: tree.ceilingGap,
+        maxObserved: tree.maxObservedValue,
+        thresholdValue: tree.thresholdValue,
+      };
+    }
+
+    // For compound nodes, find the worst ceiling among children
+    let worstCeiling = { ceilingGap: null, maxObserved: null, thresholdValue: null };
+    let worstGap = -Infinity;
+
+    for (const child of tree.children || []) {
+      const childCeiling = this.#extractCeilingData(child);
+      if (childCeiling.ceilingGap !== null && childCeiling.ceilingGap > worstGap) {
+        worstGap = childCeiling.ceilingGap;
+        worstCeiling = childCeiling;
+      }
+    }
+
+    return worstCeiling;
+  }
+
+  /**
    * Finalize clause results with rates and hierarchical breakdown
    *
    * @private
@@ -774,16 +848,36 @@ class MonteCarloSimulator {
    */
   #finalizeClauseResults(clauseTracking, sampleCount) {
     return clauseTracking
-      .map((c) => ({
-        clauseDescription: c.description,
-        clauseIndex: c.clauseIndex,
-        failureCount: c.failureCount,
-        failureRate: c.failureCount / sampleCount,
-        averageViolation:
-          c.failureCount > 0 ? c.violationSum / c.failureCount : 0,
-        // Include hierarchical breakdown if available
-        hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
-      }))
+      .map((c) => {
+        // Extract ceiling data from the worst leaf in the tree
+        const ceilingData = this.#extractCeilingData(c.hierarchicalTree);
+
+        return {
+          clauseDescription: c.description,
+          clauseIndex: c.clauseIndex,
+          failureCount: c.failureCount,
+          failureRate: c.failureCount / sampleCount,
+          averageViolation:
+            c.failureCount > 0 ? c.violationSum / c.failureCount : 0,
+          violationP50: c.hierarchicalTree?.violationP50 ?? null,
+          violationP90: c.hierarchicalTree?.violationP90 ?? null,
+          nearMissRate: c.hierarchicalTree?.nearMissRate ?? null,
+          nearMissEpsilon: c.hierarchicalTree?.nearMissEpsilon ?? null,
+          // Last-mile tracking fields
+          lastMileFailRate: c.hierarchicalTree?.lastMileFailRate ?? null,
+          lastMileContext: {
+            othersPassedCount: c.hierarchicalTree?.othersPassedCount ?? 0,
+            lastMileFailCount: c.hierarchicalTree?.lastMileFailCount ?? 0,
+          },
+          isSingleClause: c.hierarchicalTree?.isSingleClause ?? false,
+          // Ceiling detection fields (from worst leaf)
+          ceilingGap: ceilingData.ceilingGap,
+          maxObserved: ceilingData.maxObserved,
+          thresholdValue: ceilingData.thresholdValue,
+          // Include hierarchical breakdown if available
+          hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
+        };
+      })
       .sort((a, b) => b.failureRate - a.failureRate);
   }
 
@@ -839,12 +933,21 @@ class MonteCarloSimulator {
    */
   #buildHierarchicalTree(logic, pathPrefix = '0') {
     if (!logic || typeof logic !== 'object') {
-      return new HierarchicalClauseNode({
+      const node = new HierarchicalClauseNode({
         id: pathPrefix,
         nodeType: 'leaf',
         description: this.#describeLeafCondition(logic),
         logic,
       });
+      const thresholdInfo = this.#extractThresholdFromLogic(logic);
+      if (thresholdInfo) {
+        node.setThresholdMetadata(
+          thresholdInfo.threshold,
+          thresholdInfo.operator,
+          thresholdInfo.variablePath
+        );
+      }
+      return node;
     }
 
     // Handle AND nodes
@@ -876,12 +979,21 @@ class MonteCarloSimulator {
     }
 
     // Leaf node (comparison operator)
-    return new HierarchicalClauseNode({
+    const node = new HierarchicalClauseNode({
       id: pathPrefix,
       nodeType: 'leaf',
       description: this.#describeLeafCondition(logic),
       logic,
     });
+    const thresholdInfo = this.#extractThresholdFromLogic(logic);
+    if (thresholdInfo) {
+      node.setThresholdMetadata(
+        thresholdInfo.threshold,
+        thresholdInfo.operator,
+        thresholdInfo.variablePath
+      );
+    }
+    return node;
   }
 
   /**
@@ -943,6 +1055,63 @@ class MonteCarloSimulator {
   }
 
   /**
+   * Extract threshold metadata from a JSON Logic comparison.
+   *
+   * @private
+   * @param {object} logic - The JSON Logic object
+   * @returns {{threshold: number, operator: string, variablePath: string}|null}
+   */
+  #extractThresholdFromLogic(logic) {
+    if (!logic || typeof logic !== 'object') return null;
+
+    const operators = ['>=', '<=', '>', '<', '=='];
+
+    for (const op of operators) {
+      if (logic[op] && Array.isArray(logic[op]) && logic[op].length === 2) {
+        const [left, right] = logic[op];
+
+        // Pattern: {"op": [{"var": "path"}, threshold]}
+        if (left?.var && typeof right === 'number') {
+          return {
+            threshold: right,
+            operator: op,
+            variablePath: left.var,
+          };
+        }
+
+        // Pattern: {"op": [threshold, {"var": "path"}]} (reversed)
+        if (right?.var && typeof left === 'number') {
+          return {
+            threshold: left,
+            operator: this.#reverseOperator(op),
+            variablePath: right.var,
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Reverse a comparison operator (for when threshold is on the left).
+   *
+   * @private
+   * @param {string} op
+   * @returns {string}
+   */
+  #reverseOperator(op) {
+    const reverseMap = {
+      '>=': '<=',
+      '<=': '>=',
+      '>': '<',
+      '<': '>',
+      '==': '==',
+    };
+    return reverseMap[op] || op;
+  }
+
+  /**
    * Recursively evaluate a hierarchical tree node and update stats.
    * Evaluates ALL children (no short-circuit) to collect accurate stats.
    *
@@ -957,6 +1126,19 @@ class MonteCarloSimulator {
       const violation = passed
         ? 0
         : this.#estimateLeafViolation(node.logic, context);
+
+      // Record the actual observed value for ceiling analysis
+      const actualValue = this.#extractActualValue(node.logic, context);
+      if (actualValue !== null) {
+        node.recordObservedValue(actualValue);
+      }
+
+      // Record near-miss if threshold metadata available
+      if (actualValue !== null && node.thresholdValue !== null && node.variablePath) {
+        const epsilon = getEpsilonForVariable(node.variablePath);
+        node.recordNearMiss(actualValue, node.thresholdValue, epsilon);
+      }
+
       node.recordEvaluation(passed, violation);
       return passed;
     }
@@ -1087,6 +1269,41 @@ class MonteCarloSimulator {
     } catch {
       return expr;
     }
+  }
+
+  /**
+   * Extract the actual value being compared in a condition.
+   * Used for ceiling analysis (max observed value tracking).
+   *
+   * @private
+   * @param {Object} logic - JSON Logic condition
+   * @param {Object} context - Evaluation context
+   * @returns {number|null} The actual value, or null for non-numeric comparisons
+   */
+  #extractActualValue(logic, context) {
+    if (!logic) return null;
+
+    const operators = ['>=', '<=', '>', '<', '=='];
+
+    for (const op of operators) {
+      if (logic[op]) {
+        const [left, right] = logic[op];
+
+        // Pattern: {"op": [{"var": "path"}, threshold]}
+        if (left?.var) {
+          const value = this.#resolveValue(left, context);
+          return typeof value === 'number' ? value : null;
+        }
+
+        // Pattern: {"op": [threshold, {"var": "path"}]}
+        if (right?.var) {
+          const value = this.#resolveValue(right, context);
+          return typeof value === 'number' ? value : null;
+        }
+      }
+    }
+
+    return null;
   }
 
   // ============================================================

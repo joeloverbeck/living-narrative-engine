@@ -78,6 +78,7 @@ const createDefaultMoodData = () => ({
   engagement: 0,
   future_expectancy: 0,
   self_evaluation: 0,
+  affiliation: 0,
 });
 
 const createMoodData = (overrides = {}) => ({
@@ -457,7 +458,7 @@ describe('EmotionalStatePanel', () => {
   });
 
   describe('bar rendering', () => {
-    it('renders all 7 mood axes', () => {
+    it('renders all 8 mood axes', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -466,7 +467,7 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(7);
+      expect(axes.length).toBe(8);
     });
 
     it('renders positive value bars extending right from center', () => {
@@ -595,7 +596,7 @@ describe('EmotionalStatePanel', () => {
       const valenceAxis = panelElement.querySelector('[data-axis="valence"]');
       const barFill = valenceAxis.querySelector('.emotional-state-panel__bar-fill');
 
-      expect(barFill.style.backgroundColor).toBe('rgb(71, 168, 71)'); // #47a847
+      expect(barFill.style.backgroundColor).toBe('rgb(40, 167, 69)'); // #28a745
     });
 
     it('applies correct colors for negative values', () => {
@@ -609,7 +610,7 @@ describe('EmotionalStatePanel', () => {
       const valenceAxis = panelElement.querySelector('[data-axis="valence"]');
       const barFill = valenceAxis.querySelector('.emotional-state-panel__bar-fill');
 
-      expect(barFill.style.backgroundColor).toBe('rgb(196, 88, 80)'); // #c45850
+      expect(barFill.style.backgroundColor).toBe('rgb(220, 53, 69)'); // #dc3545
     });
 
     it('renders axis labels correctly', () => {
@@ -712,7 +713,69 @@ describe('EmotionalStatePanel', () => {
 
       // Should still render all axes, with missing values treated as 0
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(7);
+      expect(axes.length).toBe(8);
+    });
+
+    it('renders affiliation axis with correct labels', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const affiliationAxis = panelElement.querySelector('[data-axis="affiliation"]');
+      expect(affiliationAxis).not.toBeNull();
+
+      const leftLabel = affiliationAxis.querySelector('.emotional-state-panel__label--left');
+      const rightLabel = affiliationAxis.querySelector('.emotional-state-panel__label--right');
+
+      expect(leftLabel.textContent).toBe('Detached');
+      expect(rightLabel.textContent).toBe('Connected');
+    });
+
+    it('renders affiliation positive value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ affiliation: 75 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const affiliationAxis = panelElement.querySelector('[data-axis="affiliation"]');
+      const barFill = affiliationAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--positive')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(232, 62, 140)'); // #e83e8c
+    });
+
+    it('renders affiliation negative value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ affiliation: -60 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const affiliationAxis = panelElement.querySelector('[data-axis="affiliation"]');
+      const barFill = affiliationAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--negative')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(78, 115, 223)'); // #4e73df
+    });
+
+    it('renders affiliation axis in correct position (8th)', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
+      const lastAxis = axes[axes.length - 1];
+
+      expect(lastAxis.getAttribute('data-axis')).toBe('affiliation');
     });
   });
 

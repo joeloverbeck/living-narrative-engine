@@ -1,0 +1,151 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-vigilance:hypervigilant_scanning",
+    "description": "Heightened threat awareness with constant environmental monitoring",
+    "priority": 84,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.hypervigilance"
+                                    },
+                                    0.65
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.hypervigilance"
+                                            },
+                                            {
+                                                "var": "previousEmotions.hypervigilance"
+                                            }
+                                        ]
+                                    },
+                                    0.15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires hypervigilance+fear with credible threat and mobilized arousal plus sustained attention; explicitly excludes dissociation; stays below panic and excludes freeze so scanning remains active; gated by crossing/spike into scanning or a threat jump."
+        }
+    ],
+    "actor_description": "I can't let my attention rest. Every small sound feels like it's trying to become a bigger one. My eyes keep jumping on their own-doorways, corners, hands, exits-running loops as if I can prevent the bad thing by seeing it first. It's exhausting, but stopping feels worse, like the moment I relax is the moment I get hit.",
+    "description_text": "{actor} keeps scanning-head turning at tiny cues, eyes darting from shadows to faces to exits. Their posture stays tense and ready, weight shifting as if they can't decide whether to flee, brace, or strike first.",
+    "alternate_descriptions": {
+        "auditory": "I hear repeated small movements-fabric whispering, a shoe repositioning, breath carefully controlled and never fully released.",
+        "tactile": "Someone radiates tension. Even without seeing them, I can feel the constant readiness in the way they shift and tighten, like a spring that refuses to uncoil."
+    },
+    "tags": [
+        "hypervigilance",
+        "fear",
+        "scanning",
+        "alert",
+        "watchful"
+    ],
+    "diagnosticStatus": "unknown"
+}

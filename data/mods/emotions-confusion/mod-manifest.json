@@ -1,0 +1,11 @@
+{
+  "id": "emotions-confusion",
+  "version": "1.0.0",
+  "name": "emotions-confusion",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "confused_frown.expression.json"
+    ]
+  }
+}

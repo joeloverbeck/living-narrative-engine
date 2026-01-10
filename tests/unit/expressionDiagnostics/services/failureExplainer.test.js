@@ -1277,5 +1277,811 @@ describe('FailureExplainer', () => {
       expect(result[0].averageViolation).toBe(0.15);
       expect(result[0].explanation).toBeDefined();
     });
+
+    it('should include advancedAnalysis in blocker results', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.7,
+          averageViolation: 0.15,
+          clauseIndex: 0,
+          violationP50: 0.1,
+          violationP90: 0.25,
+          nearMissRate: 0.08,
+          lastMileFailRate: 0.5,
+          maxObserved: 0.45,
+          thresholdValue: 0.5,
+          ceilingGap: 0.05,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      expect(result[0]).toHaveProperty('advancedAnalysis');
+      expect(result[0].advancedAnalysis).toHaveProperty('percentileAnalysis');
+      expect(result[0].advancedAnalysis).toHaveProperty('nearMissAnalysis');
+      expect(result[0].advancedAnalysis).toHaveProperty('ceilingAnalysis');
+      expect(result[0].advancedAnalysis).toHaveProperty('lastMileAnalysis');
+      expect(result[0].advancedAnalysis).toHaveProperty('recommendation');
+    });
+
+    it('should include priorityScore in blocker results', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.7,
+          averageViolation: 0.15,
+          clauseIndex: 0,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      expect(result[0]).toHaveProperty('priorityScore');
+      expect(typeof result[0].priorityScore).toBe('number');
+    });
+
+    it('should sort blockers by priority score (last-mile weighted)', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'High failure, low last-mile',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          clauseIndex: 0,
+          lastMileFailRate: 0.1,
+        },
+        {
+          clauseDescription: 'Lower failure, high last-mile',
+          failureRate: 0.3,
+          averageViolation: 0.1,
+          clauseIndex: 1,
+          lastMileFailRate: 0.8,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      // The one with high last-mile should be ranked first despite lower failureRate
+      expect(result[0].lastMileFailRate).toBe(0.8);
+      expect(result[0].rank).toBe(1);
+    });
+
+    it('should include severity field in blocker results', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'test',
+          failureRate: 0.95,
+          averageViolation: 0.1,
+          clauseIndex: 0,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      expect(result[0]).toHaveProperty('severity');
+      expect(result[0].severity).toBe('high');
+    });
+
+    it('should pass through lastMileFailRate to blocker results', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'test',
+          failureRate: 0.7,
+          averageViolation: 0.1,
+          clauseIndex: 0,
+          lastMileFailRate: 0.6,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      expect(result[0].lastMileFailRate).toBe(0.6);
+    });
+
+    it('should set lastMileFailRate to null when not provided', () => {
+      const clauseFailures = [
+        {
+          clauseDescription: 'test',
+          failureRate: 0.7,
+          averageViolation: 0.1,
+          clauseIndex: 0,
+        },
+      ];
+
+      const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+      expect(result[0].lastMileFailRate).toBeNull();
+    });
+  });
+
+  describe('Advanced Metrics Analysis (MONCARADVMET-008)', () => {
+    let explainer;
+
+    beforeEach(() => {
+      explainer = new FailureExplainer({
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+      });
+    });
+
+    describe('Percentile Analysis', () => {
+      it('should return no_data status when violationP50 is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            violationP50: null,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.percentileAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(result[0].advancedAnalysis.percentileAnalysis.insight).toBeNull();
+      });
+
+      it('should detect heavy_tail when p50 < mean * 0.5', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.2,
+            clauseIndex: 0,
+            violationP50: 0.05, // Much lower than mean * 0.5 = 0.1
+            violationP90: 0.3,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.percentileAnalysis.status).toBe(
+          'heavy_tail'
+        );
+        expect(result[0].advancedAnalysis.percentileAnalysis.insight).toContain(
+          'Outliers'
+        );
+      });
+
+      it('should detect some_severe when p90 > mean * 2', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            violationP50: 0.08, // >= mean * 0.5
+            violationP90: 0.25, // > mean * 2 = 0.2
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.percentileAnalysis.status).toBe(
+          'some_severe'
+        );
+        expect(result[0].advancedAnalysis.percentileAnalysis.insight).toContain(
+          'fail badly'
+        );
+      });
+
+      it('should return normal status for normally distributed violations', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            violationP50: 0.09, // Close to mean
+            violationP90: 0.15, // <= mean * 2
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.percentileAnalysis.status).toBe(
+          'normal'
+        );
+        expect(result[0].advancedAnalysis.percentileAnalysis.insight).toContain(
+          'normally distributed'
+        );
+      });
+    });
+
+    describe('Near-Miss Analysis', () => {
+      it('should return no_data status when nearMissRate is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            nearMissRate: null,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.nearMissAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(
+          result[0].advancedAnalysis.nearMissAnalysis.tunability
+        ).toBeNull();
+      });
+
+      it('should detect high tunability when nearMissRate > 0.10', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            nearMissRate: 0.15,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.nearMissAnalysis.status).toBe('high');
+        expect(result[0].advancedAnalysis.nearMissAnalysis.tunability).toBe(
+          'high'
+        );
+        expect(result[0].advancedAnalysis.nearMissAnalysis.insight).toContain(
+          'threshold tweaks will help'
+        );
+      });
+
+      it('should detect low tunability when nearMissRate < 0.02', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            nearMissRate: 0.01,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.nearMissAnalysis.status).toBe('low');
+        expect(result[0].advancedAnalysis.nearMissAnalysis.tunability).toBe(
+          'low'
+        );
+        expect(result[0].advancedAnalysis.nearMissAnalysis.insight).toContain(
+          'tune prototypes/gates'
+        );
+      });
+
+      it('should detect moderate tunability when 0.02 <= nearMissRate <= 0.10', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            nearMissRate: 0.05,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.nearMissAnalysis.status).toBe(
+          'moderate'
+        );
+        expect(result[0].advancedAnalysis.nearMissAnalysis.tunability).toBe(
+          'moderate'
+        );
+      });
+    });
+
+    describe('Ceiling Analysis', () => {
+      it('should return no_data status when ceilingGap is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            ceilingGap: null,
+            maxObserved: 0.4,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.ceilingAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(
+          result[0].advancedAnalysis.ceilingAnalysis.achievable
+        ).toBeNull();
+      });
+
+      it('should return no_data status when maxObserved is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            ceilingGap: 0.1,
+            maxObserved: null,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.ceilingAnalysis.status).toBe(
+          'no_data'
+        );
+      });
+
+      it('should detect ceiling when ceilingGap > 0', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.7',
+            failureRate: 0.9,
+            averageViolation: 0.2,
+            clauseIndex: 0,
+            ceilingGap: 0.2,
+            maxObserved: 0.5,
+            thresholdValue: 0.7,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.ceilingAnalysis.status).toBe(
+          'ceiling_detected'
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.achievable).toBe(
+          false
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.gap).toBe(0.2);
+        expect(result[0].advancedAnalysis.ceilingAnalysis.insight).toContain(
+          '0.50'
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.insight).toContain(
+          '0.70'
+        );
+      });
+
+      it('should detect achievable when ceilingGap <= 0', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            ceilingGap: -0.1,
+            maxObserved: 0.6,
+            thresholdValue: 0.5,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.ceilingAnalysis.status).toBe(
+          'achievable'
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.achievable).toBe(
+          true
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.headroom).toBe(0.1);
+      });
+    });
+
+    describe('Last-Mile Analysis', () => {
+      it('should detect single_clause when isSingleClause is true', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            isSingleClause: true,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'single_clause'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          true
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.insight).toContain(
+          'only clause'
+        );
+      });
+
+      it('should return no_data status when lastMileFailRate is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: null,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          false
+        );
+      });
+
+      it('should detect decisive_blocker when ratio > 1.5', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.3,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.6, // ratio = 0.6 / 0.3 = 2.0 > 1.5
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'decisive_blocker'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          true
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.insight).toContain(
+          'tune this first'
+        );
+      });
+
+      it('should detect rarely_decisive when lastMileFailRate < 0.01', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.005,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'rarely_decisive'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          false
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.insight).toContain(
+          'other clauses fail first'
+        );
+      });
+
+      it('should detect moderate status otherwise', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.4, // ratio = 0.8, not > 1.5
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'moderate'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          false
+        );
+      });
+    });
+
+    describe('Recommendations', () => {
+      it('should recommend redesign for ceiling-detected clauses', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.7',
+            failureRate: 0.9,
+            averageViolation: 0.2,
+            clauseIndex: 0,
+            ceilingGap: 0.2,
+            maxObserved: 0.5,
+            thresholdValue: 0.7,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.recommendation.action).toBe(
+          'redesign'
+        );
+        expect(result[0].advancedAnalysis.recommendation.priority).toBe(
+          'critical'
+        );
+        expect(result[0].advancedAnalysis.recommendation.message).toContain(
+          'unreachable'
+        );
+      });
+
+      it('should recommend tune_threshold for decisive blockers with high near-miss', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.9,
+            nearMissRate: 0.15,
+            ceilingGap: -0.1,
+            maxObserved: 0.6,
+            thresholdValue: 0.5,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.recommendation.action).toBe(
+          'tune_threshold'
+        );
+        expect(result[0].advancedAnalysis.recommendation.priority).toBe('high');
+        expect(result[0].advancedAnalysis.recommendation.message).toContain(
+          'TUNE THIS FIRST'
+        );
+      });
+
+      it('should recommend adjust_upstream for decisive blockers with low near-miss', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.9,
+            nearMissRate: 0.01,
+            ceilingGap: -0.1,
+            maxObserved: 0.6,
+            thresholdValue: 0.5,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.recommendation.action).toBe(
+          'adjust_upstream'
+        );
+        expect(result[0].advancedAnalysis.recommendation.priority).toBe(
+          'medium'
+        );
+        expect(result[0].advancedAnalysis.recommendation.message).toContain(
+          'adjust prototypes'
+        );
+      });
+
+      it('should recommend lower_priority for non-decisive clauses', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.005,
+            nearMissRate: 0.05,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0].advancedAnalysis.recommendation.action).toBe(
+          'lower_priority'
+        );
+        expect(result[0].advancedAnalysis.recommendation.priority).toBe('low');
+        expect(result[0].advancedAnalysis.recommendation.message).toContain(
+          'tune those instead'
+        );
+      });
+    });
+
+    describe('Priority Scoring', () => {
+      it('should calculate priority score correctly with all metrics', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.8,
+            nearMissRate: 0.1,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // score = 0.8 * 0.4 + 0.5 * 0.3 + 0.1 * 0.2 = 0.32 + 0.15 + 0.02 = 0.49
+        expect(result[0].priorityScore).toBeCloseTo(0.49, 2);
+      });
+
+      it('should fall back to failureRate when lastMileFailRate is null', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: null,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // score = 0.5 * 0.4 + 0.5 * 0.3 = 0.2 + 0.15 = 0.35
+        expect(result[0].priorityScore).toBeCloseTo(0.35, 2);
+      });
+
+      it('should apply ceiling penalty (halve score) when ceilingGap > 0', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.8,
+            nearMissRate: 0.1,
+            ceilingGap: 0.1, // Ceiling detected
+            maxObserved: 0.4,
+            thresholdValue: 0.5,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // Base score = 0.49, with ceiling penalty = 0.49 * 0.5 = 0.245
+        expect(result[0].priorityScore).toBeCloseTo(0.245, 2);
+      });
+
+      it('should not apply near-miss bonus when nearMissRate <= 0.05', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'test',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.8,
+            nearMissRate: 0.03, // Not above 0.05 threshold
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // score = 0.8 * 0.4 + 0.5 * 0.3 = 0.32 + 0.15 = 0.47 (no near-miss bonus)
+        expect(result[0].priorityScore).toBeCloseTo(0.47, 2);
+      });
+    });
+
+    describe('generateSummary() with Advanced Metrics', () => {
+      it('should mention decisive blocker in summary', () => {
+        const blockers = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            lastMileFailRate: 0.8,
+            advancedAnalysis: {
+              lastMileAnalysis: { isDecisive: true },
+            },
+          },
+        ];
+
+        const summary = explainer.generateSummary(0.1, blockers);
+
+        expect(summary).toContain('emotions.joy >= 0.5');
+        expect(summary).toContain('80.0%');
+        expect(summary).toContain('last-mile failure');
+      });
+
+      it('should mention ceiling blocker in summary', () => {
+        const blockers = [
+          {
+            clauseDescription: 'emotions.fear >= 0.9',
+            failureRate: 0.95,
+            averageViolation: 0.3,
+            advancedAnalysis: {
+              ceilingAnalysis: { status: 'ceiling_detected' },
+            },
+          },
+        ];
+
+        const summary = explainer.generateSummary(0, blockers);
+
+        expect(summary).toContain('emotions.fear >= 0.9');
+        expect(summary).toContain('ceiling effect');
+        expect(summary).toContain('cannot be triggered');
+      });
+
+      it('should not add advanced insights when advancedAnalysis is missing', () => {
+        const blockers = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+          },
+        ];
+
+        const summary = explainer.generateSummary(0.02, blockers);
+
+        expect(summary).not.toContain('Focus on');
+        expect(summary).not.toContain('Warning:');
+      });
+    });
+
+    describe('Backward Compatibility', () => {
+      it('should work with clauses missing all advanced metrics', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.7,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            // No advanced metrics provided
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        expect(result[0]).toHaveProperty('advancedAnalysis');
+        expect(result[0].advancedAnalysis.percentileAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(result[0].advancedAnalysis.nearMissAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(result[0].advancedAnalysis.ceilingAnalysis.status).toBe(
+          'no_data'
+        );
+        expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
+          'no_data'
+        );
+      });
+
+      it('should still sort and rank correctly without advanced metrics', () => {
+        const clauseFailures = [
+          {
+            clauseDescription: 'clause1',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+          },
+          {
+            clauseDescription: 'clause2',
+            failureRate: 0.9,
+            averageViolation: 0.1,
+            clauseIndex: 1,
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // Without lastMileFailRate, falls back to failureRate for priority
+        expect(result[0].failureRate).toBe(0.9);
+        expect(result[0].rank).toBe(1);
+        expect(result[1].failureRate).toBe(0.5);
+        expect(result[1].rank).toBe(2);
+      });
+    });
   });
 });

@@ -39,6 +39,39 @@ class HierarchicalClauseNode {
   /** @type {number} Sum of violation magnitudes when failed */
   #violationSum;
 
+  /** @type {number|null} Threshold value from condition */
+  #thresholdValue = null;
+
+  /** @type {string|null} Comparison operator ('>=', '<=', etc.) */
+  #comparisonOperator = null;
+
+  /** @type {string|null} Variable path being compared (e.g., 'emotions.joy') */
+  #variablePath = null;
+
+  /** @type {number[]} Individual violation values for percentile calculation */
+  #violationValues = [];
+
+  /** @type {number} Maximum observed value for this clause's variable */
+  #maxObservedValue = -Infinity;
+
+  /** @type {number[]} All observed values for p99 calculation */
+  #observedValues = [];
+
+  /** @type {number} Count of samples within epsilon of threshold */
+  #nearMissCount = 0;
+
+  /** @type {number|null} The epsilon value used for near-miss detection */
+  #epsilonUsed = null;
+
+  /** @type {number} Failures when all other clauses passed */
+  #lastMileFailCount = 0;
+
+  /** @type {number} Samples where all other clauses passed */
+  #othersPassedCount = 0;
+
+  /** @type {boolean|null} Whether this is the only clause in the prerequisite */
+  #isSingleClause = null;
+
   /**
    * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
@@ -141,6 +174,296 @@ class HierarchicalClauseNode {
     return this.#nodeType === 'and' || this.#nodeType === 'or';
   }
 
+  /** @returns {number|null} */
+  get thresholdValue() {
+    return this.#thresholdValue;
+  }
+
+  /** @returns {string|null} */
+  get comparisonOperator() {
+    return this.#comparisonOperator;
+  }
+
+  /** @returns {string|null} */
+  get variablePath() {
+    return this.#variablePath;
+  }
+
+  /**
+   * Get the array of violation values for percentile calculation.
+   *
+   * @returns {number[]}
+   */
+  get violationValues() {
+    return this.#violationValues;
+  }
+
+  /**
+   * Get the count of stored violation samples.
+   *
+   * @returns {number}
+   */
+  get violationSampleCount() {
+    return this.#violationValues.length;
+  }
+
+  /**
+   * Get the maximum observed value for this clause's variable.
+   *
+   * @returns {number|null} Max value, or null if no observations
+   */
+  get maxObservedValue() {
+    return this.#maxObservedValue === -Infinity ? null : this.#maxObservedValue;
+  }
+
+  /**
+   * Get the 99th percentile of observed values.
+   *
+   * @returns {number|null}
+   */
+  get observedP99() {
+    return this.#getObservedPercentile(0.99);
+  }
+
+  /**
+   * Calculate the gap between threshold and max observed.
+   * Negative value means threshold is achievable.
+   * Positive value means there's a ceiling effect.
+   *
+   * @returns {number|null} Gap, or null if threshold not set or no observations
+   */
+  get ceilingGap() {
+    if (this.#thresholdValue === null || this.#maxObservedValue === -Infinity) {
+      return null;
+    }
+    return this.#thresholdValue - this.#maxObservedValue;
+  }
+
+  /**
+   * Get the near-miss count (samples within epsilon of threshold).
+   *
+   * @returns {number}
+   */
+  get nearMissCount() {
+    return this.#nearMissCount;
+  }
+
+  /**
+   * Get the near-miss rate (proportion of all evaluations).
+   *
+   * @returns {number|null} Rate as decimal [0, 1], or null if no evaluations
+   */
+  get nearMissRate() {
+    if (this.#evaluationCount === 0) {
+      return null;
+    }
+    return this.#nearMissCount / this.#evaluationCount;
+  }
+
+  /**
+   * Get the epsilon value used for near-miss detection.
+   *
+   * @returns {number|null}
+   */
+  get nearMissEpsilon() {
+    return this.#epsilonUsed;
+  }
+
+  /**
+   * Get the last-mile failure count.
+   * This counts failures when all other clauses passed.
+   *
+   * @returns {number}
+   */
+  get lastMileFailCount() {
+    return this.#lastMileFailCount;
+  }
+
+  /**
+   * Get the count of samples where all other clauses passed.
+   *
+   * @returns {number}
+   */
+  get othersPassedCount() {
+    return this.#othersPassedCount;
+  }
+
+  /**
+   * Get the last-mile failure rate.
+   * Failure rate among samples where all other clauses passed.
+   *
+   * @returns {number|null} Rate [0, 1], or null if no samples with others passed
+   */
+  get lastMileFailRate() {
+    if (this.#othersPassedCount === 0) {
+      return null;
+    }
+    return this.#lastMileFailCount / this.#othersPassedCount;
+  }
+
+  /**
+   * Whether this is a single-clause prerequisite.
+   * For single clauses, last-mile rate equals failure rate by definition.
+   *
+   * @returns {boolean}
+   */
+  get isSingleClause() {
+    return this.#isSingleClause ?? false;
+  }
+
+  /**
+   * Set whether this is a single-clause prerequisite.
+   *
+   * @param {boolean} value
+   */
+  set isSingleClause(value) {
+    this.#isSingleClause = value;
+  }
+
+  /**
+   * Calculate the percentile of violation values.
+   * Uses linear interpolation for non-integer indices.
+   *
+   * @param {number} p - Percentile as decimal (0.5 for p50, 0.9 for p90)
+   * @returns {number|null} The percentile value, or null if no violations
+   */
+  getViolationPercentile(p) {
+    const values = this.#violationValues;
+
+    if (values.length === 0) {
+      return null;
+    }
+
+    if (values.length === 1) {
+      return values[0];
+    }
+
+    // Sort a copy (don't mutate the original)
+    const sorted = [...values].sort((a, b) => a - b);
+
+    // Calculate index using linear interpolation
+    const index = p * (sorted.length - 1);
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+
+    if (lower === upper) {
+      return sorted[lower];
+    }
+
+    // Linear interpolation between adjacent values
+    const fraction = index - lower;
+    return sorted[lower] * (1 - fraction) + sorted[upper] * fraction;
+  }
+
+  /**
+   * Median (50th percentile) of violation values.
+   *
+   * @returns {number|null}
+   */
+  get violationP50() {
+    return this.getViolationPercentile(0.5);
+  }
+
+  /**
+   * 90th percentile of violation values.
+   *
+   * @returns {number|null}
+   */
+  get violationP90() {
+    return this.getViolationPercentile(0.9);
+  }
+
+  /**
+   * Calculate the percentile of observed values.
+   * Uses linear interpolation for non-integer indices.
+   *
+   * @private
+   * @param {number} p - Percentile as decimal (0.99 for p99)
+   * @returns {number|null} The percentile value, or null if no observations
+   */
+  #getObservedPercentile(p) {
+    const values = this.#observedValues;
+
+    if (values.length === 0) {
+      return null;
+    }
+
+    if (values.length === 1) {
+      return values[0];
+    }
+
+    // Sort a copy (don't mutate the original)
+    const sorted = [...values].sort((a, b) => a - b);
+
+    // Calculate index using linear interpolation
+    const index = p * (sorted.length - 1);
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+
+    if (lower === upper) {
+      return sorted[lower];
+    }
+
+    // Linear interpolation between adjacent values
+    const fraction = index - lower;
+    return sorted[lower] * (1 - fraction) + sorted[upper] * fraction;
+  }
+
+  /**
+   * Record an observed value for this clause's variable.
+   * Called for EVERY evaluation, not just failures.
+   *
+   * @param {number} value - The actual value observed
+   */
+  recordObservedValue(value) {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return; // Skip non-numeric values (boolean conditions)
+    }
+
+    if (value > this.#maxObservedValue) {
+      this.#maxObservedValue = value;
+    }
+
+    this.#observedValues.push(value);
+  }
+
+  /**
+   * Record whether this evaluation was a near-miss.
+   * A near-miss is when |actual - threshold| < epsilon.
+   *
+   * @param {number} actualValue - The observed value
+   * @param {number} threshold - The threshold value
+   * @param {number} epsilon - The epsilon for this variable
+   */
+  recordNearMiss(actualValue, threshold, epsilon) {
+    if (typeof actualValue !== 'number' || typeof threshold !== 'number') {
+      return;
+    }
+
+    this.#epsilonUsed = epsilon;
+
+    const distance = Math.abs(actualValue - threshold);
+    if (distance < epsilon) {
+      this.#nearMissCount++;
+    }
+  }
+
+  /**
+   * Record a last-mile failure.
+   * Called when this clause fails AND all other clauses passed.
+   */
+  recordLastMileFail() {
+    this.#lastMileFailCount++;
+  }
+
+  /**
+   * Record that all other clauses passed for this sample.
+   * Called regardless of whether this clause passed.
+   */
+  recordOthersPassed() {
+    this.#othersPassedCount++;
+  }
+
   /**
    * Record an evaluation result for this node.
    *
@@ -153,6 +476,7 @@ class HierarchicalClauseNode {
       this.#failureCount++;
       if (typeof violation === 'number' && violation > 0) {
         this.#violationSum += violation;
+        this.#violationValues.push(violation);
       }
     }
   }
@@ -164,9 +488,30 @@ class HierarchicalClauseNode {
     this.#failureCount = 0;
     this.#evaluationCount = 0;
     this.#violationSum = 0;
+    this.#violationValues = [];
+    this.#maxObservedValue = -Infinity;
+    this.#observedValues = [];
+    this.#nearMissCount = 0;
+    this.#epsilonUsed = null;
+    this.#lastMileFailCount = 0;
+    this.#othersPassedCount = 0;
+    // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
     }
+  }
+
+  /**
+   * Set threshold metadata for leaf nodes.
+   *
+   * @param {number|null} threshold - The threshold value
+   * @param {string|null} operator - The comparison operator
+   * @param {string|null} variablePath - The variable being compared
+   */
+  setThresholdMetadata(threshold, operator, variablePath) {
+    this.#thresholdValue = threshold;
+    this.#comparisonOperator = operator;
+    this.#variablePath = variablePath;
   }
 
   /**
@@ -183,7 +528,23 @@ class HierarchicalClauseNode {
       evaluationCount: this.#evaluationCount,
       failureRate: this.failureRate,
       averageViolation: this.averageViolation,
+      violationP50: this.violationP50,
+      violationP90: this.violationP90,
       isCompound: this.isCompound,
+      thresholdValue: this.#thresholdValue,
+      comparisonOperator: this.#comparisonOperator,
+      variablePath: this.#variablePath,
+      violationSampleCount: this.#violationValues.length,
+      maxObservedValue: this.maxObservedValue,
+      observedP99: this.observedP99,
+      ceilingGap: this.ceilingGap,
+      nearMissCount: this.nearMissCount,
+      nearMissRate: this.nearMissRate,
+      nearMissEpsilon: this.nearMissEpsilon,
+      lastMileFailCount: this.#lastMileFailCount,
+      othersPassedCount: this.#othersPassedCount,
+      lastMileFailRate: this.lastMileFailRate,
+      isSingleClause: this.isSingleClause,
       children: this.#children.map((c) => c.toJSON()),
     };
   }

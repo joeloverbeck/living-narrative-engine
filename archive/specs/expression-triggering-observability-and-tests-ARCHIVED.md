@@ -69,7 +69,7 @@ Add a new E2E suite under `tests/e2e/expressions/ExpressionTriggering.e2e.test.j
 1. **Happy path from LLM update to perceptible event**
    - Initialize a world with the `emotions` mod loaded.
    - Create or select an LLM-controlled actor with mood and sexual_state components.
-   - Simulate `ACTION_DECIDED` with `extractedData.moodUpdate` that drives a known expression to pass (choose a specific expression from `data/mods/*/expressions/` with stable prerequisites, e.g., `emotions-positive-affect:quiet_contentment`).
+   - Simulate `ACTION_DECIDED` with `extractedData.moodUpdate` that drives a known expression to pass (choose a specific expression from `data/mods/*/expressions/` with stable prerequisites, e.g., `emotions-calm:quiet_contentment`).
    - Assert `core:perceptible_event` appears with `contextualData.expressionId` matching the expected expression.
 
 2. **Priority selection in full stack**

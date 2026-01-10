@@ -68,7 +68,7 @@
                             {
                                 "var": "emotions.lonely_yearning"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -109,7 +109,7 @@
                                     {
                                         "var": "emotions.trust"
                                     },
-                                    0.30
+                                    0.3
                                 ]
                             },
                             {
@@ -138,5 +138,5 @@
         "warmth",
         "closeness"
     ],
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

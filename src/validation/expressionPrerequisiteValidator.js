@@ -21,6 +21,7 @@ const DEFAULT_MOOD_AXES = [
   'engagement',
   'future_expectancy',
   'self_evaluation',
+  'affiliation',
 ];
 
 const COMPARISON_OPERATORS = new Set([

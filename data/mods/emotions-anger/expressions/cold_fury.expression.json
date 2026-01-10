@@ -66,6 +66,22 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.sympathy"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.lonely_yearning"
                             },
                             0.40
