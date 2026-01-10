@@ -11,14 +11,35 @@ const EXPRESSIONS_DIRS = [
     process.cwd(),
     'data',
     'mods',
-    'emotions-sexuality',
+    'emotions-sexual-desire',
     'expressions'
   ),
   path.resolve(
     process.cwd(),
     'data',
     'mods',
-    'emotions-attention',
+    'emotions-curiosity-attention',
+    'expressions'
+  ),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-absorption',
+    'expressions'
+  ),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-disengagement',
+    'expressions'
+  ),
+  path.resolve(
+    process.cwd(),
+    'data',
+    'mods',
+    'emotions-confusion',
     'expressions'
   ),
 ];

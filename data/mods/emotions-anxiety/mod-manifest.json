@@ -1,0 +1,16 @@
+{
+    "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+    "id": "emotions-anxiety",
+    "version": "1.0.0",
+    "name": "Emotions - Anxiety",
+    "description": "Unease, controlled worry, and dread expressions",
+    "author": "Living Narrative Engine",
+    "gameVersion": ">=0.0.1",
+    "content": {
+        "expressions": [
+            "dread_settling.expression.json",
+            "restless_anxiety.expression.json",
+            "uneasy_restraint.expression.json"
+        ]
+    }
+}

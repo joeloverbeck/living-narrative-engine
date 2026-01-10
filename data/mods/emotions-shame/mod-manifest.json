@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-shame",
+  "version": "1.0.0",
+  "name": "Emotions - Shame",
+  "description": "Shame expressions capturing 'I am bad' self-condemnation responses.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "resigned_shame.expression.json",
+      "shame_spike.expression.json"
+    ]
+  }
+}

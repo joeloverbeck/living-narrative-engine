@@ -76,6 +76,7 @@ const buildGameStateDto = () => ({
         engagement: 20,
         future_expectancy: -10,
         self_evaluation: -15,
+        affiliation: 15,
       },
       sexVariables: {
         sex_excitation: 10,
@@ -174,5 +175,32 @@ describe('Mood update prompt generation', () => {
     expect(prompt).toContain('<character_persona>');
     expect(prompt).not.toContain('<mood_axes>');
     expect(prompt).not.toContain('<sex_variables>');
+  });
+
+  test('mood update prompt includes affiliation axis in mood_axes', async () => {
+    const promptData = await provider.getMoodUpdatePromptData(
+      buildGameStateDto(),
+      logger
+    );
+    const prompt = await promptBuilder.build('test-llm', promptData, {
+      isMoodUpdatePrompt: true,
+    });
+
+    expect(prompt).toContain('<mood_axes>');
+    expect(prompt).toContain('affiliation: 15');
+  });
+
+  test('mood update instructions mention affiliation axis', async () => {
+    const promptData = await provider.getMoodUpdatePromptData(
+      buildGameStateDto(),
+      logger
+    );
+    const prompt = await promptBuilder.build('test-llm', promptData, {
+      isMoodUpdatePrompt: true,
+    });
+
+    // The prompt should contain the affiliation axis definition from corePromptText
+    expect(prompt).toMatch(/affiliation/i);
+    expect(prompt).toMatch(/warm.*connected|connected.*warm/i);
   });
 });

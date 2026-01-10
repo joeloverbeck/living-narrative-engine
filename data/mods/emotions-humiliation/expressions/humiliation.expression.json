@@ -1,0 +1,169 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-humiliation:humiliation",
+    "description": "Profound humiliation causing visible distress and urge to disappear",
+    "priority": 93,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.embarrassment"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.alarm"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hypervigilance"
+                                    },
+                                    0.3
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.panic"
+                                    },
+                                    0.7
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.humiliation"
+                                    },
+                                    {
+                                        "+": [
+                                            {
+                                                "var": "emotions.panic"
+                                            },
+                                            0.08
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.humiliation"
+                                    },
+                                    {
+                                        "var": "previousEmotions.humiliation"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "previousEmotions.humiliation"
+                            },
+                            0.62
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "It's like the floor drops away. My skin goes hot and thin, as if the air itself can touch too much of me. Every sound turns sharp. I'm suddenly aware of my face, my hands, my stance-how I'm standing in the world-and it all feels wrong, exposed, documented. My body wants one clean action: escape. Run, vanish, tear myself out of the moment before it hardens into a fact everyone keeps.",
+    "description_text": "{actor} reacts as if struck-flinching, freezing, or snapping into frantic motion. Color floods their face or drains from it; their eyes avoid contact with almost violent urgency. Their posture collapses into self-protection-arms tight, shoulders hunched, head ducked-like they're trying to shield themselves from attention that can't be blocked.",
+    "alternate_descriptions": {
+        "auditory": "I hear a broken sound-breath hitching hard, a laugh that doesn't land, a sob that's immediately strangled back. Something scrapes as if someone moved too fast to get away.",
+        "tactile": "I feel someone jerking back from closeness, body rigid, as if contact itself could make it worse."
+    },
+    "tags": [
+        "humiliation",
+        "shame",
+        "fear",
+        "exposure"
+    ],
+    "diagnosticStatus": "unknown"
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-elevation",
+  "version": "1.0.0",
+  "name": "Emotions - Elevation",
+  "description": "Elevation emotional expressions - awe, inspiration, and aesthetic appreciation.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "aesthetic_appreciation_soften.expression.json",
+      "awed_transfixion.expression.json",
+      "inspired_uplift.expression.json"
+    ]
+  }
+}

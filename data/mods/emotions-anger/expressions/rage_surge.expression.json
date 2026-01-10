@@ -48,6 +48,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.sympathy"
+                            },
+                            0.32
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [
@@ -99,7 +107,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires crossing into rage with anger present, arousal up, and either low affiliation or a sharp affiliation drop; not already at sustained explosive levels."
+            "failure_message": "Requires crossing into rage with anger present, arousal up, low sympathy, and either low affiliation or a sharp affiliation drop; not already at sustained explosive levels."
         }
     ],
     "actor_description": "It comes up fast-heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting-how every other thought is being shoved out to make room for the urge to hit back.",

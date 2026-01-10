@@ -1,0 +1,12 @@
+{
+  "id": "emotions-sexual-approach",
+  "version": "1.0.0",
+  "name": "emotions-sexual-approach",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "flirtatious_playfulness.expression.json",
+      "seductive_confidence.expression.json"
+    ]
+  }
+}

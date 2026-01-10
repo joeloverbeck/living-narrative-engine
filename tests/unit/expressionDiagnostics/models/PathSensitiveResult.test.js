@@ -159,11 +159,11 @@ describe('PathSensitiveResult Model', () => {
 
     it('should accept valid parameters with defaults', () => {
       const result = new PathSensitiveResult({
-        expressionId: 'emotions-attention:flow_absorption',
+        expressionId: 'emotions-absorption:flow_absorption',
         branches: [feasibleBranch],
       });
 
-      expect(result.expressionId).toBe('emotions-attention:flow_absorption');
+      expect(result.expressionId).toBe('emotions-absorption:flow_absorption');
       expect(result.branches).toHaveLength(1);
       expect(result.reachabilityByBranch).toEqual([]);
       expect(result.feasibilityVolume).toBeNull();
@@ -214,10 +214,10 @@ describe('PathSensitiveResult Model', () => {
   describe('Getters - Basic Properties', () => {
     it('expressionId getter returns correct value', () => {
       const result = new PathSensitiveResult({
-        expressionId: 'emotions-attention:flow_absorption',
+        expressionId: 'emotions-absorption:flow_absorption',
         branches: [],
       });
-      expect(result.expressionId).toBe('emotions-attention:flow_absorption');
+      expect(result.expressionId).toBe('emotions-absorption:flow_absorption');
     });
 
     it('feasibilityVolume getter returns correct value', () => {
@@ -875,14 +875,14 @@ describe('PathSensitiveResult Model', () => {
   describe('Serialization - toSummary()', () => {
     it('returns compact string with status emoji', () => {
       const result = new PathSensitiveResult({
-        expressionId: 'emotions-attention:flow_absorption',
+        expressionId: 'emotions-absorption:flow_absorption',
         branches: [feasibleBranch],
         reachabilityByBranch: [reachableReachability],
       });
 
       const summary = result.toSummary();
       expect(summary).toContain('🟢');
-      expect(summary).toContain('emotions-attention:flow_absorption');
+      expect(summary).toContain('emotions-absorption:flow_absorption');
     });
 
     it('includes branch counts in summary', () => {

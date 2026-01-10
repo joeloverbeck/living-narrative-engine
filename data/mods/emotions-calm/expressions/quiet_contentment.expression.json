@@ -1,0 +1,119 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-calm:quiet_contentment",
+    "description": "Calm satisfaction and peaceful happiness - low arousal positive state.",
+    "priority": 38,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.contentment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.unease"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "This is enough. The wanting in me goes quiet, like someone finally stopped knocking. My breathing slows without effort; the tight places in my shoulders let go. Nothing needs fixing right now. The world feels simple and sufficient-small details landing gently instead of demanding my attention. It isn't a high. It's rest.",
+    "description_text": "{actor} eases into stillness, face smoothing as if the muscles finally got permission to stop working. Their breathing settles into an even rhythm; they stop fidgeting, stop scanning. Their presence feels soft and complete-like someone who has nowhere else they need to be.",
+    "alternate_descriptions": {
+        "auditory": "I hear unhurried breathing and a comfortable lack of motion-silence that doesn't feel tense.",
+        "tactile": "Someone feels warm and steady, not reaching for anything-stillness that reads like satisfaction, not shutdown."
+    },
+    "tags": [
+        "contentment",
+        "peace",
+        "satisfaction",
+        "calm"
+    ],
+    "diagnosticStatus": "unknown"
+}

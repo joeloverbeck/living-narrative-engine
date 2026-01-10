@@ -1,0 +1,16 @@
+{
+    "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+    "id": "emotions-fear-acute",
+    "version": "1.0.0",
+    "name": "Emotions - Fear (Acute)",
+    "description": "Terror, panic, and freeze cluster expressions",
+    "author": "Living Narrative Engine",
+    "gameVersion": ">=0.0.1",
+    "content": {
+        "expressions": [
+            "freeze_response.expression.json",
+            "panic_onset.expression.json",
+            "terror_spike.expression.json"
+        ]
+    }
+}

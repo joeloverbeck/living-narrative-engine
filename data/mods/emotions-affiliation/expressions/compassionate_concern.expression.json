@@ -8,11 +8,35 @@
             "logic": {
                 "and": [
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "emotions.compassion"
+                                ">=": [
+                                    {
+                                        "var": "emotions.compassion"
+                                    },
+                                    0.55
+                                ]
                             },
-                            0.55
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.sympathy"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            5
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
                     },
                     {
@@ -28,7 +52,7 @@
                             {
                                 "var": "emotions.empathic_distress"
                             },
-                            0.60
+                            0.55
                         ]
                     },
                     {
@@ -76,7 +100,7 @@
                             {
                                 "var": "emotions.hatred"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -118,7 +142,14 @@
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.compassion"
+                                                "max": [
+                                                    {
+                                                        "var": "emotions.compassion"
+                                                    },
+                                                    {
+                                                        "var": "emotions.sympathy"
+                                                    }
+                                                ]
                                             },
                                             {
                                                 "+": [
@@ -166,9 +197,32 @@
                     {
                         ">=": [
                             {
+                                "-": [
+                                    {
+                                        "var": "emotions.sympathy"
+                                    },
+                                    {
+                                        "var": "previousEmotions.sympathy"
+                                    }
+                                ]
+                            },
+                            0.07
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.compassion"
                             },
                             0.75
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.sympathy"
+                            },
+                            0.7
                         ]
                     }
                 ]
@@ -187,5 +241,5 @@
         "care",
         "supportive"
     ],
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal"
 }

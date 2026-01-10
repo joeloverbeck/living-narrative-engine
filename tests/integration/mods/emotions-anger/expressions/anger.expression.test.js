@@ -13,7 +13,7 @@ import SchemaLoader from '../../../../../src/loaders/schemaLoader.js';
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 
 const EMOTIONS_ANGER_DIR = path.resolve('data/mods/emotions-anger/expressions');
-const EMOTIONS_LOSS_DIR = path.resolve('data/mods/emotions-loss/expressions');
+const EMOTIONS_DESPAIR_DIR = path.resolve('data/mods/emotions-despair/expressions');
 
 const ANGER_EXPRESSION_FILES = [
   'suppressed_rage.expression.json',
@@ -22,7 +22,7 @@ const ANGER_EXPRESSION_FILES = [
   'mild_irritation.expression.json',
 ];
 
-const LOSS_EXPRESSION_FILES = ['frustrated_helplessness.expression.json'];
+const DESPAIR_EXPRESSION_FILES = ['frustrated_helplessness.expression.json'];
 
 describe('Emotions anger expressions', () => {
   let expressionsById;
@@ -60,15 +60,15 @@ describe('Emotions anger expressions', () => {
       })
     );
 
-    const lossExpressions = await Promise.all(
-      LOSS_EXPRESSION_FILES.map(async (file) => {
-        const filePath = path.join(EMOTIONS_LOSS_DIR, file);
+    const despairExpressions = await Promise.all(
+      DESPAIR_EXPRESSION_FILES.map(async (file) => {
+        const filePath = path.join(EMOTIONS_DESPAIR_DIR, file);
         const data = await readFile(filePath, { encoding: 'utf-8' });
         return JSON.parse(data);
       })
     );
 
-    const allExpressions = [...angerExpressions, ...lossExpressions];
+    const allExpressions = [...angerExpressions, ...despairExpressions];
 
     expressionsById = Object.fromEntries(
       allExpressions.map((expression) => [expression.id, expression])
@@ -267,7 +267,7 @@ describe('Emotions anger expressions', () => {
   });
 
   it('frustrated_helplessness prerequisites evaluate correctly', () => {
-    const expression = expressionsById['emotions-loss:frustrated_helplessness'];
+    const expression = expressionsById['emotions-despair:frustrated_helplessness'];
     const logic = expression.prerequisites[0].logic;
 
     // Passing context: satisfies all condition groups + worsening detection

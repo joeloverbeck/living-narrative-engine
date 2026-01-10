@@ -26,6 +26,7 @@ const validMoodUpdate = {
   engagement: 50,
   future_expectancy: -60,
   self_evaluation: 70,
+  affiliation: 0,
 };
 
 const validSexualUpdate = {

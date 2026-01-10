@@ -869,6 +869,7 @@ class CharacterDataXmlBuilder {
       'engagement',
       'future_expectancy',
       'self_evaluation',
+      'affiliation',
     ];
     const parts = axisOrder
       .filter((key) => typeof moodAxes?.[key] === 'number')

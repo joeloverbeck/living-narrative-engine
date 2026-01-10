@@ -1,0 +1,183 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-grief:grief_break",
+    "description": "Acute grief breakdown triggered by overwhelming sorrow and rapid grief escalation",
+    "priority": 95,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.sadness"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.grief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.grief"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.sadness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.sadness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.grief"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.grief"
+                                            },
+                                            0.65
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Strong grief with sadness, reduced agency, and attention stuck on the loss. Adds an attachment/connection signature (affiliation or bonding emotions) so ‘grief break’ reads as relational loss rather than generic low mood. Blocks shutdown/detachment and panic hijack. Triggers on spike or crossing."
+        }
+    ],
+    "actor_description": "It finally gets through the dam. My throat tightens and my chest caves like something heavy sat down on it. I try to breathe around it and can't. Tears spill before I've chosen them; my face is hot, my hands shake, and there's a raw, humiliating helplessness to it-like my body is grieving out loud without my permission.",
+    "description_text": "{actor} crumples around the feeling-shoulders folding inward, breath snagging in jagged pulls. Their face goes wet and bright with tears, the composure in their posture breaking into small, involuntary shudders that they can't quite hide.",
+    "alternate_descriptions": {
+        "auditory": "I hear breath fracture into sobs-wet, uneven pulls that keep failing halfway through. If words come, they arrive broken, swallowed, reshaped by the body trying not to fall apart.",
+        "tactile": "Someone starts to shake in waves-small at first, then unstoppable. Their body has that unmistakable grief rhythm: tight, trembling pulses like the whole frame is trying to hold itself together."
+    },
+    "tags": [
+        "grief",
+        "sadness",
+        "tears",
+        "acute",
+        "breakdown"
+    ],
+    "diagnosticStatus": "unknown"
+}

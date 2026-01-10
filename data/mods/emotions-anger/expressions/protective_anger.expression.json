@@ -80,6 +80,42 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sympathy"
+                                    },
+                                    0.28
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.compassion"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    0.20
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.contempt"
@@ -167,6 +203,14 @@
                                         "var": "emotions.love_attachment"
                                     },
                                     0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sympathy"
+                                    },
+                                    0.40
                                 ]
                             }
                         ]

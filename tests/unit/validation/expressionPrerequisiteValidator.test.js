@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import ExpressionPrerequisiteValidator from '../../../src/validation/expressionPrerequisiteValidator.js';
+import ExpressionPrerequisiteValidator, {
+  DEFAULT_MOOD_AXES,
+} from '../../../src/validation/expressionPrerequisiteValidator.js';
 
 const allowedOperations = new Set([
   'and',
@@ -135,7 +137,7 @@ describe('ExpressionPrerequisiteValidator', () => {
     ]);
 
     const dissociationExpression = {
-      id: 'emotions-loss:dissociation',
+      id: 'emotions-dissociation:dissociation',
       prerequisites: [
         {
           logic: {
@@ -172,7 +174,7 @@ describe('ExpressionPrerequisiteValidator', () => {
     const dissociationResult = validator.validateExpression(
       dissociationExpression,
       {
-        modId: 'emotions-loss',
+        modId: 'emotions-dissociation',
         source: 'expressions/dissociation.expression.json',
         validKeysByRoot: { emotions: validEmotionKeys },
       }
@@ -507,5 +509,64 @@ describe('ExpressionPrerequisiteValidator', () => {
     expect(
       result.violations.some((v) => v.issueType === 'mood_axes_mixed_scale')
     ).toBe(false);
+  });
+
+  it('accepts affiliation as a valid mood axis in both moodAxes and previousMoodAxes', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'test:affiliation_mood_axis',
+      prerequisites: [
+        {
+          logic: {
+            and: [
+              { '<=': [{ var: 'moodAxes.affiliation' }, 25] },
+              {
+                '>=': [
+                  {
+                    '-': [
+                      { var: 'previousMoodAxes.affiliation' },
+                      { var: 'moodAxes.affiliation' },
+                    ],
+                  },
+                  10,
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    // Use DEFAULT_MOOD_AXES (as modValidationOrchestrator does) to verify 'affiliation' is included
+    const result = validator.validateExpression(expression, {
+      modId: 'test',
+      source: 'expressions/test.expression.json',
+      validKeysByRoot: {
+        moodAxes: new Set(DEFAULT_MOOD_AXES),
+      },
+    });
+
+    // If 'affiliation' is NOT in DEFAULT_MOOD_AXES, we expect violations
+    // This test verifies that after the fix, there are no violations
+    const affiliationViolations = result.violations.filter(
+      (v) => v.issueType === 'unknown_var_key'
+    );
+    // Should be 0 after the fix - each reference to affiliation would create a violation if not fixed
+    expect(affiliationViolations).toHaveLength(0);
+    expect(result.violations).toHaveLength(0);
+  });
+
+  it('includes affiliation in DEFAULT_MOOD_AXES', () => {
+    // Sanity check that the exported constant includes all expected mood axes
+    expect(DEFAULT_MOOD_AXES).toContain('valence');
+    expect(DEFAULT_MOOD_AXES).toContain('arousal');
+    expect(DEFAULT_MOOD_AXES).toContain('agency_control');
+    expect(DEFAULT_MOOD_AXES).toContain('threat');
+    expect(DEFAULT_MOOD_AXES).toContain('engagement');
+    expect(DEFAULT_MOOD_AXES).toContain('future_expectancy');
+    expect(DEFAULT_MOOD_AXES).toContain('self_evaluation');
+    expect(DEFAULT_MOOD_AXES).toContain('affiliation');
   });
 });

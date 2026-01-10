@@ -112,7 +112,7 @@ function createFileFetchMock() {
         const availableMods = new Set(
           await fs.readdir(path.resolve(REPO_ROOT, 'data/mods'))
         );
-        const preferredMods = ['core', 'emotions-sexuality', 'emotions-attention'];
+        const preferredMods = ['core', 'emotions-sexual-desire', 'emotions-curiosity-attention', 'emotions-absorption', 'emotions-disengagement', 'emotions-confusion'];
         const filteredMods = preferredMods.filter((modId) =>
           availableMods.has(modId)
         );

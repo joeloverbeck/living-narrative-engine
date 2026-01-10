@@ -1,0 +1,217 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anxiety:uneasy_restraint",
+    "description": "Mid-tone threat awareness: controlled unease with deliberate self-restraint-careful, quiet, not yet panic or scanning frenzy.",
+    "actor_description": "Something feels slightly wrong, and I start rationing my movement. I keep my face neutral, but my attention narrows-listening harder, watching edges, weighing what to do and what not to do. My body holds tension like a kept secret: breath smaller, shoulders steadier, impulse checked before it reaches my hands.",
+    "description_text": "{actor} goes subtly controlled-movements smaller, pauses longer, expression carefully neutral. They seem to hold themselves back, as if choosing silence and restraint over instinctive reaction.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.unease"
+                            },
+                            0.52
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.suspicion"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anxiety"
+                                    },
+                                    0.4
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.62
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.calm"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.unease"
+                                            },
+                                            {
+                                                "var": "previousEmotions.unease"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.unease"
+                                            },
+                                            0.52
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.unease"
+                                            },
+                                            0.52
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires controlled unease plus suspicion/anxiety with real threat grounding; keeps attention online and explicitly excludes dissociation; stays pre-panic and excludes freeze/terror extremes; uses affiliation as a 'guardedness' check (not overly warm/open); gated by unease spike/crossing or a threat jump."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice comes out quieter and flatter than before-short answers, a careful pace between words, listening more than speaking.",
+        "tactile": "The air around them tightens-controlled tension held in the chest and shoulders, like a hand hovering over a brake.",
+        "limited": "{actor} grows cautious and measured, holding back reflexes and keeping their expression under control."
+    },
+    "tags": [
+        "unease",
+        "suspicion",
+        "restraint",
+        "caution",
+        "quiet_alertness",
+        "threat_awareness"
+    ],
+    "diagnosticStatus": "unknown"
+}

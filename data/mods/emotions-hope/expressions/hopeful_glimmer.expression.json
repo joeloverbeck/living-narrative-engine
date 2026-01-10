@@ -1,0 +1,131 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-hope:hopeful_glimmer",
+    "description": "A small but meaningful uptick in hope-future feels less closed, possibilities re-enter the frame.",
+    "priority": 64,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.hope"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.hope"
+                                    },
+                                    {
+                                        "var": "emotions.despair"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.75
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.hope"
+                                    },
+                                    {
+                                        "var": "previousEmotions.hope"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Something in me eases-small, but unmistakable. The future isn't only a block of grey; it has a seam in it. I catch myself running a scenario that doesn't end in damage control, and my body responds before I can argue it down: a longer breath, shoulders dropping a fraction, the faint urge to lean forward instead of brace. I don't trust it enough to celebrate. I just let it exist. A thin thread of \"this might work\" pulls tight and holds.",
+    "description_text": "{actor} stops looking past everything and starts looking at something. Their posture tips forward by a degree-chin up, shoulders un-hunched-as if a better outcome just became thinkable. The tightness in their face unknots; their gaze steadies, less defensive, and for a moment they seem to occupy the room instead of enduring it.",
+    "alternate_descriptions": {
+        "auditory": "I hear a slow exhale that wasn't there before-air leaving like someone finally stopped holding it.",
+        "tactile": "Someone's body shifts from rigid to oriented-weight moving forward, not away.",
+        "olfactory": "The air catches a warmer human note-less sharp stress-sweat, more ordinary breath and skin."
+    },
+    "tags": [
+        "positive",
+        "hope",
+        "soft",
+        "future",
+        "approach"
+    ],
+    "diagnosticStatus": "unknown"
+}

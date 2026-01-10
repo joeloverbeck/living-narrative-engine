@@ -1,0 +1,14 @@
+{
+  "id": "emotions-sexual-conflict",
+  "version": "1.0.0",
+  "name": "emotions-sexual-conflict",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "aroused_but_ashamed_conflict.expression.json",
+      "nervous_arousal.expression.json",
+      "self_disgust_arousal.expression.json",
+      "sexual_frustration.expression.json"
+    ]
+  }
+}

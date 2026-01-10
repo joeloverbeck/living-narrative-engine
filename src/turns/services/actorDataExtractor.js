@@ -20,6 +20,7 @@ import {
   DILEMMAS_COMPONENT_ID,
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
+  AFFECT_TRAITS_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -276,16 +277,23 @@ class ActorDataExtractor extends IActorDataExtractor {
       sexual_arousal: sexualArousal,
     };
 
-    // 4. Calculate emotions and format
+    // 4. Extract affect traits (optional component)
+    // These are stable personality traits affecting empathy and moral emotions.
+    // If absent, the calculator uses default values (all 50).
+    const affectTraitsComponent = actorState[AFFECT_TRAITS_COMPONENT_ID];
+    const affectTraits = affectTraitsComponent ?? null;
+
+    // 5. Calculate emotions with affect traits
     const emotions = this.#emotionCalculatorService.calculateEmotions(
       moodAxes,
       sexualArousal,
-      sexualComponent
+      sexualComponent,
+      affectTraits
     );
     const emotionalStateText =
       this.#emotionCalculatorService.formatEmotionsForPrompt(emotions);
 
-    // 5. Calculate sexual states and format
+    // 6. Calculate sexual states and format
     const sexualStates = this.#emotionCalculatorService.calculateSexualStates(
       moodAxes,
       sexualArousal,

@@ -1,0 +1,13 @@
+{
+  "id": "emotions-curiosity-attention",
+  "version": "1.0.0",
+  "name": "emotions-curiosity-attention",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "curious_lean_in.expression.json",
+      "fascinated_lock_on.expression.json",
+      "interested_attention.expression.json"
+    ]
+  }
+}

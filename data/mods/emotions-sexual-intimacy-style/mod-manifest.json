@@ -1,0 +1,12 @@
+{
+  "id": "emotions-sexual-intimacy-style",
+  "version": "1.0.0",
+  "name": "emotions-sexual-intimacy-style",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "passionate_longing.expression.json",
+      "submissive_pleasure.expression.json"
+    ]
+  }
+}

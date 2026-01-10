@@ -2616,7 +2616,7 @@ describe('ExpressionDiagnosticsController', () => {
       });
       mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
         {
-          id: 'emotions-sexuality:self_disgust_arousal',
+          id: 'emotions-sexual-conflict:self_disgust_arousal',
           diagnosticStatus: 'impossible',
         },
       ]);
@@ -6160,6 +6160,878 @@ describe('ExpressionDiagnosticsController', () => {
       expect(document.querySelector('.node-icon.and')).toBeTruthy();
       expect(document.querySelector('.node-icon.or')).toBeTruthy();
       expect(document.querySelectorAll('.node-icon.leaf').length).toBe(2);
+    });
+  });
+
+  describe('Advanced Metrics Display', () => {
+    it('displays violation stats with percentiles and near-miss', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            violationP50: 0.05,
+            violationP90: 0.15,
+            nearMissRate: 0.12,
+            nearMissEpsilon: 0.05,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify violation stats structure
+      const violationStats = document.querySelector('.violation-stats');
+      expect(violationStats).toBeTruthy();
+      expect(violationStats.innerHTML).toContain('violation-mean');
+      expect(violationStats.innerHTML).toContain('μ:');
+      expect(violationStats.innerHTML).toContain('violation-percentiles');
+      expect(violationStats.innerHTML).toContain('p50:');
+      expect(violationStats.innerHTML).toContain('p90:');
+      expect(violationStats.innerHTML).toContain('near-miss');
+    });
+
+    it('displays last-mile stats with both rates', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          lastMileFailRate: 0.82,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            lastMileFailRate: 0.82,
+            isSingleClause: false,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify last-mile column
+      const lastMile = document.querySelector('.last-mile');
+      expect(lastMile).toBeTruthy();
+      expect(lastMile.innerHTML).toContain('last-mile-overall');
+      expect(lastMile.innerHTML).toContain('fail_all:');
+      expect(lastMile.innerHTML).toContain('last-mile-decisive');
+      expect(lastMile.innerHTML).toContain('fail_when_others_pass:');
+    });
+
+    it('displays single-clause last-mile format', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'single clause',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'single clause',
+            failureRate: 0.5,
+            isCompound: false,
+            averageViolation: 0.1,
+            isSingleClause: true,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const lastMile = document.querySelector('.last-mile');
+      expect(lastMile).toBeTruthy();
+      expect(lastMile.innerHTML).toContain('last-mile-single');
+    });
+
+    it('displays N/A for missing last-mile data', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'clause without last-mile',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'clause without last-mile',
+            failureRate: 0.5,
+            isCompound: false,
+            averageViolation: 0.1,
+            lastMileFailRate: null,
+            isSingleClause: false,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const lastMile = document.querySelector('.last-mile');
+      expect(lastMile).toBeTruthy();
+      expect(lastMile.innerHTML).toContain('last-mile-na');
+      expect(lastMile.innerHTML).toContain('N/A');
+    });
+
+    it('displays recommendation from advanced analysis', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'high' },
+          hasHierarchy: false,
+          advancedAnalysis: {
+            recommendation: {
+              action: 'tune_threshold',
+              priority: 'high',
+              message: 'TUNE THIS FIRST: High near-miss rate suggests threshold adjustment will help',
+            },
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const recommendation = document.querySelector('.recommendation');
+      expect(recommendation).toBeTruthy();
+      expect(recommendation.innerHTML).toContain('recommendation-action');
+      expect(recommendation.innerHTML).toContain('data-action="tune_threshold"');
+      expect(recommendation.innerHTML).toContain('data-priority="high"');
+      expect(recommendation.innerHTML).toContain('TUNE THIS FIRST');
+    });
+
+    it('renders empty recommendation when no advanced analysis', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'simple clause',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'low' },
+          hasHierarchy: false,
+          // No advancedAnalysis field
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const recommendation = document.querySelector('.recommendation');
+      expect(recommendation).toBeTruthy();
+      // Should be empty - no recommendation-action div
+      expect(recommendation.querySelector('.recommendation-action')).toBeFalsy();
+    });
+
+    it('renders hierarchical tree with advanced metrics', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'complex clause',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'Root AND',
+            failureRate: 0.5,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'joy >= 0.5',
+                failureRate: 0.3,
+                isCompound: false,
+                averageViolation: 0.1,
+                violationP50: 0.08,
+                lastMileFailRate: 0.7,
+                ceilingGap: 0.05,
+                maxObservedValue: 0.45,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand the breakdown
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      // Check for advanced metrics in tree nodes
+      const treeHtml = document.querySelector('.hierarchical-tree').innerHTML;
+      expect(treeHtml).toContain('tree-percentiles');
+      expect(treeHtml).toContain('p50:');
+      expect(treeHtml).toContain('tree-last-mile');
+      expect(treeHtml).toContain('LM:');
+      expect(treeHtml).toContain('tree-ceiling');
+      expect(treeHtml).toContain('max:');
+    });
+
+    it('handles blocker without hierarchicalBreakdown gracefully', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'clause without breakdown',
+          failureRate: 0.5,
+          averageViolation: 0.123,
+          explanation: { severity: 'medium' },
+          hasHierarchy: false,
+          // No hierarchicalBreakdown field
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should still render violation stats with averageViolation fallback
+      const violationStats = document.querySelector('.violation-stats');
+      expect(violationStats).toBeTruthy();
+      expect(violationStats.innerHTML).toContain('violation-mean');
+      expect(violationStats.innerHTML).toContain('0.12');
+    });
+  });
+
+  describe('Visual Indicator Styling (MONCARADVMET-010)', () => {
+    it('applies near-miss-high class for rate > 10%', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            nearMissRate: 0.15, // > 10%
+            nearMissEpsilon: 0.05,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const nearMiss = document.querySelector('.near-miss');
+      expect(nearMiss).toBeTruthy();
+      expect(nearMiss.classList.contains('near-miss-high')).toBe(true);
+    });
+
+    it('applies near-miss-moderate class for rate between 2% and 10%', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            nearMissRate: 0.05, // Between 2% and 10%
+            nearMissEpsilon: 0.05,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const nearMiss = document.querySelector('.near-miss');
+      expect(nearMiss).toBeTruthy();
+      expect(nearMiss.classList.contains('near-miss-moderate')).toBe(true);
+    });
+
+    it('applies near-miss-low class for rate <= 2%', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            nearMissRate: 0.01, // <= 2%
+            nearMissEpsilon: 0.05,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const nearMiss = document.querySelector('.near-miss');
+      expect(nearMiss).toBeTruthy();
+      expect(nearMiss.classList.contains('near-miss-low')).toBe(true);
+    });
+
+    it('applies decisive class for decisive blockers', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          lastMileFailRate: 0.82,
+          averageViolation: 0.08,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          advancedAnalysis: {
+            lastMileAnalysis: { isDecisive: true },
+          },
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            lastMileFailRate: 0.82,
+            isSingleClause: false,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const lastMile = document.querySelector('.last-mile-decisive');
+      expect(lastMile).toBeTruthy();
+      expect(lastMile.classList.contains('decisive')).toBe(true);
+    });
+
+    it('renders ceiling warning for detected ceiling', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          advancedAnalysis: {
+            ceilingAnalysis: { status: 'ceiling_detected', gap: 0.2 },
+          },
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            maxObservedValue: 0.45,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const ceilingWarning = document.querySelector('.ceiling-warning');
+      expect(ceilingWarning).toBeTruthy();
+      expect(ceilingWarning.textContent).toContain('unreachable');
+    });
+
+    it('does not render ceiling warning when no ceiling detected', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.47,
+          averageViolation: 0.08,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          advancedAnalysis: {
+            ceilingAnalysis: { status: 'no_ceiling' },
+          },
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'emotions.joy >= 0.5',
+            failureRate: 0.47,
+            isCompound: false,
+            averageViolation: 0.08,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const ceilingWarning = document.querySelector('.ceiling-warning');
+      expect(ceilingWarning).toBeFalsy();
+    });
+
+    it('adds data-decisive and data-ceiling attributes to tree nodes', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.5,
+        triggerCount: 5000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.49, high: 0.51 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'compound clause',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'All must pass',
+            failureRate: 0.5,
+            isCompound: true,
+            ceilingGap: 0.15, // Has ceiling
+            maxObservedValue: 0.35,
+            advancedAnalysis: {
+              lastMileAnalysis: { isDecisive: true },
+            },
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'emotions.joy >= 0.5',
+                failureRate: 0.3,
+                isCompound: false,
+                averageViolation: 0.05,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand the breakdown
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const treeNodes = document.querySelectorAll('.tree-node');
+      expect(treeNodes.length).toBeGreaterThan(0);
+
+      // Parent node should have decisive and ceiling attributes
+      const parentNode = treeNodes[0];
+      expect(parentNode.dataset.decisive).toBe('true');
+      expect(parentNode.dataset.ceiling).toBe('true');
     });
   });
 

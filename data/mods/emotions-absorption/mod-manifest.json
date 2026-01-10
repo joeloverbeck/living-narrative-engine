@@ -1,0 +1,12 @@
+{
+  "id": "emotions-absorption",
+  "version": "1.0.0",
+  "name": "emotions-absorption",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "entranced_stillness.expression.json",
+      "flow_absorption.expression.json"
+    ]
+  }
+}

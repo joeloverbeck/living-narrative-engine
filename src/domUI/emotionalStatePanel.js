@@ -1,7 +1,7 @@
 // src/domUI/emotionalStatePanel.js
 
 /**
- * @file Widget displaying character's current emotional state as 7 mood axes.
+ * @file Widget displaying character's current emotional state as 8 mood axes.
  *
  * Subscribes to TURN_STARTED_ID to refresh the current actor's emotional state.
  * Subscribes to COMPONENT_ADDED_ID to refresh when mood component changes.
@@ -30,13 +30,14 @@ import { extractEntityId } from '../utils/entityUtils.js';
  * @type {{[key: string]: {negative: string, positive: string}}}
  */
 const AXIS_COLORS = {
-  valence: { negative: '#c45850', positive: '#47a847' }, // red to green
+  valence: { negative: '#dc3545', positive: '#28a745' }, // red to green
   arousal: { negative: '#6c757d', positive: '#ffc107' }, // gray to yellow
-  agency_control: { negative: '#6c757d', positive: '#0d6efd' }, // gray to blue
-  threat: { negative: '#47a847', positive: '#dc3545' }, // green to red
-  engagement: { negative: '#6c757d', positive: '#0dcaf0' }, // gray to cyan
-  future_expectancy: { negative: '#c45850', positive: '#198754' }, // red to green
-  self_evaluation: { negative: '#6f42c1', positive: '#fd7e14' }, // purple to orange
+  agency_control: { negative: '#17a2b8', positive: '#0d6efd' }, // teal to blue
+  threat: { negative: '#28a745', positive: '#dc3545' }, // green to red
+  engagement: { negative: '#adb5bd', positive: '#0dcaf0' }, // light gray to cyan
+  future_expectancy: { negative: '#6f42c1', positive: '#20c997' }, // purple to teal
+  self_evaluation: { negative: '#fd7e14', positive: '#6610f2' }, // orange to indigo
+  affiliation: { negative: '#4e73df', positive: '#e83e8c' }, // cool blue to warm pink
 };
 
 /**
@@ -52,6 +53,7 @@ const AXIS_LABELS = {
   engagement: { negative: 'Indifferent', positive: 'Absorbed' },
   future_expectancy: { negative: 'Hopeless', positive: 'Hopeful' },
   self_evaluation: { negative: 'Shame', positive: 'Pride' },
+  affiliation: { negative: 'Detached', positive: 'Connected' },
 };
 
 /**
@@ -67,13 +69,14 @@ const AXIS_ORDER = [
   'engagement',
   'future_expectancy',
   'self_evaluation',
+  'affiliation',
 ];
 
 /**
- * Widget displaying character's current emotional state as 7 mood axis bars.
+ * Widget displaying character's current emotional state as 8 mood axis bars.
  *
  * Displays:
- * - 7 horizontal bars representing mood axes
+ * - 8 horizontal bars representing mood axes
  * - Each bar shows negative values extending left, positive values extending right
  * - Calculated emotions text below the bars
  *
@@ -300,7 +303,7 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
   /**
    * Gets the mood data from the current actor.
    *
-   * @returns {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number}|null}
+   * @returns {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number, affiliation: number}|null}
    * @private
    */
   #getMoodData() {
@@ -391,7 +394,7 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
   /**
    * Renders the full content of the panel.
    *
-   * @param {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number}} moodData
+   * @param {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number, affiliation: number}} moodData
    * @private
    */
   #renderContent(moodData) {
@@ -502,7 +505,7 @@ export class EmotionalStatePanel extends BoundDomRendererBase {
   /**
    * Renders the calculated emotions text below the bars.
    *
-   * @param {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number}} moodData
+   * @param {{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number, affiliation: number}} moodData
    * @private
    */
   #renderEmotionsText(moodData) {

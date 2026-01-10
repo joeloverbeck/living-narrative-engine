@@ -114,6 +114,26 @@
                             },
                             0.55
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.sympathy"
+                                    },
+                                    0.32
+                                ]
+                            }
+                        ]
                     }
                 ]
             }

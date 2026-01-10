@@ -1,0 +1,190 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-dissociation:dissociation",
+    "description": "Detachment from reality triggered by sudden numbness spike and interest drop",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.dissociation"
+                                            },
+                                            {
+                                                "var": "previousEmotions.dissociation"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.numbness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.numbness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires dissociation + numbness with reduced control and meaningful social detachment (low affiliation or a sharp affiliation drop). Adds explicit threat/arousal band consistent with dissociation gating. Excludes strong freeze/panic and avoids boredom-driven flatness. Triggers only on a dissociation/numbness spike or a sharp engagement/affiliation drop."
+        }
+    ],
+    "actor_description": "Everything goes a half-step unreal. Sounds flatten. The edges of things feel far away, like I'm watching through glass. I know what I should feel, what I should do, but it doesn't connect-there's a delay between thought and body, and even the thought is dimmer than it should be. I'm still here… but I'm not all the way inside it.",
+    "description_text": "{actor} drifts distant-eyes unfocused, face slackened into neutrality, movements slow and slightly delayed. When they respond, it's automatic, as if they're following instructions from far away rather than inhabiting the moment.",
+    "alternate_descriptions": {
+        "auditory": "The voice I hear is oddly flat-too even, too quiet, like someone reading their lines without being in the scene."
+    },
+    "tags": [
+        "numbness",
+        "dissociation",
+        "detachment",
+        "acute"
+    ],
+    "diagnosticStatus": "unknown"
+}

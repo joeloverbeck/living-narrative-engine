@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-despair",
+  "version": "1.0.0",
+  "name": "Emotions - Despair",
+  "description": "Hopelessness collapse expressions driven by agency loss and bleak future expectancy.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "deep_despair.expression.json",
+      "frustrated_helplessness.expression.json",
+      "quiet_despair.expression.json"
+    ]
+  }
+}

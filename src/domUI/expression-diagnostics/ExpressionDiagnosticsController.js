@@ -637,7 +637,9 @@ class ExpressionDiagnosticsController {
         <td>${blocker.rank}</td>
         <td><code>${this.#escapeHtml(blocker.clauseDescription)}</code></td>
         <td>${this.#formatPercentage(blocker.failureRate)}</td>
-        <td>${blocker.averageViolation.toFixed(3)}</td>
+        <td class="violation-stats">${this.#formatViolationStats(blocker)}</td>
+        <td class="last-mile">${this.#formatLastMile(blocker)}</td>
+        <td class="recommendation">${this.#formatRecommendation(blocker)}</td>
         <td><span class="severity-badge severity-${blocker.explanation.severity}">${blocker.explanation.severity}</span></td>
       `;
 
@@ -658,7 +660,7 @@ class ExpressionDiagnosticsController {
         breakdownRow.classList.add('breakdown-row', 'collapsed');
         breakdownRow.dataset.parentId = `blocker-${blocker.rank}`;
         breakdownRow.innerHTML = `
-          <td colspan="6" class="breakdown-cell">
+          <td colspan="8" class="breakdown-cell">
             <div class="hierarchical-tree">
               ${this.#renderHierarchicalTree(blocker.hierarchicalBreakdown, 0)}
             </div>
@@ -671,7 +673,7 @@ class ExpressionDiagnosticsController {
     if (blockers.length === 0) {
       const row = document.createElement('tr');
       row.innerHTML =
-        '<td colspan="6" class="no-data">No blockers identified</td>';
+        '<td colspan="8" class="no-data">No blockers identified</td>';
       this.#blockersTbody.appendChild(row);
     }
   }
@@ -731,17 +733,39 @@ class ExpressionDiagnosticsController {
         ? ` <span class="violation-badge">Δ${node.averageViolation.toFixed(2)}</span>`
         : '';
 
+    // Percentiles (if available)
+    const percentilesDisplay =
+      node.violationP50 !== null && node.violationP50 !== undefined
+        ? ` <span class="tree-percentiles">p50: ${this.#formatNumber(node.violationP50)}</span>`
+        : '';
+
+    // Last-mile rate (if meaningful)
+    const lastMileDisplay =
+      node.lastMileFailRate !== null && node.lastMileFailRate !== undefined
+        ? ` <span class="tree-last-mile">LM: ${this.#formatPercentage(node.lastMileFailRate)}</span>`
+        : '';
+
+    // Ceiling warning
+    const ceilingDisplay =
+      node.ceilingGap !== null && node.ceilingGap > 0
+        ? ` <span class="tree-ceiling">max: ${this.#formatNumber(node.maxObservedValue)} &lt; threshold</span>`
+        : '';
+
     // Build tree line prefix
     const isLastChild = false; // Simplified - always use ├
     const treePrefix = depth > 0 ? (isLastChild ? '└' : '├') : '';
 
+    // Determine node state for data attributes
+    const isDecisive = node.advancedAnalysis?.lastMileAnalysis?.isDecisive ?? false;
+    const hasCeiling = node.ceilingGap !== null && node.ceilingGap > 0;
+
     let html = `
-      <div class="tree-node" style="padding-left: ${indent}rem">
+      <div class="tree-node" style="padding-left: ${indent}rem" data-decisive="${isDecisive}" data-ceiling="${hasCeiling}">
         <span class="tree-prefix">${treePrefix}</span>
         <span class="node-icon ${node.nodeType}">${nodeIcon}</span>
         <span class="node-description">${this.#escapeHtml(node.description)}</span>
         <span class="failure-rate ${failureColor}">${this.#formatPercentage(node.failureRate)}</span>
-        ${violationDisplay}
+        ${violationDisplay}${percentilesDisplay}${lastMileDisplay}${ceilingDisplay}
       </div>
     `;
 
@@ -787,6 +811,48 @@ class ExpressionDiagnosticsController {
     return 'failure-normal';
   }
 
+  /**
+   * Get CSS class for near-miss rate color coding.
+   *
+   * @private
+   * @param {number|null} nearMissRate - The near-miss rate from 0 to 1, or null
+   * @returns {string} The CSS class for near-miss color coding
+   */
+  #getNearMissClass(nearMissRate) {
+    if (nearMissRate === null || nearMissRate === undefined) return 'near-miss-na';
+    if (nearMissRate > 0.1) return 'near-miss-high';
+    if (nearMissRate > 0.02) return 'near-miss-moderate';
+    return 'near-miss-low';
+  }
+
+  /**
+   * Get CSS class for last-mile decisive blocker highlighting.
+   *
+   * @private
+   * @param {object} blocker - Blocker object with advancedAnalysis
+   * @returns {string} The CSS class for decisive highlighting (empty if not decisive)
+   */
+  #getLastMileClass(blocker) {
+    const analysis = blocker.advancedAnalysis?.lastMileAnalysis;
+    if (analysis?.isDecisive) return 'decisive';
+    return '';
+  }
+
+  /**
+   * Render ceiling warning badge if ceiling is detected.
+   *
+   * @private
+   * @param {object} blocker - Blocker object with advancedAnalysis and hierarchicalBreakdown
+   * @returns {string} HTML string with ceiling warning, or empty string
+   */
+  #renderCeilingWarning(blocker) {
+    const analysis = blocker.advancedAnalysis?.ceilingAnalysis;
+    if (analysis?.status !== 'ceiling_detected') return '';
+
+    const maxVal = this.#formatNumber(blocker.hierarchicalBreakdown?.maxObservedValue);
+    return `<div class="ceiling-warning">Threshold unreachable (max: ${maxVal})</div>`;
+  }
+
   #updateMcRarityIndicator(category) {
     if (!this.#mcRarityIndicator) return;
 
@@ -821,6 +887,95 @@ class ExpressionDiagnosticsController {
     return div.innerHTML;
   }
 
+  /**
+   * Format a numeric value for display with 2 decimal places.
+   *
+   * @private
+   * @param {number|null|undefined} value - The value to format
+   * @returns {string} Formatted string or 'N/A'
+   */
+  #formatNumber(value) {
+    if (value === null || value === undefined) return 'N/A';
+    return value.toFixed(2);
+  }
+
+  /**
+   * Format violation statistics including percentiles and near-miss rate.
+   *
+   * @private
+   * @param {object} blocker - Blocker object with hierarchicalBreakdown
+   * @returns {string} HTML string with violation stats
+   */
+  #formatViolationStats(blocker) {
+    const breakdown = blocker.hierarchicalBreakdown;
+    if (!breakdown) {
+      return `<div class="violation-mean">\u03BC: ${this.#formatNumber(blocker.averageViolation)}</div>`;
+    }
+
+    let html = `<div class="violation-mean">\u03BC: ${this.#formatNumber(breakdown.averageViolation)}</div>`;
+
+    if (breakdown.violationP50 !== null && breakdown.violationP50 !== undefined) {
+      html += `<div class="violation-percentiles">p50: ${this.#formatNumber(breakdown.violationP50)} | p90: ${this.#formatNumber(breakdown.violationP90)}</div>`;
+    }
+
+    if (breakdown.nearMissRate !== null && breakdown.nearMissRate !== undefined) {
+      const nearMissClass = this.#getNearMissClass(breakdown.nearMissRate);
+      html += `<div class="near-miss ${nearMissClass}">near-miss(\u03B5=${this.#formatNumber(breakdown.nearMissEpsilon)}): ${this.#formatPercentage(breakdown.nearMissRate)}</div>`;
+    }
+
+    // Add ceiling warning if detected
+    html += this.#renderCeilingWarning(blocker);
+
+    return html;
+  }
+
+  /**
+   * Format last-mile failure rate statistics.
+   *
+   * @private
+   * @param {object} blocker - Blocker object with failureRate and hierarchicalBreakdown
+   * @returns {string} HTML string with last-mile stats
+   */
+  #formatLastMile(blocker) {
+    const breakdown = blocker.hierarchicalBreakdown;
+    const failureRate = blocker.failureRate;
+
+    if (breakdown?.isSingleClause) {
+      return `<div class="last-mile-single">${this.#formatPercentage(failureRate)}</div>`;
+    }
+
+    const lastMileRate = breakdown?.lastMileFailRate ?? blocker.lastMileFailRate;
+    if (lastMileRate === null || lastMileRate === undefined) {
+      return '<div class="last-mile-na">N/A</div>';
+    }
+
+    const decisiveClass = this.#getLastMileClass(blocker);
+    return `
+      <div class="last-mile-overall">fail_all: ${this.#formatPercentage(failureRate)}</div>
+      <div class="last-mile-decisive ${decisiveClass}">fail_when_others_pass: ${this.#formatPercentage(lastMileRate)}</div>
+    `;
+  }
+
+  /**
+   * Format recommendation from advanced analysis.
+   *
+   * @private
+   * @param {object} blocker - Blocker object with advancedAnalysis
+   * @returns {string} HTML string with recommendation
+   */
+  #formatRecommendation(blocker) {
+    const analysis = blocker.advancedAnalysis;
+    if (!analysis?.recommendation) {
+      return '';
+    }
+
+    const { action, priority, message } = analysis.recommendation;
+    return `
+      <div class="recommendation-action" data-action="${action}" data-priority="${priority}">
+        ${this.#escapeHtml(message)}
+      </div>
+    `;
+  }
 
   /**
    * Load and display the problematic expressions panel.

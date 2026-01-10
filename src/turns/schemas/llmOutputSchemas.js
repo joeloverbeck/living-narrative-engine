@@ -41,7 +41,7 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
       type: 'object',
       additionalProperties: false,
       description:
-        'Mood axis updates. All 7 axes must be provided as absolute values.',
+        'Mood axis updates. All 8 axes must be provided as absolute values.',
       properties: {
         valence: {
           type: 'integer',
@@ -85,6 +85,12 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Pride (+) to shame (-)',
         },
+        affiliation: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Connected/warm (+) to cold/detached (-)',
+        },
       },
       required: [
         'valence',
@@ -94,6 +100,7 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
         'engagement',
         'future_expectancy',
         'self_evaluation',
+        'affiliation',
       ],
     },
     sexualUpdate: {
@@ -259,12 +266,12 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
         additionalProperties: false,
       },
     },
-    // Optional mood axis updates (all 7 axes must be provided if present)
+    // Optional mood axis updates (all 8 axes must be provided if present)
     moodUpdate: {
       type: 'object',
       additionalProperties: false,
       description:
-        'Optional mood axis updates. All 7 axes must be provided if present.',
+        'Optional mood axis updates. All 8 axes must be provided if present.',
       properties: {
         valence: {
           type: 'integer',
@@ -308,6 +315,12 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Pride (+) to shame (-)',
         },
+        affiliation: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Connected/warm (+) to cold/detached (-)',
+        },
       },
       required: [
         'valence',
@@ -317,6 +330,7 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
         'engagement',
         'future_expectancy',
         'self_evaluation',
+        'affiliation',
       ],
     },
     // Optional sexual state updates (both fields must be provided if present)

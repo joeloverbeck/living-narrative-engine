@@ -3,6 +3,7 @@
  */
 
 import { beforeAll, describe, expect, it } from '@jest/globals';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import StaticConfiguration from '../../../../../src/configuration/staticConfiguration.js';
@@ -11,22 +12,25 @@ import ConsoleLogger from '../../../../../src/logging/consoleLogger.js';
 import AjvSchemaValidator from '../../../../../src/validation/ajvSchemaValidator.js';
 import SchemaLoader from '../../../../../src/loaders/schemaLoader.js';
 
-const POSITIVE_AFFECT_DIR = path.resolve(
-  'data/mods/emotions-positive-affect/expressions'
+const JOY_PLAY_DIR = path.resolve(
+  'data/mods/emotions-joy-play/expressions'
 );
 const AFFILIATION_DIR = path.resolve(
   'data/mods/emotions-affiliation/expressions'
 );
-const SEXUALITY_DIR = path.resolve(
+const SEXUAL_DESIRE_DIR = path.resolve(
+  'data/mods/emotions-sexual-desire/expressions'
+);
+const LEGACY_SEXUALITY_DIR = path.resolve(
   'data/mods/emotions-sexuality/expressions'
 );
+const SEXUAL_EXPRESSION_DIR = existsSync(SEXUAL_DESIRE_DIR)
+  ? SEXUAL_DESIRE_DIR
+  : LEGACY_SEXUALITY_DIR;
+const CALM_DIR = path.resolve('data/mods/emotions-calm/expressions');
 const EXPRESSION_FILES = [
   {
-    dir: POSITIVE_AFFECT_DIR,
-    file: 'euphoric_excitement.expression.json',
-  },
-  {
-    dir: POSITIVE_AFFECT_DIR,
+    dir: CALM_DIR,
     file: 'quiet_contentment.expression.json',
   },
   {
@@ -34,11 +38,11 @@ const EXPRESSION_FILES = [
     file: 'warm_affection.expression.json',
   },
   {
-    dir: POSITIVE_AFFECT_DIR,
+    dir: JOY_PLAY_DIR,
     file: 'playful_mischief.expression.json',
   },
   {
-    dir: SEXUALITY_DIR,
+    dir: SEXUAL_EXPRESSION_DIR,
     file: 'intense_desire.expression.json',
   },
 ];

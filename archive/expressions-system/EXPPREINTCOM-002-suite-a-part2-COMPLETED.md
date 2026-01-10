@@ -25,7 +25,6 @@ Extend the complex expression integration tests with the remaining emotion delta
 
 ### Scope details
 - Add tests for:
-  - emotions-positive-affect:sigh_of_relief (A4)
   - emotions:dissociation (A5)
 - Reuse the harness created in EXPPREINTCOM-001 and keep per-test expression registry isolated to the target expression.
 
