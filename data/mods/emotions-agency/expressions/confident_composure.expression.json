@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-agency:confident_composure",
-    "description": "Steady confidence: calm control and readiness without brashness—grounded, capable, and unhurried.",
+    "description": "Steady confidence: calm control and readiness without brashness-grounded, capable, and unhurried.",
     "priority": 70,
     "prerequisites": [
         {
@@ -125,8 +125,8 @@
             }
         }
     ],
-    "actor_description": "I settle into myself. It isn't bravado—more like the noise drops low enough to hear what matters. My shoulders unclench, my breath finds an even rhythm, and my hands stop doing that tiny frantic overcorrection. I know what I can do, and I don't need to sell it.",
-    "description_text": "{actor} carries a calm certainty—posture open, movements unhurried, gaze steady. Nothing about them looks rushed or reactive; they seem to choose each action instead of being pushed into it.",
+    "actor_description": "I settle into myself. It isn't bravado-more like the noise drops low enough to hear what matters. My shoulders unclench, my breath finds an even rhythm, and my hands stop doing that tiny frantic overcorrection. I know what I can do, and I don't need to sell it.",
+    "description_text": "{actor} carries a calm certainty-posture open, movements unhurried, gaze steady. Nothing about them looks rushed or reactive; they seem to choose each action instead of being pushed into it.",
     "alternate_descriptions": {
         "olfactory": "I smell little sign of stress-sweat; mostly steady breath and warmed skin, the air feeling \"ready\" rather than strained."
     },
@@ -136,5 +136,5 @@
         "composure",
         "control"
     ],
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "normal"
 }

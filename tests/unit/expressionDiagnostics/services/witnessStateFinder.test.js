@@ -592,6 +592,61 @@ describe('WitnessStateFinder', () => {
 
         expect(result).toBeDefined();
       });
+
+      it('should produce integer mood values after perturbation', async () => {
+        const expression = {
+          id: 'test:integer_mood',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'moodAxes.valence' }, 50] } },
+          ],
+        };
+
+        const result = await finder.findWitness(expression, {
+          maxIterations: 500,
+        });
+        const state = result.witness || result.nearestMiss;
+
+        for (const axis of WitnessState.MOOD_AXES) {
+          expect(Number.isInteger(state.mood[axis])).toBe(true);
+        }
+      });
+
+      it('should produce integer sexual values after perturbation', async () => {
+        const expression = {
+          id: 'test:integer_sexual',
+          prerequisites: [{ logic: { '>=': [{ var: 'sexualArousal' }, 0.5] } }],
+        };
+
+        const result = await finder.findWitness(expression, {
+          maxIterations: 500,
+        });
+        const state = result.witness || result.nearestMiss;
+
+        for (const axis of WitnessState.SEXUAL_AXES) {
+          expect(Number.isInteger(state.sexual[axis])).toBe(true);
+        }
+      });
+
+      it('should maintain integer values through multiple iterations', async () => {
+        const expression = {
+          id: 'test:integer_iterations',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'emotions.joy' }, 1.5] } }, // Impossible - forces many iterations
+          ],
+        };
+
+        const result = await finder.findWitness(expression, {
+          maxIterations: 1000,
+        });
+        const state = result.nearestMiss;
+
+        for (const axis of WitnessState.MOOD_AXES) {
+          expect(Number.isInteger(state.mood[axis])).toBe(true);
+        }
+        for (const axis of WitnessState.SEXUAL_AXES) {
+          expect(Number.isInteger(state.sexual[axis])).toBe(true);
+        }
+      });
     });
 
     describe('Violated clauses tracking', () => {

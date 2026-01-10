@@ -81,20 +81,23 @@ describe('ExpressionStatusService', () => {
 
   describe('updateStatus()', () => {
     it('sends POST request with correct payload', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            message: 'Status updated',
-            expressionId: 'expr:test',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              message: 'Status updated',
+              expressionId: 'expr:test',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.updateStatus('data/mods/test/expr.json', 'normal');
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
         'http://localhost:3001/api/expressions/update-status',
         {
           method: 'POST',
@@ -111,15 +114,17 @@ describe('ExpressionStatusService', () => {
     });
 
     it('returns success result on successful update', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            message: 'Status updated successfully',
-            expressionId: 'emotions:happy',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              message: 'Status updated successfully',
+              expressionId: 'emotions:happy',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.updateStatus('path/to/file.json', 'normal');
@@ -132,15 +137,17 @@ describe('ExpressionStatusService', () => {
     });
 
     it('returns failure result on API error response', async () => {
-      global.fetch.mockResolvedValue({
-        ok: false,
-        status: 404,
-        json: () =>
-          Promise.resolve({
-            error: true,
-            message: 'File not found',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: () =>
+            Promise.resolve({
+              error: true,
+              message: 'File not found',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.updateStatus('invalid/path.json', 'normal');
@@ -159,8 +166,34 @@ describe('ExpressionStatusService', () => {
       );
     });
 
+    it('returns failure result when health check fails', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+      });
+
+      const service = new ExpressionStatusService({ logger: mockLogger });
+      const result = await service.updateStatus('path/to/file.json', 'normal');
+
+      expect(result).toEqual({
+        success: false,
+        errorType: 'server_error',
+        message: 'Server error: 503. Check server logs.',
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ExpressionStatusService: Health check failed',
+        expect.objectContaining({
+          errorType: 'server_error',
+          message: 'Server error: 503. Check server logs.',
+        })
+      );
+    });
+
     it('returns failure result on network error', async () => {
-      global.fetch.mockRejectedValue(new TypeError('Failed to fetch'));
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.updateStatus('path/to/file.json', 'normal');
@@ -184,7 +217,9 @@ describe('ExpressionStatusService', () => {
       const abortError = new Error('The operation was aborted');
       abortError.name = 'AbortError';
 
-      global.fetch.mockRejectedValue(abortError);
+      global.fetch.mockResolvedValueOnce({ ok: true }).mockRejectedValueOnce(
+        abortError
+      );
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.updateStatus('path/to/file.json', 'normal');
@@ -204,20 +239,23 @@ describe('ExpressionStatusService', () => {
     });
 
     it('passes signal to fetch for abort handling', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            message: 'Status updated',
-            expressionId: 'expr:test',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              message: 'Status updated',
+              expressionId: 'expr:test',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.updateStatus('data/mods/test/expr.json', 'normal');
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
         expect.any(String),
         expect.objectContaining({
           signal: expect.any(AbortSignal),
@@ -226,15 +264,17 @@ describe('ExpressionStatusService', () => {
     });
 
     it('logs info on successful update', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            message: 'Updated',
-            expressionId: 'test:expr',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              message: 'Updated',
+              expressionId: 'test:expr',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.updateStatus('path/file.json', 'rare');
@@ -252,19 +292,22 @@ describe('ExpressionStatusService', () => {
 
   describe('scanAllStatuses()', () => {
     it('sends GET request to correct endpoint', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            expressions: [],
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              expressions: [],
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.scanAllStatuses();
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
         'http://localhost:3001/api/expressions/scan-statuses',
         expect.objectContaining({
           method: 'GET',
@@ -282,14 +325,16 @@ describe('ExpressionStatusService', () => {
         { id: 'expr:test2', filePath: 'path2.json', diagnosticStatus: 'rare' },
       ];
 
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            expressions: mockExpressions,
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              expressions: mockExpressions,
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -301,15 +346,17 @@ describe('ExpressionStatusService', () => {
     });
 
     it('returns failure result on API error', async () => {
-      global.fetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        json: () =>
-          Promise.resolve({
-            error: true,
-            message: 'Scan failed',
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: () =>
+            Promise.resolve({
+              error: true,
+              message: 'Scan failed',
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -328,12 +375,38 @@ describe('ExpressionStatusService', () => {
       );
     });
 
-    it('returns failure result on CORS-blocked response', async () => {
-      global.fetch.mockResolvedValue({
+    it('returns failure result when health check fails', async () => {
+      global.fetch.mockResolvedValueOnce({
         ok: false,
-        status: 0,
-        type: 'opaque',
+        status: 500,
       });
+
+      const service = new ExpressionStatusService({ logger: mockLogger });
+      const result = await service.scanAllStatuses();
+
+      expect(result).toEqual({
+        success: false,
+        errorType: 'server_error',
+        message: 'Server error: 500. Check server logs.',
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ExpressionStatusService: Health check failed',
+        expect.objectContaining({
+          errorType: 'server_error',
+          message: 'Server error: 500. Check server logs.',
+        })
+      );
+    });
+
+    it('returns failure result on CORS-blocked response', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 0,
+          type: 'opaque',
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -349,7 +422,9 @@ describe('ExpressionStatusService', () => {
     });
 
     it('returns failure result on network error', async () => {
-      global.fetch.mockRejectedValue(new TypeError('Failed to fetch'));
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -370,18 +445,20 @@ describe('ExpressionStatusService', () => {
     });
 
     it('logs info with count on successful scan', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            expressions: [
-              { id: 'a' },
-              { id: 'b' },
-              { id: 'c' },
-            ],
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              expressions: [
+                { id: 'a' },
+                { id: 'b' },
+                { id: 'c' },
+              ],
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.scanAllStatuses();
@@ -393,10 +470,12 @@ describe('ExpressionStatusService', () => {
     });
 
     it('handles missing expressions property', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ success: true }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -411,7 +490,9 @@ describe('ExpressionStatusService', () => {
       const abortError = new Error('The operation was aborted');
       abortError.name = 'AbortError';
 
-      global.fetch.mockRejectedValue(abortError);
+      global.fetch.mockResolvedValueOnce({ ok: true }).mockRejectedValueOnce(
+        abortError
+      );
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       const result = await service.scanAllStatuses();
@@ -431,20 +512,23 @@ describe('ExpressionStatusService', () => {
     });
 
     it('passes signal to fetch for abort handling', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            expressions: [],
-          }),
-      });
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              expressions: [],
+            }),
+        });
 
       const service = new ExpressionStatusService({ logger: mockLogger });
       await service.scanAllStatuses();
 
       // Verify fetch was called with an AbortSignal
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
         expect.any(String),
         expect.objectContaining({
           signal: expect.any(AbortSignal),
@@ -567,39 +651,39 @@ describe('ExpressionStatusService', () => {
     });
 
     it('returns gray for unknown status', () => {
-      expect(service.getStatusColor('unknown')).toBe('#6c757d');
+      expect(service.getStatusColor('unknown')).toBe('#BBBBBB');
     });
 
     it('returns red for impossible status', () => {
-      expect(service.getStatusColor('impossible')).toBe('#dc3545');
+      expect(service.getStatusColor('impossible')).toBe('#CC3311');
     });
 
     it('returns orange for extremely_rare status', () => {
-      expect(service.getStatusColor('extremely_rare')).toBe('#fd7e14');
+      expect(service.getStatusColor('extremely_rare')).toBe('#EE7733');
     });
 
-    it('returns yellow for rare status', () => {
-      expect(service.getStatusColor('rare')).toBe('#ffc107');
+    it('returns magenta for rare status', () => {
+      expect(service.getStatusColor('rare')).toBe('#EE3377');
     });
 
-    it('returns green for normal status', () => {
-      expect(service.getStatusColor('normal')).toBe('#28a745');
+    it('returns teal for normal status', () => {
+      expect(service.getStatusColor('normal')).toBe('#009988');
     });
 
-    it('returns blue for frequent status', () => {
-      expect(service.getStatusColor('frequent')).toBe('#17a2b8');
+    it('returns indigo for frequent status', () => {
+      expect(service.getStatusColor('frequent')).toBe('#332288');
     });
 
     it('returns gray for null status', () => {
-      expect(service.getStatusColor(null)).toBe('#6c757d');
+      expect(service.getStatusColor(null)).toBe('#BBBBBB');
     });
 
     it('returns gray for undefined status', () => {
-      expect(service.getStatusColor(undefined)).toBe('#6c757d');
+      expect(service.getStatusColor(undefined)).toBe('#BBBBBB');
     });
 
     it('returns gray for unknown status value', () => {
-      expect(service.getStatusColor('invalid_status')).toBe('#6c757d');
+      expect(service.getStatusColor('invalid_status')).toBe('#BBBBBB');
     });
   });
 

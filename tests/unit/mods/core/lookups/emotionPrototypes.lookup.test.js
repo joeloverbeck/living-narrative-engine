@@ -51,7 +51,7 @@ describe('core:emotion_prototypes lookup', () => {
         'despair',
         'numbness',
         'fatigue',
-        'loneliness',
+        'withdrawn_isolation',
       ],
       Disengagement: ['boredom', 'apathy'],
       'Threat-Based': [

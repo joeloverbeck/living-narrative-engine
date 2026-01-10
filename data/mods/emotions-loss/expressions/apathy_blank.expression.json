@@ -5,191 +5,157 @@
     "priority": 72,
     "prerequisites": [
         {
-            "logic": {
-                "and": [
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.apathy"
-                            },
-                            0.58
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.fatigue"
-                                    },
-                                    0.4
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.numbness"
-                                    },
-                                    0.3
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            -30
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            5
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.dissociation"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.18
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.despair"
-                                    },
-                                    0.55
-                                ]
-                            },
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.grief"
-                                    },
-                                    0.55
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "and": [
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.anxiety"
-                                    },
-                                    0.55
-                                ]
-                            },
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.anger"
-                                    },
-                                    0.45
-                                ]
-                            },
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.numbness"
-                                    },
-                                    0.65
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.apathy"
-                                            },
-                                            {
-                                                "var": "previousEmotions.apathy"
-                                            }
-                                        ]
-                                    },
-                                    0.12
-                                ]
-                            },
-                            {
-                                "and": [
-                                    {
-                                        "<": [
-                                            {
-                                                "var": "previousEmotions.apathy"
-                                            },
-                                            0.58
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "emotions.apathy"
-                                            },
-                                            0.58
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "previousMoodAxes.engagement"
-                                            },
-                                            {
-                                                "var": "moodAxes.engagement"
-                                            }
-                                        ]
-                                    },
-                                    12
-                                ]
-                            }
-                        ]
-                    }
+          "logic": {
+            "and": [
+              {
+                ">=": [
+                  { "var": "emotions.apathy" },
+                  0.58
                 ]
-            },
-            "failure_message": "Requires apathy with low-energy support, grounded in collapsed engagement + low arousal; caps threat and excludes dissociation so this stays 'low-stakes motivational shutdown' rather than trauma shutdown; blocks panic/freeze and hot tones; fires only on apathy shift or engagement drop."
+              },
+              {
+                "<=": [
+                  { "var": "emotions.lonely_yearning" },
+                  0.25
+                ]
+              },
+              {
+                "<": [
+                  { "var": "emotions.freeze" },
+                  0.25
+                ]
+              },
+              {
+                "<=": [
+                  { "var": "moodAxes.threat" },
+                  20
+                ]
+              },
+              {
+                "or": [
+                  {
+                    ">=": [
+                      { "var": "emotions.fatigue" },
+                      0.4
+                    ]
+                  },
+                  {
+                    ">=": [
+                      { "var": "emotions.numbness" },
+                      0.3
+                    ]
+                  }
+                ]
+              },
+              {
+                "<=": [
+                  { "var": "moodAxes.engagement" },
+                  -30
+                ]
+              },
+              {
+                "<=": [
+                  { "var": "moodAxes.arousal" },
+                  5
+                ]
+              },
+              {
+                "<": [
+                  { "var": "emotions.dissociation" },
+                  0.35
+                ]
+              },
+              {
+                "<=": [
+                  { "var": "emotions.panic" },
+                  0.18
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "<=": [
+                      { "var": "emotions.despair" },
+                      0.55
+                    ]
+                  },
+                  {
+                    "<=": [
+                      { "var": "emotions.grief" },
+                      0.55
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    "<=": [
+                      { "var": "emotions.anxiety" },
+                      0.55
+                    ]
+                  },
+                  {
+                    "<=": [
+                      { "var": "emotions.anger" },
+                      0.45
+                    ]
+                  },
+                  {
+                    "<=": [
+                      { "var": "emotions.numbness" },
+                      0.65
+                    ]
+                  }
+                ]
+              },
+              {
+                "or": [
+                  {
+                    ">=": [
+                      {
+                        "-": [
+                          { "var": "emotions.apathy" },
+                          { "var": "previousEmotions.apathy" }
+                        ]
+                      },
+                      0.12
+                    ]
+                  },
+                  {
+                    "and": [
+                      {
+                        "<": [
+                          { "var": "previousEmotions.apathy" },
+                          0.58
+                        ]
+                      },
+                      {
+                        ">=": [
+                          { "var": "emotions.apathy" },
+                          0.58
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "-": [
+                          { "var": "previousMoodAxes.engagement" },
+                          { "var": "moodAxes.engagement" }
+                        ]
+                      },
+                      12
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "failure_message": "Requires apathy with low-energy support, grounded in collapsed engagement + low arousal; caps threat and excludes dissociation so this stays 'low-stakes motivational shutdown' rather than trauma shutdown; blocks panic/freeze and hot tones; explicitly blocks lonely_yearning so 'aching preoccupation' can't coexist with 'caring offline'; fires only on apathy shift or engagement drop."
         }
-    ],
+      ],
     "actor_description": "I can feel myself stop reaching. Things that should matter land with no weight, like they bounce off a numb surface. My body is here, but the impulse to initiate is gone—every option feels equally pointless. Time flattens into a dull, featureless stretch, and I move only when I have to.",
     "description_text": "{actor} seems to power down: posture slack, gaze unfixed, responses delayed like they’re coming from far away. Their voice goes flatter and their movements get sparse, as if initiative has to be dragged into motion.",
     "alternate_descriptions": {
@@ -204,6 +170,5 @@
         "low_energy",
         "disengagement",
         "flat_affect"
-    ],
-    "diagnosticStatus": "normal"
+    ]
 }

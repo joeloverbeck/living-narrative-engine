@@ -123,7 +123,7 @@ class GameConfigLoader extends AbstractLoader {
         "FATAL: Schema ID for 'game' configuration type not found in IConfiguration."
       );
       throw new ValidationError(
-        'Schema ID for \u2018game\u2019 configuration type not configured.'
+        "Schema ID for 'game' configuration type not configured."
       );
     }
     this.#logger.debug(

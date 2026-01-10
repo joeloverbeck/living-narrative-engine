@@ -173,17 +173,18 @@
     },
     "sexual_confidence": {
       "weights": {
-        "sexual_arousal": 0.8,
-        "agency_control": 0.6,
-        "valence": 0.2,
-        "threat": -0.4,
-        "self_evaluation": 0.2
+        "sexual_arousal": 0.85,
+        "agency_control": 0.75,
+        "self_evaluation": 0.35,
+        "threat": -0.25,
+        "engagement": 0.15,
+        "valence": 0.05
       },
       "gates": [
-        "sexual_arousal >= 0.35",
-        "agency_control >= 0.10",
-        "threat <= 0.30",
-        "self_evaluation >= 0.0"
+        "sexual_arousal >= 0.25",
+        "agency_control >= 0.05",
+        "threat <= 0.50",
+        "self_evaluation >= -0.15"
       ]
     },
     "sexual_dominant_pleasure": {

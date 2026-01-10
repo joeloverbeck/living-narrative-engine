@@ -125,7 +125,7 @@
                     }
                 ]
             },
-            "failure_message": "Disgust + negative self-evaluation with arousal present, plus rigid-freeze—capped below panic so it reads as internal revulsion, not survival hijack."
+            "failure_message": "Disgust + negative self-evaluation with arousal present, plus rigid-freeze-capped below panic so it reads as internal revulsion, not survival hijack."
         },
         {
             "logic": {
@@ -194,12 +194,12 @@
             }
         }
     ],
-    "actor_description": "My body lights up and my mind turns on me in the same instant. Heat pools under my skin, breath catches—then disgust snaps inward like a hook: What is wrong with you? I feel filthy in a way that isn't about sweat or dirt, like the wanting itself stains me. I want to pull away and I want more at the same time, and that split makes my stomach knot—arousal tangled with the urge to punish myself for having it.",
-    "description_text": "{actor} looks caught in a contradiction: flushed and reactive, but with a tight, pained edge—lips pressed too hard, eyes darting away, posture closing. Their movements come in small abortive starts, like reaching and stopping mid-gesture. Whatever is happening inside them shows up as tension: rigid shoulders, a wince that doesn't quite fit the moment, a need to create distance while their body still betrays arousal.",
+    "actor_description": "My body lights up and my mind turns on me in the same instant. Heat pools under my skin, breath catches-then disgust snaps inward like a hook: What is wrong with you? I feel filthy in a way that isn't about sweat or dirt, like the wanting itself stains me. I want to pull away and I want more at the same time, and that split makes my stomach knot-arousal tangled with the urge to punish myself for having it.",
+    "description_text": "{actor} looks caught in a contradiction: flushed and reactive, but with a tight, pained edge-lips pressed too hard, eyes darting away, posture closing. Their movements come in small abortive starts, like reaching and stopping mid-gesture. Whatever is happening inside them shows up as tension: rigid shoulders, a wince that doesn't quite fit the moment, a need to create distance while their body still betrays arousal.",
     "alternate_descriptions": {
-        "auditory": "I hear a sharp inhale that turns into a forced exhale, a sound cut off in the throat—like someone hates the noise they almost made.",
-        "tactile": "I sense that someone's body is hot and stiff at once—tension layered over heat, trembling held down like it's shameful to move.",
-        "olfactory": "I smell warm sweat with a sour, stressed edge—heat and discomfort mixed, like the air itself has turned sharp."
+        "auditory": "I hear a sharp inhale that turns into a forced exhale, a sound cut off in the throat-like someone hates the noise they almost made.",
+        "tactile": "I sense that someone's body is hot and stiff at once-tension layered over heat, trembling held down like it's shameful to move.",
+        "olfactory": "I smell warm sweat with a sour, stressed edge-heat and discomfort mixed, like the air itself has turned sharp."
     },
     "tags": [
         "sexual",
@@ -209,5 +209,6 @@
         "arousal",
         "shame",
         "anger"
-    ]
+    ],
+    "diagnosticStatus": "rare"
 }

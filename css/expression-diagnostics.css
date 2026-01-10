@@ -1,5 +1,49 @@
 /* css/expression-diagnostics.css */
 
+/* ==========================================================================
+   STATUS COLORS - Source of Truth: src/expressionDiagnostics/statusTheme.js
+
+   These CSS custom properties serve as FALLBACKS for browsers without JavaScript.
+   The canonical color definitions are in statusTheme.js, which can dynamically
+   inject these values via injectStatusCssVariables().
+
+   When adding or modifying status colors:
+   1. Update statusTheme.js first (the authoritative source)
+   2. Update these CSS fallbacks to match
+   3. Run tests to verify consistency
+   ========================================================================== */
+:root {
+  /* Unknown status */
+  --status-unknown-fill: #BBBBBB;
+  --status-unknown-bg: #F7F7F7;
+  --status-unknown-text: #545454;
+
+  /* Impossible status */
+  --status-impossible-fill: #CC3311;
+  --status-impossible-bg: #F9E7E2;
+  --status-impossible-text: #5C1708;
+
+  /* Extremely rare status */
+  --status-extremely-rare-fill: #EE7733;
+  --status-extremely-rare-bg: #FDEFE7;
+  --status-extremely-rare-text: #6B3617;
+
+  /* Rare status */
+  --status-rare-fill: #EE3377;
+  --status-rare-bg: #FDE7EF;
+  --status-rare-text: #6B1736;
+
+  /* Normal status */
+  --status-normal-fill: #009988;
+  --status-normal-bg: #E0F3F1;
+  --status-normal-text: #00453D;
+
+  /* Frequent status */
+  --status-frequent-fill: #332288;
+  --status-frequent-bg: #E7E4F1;
+  --status-frequent-text: #170F3D;
+}
+
 .diagnostics-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -94,6 +138,42 @@
   cursor: not-allowed;
 }
 
+/* Section Action Button - Button within a section header area */
+.section-action-button {
+  margin-bottom: 1rem;
+}
+
+/* Status Summary - Centered Prominent Display */
+.status-summary-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto 1rem auto;
+  padding: 1.5rem 2rem;
+  background: var(--panel-bg-color);
+  border: 2px solid var(--border-color-subtle);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.status-summary-centered .status-indicator {
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.status-summary-centered .status-circle-large {
+  width: 32px;
+  height: 32px;
+}
+
+.status-summary-centered .status-message {
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
 /* Status Indicator */
 .status-indicator {
   display: flex;
@@ -104,17 +184,19 @@
   font-weight: 600;
 }
 
-.status-emoji {
-  font-size: 1.5rem;
+/* Status indicator circle - larger version for Status Summary */
+.status-indicator .status-circle-large {
+  width: 24px;
+  height: 24px;
 }
 
-/* Status indicator backgrounds - these are page-specific colors */
-.status-unknown { background: #e8e8e8; color: #666; }
-.status-impossible { background: #fadbd8; color: #c0392b; }
-.status-extremely-rare { background: #fdebd0; color: #e67e22; }
-.status-rare { background: #fcf3cf; color: #b7950b; }
-.status-normal { background: #d5f5e3; color: #27ae60; }
-.status-frequent { background: #d6eaf8; color: #2980b9; }
+/* Status indicator backgrounds - using CSS custom properties */
+.status-unknown { background: var(--status-unknown-bg); color: var(--status-unknown-text); }
+.status-impossible { background: var(--status-impossible-bg); color: var(--status-impossible-text); }
+.status-extremely-rare { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
+.status-rare { background: var(--status-rare-bg); color: var(--status-rare-text); }
+.status-normal { background: var(--status-normal-bg); color: var(--status-normal-text); }
+.status-frequent { background: var(--status-frequent-bg); color: var(--status-frequent-text); }
 
 .status-message {
   margin-top: 0.5rem;
@@ -202,14 +284,18 @@
   font-weight: 600;
 }
 
-/* Rarity indicator backgrounds - match status indicator colors */
-.rarity-indicator.rarity-impossible { background: #fadbd8; color: #c0392b; }
-.rarity-indicator.rarity-extremely-rare { background: #fdebd0; color: #e67e22; }
-.rarity-indicator.rarity-rare { background: #fcf3cf; color: #b7950b; }
-.rarity-indicator.rarity-normal { background: #d5f5e3; color: #27ae60; }
-.rarity-indicator.rarity-frequent { background: #d6eaf8; color: #2980b9; }
+/* Rarity indicator backgrounds - using CSS custom properties */
+.rarity-indicator.rarity-impossible { background: var(--status-impossible-bg); color: var(--status-impossible-text); }
+.rarity-indicator.rarity-extremely-rare { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
+.rarity-indicator.rarity-rare { background: var(--status-rare-bg); color: var(--status-rare-text); }
+.rarity-indicator.rarity-normal { background: var(--status-normal-bg); color: var(--status-normal-text); }
+.rarity-indicator.rarity-frequent { background: var(--status-frequent-bg); color: var(--status-frequent-text); }
 
-.rarity-emoji { font-size: 1.25rem; }
+/* Rarity indicator circle - reuses status-circle styles with larger size */
+.rarity-indicator .rarity-circle {
+  width: 16px;
+  height: 16px;
+}
 .rate-details { display: flex; flex-direction: column; }
 .trigger-rate { font-size: 1.75rem; font-weight: 700; color: var(--primary-text-color); }
 .confidence-interval { font-size: 0.875rem; color: var(--secondary-text-color); }
@@ -232,10 +318,10 @@
   text-transform: uppercase;
 }
 
-.severity-badge.severity-critical { background: #fadbd8; color: #c0392b; }
-.severity-badge.severity-high { background: #fdebd0; color: #e67e22; }
-.severity-badge.severity-medium { background: #fcf3cf; color: #b7950b; }
-.severity-badge.severity-low { background: #d5f5e3; color: #27ae60; }
+.severity-badge.severity-critical { background: var(--status-impossible-bg); color: var(--status-impossible-text); }
+.severity-badge.severity-high { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
+.severity-badge.severity-medium { background: var(--status-rare-bg); color: var(--status-rare-text); }
+.severity-badge.severity-low { background: var(--status-normal-bg); color: var(--status-normal-text); }
 
 .no-data { text-align: center; color: var(--secondary-text-color); font-style: italic; }
 
@@ -347,18 +433,18 @@
 }
 
 .failure-rate.failure-critical {
-  background: #fadbd8;
-  color: #c0392b;
+  background: var(--status-impossible-bg);
+  color: var(--status-impossible-text);
 }
 
 .failure-rate.failure-high {
-  background: #fdebd0;
-  color: #e67e22;
+  background: var(--status-extremely-rare-bg);
+  color: var(--status-extremely-rare-text);
 }
 
 .failure-rate.failure-normal {
-  background: #d5f5e3;
-  color: #27ae60;
+  background: var(--status-normal-bg);
+  color: var(--status-normal-text);
 }
 
 .violation-badge {
@@ -372,17 +458,13 @@
 /* Responsive */
 @media (min-width: 768px) {
   .results-area {
-    grid-template-columns: 1fr 2fr;
-  }
-
-  .status-panel {
-    grid-column: 1;
+    grid-template-columns: 1fr 1fr;
   }
 
   .static-analysis-panel,
   .gate-conflicts-panel,
   .thresholds-panel {
-    grid-column: 2;
+    grid-column: 1 / -1;
   }
 
   .mc-panel { grid-column: 1 / -1; }
@@ -445,14 +527,15 @@
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
 }
 
-.status-circle.status-unknown { background-color: #6c757d; }
-.status-circle.status-impossible { background-color: #dc3545; }
-.status-circle.status-extremely-rare { background-color: #fd7e14; }
-.status-circle.status-rare { background-color: #ffc107; }
-.status-circle.status-normal { background-color: #28a745; }
-.status-circle.status-frequent { background-color: #17a2b8; }
+.status-circle.status-unknown { background-color: var(--status-unknown-fill); }
+.status-circle.status-impossible { background-color: var(--status-impossible-fill); }
+.status-circle.status-extremely-rare { background-color: var(--status-extremely-rare-fill); }
+.status-circle.status-rare { background-color: var(--status-rare-fill); }
+.status-circle.status-normal { background-color: var(--status-normal-fill); }
+.status-circle.status-frequent { background-color: var(--status-frequent-fill); }
 
 /* Pill Name */
 .pill-name {
@@ -513,11 +596,11 @@
 }
 
 .result-label.found {
-  color: #27ae60;
+  color: var(--status-normal-text);
 }
 
 .result-label.not-found {
-  color: #e67e22;
+  color: var(--status-extremely-rare-text);
 }
 
 .btn {
@@ -576,11 +659,11 @@
 }
 
 .axis-value.positive {
-  color: #27ae60;
+  color: var(--status-normal-text);
 }
 
 .axis-value.negative {
-  color: #c0392b;
+  color: var(--status-impossible-text);
 }
 
 .axis-value.neutral {
@@ -660,19 +743,19 @@
 }
 
 .fitness-fill.perfect {
-  background: #27ae60;
+  background: var(--status-normal-fill);
 }
 
 .fitness-fill.good {
-  background: #2980b9;
+  background: var(--status-frequent-fill);
 }
 
 .fitness-fill.poor {
-  background: #e67e22;
+  background: var(--status-extremely-rare-fill);
 }
 
 .fitness-fill.bad {
-  background: #c0392b;
+  background: var(--status-impossible-fill);
 }
 
 #fitness-value {
@@ -700,4 +783,512 @@
 .copy-feedback.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ================================= */
+/* Status Select Dropdown Component  */
+/* ================================= */
+
+.status-select-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Trigger Button (shows selected value) */
+.status-select-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  background: var(--input-bg-color);
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  color: var(--primary-text-color);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.status-select-trigger:hover:not(:disabled) {
+  border-color: var(--accent-color-primary, #4a9eff);
+}
+
+.status-select-trigger:focus {
+  outline: none;
+  border-color: var(--accent-color-primary, #4a9eff);
+  box-shadow: 0 0 0 3px var(--accent-color-focus-ring, rgba(74, 158, 255, 0.25));
+}
+
+.status-select-trigger:disabled {
+  background: var(--button-disabled-bg-color);
+  color: var(--button-disabled-text-color);
+  cursor: not-allowed;
+}
+
+/* Dropdown Arrow Icon */
+.status-select-trigger::after {
+  content: '';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--secondary-text-color);
+  transition: transform 0.2s;
+}
+
+.status-select-trigger[aria-expanded="true"]::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Trigger Content */
+.status-select-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.status-select-trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-select-placeholder {
+  color: var(--secondary-text-color);
+}
+
+/* Dropdown Listbox */
+.status-select-listbox {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--panel-bg-color);
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  display: none;
+}
+
+.status-select-listbox[aria-hidden="false"] {
+  display: block;
+}
+
+/* Option Items */
+.status-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.status-select-option:hover {
+  background: var(--secondary-bg-color);
+}
+
+.status-select-option:focus {
+  outline: none;
+  background: var(--secondary-bg-color);
+}
+
+.status-select-option.focused {
+  background: var(--secondary-bg-color);
+}
+
+.status-select-option[aria-selected="true"] {
+  background: var(--accent-color-focus-ring, rgba(74, 158, 255, 0.25));
+}
+
+.status-select-option:focus-visible {
+  outline: 2px solid var(--accent-color-primary, #4a9eff);
+  outline-offset: -2px;
+}
+
+.status-select-option-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  color: var(--primary-text-color);
+}
+
+/* Expression Selection Panel - allow dropdown to overflow */
+.expression-selection-panel {
+  overflow: visible;
+}
+
+/* ======================================== */
+/* Path-Sensitive Analysis Section          */
+/* ======================================== */
+
+.path-sensitive-panel {
+  grid-column: 1 / -1;
+}
+
+/* Panel Header Row with Toggle */
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.panel-header-row h2 {
+  margin: 0;
+}
+
+/* Toggle Switch Component */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background-color: var(--border-color-subtle);
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--status-normal-fill);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 2px solid var(--primary-accent-color);
+  outline-offset: 2px;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+}
+
+/* Branch Card Hidden State */
+.branch-card[data-status='reachable'].filtered-hidden {
+  display: none;
+}
+
+/* Summary Card */
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--secondary-bg-color);
+  border-radius: 6px;
+  border-left: 4px solid var(--border-color-subtle);
+  margin-bottom: 1rem;
+}
+
+.summary-card[data-status="fully_reachable"] {
+  border-left-color: var(--status-normal-fill);
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.summary-card[data-status="partially_reachable"] {
+  border-left-color: var(--status-rare-fill);
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.summary-card[data-status="unreachable"] {
+  border-left-color: var(--status-impossible-fill);
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.summary-card .status-indicator {
+  font-size: 1.5rem;
+  padding: 0;
+  background: none;
+}
+
+.summary-card .summary-message {
+  font-weight: 500;
+  color: var(--primary-text-color);
+}
+
+/* Branch Overview */
+.branch-overview {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 1rem;
+}
+
+/* Branch Cards Container */
+.branch-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Individual Branch Card */
+.branch-card {
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.branch-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.branch-card[data-status="reachable"] {
+  border-color: var(--status-normal-fill);
+}
+
+.branch-card[data-status="reachable"] .branch-card-header {
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.branch-card[data-status="knife-edge"] {
+  border-color: var(--status-rare-fill);
+}
+
+.branch-card[data-status="knife-edge"] .branch-card-header {
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.branch-card[data-status="unreachable"] {
+  border-color: var(--status-impossible-fill);
+}
+
+.branch-card[data-status="unreachable"] .branch-card-header {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.branch-card[data-status="infeasible"] {
+  border-color: var(--status-unknown-fill);
+  opacity: 0.7;
+}
+
+.branch-card[data-status="infeasible"] .branch-card-header {
+  background: rgba(149, 165, 166, 0.1);
+}
+
+.branch-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary-bg-color);
+  font-weight: 500;
+}
+
+.branch-status-icon {
+  font-size: 1.1rem;
+}
+
+.branch-title {
+  font-size: 0.9rem;
+  color: var(--primary-text-color);
+}
+
+.branch-card-content {
+  padding: 0.75rem;
+}
+
+.branch-prototypes {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.branch-prototypes strong {
+  color: var(--secondary-text-color);
+  font-weight: 500;
+}
+
+.prototype-list {
+  color: var(--primary-text-color);
+}
+
+/* Threshold Table within Branch Card */
+.threshold-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.threshold-table th,
+.threshold-table td {
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.threshold-table th {
+  font-weight: 500;
+  color: var(--secondary-text-color);
+  font-size: 0.75rem;
+}
+
+/* Knife-Edge Warning within Card */
+.branch-knife-edges {
+  margin-top: 0.5rem;
+}
+
+.ke-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(243, 156, 18, 0.1);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.ke-icon {
+  font-size: 1rem;
+}
+
+.ke-message {
+  color: var(--primary-text-color);
+}
+
+/* Knife-Edge Summary Section */
+.knife-edge-summary {
+  margin-top: 1rem;
+  border: 1px solid var(--status-rare-fill);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.knife-edge-summary summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(243, 156, 18, 0.1);
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+}
+
+.knife-edge-summary summary:hover {
+  background: rgba(243, 156, 18, 0.15);
+}
+
+.knife-edge-summary[open] summary {
+  border-bottom: 1px solid var(--status-rare-fill);
+}
+
+#knife-edge-table {
+  width: 100%;
+}
+
+#knife-edge-table th,
+#knife-edge-table td {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* =====================================================================
+   FEASIBILITY VOLUME INDICATOR (EXPDIAPATSENANA-009)
+   ===================================================================== */
+
+.volume-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  background: var(--surface-alt, #1a1a2e);
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-sm, 0.875rem);
+  margin-top: var(--spacing-sm, 0.5rem);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.volume-indicator.hidden {
+  display: none;
+}
+
+.volume-emoji {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.volume-label {
+  font-weight: 500;
+  color: var(--text-secondary, #b8b8d0);
+}
+
+.volume-value {
+  font-family: var(--font-mono, 'Consolas', 'Monaco', monospace);
+  background: var(--surface-color, #252545);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-xs, 2px);
+  color: var(--text-primary, #e8e8f0);
+}
+
+.volume-description {
+  color: var(--text-muted, #6b6b8d);
+  font-style: italic;
+  flex: 1;
+}
+
+/* Responsive adjustments for branch cards */
+@media (max-width: 768px) {
+  .branch-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .branch-overview {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .volume-indicator {
+    flex-wrap: wrap;
+  }
+
+  .volume-description {
+    width: 100%;
+    margin-top: 0.25rem;
+  }
 }

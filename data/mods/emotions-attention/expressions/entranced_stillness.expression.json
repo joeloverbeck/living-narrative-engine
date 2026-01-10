@@ -204,11 +204,11 @@
             }
         }
     ],
-    "actor_description": "I stop reaching for the wheel. My attention sinks and stays—caught, held, almost tenderly restrained. The world narrows to one thread and I follow it because it keeps pulling. Movement feels optional; breath slows; the usual little corrections and self-checks fade. It isn’t effort or mastery. It’s capture—quiet, steady, and hard to interrupt.",
-    "description_text": "{actor} grows unusually still, gaze fixed as if something has hooked their attention and won’t let go. Their blinking slows; posture softens into a held pause. They don’t look tense or urgent—just drawn in, following a current rather than steering. It’s not sleepiness and not efficiency; it’s absorption with reduced agency, a quiet surrender of motion to focus.",
+    "actor_description": "I stop reaching for the wheel. My attention sinks and stays-caught, held, almost tenderly restrained. The world narrows to one thread and I follow it because it keeps pulling. Movement feels optional; breath slows; the usual little corrections and self-checks fade. It isn't effort or mastery. It's capture-quiet, steady, and hard to interrupt.",
+    "description_text": "{actor} grows unusually still, gaze fixed as if something has hooked their attention and won't let go. Their blinking slows; posture softens into a held pause. They don't look tense or urgent-just drawn in, following a current rather than steering. It's not sleepiness and not efficiency; it's absorption with reduced agency, a quiet surrender of motion to focus.",
     "alternate_descriptions": {
-        "auditory": "Their breathing stretches out—longer inhales, longer silences—small repeated motions landing with the same gentle cadence, like fidgeting has been switched off.",
-        "olfactory": "A muted warmth hangs in the air—calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
+        "auditory": "Their breathing stretches out-longer inhales, longer silences-small repeated motions landing with the same gentle cadence, like fidgeting has been switched off.",
+        "olfactory": "A muted warmth hangs in the air-calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
     },
     "tags": [
         "engagement",

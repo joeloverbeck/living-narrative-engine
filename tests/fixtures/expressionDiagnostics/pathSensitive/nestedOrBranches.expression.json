@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "test:nestedOrBranches",
+  "description": "Test expression with nested OR blocks to verify branch enumeration",
+  "prerequisites": [
+    {
+      "logic": {
+        "or": [
+          {
+            "and": [
+              { ">=": [{ "var": "emotions.joy" }, 0.5] },
+              {
+                "or": [
+                  { ">=": [{ "var": "emotions.excitement" }, 0.3] },
+                  { ">=": [{ "var": "emotions.enthusiasm" }, 0.3] }
+                ]
+              }
+            ]
+          },
+          { ">=": [{ "var": "emotions.serenity" }, 0.6] }
+        ]
+      }
+    }
+  ],
+  "effects": []
+}

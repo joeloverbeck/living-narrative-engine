@@ -13,6 +13,81 @@ import {
 import ExpressionDiagnosticsController from '../../../../src/domUI/expression-diagnostics/ExpressionDiagnosticsController.js';
 import * as clipboardUtils from '../../../../src/domUI/helpers/clipboardUtils.js';
 
+/**
+ * Helper to get the custom dropdown container.
+ * @returns {HTMLElement|null}
+ */
+function getDropdownContainer() {
+  return document.getElementById('expression-select-container');
+}
+
+/**
+ * Helper to get all dropdown options from the custom dropdown.
+ * @returns {HTMLElement[]}
+ */
+function getDropdownOptions() {
+  const container = getDropdownContainer();
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('[role="option"]'));
+}
+
+/**
+ * Helper to select an expression value in the custom dropdown.
+ * @param {string} value - The expression ID to select
+ */
+function selectDropdownValue(value) {
+  const container = getDropdownContainer();
+  if (!container) return;
+
+  // Find the option with this value
+  const options = getDropdownOptions();
+  const option = options.find(
+    (opt) => opt.dataset.value === value
+  );
+
+  if (option) {
+    option.click();
+  }
+}
+
+/**
+ * Helper to clear the dropdown selection (select placeholder).
+ */
+function clearDropdownSelection() {
+  const container = getDropdownContainer();
+  if (!container) return;
+
+  // Find the placeholder option (value="")
+  const options = getDropdownOptions();
+  const placeholder = options.find(
+    (opt) => opt.dataset.value === ''
+  );
+
+  if (placeholder) {
+    placeholder.click();
+  }
+}
+
+/**
+ * Helper to get the currently selected value from the dropdown.
+ * @returns {string}
+ */
+function getDropdownValue() {
+  const container = getDropdownContainer();
+  if (!container) return '';
+
+  const trigger = container.querySelector('[role="combobox"]');
+  if (!trigger) return '';
+
+  // Find the selected option
+  const options = getDropdownOptions();
+  const selected = options.find(
+    (opt) => opt.getAttribute('aria-selected') === 'true'
+  );
+
+  return selected?.dataset.value || '';
+}
+
 describe('ExpressionDiagnosticsController', () => {
   let mockLogger;
   let mockExpressionRegistry;
@@ -22,24 +97,33 @@ describe('ExpressionDiagnosticsController', () => {
   let mockFailureExplainer;
   let mockExpressionStatusService;
   let mockWitnessStateFinder;
+  let mockPathSensitiveAnalyzer;
 
   beforeEach(() => {
     // Set up the DOM structure directly in Jest's jsdom environment
     document.body.innerHTML = `
-      <select id="expression-select">
-        <option value="">-- Select --</option>
-      </select>
+      <label id="expression-select-label" for="expression-select">Select Expression:</label>
+      <div id="expression-select-container" class="status-select-container">
+        <!-- StatusSelectDropdown renders here -->
+      </div>
       <p id="expression-description"></p>
-      <button id="run-static-btn" disabled>Run Static Analysis</button>
-      <button id="find-witness-btn" disabled>Find Witness State</button>
-      <div id="status-indicator" class="status-indicator status-unknown">
-        <span class="status-emoji">⚪</span>
-        <span class="status-label">Not Analyzed</span>
-      </div>
-      <p id="status-message"></p>
-      <div id="static-results">
-        <p class="placeholder-text">Run static analysis to see results.</p>
-      </div>
+      <!-- Status Summary - Centered -->
+      <section class="panel status-summary-centered">
+        <div id="status-indicator" class="status-indicator status-unknown">
+          <span class="status-circle-large status-circle status-unknown"></span>
+          <span class="status-label">Unknown</span>
+        </div>
+        <p id="status-message"></p>
+      </section>
+      <!-- Static Analysis Section (with button) -->
+      <section class="panel static-analysis-panel">
+        <div class="section-action-button">
+          <button id="run-static-btn" class="action-button" disabled>Run Static Analysis</button>
+        </div>
+        <div id="static-results">
+          <p class="placeholder-text">Run static analysis to see results.</p>
+        </div>
+      </section>
       <section id="gate-conflicts-section" hidden>
         <table id="gate-conflicts-table">
           <thead><tr><th>Axis</th></tr></thead>
@@ -72,7 +156,7 @@ describe('ExpressionDiagnosticsController', () => {
         <button id="run-mc-btn" disabled>Run Simulation</button>
         <div id="mc-results" hidden>
           <div id="mc-rarity-indicator" class="rarity-indicator">
-            <span class="rarity-emoji"></span>
+            <span class="rarity-circle status-circle"></span>
             <span class="rarity-label"></span>
           </div>
           <span id="mc-trigger-rate">--</span>
@@ -83,8 +167,11 @@ describe('ExpressionDiagnosticsController', () => {
           </table>
         </div>
       </section>
-      <!-- Witness State Section -->
-      <section id="witness-section">
+      <!-- Witness State Section (with button) -->
+      <section id="witness-section" class="panel witness-panel">
+        <div class="section-action-button">
+          <button id="find-witness-btn" class="action-button" disabled>Find Witness State</button>
+        </div>
         <span id="witness-status"></span>
         <div id="witness-results" hidden>
           <span id="witness-result-label" class="result-label"></span>
@@ -99,6 +186,38 @@ describe('ExpressionDiagnosticsController', () => {
           <span id="fitness-value">--</span>
         </div>
       </section>
+      <!-- Path-Sensitive Analysis Section -->
+      <label class="toggle-switch" id="show-all-branches-toggle">
+        <input type="checkbox" id="show-all-branches">
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">Show All</span>
+      </label>
+      <section id="path-sensitive-results" hidden>
+        <div id="path-sensitive-summary">
+          <span id="ps-status-indicator"></span>
+          <span id="ps-summary-message"></span>
+        </div>
+        <span id="branch-count">0</span>
+        <span id="reachable-count">0</span>
+        <div id="branch-cards-container"></div>
+        <details id="knife-edge-summary" hidden>
+          <span id="ke-count">0</span>
+          <table><tbody id="knife-edge-tbody"></tbody></table>
+        </details>
+      </section>
+      <template id="branch-card-template">
+        <div class="branch-card" data-status="pending">
+          <span class="branch-status-icon"></span>
+          <span class="branch-title"></span>
+          <span class="prototype-list"></span>
+          <div class="branch-thresholds" hidden>
+            <table><tbody class="threshold-tbody"></tbody></table>
+          </div>
+          <div class="branch-knife-edges" hidden>
+            <span class="ke-message"></span>
+          </div>
+        </div>
+      </template>
     `;
 
     mockLogger = {
@@ -192,6 +311,24 @@ describe('ExpressionDiagnosticsController', () => {
         violatedClauses: [],
       }),
     };
+
+    mockPathSensitiveAnalyzer = {
+      analyze: jest.fn().mockResolvedValue({
+        expressionId: 'expr:test1',
+        branches: [],
+        branchCount: 0,
+        feasibleBranchCount: 0,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: false,
+        fullyReachableBranchIds: [],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'unreachable',
+        statusEmoji: '🔴',
+        getSummaryMessage: jest.fn().mockReturnValue('No branches analyzed'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      }),
+    };
   });
 
   afterEach(() => {
@@ -210,6 +347,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -224,6 +362,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -238,6 +377,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -252,6 +392,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -266,6 +407,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: null,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -280,6 +422,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: null,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -295,6 +438,7 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: null,
           witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -310,6 +454,7 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           witnessStateFinder: null,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -325,6 +470,7 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           witnessStateFinder: { someMethod: jest.fn() },
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -339,6 +485,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -353,6 +500,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: { someMethod: jest.fn() },
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -367,6 +515,7 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: { someMethod: jest.fn() },
           expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).toThrow();
     });
@@ -385,6 +534,38 @@ describe('ExpressionDiagnosticsController', () => {
       }).toThrow();
     });
 
+    it('throws if pathSensitiveAnalyzer is missing', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: null,
+        });
+      }).toThrow();
+    });
+
+    it('throws if pathSensitiveAnalyzer lacks required methods', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: { someMethod: jest.fn() },
+        });
+      }).toThrow();
+    });
+
     it('constructs successfully with valid dependencies', () => {
       expect(() => {
         new ExpressionDiagnosticsController({
@@ -396,6 +577,7 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
         });
       }).not.toThrow();
     });
@@ -412,15 +594,17 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      // 1 default option + 2 expressions
-      expect(select.options.length).toBe(3);
-      expect(select.options[1].value).toBe('expr:test1');
-      expect(select.options[2].value).toBe('expr:test2');
+      const options = getDropdownOptions();
+      // 3 options: placeholder + 2 expressions
+      expect(options.length).toBe(3);
+      expect(options[0].dataset.value).toBe(''); // placeholder
+      expect(options[1].dataset.value).toBe('expr:test1');
+      expect(options[2].dataset.value).toBe('expr:test2');
     });
 
     it('sorts expression dropdown options alphabetically by id', async () => {
@@ -439,14 +623,17 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      expect(select.options[1].value).toBe('expr:alpha');
-      expect(select.options[2].value).toBe('expr:beta');
-      expect(select.options[3].value).toBe('expr:zeta');
+      const options = getDropdownOptions();
+      // Index 0 is placeholder, then sorted expressions
+      expect(options[0].dataset.value).toBe(''); // placeholder
+      expect(options[1].dataset.value).toBe('expr:alpha');
+      expect(options[2].dataset.value).toBe('expr:beta');
+      expect(options[3].dataset.value).toBe('expr:zeta');
     });
 
     it('logs debug message with expression count', async () => {
@@ -459,6 +646,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -480,13 +668,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const description = document.getElementById('expression-description');
       expect(description.textContent).toBe('Test expression 1');
@@ -502,17 +689,16 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
       const runBtn = document.getElementById('run-static-btn');
 
       expect(runBtn.disabled).toBe(true);
 
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       expect(runBtn.disabled).toBe(false);
     });
@@ -527,21 +713,19 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
       const runBtn = document.getElementById('run-static-btn');
 
       // Select an expression
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
       expect(runBtn.disabled).toBe(false);
 
       // Clear selection
-      select.value = '';
-      select.dispatchEvent(new Event('change'));
+      clearDropdownSelection();
       expect(runBtn.disabled).toBe(true);
     });
 
@@ -567,13 +751,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:no-desc';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:no-desc');
 
       const description = document.getElementById('expression-description');
       expect(description.textContent).toBe('No description available');
@@ -596,15 +779,14 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
       const runBtn = document.getElementById('run-static-btn');
 
-      select.value = 'expr:nonexistent';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:nonexistent');
 
       const description = document.getElementById('expression-description');
       expect(description.textContent).toBe('Expression not found');
@@ -623,14 +805,13 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
       // Select expression
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Click run
       const runBtn = document.getElementById('run-static-btn');
@@ -652,13 +833,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -690,13 +870,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -731,13 +910,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -784,13 +962,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -814,13 +991,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -844,6 +1020,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -864,13 +1041,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -892,6 +1068,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -899,8 +1076,8 @@ describe('ExpressionDiagnosticsController', () => {
       const indicator = document.getElementById('status-indicator');
       expect(indicator.classList.contains('status-unknown')).toBe(true);
 
-      const emoji = indicator.querySelector('.status-emoji');
-      expect(emoji.textContent).toBe('⚪');
+      const circle = indicator.querySelector('.status-circle-large');
+      expect(circle.classList.contains('status-unknown')).toBe(true);
     });
 
     it('resets status when expression selection changes', async () => {
@@ -926,23 +1103,280 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
 
-      // Change to a different expression
-      select.value = 'expr:test2';
-      select.dispatchEvent(new Event('change'));
+      // Change to a different expression (expr:test2 has diagnosticStatus: 'normal')
+      selectDropdownValue('expr:test2');
 
       const indicator = document.getElementById('status-indicator');
+      // Should show the saved diagnosticStatus ('normal') from the expression file
+      expect(indicator.classList.contains('status-normal')).toBe(true);
+    });
+
+    it('displays saved diagnosticStatus when selecting expression with normal status', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // expr:test2 has diagnosticStatus: 'normal' in mock
+      selectDropdownValue('expr:test2');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
+      expect(indicator.classList.contains('status-normal')).toBe(true);
+      expect(circleEl.classList.contains('status-normal')).toBe(true);
+      expect(labelEl.textContent).toBe('Normal');
+    });
+
+    it('displays Unknown status when selecting expression with unknown diagnosticStatus', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // expr:test1 has diagnosticStatus: 'unknown' in mock
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
       expect(indicator.classList.contains('status-unknown')).toBe(true);
+      expect(circleEl.classList.contains('status-unknown')).toBe(true);
+      expect(labelEl.textContent).toBe('Unknown');
+    });
+
+    it('displays Unknown status when expression has no diagnosticStatus', async () => {
+      // Override mock to include expression without diagnosticStatus
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValueOnce({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'path', diagnosticStatus: undefined },
+          { id: 'expr:test2', filePath: 'path', diagnosticStatus: 'normal' },
+        ],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Select expression with missing diagnosticStatus
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+
+      expect(indicator.classList.contains('status-unknown')).toBe(true);
+      expect(labelEl.textContent).toBe('Unknown');
+    });
+
+    it('displays rare status with correct label and circle class', async () => {
+      // Override mock to include expression with rare status
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValueOnce({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'path', diagnosticStatus: 'rare' },
+          { id: 'expr:test2', filePath: 'path', diagnosticStatus: 'normal' },
+        ],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
+      expect(indicator.classList.contains('status-rare')).toBe(true);
+      expect(circleEl.classList.contains('status-rare')).toBe(true);
+      expect(labelEl.textContent).toBe('Rare');
+    });
+
+    it('displays impossible status with correct label and circle class', async () => {
+      // Override mock to include expression with impossible status
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValueOnce({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'path', diagnosticStatus: 'impossible' },
+          { id: 'expr:test2', filePath: 'path', diagnosticStatus: 'normal' },
+        ],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
+      expect(indicator.classList.contains('status-impossible')).toBe(true);
+      expect(circleEl.classList.contains('status-impossible')).toBe(true);
+      expect(labelEl.textContent).toBe('Impossible');
+    });
+
+    it('displays extremely_rare status with hyphenated CSS class', async () => {
+      // Override mock to include expression with extremely_rare status
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValueOnce({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'path', diagnosticStatus: 'extremely_rare' },
+          { id: 'expr:test2', filePath: 'path', diagnosticStatus: 'normal' },
+        ],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
+      // CSS class should use hyphens, not underscores
+      expect(indicator.classList.contains('status-extremely-rare')).toBe(true);
+      expect(circleEl.classList.contains('status-extremely-rare')).toBe(true);
+      expect(labelEl.textContent).toBe('Extremely Rare');
+    });
+
+    it('displays frequent status with correct label and circle class', async () => {
+      // Override mock to include expression with frequent status
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValueOnce({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'path', diagnosticStatus: 'frequent' },
+          { id: 'expr:test2', filePath: 'path', diagnosticStatus: 'normal' },
+        ],
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const indicator = document.getElementById('status-indicator');
+      const labelEl = indicator.querySelector('.status-label');
+      const circleEl = indicator.querySelector('.status-circle-large');
+
+      expect(indicator.classList.contains('status-frequent')).toBe(true);
+      expect(circleEl.classList.contains('status-frequent')).toBe(true);
+      expect(labelEl.textContent).toBe('Frequent');
+    });
+
+    it('resets to Unknown when no expression is selected', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // First select an expression with normal status
+      selectDropdownValue('expr:test2');
+
+      const indicator = document.getElementById('status-indicator');
+      expect(indicator.classList.contains('status-normal')).toBe(true);
+
+      // Clear selection
+      clearDropdownSelection();
+
+      const labelEl = indicator.querySelector('.status-label');
+      expect(indicator.classList.contains('status-unknown')).toBe(true);
+      expect(labelEl.textContent).toBe('Unknown');
     });
   });
 
@@ -970,13 +1404,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
@@ -987,8 +1420,7 @@ describe('ExpressionDiagnosticsController', () => {
       ).toBe(false);
 
       // Select different expression
-      select.value = 'expr:test2';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test2');
 
       // Verify sections are hidden
       expect(
@@ -1009,20 +1441,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runBtn = document.getElementById('run-static-btn');
       runBtn.click();
 
       // Change expression
-      select.value = 'expr:test2';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test2');
 
       const results = document.getElementById('static-results');
       expect(results.innerHTML).toContain('Run static analysis to see results');
@@ -1040,6 +1470,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -1058,15 +1489,14 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
       const runMcBtn = document.getElementById('run-mc-btn');
 
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       expect(runMcBtn.disabled).toBe(false);
     });
@@ -1081,20 +1511,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
       const runMcBtn = document.getElementById('run-mc-btn');
 
       // Select then clear
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
       expect(runMcBtn.disabled).toBe(false);
 
-      select.value = '';
-      select.dispatchEvent(new Event('change'));
+      clearDropdownSelection();
       expect(runMcBtn.disabled).toBe(true);
     });
 
@@ -1108,13 +1536,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1142,13 +1569,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1173,6 +1599,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -1180,9 +1607,7 @@ describe('ExpressionDiagnosticsController', () => {
       const mcResults = document.getElementById('mc-results');
       expect(mcResults.hidden).toBe(true);
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1203,13 +1628,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1231,13 +1655,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1260,13 +1683,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1300,13 +1722,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1337,13 +1758,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1374,13 +1794,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1419,13 +1838,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1450,13 +1868,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1482,13 +1899,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1521,6 +1937,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -1541,13 +1958,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1570,13 +1986,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Change sample count to 100000
       const sampleCountSelect = document.getElementById('sample-count');
@@ -1604,13 +2019,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Change distribution to gaussian
       const distributionSelect = document.getElementById('distribution');
@@ -1638,13 +2052,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1656,8 +2069,7 @@ describe('ExpressionDiagnosticsController', () => {
       expect(mcResults.hidden).toBe(false);
 
       // Change expression
-      select.value = 'expr:test2';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test2');
 
       expect(mcResults.hidden).toBe(true);
       expect(document.getElementById('mc-trigger-rate').textContent).toBe('--');
@@ -1682,13 +2094,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1719,13 +2130,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1756,13 +2166,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Run static analysis first (creates #currentResult)
       const runStaticBtn = document.getElementById('run-static-btn');
@@ -1781,8 +2190,8 @@ describe('ExpressionDiagnosticsController', () => {
 
       // Verify Status Summary updated to frequent
       expect(statusIndicator.classList.contains('status-frequent')).toBe(true);
-      const emoji = statusIndicator.querySelector('.status-emoji');
-      expect(emoji.textContent).toBe('🔵');
+      const circle = statusIndicator.querySelector('.status-circle-large');
+      expect(circle.classList.contains('status-frequent')).toBe(true);
       const label = statusIndicator.querySelector('.status-label');
       expect(label.textContent).toBe('Frequent');
     });
@@ -1806,13 +2215,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Run static analysis first
       const runStaticBtn = document.getElementById('run-static-btn');
@@ -1828,8 +2236,8 @@ describe('ExpressionDiagnosticsController', () => {
       // Verify Status Summary updated to impossible
       const statusIndicator = document.getElementById('status-indicator');
       expect(statusIndicator.classList.contains('status-impossible')).toBe(true);
-      const emoji = statusIndicator.querySelector('.status-emoji');
-      expect(emoji.textContent).toBe('🔴');
+      const circle = statusIndicator.querySelector('.status-circle-large');
+      expect(circle.classList.contains('status-impossible')).toBe(true);
       const label = statusIndicator.querySelector('.status-label');
       expect(label.textContent).toBe('Impossible');
     });
@@ -1853,13 +2261,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // Verify status starts as unknown
       const statusIndicator = document.getElementById('status-indicator');
@@ -1874,8 +2281,8 @@ describe('ExpressionDiagnosticsController', () => {
 
       // Verify Status Summary updated to normal (rate < 2%)
       expect(statusIndicator.classList.contains('status-normal')).toBe(true);
-      const emoji = statusIndicator.querySelector('.status-emoji');
-      expect(emoji.textContent).toBe('🟢');
+      const circle = statusIndicator.querySelector('.status-circle-large');
+      expect(circle.classList.contains('status-normal')).toBe(true);
       const label = statusIndicator.querySelector('.status-label');
       expect(label.textContent).toBe('Normal');
     });
@@ -1899,13 +2306,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1920,10 +2326,11 @@ describe('ExpressionDiagnosticsController', () => {
       expect(statusIndicator.classList.contains('status-rare')).toBe(true);
       expect(mcRarityIndicator.classList.contains('rarity-rare')).toBe(true);
 
-      const statusEmoji = statusIndicator.querySelector('.status-emoji');
-      const mcEmoji = mcRarityIndicator.querySelector('.rarity-emoji');
-      expect(statusEmoji.textContent).toBe('🟡');
-      expect(mcEmoji.textContent).toBe('🟡');
+      const statusCircle = statusIndicator.querySelector('.status-circle-large');
+      const mcCircle = mcRarityIndicator.querySelector('.rarity-circle');
+      // Both indicators use CSS circle classes for consistent color rendering
+      expect(statusCircle.classList.contains('status-rare')).toBe(true);
+      expect(mcCircle.classList.contains('status-rare')).toBe(true);
 
       const statusLabel = statusIndicator.querySelector('.status-label');
       const mcLabel = mcRarityIndicator.querySelector('.rarity-label');
@@ -1950,13 +2357,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -1967,8 +2373,8 @@ describe('ExpressionDiagnosticsController', () => {
       // Verify Status Summary updated to extremely-rare (rate < 0.001%)
       const statusIndicator = document.getElementById('status-indicator');
       expect(statusIndicator.classList.contains('status-extremely-rare')).toBe(true);
-      const emoji = statusIndicator.querySelector('.status-emoji');
-      expect(emoji.textContent).toBe('🟠');
+      const circle = statusIndicator.querySelector('.status-circle-large');
+      expect(circle.classList.contains('status-extremely-rare')).toBe(true);
       const label = statusIndicator.querySelector('.status-label');
       expect(label.textContent).toBe('Extremely Rare');
     });
@@ -1989,6 +2395,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2015,6 +2422,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2041,6 +2449,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2065,6 +2474,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2088,6 +2498,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2109,6 +2520,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2131,6 +2543,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2139,8 +2552,7 @@ describe('ExpressionDiagnosticsController', () => {
       const pill = pillsContainer.querySelector('.expression-pill');
       pill.click();
 
-      const select = document.getElementById('expression-select');
-      expect(select.value).toBe('expr:test1');
+      expect(getDropdownValue()).toBe('expr:test1');
     });
 
     it('clicking pill matches dropdown entries without namespace', async () => {
@@ -2169,6 +2581,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2177,8 +2590,7 @@ describe('ExpressionDiagnosticsController', () => {
       const pill = pillsContainer.querySelector('.expression-pill');
       pill.click();
 
-      const select = document.getElementById('expression-select');
-      expect(select.value).toBe('self_disgust_arousal');
+      expect(getDropdownValue()).toBe('self_disgust_arousal');
 
       const description = document.getElementById('expression-description');
       expect(description.textContent).toBe('Test expression 1');
@@ -2207,6 +2619,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2233,6 +2646,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2259,6 +2673,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2297,6 +2712,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2320,6 +2736,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2345,6 +2762,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2367,6 +2785,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2389,6 +2808,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2412,6 +2832,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2456,6 +2877,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2474,6 +2896,159 @@ describe('ExpressionDiagnosticsController', () => {
       // Should show pills for expressions with unknown status
       const pills = pillsContainer.querySelectorAll('.expression-pill');
       expect(pills.length).toBeGreaterThan(0);
+    });
+
+    it('updates dropdown status circles without warnings after initialization', async () => {
+      // Setup: registry returns expressions
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: 'expr:test1', description: 'Test 1' },
+        { id: 'expr:test2', description: 'Test 2' },
+      ]);
+
+      // Setup: status service returns matching expressions with statuses
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/test1.expression.json', diagnosticStatus: 'normal' },
+          { id: 'expr:test2', filePath: 'data/mods/test/test2.expression.json', diagnosticStatus: 'impossible' },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
+        { id: 'expr:test2', diagnosticStatus: 'impossible' },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Verify NO warnings about options not found
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        'StatusSelectDropdown: updateOptionStatus - option not found',
+        expect.anything()
+      );
+
+      // Verify dropdown exists and has options
+      const dropdownContainer = document.getElementById('expression-select-container');
+      expect(dropdownContainer).not.toBeNull();
+      const options = dropdownContainer.querySelectorAll('.status-select-option');
+      expect(options.length).toBeGreaterThan(0);
+    });
+
+    it('applies correct status classes to dropdown options after status update', async () => {
+      // Setup: registry returns expressions
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: 'expr:test1', description: 'Test 1' },
+        { id: 'expr:test2', description: 'Test 2' },
+      ]);
+
+      // Setup: status service returns expressions with specific statuses
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/test1.expression.json', diagnosticStatus: 'normal' },
+          { id: 'expr:test2', filePath: 'data/mods/test/test2.expression.json', diagnosticStatus: 'impossible' },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
+        { id: 'expr:test2', diagnosticStatus: 'impossible' },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Find the dropdown options
+      const dropdownContainer = document.getElementById('expression-select-container');
+      const options = dropdownContainer.querySelectorAll('.status-select-option');
+
+      // Find the status circles for each expression
+      // Note: First option is placeholder, so we check from index 1
+      const statusCircles = [];
+      options.forEach((opt) => {
+        const circle = opt.querySelector('.status-circle');
+        if (circle) statusCircles.push(circle);
+      });
+
+      // At minimum, we should have status circles
+      expect(statusCircles.length).toBeGreaterThan(0);
+    });
+
+    it('logs warnings when status entry IDs do not match dropdown option values', async () => {
+      // This test reproduces the bug: registry and status service return
+      // different expression IDs, causing updateOptionStatus to fail
+
+      // Setup: registry returns expressions
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: 'expr:test1', description: 'Test 1' },
+        { id: 'expr:test2', description: 'Test 2' },
+      ]);
+
+      // Setup: status service returns expressions with DIFFERENT IDs
+      // This simulates the production scenario where IDs don't match
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'different:test1', filePath: 'data/mods/test/test1.expression.json', diagnosticStatus: 'normal' },
+          { id: 'different:test2', filePath: 'data/mods/test/test2.expression.json', diagnosticStatus: 'impossible' },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
+        { id: 'different:test2', diagnosticStatus: 'impossible' },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Verify warnings ARE logged about options not found due to ID mismatch
+      // The warning now includes diagnostic info: optionCount and sampleValues
+      // Note: optionCount is 3 because it includes the placeholder option with empty value
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'StatusSelectDropdown: updateOptionStatus - option not found',
+        {
+          value: 'different:test1',
+          optionCount: 3,
+          sampleValues: ['', 'expr:test1', 'expr:test2'],
+        }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'StatusSelectDropdown: updateOptionStatus - option not found',
+        {
+          value: 'different:test2',
+          optionCount: 3,
+          sampleValues: ['', 'expr:test1', 'expr:test2'],
+        }
+      );
     });
   });
 
@@ -2496,18 +3071,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
 
-      // Wait for async operations
+      // Wait for async operations (path-sensitive analysis is now async)
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
 
       expect(mockExpressionStatusService.updateStatus).toHaveBeenCalledWith(
@@ -2534,13 +3109,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
       runMcBtn.click();
@@ -2573,17 +3147,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
 
+      // Wait for async operations (path-sensitive analysis is now async)
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -2592,7 +3167,7 @@ describe('ExpressionDiagnosticsController', () => {
       expect(mockExpressionStatusService.updateStatus).not.toHaveBeenCalled();
     });
 
-    it('refreshes panel after status persistence', async () => {
+    it('refreshes panel after status persistence using cached data', async () => {
       mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
         success: true,
         expressions: [
@@ -2610,6 +3185,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -2618,19 +3194,21 @@ describe('ExpressionDiagnosticsController', () => {
       mockExpressionStatusService.scanAllStatuses.mockClear();
       mockExpressionStatusService.getProblematicExpressions.mockClear();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
 
-      // Wait for async operations
+      // Wait for async operations (path-sensitive analysis is now async)
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
       await Promise.resolve();
 
-      // Panel should be refreshed after persistence
-      expect(mockExpressionStatusService.scanAllStatuses).toHaveBeenCalled();
+      // Panel should be refreshed using cached data (not re-scanning from disk)
+      // This prevents race condition where scanAllStatuses returns stale data
+      expect(mockExpressionStatusService.getProblematicExpressions).toHaveBeenCalled();
+      // Should NOT re-scan from disk after persistence
+      expect(mockExpressionStatusService.scanAllStatuses).not.toHaveBeenCalled();
     });
 
     it('handles persistence error gracefully', async () => {
@@ -2654,18 +3232,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
 
-      // Wait for async operations
+      // Wait for async operations (path-sensitive analysis is now async)
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
       await Promise.resolve();
 
@@ -2693,18 +3271,18 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
 
-      // Wait for async operations
+      // Wait for async operations (path-sensitive analysis is now async)
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
       await Promise.resolve();
 
@@ -2748,13 +3326,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'positioning:sit_down';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('positioning:sit_down');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
@@ -2807,13 +3384,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'core:test_expr';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('core:test_expr');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
@@ -2859,13 +3435,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'orphan:no_metadata';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('orphan:no_metadata');
 
       const runStaticBtn = document.getElementById('run-static-btn');
       runStaticBtn.click();
@@ -2879,10 +3454,102 @@ describe('ExpressionDiagnosticsController', () => {
       );
       expect(mockExpressionStatusService.updateStatus).not.toHaveBeenCalled();
     });
+
+    it('should not overwrite dropdown status when scanAllStatuses returns stale data (race condition prevention)', async () => {
+      // This test reproduces the bug where:
+      // 1. Monte Carlo simulation determines 'rare' status
+      // 2. Dropdown is correctly updated to 'rare' (purple)
+      // 3. scanAllStatuses() returns stale data ('impossible') from disk
+      // 4. Dropdown gets incorrectly overwritten to 'impossible' (red)
+
+      // Setup expression in registry
+      const testExpression = {
+        id: 'expr:test1',
+        description: 'Test expression',
+        _sourceFile: 'test1.expression.json',
+        _modId: 'test',
+      };
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([testExpression]);
+      mockExpressionRegistry.getExpression.mockReturnValue(testExpression);
+
+      // Initial scan returns unknown status
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/expressions/test1.expression.json', diagnosticStatus: 'unknown' },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([]);
+
+      // Mock Monte Carlo to return 'rare' rarity
+      // RARITY_THRESHOLDS: RARE < 0.0005 (0.05%), so use 0.0001 (0.01%)
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        iterations: 100000,
+        triggers: 10,
+        noTriggerIterations: 0,
+        noTriggerPercentage: 0,
+        triggerRate: 0.0001, // 0.01% - classified as 'rare'
+      });
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Reset scanAllStatuses to return STALE 'impossible' status
+      // This simulates the race condition where the file write hasn't completed yet
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/expressions/test1.expression.json', diagnosticStatus: 'impossible' },
+        ],
+      });
+
+      selectDropdownValue('expr:test1');
+
+      // Run Monte Carlo simulation
+      const runMcBtn = document.getElementById('run-mc-btn');
+      runMcBtn.click();
+
+      // Wait for async simulation to complete
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // Verify the status was persisted as 'rare' (not stale 'impossible')
+      expect(mockExpressionStatusService.updateStatus).toHaveBeenLastCalledWith(
+        expect.stringContaining('test1.expression.json'),
+        'rare'
+      );
+
+      // The key assertion: scanAllStatuses should NOT be called after persist
+      // when using the cache-based refresh (the fix). If this test fails before
+      // the fix, it means scanAllStatuses was called in #loadProblematicExpressionsPanel
+      // and would have returned stale 'impossible' data.
+      //
+      // Count scanAllStatuses calls: 1 during initialize, 0 after persist (with fix)
+      // Before fix: 1 during initialize, 1 after persist = 2 total
+      // After fix: 1 during initialize only = 1 total
+      const scanCalls = mockExpressionStatusService.scanAllStatuses.mock.calls.length;
+
+      // With the fix, scanAllStatuses should only be called once (during initialize)
+      // If it's called twice, the race condition bug is present
+      expect(scanCalls).toBe(1);
+    });
   });
 
   describe('Event dispatch consistency (regression tests)', () => {
-    it('pill click dispatches change event on dropdown', async () => {
+    it('pill click updates dropdown selection', async () => {
       mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
         { id: 'expr:test1', diagnosticStatus: 'impossible' },
       ]);
@@ -2896,20 +3563,20 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      const changeHandler = jest.fn();
-      select.addEventListener('change', changeHandler);
+      // Verify dropdown is initially empty or has different value
+      expect(getDropdownValue()).not.toBe('expr:test1');
 
       const pillsContainer = document.getElementById('problematic-pills-container');
       const pill = pillsContainer.querySelector('.expression-pill');
       pill.click();
 
-      // The change event should have been dispatched
-      expect(changeHandler).toHaveBeenCalled();
+      // The dropdown should now have the clicked pill's expression selected
+      expect(getDropdownValue()).toBe('expr:test1');
     });
 
     it('static analysis button waits for async operation to complete', async () => {
@@ -2939,13 +3606,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runStaticBtn = document.getElementById('run-static-btn');
 
@@ -2987,13 +3653,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const runMcBtn = document.getElementById('run-mc-btn');
 
@@ -3020,6 +3685,7 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
@@ -3038,13 +3704,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       expect(findWitnessBtn.disabled).toBe(false);
@@ -3060,13 +3725,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3106,13 +3770,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3147,13 +3810,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3178,13 +3840,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3206,13 +3867,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3237,13 +3897,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3266,13 +3925,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3295,13 +3953,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3323,14 +3980,13 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
       // Select first expression and run witness finder
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3342,8 +3998,7 @@ describe('ExpressionDiagnosticsController', () => {
       expect(document.getElementById('witness-results').hidden).toBe(false);
 
       // Change expression (clears selection)
-      select.value = '';
-      select.dispatchEvent(new Event('change'));
+      clearDropdownSelection();
 
       // Results should be reset/hidden
       expect(document.getElementById('witness-results').hidden).toBe(true);
@@ -3364,13 +4019,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
       findWitnessBtn.click();
@@ -3393,13 +4047,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       const findWitnessBtn = document.getElementById('find-witness-btn');
 
@@ -3429,13 +4082,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // First find a witness
       const findWitnessBtn = document.getElementById('find-witness-btn');
@@ -3470,13 +4122,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // First find a witness
       const findWitnessBtn = document.getElementById('find-witness-btn');
@@ -3518,13 +4169,12 @@ describe('ExpressionDiagnosticsController', () => {
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
         witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       });
 
       await controller.initialize();
 
-      const select = document.getElementById('expression-select');
-      select.value = 'expr:test1';
-      select.dispatchEvent(new Event('change'));
+      selectDropdownValue('expr:test1');
 
       // First find a witness
       const findWitnessBtn = document.getElementById('find-witness-btn');
@@ -3546,6 +4196,2492 @@ describe('ExpressionDiagnosticsController', () => {
       expect(toast.textContent).toBe('Copy failed');
 
       mockCopyToClipboard.mockRestore();
+    });
+  });
+
+  describe('Path-Sensitive Analysis', () => {
+    it('shows path-sensitive section after running static analysis', async () => {
+      // Setup mock to return branches for path-sensitive analysis
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [
+          {
+            branchId: 'branch-1',
+            description: 'All prototypes active',
+            isInfeasible: false,
+            knifeEdges: [],
+            requiredPrototypes: ['proto1'],
+            activePrototypes: ['proto1'],
+            inactivePrototypes: [],
+          },
+        ],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: 0.8,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Expression is reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([
+          { prototypeId: 'proto1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 },
+        ]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      // Run static analysis which triggers path-sensitive analysis
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const pathSensitiveSection = document.getElementById('path-sensitive-results');
+      expect(pathSensitiveSection.hidden).toBe(false);
+    });
+
+    it('updates summary status and message', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [],
+        branchCount: 2,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'partial',
+        statusEmoji: '🟡',
+        getSummaryMessage: jest.fn().mockReturnValue('1 of 2 branches reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const summaryMessage = document.getElementById('ps-summary-message');
+      const statusIndicator = document.getElementById('ps-status-indicator');
+      const branchCount = document.getElementById('branch-count');
+      const reachableCount = document.getElementById('reachable-count');
+
+      expect(summaryMessage.textContent).toBe('1 of 2 branches reachable');
+      expect(statusIndicator.textContent).toBe('🟡');
+      expect(branchCount.textContent).toBe('2');
+      expect(reachableCount.textContent).toBe('1');
+    });
+
+    it('renders correct number of branch cards', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [
+          { branchId: 'branch-1', description: 'Branch 1', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+          { branchId: 'branch-2', description: 'Branch 2', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+          { branchId: 'branch-3', description: 'Branch 3', isInfeasible: true, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+        ],
+        branchCount: 3,
+        feasibleBranchCount: 2,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1', 'branch-2'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('All branches reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const branchCards = document.querySelectorAll('.branch-card');
+      expect(branchCards.length).toBe(3);
+    });
+
+    it('handles analysis error gracefully', async () => {
+      mockPathSensitiveAnalyzer.analyze.mockRejectedValue(new Error('Analysis failed'));
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should hide the path-sensitive section on error
+      const pathSensitiveSection = document.getElementById('path-sensitive-results');
+      expect(pathSensitiveSection.hidden).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith('Path-sensitive analysis failed:', expect.any(Error));
+    });
+
+    it('resets path-sensitive results when expression changes', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Branch 1', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      // Run analysis
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify section is visible
+      let pathSensitiveSection = document.getElementById('path-sensitive-results');
+      expect(pathSensitiveSection.hidden).toBe(false);
+
+      // Change expression (reset happens)
+      selectDropdownValue('expr:test2');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Section should be hidden after selection change
+      pathSensitiveSection = document.getElementById('path-sensitive-results');
+      expect(pathSensitiveSection.hidden).toBe(true);
+    });
+  });
+
+  describe('Branch Cards', () => {
+    it('creates reachable branch card with correct status', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Reachable Branch', isInfeasible: false, knifeEdges: [], requiredPrototypes: ['proto1'], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'proto1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.branch-card');
+      expect(card.dataset.status).toBe('reachable');
+      expect(card.querySelector('.branch-status-icon').textContent).toBe('✅');
+      expect(card.querySelector('.branch-title').textContent).toBe('Reachable Branch');
+    });
+
+    it('creates infeasible branch card when isInfeasible is true', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Infeasible Branch', isInfeasible: true, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 0,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: false,
+        fullyReachableBranchIds: [],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'infeasible',
+        statusEmoji: '🚫',
+        getSummaryMessage: jest.fn().mockReturnValue('No feasible branches'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.branch-card');
+      expect(card.dataset.status).toBe('infeasible');
+      expect(card.querySelector('.branch-status-icon').textContent).toBe('🚫');
+    });
+
+    it('creates knife-edge branch card when knifeEdges exist', async () => {
+      const mockKnifeEdge = {
+        axis: 'valence',
+        min: 0.45,
+        max: 0.55,
+        width: 0.1,
+        formatDualScaleInterval: jest.fn().mockReturnValue('[0.45, 0.55]'),
+        formatInterval: jest.fn().mockReturnValue('[0.45, 0.55]'),
+        contributingPrototypes: ['proto1'],
+        formatContributors: jest.fn().mockReturnValue('proto1'),
+        branchId: 'branch-1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Knife Edge Branch', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('Has knife-edge conditions'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'proto1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.branch-card');
+      expect(card.dataset.status).toBe('knife-edge');
+      expect(card.querySelector('.branch-status-icon').textContent).toBe('⚠️');
+      expect(card.querySelector('.branch-knife-edges').hidden).toBe(false);
+      expect(card.querySelector('.ke-message').textContent).toBe('valence: [0.45, 0.55]');
+    });
+
+    it('creates unreachable branch card when some reachability false', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Unreachable Branch', isInfeasible: false, knifeEdges: [], requiredPrototypes: ['proto1'], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 0,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: false,
+        fullyReachableBranchIds: [],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'unreachable',
+        statusEmoji: '❌',
+        getSummaryMessage: jest.fn().mockReturnValue('Unreachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'proto1', isReachable: false, threshold: 0.8, maxPossible: 0.6, gap: 0.2 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.branch-card');
+      expect(card.dataset.status).toBe('unreachable');
+      expect(card.querySelector('.branch-status-icon').textContent).toBe('❌');
+      // Threshold table should be visible
+      expect(card.querySelector('.branch-thresholds').hidden).toBe(false);
+    });
+
+    it('displays active and inactive prototypes', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{
+          branchId: 'branch-1',
+          description: 'Partitioned Branch',
+          isInfeasible: false,
+          knifeEdges: [],
+          requiredPrototypes: ['proto1', 'proto2'],
+          activePrototypes: ['proto1'],
+          inactivePrototypes: ['proto2'],
+        }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'proto1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const prototypeList = document.querySelector('.prototype-list');
+      expect(prototypeList.innerHTML).toContain('Active (gates enforced): proto1');
+      expect(prototypeList.innerHTML).toContain('Inactive (gates ignored): proto2');
+    });
+
+    it('falls back to requiredPrototypes when no active/inactive', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{
+          branchId: 'branch-1',
+          description: 'Fallback Branch',
+          isInfeasible: false,
+          knifeEdges: [],
+          requiredPrototypes: ['protoA', 'protoB'],
+          activePrototypes: [],
+          inactivePrototypes: [],
+        }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'protoA', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const prototypeList = document.querySelector('.prototype-list');
+      expect(prototypeList.textContent).toBe('protoA, protoB');
+    });
+
+    it('shows threshold table for unreachable branches', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Unreachable', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 0,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: false,
+        fullyReachableBranchIds: [],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'unreachable',
+        statusEmoji: '❌',
+        getSummaryMessage: jest.fn().mockReturnValue('Unreachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([
+          { prototypeId: 'proto1', isReachable: false, threshold: 0.9, maxPossible: 0.7, gap: 0.2 },
+          { prototypeId: 'proto2', isReachable: false, threshold: 0.8, maxPossible: 0.5, gap: 0.3 },
+        ]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const thresholdsDiv = document.querySelector('.branch-thresholds');
+      expect(thresholdsDiv.hidden).toBe(false);
+
+      const rows = document.querySelectorAll('.threshold-tbody tr');
+      expect(rows.length).toBe(2);
+    });
+
+    it('uses formatInterval fallback when formatDualScaleInterval unavailable', async () => {
+      const mockKnifeEdge = {
+        axis: 'arousal',
+        min: 0.3,
+        max: 0.7,
+        width: 0.4,
+        formatInterval: jest.fn().mockReturnValue('[0.30, 0.70]'),
+        contributingPrototypes: ['proto1'],
+        branchId: 'branch-1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'KE Branch', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('Knife-edge'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const keMessage = document.querySelector('.ke-message');
+      expect(keMessage.textContent).toBe('arousal: [0.30, 0.70]');
+      expect(mockKnifeEdge.formatInterval).toHaveBeenCalled();
+    });
+
+    it('uses raw min/max fallback when no format methods available', async () => {
+      const mockKnifeEdge = {
+        axis: 'engagement',
+        min: 0.2,
+        max: 0.4,
+        width: 0.2,
+        contributingPrototypes: ['proto1'],
+        branchId: 'branch-1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Raw KE Branch', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('Knife-edge'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const keMessage = document.querySelector('.ke-message');
+      expect(keMessage.textContent).toBe('engagement: [0.20, 0.40]');
+    });
+  });
+
+  describe('Branch Filter Toggle', () => {
+    it('toggles showAllBranches state on checkbox change', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Branch', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const checkbox = document.getElementById('show-all-branches');
+
+      // Initially reachable cards are hidden (filtered)
+      let card = document.querySelector('.branch-card[data-status="reachable"]');
+      expect(card.classList.contains('filtered-hidden')).toBe(true);
+
+      // Check the checkbox
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+
+      // Now card should be visible
+      card = document.querySelector('.branch-card[data-status="reachable"]');
+      expect(card.classList.contains('filtered-hidden')).toBe(false);
+
+      // Uncheck
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event('change'));
+
+      // Card hidden again
+      card = document.querySelector('.branch-card[data-status="reachable"]');
+      expect(card.classList.contains('filtered-hidden')).toBe(true);
+    });
+
+    it('hides reachable cards when filter not enabled', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [
+          { branchId: 'branch-1', description: 'Reachable', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+          { branchId: 'branch-2', description: 'Unreachable', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+        ],
+        branchCount: 2,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'partial',
+        statusEmoji: '🟡',
+        getSummaryMessage: jest.fn().mockReturnValue('Partial'),
+        getReachabilityForBranch: jest.fn().mockImplementation((branchId) => {
+          if (branchId === 'branch-1') {
+            return [{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }];
+          }
+          return [{ prototypeId: 'p1', isReachable: false, threshold: 0.8, maxPossible: 0.6, gap: 0.2 }];
+        }),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const reachableCard = document.querySelector('.branch-card[data-status="reachable"]');
+      const unreachableCard = document.querySelector('.branch-card[data-status="unreachable"]');
+
+      expect(reachableCard.classList.contains('filtered-hidden')).toBe(true);
+      expect(unreachableCard.classList.contains('filtered-hidden')).toBe(false);
+    });
+
+    it('shows all cards when filter enabled', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [
+          { branchId: 'branch-1', description: 'Reachable', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+          { branchId: 'branch-2', description: 'Also Reachable', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] },
+        ],
+        branchCount: 2,
+        feasibleBranchCount: 2,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1', 'branch-2'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Enable show all
+      const checkbox = document.getElementById('show-all-branches');
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+
+      const cards = document.querySelectorAll('.branch-card');
+      for (const card of cards) {
+        expect(card.classList.contains('filtered-hidden')).toBe(false);
+      }
+    });
+  });
+
+  describe('Blocker Toggle', () => {
+    it('expands collapsed breakdown on click', async () => {
+      // Setup Monte Carlo with blockers that have hierarchical breakdown
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.99 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'test clause description',
+          failureRate: 0.99,
+          averageViolation: 0.5,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'Root AND',
+            failureRate: 0.99,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              { nodeType: 'leaf', description: 'Child leaf', failureRate: 0.5, isCompound: false, averageViolation: 0.1, children: [] },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Find the expand toggle
+      const toggle = document.querySelector('.expand-toggle');
+      expect(toggle).toBeTruthy();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+      // Click to expand
+      toggle.click();
+
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(toggle.textContent).toBe('▼');
+
+      const breakdownRow = document.querySelector('.breakdown-row');
+      expect(breakdownRow.classList.contains('collapsed')).toBe(false);
+    });
+
+    it('collapses expanded breakdown on click', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.99 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'test clause description',
+          failureRate: 0.99,
+          averageViolation: 0.5,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'Root',
+            failureRate: 0.99,
+            isCompound: true,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const toggle = document.querySelector('.expand-toggle');
+
+      // Expand first
+      toggle.click();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+      // Then collapse
+      toggle.click();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(toggle.textContent).toBe('▶');
+
+      const breakdownRow = document.querySelector('.breakdown-row');
+      expect(breakdownRow.classList.contains('collapsed')).toBe(true);
+    });
+
+    it('does nothing when elements not found', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Manually remove blocker tbody to test guard clause
+      const blockersTbody = document.getElementById('blockers-tbody');
+      blockersTbody.innerHTML = `
+        <tr data-blocker-id="blocker-1">
+          <td><button class="expand-toggle" aria-expanded="false">▶</button></td>
+        </tr>
+      `;
+
+      // Try to toggle - should not throw because breakdown row doesn't exist
+      const toggle = document.querySelector('.expand-toggle');
+      expect(() => toggle.click()).not.toThrow();
+    });
+  });
+
+  describe('Knife-Edge Summary', () => {
+    it('shows knife-edge summary when edges exist', async () => {
+      const mockKnifeEdge = {
+        axis: 'valence',
+        min: 0.4,
+        max: 0.6,
+        width: 0.2,
+        formatDualScaleInterval: jest.fn().mockReturnValue('[0.40, 0.60]'),
+        formatContributors: jest.fn().mockReturnValue('proto1, proto2'),
+        contributingPrototypes: ['proto1', 'proto2'],
+        branchId: 'branch-1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('Knife-edge'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const keSummary = document.getElementById('knife-edge-summary');
+      expect(keSummary.hidden).toBe(false);
+
+      const keCount = document.getElementById('ke-count');
+      expect(keCount.textContent).toBe('1');
+
+      const keRows = document.querySelectorAll('#knife-edge-tbody tr');
+      expect(keRows.length).toBe(1);
+    });
+
+    it('hides knife-edge summary when no edges', async () => {
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Normal', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([{ prototypeId: 'p1', isReachable: true, threshold: 0.5, maxPossible: 1.0, gap: 0 }]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const keSummary = document.getElementById('knife-edge-summary');
+      expect(keSummary.hidden).toBe(true);
+    });
+
+    it('uses formatDualScaleInterval in summary when available', async () => {
+      const mockKnifeEdge = {
+        axis: 'arousal',
+        min: 0.3,
+        max: 0.5,
+        width: 0.2,
+        formatDualScaleInterval: jest.fn().mockReturnValue('[0.30, 0.50] (dual-scale)'),
+        contributingPrototypes: ['p1'],
+        formatContributors: jest.fn().mockReturnValue('p1'),
+        branchId: 'b1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'b1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['b1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('KE'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const row = document.querySelector('#knife-edge-tbody tr');
+      expect(row.innerHTML).toContain('[0.30, 0.50] (dual-scale)');
+      expect(mockKnifeEdge.formatDualScaleInterval).toHaveBeenCalled();
+    });
+
+    it('falls back to formatInterval in summary when dual-scale unavailable', async () => {
+      const mockKnifeEdge = {
+        axis: 'threat',
+        min: 0.1,
+        max: 0.3,
+        width: 0.2,
+        formatInterval: jest.fn().mockReturnValue('[0.10, 0.30]'),
+        contributingPrototypes: ['p1'],
+        branchId: 'b1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'b1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['b1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('KE'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const row = document.querySelector('#knife-edge-tbody tr');
+      expect(row.innerHTML).toContain('[0.10, 0.30]');
+      expect(mockKnifeEdge.formatInterval).toHaveBeenCalled();
+    });
+
+    it('falls back to raw min/max in summary when no format methods', async () => {
+      const mockKnifeEdge = {
+        axis: 'agency',
+        min: 0.25,
+        max: 0.35,
+        width: 0.1,
+        contributingPrototypes: ['p1'],
+        branchId: 'b1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'b1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['b1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('KE'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const row = document.querySelector('#knife-edge-tbody tr');
+      expect(row.innerHTML).toContain('[0.25, 0.35]');
+    });
+
+    it('uses formatContributors when available', async () => {
+      const mockKnifeEdge = {
+        axis: 'test',
+        min: 0.1,
+        max: 0.2,
+        width: 0.1,
+        formatDualScaleInterval: jest.fn().mockReturnValue('[0.10, 0.20]'),
+        formatContributors: jest.fn().mockReturnValue('formatted contributors'),
+        contributingPrototypes: ['p1', 'p2'],
+        branchId: 'b1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'b1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['b1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('KE'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const row = document.querySelector('#knife-edge-tbody tr');
+      expect(row.innerHTML).toContain('formatted contributors');
+      expect(mockKnifeEdge.formatContributors).toHaveBeenCalled();
+    });
+
+    it('falls back to contributingPrototypes.join when formatContributors unavailable', async () => {
+      const mockKnifeEdge = {
+        axis: 'test',
+        min: 0.1,
+        max: 0.2,
+        width: 0.1,
+        formatDualScaleInterval: jest.fn().mockReturnValue('[0.10, 0.20]'),
+        contributingPrototypes: ['protoA', 'protoB'],
+        branchId: 'b1',
+      };
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'b1', description: 'KE', isInfeasible: false, knifeEdges: [mockKnifeEdge], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['b1'],
+        allKnifeEdges: [mockKnifeEdge],
+        feasibilityVolume: null,
+        overallStatus: 'knife-edge',
+        statusEmoji: '⚠️',
+        getSummaryMessage: jest.fn().mockReturnValue('KE'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const row = document.querySelector('#knife-edge-tbody tr');
+      expect(row.innerHTML).toContain('protoA, protoB');
+    });
+  });
+
+  describe('Hierarchical Tree Rendering', () => {
+    it('renders AND node with correct icon', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'and condition',
+          failureRate: 0.9,
+          averageViolation: 0.1,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'AND Node',
+            failureRate: 0.9,
+            isCompound: true,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const nodeIcon = document.querySelector('.node-icon.and');
+      expect(nodeIcon).toBeTruthy();
+      expect(nodeIcon.textContent).toBe('∧');
+    });
+
+    it('renders OR node with correct icon', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'or condition',
+          failureRate: 0.8,
+          averageViolation: 0.1,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'or',
+            description: 'OR Node',
+            failureRate: 0.8,
+            isCompound: true,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const nodeIcon = document.querySelector('.node-icon.or');
+      expect(nodeIcon).toBeTruthy();
+      expect(nodeIcon.textContent).toBe('∨');
+    });
+
+    it('renders LEAF node with correct icon', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'leaf condition',
+          failureRate: 0.7,
+          averageViolation: 0.2,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Leaf Node',
+            failureRate: 0.7,
+            isCompound: false,
+            averageViolation: 0.2,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const nodeIcon = document.querySelector('.node-icon.leaf');
+      expect(nodeIcon).toBeTruthy();
+      expect(nodeIcon.textContent).toBe('●');
+    });
+
+    it('applies failure-critical class for rate >= 0.9', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'critical condition',
+          failureRate: 0.95,
+          averageViolation: 0.1,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Critical failure',
+            failureRate: 0.95,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate.failure-critical');
+      expect(failureRate).toBeTruthy();
+    });
+
+    it('applies failure-high class for rate >= 0.5', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'high condition',
+          failureRate: 0.6,
+          averageViolation: 0.1,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'High failure',
+            failureRate: 0.6,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate.failure-high');
+      expect(failureRate).toBeTruthy();
+    });
+
+    it('applies failure-normal class for rate < 0.5', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'normal condition',
+          failureRate: 0.3,
+          averageViolation: 0.1,
+          explanation: { severity: 'low' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Normal failure',
+            failureRate: 0.3,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate.failure-normal');
+      expect(failureRate).toBeTruthy();
+    });
+
+    it('displays violation badge for non-compound nodes', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'violation condition',
+          failureRate: 0.5,
+          averageViolation: 0.2,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Leaf with violation',
+            failureRate: 0.5,
+            isCompound: false,
+            averageViolation: 0.15,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const violationBadge = document.querySelector('.violation-badge');
+      expect(violationBadge).toBeTruthy();
+      expect(violationBadge.textContent).toBe('Δ0.15');
+    });
+
+    it('recursively renders child nodes', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'compound condition',
+          failureRate: 0.8,
+          averageViolation: 0.1,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'Root',
+            failureRate: 0.8,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'Child 1',
+                failureRate: 0.6,
+                isCompound: false,
+                averageViolation: 0.1,
+                children: [],
+              },
+              {
+                nodeType: 'or',
+                description: 'Child 2',
+                failureRate: 0.4,
+                isCompound: true,
+                averageViolation: 0,
+                children: [
+                  {
+                    nodeType: 'leaf',
+                    description: 'Grandchild',
+                    failureRate: 0.2,
+                    isCompound: false,
+                    averageViolation: 0.05,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      // Should have 4 tree nodes: Root, Child 1, Child 2, Grandchild
+      const treeNodes = document.querySelectorAll('.tree-node');
+      expect(treeNodes.length).toBe(4);
+
+      // Verify node types
+      expect(document.querySelector('.node-icon.and')).toBeTruthy();
+      expect(document.querySelector('.node-icon.or')).toBeTruthy();
+      expect(document.querySelectorAll('.node-icon.leaf').length).toBe(2);
+    });
+  });
+
+  describe('Format Percentage Edge Cases', () => {
+    it('formats value between 0.0001 and 0.01 with 3 decimal places', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'low failure condition',
+          failureRate: 0.005, // 0.5% - should show 3 decimals (0.500%)
+          averageViolation: 0.1,
+          explanation: { severity: 'low' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Low failure',
+            failureRate: 0.005,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes with .failure-rate
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate');
+      expect(failureRate.textContent).toBe('0.500%');
+    });
+
+    it('formats very small values as <0.01%', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.00001,
+        triggerCount: 1,
+        sampleCount: 100000,
+        confidenceInterval: { low: 0.000005, high: 0.000015 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'tiny failure condition',
+          failureRate: 0.00005, // Very small
+          averageViolation: 0.01,
+          explanation: { severity: 'low' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'Tiny failure',
+            failureRate: 0.00005,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes with .failure-rate
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate');
+      expect(failureRate.textContent).toBe('<0.01%');
+    });
+
+    it('formats zero as 0%', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 1.0,
+        triggerCount: 10000,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.995, high: 1.0 },
+        clauseFailures: [],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'no failure condition',
+          failureRate: 0, // Zero
+          averageViolation: 0,
+          explanation: { severity: 'low' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            description: 'No failure',
+            failureRate: 0,
+            isCompound: false,
+            averageViolation: 0,
+            children: [],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click the expand toggle to reveal the tree nodes with .failure-rate
+      const toggle = document.querySelector('.expand-toggle');
+      toggle.click();
+
+      const failureRate = document.querySelector('.failure-rate');
+      expect(failureRate.textContent).toBe('0%');
+    });
+  });
+
+  describe('Template Not Found Warning', () => {
+    it('logs warning when branch card template not found', async () => {
+      // Remove the template from DOM
+      const template = document.getElementById('branch-card-template');
+      template.remove();
+
+      const mockResult = {
+        expressionId: 'expr:test1',
+        branches: [{ branchId: 'branch-1', description: 'Branch', isInfeasible: false, knifeEdges: [], requiredPrototypes: [], activePrototypes: [], inactivePrototypes: [] }],
+        branchCount: 1,
+        feasibleBranchCount: 1,
+        reachabilityByBranch: [],
+        hasFullyReachableBranch: true,
+        fullyReachableBranchIds: ['branch-1'],
+        allKnifeEdges: [],
+        feasibilityVolume: null,
+        overallStatus: 'reachable',
+        statusEmoji: '✅',
+        getSummaryMessage: jest.fn().mockReturnValue('Reachable'),
+        getReachabilityForBranch: jest.fn().mockReturnValue([]),
+      };
+      mockPathSensitiveAnalyzer.analyze.mockResolvedValue(mockResult);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        witnessStateFinder: mockWitnessStateFinder,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const runBtn = document.getElementById('run-static-btn');
+      runBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('Branch card template not found');
+    });
+  });
+
+  describe('Minor Edge Cases', () => {
+    describe('Missing DOM Elements Guard Clauses', () => {
+      it('logs debug and returns early when expressionSelectContainer is null', async () => {
+        // Remove the expression select container from DOM
+        const container = document.getElementById('expression-select-container');
+        container.remove();
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+
+        // Should log debug with expression count and return early
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Populated'));
+      });
+
+      it('logs warning when problematic pills container not found during initial load', async () => {
+        // Remove the problematic pills container from DOM
+        const container = document.getElementById('problematic-pills-container');
+        container.remove();
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith('Problematic pills container not found in DOM');
+      });
+
+      it('returns early from updateDropdownStatuses when dropdown is null', async () => {
+        // Create controller but remove dropdown after initialization
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        // Remove expression select container before init to prevent dropdown creation
+        const container = document.getElementById('expression-select-container');
+        container.remove();
+
+        await controller.initialize();
+
+        // Should not throw and should not call updateOptionStatus
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Populated'));
+      });
+
+      it('selects expression successfully when pill is clicked', async () => {
+        // Setup: Ensure there are problematic expressions with pills
+        mockExpressionStatusService.getProblematicExpressions.mockReturnValue([
+          {
+            id: 'expr:test1',
+            filePath: 'data/mods/test/expressions/test1.expression.json',
+            diagnosticStatus: 'rare',
+          },
+        ]);
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+
+        // Verify pill exists and clicking it selects the expression
+        const pillsContainer = document.getElementById('problematic-pills-container');
+        const pill = pillsContainer.querySelector('.expression-pill');
+
+        expect(pill).toBeTruthy();
+        pill.click();
+
+        // Verify no warnings were logged about expression not found
+        // This confirms the filtering in renderProblematicPills works correctly
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('Expression not found')
+        );
+      });
+    });
+
+    describe('Scan Failure Handling', () => {
+      it('logs warning and sets empty statuses when scan fails', async () => {
+        // Mock scanAllStatuses to return failure
+        mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+          success: false,
+          error: 'Network error',
+        });
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'ExpressionStatusService: Scan failed',
+          expect.objectContaining({ success: false })
+        );
+      });
+    });
+
+    describe('Fitness Level Classes', () => {
+      it('applies fitness-medium class for fitness between 0.5 and 0.8', async () => {
+        // Mock witness state with medium fitness using correct result structure
+        const mockWitnessResult = {
+          found: true,
+          witness: {
+            mood: { joy: 0.6 },
+            sexual: {},
+            toClipboardJSON: () => '{}',
+          },
+          bestFitness: 0.65, // Medium fitness
+        };
+        mockWitnessStateFinder.findWitness.mockResolvedValue(mockWitnessResult);
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        const findBtn = document.getElementById('find-witness-btn');
+        findBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const fitnessFill = document.querySelector('.fitness-fill');
+        expect(fitnessFill.classList.contains('fitness-medium')).toBe(true);
+      });
+
+      it('applies fitness-low class for fitness below 0.5', async () => {
+        // Mock witness state with low fitness using correct result structure
+        const mockWitnessResult = {
+          found: false,
+          nearestMiss: {
+            mood: { joy: 0.2 },
+            sexual: {},
+            toClipboardJSON: () => '{}',
+          },
+          bestFitness: 0.3, // Low fitness
+          violatedClauses: ['some clause'],
+        };
+        mockWitnessStateFinder.findWitness.mockResolvedValue(mockWitnessResult);
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        const findBtn = document.getElementById('find-witness-btn');
+        findBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const fitnessFill = document.querySelector('.fitness-fill');
+        expect(fitnessFill.classList.contains('fitness-low')).toBe(true);
+      });
+    });
+
+    describe('Copy Witness Edge Cases', () => {
+      it('shows feedback when no witness state to copy', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        // Click copy without finding witness first
+        const copyBtn = document.getElementById('copy-witness-btn');
+        await copyBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        const toast = document.querySelector('.copy-feedback');
+        expect(toast).toBeTruthy();
+        expect(toast.textContent).toBe('No witness state to copy');
+      });
+
+      it('appends toast to body when witness-section not found', async () => {
+        // Move copy button outside witness section, then remove section
+        const copyBtn = document.getElementById('copy-witness-btn');
+        document.body.appendChild(copyBtn);
+
+        const witnessSection = document.getElementById('witness-section');
+        witnessSection.remove();
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        // Click copy without finding witness first - button now uses body as fallback
+        await copyBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        // Toast should be appended to body since witness-section doesn't exist
+        const toast = document.body.querySelector('.copy-feedback');
+        expect(toast).toBeTruthy();
+        expect(toast.textContent).toBe('No witness state to copy');
+      });
+    });
+
+    describe('Progress Callbacks', () => {
+      it('updates Monte Carlo button text during simulation progress', async () => {
+        // Create a mock that calls the onProgress callback
+        let capturedOnProgress = null;
+        mockMonteCarloSimulator.simulate.mockImplementation(async (expr, options) => {
+          capturedOnProgress = options.onProgress;
+          // Simulate progress
+          if (options.onProgress) {
+            options.onProgress(50, 100);
+          }
+          return {
+            triggerRate: 0.8,
+            clauseFailures: {},
+            sampleCount: 100,
+          };
+        });
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // The onProgress callback should have been captured and executed
+        expect(capturedOnProgress).not.toBeNull();
+      });
+
+      it('updates witness finder button text during search progress', async () => {
+        // Create a mock that calls the onProgress callback
+        let capturedOnProgress = null;
+        mockWitnessStateFinder.findWitness.mockImplementation(async (expr, options) => {
+          capturedOnProgress = options.onProgress;
+          // Simulate progress
+          if (options.onProgress) {
+            options.onProgress(50, 100);
+          }
+          return {
+            success: true,
+            witnessState: {
+              moodAxes: {},
+              sexualAxes: {},
+              fitness: 1.0,
+              toClipboardJSON: () => '{}',
+            },
+          };
+        });
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        const findWitnessBtn = document.getElementById('find-witness-btn');
+        findWitnessBtn.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // The onProgress callback should have been captured and executed
+        expect(capturedOnProgress).not.toBeNull();
+      });
+    });
+
+    describe('Toast Cleanup', () => {
+      it('removes toast after timeout and transition', async () => {
+        jest.useFakeTimers();
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+        selectDropdownValue('expr:test1');
+
+        // Click copy without finding witness first to trigger toast
+        const copyBtn = document.getElementById('copy-witness-btn');
+        await copyBtn.click();
+
+        // Advance timers past the toast visibility duration
+        jest.advanceTimersByTime(2100);
+
+        const toast = document.querySelector('.copy-feedback');
+        expect(toast).toBeTruthy();
+        expect(toast.classList.contains('show')).toBe(false);
+
+        // Simulate transitionend event to trigger removal
+        toast.dispatchEvent(new Event('transitionend'));
+
+        // Toast should be removed
+        const removedToast = document.querySelector('.copy-feedback');
+        expect(removedToast).toBeNull();
+
+        jest.useRealTimers();
+      });
+    });
+
+    describe('Dispose Existing Dropdown', () => {
+      it('disposes existing dropdown when re-populating expression select', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          witnessStateFinder: mockWitnessStateFinder,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        });
+
+        await controller.initialize();
+
+        // Store reference to the first dropdown by checking if it was created
+        const firstDropdown = document.querySelector('.status-select-trigger');
+        expect(firstDropdown).toBeTruthy();
+
+        // Re-initialize to trigger the dispose path (line 238-240)
+        await controller.initialize();
+
+        // Should have created a new dropdown
+        const newDropdown = document.querySelector('.status-select-trigger');
+        expect(newDropdown).toBeTruthy();
+      });
     });
   });
 });

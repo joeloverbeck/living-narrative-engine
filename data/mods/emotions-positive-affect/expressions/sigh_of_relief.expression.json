@@ -12,15 +12,7 @@
                             {
                                 "var": "emotions.relief"
                             },
-                            0.55
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "previousEmotions.fear"
-                            },
-                            0.25
+                            0.5
                         ]
                     },
                     {
@@ -28,54 +20,91 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.2
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "emotions.relief"
-                                    },
-                                    {
-                                        "var": "previousEmotions.relief"
-                                    }
-                                ]
-                            },
-                            0.15
+                            0.3
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "-": [
-                                    {
-                                        "var": "emotions.fear"
-                                    },
-                                    {
-                                        "var": "previousEmotions.fear"
-                                    }
-                                ]
+                                "var": "moodAxes.threat"
                             },
-                            -0.2
+                            20
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
                         ]
                     },
                     {
                         "or": [
                             {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.alarm"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.panic"
+                                    },
+                                    0.2
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.stress"
+                                    },
+                                    0.4
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.relief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.relief"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
                                 "<=": [
                                     {
                                         "-": [
                                             {
-                                                "var": "moodAxes.arousal"
+                                                "var": "emotions.fear"
                                             },
                                             {
-                                                "var": "previousMoodAxes.arousal"
+                                                "var": "previousEmotions.fear"
                                             }
                                         ]
                                     },
-                                    -10
+                                    -0.1
                                 ]
                             },
                             {
@@ -90,7 +119,22 @@
                                             }
                                         ]
                                     },
-                                    -10
+                                    -6
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    -6
                                 ]
                             },
                             {
@@ -105,20 +149,20 @@
                                             }
                                         ]
                                     },
-                                    -0.1
+                                    -0.05
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires relief rising sharply, fear dropping sharply, and at least one physiological downshift (arousal/threat/stress) consistent with an exhale-and-release moment."
+            "failure_message": "Requires relief to be present and fear/panic to be low, plus evidence of recent tension (fear/alarm/panic/stress) and a modest release signal (relief rise or fear/threat/arousal/stress downshift)."
         }
     ],
     "actor_description": "The breath leaves me all at once, like my body finally got the message. My shoulders unclench. The tight band around my ribs loosens. For a second I just stand there and let the “not happening” of it sink in.",
     "description_text": "{actor} lets out a long, audible exhale. Their shoulders drop; their face softens from braced to human again. Whatever they were holding in their posture drains out in one slow release.",
     "alternate_descriptions": {
-        "auditory": "A long exhale spills out nearby—air pushed out like someone finally stopped bracing.",
+        "auditory": "A long exhale spills out nearby-air pushed out like someone finally stopped bracing.",
         "tactile": "The tension of someone eases abruptly, as if a coiled spring just let go."
     },
     "tags": [

@@ -68,10 +68,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 6 services (Phase 1 + Phase 2 + ExpressionStatusService + Phase 3)', () => {
+    it('should register exactly 7 services (Phase 1 + Phase 2 + ExpressionStatusService + Phase 3 + PathSensitiveAnalyzer)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(6);
+      expect(mockContainer.register).toHaveBeenCalledTimes(7);
     });
 
     it('should register ExpressionStatusService', () => {
@@ -155,7 +155,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(6);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(7);
     });
   });
 

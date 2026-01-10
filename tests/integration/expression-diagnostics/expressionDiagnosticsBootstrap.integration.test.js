@@ -47,6 +47,33 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
               <tbody></tbody>
             </table>
           </section>
+          <!-- Path-Sensitive Analysis Section -->
+          <section id="path-sensitive-results" hidden>
+            <div id="path-sensitive-summary">
+              <span id="ps-status-indicator"></span>
+              <span id="ps-summary-message"></span>
+            </div>
+            <span id="branch-count">0</span>
+            <span id="reachable-count">0</span>
+            <div id="branch-cards-container"></div>
+            <details id="knife-edge-summary" hidden>
+              <span id="ke-count">0</span>
+              <tbody id="knife-edge-tbody"></tbody>
+            </details>
+          </section>
+          <template id="branch-card-template">
+            <div class="branch-card" data-status="pending">
+              <span class="branch-status-icon"></span>
+              <span class="branch-title"></span>
+              <span class="prototype-list"></span>
+              <div class="branch-thresholds" hidden>
+                <tbody class="threshold-tbody"></tbody>
+              </div>
+              <div class="branch-knife-edges" hidden>
+                <span class="ke-message"></span>
+              </div>
+            </div>
+          </template>
           <button id="back-button">Back</button>
         </body>
       </html>
@@ -201,6 +228,25 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       const witnessStateFinder = sharedContainer.resolve(
         diagnosticsTokens.IWitnessStateFinder
       );
+      // PathSensitiveAnalyzer requires a complete DataRegistry with getLookupData,
+      // which minimal container doesn't provide. Use a mock for controller instantiation test.
+      const pathSensitiveAnalyzer = {
+        analyze: async () => ({
+          expressionId: '',
+          branches: [],
+          branchCount: 0,
+          feasibleBranchCount: 0,
+          reachabilityByBranch: [],
+          hasFullyReachableBranch: false,
+          fullyReachableBranchIds: [],
+          allKnifeEdges: [],
+          feasibilityVolume: null,
+          overallStatus: 'unknown',
+          statusEmoji: '⚪',
+          getSummaryMessage: () => 'Mock analyzer',
+          getReachabilityForBranch: () => [],
+        }),
+      };
 
       // Create controller instance (should not throw)
       const controller = new ExpressionDiagnosticsController({
@@ -212,6 +258,7 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
         failureExplainer,
         expressionStatusService,
         witnessStateFinder,
+        pathSensitiveAnalyzer,
       });
 
       expect(controller).toBeDefined();

@@ -12,6 +12,7 @@ import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarlo
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 import WitnessStateFinder from '../../expressionDiagnostics/services/WitnessStateFinder.js';
+import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -99,6 +100,21 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IWitnessStateFinder}`);
+
+  // Path-Sensitive Analysis (EXPDIAPATSENANA series)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPathSensitiveAnalyzer,
+    (c) =>
+      new PathSensitiveAnalyzer({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        gateConstraintAnalyzer: c.resolve(diagnosticsTokens.IGateConstraintAnalyzer),
+        intensityBoundsCalculator: c.resolve(
+          diagnosticsTokens.IIntensityBoundsCalculator
+        ),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPathSensitiveAnalyzer}`);
 
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)

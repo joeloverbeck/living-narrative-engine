@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-threat-response:dread_settling",
-    "description": "A slow, heavy dread that settles in—anticipation turns sour, attention narrows, and the body prepares for something bad without tipping into panic.",
+    "description": "A slow, heavy dread that settles in-anticipation turns sour, attention narrows, and the body prepares for something bad without tipping into panic.",
     "priority": 73,
     "prerequisites": [
         {
@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.unease"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -68,7 +68,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -76,7 +76,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -84,7 +84,7 @@
                             {
                                 "var": "emotions.fear"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -92,7 +92,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -100,7 +100,7 @@
                             {
                                 "var": "emotions.hypervigilance"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -145,7 +145,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -171,10 +171,10 @@
         }
     ],
     "actor_description": "Something heavy drops into my stomach like a stone finding water. My thoughts keep running a few steps ahead, rehearsing what could go wrong, and every option tastes metallic. I can still move and talk, but it feels like I'm doing it under a low ceiling. I keep listening for the moment the other shoe finally hits.",
-    "description_text": "{actor} grows quieter and more deliberate, as if weighing each second. Their gaze drifts into middle distance; their jaw sets and releases, and their breathing turns measured, careful. They don’t look panicked—just like they’re bracing for bad news that hasn’t arrived yet.",
+    "description_text": "{actor} grows quieter and more deliberate, as if weighing each second. Their gaze drifts into middle distance; their jaw sets and releases, and their breathing turns measured, careful. They don't look panicked-just like they're bracing for bad news that hasn't arrived yet.",
     "alternate_descriptions": {
-        "auditory": "Their voice comes out lower and tighter, with longer pauses—words chosen like they might matter later. You catch a slow inhale that stops halfway, then finishes as a controlled exhale.",
-        "tactile": "The air around them feels denser, like pressure building under the skin—shoulders subtly held, movements minimized, as if conserving readiness.",
+        "auditory": "Their voice comes out lower and tighter, with longer pauses-words chosen like they might matter later. You catch a slow inhale that stops halfway, then finishes as a controlled exhale.",
+        "tactile": "The air around them feels denser, like pressure building under the skin-shoulders subtly held, movements minimized, as if conserving readiness.",
         "olfactory": "A faint stress-sour edge to their breath and sweat, like adrenaline without the sprint.",
         "limited": "{actor} looks preoccupied and tense, attention narrowing as they brace themselves."
     },
@@ -186,5 +186,6 @@
         "threat",
         "quiet_tension",
         "readiness"
-    ]
+    ],
+    "diagnosticStatus": "normal"
 }

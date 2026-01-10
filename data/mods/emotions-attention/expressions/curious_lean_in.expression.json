@@ -143,10 +143,10 @@
             }
         }
     ],
-    "actor_description": "I catch myself leaning forward before I’ve decided to. My eyes keep snagging on the small parts—the seam, the edge, the detail that doesn’t quite fit—and it lights up that bright, itchy need to close the gap between seeing and knowing. I can feel my attention tightening into a point, like my mind is reaching out ahead of my body. One question finishes and the next one is already forming in my mouth.",
-    "description_text": "{actor} shifts their weight forward, head tilting as their gaze tracks from detail to detail—pausing, flicking, returning. Their face tightens into focus, then loosens again as they spot something new; a hand hovers as if tempted to point, touch, or test. Even when they’re still, there’s a forward pull to them, like their attention is tugging the rest of them closer.",
+    "actor_description": "I catch myself leaning forward before I've decided to. My eyes keep snagging on the small parts-the seam, the edge, the detail that doesn't quite fit-and it lights up that bright, itchy need to close the gap between seeing and knowing. I can feel my attention tightening into a point, like my mind is reaching out ahead of my body. One question finishes and the next one is already forming in my mouth.",
+    "description_text": "{actor} shifts their weight forward, head tilting as their gaze tracks from detail to detail-pausing, flicking, returning. Their face tightens into focus, then loosens again as they spot something new; a hand hovers as if tempted to point, touch, or test. Even when they're still, there's a forward pull to them, like their attention is tugging the rest of them closer.",
     "alternate_descriptions": {
-        "auditory": "I hear a soft “huh,” quick little questions half-formed, a sharper inhale when something clicks. There’s the faint scrape of movement—someone edging closer without realizing they’re doing it.",
+        "auditory": "I hear a soft “huh,” quick little questions half-formed, a sharper inhale when something clicks. There's the faint scrape of movement-someone edging closer without realizing they're doing it.",
         "tactile": "I sense a subtle forward pressure, restless micro-movements, the sense of attention crowding the space.",
         "olfactory": "I smell warm skin, fabric, and clean breath; the faint, ordinary scent of someone awake and engaged."
     },
@@ -157,5 +157,5 @@
         "inquiry",
         "observable"
     ],
-    "diagnosticStatus": "frequent"
+    "diagnosticStatus": "normal"
 }

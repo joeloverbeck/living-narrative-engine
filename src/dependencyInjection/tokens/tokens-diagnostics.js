@@ -24,6 +24,9 @@ export const diagnosticsTokens = freeze({
   // Phase 3 - Witness Finding
   IWitnessStateFinder: 'IWitnessStateFinder',
 
+  // Path-Sensitive Analysis (EXPDIAPATSENANA series)
+  IPathSensitiveAnalyzer: 'IPathSensitiveAnalyzer',
+
   // Phase 4 - SMT Solver (to be added in EXPDIA-013)
   // ISmtSolver: 'ISmtSolver',
 

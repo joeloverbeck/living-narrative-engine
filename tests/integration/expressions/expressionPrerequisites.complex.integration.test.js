@@ -268,7 +268,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     const previousMood = {
       valence: -80,
       arousal: 70,
-      threat: 80,
+      threat: 70,
       agency_control: 30,
       future_expectancy: 10,
       engagement: 10,
@@ -277,8 +277,8 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     const currentMood = {
       valence: -80,
       arousal: 90,
-      threat: 90,
-      agency_control: 50,
+      threat: 70,
+      agency_control: 70,
       future_expectancy: 20,
       engagement: 20,
       self_evaluation: 0,
@@ -304,6 +304,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     const courageDelta = courage - (previousContext.emotions.courage ?? 0);
     const determinationDelta =
       determination - (previousContext.emotions.determination ?? 0);
+    const fearDelta = fear - (previousContext.emotions.fear ?? 0);
 
     expect(courage).toBeGreaterThanOrEqual(0.6);
     expect(fear).toBeGreaterThanOrEqual(0.45);
@@ -312,6 +313,7 @@ describe('Complex Expression Prerequisites - Suite A + B', () => {
     expect(Math.max(courageDelta, determinationDelta)).toBeGreaterThanOrEqual(
       0.1
     );
+    expect(fearDelta).toBeGreaterThanOrEqual(-0.05);
 
     const matches = expressionEvaluatorService.evaluateAll(currentContext);
     expect(matches.map((match) => match.id)).toContain(expression.id);

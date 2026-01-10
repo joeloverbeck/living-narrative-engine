@@ -168,7 +168,7 @@ describe('DiagnosticResult Model', () => {
       result.setStaticAnalysis({
         gateConflicts: [{ axis: 'threat', required: { min: 0.5, max: 0.2 }, prototypes: [], gates: [] }],
       });
-      expect(result.statusIndicator).toEqual({
+      expect(result.statusIndicator).toMatchObject({
         color: 'red',
         emoji: '🔴',
         label: 'Impossible',
@@ -178,7 +178,7 @@ describe('DiagnosticResult Model', () => {
     it('should return correct indicator for extremely_rare', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.000005 });
-      expect(result.statusIndicator).toEqual({
+      expect(result.statusIndicator).toMatchObject({
         color: 'orange',
         emoji: '🟠',
         label: 'Extremely Rare',
@@ -188,9 +188,9 @@ describe('DiagnosticResult Model', () => {
     it('should return correct indicator for rare', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.0001 });
-      expect(result.statusIndicator).toEqual({
-        color: 'yellow',
-        emoji: '🟡',
+      expect(result.statusIndicator).toMatchObject({
+        color: 'magenta',
+        emoji: '🟣',
         label: 'Rare',
       });
     });
@@ -198,8 +198,8 @@ describe('DiagnosticResult Model', () => {
     it('should return correct indicator for normal', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.01 });
-      expect(result.statusIndicator).toEqual({
-        color: 'green',
+      expect(result.statusIndicator).toMatchObject({
+        color: 'teal',
         emoji: '🟢',
         label: 'Normal',
       });
@@ -208,8 +208,8 @@ describe('DiagnosticResult Model', () => {
     it('should return correct indicator for frequent', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.05 });
-      expect(result.statusIndicator).toEqual({
-        color: 'blue',
+      expect(result.statusIndicator).toMatchObject({
+        color: 'indigo',
         emoji: '🔵',
         label: 'Frequent',
       });
@@ -407,6 +407,156 @@ describe('DiagnosticResult Model', () => {
     });
   });
 
+  describe('setPathSensitiveResults()', () => {
+    it('should clear impossibility when feasible branches exist', () => {
+      const result = new DiagnosticResult('test:expression');
+      // First set impossible via static analysis
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'future_expectancy',
+            required: { min: -0.05, max: -0.10 },
+            prototypes: ['disappointment', 'lonely_yearning'],
+            gates: ['future_expectancy <= -0.10', 'future_expectancy >= -0.05'],
+          },
+        ],
+      });
+
+      expect(result.isImpossible).toBe(true);
+      expect(result.impossibilityReason).toBe(
+        'Gate conflict on axis: future_expectancy'
+      );
+
+      // Path-sensitive analysis finds feasible branches
+      result.setPathSensitiveResults({
+        overallStatus: 'partially_reachable',
+        feasibleBranchCount: 4,
+        branchCount: 5,
+      });
+
+      expect(result.isImpossible).toBe(false);
+      expect(result.impossibilityReason).toBeNull();
+    });
+
+    it('should not clear impossibility when no feasible branches exist', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: [],
+            gates: [],
+          },
+        ],
+      });
+
+      expect(result.isImpossible).toBe(true);
+
+      // Path-sensitive analysis confirms unreachable
+      result.setPathSensitiveResults({
+        overallStatus: 'unreachable',
+        feasibleBranchCount: 0,
+        branchCount: 2,
+      });
+
+      expect(result.isImpossible).toBe(true);
+    });
+
+    it('should not clear impossibility when feasibleBranchCount is 0', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: [],
+            gates: [],
+          },
+        ],
+      });
+
+      result.setPathSensitiveResults({
+        overallStatus: 'partially_reachable', // status says partial but count is 0
+        feasibleBranchCount: 0,
+        branchCount: 2,
+      });
+
+      expect(result.isImpossible).toBe(true);
+    });
+
+    it('should handle null input gracefully', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: [],
+            gates: [],
+          },
+        ],
+      });
+
+      const returned = result.setPathSensitiveResults(null);
+
+      expect(result.isImpossible).toBe(true);
+      expect(returned).toBe(result);
+    });
+
+    it('should handle undefined input gracefully', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: [],
+            gates: [],
+          },
+        ],
+      });
+
+      const returned = result.setPathSensitiveResults(undefined);
+
+      expect(result.isImpossible).toBe(true);
+      expect(returned).toBe(result);
+    });
+
+    it('should clear impossibility for fully_reachable status', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setStaticAnalysis({
+        gateConflicts: [
+          {
+            axis: 'threat',
+            required: { min: 0.5, max: 0.2 },
+            prototypes: [],
+            gates: [],
+          },
+        ],
+      });
+
+      result.setPathSensitiveResults({
+        overallStatus: 'fully_reachable',
+        feasibleBranchCount: 3,
+        branchCount: 3,
+      });
+
+      expect(result.isImpossible).toBe(false);
+      expect(result.impossibilityReason).toBeNull();
+    });
+
+    it('should return this for chaining', () => {
+      const result = new DiagnosticResult('test:expression');
+      const returned = result.setPathSensitiveResults({
+        overallStatus: 'fully_reachable',
+        feasibleBranchCount: 1,
+        branchCount: 1,
+      });
+      expect(returned).toBe(result);
+    });
+  });
+
   describe('Builder Pattern Chaining', () => {
     it('should allow chaining all setters', () => {
       const result = new DiagnosticResult('test:expression')
@@ -560,9 +710,9 @@ describe('DiagnosticResult Model', () => {
       expect(DiagnosticResult.STATUS_INDICATORS).toBeDefined();
       expect(DiagnosticResult.STATUS_INDICATORS.impossible.color).toBe('red');
       expect(DiagnosticResult.STATUS_INDICATORS.extremely_rare.color).toBe('orange');
-      expect(DiagnosticResult.STATUS_INDICATORS.rare.color).toBe('yellow');
-      expect(DiagnosticResult.STATUS_INDICATORS.normal.color).toBe('green');
-      expect(DiagnosticResult.STATUS_INDICATORS.frequent.color).toBe('blue');
+      expect(DiagnosticResult.STATUS_INDICATORS.rare.color).toBe('magenta');
+      expect(DiagnosticResult.STATUS_INDICATORS.normal.color).toBe('teal');
+      expect(DiagnosticResult.STATUS_INDICATORS.frequent.color).toBe('indigo');
     });
 
     it('should have frozen constants', () => {
@@ -693,7 +843,7 @@ describe('DiagnosticResult Model', () => {
         unreachableThresholds: [],
       });
 
-      expect(result.statusIndicator).toEqual({
+      expect(result.statusIndicator).toMatchObject({
         color: 'gray',
         emoji: '⚪',
         label: 'Unknown',

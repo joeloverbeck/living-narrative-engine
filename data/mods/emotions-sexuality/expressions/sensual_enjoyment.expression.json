@@ -62,7 +62,7 @@
                                     {
                                         "var": "emotions.calm"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -70,7 +70,7 @@
                                     {
                                         "var": "emotions.contentment"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -78,7 +78,7 @@
                                     {
                                         "var": "emotions.relief"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             }
                         ]
@@ -148,12 +148,12 @@
             }
         }
     ],
-    "actor_description": "I let myself sink into it. Heat spreads slow and honest, the kind that loosens my shoulders and quiets the noise in my head. Nothing needs to be chased; nothing needs to be proved. My breath deepens, my body feels heavier in a good way—like I finally fit inside it.",
-    "description_text": "{actor} softens—jaw unclenches, shoulders drop, breath turning slow and full. Their movements become unhurried, almost lazy with comfort, as if they're savoring each second instead of trying to get past it.",
+    "actor_description": "I let myself sink into it. Heat spreads slow and honest, the kind that loosens my shoulders and quiets the noise in my head. Nothing needs to be chased; nothing needs to be proved. My breath deepens, my body feels heavier in a good way-like I finally fit inside it.",
+    "description_text": "{actor} softens-jaw unclenches, shoulders drop, breath turning slow and full. Their movements become unhurried, almost lazy with comfort, as if they're savoring each second instead of trying to get past it.",
     "alternate_descriptions": {
-        "auditory": "I hear a long, satisfied exhale—then breathing that settles into a slower rhythm.",
+        "auditory": "I hear a long, satisfied exhale-then breathing that settles into a slower rhythm.",
         "tactile": "Warmth lingers close by; tension eases out of nearby muscles, contact turning heavy and relaxed.",
-        "olfactory": "I smell warm skin and faint soap or perfume, with a soft underlying musk—comfort more than hunger."
+        "olfactory": "I smell warm skin and faint soap or perfume, with a soft underlying musk-comfort more than hunger."
     },
     "tags": [
         "sexual",
@@ -161,5 +161,6 @@
         "pleasure",
         "relaxed",
         "enjoyment"
-    ]
+    ],
+    "diagnosticStatus": "impossible"
 }

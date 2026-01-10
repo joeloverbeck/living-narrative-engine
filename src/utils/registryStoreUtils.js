@@ -67,7 +67,8 @@ export function storeItemInRegistry(
     isScope ||
     category === 'actions' ||
     category === 'rules' ||
-    category === 'tasks'
+    category === 'tasks' ||
+    category === 'expressions'
   ) {
     finalId = qualifiedId;
   }

@@ -1,11 +1,18 @@
 /**
  * @file Expression Diagnostics Controller - UI controller for expression diagnostics page.
+ *
+ * @see statusTheme.js - Single source of truth for status colors and CSS class generation
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import DiagnosticResult from '../../expressionDiagnostics/models/DiagnosticResult.js';
+import {
+  getStatusCircleCssClass,
+  getStatusThemeEntry,
+} from '../../expressionDiagnostics/statusTheme.js';
 import WitnessState from '../../expressionDiagnostics/models/WitnessState.js';
 import { copyToClipboard } from '../helpers/clipboardUtils.js';
+import StatusSelectDropdown from './components/StatusSelectDropdown.js';
 
 class ExpressionDiagnosticsController {
   #logger;
@@ -16,14 +23,17 @@ class ExpressionDiagnosticsController {
   #failureExplainer;
   #expressionStatusService;
   #witnessStateFinder;
+  #pathSensitiveAnalyzer;
 
   #selectedExpression = null;
   #currentResult = null;
   #expressionStatuses = [];
   #currentWitnessState = null;
+  #currentPathSensitiveResult = null;
 
   // DOM elements
-  #expressionSelect;
+  #expressionSelectContainer;
+  #statusSelectDropdown = null;
   #expressionDescription;
   #runStaticBtn;
   #statusIndicator;
@@ -58,6 +68,20 @@ class ExpressionDiagnosticsController {
   #violatedClausesList;
   #fitnessFill;
   #fitnessValue;
+  // Path-Sensitive Analysis DOM elements
+  #pathSensitiveSection;
+  #pathSensitiveSummary;
+  #psStatusIndicator;
+  #psSummaryMessage;
+  #branchCount;
+  #reachableCount;
+  #branchCardsContainer;
+  #knifeEdgeSummary;
+  #keCount;
+  #knifeEdgeTbody;
+  // Branch filter toggle
+  #showAllBranchesCheckbox;
+  #showAllBranches = false;
 
   constructor({
     logger,
@@ -68,6 +92,7 @@ class ExpressionDiagnosticsController {
     failureExplainer,
     expressionStatusService,
     witnessStateFinder,
+    pathSensitiveAnalyzer,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -93,6 +118,9 @@ class ExpressionDiagnosticsController {
     validateDependency(witnessStateFinder, 'IWitnessStateFinder', logger, {
       requiredMethods: ['findWitness'],
     });
+    validateDependency(pathSensitiveAnalyzer, 'IPathSensitiveAnalyzer', logger, {
+      requiredMethods: ['analyze'],
+    });
 
     this.#logger = logger;
     this.#expressionRegistry = expressionRegistry;
@@ -102,6 +130,7 @@ class ExpressionDiagnosticsController {
     this.#failureExplainer = failureExplainer;
     this.#expressionStatusService = expressionStatusService;
     this.#witnessStateFinder = witnessStateFinder;
+    this.#pathSensitiveAnalyzer = pathSensitiveAnalyzer;
   }
 
   async initialize() {
@@ -112,7 +141,9 @@ class ExpressionDiagnosticsController {
   }
 
   #bindDomElements() {
-    this.#expressionSelect = document.getElementById('expression-select');
+    this.#expressionSelectContainer = document.getElementById(
+      'expression-select-container'
+    );
     this.#expressionDescription = document.getElementById(
       'expression-description'
     );
@@ -155,12 +186,23 @@ class ExpressionDiagnosticsController {
     this.#violatedClausesList = document.getElementById('violated-clauses-list');
     this.#fitnessFill = document.getElementById('fitness-fill');
     this.#fitnessValue = document.getElementById('fitness-value');
+    // Path-Sensitive Analysis elements
+    this.#pathSensitiveSection = document.getElementById('path-sensitive-results');
+    this.#pathSensitiveSummary = document.getElementById('path-sensitive-summary');
+    this.#psStatusIndicator = document.getElementById('ps-status-indicator');
+    this.#psSummaryMessage = document.getElementById('ps-summary-message');
+    this.#branchCount = document.getElementById('branch-count');
+    this.#reachableCount = document.getElementById('reachable-count');
+    this.#branchCardsContainer = document.getElementById('branch-cards-container');
+    this.#knifeEdgeSummary = document.getElementById('knife-edge-summary');
+    this.#keCount = document.getElementById('ke-count');
+    this.#knifeEdgeTbody = document.getElementById('knife-edge-tbody');
+    // Branch filter toggle
+    this.#showAllBranchesCheckbox = document.getElementById('show-all-branches');
   }
 
   #setupEventListeners() {
-    this.#expressionSelect?.addEventListener('change', (e) => {
-      this.#onExpressionSelected(e.target.value);
-    });
+    // Note: expression selection is handled by StatusSelectDropdown's onSelectionChange callback
 
     this.#runStaticBtn?.addEventListener('click', async () => {
       await this.#runStaticAnalysis();
@@ -177,41 +219,85 @@ class ExpressionDiagnosticsController {
     this.#copyWitnessBtn?.addEventListener('click', async () => {
       await this.#copyWitnessToClipboard();
     });
+
+    this.#showAllBranchesCheckbox?.addEventListener('change', (e) => {
+      this.#showAllBranches = e.target.checked;
+      this.#applyBranchFilter();
+    });
   }
 
   async #populateExpressionSelect() {
     const expressions = this.#expressionRegistry.getAllExpressions();
 
-    if (!this.#expressionSelect) {
+    if (!this.#expressionSelectContainer) {
       this.#logger.debug(`Populated ${expressions.length} expressions`);
       return;
     }
 
-    const defaultOption = this.#expressionSelect.querySelector(
-      'option[value=""]'
-    );
-    this.#expressionSelect.innerHTML = '';
-    if (defaultOption) {
-      this.#expressionSelect.appendChild(defaultOption);
-    } else {
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = '-- Select an expression --';
-      this.#expressionSelect.appendChild(placeholder);
+    // Dispose existing dropdown if present
+    if (this.#statusSelectDropdown) {
+      this.#statusSelectDropdown.dispose();
+      this.#statusSelectDropdown = null;
     }
 
+    // Get sorted expression IDs
     const sortedIds = expressions
       .map((expr) => expr?.id)
       .filter((id) => typeof id === 'string' && id.trim() !== '')
       .sort((a, b) => a.localeCompare(b));
 
-    for (const expressionId of sortedIds) {
-      this.#expressionSelect.appendChild(
-        this.#createExpressionOption(expressionId)
-      );
-    }
+    // Build options with status information
+    // Start with a placeholder option for "no selection"
+    const options = [
+      { value: '', label: '-- Select an expression --', status: null },
+      ...sortedIds.map((expressionId) => ({
+        value: expressionId,
+        label: expressionId,
+        status: this.#getStatusForExpression(expressionId),
+      })),
+    ];
+
+    // Create the custom dropdown
+    this.#statusSelectDropdown = new StatusSelectDropdown({
+      containerElement: this.#expressionSelectContainer,
+      onSelectionChange: (value) => this.#onExpressionSelected(value),
+      logger: this.#logger,
+      placeholder: '-- Select an expression --',
+      id: 'expression-select',
+    });
+
+    this.#statusSelectDropdown.setOptions(options);
 
     this.#logger.debug(`Populated ${expressions.length} expressions`);
+  }
+
+  /**
+   * Get the diagnostic status for an expression.
+   *
+   * @private
+   * @param {string} expressionId - The expression ID
+   * @returns {string} The diagnostic status ('unknown', 'impossible', etc.)
+   */
+  #getStatusForExpression(expressionId) {
+    const statusEntry = this.#expressionStatuses.find(
+      (e) => e.id === expressionId
+    );
+    return statusEntry?.diagnosticStatus || 'unknown';
+  }
+
+  /**
+   * Display the saved diagnostic status for a selected expression.
+   * Shows the appropriate colored circle and label based on the expression's
+   * persisted diagnosticStatus field.
+   *
+   * @private
+   * @param {string} expressionId - The expression ID
+   */
+  #displayExpressionStatus(expressionId) {
+    const status = this.#getStatusForExpression(expressionId);
+    const theme = getStatusThemeEntry(status);
+    const cssCategory = status.replace(/_/g, '-');
+    this.#updateStatus(cssCategory, theme.label, '');
   }
 
   #onExpressionSelected(expressionId) {
@@ -242,17 +328,23 @@ class ExpressionDiagnosticsController {
     }
 
     this.#resetResults();
+
+    // Display the expression's saved diagnostic status (if any)
+    if (this.#selectedExpression) {
+      this.#displayExpressionStatus(expressionId);
+    }
   }
 
   #resetResults() {
     this.#currentResult = null;
-    this.#updateStatus('unknown', 'Not Analyzed', '');
+    this.#updateStatus('unknown', 'Unknown', '');
     this.#staticResults.innerHTML =
       '<p class="placeholder-text">Run static analysis to see results.</p>';
     this.#gateConflictsSection.hidden = true;
     this.#thresholdsSection.hidden = true;
     this.#resetMonteCarloResults();
     this.#resetWitnessResults();
+    this.#resetPathSensitiveResults();
   }
 
   #resetWitnessResults() {
@@ -305,6 +397,9 @@ class ExpressionDiagnosticsController {
       // Update UI
       this.#displayStaticResults(gateResult, thresholdIssues);
       this.#updateStatusFromResult();
+
+      // Run path-sensitive analysis (provides per-branch details)
+      await this.#runPathSensitiveAnalysis();
 
       // Persist the new status and refresh problematic panel
       const newStatus = this.#currentResult.rarityCategory;
@@ -394,19 +489,13 @@ class ExpressionDiagnosticsController {
     this.#statusIndicator.className = 'status-indicator';
     this.#statusIndicator.classList.add(`status-${category}`);
 
-    const emoji = this.#statusIndicator.querySelector('.status-emoji');
+    const circleEl = this.#statusIndicator.querySelector('.status-circle-large');
     const labelEl = this.#statusIndicator.querySelector('.status-label');
 
-    const emojiMap = {
-      unknown: '⚪',
-      impossible: '🔴',
-      'extremely-rare': '🟠',
-      rare: '🟡',
-      normal: '🟢',
-      frequent: '🔵',
-    };
-
-    if (emoji) emoji.textContent = emojiMap[category] || '⚪';
+    // Use CSS circle class instead of emoji text for consistent color rendering
+    if (circleEl) {
+      circleEl.className = `status-circle-large status-circle status-${category}`;
+    }
     if (labelEl) labelEl.textContent = label;
     if (this.#statusMessage) this.#statusMessage.textContent = message;
   }
@@ -703,10 +792,13 @@ class ExpressionDiagnosticsController {
     const cssCategory = category.replace(/_/g, '-');
     this.#mcRarityIndicator.className = `rarity-indicator rarity-${cssCategory}`;
 
-    const emojiEl = this.#mcRarityIndicator.querySelector('.rarity-emoji');
+    const circleEl = this.#mcRarityIndicator.querySelector('.rarity-circle');
     const labelEl = this.#mcRarityIndicator.querySelector('.rarity-label');
 
-    if (emojiEl) emojiEl.textContent = indicator.emoji;
+    // Use CSS circle class instead of emoji text for consistent color rendering
+    if (circleEl) {
+      circleEl.className = `rarity-circle status-circle status-${cssCategory}`;
+    }
     if (labelEl) labelEl.textContent = indicator.label;
   }
 
@@ -766,6 +858,9 @@ class ExpressionDiagnosticsController {
       );
 
       this.#renderProblematicPills(problematic);
+
+      // Update dropdown option statuses now that we have the data
+      this.#updateDropdownStatuses();
     } catch (error) {
       this.#logger.error('Failed to load problematic expressions:', error);
       this.#problematicPillsContainer.innerHTML =
@@ -773,6 +868,27 @@ class ExpressionDiagnosticsController {
     } finally {
       this.#problematicPillsContainer.classList.remove('loading');
     }
+  }
+
+  /**
+   * Refresh problematic pills panel using the in-memory cache.
+   * Used after persisting status to avoid race condition where scanAllStatuses()
+   * might return stale data before the server has finished writing the file.
+   *
+   * @private
+   */
+  #refreshProblematicPillsFromCache() {
+    // Note: Guard clause for missing container is unnecessary here because:
+    // 1. This method is only called from #persistExpressionStatus()
+    // 2. #persistExpressionStatus() requires #expressionStatuses to be populated
+    // 3. #expressionStatuses is only populated if container existed during init
+    // 4. If container existed during init, #problematicPillsContainer is set for controller lifetime
+    // Therefore, if this method is reached, container is guaranteed to exist.
+    const problematic = this.#expressionStatusService.getProblematicExpressions(
+      this.#expressionStatuses,
+      10
+    );
+    this.#renderProblematicPills(problematic);
   }
 
   /**
@@ -786,9 +902,9 @@ class ExpressionDiagnosticsController {
 
     this.#problematicPillsContainer.innerHTML = '';
 
-    const selectableExpressions = this.#expressionSelect
+    const selectableExpressions = this.#statusSelectDropdown
       ? problematicExpressions.filter((expr) =>
-          this.#findExpressionOption(expr.id)
+          this.#hasExpressionOption(expr.id)
         )
       : problematicExpressions;
 
@@ -808,7 +924,7 @@ class ExpressionDiagnosticsController {
       const displayName = this.#getExpressionName(expr.id) || expr.id;
       
       // Status circle color class
-      const statusClass = this.#getStatusCircleClass(expr.diagnosticStatus);
+      const statusClass = getStatusCircleCssClass(expr.diagnosticStatus, this.#logger);
       
       pill.innerHTML = `
         <span class="status-circle ${statusClass}"></span>
@@ -830,53 +946,80 @@ class ExpressionDiagnosticsController {
     return segments[segments.length - 1];
   }
 
-  #findExpressionOption(expressionId) {
-    if (!this.#expressionSelect) return null;
+  /**
+   * Update all dropdown option statuses from the loaded expression statuses.
+   * Called after #loadProblematicExpressionsPanel() has populated #expressionStatuses.
+   *
+   * @private
+   */
+  #updateDropdownStatuses() {
+    if (!this.#statusSelectDropdown || this.#expressionStatuses.length === 0) {
+      return;
+    }
 
+    for (const statusEntry of this.#expressionStatuses) {
+      this.#statusSelectDropdown.updateOptionStatus(
+        statusEntry.id,
+        statusEntry.diagnosticStatus
+      );
+    }
+
+    this.#logger.debug(
+      `Updated ${this.#expressionStatuses.length} dropdown option statuses`
+    );
+  }
+
+  /**
+   * Check if an expression exists in the dropdown.
+   *
+   * @private
+   * @param {string} expressionId - The expression ID to check
+   * @returns {boolean} True if the expression exists in the dropdown
+   */
+  #hasExpressionOption(expressionId) {
+    if (!this.#statusSelectDropdown) return false;
+
+    // Check by full ID first, then by name only
     const expressionName = this.#getExpressionName(expressionId);
-    return Array.from(this.#expressionSelect.options).find(
+    const currentOptions = this.#statusSelectDropdown.getOptions();
+
+    return currentOptions.some(
       (opt) => opt.value === expressionId || opt.value === expressionName
     );
   }
 
   /**
-   * Get CSS class for status circle based on diagnostic status.
-   *
-   * @private
-   * @param {string} status - The diagnostic status
-   * @returns {string} CSS class for the status circle
-   */
-  #getStatusCircleClass(status) {
-    const normalizedStatus = (status || 'unknown').toLowerCase().replace(/_/g, '-');
-    return `status-${normalizedStatus}`;
-  }
-
-  /**
    * Select an expression by ID, updating the dropdown and triggering selection.
+   * Tries full namespaced ID first, then falls back to short name if needed.
    *
    * @private
    * @param {string} expressionId - The expression ID to select
    */
   #selectExpressionById(expressionId) {
-    if (!this.#expressionSelect) return;
+    if (!this.#statusSelectDropdown) return;
 
-    // Find and select the option
-    const option = this.#findExpressionOption(expressionId);
+    // Try full ID first (without triggering setValue's internal warning via silent check)
+    const options = this.#statusSelectDropdown.getOptions();
+    const hasFullId = options.some((opt) => opt.value === expressionId);
 
-    if (option) {
-      this.#expressionSelect.value = option.value;
-      // Dispatch change event so the normal event listener handles selection consistently
-      this.#expressionSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      this.#logger.warn(`Expression not found in dropdown: ${expressionId}`);
+    if (hasFullId) {
+      this.#statusSelectDropdown.setValue(expressionId, true);
+      return;
     }
-  }
 
-  #createExpressionOption(expressionId) {
-    const option = document.createElement('option');
-    option.value = expressionId;
-    option.textContent = expressionId;
-    return option;
+    // Fallback: try without namespace (for expressions without namespace prefix)
+    const expressionName = this.#getExpressionName(expressionId);
+    if (expressionName !== expressionId) {
+      const hasShortName = options.some((opt) => opt.value === expressionName);
+      if (hasShortName) {
+        this.#statusSelectDropdown.setValue(expressionName, true);
+      }
+    }
+    // Note: No "not found" warning needed here because:
+    // 1. This method is only called from pill click handlers
+    // 2. Pills are filtered by #hasExpressionOption() before rendering
+    // 3. #hasExpressionOption() uses the same logic to check if expression exists
+    // Therefore, any pill that renders will always have a matching dropdown option.
   }
 
   /**
@@ -920,8 +1063,26 @@ class ExpressionDiagnosticsController {
         `Persisted status '${status}' for ${this.#selectedExpression.id}`
       );
 
-      // Refresh the problematic panel to reflect the change
-      await this.#loadProblematicExpressionsPanel();
+      // Update the dropdown option's status circle
+      if (this.#statusSelectDropdown) {
+        this.#statusSelectDropdown.updateOptionStatus(
+          this.#selectedExpression.id,
+          status
+        );
+      }
+
+      // Update local cache of expression statuses
+      const existingEntry = this.#expressionStatuses.find(
+        (e) => e.id === this.#selectedExpression.id
+      );
+      if (existingEntry) {
+        existingEntry.diagnosticStatus = status;
+      }
+
+      // Refresh the problematic panel using local cache to avoid race condition.
+      // Using the in-memory cache (already updated above) instead of re-scanning
+      // from disk prevents stale data from overwriting the correct dropdown status.
+      this.#refreshProblematicPillsFromCache();
     } catch (error) {
       this.#logger.error('Failed to persist expression status:', error);
     }
@@ -1183,6 +1344,326 @@ class ExpressionDiagnosticsController {
         once: true,
       });
     }, 2000);
+  }
+
+  // ========== Path-Sensitive Analysis Methods ==========
+
+  /**
+   * Run path-sensitive analysis on the selected expression.
+   *
+   * @private
+   */
+  async #runPathSensitiveAnalysis() {
+    if (!this.#selectedExpression) return;
+
+    this.#logger.info(
+      `Running path-sensitive analysis for: ${this.#selectedExpression.id}`
+    );
+
+    try {
+      const result = await this.#pathSensitiveAnalyzer.analyze(
+        this.#selectedExpression
+      );
+      this.#currentPathSensitiveResult = result;
+
+      // Update DiagnosticResult with path-sensitive analysis
+      // This can override impossibility if feasible branches exist
+      if (this.#currentResult) {
+        this.#currentResult.setPathSensitiveResults({
+          overallStatus: result.overallStatus,
+          feasibleBranchCount: result.feasibleBranchCount,
+          branchCount: result.branchCount,
+        });
+        // Refresh status display after path-sensitive update
+        this.#updateStatusFromResult();
+      }
+
+      this.#displayPathSensitiveResults(result);
+    } catch (error) {
+      this.#logger.error('Path-sensitive analysis failed:', error);
+      this.#resetPathSensitiveResults();
+    }
+  }
+
+  /**
+   * Display path-sensitive analysis results.
+   *
+   * @private
+   * @param {import('../../expressionDiagnostics/models/PathSensitiveResult.js').default} result
+   */
+  #displayPathSensitiveResults(result) {
+    if (!this.#pathSensitiveSection) return;
+
+    // Show the section
+    this.#pathSensitiveSection.hidden = false;
+
+    // Update summary
+    if (this.#pathSensitiveSummary) {
+      this.#pathSensitiveSummary.dataset.status = result.overallStatus;
+    }
+    if (this.#psStatusIndicator) {
+      this.#psStatusIndicator.textContent = result.statusEmoji;
+    }
+    if (this.#psSummaryMessage) {
+      this.#psSummaryMessage.textContent = result.getSummaryMessage();
+    }
+
+    // Update counts
+    if (this.#branchCount) {
+      this.#branchCount.textContent = result.branchCount;
+    }
+    if (this.#reachableCount) {
+      this.#reachableCount.textContent = result.fullyReachableBranchIds.length;
+    }
+
+    // Render branch cards
+    this.#renderBranchCards(result);
+
+    // Render knife-edge summary
+    this.#renderKnifeEdgeSummary(result);
+  }
+
+  /**
+   * Render branch cards for path-sensitive results.
+   *
+   * @private
+   * @param {import('../../expressionDiagnostics/models/PathSensitiveResult.js').default} result
+   */
+  #renderBranchCards(result) {
+    if (!this.#branchCardsContainer) return;
+
+    this.#branchCardsContainer.innerHTML = '';
+
+    const template = document.getElementById('branch-card-template');
+    if (!template) {
+      this.#logger.warn('Branch card template not found');
+      return;
+    }
+
+    for (const branch of result.branches) {
+      const card = this.#createBranchCard(branch, result, template);
+      this.#branchCardsContainer.appendChild(card);
+    }
+
+    this.#applyBranchFilter();
+  }
+
+  /**
+   * Apply branch visibility filter based on toggle state.
+   * Hides reachable branches unless "Show All" is enabled.
+   *
+   * @private
+   */
+  #applyBranchFilter() {
+    if (!this.#branchCardsContainer) return;
+
+    const cards = this.#branchCardsContainer.querySelectorAll('.branch-card');
+    for (const card of cards) {
+      if (card.dataset.status === 'reachable') {
+        card.classList.toggle('filtered-hidden', !this.#showAllBranches);
+      }
+    }
+  }
+
+  /**
+   * Create a single branch card element.
+   *
+   * @private
+   * @param {import('../../expressionDiagnostics/models/AnalysisBranch.js').default} branch
+   * @param {import('../../expressionDiagnostics/models/PathSensitiveResult.js').default} result
+   * @param {HTMLTemplateElement} template
+   * @returns {HTMLElement}
+   */
+  #createBranchCard(branch, result, template) {
+    const card = template.content.cloneNode(true).querySelector('.branch-card');
+
+    // Determine status
+    let status = 'reachable';
+    if (branch.isInfeasible) {
+      status = 'infeasible';
+    } else if (branch.knifeEdges && branch.knifeEdges.length > 0) {
+      status = 'knife-edge';
+    } else {
+      const branchReachability = result.getReachabilityForBranch(branch.branchId);
+      const allReachable = branchReachability.every((r) => r.isReachable);
+      if (!allReachable) {
+        status = 'unreachable';
+      }
+    }
+
+    card.dataset.status = status;
+
+    // Status icon
+    const statusIcons = {
+      reachable: '✅',
+      'knife-edge': '⚠️',
+      unreachable: '❌',
+      infeasible: '🚫',
+    };
+    const statusIcon = card.querySelector('.branch-status-icon');
+    if (statusIcon) {
+      statusIcon.textContent = statusIcons[status];
+    }
+
+    // Title
+    const title = card.querySelector('.branch-title');
+    if (title) {
+      title.textContent = branch.description || `Branch ${branch.branchId}`;
+    }
+
+    // Prototypes - show active (gates enforced) vs inactive (gates ignored) partitioning
+    const prototypeList = card.querySelector('.prototype-list');
+    if (prototypeList) {
+      const activePrototypes = branch.activePrototypes || [];
+      const inactivePrototypes = branch.inactivePrototypes || [];
+
+      if (activePrototypes.length > 0 || inactivePrototypes.length > 0) {
+        // Show partitioned view when we have direction info
+        const parts = [];
+        if (activePrototypes.length > 0) {
+          parts.push(`Active (gates enforced): ${activePrototypes.join(', ')}`);
+        }
+        if (inactivePrototypes.length > 0) {
+          parts.push(`Inactive (gates ignored): ${inactivePrototypes.join(', ')}`);
+        }
+        prototypeList.innerHTML = parts.join('<br>');
+      } else {
+        // Fallback to old behavior
+        prototypeList.textContent =
+          branch.requiredPrototypes?.join(', ') || 'none';
+      }
+    }
+
+    // Threshold table (if unreachable or knife-edge)
+    if (status === 'unreachable' || status === 'knife-edge') {
+      const branchReachability = result.getReachabilityForBranch(branch.branchId);
+      const unreachable = branchReachability.filter((r) => !r.isReachable);
+
+      if (unreachable.length > 0) {
+        const thresholdsDiv = card.querySelector('.branch-thresholds');
+        if (thresholdsDiv) {
+          thresholdsDiv.hidden = false;
+
+          const tbody = card.querySelector('.threshold-tbody');
+          if (tbody) {
+            for (const r of unreachable) {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${this.#escapeHtml(r.prototypeId)}</td>
+                <td>${r.threshold.toFixed(2)}</td>
+                <td>${r.maxPossible.toFixed(2)}</td>
+                <td>${r.gap.toFixed(2)}</td>
+              `;
+              tbody.appendChild(row);
+            }
+          }
+        }
+      }
+    }
+
+    // Knife-edge warning
+    if (branch.knifeEdges && branch.knifeEdges.length > 0) {
+      const keDiv = card.querySelector('.branch-knife-edges');
+      if (keDiv) {
+        keDiv.hidden = false;
+
+        const keMessage = branch.knifeEdges
+          .map((ke) => {
+            // Use dual-scale format if available, fall back to legacy formats
+            const interval =
+              typeof ke.formatDualScaleInterval === 'function'
+                ? ke.formatDualScaleInterval()
+                : typeof ke.formatInterval === 'function'
+                  ? ke.formatInterval()
+                  : `[${ke.min?.toFixed(2) || '?'}, ${ke.max?.toFixed(2) || '?'}]`;
+            return `${ke.axis}: ${interval}`;
+          })
+          .join('; ');
+        const keMessageEl = card.querySelector('.ke-message');
+        if (keMessageEl) {
+          keMessageEl.textContent = keMessage;
+        }
+      }
+    }
+
+    return card;
+  }
+
+  /**
+   * Render knife-edge summary section.
+   *
+   * @private
+   * @param {import('../../expressionDiagnostics/models/PathSensitiveResult.js').default} result
+   */
+  #renderKnifeEdgeSummary(result) {
+    if (!this.#knifeEdgeSummary) return;
+
+    const allKnifeEdges = result.allKnifeEdges;
+
+    if (allKnifeEdges.length === 0) {
+      this.#knifeEdgeSummary.hidden = true;
+      return;
+    }
+
+    this.#knifeEdgeSummary.hidden = false;
+
+    if (this.#keCount) {
+      this.#keCount.textContent = allKnifeEdges.length;
+    }
+
+    if (this.#knifeEdgeTbody) {
+      this.#knifeEdgeTbody.innerHTML = '';
+
+      for (const ke of allKnifeEdges) {
+        const row = document.createElement('tr');
+        // Use dual-scale format if available, fall back to legacy formats
+        const interval =
+          typeof ke.formatDualScaleInterval === 'function'
+            ? ke.formatDualScaleInterval()
+            : typeof ke.formatInterval === 'function'
+              ? ke.formatInterval()
+              : `[${ke.min?.toFixed(2) || '?'}, ${ke.max?.toFixed(2) || '?'}]`;
+        const width =
+          typeof ke.width === 'number' ? ke.width.toFixed(3) : '?';
+        const rawWidth =
+          typeof ke.width === 'number' ? Math.round(ke.width * 100) : '?';
+        const contributors =
+          typeof ke.formatContributors === 'function'
+            ? ke.formatContributors()
+            : ke.contributingPrototypes?.join(', ') || '-';
+
+        row.innerHTML = `
+          <td>${this.#escapeHtml(ke.axis || '-')}</td>
+          <td>${interval}</td>
+          <td>${width} (raw: ${rawWidth})</td>
+          <td>${this.#escapeHtml(contributors)}</td>
+          <td>${this.#escapeHtml(ke.branchId || '-')}</td>
+        `;
+        this.#knifeEdgeTbody.appendChild(row);
+      }
+    }
+  }
+
+  /**
+   * Reset path-sensitive results display.
+   *
+   * @private
+   */
+  #resetPathSensitiveResults() {
+    this.#currentPathSensitiveResult = null;
+
+    if (this.#pathSensitiveSection) {
+      this.#pathSensitiveSection.hidden = true;
+    }
+    if (this.#branchCardsContainer) {
+      this.#branchCardsContainer.innerHTML = '';
+    }
+    if (this.#knifeEdgeTbody) {
+      this.#knifeEdgeTbody.innerHTML = '';
+    }
+    if (this.#knifeEdgeSummary) {
+      this.#knifeEdgeSummary.hidden = true;
+    }
   }
 }
 

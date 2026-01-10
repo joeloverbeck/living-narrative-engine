@@ -123,7 +123,7 @@
             "failure_message": "Requires high despair + numbness + low hope with low arousal/engagement (quiet shutdown), not anger/frustration-driven; excludes significant dissociation so dissociation owns 'checked out' scenes; requires a notable worsening shift."
         }
     ],
-    "actor_description": "Something in me stops reaching. The future doesn't look bad so much as… blank—like a hallway with the lights out. My thoughts slow, heavy and unspecific. Even my breathing feels distant, like I'm listening to it from another room. I could speak, probably. I just can't find a reason that feels real.",
+    "actor_description": "Something in me stops reaching. The future doesn't look bad so much as… blank-like a hallway with the lights out. My thoughts slow, heavy and unspecific. Even my breathing feels distant, like I'm listening to it from another room. I could speak, probably. I just can't find a reason that feels real.",
     "description_text": "{actor} goes still in a way that isn't restful. Their face flattens; their gaze loses its hook on the room. Movements come late and small, as if every gesture has to be hauled up from deep water.",
     "alternate_descriptions": {
         "auditory": "I hear a slow breath that sounds far away."
@@ -134,5 +134,5 @@
         "hopelessness",
         "withdrawal"
     ],
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "rare"
 }

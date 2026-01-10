@@ -409,7 +409,7 @@
         "arousal <= -0.35"
       ]
     },
-    "loneliness": {
+    "withdrawn_isolation": {
       "weights": {
         "valence": -0.8,
         "engagement": -0.5,
@@ -419,6 +419,25 @@
       "gates": [
         "valence <= -0.15",
         "engagement <= -0.10"
+      ]
+    },
+    "lonely_yearning": {
+      "weights": {
+        "engagement": 0.90,
+        "valence": -0.60,
+        "future_expectancy": 0.35,
+        "self_evaluation": -0.25,
+        "agency_control": -0.15,
+        "arousal": 0.10,
+        "threat": -0.25
+      },
+      "gates": [
+        "engagement >= 0.25",
+        "valence <= -0.10",
+        "threat <= 0.40",
+        "arousal >= -0.10",
+        "arousal <= 0.35",
+        "future_expectancy >= -0.05"
       ]
     },
     "nostalgia": {
@@ -547,8 +566,9 @@
       "weights": {
         "threat": 1.0,
         "arousal": 1.0,
-        "agency_control": -0.8,
-        "valence": -0.6
+        "valence": -0.6,
+        "agency_control": -0.35,
+        "engagement": 0.25
       },
       "gates": [
         "threat >= 0.50",

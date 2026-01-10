@@ -51,7 +51,7 @@
     "writing",
     "ballet",
     "intoxicants",
-    "alicia",
+    "p_erotica_kern",
     "comfort",
     "breaching",
     "drinking",
@@ -59,7 +59,9 @@
     "emotions-affiliation",
     "emotions-agency",
     "emotions-anger",
-    "emotions-positive-affect"
+    "emotions-positive-affect",
+    "cosmetics",
+    "movement"
   ],
-  "startWorld": "alicia:alicia"
+  "startWorld": "p_erotica_kern:kern"
 }

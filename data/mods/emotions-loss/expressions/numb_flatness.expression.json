@@ -2,8 +2,8 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-loss:numb_flatness",
     "description": "Blunted affect and emotional muting: numbness dominates with low engagement/arousal, without tipping into full dissociation or heavy grief/despair.",
-    "actor_description": "My feelings don’t argue with me—they just don’t show up. Thoughts still happen, but they land without weight, like they’re sliding off a slick surface. I notice what should matter and it registers as a fact, not a pull. Even my body feels slightly turned down, as if someone lowered the volume on being here.",
-    "description_text": "{actor} looks oddly neutral—face slack, eyes unfocused in a steady way that isn’t calm. Their responses come a beat late and a size too small, as if emotion is present only as an outline.",
+    "actor_description": "My feelings don't argue with me-they just don't show up. Thoughts still happen, but they land without weight, like they're sliding off a slick surface. I notice what should matter and it registers as a fact, not a pull. Even my body feels slightly turned down, as if someone lowered the volume on being here.",
+    "description_text": "{actor} looks oddly neutral-face slack, eyes unfocused in a steady way that isn't calm. Their responses come a beat late and a size too small, as if emotion is present only as an outline.",
     "priority": 73,
     "prerequisites": [
         {
@@ -15,6 +15,14 @@
                                 "var": "emotions.numbness"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.22
                         ]
                     },
                     {
@@ -153,13 +161,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires dominant numbness with low engagement/arousal and mild-negative valence; hard-excludes dissociation and caps threat so this is 'flat without acute danger' rather than trauma shutdown; also caps grief/despair/panic/terror and excludes freeze; needs a spike/crossing or notable engagement drop to avoid spam."
+            "failure_message": "Requires dominant numbness with low engagement/arousal and mild-negative valence; hard-excludes dissociation and caps threat so this is 'flat without acute danger' rather than trauma shutdown; also caps grief/despair/panic/terror and excludes freeze; explicitly blocks lonely_yearning so 'aching preoccupation' doesn't coexist with 'signal muted'; needs a spike/crossing or notable engagement drop to avoid spam."
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a voice that stays even and slightly distant—short answers, few inflections, breaths that don’t hitch or laugh.",
-        "tactile": "It feels like the room’s emotional temperature dropped: less tension, less warmth, a muted presence that doesn’t quite press back.",
-        "olfactory": "The air seems thin and plain—scents register, but they don’t spark appetite or comfort.",
+        "auditory": "I hear a voice that stays even and slightly distant-short answers, few inflections, breaths that don't hitch or laugh.",
+        "tactile": "It feels like the room's emotional temperature dropped: less tension, less warmth, a muted presence that doesn't quite press back.",
+        "olfactory": "The air seems thin and plain-scents register, but they don't spark appetite or comfort.",
         "limited": "Something in {actor} goes quiet and flat, like the emotional signal has been dampened."
     },
     "tags": [

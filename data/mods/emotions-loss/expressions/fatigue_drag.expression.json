@@ -159,15 +159,15 @@
                     }
                 ]
             },
-            "failure_message": "Requires meaningful fatigue with low arousal/engagement; caps threat and excludes dissociation so crisis shutdown can’t masquerade as tiredness; also blocks high activation (alarm/terror/panic) and only fires on fatigue spike/crossing or arousal drop."
+            "failure_message": "Requires meaningful fatigue with low arousal/engagement; caps threat and excludes dissociation so crisis shutdown can't masquerade as tiredness; also blocks high activation (alarm/terror/panic) and only fires on fatigue spike/crossing or arousal drop."
         }
     ],
-    "actor_description": "Everything feels heavier than it should—thoughts, limbs, even breathing. I can still do things, but each action asks for a payment up front, and I keep negotiating with myself to pay it. My attention slips off details like it can’t get traction, and time stretches in dull, slow sheets.",
-    "description_text": "{actor} moves as if wading—shoulders slightly sunk, blinks lingering, gestures abbreviated. They pause before simple actions, as though weighing whether the effort is worth it, and their focus keeps drifting away from the room.",
+    "actor_description": "Everything feels heavier than it should-thoughts, limbs, even breathing. I can still do things, but each action asks for a payment up front, and I keep negotiating with myself to pay it. My attention slips off details like it can't get traction, and time stretches in dull, slow sheets.",
+    "description_text": "{actor} moves as if wading-shoulders slightly sunk, blinks lingering, gestures abbreviated. They pause before simple actions, as though weighing whether the effort is worth it, and their focus keeps drifting away from the room.",
     "alternate_descriptions": {
         "auditory": "I hear longer silences between words, slower replies, and a breath that keeps turning into quiet sighs.",
-        "tactile": "The air around them feels slack and weighted—like warmth without comfort—making motion seem optional and expensive.",
-        "olfactory": "There’s a faint sense of stale warmth, like a room that’s been lived in too long without a reset.",
+        "tactile": "The air around them feels slack and weighted-like warmth without comfort-making motion seem optional and expensive.",
+        "olfactory": "There's a faint sense of stale warmth, like a room that's been lived in too long without a reset.",
         "limited": "A low-energy slump settles in; attention dulls and movement slows."
     },
     "tags": [

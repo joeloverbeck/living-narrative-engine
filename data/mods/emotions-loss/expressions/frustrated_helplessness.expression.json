@@ -150,11 +150,11 @@
             "failure_message": "Requires frustration + very low agency plus bleak expectancy signals and enough engagement to show struggle; explicitly excludes dissociation (checked-out) and caps numbness to avoid quiet shutdown; excludes freeze and needs a notable worsening shift."
         }
     ],
-    "actor_description": "I push and the world doesn't move. The same wall, every time. Heat climbs my neck; my hands clench like they're trying to become tools. I can feel my mind searching for leverage—anything to grab—and coming back empty. The worst part is the wasted energy: all this drive, nowhere it can actually go.",
-    "description_text": "{actor} paces in place without getting anywhere—fists tightening, jaw working, breath coming sharp. They look for exits, options, handles that aren't there. The anger shows, but it keeps folding back on itself, trapped.",
+    "actor_description": "I push and the world doesn't move. The same wall, every time. Heat climbs my neck; my hands clench like they're trying to become tools. I can feel my mind searching for leverage-anything to grab-and coming back empty. The worst part is the wasted energy: all this drive, nowhere it can actually go.",
+    "description_text": "{actor} paces in place without getting anywhere-fists tightening, jaw working, breath coming sharp. They look for exits, options, handles that aren't there. The anger shows, but it keeps folding back on itself, trapped.",
     "alternate_descriptions": {
-        "auditory": "I hear a sharp breath, a muttered curse, the thud of something hit—not hard enough to break, hard enough to vent.",
-        "tactile": "I sense someone's tension spiking and circling with no release—like someone revving an engine in neutral."
+        "auditory": "I hear a sharp breath, a muttered curse, the thud of something hit-not hard enough to break, hard enough to vent.",
+        "tactile": "I sense someone's tension spiking and circling with no release-like someone revving an engine in neutral."
     },
     "tags": [
         "frustration",

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "test:flowAbsorptionOriginal",
+  "description": "Recreates the original flow_absorption bug scenario with entrancement branch for path-sensitive analysis testing",
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "emotions.flow" }, 0.7] },
+          {
+            "or": [
+              { ">=": [{ "var": "emotions.interest" }, 0.45] },
+              { ">=": [{ "var": "emotions.fascination" }, 0.45] },
+              { ">=": [{ "var": "emotions.entrancement" }, 0.4] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "logic": {
+        "or": [
+          { ">=": [{ "var": "emotions.flow" }, 0.85] },
+          {
+            "and": [
+              { ">=": [{ "var": "emotions.interest" }, 0.6] },
+              { ">=": [{ "var": "emotions.curiosity" }, 0.5] }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "effects": []
+}

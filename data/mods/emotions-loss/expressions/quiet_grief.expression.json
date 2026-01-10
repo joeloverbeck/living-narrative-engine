@@ -8,11 +8,35 @@
             "logic": {
                 "and": [
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "emotions.grief"
+                                ">=": [
+                                    {
+                                        "var": "emotions.grief"
+                                    },
+                                    0.55
+                                ]
                             },
-                            0.55
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.grief"
+                                            },
+                                            0.48
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.4
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
                     },
                     {
@@ -125,17 +149,33 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
                             }
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Contained grief + sadness with low alarm/fear, low arousal, negative valence, and some fresh shift (grief/sadness spike, hope drop, or lonely-yearning surge). The lonely-yearning path allows ‘missing them' to activate quiet grief even when grief is only moderate."
         }
     ],
-    "actor_description": "The grief isn't sharp anymore. It's weight. It sits behind my sternum and in my throat, turning everything quieter. My thoughts move slowly, like they're wading. I don't even have the energy for drama. The loss is simply there—an ache that keeps its own hours. I notice myself handling the world more gently, as if one wrong touch could make something else break. Even breathing feels careful.",
-    "description_text": "{actor} carries a steady heaviness—eyes duller, movements slowed and deliberate. Their face holds sadness without spectacle; the body seems to conserve motion, as if every gesture costs more than it should.",
+    "actor_description": "The grief isn't sharp anymore. It's weight. It sits behind my sternum and in my throat, turning everything quieter. My thoughts move slowly, like they're wading. I don't even have the energy for drama. The loss is simply there-an ache that keeps its own hours. I notice myself handling the world more gently, as if one wrong touch could make something else break. Even breathing feels careful.",
+    "description_text": "{actor} carries a steady heaviness-eyes duller, movements slowed and deliberate. Their face holds sadness without spectacle; the body seems to conserve motion, as if every gesture costs more than it should.",
     "alternate_descriptions": {
-        "auditory": "I hear a thick quiet—one slow breath, a small exhale that sounds like giving up on words.",
+        "auditory": "I hear a thick quiet-one slow breath, a small exhale that sounds like giving up on words.",
         "tactile": "Someone's presence feels weighted and still, like someone holding something they can't set down."
     },
     "tags": [

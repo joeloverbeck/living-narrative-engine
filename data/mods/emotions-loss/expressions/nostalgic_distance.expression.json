@@ -1,20 +1,44 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-loss:nostalgic_distance",
-    "description": "A low-energy, inward drift into bittersweet reminiscence—present focus softens while the past feels closer than the room.",
-    "actor_description": "I slip a little out of the present without meaning to. The past comes up with surprising texture—close enough to almost touch—while the now goes slightly quiet and far away. It isn’t exactly painful, but it tugs, heavy in a familiar place behind my ribs. I can move and speak, but there’s a delay, like I’m answering from a step back.",
-    "description_text": "{actor} grows quieter and more inward, gaze unfocusing as if watching something that isn’t in the room. Their movements slow and soften; responses arrive a beat late, wrapped in a faint, distant half-smile or a shadowed look.",
+    "description": "A low-energy, inward drift into bittersweet reminiscence-present focus softens while the past feels closer than the room.",
+    "actor_description": "I slip a little out of the present without meaning to. The past comes up with surprising texture-close enough to almost touch-while the now goes slightly quiet and far away. It isn't exactly painful, but it tugs, heavy in a familiar place behind my ribs. I can move and speak, but there's a delay, like I'm answering from a step back.",
+    "description_text": "{actor} grows quieter and more inward, gaze unfocusing as if watching something that isn't in the room. Their movements slow and soften; responses arrive a beat late, wrapped in a faint, distant half-smile or a shadowed look.",
     "priority": 68,
     "prerequisites": [
         {
             "logic": {
                 "and": [
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "emotions.nostalgia"
+                                ">=": [
+                                    {
+                                        "var": "emotions.nostalgia"
+                                    },
+                                    0.55
+                                ]
                             },
-                            0.55
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.nostalgia"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
                     },
                     {
@@ -116,17 +140,32 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a notable nostalgia rise plus low arousal and moderate absorption (inward drift). Capped grief/despair to keep it bittersweet instead of collapse."
+            "failure_message": "Bittersweet reminiscence: nostalgia-driven inward drift with low arousal and moderate absorption. Lonely-yearning can ‘pull' this state on with a smaller nostalgia baseline, and a lonely-yearning surge can serve as the change-gate."
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear {actor}'s voice soften and slow, with small pauses like they’re choosing words from farther away than usual.",
-        "tactile": "There’s a subtle slackening in {actor}'s energy—shoulders easing, movements losing urgency—like the room’s edges have gone slightly dull.",
+        "auditory": "I hear {actor}'s voice soften and slow, with small pauses like they're choosing words from farther away than usual.",
+        "tactile": "There's a subtle slackening in {actor}'s energy-shoulders easing, movements losing urgency-like the room's edges have gone slightly dull.",
         "limited": "{actor} seems distracted, attention turned inward for a moment."
     },
     "tags": [
@@ -138,5 +177,5 @@
         "bittersweet",
         "withdrawal"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "rare"
 }

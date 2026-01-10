@@ -197,6 +197,29 @@ describe('InMemoryDataRegistry Convenience Methods', () => {
     });
   });
 
+  describe('Lookup methods', () => {
+    it('should store and retrieve lookup data using convenience method', () => {
+      const lookupData = {
+        entries: {
+          joy: { gates: [], weights: { arousal: 0.7 } },
+          sadness: { gates: [], weights: { arousal: -0.3 } },
+        },
+      };
+      registry.store('lookups', 'core:emotion_prototypes', lookupData);
+
+      expect(registry.getLookupData('core:emotion_prototypes')).toBe(lookupData);
+    });
+
+    it('should return undefined for non-existent lookup', () => {
+      expect(registry.getLookupData('nonexistent:lookup')).toBeUndefined();
+    });
+
+    it('should propagate errors for invalid parameters', () => {
+      expect(() => registry.getLookupData('')).toThrow();
+      expect(() => registry.getLookupData(null)).toThrow();
+    });
+  });
+
   describe('Cross-type isolation', () => {
     it('should maintain isolation between different data types', () => {
       const worldData = { name: 'Test World' };

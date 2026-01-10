@@ -6,6 +6,8 @@
  * @see specs/expression-diagnostics.md
  */
 
+import { STATUS_THEME } from '../statusTheme.js';
+
 /**
  * @typedef {'impossible' | 'extremely_rare' | 'rare' | 'normal' | 'frequent'} RarityCategory
  */
@@ -72,17 +74,26 @@ const RARITY_CATEGORIES = Object.freeze({
 
 /**
  * UI status indicators for each rarity category.
+ * Derived from the centralized STATUS_THEME.
+ * Maintains backward compatibility with `.color` returning color name strings.
  *
- * @type {Readonly<{[key: string]: {color: string, emoji: string, label: string}}>}
+ * @type {Readonly<{[key: string]: {color: string, emoji: string, label: string, fillColor: string, backgroundColor: string, textColor: string}}>}
  */
-const STATUS_INDICATORS = Object.freeze({
-  unknown: { color: 'gray', emoji: '⚪', label: 'Unknown' },
-  impossible: { color: 'red', emoji: '🔴', label: 'Impossible' },
-  extremely_rare: { color: 'orange', emoji: '🟠', label: 'Extremely Rare' },
-  rare: { color: 'yellow', emoji: '🟡', label: 'Rare' },
-  normal: { color: 'green', emoji: '🟢', label: 'Normal' },
-  frequent: { color: 'blue', emoji: '🔵', label: 'Frequent' },
-});
+const STATUS_INDICATORS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(STATUS_THEME).map(([key, theme]) => [
+      key,
+      Object.freeze({
+        color: theme.colorName, // Backward compatible: 'red', 'green', etc.
+        emoji: theme.emoji,
+        label: theme.label,
+        fillColor: theme.fill, // Hex for programmatic use
+        backgroundColor: theme.background, // Hex for programmatic use
+        textColor: theme.text, // Hex for programmatic use
+      }),
+    ])
+  )
+);
 
 /**
  * Unified result model aggregating output from all diagnostic layers.
@@ -435,6 +446,35 @@ class DiagnosticResult {
         this.#isImpossible = true;
         this.#impossibilityReason = 'SMT solver proved impossibility';
       }
+    }
+
+    return this;
+  }
+
+  /**
+   * Set path-sensitive analysis results.
+   * This method can override impossibility determined by non-path-sensitive analysis
+   * if the path-sensitive analysis finds at least one feasible branch.
+   *
+   * @param {object} pathSensitiveResult - Path-sensitive analysis result.
+   * @param {string} pathSensitiveResult.overallStatus - 'fully_reachable', 'partially_reachable', or 'unreachable'.
+   * @param {number} pathSensitiveResult.feasibleBranchCount - Number of feasible branches.
+   * @param {number} pathSensitiveResult.branchCount - Total number of branches.
+   * @returns {DiagnosticResult} This instance for chaining.
+   */
+  setPathSensitiveResults(pathSensitiveResult) {
+    if (!pathSensitiveResult) {
+      return this;
+    }
+
+    // If path-sensitive analysis found feasible branches, clear impossibility
+    // that was set by non-path-sensitive global analysis
+    if (
+      pathSensitiveResult.overallStatus !== 'unreachable' &&
+      pathSensitiveResult.feasibleBranchCount > 0
+    ) {
+      this.#isImpossible = false;
+      this.#impossibilityReason = null;
     }
 
     return this;

@@ -1,80 +1,127 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-threat-response:startle_flinch",
-  "description": "Sudden startle response triggered by rapid increase in surprise/startle emotion",
-  "priority": 78,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.surprise_startle"
-              },
-              0.55
-            ]
-          },
-          {
-            ">=": [
-              {
-                "-": [
-                  {
-                    "var": "emotions.surprise_startle"
-                  },
-                  {
-                    "var": "previousEmotions.surprise_startle"
-                  }
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-threat-response:startle_flinch",
+    "description": "Sudden startle response triggered by rapid increase in surprise/startle emotion",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.surprise_startle"
+                                            },
+                                            {
+                                                "var": "previousEmotions.surprise_startle"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "max": [
+                                            {
+                                                "var": "emotions.alarm"
+                                            },
+                                            {
+                                                "var": "emotions.fear"
+                                            }
+                                        ]
+                                    },
+                                    0.15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    }
                 ]
-              },
-              0.25
-            ]
-          },
-          {
-            ">=": [
-              {
-                "max": [
-                  {
-                    "var": "emotions.alarm"
-                  },
-                  {
-                    "var": "emotions.fear"
-                  }
-                ]
-              },
-              0.20
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.45
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.15
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires a sharp startle spike with at least mild alarm/fear (not purely positive surprise), stays below active panic so the momentary flinch doesn’t undercut a larger spiral, and excludes freeze so sustained immobility isn’t mislabeled as a flinch."
-    }
-  ],
-  "actor_description": "My body jumps before my mind catches up—sharp inhale, shoulders snapping up, hands rising like a shield. For a beat my heart is a fist in my chest and I'm already halfway into defend / run. Then the world resolves and I'm left standing in the echo of the reflex, embarrassed at how fast it took me.",
-  "description_text": "{actor} flinches hard—shoulders jerking up, hands flashing into a guard, eyes wide as they snap toward the source. The reaction is instant and involuntary, like a wire got yanked.",
-  "alternate_descriptions": {
-    "auditory": "I hear a sharp gasp—then a quick scuff or stumble, something bumped or grabbed too fast."
-  },
-  "tags": [
-    "startle",
-    "flinch",
-    "surprise",
-    "reactive"
-  ]
+            },
+            "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Excludes high panic/freeze so a brief flinch doesn’t mislabel a larger spiral or immobility response."
+        }
+    ],
+    "actor_description": "My body jumps before my mind catches up-sharp inhale, shoulders snapping up, hands rising like a shield. For a beat my heart is a fist in my chest and I'm already halfway into defend / run. Then the world resolves and I'm left standing in the echo of the reflex, embarrassed at how fast it took me.",
+    "description_text": "{actor} flinches hard-shoulders jerking up, hands flashing into a guard, eyes wide as they snap toward the source. The reaction is instant and involuntary, like a wire got yanked.",
+    "alternate_descriptions": {
+        "auditory": "I hear a sharp gasp-then a quick scuff or stumble, something bumped or grabbed too fast."
+    },
+    "tags": [
+        "startle",
+        "flinch",
+        "surprise",
+        "reactive"
+    ],
+    "diagnosticStatus": "normal"
 }

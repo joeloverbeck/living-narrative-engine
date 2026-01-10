@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-moral:lingering_guilt",
-    "description": "Moderate, non-spiking guilt—an apologetic, sheepish self-consciousness after a minor mistake",
+    "description": "Moderate, non-spiking guilt-an apologetic, sheepish self-consciousness after a minor mistake",
     "priority": 55,
     "prerequisites": [
         {
@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.guilt"
                             },
-                            0.35
+                            0.4
                         ]
                     },
                     {
@@ -20,7 +20,7 @@
                             {
                                 "var": "emotions.guilt"
                             },
-                            0.75
+                            0.7
                         ]
                     },
                     {
@@ -28,7 +28,55 @@
                             {
                                 "var": "emotions.regret"
                             },
-                            0.25
+                            0.18
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "previousEmotions.guilt"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
                         ]
                     },
                     {
@@ -36,7 +84,7 @@
                             {
                                 "var": "emotions.shame"
                             },
-                            0.55
+                            0.5
                         ]
                     },
                     {
@@ -44,7 +92,7 @@
                             {
                                 "var": "emotions.humiliation"
                             },
-                            0.25
+                            0.2
                         ]
                     },
                     {
@@ -66,13 +114,20 @@
                     {
                         "<=": [
                             {
-                                "var": "moodAxes.self_evaluation"
+                                "-": [
+                                    {
+                                        "var": "emotions.guilt"
+                                    },
+                                    {
+                                        "var": "previousEmotions.guilt"
+                                    }
+                                ]
                             },
-                            -10
+                            0.06
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
                                 "-": [
                                     {
@@ -83,38 +138,18 @@
                                     }
                                 ]
                             },
-                            0.08
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "previousEmotions.guilt"
-                                    },
-                                    0.3
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.guilt"
-                                    },
-                                    0.55
-                                ]
-                            }
+                            -0.06
                         ]
                     }
                 ]
             }
         }
     ],
-    "actor_description": "It's still there—the same scene, the same fork in the road, the same version of me that chose wrong or froze. It doesn't flare up; it just sits in me, steady as a stone, and my mind keeps worrying it like a sore tooth. I catch myself editing imaginary conversations, rehearsing apologies I'll never deliver. My stomach stays tight; my throat feels crowded, like my body is trying to make me smaller in advance of judgment.",
-    "description_text": "{actor} moves with a faint hesitation, as if checking their own right to occupy space. Their gaze slips away at the wrong moments; shoulders hold a quiet tension. Hands hover, fidget, then still—an awkwardness that reads less like fear and more like self-reproach.",
+    "actor_description": "It's still there-the same scene, the same fork in the road, the same version of me that chose wrong or froze. It doesn't flare up; it just sits in me, steady as a stone, and my mind keeps worrying it like a sore tooth. I catch myself editing imaginary conversations, rehearsing apologies I'll never deliver. My stomach stays tight; my throat feels crowded, like my body is trying to make me smaller in advance of judgment.",
+    "description_text": "{actor} moves with a faint hesitation, as if checking their own right to occupy space. Their gaze slips away at the wrong moments; shoulders hold a quiet tension. Hands hover, fidget, then still-an awkwardness that reads less like fear and more like self-reproach.",
     "alternate_descriptions": {
-        "auditory": "Words start and stop. There are pauses that don't feel thoughtful—more like someone swallowing what they meant to say. A small sigh repeats, the kind that sounds like an apology with no audience.",
-        "tactile": "A body holds itself guarded—muscles tight in the shoulders, a careful stillness, like someone bracing to be blamed even if nobody's speaking."
+        "auditory": "Words start and stop. There are pauses that don't feel thoughtful-more like someone swallowing what they meant to say. A small sigh repeats, the kind that sounds like an apology with no audience.",
+        "tactile": "A body holds itself guarded-muscles tight in the shoulders, a careful stillness, like someone bracing to be blamed even if nobody's speaking."
     },
     "tags": [
         "guilt",
@@ -123,5 +158,5 @@
         "minor_mistake",
         "lingering"
     ],
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "normal"
 }

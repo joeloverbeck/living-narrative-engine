@@ -307,9 +307,13 @@ class WitnessStateFinder {
     for (const axis of WitnessState.MOOD_AXES) {
       if (Math.random() < 0.5) {
         const delta = (Math.random() - 0.5) * 2 * magnitude;
-        mood[axis] = Math.max(
-          WitnessState.MOOD_RANGE.min,
-          Math.min(WitnessState.MOOD_RANGE.max, mood[axis] + delta)
+        const rawValue = mood[axis] + delta;
+        // Round to integer and clamp to valid range
+        mood[axis] = Math.round(
+          Math.max(
+            WitnessState.MOOD_RANGE.min,
+            Math.min(WitnessState.MOOD_RANGE.max, rawValue)
+          )
         );
       }
     }
@@ -318,7 +322,11 @@ class WitnessStateFinder {
       if (Math.random() < 0.5) {
         const range = WitnessState.SEXUAL_RANGES[axis];
         const delta = (Math.random() - 0.5) * 2 * magnitude;
-        sexual[axis] = Math.max(range.min, Math.min(range.max, sexual[axis] + delta));
+        const rawValue = sexual[axis] + delta;
+        // Round to integer and clamp to valid range
+        sexual[axis] = Math.round(
+          Math.max(range.min, Math.min(range.max, rawValue))
+        );
       }
     }
 

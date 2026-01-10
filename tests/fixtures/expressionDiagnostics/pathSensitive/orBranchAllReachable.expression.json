@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "test:orBranchAllReachable",
+  "description": "Test expression where all OR branches have reachable thresholds with no gate conflicts",
+  "prerequisites": [
+    {
+      "logic": {
+        "or": [
+          { ">=": [{ "var": "emotions.joy" }, 0.3] },
+          { ">=": [{ "var": "emotions.contentment" }, 0.3] },
+          { ">=": [{ "var": "emotions.serenity" }, 0.3] }
+        ]
+      }
+    }
+  ],
+  "effects": []
+}

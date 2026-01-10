@@ -113,7 +113,7 @@ class PromptTextLoader extends AbstractLoader {
 
     this.#dataRegistry.store('prompt_text', 'core', data);
     this._logger.debug(
-      'PromptTextLoader: Stored prompt text under type \u2018prompt_text\u2019 with id \u2018core\u2019.'
+      "PromptTextLoader: Stored prompt text under type 'prompt_text' with id 'core'."
     );
 
     return data;

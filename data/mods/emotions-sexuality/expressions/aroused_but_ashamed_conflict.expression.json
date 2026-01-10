@@ -125,7 +125,7 @@
                     }
                 ]
             },
-            "failure_message": "Arousal-with-shame plus negative self-evaluation and mild threat, with social-freeze—explicitly capped below panic so it reads as 'caught/embarrassed,' not 'threat-collapse.'"
+            "failure_message": "Arousal-with-shame plus negative self-evaluation and mild threat, with social-freeze-explicitly capped below panic so it reads as 'caught/embarrassed,' not 'threat-collapse.'"
         },
         {
             "logic": {
@@ -187,11 +187,11 @@
             }
         }
     ],
-    "actor_description": "My body responds before I can argue with it—heat low in my belly, breath tightening, attention snapping to every nerve. And then shame rushes in like a spotlight: Not this. Not like this. Not me. I try to shut it down by sheer will—by looking away, by holding still, by thinking of anything else—while the wanting keeps pressing forward under my skin, stubborn and alive.",
-    "description_text": "{actor} gives off mixed signals in the same breath—flushed skin and quickened breathing paired with guarded posture and avoidance. They half-turn toward what they want and then correct themself, tightening up as if they've been caught. Their hands keep finding 'cover' gestures—crossed arms, fidgeting at clothing, a sudden insistence on distance.",
+    "actor_description": "My body responds before I can argue with it-heat low in my belly, breath tightening, attention snapping to every nerve. And then shame rushes in like a spotlight: Not this. Not like this. Not me. I try to shut it down by sheer will-by looking away, by holding still, by thinking of anything else-while the wanting keeps pressing forward under my skin, stubborn and alive.",
+    "description_text": "{actor} gives off mixed signals in the same breath-flushed skin and quickened breathing paired with guarded posture and avoidance. They half-turn toward what they want and then correct themself, tightening up as if they've been caught. Their hands keep finding 'cover' gestures-crossed arms, fidgeting at clothing, a sudden insistence on distance.",
     "alternate_descriptions": {
-        "auditory": "I hear breathing go uneven, a sound that starts and gets swallowed, the too-quick pause before any word—as if speech itself feels exposing.",
-        "olfactory": "I smell warm skin and nervous sweat—clean heat edged with anxiety, like embarrassment made physical."
+        "auditory": "I hear breathing go uneven, a sound that starts and gets swallowed, the too-quick pause before any word-as if speech itself feels exposing.",
+        "olfactory": "I smell warm skin and nervous sweat-clean heat edged with anxiety, like embarrassment made physical."
     },
     "tags": [
         "arousal",
