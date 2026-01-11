@@ -72,6 +72,10 @@ const TRAIT_RANGE = Object.freeze({ min: 0, max: 100 });
  * Represents a satisfying state (witness) that causes an expression to trigger.
  * A witness state contains concrete mood axis values and sexual state values that,
  * when applied, would make the expression fire.
+ *
+ * For temporal expressions that compare current vs previous state, the witness
+ * also contains optional previousMood and previousSexual values representing
+ * the state before the transition.
  */
 class WitnessState {
   /** @type {MoodState} */
@@ -92,13 +96,21 @@ class WitnessState {
   /** @type {AffectTraitsState} */
   #affectTraits;
 
+  /** @type {MoodState|null} */
+  #previousMood;
+
+  /** @type {SexualState|null} */
+  #previousSexual;
+
   /**
    * Creates a new WitnessState instance.
    *
    * @param {object} params - Constructor parameters
-   * @param {MoodState} params.mood - Mood axis values
-   * @param {SexualState} params.sexual - Sexual axis values
+   * @param {MoodState} params.mood - Mood axis values (current state)
+   * @param {SexualState} params.sexual - Sexual axis values (current state)
    * @param {AffectTraitsState} [params.affectTraits] - Affect trait values (optional, defaults to 50)
+   * @param {MoodState} [params.previousMood] - Previous mood axis values (for temporal expressions)
+   * @param {SexualState} [params.previousSexual] - Previous sexual axis values (for temporal expressions)
    * @param {number} [params.fitness] - How well this state satisfies (1 = perfect)
    * @param {boolean} [params.isExact] - True if exact witness, false if nearest miss
    * @param {string|null} [params.expressionId] - The expression this witnesses
@@ -107,6 +119,8 @@ class WitnessState {
     mood,
     sexual,
     affectTraits = null,
+    previousMood = null,
+    previousSexual = null,
     fitness = 1,
     isExact = true,
     expressionId = null,
@@ -122,9 +136,26 @@ class WitnessState {
     };
     this.#validateAffectTraits(traitsToUse);
 
+    // Validate previous state if provided - both must be present or both absent
+    const hasPrevMood = previousMood !== null;
+    const hasPrevSexual = previousSexual !== null;
+    if (hasPrevMood !== hasPrevSexual) {
+      throw new Error(
+        'previousMood and previousSexual must both be provided or both be null'
+      );
+    }
+    if (previousMood !== null) {
+      this.#validateMood(previousMood);
+    }
+    if (previousSexual !== null) {
+      this.#validateSexual(previousSexual);
+    }
+
     this.#mood = { ...mood };
     this.#sexual = { ...sexual };
     this.#affectTraits = { ...traitsToUse };
+    this.#previousMood = previousMood ? { ...previousMood } : null;
+    this.#previousSexual = previousSexual ? { ...previousSexual } : null;
     this.#fitness = fitness;
     this.#isExact = isExact;
     this.#expressionId = expressionId;
@@ -148,6 +179,21 @@ class WitnessState {
   }
   get affectTraits() {
     return { ...this.#affectTraits };
+  }
+  get previousMood() {
+    return this.#previousMood ? { ...this.#previousMood } : null;
+  }
+  get previousSexual() {
+    return this.#previousSexual ? { ...this.#previousSexual } : null;
+  }
+
+  /**
+   * Check if this witness contains previous state data (for temporal expressions).
+   *
+   * @returns {boolean} True if previousMood and previousSexual are set.
+   */
+  get hasPreviousState() {
+    return this.#previousMood !== null && this.#previousSexual !== null;
   }
 
   /**
@@ -196,19 +242,66 @@ class WitnessState {
    * @param {object} [changes.mood] - Mood values to override.
    * @param {object} [changes.sexual] - Sexual values to override.
    * @param {object} [changes.affectTraits] - Trait values to override.
+   * @param {object} [changes.previousMood] - Previous mood values to override.
+   * @param {object} [changes.previousSexual] - Previous sexual values to override.
    * @param {number} [changes.fitness] - New fitness value.
    * @param {boolean} [changes.isExact] - New isExact value.
    * @param {string|null} [changes.expressionId] - New expressionId value.
    * @returns {WitnessState} A new WitnessState with the specified changes.
    */
   withChanges(changes) {
+    // Handle previousMood: use changes if explicitly provided (including null), else keep current
+    let newPreviousMood;
+    if (Object.prototype.hasOwnProperty.call(changes, 'previousMood')) {
+      newPreviousMood = changes.previousMood
+        ? { ...(this.#previousMood || {}), ...changes.previousMood }
+        : changes.previousMood;
+    } else {
+      newPreviousMood = this.#previousMood ? { ...this.#previousMood } : null;
+    }
+
+    // Handle previousSexual: use changes if explicitly provided (including null), else keep current
+    let newPreviousSexual;
+    if (Object.prototype.hasOwnProperty.call(changes, 'previousSexual')) {
+      newPreviousSexual = changes.previousSexual
+        ? { ...(this.#previousSexual || {}), ...changes.previousSexual }
+        : changes.previousSexual;
+    } else {
+      newPreviousSexual = this.#previousSexual
+        ? { ...this.#previousSexual }
+        : null;
+    }
+
     return new WitnessState({
       mood: { ...this.#mood, ...(changes.mood || {}) },
       sexual: { ...this.#sexual, ...(changes.sexual || {}) },
       affectTraits: { ...this.#affectTraits, ...(changes.affectTraits || {}) },
+      previousMood: newPreviousMood,
+      previousSexual: newPreviousSexual,
       fitness: changes.fitness ?? this.#fitness,
       isExact: changes.isExact ?? this.#isExact,
       expressionId: changes.expressionId ?? this.#expressionId,
+    });
+  }
+
+  /**
+   * Create a new WitnessState with added previous state data.
+   * Useful for converting a non-temporal witness into a temporal one.
+   *
+   * @param {MoodState} previousMood - Previous mood state values.
+   * @param {SexualState} previousSexual - Previous sexual state values.
+   * @returns {WitnessState} A new WitnessState with the same current state and the added previous state.
+   */
+  withPreviousState(previousMood, previousSexual) {
+    return new WitnessState({
+      mood: { ...this.#mood },
+      sexual: { ...this.#sexual },
+      affectTraits: { ...this.#affectTraits },
+      previousMood: { ...previousMood },
+      previousSexual: { ...previousSexual },
+      fitness: this.#fitness,
+      isExact: this.#isExact,
+      expressionId: this.#expressionId,
     });
   }
 
@@ -230,7 +323,23 @@ class WitnessState {
       (axis) => `  ${axis}: ${this.#affectTraits[axis]?.toFixed(1) ?? 'N/A'}`
     ).join('\n');
 
-    return `Mood:\n${moodLines}\n\nSexual:\n${sexualLines}\n\nAffect Traits:\n${traitLines}`;
+    let result = `Current State:\n\nMood:\n${moodLines}\n\nSexual:\n${sexualLines}\n\nAffect Traits:\n${traitLines}`;
+
+    // Include previous state if present
+    if (this.hasPreviousState) {
+      const prevMoodLines = MOOD_AXES.map(
+        (axis) => `  ${axis}: ${this.#previousMood[axis]?.toFixed(1) ?? 'N/A'}`
+      ).join('\n');
+
+      const prevSexualLines = SEXUAL_AXES.map(
+        (axis) =>
+          `  ${axis}: ${this.#previousSexual[axis]?.toFixed(1) ?? 'N/A'}`
+      ).join('\n');
+
+      result += `\n\n--- Previous State ---\n\nMood:\n${prevMoodLines}\n\nSexual:\n${prevSexualLines}`;
+    }
+
+    return result;
   }
 
   /**
@@ -239,7 +348,7 @@ class WitnessState {
    * @returns {object} JSON representation including all fields.
    */
   toJSON() {
-    return {
+    const json = {
       mood: { ...this.#mood },
       sexual: { ...this.#sexual },
       affectTraits: { ...this.#affectTraits },
@@ -247,29 +356,55 @@ class WitnessState {
       isExact: this.#isExact,
       expressionId: this.#expressionId,
     };
+
+    // Include previous state if present
+    if (this.#previousMood !== null) {
+      json.previousMood = { ...this.#previousMood };
+    }
+    if (this.#previousSexual !== null) {
+      json.previousSexual = { ...this.#previousSexual };
+    }
+
+    return json;
   }
 
   /**
    * Convert to compact JSON for clipboard.
+   * For non-temporal states, uses flat structure (mood, sexual, affectTraits).
+   * For temporal states, uses nested structure (current, previous, affectTraits).
    *
-   * @returns {string} JSON string containing mood, sexual, and trait values.
+   * @returns {string} JSON string containing mood, sexual, trait, and optional previous state values.
    */
   toClipboardJSON() {
-    return JSON.stringify(
-      {
-        mood: this.#mood,
-        sexual: this.#sexual,
+    // For temporal expressions with previous state, use nested structure
+    if (this.hasPreviousState) {
+      const obj = {
+        current: {
+          mood: this.#mood,
+          sexual: this.#sexual,
+        },
+        previous: {
+          mood: this.#previousMood,
+          sexual: this.#previousSexual,
+        },
         affectTraits: this.#affectTraits,
-      },
-      null,
-      2
-    );
+      };
+      return JSON.stringify(obj, null, 2);
+    }
+
+    // For non-temporal states, maintain backward-compatible flat structure
+    const obj = {
+      mood: this.#mood,
+      sexual: this.#sexual,
+      affectTraits: this.#affectTraits,
+    };
+    return JSON.stringify(obj, null, 2);
   }
 
   /**
    * Create from JSON.
    *
-   * @param {object} json - JSON object with mood, sexual, and optionally affectTraits properties.
+   * @param {object} json - JSON object with mood, sexual, and optionally affectTraits, previousMood, previousSexual properties.
    * @returns {WitnessState} A new WitnessState reconstructed from JSON.
    */
   static fromJSON(json) {
@@ -277,6 +412,8 @@ class WitnessState {
       mood: json.mood,
       sexual: json.sexual,
       affectTraits: json.affectTraits ?? null, // Will use defaults if null
+      previousMood: json.previousMood ?? null,
+      previousSexual: json.previousSexual ?? null,
       fitness: json.fitness ?? 1,
       isExact: json.isExact ?? true,
       expressionId: json.expressionId ?? null,
@@ -316,6 +453,113 @@ class WitnessState {
       mood,
       sexual,
       affectTraits,
+      fitness: 0,
+      isExact: false,
+    });
+  }
+
+  /**
+   * Sample a Gaussian-distributed value using Box-Muller transform.
+   *
+   * @private
+   * @param {number} sigma - Standard deviation
+   * @returns {number} Gaussian-distributed value with mean 0
+   */
+  static #sampleGaussianDelta(sigma) {
+    // Box-Muller transform for Gaussian sampling
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return z0 * sigma;
+  }
+
+  /**
+   * Create a random state pair with correlated previous and current states.
+   * Previous state is generated randomly, current state is derived by adding
+   * Gaussian deltas. This enables "persistence-style" expressions that check
+   * previousEmotions, previousMoodAxes, or delta magnitudes.
+   *
+   * Uses the same sigma values as MonteCarloSimulator:
+   * - Mood delta: σ=15 (~15% of full range)
+   * - Sexual delta: σ=12 for excitation/inhibition, σ=8 for libido
+   *
+   * @returns {WitnessState} A new WitnessState with both current and previous state values.
+   */
+  static createRandomPair() {
+    const MOOD_DELTA_SIGMA = 15;
+    const SEXUAL_DELTA_SIGMA = 12;
+    const LIBIDO_DELTA_SIGMA = 8;
+
+    // Generate previous state (fully random)
+    const previousMood = {};
+    const previousSexual = {};
+    const affectTraits = {};
+
+    for (const axis of MOOD_AXES) {
+      const rawValue =
+        MOOD_RANGE.min + Math.random() * (MOOD_RANGE.max - MOOD_RANGE.min);
+      previousMood[axis] = Math.round(rawValue);
+    }
+
+    for (const axis of SEXUAL_AXES) {
+      const range = SEXUAL_RANGES[axis];
+      const rawValue = range.min + Math.random() * (range.max - range.min);
+      previousSexual[axis] = Math.round(rawValue);
+    }
+
+    // Generate affect traits (stable - same for both states)
+    for (const axis of AFFECT_TRAIT_AXES) {
+      const rawValue =
+        TRAIT_RANGE.min + Math.random() * (TRAIT_RANGE.max - TRAIT_RANGE.min);
+      affectTraits[axis] = Math.round(rawValue);
+    }
+
+    // Generate current state as previous + gaussian delta (correlated temporal states)
+    const currentMood = {};
+    const currentSexual = {};
+
+    // Mood deltas
+    for (const axis of MOOD_AXES) {
+      const delta = WitnessState.#sampleGaussianDelta(MOOD_DELTA_SIGMA);
+      const raw = previousMood[axis] + delta;
+      currentMood[axis] = Math.round(
+        Math.max(MOOD_RANGE.min, Math.min(MOOD_RANGE.max, raw))
+      );
+    }
+
+    // Sexual state deltas
+    const excitationDelta =
+      WitnessState.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
+    currentSexual.sex_excitation = Math.round(
+      Math.max(
+        0,
+        Math.min(100, previousSexual.sex_excitation + excitationDelta)
+      )
+    );
+
+    const inhibitionDelta =
+      WitnessState.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
+    currentSexual.sex_inhibition = Math.round(
+      Math.max(
+        0,
+        Math.min(100, previousSexual.sex_inhibition + inhibitionDelta)
+      )
+    );
+
+    const libidoDelta = WitnessState.#sampleGaussianDelta(LIBIDO_DELTA_SIGMA);
+    currentSexual.baseline_libido = Math.round(
+      Math.max(
+        -50,
+        Math.min(50, previousSexual.baseline_libido + libidoDelta)
+      )
+    );
+
+    return new WitnessState({
+      mood: currentMood,
+      sexual: currentSexual,
+      affectTraits,
+      previousMood,
+      previousSexual,
       fitness: 0,
       isExact: false,
     });

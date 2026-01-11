@@ -1,0 +1,213 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-trust-distrust:guard_lowering",
+  "description": "Guard lowering: trust takes the wheel and the body stops bracing—softening into openness without tipping into helpless surrender.",
+  "actor_description": "Something in me unclenches like I’ve been holding my breath for hours. My thoughts stop rehearsing worst-cases and start moving in longer, calmer lines. I feel my shoulders drop, my jaw loosen, and the urge to scan fades into a quiet willingness to be seen. It’s not naïve—I just don’t feel the need to armor every second.",
+  "description_text": "{actor} visibly softens—posture easing, shoulders lowering, gaze less guarded. Their voice steadies and their attention stops darting, as if they’ve decided it’s safe enough to be open for a moment.",
+  "priority": 72,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            "or": [
+              {
+                "and": [
+                  {
+                    "<": [
+                      {
+                        "var": "previousEmotions.trust"
+                      },
+                      0.55
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.trust"
+                      },
+                      0.55
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    "<": [
+                      {
+                        "var": "previousEmotions.trusting_surrender"
+                      },
+                      0.55
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.trusting_surrender"
+                      },
+                      0.55
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.protest_anger"
+              },
+              0.35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              20
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.affiliation"
+              },
+              10
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              -15
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.suspicion"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.anxiety"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.shame"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.humiliation"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.anger"
+              },
+              0.5
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.contempt"
+              },
+              0.35
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.trust"
+                      },
+                      {
+                        "var": "previousEmotions.trust"
+                      }
+                    ]
+                  },
+                  0.1
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "emotions.trusting_surrender"
+                      },
+                      {
+                        "var": "previousEmotions.trusting_surrender"
+                      }
+                    ]
+                  },
+                  0.1
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "-": [
+                      {
+                        "var": "previousMoodAxes.threat"
+                      },
+                      {
+                        "var": "moodAxes.threat"
+                      }
+                    ]
+                  },
+                  12
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "Requires trust (or trusting_surrender) crossing into a clear-on state, grounded by low threat + affiliative warmth and soft arousal. Blocks suspicion/anxiety, shame/humiliation, and anger/contempt so it reads as genuine easing—not paranoia, self-protection, or hostility. Triggers only on a trust spike or a meaningful threat drop to prevent spam."
+    }
+  ],
+  "alternate_descriptions": {
+    "auditory": "I hear the exhale first—long and quiet—then speech that stops sounding rehearsed and starts sounding present.",
+    "tactile": "The air feels less sharp; there’s a loosening in the space between movements, like someone’s hands finally unclasped.",
+    "limited": "I can’t name why, but the tension drains out of me and I stop bracing for impact."
+  },
+  "tags": [
+    "trust",
+    "guard_lowering",
+    "softening",
+    "openness",
+    "safety_shift",
+    "affiliation",
+    "de-escalation"
+  ],
+  "diagnosticStatus": "unknown"
+}

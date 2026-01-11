@@ -18,6 +18,7 @@ describe('LLM Output Validation Pipeline Integration', () => {
     engagement: 20,
     future_expectancy: 10,
     self_evaluation: 5,
+    affiliation: 5,
   };
   const baseSexualUpdate = {
     sex_excitation: 10,

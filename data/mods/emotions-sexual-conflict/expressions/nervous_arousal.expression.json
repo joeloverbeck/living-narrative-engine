@@ -1,203 +1,203 @@
 {
-    "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions-sexual-conflict:nervous_arousal",
-    "description": "Sexual performance anxiety: arousal present alongside threat/anxiety and low perceived control/self-evaluation, expressed as fidgety, hesitant excitement.",
-    "priority": 83,
-    "prerequisites": [
-        {
-            "logic": {
-                "and": [
-                    {
-                        ">=": [
-                            {
-                                "var": "sexualStates.sexual_performance_anxiety"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "sexualArousal"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            65
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.affiliation"
-                            },
-                            -20
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.self_evaluation"
-                            },
-                            0
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.2
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.7
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.anxiety"
-                                    },
-                                    0.35
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.unease"
-                                    },
-                                    0.4
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.awkwardness"
-                                    },
-                                    0.35
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "sexualStates.sexual_confidence"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "sexualStates.sexual_indifference"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.terror"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.fear"
-                            },
-                            0.65
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "sexualStates.aroused_with_shame"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.1
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "sexualStates.sexual_performance_anxiety"
-                                    },
-                                    {
-                                        "var": "previousSexualStates.sexual_performance_anxiety"
-                                    }
-                                ]
-                            },
-                            0.1
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "previousSexualStates.sexual_performance_anxiety"
-                            },
-                            0.62
-                        ]
-                    }
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-sexual-conflict:nervous_arousal",
+  "description": "Sexual performance anxiety: arousal present alongside threat/anxiety and low perceived control/self-evaluation, expressed as fidgety, hesitant excitement.",
+  "priority": 83,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "sexualStates.sexual_performance_anxiety"
+              },
+              0.55
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "sexualArousal"
+              },
+              0.35
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.threat"
+              },
+              65
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.affiliation"
+              },
+              -20
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.agency_control"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.self_evaluation"
+              },
+              0
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.freeze"
+              },
+              0.2
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.freeze"
+              },
+              0.7
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.anxiety"
+                  },
+                  0.35
                 ]
-            },
-            "failure_message": "Performance anxiety with social-threat range + low control/self-evaluation, and not strongly hostile/detached; capped below panic so it stays fluttery/awkward rather than spiraling."
-        }
-    ],
-    "actor_description": "My body is ahead of me-heat, pulse, wanting-while my mind keeps tapping the brakes. What if I mess this up? What if they notice too much? I can feel myself monitoring everything at once: breath, hands, the space between us, what my face is doing. The desire doesn't vanish-it sharpens-but it comes laced with a thin panic, like standing too close to an edge. I want to lean in, and in the same instant I'm already rehearsing how to retreat.",
-    "description_text": "{actor} looks charged and guarded at the same time-breathing quick, pupils wide, but posture held back. They fidget with their hands or clothing, offering a half-step forward and then pausing as if reconsidering. Their gaze keeps flicking between connection and escape, and their expressions arrive slightly delayed, like they're second-guessing themselves mid-moment.",
-    "alternate_descriptions": {
-        "auditory": "I hear uneven breathing-fast, then held-plus a small, uncertain laugh or throat-clear that doesn't match the moment.",
-        "tactile": "I feel warmth and tension mingling in a body-skin flushed, muscles braced-like someone is ready to bolt even as they stay near.",
-        "olfactory": "The air smells warm and close: arousal threaded with nervous sweat, sharp at the edges, like adrenaline got into it."
-    },
-    "tags": [
-        "sexual",
-        "anxiety",
-        "performance",
-        "nervous",
-        "arousal",
-        "hesitation",
-        "self_doubt"
-    ],
-    "diagnosticStatus": "unknown"
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.unease"
+                  },
+                  0.4
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.awkwardness"
+                  },
+                  0.35
+                ]
+              }
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "sexualStates.sexual_confidence"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "sexualStates.sexual_indifference"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.terror"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.fear"
+              },
+              0.65
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "sexualStates.aroused_with_shame"
+              },
+              0.55
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.panic"
+              },
+              0.1
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "sexualStates.sexual_performance_anxiety"
+                  },
+                  {
+                    "var": "previousSexualStates.sexual_performance_anxiety"
+                  }
+                ]
+              },
+              0.1
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "previousSexualStates.sexual_performance_anxiety"
+              },
+              0.62
+            ]
+          }
+        ]
+      },
+      "failure_message": "Performance anxiety with social-threat range + low control/self-evaluation, and not strongly hostile/detached; capped below panic so it stays fluttery/awkward rather than spiraling."
+    }
+  ],
+  "actor_description": "My body is ahead of me-heat, pulse, wanting-while my mind keeps tapping the brakes. What if I mess this up? What if they notice too much? I can feel myself monitoring everything at once: breath, hands, the space between us, what my face is doing. The desire doesn't vanish-it sharpens-but it comes laced with a thin panic, like standing too close to an edge. I want to lean in, and in the same instant I'm already rehearsing how to retreat.",
+  "description_text": "{actor} looks charged and guarded at the same time-breathing quick, pupils wide, but posture held back. They fidget with their hands or clothing, offering a half-step forward and then pausing as if reconsidering. Their gaze keeps flicking between connection and escape, and their expressions arrive slightly delayed, like they're second-guessing themselves mid-moment.",
+  "alternate_descriptions": {
+    "auditory": "I hear uneven breathing-fast, then held-plus a small, uncertain laugh or throat-clear that doesn't match the moment.",
+    "tactile": "I feel warmth and tension mingling in a body-skin flushed, muscles braced-like someone is ready to bolt even as they stay near.",
+    "olfactory": "The air smells warm and close: arousal threaded with nervous sweat, sharp at the edges, like adrenaline got into it."
+  },
+  "tags": [
+    "sexual",
+    "anxiety",
+    "performance",
+    "nervous",
+    "arousal",
+    "hesitation",
+    "self_doubt"
+  ],
+  "diagnosticStatus": "unknown"
 }

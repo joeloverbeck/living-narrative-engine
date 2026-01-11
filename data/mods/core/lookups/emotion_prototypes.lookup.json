@@ -737,6 +737,25 @@
         "arousal >= 0.10"
       ]
     },
+    "protest_anger": {
+      "weights": {
+        "valence": -0.65,
+        "threat": 0.55,
+        "engagement": 0.70,
+        "affiliation": 0.75,
+        "agency_control": 0.05,
+        "arousal": 0.35,
+        "self_evaluation": -0.20,
+        "future_expectancy": -0.10
+      },
+      "gates": [
+        "valence <= -0.10",
+        "engagement >= 0.15",
+        "threat >= 0.10",
+        "affiliation >= 0.10",
+        "arousal >= 0.05"
+      ]
+    },
     "rage": {
       "weights": {
         "valence": -0.9,

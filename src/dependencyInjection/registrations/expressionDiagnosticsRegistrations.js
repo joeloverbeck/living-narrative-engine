@@ -11,8 +11,10 @@ import IntensityBoundsCalculator from '../../expressionDiagnostics/services/Inte
 import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarloSimulator.js';
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
-import WitnessStateFinder from '../../expressionDiagnostics/services/WitnessStateFinder.js';
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
+import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
+import PrototypeFitRankingService from '../../expressionDiagnostics/services/PrototypeFitRankingService.js';
+import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -65,9 +67,22 @@ export function registerExpressionDiagnosticsServices(container) {
       new MonteCarloSimulator({
         dataRegistry: c.resolve(tokens.IDataRegistry),
         logger: c.resolve(tokens.ILogger),
+        emotionCalculatorAdapter: c.resolve(
+          diagnosticsTokens.IEmotionCalculatorAdapter
+        ),
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IMonteCarloSimulator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IEmotionCalculatorAdapter,
+    (c) =>
+      new EmotionCalculatorAdapter({
+        emotionCalculatorService: c.resolve(tokens.IEmotionCalculatorService),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IEmotionCalculatorAdapter}`);
 
   registrar.singletonFactory(
     diagnosticsTokens.IFailureExplainer,
@@ -90,16 +105,6 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IExpressionStatusService}`);
 
-  // Phase 3 - Witness Finding
-  registrar.singletonFactory(
-    diagnosticsTokens.IWitnessStateFinder,
-    (c) =>
-      new WitnessStateFinder({
-        dataRegistry: c.resolve(tokens.IDataRegistry),
-        logger: c.resolve(tokens.ILogger),
-      })
-  );
-  safeDebug(`Registered ${diagnosticsTokens.IWitnessStateFinder}`);
 
   // Path-Sensitive Analysis (EXPDIAPATSENANA series)
   registrar.singletonFactory(
@@ -115,6 +120,31 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IPathSensitiveAnalyzer}`);
+
+  // Prototype Constraint Analysis (Monte Carlo report enhancement)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeConstraintAnalyzer,
+    (c) =>
+      new PrototypeConstraintAnalyzer({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeConstraintAnalyzer}`);
+
+  // Prototype Fit Ranking Service (Monte Carlo prototype fit analysis)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeFitRankingService,
+    (c) =>
+      new PrototypeFitRankingService({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+        prototypeConstraintAnalyzer: c.resolve(
+          diagnosticsTokens.IPrototypeConstraintAnalyzer
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeFitRankingService}`);
 
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)

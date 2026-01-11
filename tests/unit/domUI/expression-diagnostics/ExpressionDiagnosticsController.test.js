@@ -104,8 +104,9 @@ describe('ExpressionDiagnosticsController', () => {
   let mockMonteCarloSimulator;
   let mockFailureExplainer;
   let mockExpressionStatusService;
-  let mockWitnessStateFinder;
   let mockPathSensitiveAnalyzer;
+  let mockReportGenerator;
+  let mockReportModal;
 
   beforeEach(() => {
     // Set up the DOM structure directly in Jest's jsdom environment
@@ -173,26 +174,16 @@ describe('ExpressionDiagnosticsController', () => {
           <table id="blockers-table">
             <tbody id="blockers-tbody"></tbody>
           </table>
-        </div>
-      </section>
-      <!-- Witness State Section (with button) -->
-      <section id="witness-section" class="panel witness-panel">
-        <div class="section-action-button">
-          <button id="find-witness-btn" class="action-button" disabled>Find Witness State</button>
-        </div>
-        <span id="witness-status"></span>
-        <div id="witness-results" hidden>
-          <span id="witness-result-label" class="result-label"></span>
-          <button id="copy-witness-btn">Copy to Clipboard</button>
-          <div id="mood-display" class="axis-grid"></div>
-          <div id="sexual-display" class="axis-grid"></div>
-          <div id="traits-display" class="axis-grid"></div>
-          <pre id="witness-json-content"></pre>
-          <div id="violated-clauses" hidden>
-            <ul id="violated-clauses-list"></ul>
+          <div class="mc-results-actions">
+            <button id="generate-report-btn" class="action-button action-button--secondary">
+              Generate Report
+            </button>
           </div>
-          <div id="fitness-fill" class="fitness-fill"></div>
-          <span id="fitness-value">--</span>
+        </div>
+        <!-- Ground-Truth Witnesses from Monte Carlo -->
+        <div id="mc-witnesses" class="mc-witnesses-container" hidden>
+          <h3>Ground-Truth Witnesses</h3>
+          <div id="mc-witnesses-list" class="mc-witnesses-list"></div>
         </div>
       </section>
       <!-- Path-Sensitive Analysis Section -->
@@ -294,43 +285,6 @@ describe('ExpressionDiagnosticsController', () => {
       getProblematicExpressions: jest.fn().mockReturnValue([]),
     };
 
-    mockWitnessStateFinder = {
-      findWitness: jest.fn().mockResolvedValue({
-        found: true,
-        witness: {
-          mood: {
-            valence: 0.5,
-            arousal: 0.6,
-            agency_control: 0.4,
-            threat: 0.2,
-            engagement: 0.7,
-            future_expectancy: 0.5,
-            self_evaluation: 0.6,
-            affiliation: 0.3,
-          },
-          sexual: {
-            sex_excitation: 0.3,
-            sex_inhibition: 0.4,
-            baseline_libido: 0.5,
-          },
-          affectTraits: {
-            affective_empathy: 50,
-            cognitive_empathy: 60,
-            harm_aversion: 45,
-          },
-          toClipboardJSON: jest
-            .fn()
-            .mockReturnValue(
-              '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
-            ),
-        },
-        nearestMiss: null,
-        bestFitness: 1.0,
-        iterationsUsed: 100,
-        violatedClauses: [],
-      }),
-    };
-
     mockPathSensitiveAnalyzer = {
       analyze: jest.fn().mockResolvedValue({
         expressionId: 'expr:test1',
@@ -347,6 +301,14 @@ describe('ExpressionDiagnosticsController', () => {
         getSummaryMessage: jest.fn().mockReturnValue('No branches analyzed'),
         getReachabilityForBranch: jest.fn().mockReturnValue([]),
       }),
+    };
+
+    mockReportGenerator = {
+      generate: jest.fn().mockReturnValue('# Mock Report\n\nGenerated report content'),
+    };
+
+    mockReportModal = {
+      showReport: jest.fn(),
     };
   });
 
@@ -367,6 +329,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -382,6 +346,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -397,6 +363,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -412,6 +380,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -427,6 +397,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -442,6 +414,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: null,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -456,40 +430,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: null,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-      }).toThrow();
-    });
-
-    it('throws if witnessStateFinder is missing', () => {
-      expect(() => {
-        new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: null,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-      }).toThrow();
-    });
-
-    it('throws if witnessStateFinder lacks required methods', () => {
-      expect(() => {
-        new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: { someMethod: jest.fn() },
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -505,6 +448,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -520,6 +465,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -535,6 +482,8 @@ describe('ExpressionDiagnosticsController', () => {
           failureExplainer: { someMethod: jest.fn() },
           expressionStatusService: mockExpressionStatusService,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -549,6 +498,8 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: { someMethod: jest.fn() },
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -563,8 +514,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: null,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -579,8 +531,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: { someMethod: jest.fn() },
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).toThrow();
     });
@@ -595,10 +548,79 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
       }).not.toThrow();
+    });
+
+    it('throws if reportGenerator is missing', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: null,
+          reportModal: mockReportModal,
+        });
+      }).toThrow();
+    });
+
+    it('throws if reportGenerator lacks required methods', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: { someMethod: jest.fn() },
+          reportModal: mockReportModal,
+        });
+      }).toThrow();
+    });
+
+    it('throws if reportModal is missing', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: null,
+        });
+      }).toThrow();
+    });
+
+    it('throws if reportModal lacks required methods', () => {
+      expect(() => {
+        new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: { someMethod: jest.fn() },
+        });
+      }).toThrow();
     });
   });
 
@@ -612,8 +634,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -641,8 +664,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -664,8 +688,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -686,8 +711,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -707,8 +733,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -731,8 +758,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -769,8 +797,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -797,8 +826,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -823,8 +853,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -851,8 +882,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -888,8 +920,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -928,8 +961,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -980,8 +1014,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1009,8 +1044,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1038,8 +1074,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1059,8 +1096,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1086,8 +1124,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1121,8 +1160,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1149,8 +1189,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1176,8 +1217,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1212,8 +1254,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1246,8 +1289,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1281,8 +1325,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1316,8 +1361,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1352,8 +1398,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1378,8 +1425,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1422,8 +1470,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1459,8 +1508,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1488,8 +1538,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1507,8 +1558,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1529,8 +1581,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1554,8 +1607,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1587,8 +1641,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1617,8 +1672,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1646,8 +1702,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1673,8 +1730,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1701,8 +1759,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1740,8 +1799,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1776,8 +1836,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1812,8 +1873,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1856,8 +1918,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1886,8 +1949,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1917,8 +1981,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1955,8 +2020,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -1976,8 +2042,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2004,8 +2071,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2037,8 +2105,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2070,8 +2139,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2112,8 +2182,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2148,8 +2219,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2184,8 +2256,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2233,8 +2306,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2279,8 +2353,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2324,8 +2399,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2375,8 +2451,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2397,6 +2474,215 @@ describe('ExpressionDiagnosticsController', () => {
       const label = statusIndicator.querySelector('.status-label');
       expect(label.textContent).toBe('Extremely Rare');
     });
+
+    describe('Generate Report functionality', () => {
+      it('calls reportGenerator.generate with correct parameters when button clicked', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression and run simulation
+        selectDropdownValue('expr:test1');
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        // Wait for async simulation to complete (including all microtasks)
+        await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+        await Promise.resolve();
+        await Promise.resolve();
+
+        // Click generate report button
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        generateReportBtn.click();
+
+        expect(mockReportGenerator.generate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            expressionName: 'test1', // #getExpressionName extracts last segment after ':'
+            simulationResult: expect.any(Object),
+            blockers: expect.any(Array),
+            summary: expect.any(String),
+          })
+        );
+      });
+
+      it('calls reportModal.showReport with generated content', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression and run simulation
+        selectDropdownValue('expr:test1');
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        // Wait for async simulation to complete
+        await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+        // Click generate report button
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        generateReportBtn.click();
+
+        expect(mockReportModal.showReport).toHaveBeenCalledWith(
+          '# Mock Report\n\nGenerated report content'
+        );
+      });
+
+      it('does not call reportGenerator when no simulation results exist', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression but don't run simulation
+        selectDropdownValue('expr:test1');
+
+        // Try to click generate report button (button is inside hidden mc-results)
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        generateReportBtn.click();
+
+        expect(mockReportGenerator.generate).not.toHaveBeenCalled();
+        expect(mockReportModal.showReport).not.toHaveBeenCalled();
+      });
+
+      it('logs warning when no simulation results and report button is clicked', async () => {
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression but don't run simulation
+        selectDropdownValue('expr:test1');
+
+        // Click generate report button
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        generateReportBtn.click();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Cannot generate report: no simulation results'
+        );
+      });
+
+      it('stores blockers from displayMonteCarloResults for report generation', async () => {
+        const testBlockers = [
+          { category: 'mood_constraint', message: 'Test blocker' },
+        ];
+        mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue(testBlockers);
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression and run simulation
+        selectDropdownValue('expr:test1');
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        // Wait for async simulation to complete
+        await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+        // Click generate report button
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        generateReportBtn.click();
+
+        expect(mockReportGenerator.generate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            blockers: testBlockers,
+          })
+        );
+      });
+
+      it('logs error and does not throw when reportGenerator.generate fails', async () => {
+        mockReportGenerator.generate.mockImplementation(() => {
+          throw new Error('Generation failed');
+        });
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression and run simulation
+        selectDropdownValue('expr:test1');
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        // Wait for async simulation to complete
+        await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+        // Click generate report button - should not throw
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        expect(() => generateReportBtn.click()).not.toThrow();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to generate report:',
+          expect.any(Error)
+        );
+        expect(mockReportModal.showReport).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Problematic Expressions Panel', () => {
@@ -2416,8 +2702,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2443,8 +2730,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2470,8 +2758,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2497,8 +2786,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2522,8 +2812,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2546,8 +2837,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2568,8 +2860,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2591,8 +2884,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2629,8 +2923,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2667,8 +2962,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2694,8 +2990,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2721,8 +3018,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2760,8 +3058,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2784,8 +3083,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2814,8 +3114,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2837,8 +3138,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2860,8 +3162,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2884,8 +3187,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2929,8 +3233,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -2978,8 +3283,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3024,8 +3330,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3077,8 +3384,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3128,8 +3436,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3168,8 +3477,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3206,8 +3516,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3244,8 +3555,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3282,8 +3594,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3329,8 +3642,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3368,8 +3682,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3423,8 +3738,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3481,8 +3797,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3532,8 +3849,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3597,8 +3915,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3660,8 +3979,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3703,8 +4023,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3750,8 +4071,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -3770,564 +4092,185 @@ describe('ExpressionDiagnosticsController', () => {
       expect(operationOrder).toContain('updateStatus-start');
       expect(operationOrder).toContain('updateStatus-end');
     });
-  });
 
-  describe('Witness State Finder', () => {
-    it('Find Witness button is disabled when no expression selected', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+    describe('Failed Conditions Display', () => {
+      it('should render failed condition descriptions, not [object Object]', async () => {
+        // Mock simulator to return impossible expression with nearestMiss data
+        mockMonteCarloSimulator.simulate.mockResolvedValue({
+          triggerRate: 0,
+          triggerCount: 0,
+          sampleCount: 10000,
+          confidenceInterval: { low: 0, high: 0.001 },
+          clauseFailures: [],
+          distribution: 'uniform',
+          witnessAnalysis: {
+            witnesses: [],
+            nearestMiss: {
+              sample: {
+                current: { mood: { joy: 25 } },
+                previous: { mood: {} },
+                affectTraits: {},
+              },
+              failedLeafCount: 2,
+              failedLeaves: [
+                {
+                  description: 'emotions.joy >= 50',
+                  actual: 25,
+                  threshold: 50,
+                  violation: 25,
+                },
+                {
+                  description: 'emotions.calm >= 30',
+                  actual: 10,
+                  threshold: 30,
+                  violation: 20,
+                },
+              ],
+            },
+          },
+        });
+
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
+
+        await controller.initialize();
+
+        // Select expression and trigger simulation
+        selectDropdownValue('expr:test1');
+        const runMcBtn = document.getElementById('run-mc-btn');
+        runMcBtn.click();
+
+        // Wait for async simulation to complete
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Find the failed conditions section
+        const failedSection = document.querySelector('.mc-witness-failed-section');
+        expect(failedSection).not.toBeNull();
+
+        const html = failedSection.innerHTML;
+        expect(html).not.toContain('[object Object]');
+        // Note: innerHTML escapes > to &gt;
+        expect(html).toContain('emotions.joy');
+        expect(html).toContain('emotions.calm');
+        expect(html).toContain('actual: 25');
+        expect(html).toContain('needed: 50');
       });
 
-      await controller.initialize();
+      it('should handle failedLeaves with missing description gracefully', async () => {
+        mockMonteCarloSimulator.simulate.mockResolvedValue({
+          triggerRate: 0,
+          triggerCount: 0,
+          sampleCount: 10000,
+          confidenceInterval: { low: 0, high: 0 },
+          clauseFailures: [],
+          distribution: 'uniform',
+          witnessAnalysis: {
+            witnesses: [],
+            nearestMiss: {
+              sample: { current: {}, previous: {}, affectTraits: {} },
+              failedLeafCount: 1,
+              failedLeaves: [
+                {
+                  description: null,
+                  actual: null,
+                  threshold: null,
+                  violation: null,
+                },
+              ],
+            },
+          },
+        });
 
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      expect(findWitnessBtn.disabled).toBe(true);
-    });
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
 
-    it('Find Witness button is enabled when expression selected', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        await controller.initialize();
+
+        selectDropdownValue('expr:test1');
+        document.getElementById('run-mc-btn').click();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const failedSection = document.querySelector('.mc-witness-failed-section');
+        expect(failedSection).not.toBeNull();
+        expect(failedSection.innerHTML).not.toContain('[object Object]');
+        expect(failedSection.innerHTML).toContain('Unknown condition');
       });
 
-      await controller.initialize();
+      it('should display actual and threshold values when available', async () => {
+        mockMonteCarloSimulator.simulate.mockResolvedValue({
+          triggerRate: 0,
+          triggerCount: 0,
+          sampleCount: 10000,
+          confidenceInterval: { low: 0, high: 0 },
+          clauseFailures: [],
+          distribution: 'uniform',
+          witnessAnalysis: {
+            witnesses: [],
+            nearestMiss: {
+              sample: { current: {}, previous: {}, affectTraits: {} },
+              failedLeafCount: 1,
+              failedLeaves: [
+                {
+                  description: 'mood.anger >= 75',
+                  actual: 30,
+                  threshold: 75,
+                  violation: 45,
+                },
+              ],
+            },
+          },
+        });
 
-      selectDropdownValue('expr:test1');
+        const controller = new ExpressionDiagnosticsController({
+          logger: mockLogger,
+          expressionRegistry: mockExpressionRegistry,
+          gateAnalyzer: mockGateAnalyzer,
+          boundsCalculator: mockBoundsCalculator,
+          monteCarloSimulator: mockMonteCarloSimulator,
+          failureExplainer: mockFailureExplainer,
+          expressionStatusService: mockExpressionStatusService,
+          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
+        });
 
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      expect(findWitnessBtn.disabled).toBe(false);
-    });
+        await controller.initialize();
 
-    it('Find Witness button triggers search and shows results when witness found', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        selectDropdownValue('expr:test1');
+        document.getElementById('run-mc-btn').click();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const failedSection = document.querySelector('.mc-witness-failed-section');
+        expect(failedSection).not.toBeNull();
+        const html = failedSection.innerHTML;
+        // Note: innerHTML escapes > to &gt;
+        expect(html).toContain('mood.anger');
+        expect(html).toContain('actual: 30');
+        expect(html).toContain('needed: 75');
       });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(mockWitnessStateFinder.findWitness).toHaveBeenCalled();
-
-      const witnessResults = document.getElementById('witness-results');
-      expect(witnessResults.hidden).toBe(false);
-
-      const resultLabel = document.getElementById('witness-result-label');
-      expect(resultLabel.textContent).toContain('Witness Found');
-    });
-
-    it('shows "Nearest Miss" label when witness not found', async () => {
-      mockWitnessStateFinder.findWitness.mockResolvedValue({
-        found: false,
-        witness: null,
-        nearestMiss: {
-          mood: { valence: 0.5, arousal: 0.5, agency_control: 0.5, threat: 0.5, engagement: 0.5, future_expectancy: 0.5, self_evaluation: 0.5 },
-          sexual: { arousal: 0.5, desire: 0.5, satisfaction: 0.5 },
-          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
-        },
-        bestFitness: 0.85,
-        iterationsUsed: 1000,
-        violatedClauses: ['condition1 failed', 'condition2 failed'],
-      });
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const resultLabel = document.getElementById('witness-result-label');
-      expect(resultLabel.textContent).toContain('Nearest Miss');
-    });
-
-    it('displays violated clauses when witness not found', async () => {
-      mockWitnessStateFinder.findWitness.mockResolvedValue({
-        found: false,
-        witness: null,
-        nearestMiss: {
-          mood: { valence: 0.5, arousal: 0.5, agency_control: 0.5, threat: 0.5, engagement: 0.5, future_expectancy: 0.5, self_evaluation: 0.5 },
-          sexual: { arousal: 0.5, desire: 0.5, satisfaction: 0.5 },
-          toClipboardJSON: jest.fn().mockReturnValue('{"mood":{},"sexual":{}}'),
-        },
-        bestFitness: 0.85,
-        iterationsUsed: 1000,
-        violatedClauses: ['condition1 failed', 'condition2 failed'],
-      });
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const violatedClauses = document.getElementById('violated-clauses');
-      expect(violatedClauses.hidden).toBe(false);
-
-      const clausesList = document.getElementById('violated-clauses-list');
-      expect(clausesList.children.length).toBe(2);
-    });
-
-    it('hides violated clauses section when witness is found', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const violatedClauses = document.getElementById('violated-clauses');
-      expect(violatedClauses.hidden).toBe(true);
-    });
-
-    it('displays fitness score in the UI', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const fitnessValue = document.getElementById('fitness-value');
-      expect(fitnessValue.textContent).toBe('1.000');
-
-      const fitnessFill = document.getElementById('fitness-fill');
-      expect(fitnessFill.style.width).toBe('100%');
-    });
-
-    it('populates mood axes display', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const moodDisplay = document.getElementById('mood-display');
-      // Should have 8 mood axes (including affiliation)
-      expect(moodDisplay.children.length).toBe(8);
-    });
-
-    it('populates sexual state display', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const sexualDisplay = document.getElementById('sexual-display');
-      // Should have 3 sexual axes
-      expect(sexualDisplay.children.length).toBe(3);
-    });
-
-    it('displays JSON in witness JSON content area', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const jsonContent = document.getElementById('witness-json-content');
-      expect(jsonContent.textContent).toBe(
-        '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
-      );
-    });
-
-    it('populates affect traits display', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const traitsDisplay = document.getElementById('traits-display');
-      // Should have 3 affect trait axes
-      expect(traitsDisplay.children.length).toBe(3);
-    });
-
-    it('resets witness results when expression selection changes', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      // Select first expression and run witness finder
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Verify results are shown
-      expect(document.getElementById('witness-results').hidden).toBe(false);
-
-      // Change expression (clears selection)
-      clearDropdownSelection();
-
-      // Results should be reset/hidden
-      expect(document.getElementById('witness-results').hidden).toBe(true);
-      expect(document.getElementById('fitness-value').textContent).toBe('--');
-    });
-
-    it('handles search errors gracefully', async () => {
-      mockWitnessStateFinder.findWitness.mockRejectedValue(
-        new Error('Search algorithm failed')
-      );
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      const witnessStatus = document.getElementById('witness-status');
-      expect(witnessStatus.textContent).toContain('Error');
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-
-    it('button shows searching state during search', async () => {
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-
-      // The button text should be restored after the search completes
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // After completion, button should be re-enabled
-      expect(findWitnessBtn.disabled).toBe(false);
-      expect(findWitnessBtn.textContent).toBe('Find Witness State');
-    });
-
-    it('copy button calls clipboard utility', async () => {
-      // Mock the copyToClipboard utility
-      const mockCopyToClipboard = jest
-        .spyOn(clipboardUtils, 'copyToClipboard')
-        .mockResolvedValue(true);
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      // First find a witness
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Then copy
-      const copyBtn = document.getElementById('copy-witness-btn');
-      await copyBtn.click();
-
-      // Give time for async clipboard operation
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(mockCopyToClipboard).toHaveBeenCalledWith(
-        '{"mood":{},"sexual":{},"affectTraits":{"affective_empathy":50,"cognitive_empathy":60,"harm_aversion":45}}'
-      );
-      mockCopyToClipboard.mockRestore();
-    });
-
-    it('copy button shows feedback immediately with accessibility attributes', async () => {
-      // Mock the copyToClipboard utility
-      const mockCopyToClipboard = jest
-        .spyOn(clipboardUtils, 'copyToClipboard')
-        .mockResolvedValue(true);
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      // First find a witness
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Then copy
-      const copyBtn = document.getElementById('copy-witness-btn');
-      await copyBtn.click();
-
-      // Give time for async clipboard operation
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Check that feedback toast has proper accessibility attributes
-      const toast = document.querySelector('.copy-feedback');
-      expect(toast).toBeTruthy();
-      expect(toast.getAttribute('role')).toBe('status');
-      expect(toast.getAttribute('aria-live')).toBe('polite');
-      expect(toast.classList.contains('show')).toBe(true);
-      expect(toast.textContent).toBe('Copied to clipboard!');
-
-      mockCopyToClipboard.mockRestore();
-    });
-
-    it('copy button shows failure feedback when clipboard fails', async () => {
-      // Mock the copyToClipboard utility to return failure
-      const mockCopyToClipboard = jest
-        .spyOn(clipboardUtils, 'copyToClipboard')
-        .mockResolvedValue(false);
-
-      const controller = new ExpressionDiagnosticsController({
-        logger: mockLogger,
-        expressionRegistry: mockExpressionRegistry,
-        gateAnalyzer: mockGateAnalyzer,
-        boundsCalculator: mockBoundsCalculator,
-        monteCarloSimulator: mockMonteCarloSimulator,
-        failureExplainer: mockFailureExplainer,
-        expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
-        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-      });
-
-      await controller.initialize();
-
-      selectDropdownValue('expr:test1');
-
-      // First find a witness
-      const findWitnessBtn = document.getElementById('find-witness-btn');
-      findWitnessBtn.click();
-
-      // Wait for async findWitness to complete
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Then copy
-      const copyBtn = document.getElementById('copy-witness-btn');
-      await copyBtn.click();
-
-      // Give time for async clipboard operation
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Check that failure feedback is shown
-      const toast = document.querySelector('.copy-feedback');
-      expect(toast).toBeTruthy();
-      expect(toast.textContent).toBe('Copy failed');
-
-      mockCopyToClipboard.mockRestore();
     });
   });
+
 
   describe('Path-Sensitive Analysis', () => {
     it('shows path-sensitive section after running static analysis', async () => {
@@ -4369,8 +4312,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4411,8 +4355,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4463,8 +4408,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4489,8 +4435,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4532,8 +4479,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4585,8 +4533,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4628,8 +4577,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4682,8 +4632,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4726,8 +4677,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4778,8 +4730,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4828,8 +4781,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4872,8 +4826,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4926,8 +4881,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -4977,8 +4933,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5020,8 +4977,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5088,8 +5046,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5135,8 +5094,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5199,8 +5159,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5262,8 +5223,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5297,8 +5259,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5314,6 +5277,361 @@ describe('ExpressionDiagnosticsController', () => {
       // Try to toggle - should not throw because breakdown row doesn't exist
       const toggle = document.querySelector('.expand-toggle');
       expect(() => toggle.click()).not.toThrow();
+    });
+  });
+
+describe('Compound Node Stats and OR Pass Rate', () => {
+    it('shows aggregated stats for compound nodes with worst violation', async () => {
+      // Setup Monte Carlo with compound node having leaf children with violations
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.99 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'AND of 6 conditions',
+          failureRate: 0.99,
+          averageViolation: 0,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'AND of 6 conditions',
+            failureRate: 0.99,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'moodAxes.threat <= 20',
+                failureRate: 0.8,
+                isCompound: false,
+                averageViolation: 40.87,
+                nearMissRate: 0.01,
+                nearMissEpsilon: 0.05,
+                children: [],
+              },
+              {
+                nodeType: 'leaf',
+                description: 'previousEmotions.fear >= 0.25',
+                failureRate: 0.5,
+                isCompound: false,
+                averageViolation: 0.1,
+                nearMissRate: 0.0548,
+                nearMissEpsilon: 0.05,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Check that the violation stats column shows aggregated stats
+      const violationStats = document.querySelector('.violation-stats');
+      expect(violationStats).toBeTruthy();
+      expect(violationStats.innerHTML).toContain('worst Δ');
+      expect(violationStats.innerHTML).toContain('40.87');
+      expect(violationStats.innerHTML).toContain('most tunable');
+    });
+
+    it('shows OR block pass rate summary in hierarchical tree', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.75 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'OR block',
+          failureRate: 0.75,
+          averageViolation: 0.5,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'or',
+            description: 'OR of 2 conditions',
+            failureRate: 0.75,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'condition A',
+                failureRate: 0.9,
+                isCompound: false,
+                averageViolation: 0.3,
+                children: [],
+              },
+              {
+                nodeType: 'leaf',
+                description: 'condition B',
+                failureRate: 0.833,
+                isCompound: false,
+                averageViolation: 0.2,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand the blocker to see the hierarchical tree
+      const toggle = document.querySelector('.expand-toggle');
+      if (toggle) {
+        toggle.click();
+      }
+
+      // Check for OR summary - combined pass rate = 1 - (0.9 * 0.833) ≈ 25%
+      const orSummary = document.querySelector('.tree-or-summary');
+      expect(orSummary).toBeTruthy();
+      expect(orSummary.textContent).toContain('Combined:');
+      expect(orSummary.textContent).toContain('pass rate');
+    });
+
+    it('shows tunability badges in leaf nodes', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.5 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'AND block',
+          failureRate: 0.5,
+          averageViolation: 0.1,
+          explanation: { severity: 'medium' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'AND of 3 conditions',
+            failureRate: 0.5,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'high tunability condition',
+                failureRate: 0.3,
+                isCompound: false,
+                averageViolation: 0.1,
+                nearMissRate: 0.15,
+                thresholdValue: 0.5,
+                maxObservedValue: 0.48,
+                children: [],
+              },
+              {
+                nodeType: 'leaf',
+                description: 'moderate tunability condition',
+                failureRate: 0.4,
+                isCompound: false,
+                averageViolation: 0.2,
+                nearMissRate: 0.05,
+                thresholdValue: 0.7,
+                maxObservedValue: 0.65,
+                children: [],
+              },
+              {
+                nodeType: 'leaf',
+                description: 'low tunability condition',
+                failureRate: 0.6,
+                isCompound: false,
+                averageViolation: 0.5,
+                nearMissRate: 0.01,
+                thresholdValue: 0.9,
+                maxObservedValue: 0.4,
+                ceilingGap: 0.5,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand the blocker to see the hierarchical tree
+      const toggle = document.querySelector('.expand-toggle');
+      if (toggle) {
+        toggle.click();
+      }
+
+      // Check for tunability badges
+      const tunabilityBadges = document.querySelectorAll('.tree-tunability');
+      expect(tunabilityBadges.length).toBeGreaterThan(0);
+
+      // Check for high tunability
+      const highBadge = document.querySelector('.tunability-high');
+      expect(highBadge).toBeTruthy();
+      expect(highBadge.textContent).toBe('high');
+
+      // Check for moderate tunability
+      const moderateBadge = document.querySelector('.tunability-moderate');
+      expect(moderateBadge).toBeTruthy();
+      expect(moderateBadge.textContent).toBe('moderate');
+
+      // Check for low tunability
+      const lowBadge = document.querySelector('.tunability-low');
+      expect(lowBadge).toBeTruthy();
+      expect(lowBadge.textContent).toBe('low');
+
+      // Check for threshold displays
+      const thresholdDisplays = document.querySelectorAll('.tree-threshold');
+      expect(thresholdDisplays.length).toBeGreaterThan(0);
+
+      // Check for max observed displays
+      const maxObsDisplays = document.querySelectorAll('.tree-max-obs');
+      expect(maxObsDisplays.length).toBeGreaterThan(0);
+
+      // Check for ceiling gap display
+      const gapDisplays = document.querySelectorAll('.tree-gap');
+      expect(gapDisplays.length).toBeGreaterThan(0);
+    });
+
+    it('falls back to average violation when no leaves have violations', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.001,
+        triggerCount: 10,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.0005, high: 0.0015 },
+        clauseFailures: [{ clauseId: 'clause1', failureRate: 0.99 }],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'AND block',
+          failureRate: 0.99,
+          averageViolation: 0,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'and',
+            description: 'AND of 2 conditions',
+            failureRate: 0.99,
+            isCompound: true,
+            averageViolation: 0,
+            children: [
+              {
+                nodeType: 'leaf',
+                description: 'condition with zero violation',
+                failureRate: 0.8,
+                isCompound: false,
+                averageViolation: 0,
+                children: [],
+              },
+              {
+                nodeType: 'leaf',
+                description: 'another condition with zero violation',
+                failureRate: 0.5,
+                isCompound: false,
+                averageViolation: 0,
+                children: [],
+              },
+            ],
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+      });
+
+      await controller.initialize();
+      selectDropdownValue('expr:test1');
+
+      const mcBtn = document.getElementById('run-mc-btn');
+      mcBtn.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Check that the violation stats column falls back to μ: 0.00
+      const violationStats = document.querySelector('.violation-stats');
+      expect(violationStats).toBeTruthy();
+      expect(violationStats.innerHTML).toContain('μ:');
+      expect(violationStats.innerHTML).not.toContain('worst Δ');
     });
   });
 
@@ -5355,8 +5673,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5402,8 +5721,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5454,8 +5774,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5506,8 +5827,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5557,8 +5879,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5609,8 +5932,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5661,8 +5985,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5715,8 +6040,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5772,8 +6098,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5829,8 +6156,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5886,8 +6214,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5942,8 +6271,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -5998,8 +6328,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6054,8 +6385,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6137,8 +6469,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6205,8 +6538,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6267,8 +6601,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6325,8 +6660,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6380,8 +6716,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6433,8 +6770,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6482,8 +6820,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6549,8 +6888,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6604,8 +6944,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6663,8 +7004,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6718,8 +7060,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6773,8 +7116,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6832,8 +7176,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6889,8 +7234,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -6945,8 +7291,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7010,8 +7357,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7073,8 +7421,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7129,8 +7478,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7185,8 +7535,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7236,8 +7587,9 @@ describe('ExpressionDiagnosticsController', () => {
         monteCarloSimulator: mockMonteCarloSimulator,
         failureExplainer: mockFailureExplainer,
         expressionStatusService: mockExpressionStatusService,
-        witnessStateFinder: mockWitnessStateFinder,
         pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
       });
 
       await controller.initialize();
@@ -7266,8 +7618,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();
@@ -7289,8 +7642,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();
@@ -7308,8 +7662,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         // Remove expression select container before init to prevent dropdown creation
@@ -7340,8 +7695,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();
@@ -7377,8 +7733,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();
@@ -7390,145 +7747,6 @@ describe('ExpressionDiagnosticsController', () => {
       });
     });
 
-    describe('Fitness Level Classes', () => {
-      it('applies fitness-medium class for fitness between 0.5 and 0.8', async () => {
-        // Mock witness state with medium fitness using correct result structure
-        const mockWitnessResult = {
-          found: true,
-          witness: {
-            mood: { joy: 0.6 },
-            sexual: {},
-            toClipboardJSON: () => '{}',
-          },
-          bestFitness: 0.65, // Medium fitness
-        };
-        mockWitnessStateFinder.findWitness.mockResolvedValue(mockWitnessResult);
-
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        const findBtn = document.getElementById('find-witness-btn');
-        findBtn.click();
-
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        const fitnessFill = document.querySelector('.fitness-fill');
-        expect(fitnessFill.classList.contains('fitness-medium')).toBe(true);
-      });
-
-      it('applies fitness-low class for fitness below 0.5', async () => {
-        // Mock witness state with low fitness using correct result structure
-        const mockWitnessResult = {
-          found: false,
-          nearestMiss: {
-            mood: { joy: 0.2 },
-            sexual: {},
-            toClipboardJSON: () => '{}',
-          },
-          bestFitness: 0.3, // Low fitness
-          violatedClauses: ['some clause'],
-        };
-        mockWitnessStateFinder.findWitness.mockResolvedValue(mockWitnessResult);
-
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        const findBtn = document.getElementById('find-witness-btn');
-        findBtn.click();
-
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        const fitnessFill = document.querySelector('.fitness-fill');
-        expect(fitnessFill.classList.contains('fitness-low')).toBe(true);
-      });
-    });
-
-    describe('Copy Witness Edge Cases', () => {
-      it('shows feedback when no witness state to copy', async () => {
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        // Click copy without finding witness first
-        const copyBtn = document.getElementById('copy-witness-btn');
-        await copyBtn.click();
-
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        const toast = document.querySelector('.copy-feedback');
-        expect(toast).toBeTruthy();
-        expect(toast.textContent).toBe('No witness state to copy');
-      });
-
-      it('appends toast to body when witness-section not found', async () => {
-        // Move copy button outside witness section, then remove section
-        const copyBtn = document.getElementById('copy-witness-btn');
-        document.body.appendChild(copyBtn);
-
-        const witnessSection = document.getElementById('witness-section');
-        witnessSection.remove();
-
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        // Click copy without finding witness first - button now uses body as fallback
-        await copyBtn.click();
-
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        // Toast should be appended to body since witness-section doesn't exist
-        const toast = document.body.querySelector('.copy-feedback');
-        expect(toast).toBeTruthy();
-        expect(toast.textContent).toBe('No witness state to copy');
-      });
-    });
 
     describe('Progress Callbacks', () => {
       it('updates Monte Carlo button text during simulation progress', async () => {
@@ -7555,8 +7773,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();
@@ -7571,90 +7790,6 @@ describe('ExpressionDiagnosticsController', () => {
         expect(capturedOnProgress).not.toBeNull();
       });
 
-      it('updates witness finder button text during search progress', async () => {
-        // Create a mock that calls the onProgress callback
-        let capturedOnProgress = null;
-        mockWitnessStateFinder.findWitness.mockImplementation(async (expr, options) => {
-          capturedOnProgress = options.onProgress;
-          // Simulate progress
-          if (options.onProgress) {
-            options.onProgress(50, 100);
-          }
-          return {
-            success: true,
-            witnessState: {
-              moodAxes: {},
-              sexualAxes: {},
-              fitness: 1.0,
-              toClipboardJSON: () => '{}',
-            },
-          };
-        });
-
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        const findWitnessBtn = document.getElementById('find-witness-btn');
-        findWitnessBtn.click();
-
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // The onProgress callback should have been captured and executed
-        expect(capturedOnProgress).not.toBeNull();
-      });
-    });
-
-    describe('Toast Cleanup', () => {
-      it('removes toast after timeout and transition', async () => {
-        jest.useFakeTimers();
-
-        const controller = new ExpressionDiagnosticsController({
-          logger: mockLogger,
-          expressionRegistry: mockExpressionRegistry,
-          gateAnalyzer: mockGateAnalyzer,
-          boundsCalculator: mockBoundsCalculator,
-          monteCarloSimulator: mockMonteCarloSimulator,
-          failureExplainer: mockFailureExplainer,
-          expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
-          pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
-        });
-
-        await controller.initialize();
-        selectDropdownValue('expr:test1');
-
-        // Click copy without finding witness first to trigger toast
-        const copyBtn = document.getElementById('copy-witness-btn');
-        await copyBtn.click();
-
-        // Advance timers past the toast visibility duration
-        jest.advanceTimersByTime(2100);
-
-        const toast = document.querySelector('.copy-feedback');
-        expect(toast).toBeTruthy();
-        expect(toast.classList.contains('show')).toBe(false);
-
-        // Simulate transitionend event to trigger removal
-        toast.dispatchEvent(new Event('transitionend'));
-
-        // Toast should be removed
-        const removedToast = document.querySelector('.copy-feedback');
-        expect(removedToast).toBeNull();
-
-        jest.useRealTimers();
-      });
     });
 
     describe('Dispose Existing Dropdown', () => {
@@ -7667,8 +7802,9 @@ describe('ExpressionDiagnosticsController', () => {
           monteCarloSimulator: mockMonteCarloSimulator,
           failureExplainer: mockFailureExplainer,
           expressionStatusService: mockExpressionStatusService,
-          witnessStateFinder: mockWitnessStateFinder,
           pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+          reportGenerator: mockReportGenerator,
+          reportModal: mockReportModal,
         });
 
         await controller.initialize();

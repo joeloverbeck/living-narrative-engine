@@ -6,10 +6,22 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
+import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
+import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+
+const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
+  new EmotionCalculatorAdapter({
+    emotionCalculatorService: new EmotionCalculatorService({
+      dataRegistry,
+      logger,
+    }),
+    logger,
+  });
 
 describe('MonteCarloSimulator - Gate Enforcement', () => {
   let mockLogger;
   let mockDataRegistry;
+  let mockEmotionCalculatorAdapter;
 
   // Emotion prototypes with gates matching production emotion_prototypes.lookup.json
   const mockEmotionPrototypes = {
@@ -82,6 +94,11 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         return null;
       }),
     };
+
+    mockEmotionCalculatorAdapter = buildEmotionCalculatorAdapter(
+      mockDataRegistry,
+      mockLogger
+    );
   });
 
   describe('Emotion Gate Enforcement', () => {
@@ -89,6 +106,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Create expression requiring high fear
@@ -120,6 +138,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Expression requiring relief when threat is high - should be impossible
@@ -151,6 +170,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Expression requiring relief when threat is low
@@ -185,6 +205,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Expression requiring a large fear drop (delta <= -0.2)
@@ -232,6 +253,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Relief gate: threat <= 0.20
@@ -276,6 +298,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Confidence has gates: threat <= 0.20 AND agency_control >= 0.10
@@ -313,6 +336,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Confidence has gates: threat <= 0.20 AND agency_control >= 0.10
@@ -352,6 +376,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Aroused state has gate: sexual_arousal >= 0.35
@@ -384,6 +409,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Aroused state has gate: sexual_arousal >= 0.35
@@ -417,6 +443,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Simplified test: Demonstrate that gate enforcement creates different
@@ -470,6 +497,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Test that fear IS calculated when threat is high enough
@@ -504,6 +532,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
 
       // Curiosity has no gates - should always be calculated

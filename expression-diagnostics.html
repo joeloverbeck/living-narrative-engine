@@ -180,6 +180,11 @@
               </div>
             </div>
             <p class="mc-summary" id="mc-summary"></p>
+            <div class="mc-results-actions">
+              <button id="generate-report-btn" class="action-button action-button--secondary">
+                Generate Report
+              </button>
+            </div>
             <h3>Top Blockers</h3>
             <table id="blockers-table" class="results-table blockers-table">
               <thead>
@@ -196,68 +201,190 @@
               </thead>
               <tbody id="blockers-tbody"></tbody>
             </table>
+
+            <!-- Ground-Truth Witnesses from Monte Carlo -->
+            <div id="mc-witnesses" class="mc-witnesses-container" hidden>
+              <h3>Ground-Truth Witnesses</h3>
+              <div id="mc-witnesses-list" class="mc-witnesses-list">
+                <!-- Witness cards populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Global Expression Sensitivity -->
+            <div id="global-sensitivity" class="global-sensitivity-container" hidden>
+              <h3>🎯 Global Expression Sensitivity</h3>
+              <p class="sensitivity-intro">
+                Shows how adjusting thresholds affects the <strong>entire expression trigger rate</strong>,
+                not just individual clause pass rates.
+              </p>
+              <div id="global-sensitivity-tables" class="sensitivity-tables">
+                <!-- Sensitivity tables populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Conditional Pass Rates Under Mood Regime -->
+            <div id="conditional-pass-rates" class="conditional-pass-rates-container" hidden>
+              <h3>📊 Conditional Pass Rates (Given Mood Constraints)</h3>
+              <p class="conditional-intro">
+                Shows how often each emotion condition passes when the mood state is already suitable.
+                Low rates indicate emotion-specific blockers that persist even in favorable mood regimes.
+              </p>
+              <div id="conditional-pass-rates-content" class="conditional-content">
+                <!-- Conditional pass rates table populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Last-Mile Decomposition -->
+            <div id="last-mile-decomposition" class="last-mile-decomposition-container" hidden>
+              <h3>🔬 Last-Mile Decomposition</h3>
+              <p class="decomposition-intro">
+                For decisive blockers, shows why the emotion value is too low by analyzing
+                axis contributions and identifying dominant suppressors.
+              </p>
+              <div id="last-mile-decomposition-content" class="decomposition-content">
+                <!-- Decomposition panels populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Static Analysis Cross-Reference -->
+            <div id="static-cross-reference" class="static-cross-reference-container" hidden>
+              <h3>🔗 Static Analysis Cross-Reference</h3>
+              <p class="cross-reference-intro">
+                Compares findings from static analysis with Monte Carlo observations.
+              </p>
+              <div id="static-cross-reference-content" class="cross-reference-content">
+                <!-- Cross-reference tables populated dynamically -->
+              </div>
+              <div id="cross-reference-summary" class="cross-reference-summary"></div>
+            </div>
+
+            <!-- Prototype Fit Analysis -->
+            <div id="prototype-fit-analysis" class="prototype-fit-analysis-container" hidden>
+              <h3>🎯 Prototype Fit Analysis</h3>
+              <p class="prototype-fit-intro">
+                Ranking of emotion prototypes by how well they fit this expression's mood regime.
+              </p>
+              <table id="prototype-fit-table" class="results-table prototype-fit-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Prototype</th>
+                    <th>Gate Pass</th>
+                    <th>P(I≥t)</th>
+                    <th>Conflict</th>
+                    <th>Composite</th>
+                  </tr>
+                </thead>
+                <tbody id="prototype-fit-tbody"></tbody>
+              </table>
+              <div id="prototype-fit-details" class="prototype-fit-details">
+                <!-- Detailed info for top prototypes populated dynamically -->
+              </div>
+              <div id="prototype-fit-suggestion" class="prototype-fit-suggestion"></div>
+            </div>
+
+            <!-- Implied Prototype from Prerequisites -->
+            <div id="implied-prototype" class="implied-prototype-container" hidden>
+              <h3>🧭 Implied Prototype from Prerequisites</h3>
+              <p class="implied-prototype-intro">
+                Analysis of which prototypes best match the expression's constraint pattern.
+              </p>
+              <div id="target-signature" class="target-signature-section">
+                <h4>Target Signature</h4>
+                <table id="target-signature-table" class="results-table target-signature-table">
+                  <thead>
+                    <tr>
+                      <th>Axis</th>
+                      <th>Direction</th>
+                      <th>Importance</th>
+                    </tr>
+                  </thead>
+                  <tbody id="target-signature-tbody"></tbody>
+                </table>
+              </div>
+              <div id="implied-rankings" class="implied-rankings-section">
+                <div class="implied-ranking-column">
+                  <h4>Top 5 by Similarity</h4>
+                  <table class="results-table similarity-ranking-table">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Prototype</th>
+                        <th>Similarity</th>
+                        <th>Gate Pass</th>
+                        <th>Combined</th>
+                      </tr>
+                    </thead>
+                    <tbody id="similarity-ranking-tbody"></tbody>
+                  </table>
+                </div>
+                <div class="implied-ranking-column">
+                  <h4>Top 5 by Gate Pass</h4>
+                  <table class="results-table gate-pass-ranking-table">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Prototype</th>
+                        <th>Gate Pass</th>
+                        <th>Similarity</th>
+                        <th>Combined</th>
+                      </tr>
+                    </thead>
+                    <tbody id="gate-pass-ranking-tbody"></tbody>
+                  </table>
+                </div>
+                <div class="implied-ranking-column">
+                  <h4>Top 5 by Combined</h4>
+                  <table class="results-table combined-ranking-table">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Prototype</th>
+                        <th>Combined</th>
+                        <th>Similarity</th>
+                        <th>Gate Pass</th>
+                      </tr>
+                    </thead>
+                    <tbody id="combined-ranking-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prototype Gap Detection -->
+            <div id="gap-detection" class="gap-detection-container" hidden>
+              <h3>🔍 Prototype Gap Detection</h3>
+              <p class="gap-detection-intro">
+                Analysis of prototype coverage in "prototype space".
+              </p>
+              <div id="gap-status" class="gap-status-section">
+                <!-- Gap status indicator populated dynamically -->
+              </div>
+              <div id="nearest-prototypes" class="nearest-prototypes-section">
+                <h4>k-Nearest Prototypes</h4>
+                <table id="nearest-prototypes-table" class="results-table nearest-prototypes-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Prototype</th>
+                      <th>Distance</th>
+                      <th>Weight Dist</th>
+                      <th>Gate Dist</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nearest-prototypes-tbody"></tbody>
+                </table>
+              </div>
+              <div id="suggested-prototype" class="suggested-prototype-section" hidden>
+                <h4>💡 Suggested New Prototype</h4>
+                <div id="suggested-prototype-content">
+                  <!-- Suggested prototype details populated dynamically -->
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- Witness State Section -->
-        <section class="panel witness-panel" id="witness-section">
-          <h2>Witness State Finder</h2>
-          <p class="section-description">
-            Find a concrete state that would trigger this expression.
-          </p>
-          <div class="section-action-button">
-            <button id="find-witness-btn" class="action-button" disabled>
-              Find Witness State
-            </button>
-          </div>
-
-          <div class="witness-controls">
-            <span id="witness-status" class="status-text"></span>
-          </div>
-
-          <div id="witness-results" class="results-container" hidden>
-            <div class="witness-header">
-              <span id="witness-result-label" class="result-label"></span>
-              <button id="copy-witness-btn" class="btn btn-secondary btn-small">
-                Copy to Clipboard
-              </button>
-            </div>
-
-            <div class="witness-content">
-              <h3>Mood Axes</h3>
-              <div id="mood-display" class="axis-grid">
-                <!-- Populated dynamically -->
-              </div>
-
-              <h3>Sexual State</h3>
-              <div id="sexual-display" class="axis-grid">
-                <!-- Populated dynamically -->
-              </div>
-
-              <h3>Affect Traits</h3>
-              <div id="traits-display" class="axis-grid">
-                <!-- Populated dynamically -->
-              </div>
-            </div>
-
-            <div id="witness-json" class="json-display">
-              <pre id="witness-json-content"></pre>
-            </div>
-
-            <div id="violated-clauses" class="violated-clauses" hidden>
-              <h4>Violated Clauses (Nearest Miss)</h4>
-              <ul id="violated-clauses-list"></ul>
-            </div>
-
-            <div id="fitness-display" class="fitness-display">
-              <label>Fitness Score:</label>
-              <div class="fitness-bar">
-                <div id="fitness-fill" class="fitness-fill"></div>
-              </div>
-              <span id="fitness-value">--</span>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
   </div>
@@ -297,6 +424,25 @@
       </div>
     </div>
   </template>
+
+  <!-- Monte Carlo Report Modal -->
+  <div id="mc-report-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mc-report-title" style="display: none;">
+    <div class="modal-content modal-content--large">
+      <div class="modal-header">
+        <h2 id="mc-report-title">Monte Carlo Analysis Report</h2>
+        <button id="mc-report-close-btn" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <pre id="mc-report-content" class="mc-report-content"></pre>
+      </div>
+      <div class="modal-footer">
+        <div id="mc-report-status" class="status-message-area"></div>
+        <button id="mc-report-copy-btn" class="btn btn-primary">
+          Copy to Clipboard
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="expression-diagnostics.js"></script>
 </body>

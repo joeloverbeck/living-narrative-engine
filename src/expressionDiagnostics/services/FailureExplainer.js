@@ -164,6 +164,11 @@ class FailureExplainer {
       `FailureExplainer: Analyzing ${clauseFailures.length} clause failures with hierarchy`
     );
 
+    // Collect all last-mile failure rates for relative ranking
+    const allLastMileRates = clauseFailures
+      .map((c) => c.lastMileFailRate)
+      .filter((r) => r !== null && r !== undefined);
+
     return (
       clauseFailures
         .map((clause) => {
@@ -188,8 +193,11 @@ class FailureExplainer {
             explanation: this.#generateExplanation(clause, context),
             rank: 0, // Will be set after sort
             severity: this.#categorizeSeverity(clause.failureRate),
-            // NEW: Advanced metrics analysis
-            advancedAnalysis: this.#analyzeAdvancedMetrics(clause),
+            // NEW: Advanced metrics analysis with sibling context for relative ranking
+            advancedAnalysis: this.#analyzeAdvancedMetrics(
+              clause,
+              allLastMileRates
+            ),
             // NEW: Priority score for sorting
             priorityScore: this.#calculatePriorityScore(clause),
             // Existing hierarchy fields
@@ -245,6 +253,8 @@ class FailureExplainer {
           averageViolation: node.averageViolation,
           severity: this.#categorizeSeverity(node.failureRate),
           depth,
+          parentNodeType: node.parentNodeType || null,
+          isOrChild: node.parentNodeType === 'or',
         });
       }
     }
@@ -523,14 +533,37 @@ class FailureExplainer {
   }
 
   /**
-   * Analyze last-mile blocker status
+   * Analyze last-mile blocker status using relative ranking among siblings.
+   *
+   * The previous implementation used an absolute ratio threshold (> 1.5) that was
+   * mathematically unreachable in practice, causing all clauses to show
+   * "Other clauses fail first" which created circular, unhelpful recommendations.
+   *
+   * The new approach uses relative ranking: the clause with the highest last-mile
+   * failure rate among its siblings is considered decisive, with contextual
+   * recommendations for other clauses based on their relative position.
    *
    * @private
    * @param {object} clause - Clause result with advanced metrics
+   * @param {number[]} [siblingLastMileRates] - All sibling last-mile rates for relative ranking
    * @returns {{status: string, isDecisive: boolean, insight?: string}}
    */
-  #analyzeLastMile(clause) {
-    const { failureRate, lastMileFailRate, isSingleClause } = clause;
+  #analyzeLastMile(clause, siblingLastMileRates = []) {
+    const { lastMileFailRate, isSingleClause } = clause;
+
+    // Check if this is a compound node (AND/OR block)
+    const isCompound = clause.hierarchicalBreakdown?.isCompound ?? false;
+
+    if (isSingleClause && isCompound) {
+      // This is a compound block that is the only prerequisite
+      // The "single clause" logic doesn't apply meaningfully here
+      return {
+        status: 'compound_single_prereq',
+        insight:
+          'This compound block contains the only prerequisite; analyze individual leaf conditions for actionable insights',
+        isDecisive: true,
+      };
+    }
 
     if (isSingleClause) {
       return {
@@ -544,17 +577,59 @@ class FailureExplainer {
       return { status: 'no_data', isDecisive: false };
     }
 
-    const ratio = lastMileFailRate / (failureRate || 1);
+    // Relative ranking: compare against all sibling rates
+    const validSiblingRates = siblingLastMileRates.filter(
+      (r) => r !== null && r !== undefined
+    );
+    const maxSiblingRate =
+      validSiblingRates.length > 0 ? Math.max(...validSiblingRates) : 0;
 
-    if (ratio > 1.5) {
+    // Thresholds for relative ranking
+    const NEAR_TOP_THRESHOLD = 0.8; // Within 80% of max is "near top"
+    const SIGNIFICANT_IMPACT_MIN = 0.05; // 5% minimum for significance
+    const LOW_PRIORITY_THRESHOLD = 0.5; // Below 50% of max is "lower priority"
+
+    // Handle edge case: only one clause with data
+    if (validSiblingRates.length <= 1) {
+      // If only one clause, it's decisive by default if it has significant impact
+      if (lastMileFailRate >= SIGNIFICANT_IMPACT_MIN) {
+        return {
+          status: 'decisive_blocker',
+          isDecisive: true,
+          insight: 'This is the primary bottleneck - tune this first',
+        };
+      }
       return {
-        status: 'decisive_blocker',
-        isDecisive: true,
-        insight:
-          'This clause is the final obstacle when others pass - tune this first',
+        status: 'rarely_decisive',
+        isDecisive: false,
+        insight: 'This clause rarely blocks alone',
       };
     }
 
+    // Relative ranking with multiple clauses
+    const isHighestOrNear = lastMileFailRate >= maxSiblingRate * NEAR_TOP_THRESHOLD;
+    const hasSignificantImpact = lastMileFailRate >= SIGNIFICANT_IMPACT_MIN;
+    const isLowRelativePriority = lastMileFailRate < maxSiblingRate * LOW_PRIORITY_THRESHOLD;
+
+    // Primary blocker: highest or near-highest with significant absolute impact
+    if (isHighestOrNear && hasSignificantImpact) {
+      return {
+        status: 'decisive_blocker',
+        isDecisive: true,
+        insight: 'This is the primary bottleneck - tune this first',
+      };
+    }
+
+    // Very low relative impact: other clauses are more important
+    if (isLowRelativePriority && maxSiblingRate >= SIGNIFICANT_IMPACT_MIN) {
+      return {
+        status: 'lower_priority',
+        isDecisive: false,
+        insight: 'Other clauses fail more often - focus on those first',
+      };
+    }
+
+    // Absolute low impact: rarely blocks alone
     if (lastMileFailRate < 0.01) {
       return {
         status: 'rarely_decisive',
@@ -563,10 +638,11 @@ class FailureExplainer {
       };
     }
 
+    // Moderate contributor: not primary but still contributes
     return {
       status: 'moderate',
       isDecisive: false,
-      insight: 'This clause sometimes blocks alone',
+      insight: 'This clause contributes to blocking; consider tuning after primary blockers',
     };
   }
 
@@ -575,11 +651,12 @@ class FailureExplainer {
    *
    * @private
    * @param {object} clause - Clause result with advanced metrics
+   * @param {object} [lastMileAnalysis] - Pre-computed last-mile analysis (with relative ranking)
    * @returns {{action: string, priority: string, message: string}}
    */
-  #generateRecommendation(clause) {
+  #generateRecommendation(clause, lastMileAnalysis = null) {
     const ceiling = this.#analyzeCeiling(clause);
-    const lastMile = this.#analyzeLastMile(clause);
+    const lastMile = lastMileAnalysis || this.#analyzeLastMile(clause);
     const nearMiss = this.#analyzeNearMiss(clause);
 
     // Priority 1: Ceiling effect (can't be fixed by tuning)
@@ -611,12 +688,31 @@ class FailureExplainer {
       };
     }
 
-    // Priority 4: Not decisive
-    if (!lastMile.isDecisive) {
+    // Priority 4: Lower priority - not the primary blocker
+    // Use contextual message based on status
+    if (lastMile.status === 'lower_priority') {
       return {
         action: 'lower_priority',
         priority: 'low',
-        message: 'Other clauses fail first - tune those instead',
+        message: 'Other clauses fail more often - focus on those first',
+      };
+    }
+
+    // Priority 5: Moderate contributor
+    if (lastMile.status === 'moderate') {
+      return {
+        action: 'consider_tuning',
+        priority: 'low',
+        message: 'Contributes to blocking - consider tuning after primary blockers',
+      };
+    }
+
+    // Priority 6: Rarely decisive
+    if (lastMile.status === 'rarely_decisive') {
+      return {
+        action: 'lower_priority',
+        priority: 'low',
+        message: 'This clause rarely blocks alone - focus on other clauses',
       };
     }
 
@@ -632,15 +728,17 @@ class FailureExplainer {
    *
    * @private
    * @param {object} clause - Clause result with advanced metrics
+   * @param {number[]} [siblingLastMileRates] - All sibling last-mile rates for relative ranking
    * @returns {{percentileAnalysis: object, nearMissAnalysis: object, ceilingAnalysis: object, lastMileAnalysis: object, recommendation: object}}
    */
-  #analyzeAdvancedMetrics(clause) {
+  #analyzeAdvancedMetrics(clause, siblingLastMileRates = []) {
+    const lastMileAnalysis = this.#analyzeLastMile(clause, siblingLastMileRates);
     return {
       percentileAnalysis: this.#analyzePercentiles(clause),
       nearMissAnalysis: this.#analyzeNearMiss(clause),
       ceilingAnalysis: this.#analyzeCeiling(clause),
-      lastMileAnalysis: this.#analyzeLastMile(clause),
-      recommendation: this.#generateRecommendation(clause),
+      lastMileAnalysis,
+      recommendation: this.#generateRecommendation(clause, lastMileAnalysis),
     };
   }
 

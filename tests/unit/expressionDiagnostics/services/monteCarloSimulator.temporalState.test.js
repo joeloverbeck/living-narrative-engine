@@ -15,11 +15,23 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
+import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
+import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+
+const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
+  new EmotionCalculatorAdapter({
+    emotionCalculatorService: new EmotionCalculatorService({
+      dataRegistry,
+      logger,
+    }),
+    logger,
+  });
 
 describe('MonteCarloSimulator - Temporal State Handling', () => {
   let mockLogger;
   let mockDataRegistry;
   let simulator;
+  let mockEmotionCalculatorAdapter;
 
   // Mock emotion prototypes - must include guilt for persistence tests
   const mockEmotionPrototypes = {
@@ -80,9 +92,15 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
       }),
     };
 
+    mockEmotionCalculatorAdapter = buildEmotionCalculatorAdapter(
+      mockDataRegistry,
+      mockLogger
+    );
+
     simulator = new MonteCarloSimulator({
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
+      emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
     });
   });
 
@@ -338,9 +356,10 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
 
       const result = await simulator.simulate(nearZeroDeltaExpression, {
         sampleCount: 2000,
+        samplingMode: 'dynamic', // Test Gaussian delta behavior (coupled sampling)
       });
 
-      // With σ=10, ~68% of deltas should be within ±10, so ±15 should capture more
+      // With σ=15, ~68% of deltas should be within ±15, so this should trigger very often
       // This should trigger very often (>70% of samples)
       expect(result.triggerRate).toBeGreaterThan(0.6);
     });
@@ -385,6 +404,7 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
 
       const result = await simulator.simulate(moderateDeltaExpression, {
         sampleCount: 2000,
+        samplingMode: 'dynamic', // Test Gaussian delta behavior (coupled sampling)
       });
 
       // With σ=15, deltas >15 or <-15 should occur ~32% of time (tails)

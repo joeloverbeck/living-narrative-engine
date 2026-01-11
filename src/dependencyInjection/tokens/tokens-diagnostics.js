@@ -17,15 +17,19 @@ export const diagnosticsTokens = freeze({
   // Phase 2 - Monte Carlo
   IMonteCarloSimulator: 'IMonteCarloSimulator',
   IFailureExplainer: 'IFailureExplainer',
+  IEmotionCalculatorAdapter: 'IEmotionCalculatorAdapter',
 
   // Status Persistence
   IExpressionStatusService: 'IExpressionStatusService',
 
-  // Phase 3 - Witness Finding
-  IWitnessStateFinder: 'IWitnessStateFinder',
-
   // Path-Sensitive Analysis (EXPDIAPATSENANA series)
   IPathSensitiveAnalyzer: 'IPathSensitiveAnalyzer',
+
+  // Prototype Constraint Analysis (Monte Carlo report enhancement)
+  IPrototypeConstraintAnalyzer: 'IPrototypeConstraintAnalyzer',
+
+  // Prototype Fit Ranking (Monte Carlo prototype fit analysis)
+  IPrototypeFitRankingService: 'IPrototypeFitRankingService',
 
   // Phase 4 - SMT Solver (to be added in EXPDIA-013)
   // ISmtSolver: 'ISmtSolver',

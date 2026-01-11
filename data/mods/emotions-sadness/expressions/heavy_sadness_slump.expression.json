@@ -1,0 +1,168 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sadness:heavy_sadness_slump",
+    "description": "Everyday heavy sadness: a low, sinking mood that pulls the body down and slows thought, without tipping into grief-break, despair, or shutdown.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.sadness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disappointment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.sadness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.sadness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.valence"
+                                            },
+                                            {
+                                                "var": "moodAxes.valence"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires solid everyday sadness (sadness high) with clearly negative valence and low-to-mid energy. Excludes grief-break territory (grief kept moderate), blocks despair/shutdown (despair, numbness, dissociation capped), and avoids threat/panic tones. Triggers only on a noticeable sadness rise or a meaningful valence/arousal drop to prevent idle-loop spam."
+        }
+    ],
+    "actor_description": "Something heavy settles in me, not sharp—just weight. My thoughts slow and my chest feels dense, like every task got farther away. I'm still here, still functioning, but everything takes more effort and less of me wants to reach for anything.",
+    "description_text": "{actor} looks weighed down—shoulders lower, movements smaller, attention drifting as if it costs them to stay upright inside their own skin. Their voice and pace come out muted, like they're carrying extra weight they can't put down.",
+    "alternate_descriptions": {
+        "auditory": "I hear longer pauses and a softer, flatter cadence—breaths heavier than the words, as if speaking is one more thing to lift.",
+        "tactile": "The air feels thicker around them; their posture has a sink to it, like gravity is turned up and every motion drags a fraction longer.",
+        "limited": "Their energy dips and their expression dulls, the kind of quiet low that makes everything feel harder."
+    },
+    "tags": [
+        "sadness",
+        "low_mood",
+        "slump",
+        "low_energy",
+        "withdrawal",
+        "muted_affect"
+    ],
+    "diagnosticStatus": "unknown"
+}

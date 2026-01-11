@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-empathy-distress",
+  "version": "1.0.0",
+  "name": "Emotions - Empathy Distress",
+  "description": "Empathic overwhelm and prosocial distress expressions—when care is present but the felt load tips into 'too much.'",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "empathic_overwhelm.expression.json"
+    ]
+  }
+}

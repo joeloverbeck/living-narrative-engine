@@ -1,0 +1,120 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-empathy-distress:empathic_overwhelm",
+    "description": "Empathic overwhelm: prosocial distress flooding the system—care is present, but the felt load tips into \"too much.\" Attention stays locked on suffering while agency collapses, producing urgent discomfort, tightening urgency, and an impulse to escape or urgently fix.",
+    "actor_description": "I feel it hit me like a wave I can't stay standing in—my chest tight, breath thin, thoughts skittering between \"help\" and \"get out.\" I can't look away, but I also can't hold it; my stomach drops as if my body is trying to eject the feeling. I want to do something right now, but my hands hesitate like they don't belong to me. The care is still there—it just hurts too much to carry.",
+    "description_text": "{actor} goes visibly strained while staying locked-in—eyes fixed, jaw tight, breath quick and shallow. Their posture curls or braces as if carrying weight, hands hovering with indecision between helping and backing away.",
+    "priority": 82,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.empathic_distress"
+                            },
+                            0.62
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.empathic_distress"
+                                    },
+                                    {
+                                        "var": "previousEmotions.empathic_distress"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires high empathic_distress with compassion present, sustained high engagement, and a negative/low-agency appraisal. Blocks dissociation (shutdown), and caps panic/freeze (fear-system takeover). Triggers on an empathic_distress spike to prevent constant firing during steady sadness or baseline caring."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice goes thin or clipped, with a rushed inhale between words—as if they're trying not to crack while still responding.",
+        "tactile": "The air around them feels tight and braced—small tremors in their hands, shoulders set hard, like their body is holding back a flood.",
+        "limited": "{actor} looks overwhelmed—present, caring, and strained, as if they're fighting to keep it together."
+    },
+    "tags": [
+        "empathic_distress",
+        "compassion",
+        "overwhelm",
+        "prosocial",
+        "helplessness",
+        "locked_in_attention",
+        "withdrawal_urge",
+        "urgent_repair"
+    ],
+    "diagnosticStatus": "unknown"
+}

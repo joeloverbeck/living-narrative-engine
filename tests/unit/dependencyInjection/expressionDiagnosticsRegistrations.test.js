@@ -68,10 +68,20 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 7 services (Phase 1 + Phase 2 + ExpressionStatusService + Phase 3 + PathSensitiveAnalyzer)', () => {
+    it('should register exactly 9 services (Phase 1 + Phase 2 + ExpressionStatusService + Phase 3 + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(7);
+      expect(mockContainer.register).toHaveBeenCalledTimes(9);
+    });
+
+    it('should register PrototypeFitRankingService', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IPrototypeFitRankingService,
+        expect.any(Function),
+        expect.any(Object)
+      );
     });
 
     it('should register ExpressionStatusService', () => {
@@ -79,16 +89,6 @@ describe('expressionDiagnosticsRegistrations', () => {
 
       expect(mockContainer.register).toHaveBeenCalledWith(
         diagnosticsTokens.IExpressionStatusService,
-        expect.any(Function),
-        expect.any(Object)
-      );
-    });
-
-    it('should register WitnessStateFinder', () => {
-      registerExpressionDiagnosticsServices(mockContainer);
-
-      expect(mockContainer.register).toHaveBeenCalledWith(
-        diagnosticsTokens.IWitnessStateFinder,
         expect.any(Function),
         expect.any(Object)
       );
@@ -155,7 +155,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(7);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(9);
     });
   });
 
@@ -215,10 +215,6 @@ describe('expressionDiagnosticsRegistrations', () => {
       expect(diagnosticsTokens.IExpressionStatusService).toBe(
         'IExpressionStatusService'
       );
-    });
-
-    it('should export IWitnessStateFinder token', () => {
-      expect(diagnosticsTokens.IWitnessStateFinder).toBe('IWitnessStateFinder');
     });
 
     it('should be frozen', () => {

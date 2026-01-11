@@ -308,7 +308,7 @@ describe('GateConstraintAnalyzer', () => {
         expect(result.axisIntervals.has('threat')).toBe(true);
       });
 
-      it('should extract prototypes from OR logic', () => {
+      it('should NOT extract prototypes from OR logic (only one alternative needs to pass)', () => {
         const result = analyzer.analyze({
           id: 'test:or',
           prerequisites: [
@@ -323,12 +323,14 @@ describe('GateConstraintAnalyzer', () => {
           ],
         });
 
-        // Note: Current implementation treats OR same as AND for gate analysis
-        // This is conservative - if any branch might conflict, we analyze all
-        expect(result.axisIntervals.size).toBeGreaterThan(0);
+        // OR blocks represent alternatives - only one needs to pass
+        // We don't extract prototypes from OR blocks because they're not all required
+        // This prevents false positive gate conflicts from OR alternatives
+        expect(result.axisIntervals.size).toBe(0);
+        expect(result.hasConflict).toBe(false);
       });
 
-      it('should extract prototypes from deeply nested logic', () => {
+      it('should NOT detect conflict when OR provides a non-conflicting alternative', () => {
         const result = analyzer.analyze({
           id: 'test:deep_nested',
           prerequisites: [
@@ -337,8 +339,8 @@ describe('GateConstraintAnalyzer', () => {
                 and: [
                   {
                     or: [
-                      { '>=': [{ var: 'emotions.fear' }, 0.5] },
-                      { '>=': [{ var: 'emotions.joy' }, 0.5] },
+                      { '>=': [{ var: 'emotions.fear' }, 0.5] }, // conflicts with confidence
+                      { '>=': [{ var: 'emotions.joy' }, 0.5] }, // does NOT conflict with confidence
                     ],
                   },
                   { '>=': [{ var: 'emotions.confidence' }, 0.5] },
@@ -348,8 +350,13 @@ describe('GateConstraintAnalyzer', () => {
           ],
         });
 
-        // Should detect fear + confidence conflict even in nested structure
-        expect(result.hasConflict).toBe(true);
+        // OR blocks are skipped - only confidence (from AND) is required
+        // Even though fear+confidence would conflict, joy is a valid alternative
+        // So no conflict is reported (only confidence gates are analyzed)
+        expect(result.hasConflict).toBe(false);
+        // Only confidence's gates are in the intervals
+        expect(result.axisIntervals.has('threat')).toBe(true);
+        expect(result.axisIntervals.has('agency_control')).toBe(true);
       });
     });
 

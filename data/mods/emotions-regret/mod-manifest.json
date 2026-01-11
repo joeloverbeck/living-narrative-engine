@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-regret",
+  "version": "1.0.0",
+  "name": "Emotions - Regret",
+  "description": "Regret expressions capturing counterfactual self-reproach and rumination—\"I chose wrong\" without moral guilt or identity-shame.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "regret_rumination_loop.expression.json"
+    ]
+  }
+}

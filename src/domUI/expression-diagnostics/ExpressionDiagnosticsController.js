@@ -10,7 +10,6 @@ import {
   getStatusCircleCssClass,
   getStatusThemeEntry,
 } from '../../expressionDiagnostics/statusTheme.js';
-import WitnessState from '../../expressionDiagnostics/models/WitnessState.js';
 import { copyToClipboard } from '../helpers/clipboardUtils.js';
 import StatusSelectDropdown from './components/StatusSelectDropdown.js';
 
@@ -22,14 +21,17 @@ class ExpressionDiagnosticsController {
   #monteCarloSimulator;
   #failureExplainer;
   #expressionStatusService;
-  #witnessStateFinder;
   #pathSensitiveAnalyzer;
+  #reportGenerator;
+  #reportModal;
+  #prototypeFitRankingService;
 
   #selectedExpression = null;
   #currentResult = null;
+  #currentBlockers = [];
   #expressionStatuses = [];
-  #currentWitnessState = null;
   #currentPathSensitiveResult = null;
+  #rawSimulationResult = null; // Raw result with storedContexts for sensitivity analysis
 
   // DOM elements
   #expressionSelectContainer;
@@ -53,26 +55,46 @@ class ExpressionDiagnosticsController {
   #mcConfidenceInterval;
   #mcSummary;
   #blockersTbody;
+  #generateReportBtn;
   // Problematic Expressions DOM elements
   #problematicPillsContainer;
   #problematicErrorBanner;
   #problematicErrorTitle;
   #problematicErrorMessage;
   #problematicErrorGuidance;
-  // Witness State DOM elements
-  #findWitnessBtn;
-  #witnessStatus;
-  #witnessResults;
-  #witnessResultLabel;
-  #copyWitnessBtn;
-  #moodDisplay;
-  #sexualDisplay;
-  #traitsDisplay;
-  #witnessJsonContent;
-  #violatedClauses;
-  #violatedClausesList;
-  #fitnessFill;
-  #fitnessValue;
+  // MC Witnesses DOM elements (ground-truth witnesses from Monte Carlo)
+  #mcWitnessesContainer;
+  #mcWitnessesList;
+  // Global Sensitivity DOM elements
+  #globalSensitivityContainer;
+  #globalSensitivityTables;
+  // Static Cross-Reference DOM elements
+  #staticCrossReferenceContainer;
+  #staticCrossReferenceContent;
+  #crossReferenceSummary;
+  // Conditional Pass Rates DOM elements
+  #conditionalPassRatesContainer;
+  #conditionalPassRatesContent;
+  // Last-Mile Decomposition DOM elements
+  #lastMileDecompositionContainer;
+  #lastMileDecompositionContent;
+  // Prototype Fit Analysis DOM elements
+  #prototypeFitAnalysisContainer;
+  #prototypeFitTbody;
+  #prototypeFitDetails;
+  #prototypeFitSuggestion;
+  // Implied Prototype DOM elements
+  #impliedPrototypeContainer;
+  #targetSignatureTbody;
+  #similarityRankingTbody;
+  #gatePassRankingTbody;
+  #combinedRankingTbody;
+  // Gap Detection DOM elements
+  #gapDetectionContainer;
+  #gapStatus;
+  #nearestPrototypesTbody;
+  #suggestedPrototypeSection;
+  #suggestedPrototypeContent;
   // Path-Sensitive Analysis DOM elements
   #pathSensitiveSection;
   #pathSensitiveSummary;
@@ -96,8 +118,10 @@ class ExpressionDiagnosticsController {
     monteCarloSimulator,
     failureExplainer,
     expressionStatusService,
-    witnessStateFinder,
     pathSensitiveAnalyzer,
+    reportGenerator,
+    reportModal,
+    prototypeFitRankingService = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -120,11 +144,14 @@ class ExpressionDiagnosticsController {
     validateDependency(expressionStatusService, 'IExpressionStatusService', logger, {
       requiredMethods: ['scanAllStatuses', 'updateStatus', 'getProblematicExpressions'],
     });
-    validateDependency(witnessStateFinder, 'IWitnessStateFinder', logger, {
-      requiredMethods: ['findWitness'],
-    });
     validateDependency(pathSensitiveAnalyzer, 'IPathSensitiveAnalyzer', logger, {
       requiredMethods: ['analyze'],
+    });
+    validateDependency(reportGenerator, 'IMonteCarloReportGenerator', logger, {
+      requiredMethods: ['generate'],
+    });
+    validateDependency(reportModal, 'IMonteCarloReportModal', logger, {
+      requiredMethods: ['showReport'],
     });
 
     this.#logger = logger;
@@ -134,8 +161,10 @@ class ExpressionDiagnosticsController {
     this.#monteCarloSimulator = monteCarloSimulator;
     this.#failureExplainer = failureExplainer;
     this.#expressionStatusService = expressionStatusService;
-    this.#witnessStateFinder = witnessStateFinder;
     this.#pathSensitiveAnalyzer = pathSensitiveAnalyzer;
+    this.#reportGenerator = reportGenerator;
+    this.#reportModal = reportModal;
+    this.#prototypeFitRankingService = prototypeFitRankingService;
   }
 
   async initialize() {
@@ -174,24 +203,44 @@ class ExpressionDiagnosticsController {
     );
     this.#mcSummary = document.getElementById('mc-summary');
     this.#blockersTbody = document.getElementById('blockers-tbody');
+    this.#generateReportBtn = document.getElementById('generate-report-btn');
     // Problematic Expressions elements
     this.#problematicPillsContainer = document.getElementById(
       'problematic-pills-container'
     );
-    // Witness State elements
-    this.#findWitnessBtn = document.getElementById('find-witness-btn');
-    this.#witnessStatus = document.getElementById('witness-status');
-    this.#witnessResults = document.getElementById('witness-results');
-    this.#witnessResultLabel = document.getElementById('witness-result-label');
-    this.#copyWitnessBtn = document.getElementById('copy-witness-btn');
-    this.#moodDisplay = document.getElementById('mood-display');
-    this.#sexualDisplay = document.getElementById('sexual-display');
-    this.#traitsDisplay = document.getElementById('traits-display');
-    this.#witnessJsonContent = document.getElementById('witness-json-content');
-    this.#violatedClauses = document.getElementById('violated-clauses');
-    this.#violatedClausesList = document.getElementById('violated-clauses-list');
-    this.#fitnessFill = document.getElementById('fitness-fill');
-    this.#fitnessValue = document.getElementById('fitness-value');
+    // MC Witnesses elements (ground-truth witnesses from Monte Carlo)
+    this.#mcWitnessesContainer = document.getElementById('mc-witnesses');
+    this.#mcWitnessesList = document.getElementById('mc-witnesses-list');
+    // Global Sensitivity elements
+    this.#globalSensitivityContainer = document.getElementById('global-sensitivity');
+    this.#globalSensitivityTables = document.getElementById('global-sensitivity-tables');
+    // Static Cross-Reference elements
+    this.#staticCrossReferenceContainer = document.getElementById('static-cross-reference');
+    this.#staticCrossReferenceContent = document.getElementById('static-cross-reference-content');
+    this.#crossReferenceSummary = document.getElementById('cross-reference-summary');
+    // Conditional Pass Rates elements
+    this.#conditionalPassRatesContainer = document.getElementById('conditional-pass-rates');
+    this.#conditionalPassRatesContent = document.getElementById('conditional-pass-rates-content');
+    // Last-Mile Decomposition elements
+    this.#lastMileDecompositionContainer = document.getElementById('last-mile-decomposition');
+    this.#lastMileDecompositionContent = document.getElementById('last-mile-decomposition-content');
+    // Prototype Fit Analysis elements
+    this.#prototypeFitAnalysisContainer = document.getElementById('prototype-fit-analysis');
+    this.#prototypeFitTbody = document.getElementById('prototype-fit-tbody');
+    this.#prototypeFitDetails = document.getElementById('prototype-fit-details');
+    this.#prototypeFitSuggestion = document.getElementById('prototype-fit-suggestion');
+    // Implied Prototype elements
+    this.#impliedPrototypeContainer = document.getElementById('implied-prototype');
+    this.#targetSignatureTbody = document.getElementById('target-signature-tbody');
+    this.#similarityRankingTbody = document.getElementById('similarity-ranking-tbody');
+    this.#gatePassRankingTbody = document.getElementById('gate-pass-ranking-tbody');
+    this.#combinedRankingTbody = document.getElementById('combined-ranking-tbody');
+    // Gap Detection elements
+    this.#gapDetectionContainer = document.getElementById('gap-detection');
+    this.#gapStatus = document.getElementById('gap-status');
+    this.#nearestPrototypesTbody = document.getElementById('nearest-prototypes-tbody');
+    this.#suggestedPrototypeSection = document.getElementById('suggested-prototype');
+    this.#suggestedPrototypeContent = document.getElementById('suggested-prototype-content');
     // Path-Sensitive Analysis elements
     this.#pathSensitiveSection = document.getElementById('path-sensitive-results');
     this.#pathSensitiveSummary = document.getElementById('path-sensitive-summary');
@@ -218,17 +267,15 @@ class ExpressionDiagnosticsController {
       await this.#runMonteCarloSimulation();
     });
 
-    this.#findWitnessBtn?.addEventListener('click', async () => {
-      await this.#findWitness();
-    });
-
-    this.#copyWitnessBtn?.addEventListener('click', async () => {
-      await this.#copyWitnessToClipboard();
-    });
+    // Note: Witness copy button is now bound dynamically in #displayMcWitnesses()
 
     this.#showAllBranchesCheckbox?.addEventListener('change', (e) => {
       this.#showAllBranches = e.target.checked;
       this.#applyBranchFilter();
+    });
+
+    this.#generateReportBtn?.addEventListener('click', () => {
+      this.#handleGenerateReport();
     });
   }
 
@@ -312,7 +359,6 @@ class ExpressionDiagnosticsController {
       this.#expressionDescription.textContent = '';
       this.#runStaticBtn.disabled = true;
       if (this.#runMcBtn) this.#runMcBtn.disabled = true;
-      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = true;
       this.#resetResults();
       return;
     }
@@ -325,12 +371,10 @@ class ExpressionDiagnosticsController {
         this.#selectedExpression.description || 'No description available';
       this.#runStaticBtn.disabled = false;
       if (this.#runMcBtn) this.#runMcBtn.disabled = false;
-      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = false;
     } else {
       this.#expressionDescription.textContent = 'Expression not found';
       this.#runStaticBtn.disabled = true;
       if (this.#runMcBtn) this.#runMcBtn.disabled = true;
-      if (this.#findWitnessBtn) this.#findWitnessBtn.disabled = true;
     }
 
     this.#resetResults();
@@ -354,17 +398,13 @@ class ExpressionDiagnosticsController {
   }
 
   #resetWitnessResults() {
-    this.#currentWitnessState = null;
-    if (this.#witnessResults) this.#witnessResults.hidden = true;
-    if (this.#witnessStatus) this.#witnessStatus.textContent = '';
-    if (this.#witnessResultLabel) this.#witnessResultLabel.textContent = '';
-    if (this.#moodDisplay) this.#moodDisplay.innerHTML = '';
-    if (this.#sexualDisplay) this.#sexualDisplay.innerHTML = '';
-    if (this.#witnessJsonContent) this.#witnessJsonContent.textContent = '';
-    if (this.#violatedClauses) this.#violatedClauses.hidden = true;
-    if (this.#violatedClausesList) this.#violatedClausesList.innerHTML = '';
-    if (this.#fitnessFill) this.#fitnessFill.style.width = '0%';
-    if (this.#fitnessValue) this.#fitnessValue.textContent = '--';
+    // Reset MC-captured witness display
+    if (this.#mcWitnessesContainer) {
+      this.#mcWitnessesContainer.hidden = true;
+    }
+    if (this.#mcWitnessesList) {
+      this.#mcWitnessesList.innerHTML = '';
+    }
   }
 
   #resetMonteCarloResults() {
@@ -374,6 +414,22 @@ class ExpressionDiagnosticsController {
       this.#mcConfidenceInterval.textContent = '(-- - --)';
     if (this.#mcSummary) this.#mcSummary.textContent = '';
     if (this.#blockersTbody) this.#blockersTbody.innerHTML = '';
+    // Clear stored blockers for report generation
+    this.#currentBlockers = [];
+    // Reset conditional pass rates section
+    if (this.#conditionalPassRatesContainer) {
+      this.#conditionalPassRatesContainer.hidden = true;
+    }
+    if (this.#conditionalPassRatesContent) {
+      this.#conditionalPassRatesContent.innerHTML = '';
+    }
+    // Reset last-mile decomposition section
+    if (this.#lastMileDecompositionContainer) {
+      this.#lastMileDecompositionContainer.hidden = true;
+    }
+    if (this.#lastMileDecompositionContent) {
+      this.#lastMileDecompositionContent.innerHTML = '';
+    }
   }
 
   async #runStaticAnalysis() {
@@ -533,6 +589,8 @@ class ExpressionDiagnosticsController {
           sampleCount,
           distribution,
           trackClauses: true,
+          storeSamplesForSensitivity: true,
+          sensitivitySampleLimit: 10000,
           onProgress: (completed, total) => {
             if (this.#runMcBtn) {
               const pct = Math.round((100 * completed) / total);
@@ -541,6 +599,9 @@ class ExpressionDiagnosticsController {
           },
         }
       );
+
+      // Store raw result for sensitivity analysis during report generation
+      this.#rawSimulationResult = result;
 
       const blockers = this.#failureExplainer.analyzeHierarchicalBlockers(
         result.clauseFailures
@@ -586,6 +647,9 @@ class ExpressionDiagnosticsController {
   #displayMonteCarloResults(result, blockers, summary) {
     if (!this.#mcResults) return;
 
+    // Store blockers for report generation
+    this.#currentBlockers = blockers;
+
     this.#mcResults.hidden = false;
 
     // Update rarity indicator using shared classification
@@ -615,6 +679,27 @@ class ExpressionDiagnosticsController {
 
     // Update blockers table
     this.#populateBlockersTable(blockers);
+
+    // Display ground-truth witnesses from MC simulation
+    this.#displayMcWitnesses(result.witnessAnalysis);
+
+    // Display global expression sensitivity (how threshold changes affect whole expression)
+    this.#displayGlobalSensitivity();
+
+    // Display conditional pass rates (emotion pass rates given mood constraints)
+    this.#displayConditionalPassRates();
+
+    // Display last-mile decomposition (why decisive blockers fail)
+    this.#displayLastMileDecomposition();
+
+    // Display static analysis cross-reference (compare static findings with MC observations)
+    this.#displayStaticCrossReference();
+
+    // Display prototype fit analysis sections (prototype fit, implied prototype, gap detection)
+    // Deferred via requestAnimationFrame to avoid click handler violation (expensive analysis)
+    requestAnimationFrame(() => {
+      this.#displayPrototypeFitAnalysis();
+    });
   }
 
   #populateBlockersTable(blockers) {
@@ -678,6 +763,255 @@ class ExpressionDiagnosticsController {
     }
   }
 
+  /**
+   * Handle Generate Report button click.
+   * Generates markdown report and displays in modal.
+   *
+   * @private
+   */
+  #handleGenerateReport() {
+    if (!this.#currentResult || !this.#selectedExpression) {
+      this.#logger.warn('Cannot generate report: no simulation results');
+      return;
+    }
+
+    if (!this.#reportGenerator || !this.#reportModal) {
+      this.#logger.error('Report generator or modal not available');
+      return;
+    }
+
+    const expressionName = this.#getExpressionName(this.#selectedExpression.id);
+    const summary = this.#mcSummary?.textContent || '';
+
+    // Compute sensitivity data for emotion threshold conditions
+    const sensitivityData = this.#computeSensitivityData();
+
+    // Compute global expression sensitivity for top tunable conditions
+    const globalSensitivityData = this.#computeGlobalSensitivityData();
+
+    // Collect static analysis data for cross-reference section
+    const staticAnalysis = {
+      gateConflicts: this.#currentResult.gateConflicts || [],
+      unreachableThresholds: this.#currentResult.unreachableThresholds || [],
+    };
+
+    try {
+      const report = this.#reportGenerator.generate({
+        expressionName,
+        simulationResult: this.#rawSimulationResult,
+        blockers: this.#currentBlockers,
+        summary,
+        prerequisites: this.#selectedExpression?.prerequisites ?? null,
+        sensitivityData,
+        globalSensitivityData,
+        staticAnalysis,
+      });
+
+      this.#reportModal.showReport(report);
+      this.#logger.debug('Report generated and displayed');
+    } catch (err) {
+      this.#logger.error('Failed to generate report:', err);
+    }
+  }
+
+  /**
+   * Compute sensitivity analysis for emotion threshold conditions.
+   *
+   * @private
+   * @returns {import('../../expressionDiagnostics/services/MonteCarloSimulator.js').SensitivityResult[]} Array of sensitivity results
+   */
+  #computeSensitivityData() {
+    // Check if we have stored contexts for sensitivity analysis
+    if (
+      !this.#rawSimulationResult?.storedContexts ||
+      this.#rawSimulationResult.storedContexts.length === 0
+    ) {
+      this.#logger.debug(
+        'No stored contexts available for sensitivity analysis'
+      );
+      return [];
+    }
+
+    const sensitivityResults = [];
+    const storedContexts = this.#rawSimulationResult.storedContexts;
+    // Track processed conditions to avoid duplicate analysis
+    // Key format: "varPath:operator:threshold"
+    const processedConditions = new Set();
+
+    // Extract emotion threshold conditions from blockers
+    for (const blocker of this.#currentBlockers) {
+      const hb = blocker.hierarchicalBreakdown ?? {};
+      const leaves = hb.isCompound ? this.#flattenLeavesForSensitivity(hb) : [hb];
+
+      for (const leaf of leaves) {
+        const varPath = leaf.variablePath ?? '';
+        const threshold = leaf.thresholdValue;
+        // Note: HierarchicalClauseNode exposes operator as 'comparisonOperator', not 'operator'
+        const operator = leaf.comparisonOperator ?? '>=';
+
+        // Only analyze emotion and sexual threshold conditions
+        const emotionMatch = varPath.match(/^emotions\.(\w+)$/);
+        const sexualMatch = varPath.match(/^sexual\.(\w+)$/);
+
+        if ((emotionMatch || sexualMatch) && typeof threshold === 'number') {
+          // Skip if this exact condition was already analyzed
+          // (same condition can appear in multiple places, e.g., AND + nested OR)
+          const conditionKey = `${varPath}:${operator}:${threshold}`;
+          if (processedConditions.has(conditionKey)) {
+            continue;
+          }
+          processedConditions.add(conditionKey);
+
+          try {
+            const result = this.#monteCarloSimulator.computeThresholdSensitivity(
+              storedContexts,
+              varPath,
+              operator,
+              threshold
+            );
+            sensitivityResults.push(result);
+          } catch (err) {
+            this.#logger.warn(
+              `Failed to compute sensitivity for ${varPath}: ${err.message}`
+            );
+          }
+        }
+      }
+    }
+
+    return sensitivityResults;
+  }
+
+  /**
+   * Flatten leaf nodes from hierarchical breakdown for sensitivity analysis.
+   *
+   * @private
+   * @param {object} node - Hierarchical node
+   * @returns {object[]} Flattened leaf nodes
+   */
+  #flattenLeavesForSensitivity(node) {
+    if (!node.isCompound) {
+      return [node];
+    }
+
+    const leaves = [];
+    for (const child of node.children ?? []) {
+      leaves.push(...this.#flattenLeavesForSensitivity(child));
+    }
+    return leaves;
+  }
+
+  /**
+   * Compute global expression sensitivity for top tunable conditions.
+   * Unlike clause-level sensitivity, this shows how the ENTIRE expression trigger rate
+   * changes when a threshold is adjusted.
+   *
+   * @private
+   * @returns {Array<{varPath: string, operator: string, originalThreshold: number, grid: Array, isExpressionLevel: boolean}>}
+   */
+  #computeGlobalSensitivityData() {
+    // Check if we have stored contexts for sensitivity analysis
+    if (
+      !this.#rawSimulationResult?.storedContexts ||
+      this.#rawSimulationResult.storedContexts.length === 0
+    ) {
+      this.#logger.debug(
+        'No stored contexts available for global sensitivity analysis'
+      );
+      return [];
+    }
+
+    // Get the full expression logic from prerequisites
+    const prerequisites = this.#selectedExpression?.prerequisites;
+    if (!prerequisites || prerequisites.length === 0) {
+      this.#logger.debug('No prerequisites available for global sensitivity');
+      return [];
+    }
+
+    // Extract the top-level logic from prerequisites
+    const expressionLogic = prerequisites[0]?.logic;
+    if (!expressionLogic) {
+      this.#logger.debug('No logic found in prerequisites');
+      return [];
+    }
+
+    const globalSensitivityResults = [];
+    const storedContexts = this.#rawSimulationResult.storedContexts;
+    const processedVars = new Set();
+
+    // Find top 3 tunable emotion/sexual conditions from blockers
+    const tunableCandidates = [];
+
+    for (const blocker of this.#currentBlockers) {
+      const hb = blocker.hierarchicalBreakdown ?? {};
+      const leaves = hb.isCompound ? this.#flattenLeavesForSensitivity(hb) : [hb];
+
+      for (const leaf of leaves) {
+        const varPath = leaf.variablePath ?? '';
+        const threshold = leaf.thresholdValue;
+        const operator = leaf.comparisonOperator ?? '>=';
+        const nearMissRate = leaf.nearMissRate ?? 0;
+
+        // Only analyze emotion and sexual threshold conditions
+        const emotionMatch = varPath.match(/^emotions\.(\w+)$/);
+        const sexualMatch = varPath.match(/^sexual\.(\w+)$/);
+
+        if ((emotionMatch || sexualMatch) && typeof threshold === 'number') {
+          // Skip if already processed
+          const key = `${varPath}:${operator}:${threshold}`;
+          if (processedVars.has(key)) continue;
+          processedVars.add(key);
+
+          const failureRate = leaf.failureRate ?? 0;
+          const lastMileRate = leaf.lastMileFailRate ?? failureRate;
+
+          tunableCandidates.push({
+            varPath,
+            operator,
+            threshold,
+            nearMissRate,
+            failureRate,
+            lastMileRate,
+          });
+        }
+      }
+    }
+
+    // Sort by combined score balancing decisiveness and tunability:
+    // - lastMileRate: How often this is the sole blocking condition (decisiveness)
+    // - nearMissRate: How close values are to threshold (tunability/actionability)
+    // - failureRate: Overall failure contribution
+    // This ensures decisive blockers (like emotions.anger) get included even if
+    // they have low tunability, while still prioritizing actionable conditions.
+    tunableCandidates.sort((a, b) => {
+      const scoreA = a.lastMileRate * 0.5 + a.nearMissRate * 0.3 + a.failureRate * 0.2;
+      const scoreB = b.lastMileRate * 0.5 + b.nearMissRate * 0.3 + b.failureRate * 0.2;
+      return scoreB - scoreA;
+    });
+    const topCandidates = tunableCandidates.slice(0, 3);
+
+    // Compute global sensitivity for each top candidate
+    for (const candidate of topCandidates) {
+      try {
+        const result = this.#monteCarloSimulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          candidate.varPath,
+          candidate.operator,
+          candidate.threshold,
+          { steps: 9, stepSize: 0.05 }
+        );
+        globalSensitivityResults.push(result);
+      } catch (err) {
+        this.#logger.warn(
+          `Failed to compute global sensitivity for ${candidate.varPath}: ${err.message}`
+        );
+      }
+    }
+
+    return globalSensitivityResults;
+  }
+
 
   /**
    * Toggle expand/collapse of a blocker's hierarchical breakdown.
@@ -718,37 +1052,84 @@ class ExpressionDiagnosticsController {
    * @private
    * @param {object} node - Tree node (from toJSON)
    * @param {number} depth - Current depth (for indentation)
+   * @param {boolean} isInsideOrBlock - True if this node is inside an OR block (last-mile N/A)
    * @returns {string} HTML string
    */
-  #renderHierarchicalTree(node, depth) {
+  #renderHierarchicalTree(node, depth, isInsideOrBlock = false) {
     if (!node) return '';
 
     const indent = depth * 1.5; // rem units
     const nodeIcon = this.#getNodeIcon(node.nodeType);
-    const failureColor = this.#getFailureColor(node.failureRate);
+
+    // For OR blocks, show PASS rate (which is the meaningful metric)
+    // For other blocks, show FAIL rate
+    const isOrBlock = node.nodeType === 'or';
+    // Track if this node or any ancestor is an OR block
+    const isOrContext = isInsideOrBlock || isOrBlock;
+    const displayRate = isOrBlock
+      ? this.#calculateOrPassRate(node.children ?? [])
+      : node.failureRate;
+    const rateClass = isOrBlock
+      ? this.#getPassRateColor(displayRate)
+      : this.#getFailureColor(node.failureRate);
+    const rateLabel = isOrBlock ? 'pass' : '';
 
     // Format violation for leaf nodes
     const violationDisplay =
       !node.isCompound && node.averageViolation > 0
-        ? ` <span class="violation-badge">Δ${node.averageViolation.toFixed(2)}</span>`
+        ? ` <span class="violation-badge">\u0394${node.averageViolation.toFixed(2)}</span>`
         : '';
 
-    // Percentiles (if available)
-    const percentilesDisplay =
-      node.violationP50 !== null && node.violationP50 !== undefined
-        ? ` <span class="tree-percentiles">p50: ${this.#formatNumber(node.violationP50)}</span>`
+    // Threshold display for leaf nodes
+    const thresholdDisplay =
+      !node.isCompound &&
+      node.thresholdValue !== null &&
+      node.thresholdValue !== undefined
+        ? ` <span class="tree-threshold">thresh: ${this.#formatNumber(node.thresholdValue)}</span>`
         : '';
+
+    // Max observed display for leaf nodes
+    const maxObsDisplay =
+      !node.isCompound &&
+      node.maxObservedValue !== null &&
+      node.maxObservedValue !== undefined
+        ? ` <span class="tree-max-obs">max: ${this.#formatNumber(node.maxObservedValue)}</span>`
+        : '';
+
+    // Ceiling gap display for leaf nodes (show as metric, not just warning)
+    const gapDisplay =
+      !node.isCompound &&
+      node.ceilingGap !== null &&
+      node.ceilingGap !== undefined
+        ? ` <span class="tree-gap ${node.ceilingGap > 0 ? 'positive' : 'negative'}">gap: ${this.#formatNumber(node.ceilingGap)}</span>`
+        : '';
+
+    // Tunability indicator for leaf nodes
+    const tunabilityDisplay =
+      !node.isCompound &&
+      node.nearMissRate !== null &&
+      node.nearMissRate !== undefined
+        ? ` <span class="tree-tunability tunability-${this.#getTunabilityLevel(node.nearMissRate)}">${this.#getTunabilityLevel(node.nearMissRate)}</span>`
+        : '';
+
+    // Percentiles (if available) - show P50, P90, P95, P99
+    const percentilesDisplay = this.#formatPercentilesDisplay(node);
 
     // Last-mile rate (if meaningful)
-    const lastMileDisplay =
-      node.lastMileFailRate !== null && node.lastMileFailRate !== undefined
-        ? ` <span class="tree-last-mile">LM: ${this.#formatPercentage(node.lastMileFailRate)}</span>`
-        : '';
+    // For leaf nodes inside OR blocks, last-mile is conceptually meaningless
+    // (only one OR alternative needs to pass, so "last-mile" doesn't apply)
+    let lastMileDisplay = '';
+    if (!node.isCompound && isOrContext) {
+      // Leaf inside OR block - show N/A indicator
+      lastMileDisplay = ' <span class="tree-last-mile na">LM: N/A</span>';
+    } else if (node.lastMileFailRate !== null && node.lastMileFailRate !== undefined) {
+      lastMileDisplay = ` <span class="tree-last-mile">LM: ${this.#formatPercentage(node.lastMileFailRate)}</span>`;
+    }
 
-    // Ceiling warning
+    // Ceiling warning (for critical ceiling detection)
     const ceilingDisplay =
       node.ceilingGap !== null && node.ceilingGap > 0
-        ? ` <span class="tree-ceiling">max: ${this.#formatNumber(node.maxObservedValue)} &lt; threshold</span>`
+        ? ` <span class="tree-ceiling-warning">CEILING</span>`
         : '';
 
     // Build tree line prefix
@@ -759,24 +1140,163 @@ class ExpressionDiagnosticsController {
     const isDecisive = node.advancedAnalysis?.lastMileAnalysis?.isDecisive ?? false;
     const hasCeiling = node.ceilingGap !== null && node.ceilingGap > 0;
 
+    // For OR blocks, show pass rate with label; for others, show failure rate
+    const rateDisplay = isOrBlock
+      ? `<span class="pass-rate ${rateClass}">${this.#formatPercentage(displayRate)} ${rateLabel}</span>`
+      : `<span class="failure-rate ${rateClass}">${this.#formatPercentage(displayRate)}</span>`;
+
     let html = `
       <div class="tree-node" style="padding-left: ${indent}rem" data-decisive="${isDecisive}" data-ceiling="${hasCeiling}">
         <span class="tree-prefix">${treePrefix}</span>
         <span class="node-icon ${node.nodeType}">${nodeIcon}</span>
         <span class="node-description">${this.#escapeHtml(node.description)}</span>
-        <span class="failure-rate ${failureColor}">${this.#formatPercentage(node.failureRate)}</span>
-        ${violationDisplay}${percentilesDisplay}${lastMileDisplay}${ceilingDisplay}
+        ${rateDisplay}
+        ${violationDisplay}${thresholdDisplay}${maxObsDisplay}${gapDisplay}${tunabilityDisplay}${percentilesDisplay}${lastMileDisplay}${ceilingDisplay}
       </div>
     `;
 
     // Render children recursively
+    // Pass isOrContext so children know they're inside an OR block (for last-mile display)
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
-        html += this.#renderHierarchicalTree(child, depth + 1);
+        html += this.#renderHierarchicalTree(child, depth + 1, isOrContext);
+      }
+
+      // For OR nodes, add combined pass rate summary and contribution breakdown after children
+      if (node.nodeType === 'or') {
+        const passRate = this.#calculateOrPassRate(node.children);
+        const contributionHtml = this.#generateOrContributionBreakdownHtml(node.children, depth);
+        html += `<div class="tree-or-summary" style="padding-left: ${(depth + 1) * 1.5}rem">Combined: ${this.#formatPercentage(passRate)} pass rate</div>`;
+        html += contributionHtml;
       }
     }
 
     return html;
+  }
+
+  /**
+   * Calculate the combined pass rate for an OR block.
+   * P(any pass) = 1 - P(all fail) = 1 - Π(failRate_i)
+   *
+   * @private
+   * @param {object[]} children - Child nodes of the OR block
+   * @returns {number} Combined pass rate (0 to 1)
+   */
+  #calculateOrPassRate(children) {
+    let allFailProb = 1;
+    for (const child of children) {
+      allFailProb *= child.failureRate ?? 1;
+    }
+    return 1 - allFailProb;
+  }
+
+  /**
+   * Generate HTML for OR contribution breakdown.
+   * Shows which OR alternatives contribute most to the block passing.
+   *
+   * @private
+   * @param {object[]} children - Child nodes of the OR block
+   * @param {number} depth - Current depth for indentation
+   * @returns {string} HTML string with contribution breakdown
+   */
+  #generateOrContributionBreakdownHtml(children, depth) {
+    if (!children || children.length === 0) {
+      return '';
+    }
+
+    // Collect contribution data from all children
+    const contributions = [];
+
+    for (const child of children) {
+      const orContributionRate = child.orContributionRate;
+      const orContributionCount = child.orContributionCount ?? 0;
+      const orSuccessCount = child.orSuccessCount ?? 0;
+
+      // Only include if we have contribution data
+      if (
+        typeof orContributionRate === 'number' ||
+        orContributionCount > 0 ||
+        orSuccessCount > 0
+      ) {
+        contributions.push({
+          description: child.description ?? 'Unknown condition',
+          contributionRate: orContributionRate,
+          contributionCount: orContributionCount,
+          successCount: orSuccessCount,
+        });
+      }
+    }
+
+    // No contribution data available
+    if (contributions.length === 0) {
+      return '';
+    }
+
+    // Sort by contribution rate descending
+    contributions.sort((a, b) => {
+      const rateA = a.contributionRate ?? 0;
+      const rateB = b.contributionRate ?? 0;
+      return rateB - rateA;
+    });
+
+    const totalSuccesses = contributions[0]?.successCount ?? 0;
+    if (totalSuccesses === 0) {
+      return '';
+    }
+
+    // Build collapsible breakdown
+    const indent = (depth + 1) * 1.5;
+    let html = `<details class="or-contribution-breakdown" style="padding-left: ${indent}rem">`;
+    html += `<summary>Which alternatives fire (${totalSuccesses} total passes)</summary>`;
+    html += '<ul class="contribution-list">';
+
+    for (const c of contributions) {
+      const rate =
+        typeof c.contributionRate === 'number'
+          ? this.#formatPercentage(c.contributionRate)
+          : 'N/A';
+      const countStr = `${c.contributionCount}/${c.successCount}`;
+
+      // Determine contribution class for color coding
+      const contributionClass = this.#getContributionClass(c.contributionRate);
+
+      html += `<li class="contribution-item ${contributionClass}">`;
+      html += `<span class="contribution-desc">${this.#escapeHtml(c.description)}</span>: `;
+      html += `<span class="contribution-rate">${rate}</span> `;
+      html += `<span class="contribution-count">(${countStr})</span>`;
+      html += '</li>';
+    }
+
+    html += '</ul></details>';
+    return html;
+  }
+
+  /**
+   * Get CSS class for contribution rate color coding.
+   *
+   * @private
+   * @param {number|undefined} rate - Contribution rate (0 to 1)
+   * @returns {string} CSS class
+   */
+  #getContributionClass(rate) {
+    if (typeof rate !== 'number') return 'contribution-unknown';
+    if (rate >= 0.3) return 'contribution-major';
+    if (rate >= 0.1) return 'contribution-moderate';
+    if (rate >= 0.01) return 'contribution-minor';
+    return 'contribution-negligible';
+  }
+
+  /**
+   * Get tunability level string from near-miss rate.
+   *
+   * @private
+   * @param {number} nearMissRate - Near-miss rate (0 to 1)
+   * @returns {string} 'high', 'moderate', or 'low'
+   */
+  #getTunabilityLevel(nearMissRate) {
+    if (nearMissRate > 0.1) return 'high';
+    if (nearMissRate >= 0.02) return 'moderate';
+    return 'low';
   }
 
   /**
@@ -809,6 +1329,20 @@ class ExpressionDiagnosticsController {
     if (failureRate >= 0.9) return 'failure-critical';
     if (failureRate >= 0.5) return 'failure-high';
     return 'failure-normal';
+  }
+
+  /**
+   * Get CSS class for pass rate color coding (used for OR blocks).
+   * Inverted color logic: high pass rate is good, low pass rate is bad.
+   *
+   * @private
+   * @param {number} passRate - The pass rate from 0 to 1
+   * @returns {string} The CSS class for color coding
+   */
+  #getPassRateColor(passRate) {
+    if (passRate >= 0.7) return 'pass-good';
+    if (passRate >= 0.3) return 'pass-moderate';
+    return 'pass-low';
   }
 
   /**
@@ -900,7 +1434,82 @@ class ExpressionDiagnosticsController {
   }
 
   /**
+   * Format percentiles display for tree nodes.
+   * Shows P50, P90, P95, P99 with outlier skew detection.
+   *
+   * @private
+   * @param {object} node - Tree node with violation percentile data
+   * @returns {string} HTML span with percentiles or empty string
+   */
+  #formatPercentilesDisplay(node) {
+    const p50 = node.violationP50;
+    const p90 = node.violationP90;
+    const p95 = node.violationP95;
+    const p99 = node.violationP99;
+
+    if (p50 === null || p50 === undefined) {
+      return '';
+    }
+
+    // Detect outlier skew: when P99 >> P50, there are severe tail violations
+    const hasOutlierSkew = p99 !== null && p50 > 0 && p99 / p50 > 3;
+    const outlierFlag = hasOutlierSkew ? ' <span class="outlier-skew-flag">[OUTLIERS]</span>' : '';
+
+    // Build percentile string
+    let parts = [`p50: ${this.#formatNumber(p50)}`];
+    if (p90 !== null && p90 !== undefined) {
+      parts.push(`p90: ${this.#formatNumber(p90)}`);
+    }
+    if (p95 !== null && p95 !== undefined) {
+      parts.push(`p95: ${this.#formatNumber(p95)}`);
+    }
+    if (p99 !== null && p99 !== undefined) {
+      parts.push(`p99: ${this.#formatNumber(p99)}`);
+    }
+
+    return ` <span class="tree-percentiles">${parts.join(' | ')}${outlierFlag}</span>`;
+  }
+
+  /**
+   * Format percentiles for breakdown nodes in the blockers table.
+   * Similar to #formatPercentilesDisplay but for breakdown context.
+   *
+   * @private
+   * @param {object} breakdown - Breakdown node with violation percentile data
+   * @returns {string} HTML div with percentiles or empty string
+   */
+  #formatBreakdownPercentiles(breakdown) {
+    const p50 = breakdown.violationP50;
+    const p90 = breakdown.violationP90;
+    const p95 = breakdown.violationP95;
+    const p99 = breakdown.violationP99;
+
+    if (p50 === null || p50 === undefined) {
+      return '';
+    }
+
+    // Detect outlier skew
+    const hasOutlierSkew = p99 !== null && p50 > 0 && p99 / p50 > 3;
+    const outlierFlag = hasOutlierSkew ? ' <span class="outlier-skew-flag">[OUTLIERS]</span>' : '';
+
+    // Build percentile parts
+    let parts = [`p50: ${this.#formatNumber(p50)}`];
+    if (p90 !== null && p90 !== undefined) {
+      parts.push(`p90: ${this.#formatNumber(p90)}`);
+    }
+    if (p95 !== null && p95 !== undefined) {
+      parts.push(`p95: ${this.#formatNumber(p95)}`);
+    }
+    if (p99 !== null && p99 !== undefined) {
+      parts.push(`p99: ${this.#formatNumber(p99)}`);
+    }
+
+    return `<div class="violation-percentiles">${parts.join(' | ')}${outlierFlag}</div>`;
+  }
+
+  /**
    * Format violation statistics including percentiles and near-miss rate.
+   * For compound nodes, aggregates statistics from leaf children.
    *
    * @private
    * @param {object} blocker - Blocker object with hierarchicalBreakdown
@@ -912,11 +1521,16 @@ class ExpressionDiagnosticsController {
       return `<div class="violation-mean">\u03BC: ${this.#formatNumber(blocker.averageViolation)}</div>`;
     }
 
+    // For compound nodes, show aggregated stats from leaves
+    if (breakdown.isCompound) {
+      return this.#formatCompoundViolationStats(breakdown, blocker);
+    }
+
+    // Leaf node: show standard stats
     let html = `<div class="violation-mean">\u03BC: ${this.#formatNumber(breakdown.averageViolation)}</div>`;
 
-    if (breakdown.violationP50 !== null && breakdown.violationP50 !== undefined) {
-      html += `<div class="violation-percentiles">p50: ${this.#formatNumber(breakdown.violationP50)} | p90: ${this.#formatNumber(breakdown.violationP90)}</div>`;
-    }
+    // Show extended percentiles with outlier detection
+    html += this.#formatBreakdownPercentiles(breakdown);
 
     if (breakdown.nearMissRate !== null && breakdown.nearMissRate !== undefined) {
       const nearMissClass = this.#getNearMissClass(breakdown.nearMissRate);
@@ -927,6 +1541,138 @@ class ExpressionDiagnosticsController {
     html += this.#renderCeilingWarning(blocker);
 
     return html;
+  }
+
+  /**
+   * Format violation statistics for compound nodes by aggregating leaf stats.
+   *
+   * @private
+   * @param {object} breakdown - Hierarchical breakdown node (compound)
+   * @param {object} blocker - Full blocker object
+   * @returns {string} HTML string with aggregated violation stats
+   */
+  #formatCompoundViolationStats(breakdown, blocker) {
+    const aggregated = this.#aggregateLeafStatsForDisplay(breakdown);
+
+    let html = '';
+
+    // Show worst violation from leaf conditions
+    if (aggregated.worstViolation > 0) {
+      html += `<div class="violation-mean">worst \u0394: ${this.#formatNumber(aggregated.worstViolation)} (${this.#escapeHtml(this.#truncateDescription(aggregated.worstDescription))})</div>`;
+    } else {
+      html += `<div class="violation-mean">\u03BC: ${this.#formatNumber(breakdown.averageViolation ?? 0)}</div>`;
+    }
+
+    // Show most tunable leaf's near-miss rate
+    if (aggregated.tunableRate !== null && aggregated.tunableRate > 0) {
+      const nearMissClass = this.#getNearMissClass(aggregated.tunableRate);
+      html += `<div class="near-miss ${nearMissClass}">most tunable: ${this.#escapeHtml(this.#truncateDescription(aggregated.tunableDescription))} (${this.#formatPercentage(aggregated.tunableRate)})</div>`;
+    }
+
+    // Add ceiling warning if detected
+    html += this.#renderCeilingWarning(blocker);
+
+    return html;
+  }
+
+  /**
+   * Aggregate statistics from leaf nodes of a compound breakdown for display.
+   *
+   * Uses impact-weighted scoring (nearMissRate × lastMileRate) to select the
+   * most tunable condition, consistent with MonteCarloReportGenerator.
+   *
+   * @private
+   * @param {object} breakdown - Hierarchical breakdown node
+   * @returns {{worstViolation: number, worstDescription: string, tunableRate: number|null, tunableDescription: string, tunableEpsilon: number, tunableImpact: number|null}}
+   */
+  #aggregateLeafStatsForDisplay(breakdown) {
+    const leaves = this.#flattenLeavesForDisplay(breakdown);
+
+    let worstViolation = 0;
+    let worstDescription = '';
+    let tunableRate = null;
+    let tunableDescription = '';
+    let tunableEpsilon = 0;
+    let tunableImpact = null;
+
+    for (const leaf of leaves) {
+      const avgViol = leaf.averageViolation ?? 0;
+      const nearMissRate = leaf.nearMissRate;
+
+      // Track worst violator
+      if (avgViol > worstViolation) {
+        worstViolation = avgViol;
+        worstDescription = leaf.description ?? 'Unknown condition';
+      }
+
+      // Track most tunable (weighted by last-mile impact - consistent with report)
+      if (typeof nearMissRate === 'number' && nearMissRate > 0) {
+        // Weight tunability by last-mile impact (consistent with MonteCarloReportGenerator)
+        const lastMileRate =
+          leaf.siblingConditionedFailRate ??
+          leaf.lastMileFailRate ??
+          leaf.failureRate ??
+          0;
+        const impactScore = nearMissRate * lastMileRate;
+
+        if (tunableImpact === null || impactScore > tunableImpact) {
+          tunableRate = nearMissRate;
+          tunableDescription = leaf.description ?? 'Unknown condition';
+          tunableEpsilon = leaf.nearMissEpsilon ?? 0;
+          tunableImpact = impactScore;
+        }
+      }
+    }
+
+    return {
+      worstViolation,
+      worstDescription,
+      tunableRate,
+      tunableDescription,
+      tunableEpsilon,
+      tunableImpact,
+    };
+  }
+
+  /**
+   * Flatten a hierarchical breakdown tree to get all leaf nodes.
+   *
+   * @private
+   * @param {object} node - Hierarchical breakdown node
+   * @param {object[]} [results=[]] - Accumulator for results
+   * @returns {object[]} Array of leaf nodes
+   */
+  #flattenLeavesForDisplay(node, results = []) {
+    if (!node) return results;
+
+    // If this is a leaf node, add it to results
+    if (node.nodeType === 'leaf' || !node.isCompound) {
+      results.push(node);
+    }
+
+    // Recurse into children for compound nodes
+    if (node.children && Array.isArray(node.children)) {
+      for (const child of node.children) {
+        this.#flattenLeavesForDisplay(child, results);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Truncate a description string for inline display.
+   *
+   * @private
+   * @param {string} description - Full description
+   * @param {number} [maxLength=40] - Maximum length
+   * @returns {string} Truncated description
+   */
+  #truncateDescription(description, maxLength = 40) {
+    if (!description || description.length <= maxLength) {
+      return description || '';
+    }
+    return description.substring(0, maxLength - 3) + '...';
   }
 
   /**
@@ -1379,289 +2125,1414 @@ class ExpressionDiagnosticsController {
     }
   }
 
-  // ========== Witness State Methods ==========
+  // ========== MC Ground-Truth Witness Methods ==========
 
   /**
-   * Find a witness state that triggers the selected expression.
+   * Display ground-truth witnesses from Monte Carlo simulation.
+   * These are actual triggering states captured during simulation.
    *
    * @private
+   * @param {object} witnessAnalysis - The witness analysis from MC simulation
+   * @param {Array<object>} witnessAnalysis.witnesses - Array of witness states
+   * @param {object|null} witnessAnalysis.nearestMiss - Nearest miss if no triggers
    */
-  async #findWitness() {
-    if (!this.#selectedExpression) return;
+  #displayMcWitnesses(witnessAnalysis) {
+    if (!this.#mcWitnessesContainer || !this.#mcWitnessesList) return;
 
-    this.#logger.info(
-      `Finding witness state for: ${this.#selectedExpression.id}`
-    );
+    const witnesses = witnessAnalysis?.witnesses ?? [];
+    const nearestMiss = witnessAnalysis?.nearestMiss ?? null;
 
-    // Disable button and show searching status
-    if (this.#findWitnessBtn) {
-      this.#findWitnessBtn.disabled = true;
-      this.#findWitnessBtn.textContent = 'Searching...';
-    }
-    if (this.#witnessStatus) {
-      this.#witnessStatus.textContent = 'Searching for witness state...';
-    }
+    // Clear previous content
+    this.#mcWitnessesList.innerHTML = '';
 
-    try {
-      const result = await this.#witnessStateFinder.findWitness(
-        this.#selectedExpression,
-        {
-          onProgress: (completed, total) => {
-            if (this.#findWitnessBtn) {
-              const pct = Math.round((completed / total) * 100);
-              this.#findWitnessBtn.textContent = `Searching... ${pct}%`;
-            }
-          },
-        }
-      );
-
-      this.#displayWitnessResult(result);
-    } catch (error) {
-      this.#logger.error('Witness state search failed:', error);
-      if (this.#witnessStatus) {
-        this.#witnessStatus.textContent = `Error: ${error.message}`;
-      }
-    } finally {
-      // Re-enable button
-      if (this.#findWitnessBtn) {
-        this.#findWitnessBtn.disabled = false;
-        this.#findWitnessBtn.textContent = 'Find Witness State';
-      }
-    }
-  }
-
-  /**
-   * Display the witness search result.
-   *
-   * @private
-   * @param {object} result - The search result from WitnessStateFinder
-   */
-  #displayWitnessResult(result) {
-    if (!this.#witnessResults) return;
-
-    this.#witnessResults.hidden = false;
-
-    // Set result label based on whether witness was found
-    if (this.#witnessResultLabel) {
-      if (result.found) {
-        this.#witnessResultLabel.textContent = '✅ Witness Found';
-        this.#witnessResultLabel.className = 'result-label result-found';
-      } else {
-        this.#witnessResultLabel.textContent = '⚠️ Nearest Miss';
-        this.#witnessResultLabel.className = 'result-label result-miss';
-      }
-    }
-
-    // Clear status text since we now have results
-    if (this.#witnessStatus) {
-      this.#witnessStatus.textContent = '';
-    }
-
-    // Get the state to display (witness if found, nearestMiss otherwise)
-    const state = result.found ? result.witness : result.nearestMiss;
-    this.#currentWitnessState = state;
-
-    // Display mood, sexual, and affect trait axes
-    if (state) {
-      this.#displayMoodAxes(state.mood);
-      this.#displaySexualAxes(state.sexual);
-      this.#displayAffectTraits(state.affectTraits);
-
-      // Display JSON
-      if (this.#witnessJsonContent) {
-        this.#witnessJsonContent.textContent = state.toClipboardJSON();
-      }
-    }
-
-    // Display violated clauses if not found
-    if (!result.found && result.violatedClauses?.length > 0) {
-      if (this.#violatedClauses) this.#violatedClauses.hidden = false;
-      if (this.#violatedClausesList) {
-        this.#violatedClausesList.innerHTML = '';
-        for (const clause of result.violatedClauses) {
-          const li = document.createElement('li');
-          li.textContent = clause;
-          this.#violatedClausesList.appendChild(li);
-        }
-      }
-    } else {
-      if (this.#violatedClauses) this.#violatedClauses.hidden = true;
-    }
-
-    // Display fitness
-    this.#displayFitness(result.bestFitness);
-  }
-
-  /**
-   * Display mood axes in the grid.
-   *
-   * @private
-   * @param {object} mood - The mood state object
-   */
-  #displayMoodAxes(mood) {
-    if (!this.#moodDisplay || !mood) return;
-
-    this.#moodDisplay.innerHTML = '';
-
-    for (const axis of WitnessState.MOOD_AXES) {
-      const value = mood[axis];
-      if (value === undefined) continue;
-
-      const item = document.createElement('div');
-      item.className = `axis-item ${this.#getValueClass(value, true)}`;
-      item.innerHTML = `
-        <span class="axis-name">${axis}</span>
-        <span class="axis-value">${value.toFixed(2)}</span>
-      `;
-      this.#moodDisplay.appendChild(item);
-    }
-  }
-
-  /**
-   * Display sexual state axes in the grid.
-   *
-   * @private
-   * @param {object} sexual - The sexual state object
-   */
-  #displaySexualAxes(sexual) {
-    if (!this.#sexualDisplay || !sexual) return;
-
-    this.#sexualDisplay.innerHTML = '';
-
-    for (const axis of WitnessState.SEXUAL_AXES) {
-      const value = sexual[axis];
-      if (value === undefined) continue;
-
-      const item = document.createElement('div');
-      item.className = `axis-item ${this.#getValueClass(value, false)}`;
-      item.innerHTML = `
-        <span class="axis-name">${axis}</span>
-        <span class="axis-value">${value.toFixed(2)}</span>
-      `;
-      this.#sexualDisplay.appendChild(item);
-    }
-  }
-
-  /**
-   * Display affect trait axes in the grid.
-   *
-   * @private
-   * @param {object} affectTraits - The affect traits object
-   */
-  #displayAffectTraits(affectTraits) {
-    if (!this.#traitsDisplay || !affectTraits) return;
-
-    this.#traitsDisplay.innerHTML = '';
-
-    for (const axis of WitnessState.AFFECT_TRAIT_AXES) {
-      const value = affectTraits[axis];
-      if (value === undefined) continue;
-
-      const item = document.createElement('div');
-      // Affect traits use 0-100 range, so isBipolar=false (like sexual axes)
-      item.className = `axis-item ${this.#getValueClass(value, false)}`;
-      item.innerHTML = `
-        <span class="axis-name">${axis}</span>
-        <span class="axis-value">${value.toFixed(2)}</span>
-      `;
-      this.#traitsDisplay.appendChild(item);
-    }
-  }
-
-  /**
-   * Get CSS class for value color coding.
-   *
-   * @private
-   * @param {number} value - The axis value (0-1)
-   * @param {boolean} isMood - Whether this is a mood axis (vs sexual)
-   * @returns {string} CSS class for color coding
-   */
-  #getValueClass(value, isMood) {
-    // For mood: low (0-0.33), mid (0.34-0.66), high (0.67-1.0)
-    // For sexual: same ranges but different visual meaning
-    const prefix = isMood ? 'mood' : 'sexual';
-    if (value <= 0.33) return `${prefix}-low`;
-    if (value <= 0.66) return `${prefix}-mid`;
-    return `${prefix}-high`;
-  }
-
-  /**
-   * Display fitness score with visual bar.
-   *
-   * @private
-   * @param {number} fitness - The fitness score (0-1)
-   */
-  #displayFitness(fitness) {
-    if (this.#fitnessFill) {
-      const percentage = Math.min(100, Math.max(0, fitness * 100));
-      this.#fitnessFill.style.width = `${percentage}%`;
-
-      // Apply color class based on fitness level
-      this.#fitnessFill.className = 'fitness-fill';
-      if (fitness >= 1.0) {
-        this.#fitnessFill.classList.add('fitness-perfect');
-      } else if (fitness >= 0.8) {
-        this.#fitnessFill.classList.add('fitness-high');
-      } else if (fitness >= 0.5) {
-        this.#fitnessFill.classList.add('fitness-medium');
-      } else {
-        this.#fitnessFill.classList.add('fitness-low');
-      }
-    }
-
-    if (this.#fitnessValue) {
-      this.#fitnessValue.textContent = fitness.toFixed(3);
-    }
-  }
-
-  /**
-   * Copy current witness state to clipboard.
-   * Uses the centralized clipboard utility for fallback support.
-   *
-   * @private
-   */
-  async #copyWitnessToClipboard() {
-    if (!this.#currentWitnessState) {
-      this.#showCopyFeedback('No witness state to copy');
+    if (witnesses.length === 0 && !nearestMiss) {
+      this.#mcWitnessesContainer.hidden = true;
       return;
     }
 
-    const json = this.#currentWitnessState.toClipboardJSON();
+    this.#mcWitnessesContainer.hidden = false;
+
+    // Display witnesses
+    if (witnesses.length > 0) {
+      const header = document.createElement('h4');
+      header.textContent = `✅ Ground-Truth Witnesses (${witnesses.length})`;
+      header.className = 'mc-witnesses-header';
+      this.#mcWitnessesList.appendChild(header);
+
+      const description = document.createElement('p');
+      description.className = 'mc-witnesses-description';
+      description.textContent =
+        'These states were verified to trigger the expression during simulation.';
+      this.#mcWitnessesList.appendChild(description);
+
+      for (let i = 0; i < witnesses.length; i++) {
+        const witnessCard = this.#createWitnessCard(witnesses[i], i + 1, true);
+        this.#mcWitnessesList.appendChild(witnessCard);
+      }
+    }
+
+    // Display nearest miss if no witnesses found
+    if (witnesses.length === 0 && nearestMiss) {
+      const header = document.createElement('h4');
+      header.textContent = '⚠️ Nearest Miss';
+      header.className = 'mc-witnesses-header mc-witnesses-miss';
+      this.#mcWitnessesList.appendChild(header);
+
+      const description = document.createElement('p');
+      description.className = 'mc-witnesses-description';
+      description.textContent =
+        'No triggering states found. This is the closest sample to triggering.';
+      this.#mcWitnessesList.appendChild(description);
+
+      const missCard = this.#createWitnessCard(nearestMiss.sample, 1, false);
+      this.#mcWitnessesList.appendChild(missCard);
+
+      // Show failed leaves info if available
+      if (nearestMiss.failedLeaves && nearestMiss.failedLeaves.length > 0) {
+        const failedSection = document.createElement('div');
+        failedSection.className = 'mc-witness-failed-section';
+        failedSection.innerHTML = `
+          <h5>Failed Conditions (${nearestMiss.failedLeafCount})</h5>
+          <ul class="mc-witness-failed-list">
+            ${nearestMiss.failedLeaves
+              .map((f) => {
+                const desc = f.description || 'Unknown condition';
+                const details =
+                  f.actual !== null && f.threshold !== null
+                    ? ` (actual: ${f.actual}, needed: ${f.threshold})`
+                    : '';
+                return `<li><code>${desc}</code>${details}</li>`;
+              })
+              .join('')}
+          </ul>
+        `;
+        this.#mcWitnessesList.appendChild(failedSection);
+      }
+    }
+  }
+
+  /**
+   * Create a collapsible witness card for display.
+   *
+   * @private
+   * @param {object} witness - The witness state data
+   * @param {number} index - The witness index (1-based)
+   * @param {boolean} isTriggering - Whether this is a triggering witness
+   * @returns {HTMLElement} The witness card element
+   */
+  #createWitnessCard(witness, index, isTriggering) {
+    const card = document.createElement('details');
+    card.className = `mc-witness-card ${isTriggering ? 'witness-triggering' : 'witness-miss'}`;
+
+    const summary = document.createElement('summary');
+    summary.className = 'mc-witness-summary';
+    summary.textContent = isTriggering
+      ? `Witness #${index}`
+      : `Nearest Miss #${index}`;
+    card.appendChild(summary);
+
+    const content = document.createElement('div');
+    content.className = 'mc-witness-content';
+
+    // Current mood state
+    if (witness.current?.mood) {
+      content.appendChild(
+        this.#createStateSection('Current Mood', witness.current.mood)
+      );
+    }
+
+    // Current sexual state
+    if (witness.current?.sexual) {
+      content.appendChild(
+        this.#createStateSection('Current Sexual', witness.current.sexual)
+      );
+    }
+
+    // Previous mood state (for temporal expressions)
+    if (witness.previous?.mood) {
+      content.appendChild(
+        this.#createStateSection('Previous Mood', witness.previous.mood)
+      );
+    }
+
+    // Previous sexual state
+    if (witness.previous?.sexual) {
+      content.appendChild(
+        this.#createStateSection('Previous Sexual', witness.previous.sexual)
+      );
+    }
+
+    // Affect traits
+    if (witness.affectTraits) {
+      content.appendChild(
+        this.#createStateSection('Affect Traits', witness.affectTraits)
+      );
+    }
+
+    // Computed emotions (current) - only referenced emotions from expression prerequisites
+    if (
+      witness.computedEmotions &&
+      Object.keys(witness.computedEmotions).length > 0
+    ) {
+      content.appendChild(
+        this.#createStateSection('Computed Emotions', witness.computedEmotions)
+      );
+    }
+
+    // Previous computed emotions - for temporal/delta expressions
+    if (
+      witness.previousComputedEmotions &&
+      Object.keys(witness.previousComputedEmotions).length > 0
+    ) {
+      content.appendChild(
+        this.#createStateSection(
+          'Previous Computed Emotions',
+          witness.previousComputedEmotions
+        )
+      );
+    }
+
+    // Copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'mc-witness-copy-btn';
+    copyBtn.textContent = 'Copy JSON';
+    copyBtn.addEventListener('click', () => this.#copyWitnessJson(witness));
+    content.appendChild(copyBtn);
+
+    card.appendChild(content);
+    return card;
+  }
+
+  /**
+   * Create a state section with axis values.
+   *
+   * @private
+   * @param {string} label - Section label
+   * @param {object} state - State object with axis values
+   * @returns {HTMLElement} The section element
+   */
+  #createStateSection(label, state) {
+    const section = document.createElement('div');
+    section.className = 'mc-witness-state-section';
+
+    const heading = document.createElement('h5');
+    heading.textContent = label;
+    section.appendChild(heading);
+
+    const grid = document.createElement('div');
+    grid.className = 'mc-witness-state-grid';
+
+    // Computed Emotions sections contain float values in [0, 1] range
+    // Other sections (Mood, Sexual, Affect Traits) contain integer values
+    const isFloatSection =
+      label === 'Computed Emotions' || label === 'Previous Computed Emotions';
+
+    for (const [axis, value] of Object.entries(state)) {
+      if (value === undefined || value === null) continue;
+
+      let formattedValue;
+      if (typeof value === 'number') {
+        formattedValue = isFloatSection ? value.toFixed(2) : value.toFixed(0);
+      } else {
+        formattedValue = value;
+      }
+
+      const item = document.createElement('div');
+      item.className = 'mc-witness-axis-item';
+      item.innerHTML = `
+        <span class="mc-witness-axis-name">${axis}</span>
+        <span class="mc-witness-axis-value">${formattedValue}</span>
+      `;
+      grid.appendChild(item);
+    }
+
+    section.appendChild(grid);
+    return section;
+  }
+
+  /**
+   * Copy a witness state to clipboard as JSON.
+   *
+   * @private
+   * @param {object} witness - The witness state to copy
+   */
+  async #copyWitnessJson(witness) {
+    const json = JSON.stringify(witness, null, 2);
     const success = await copyToClipboard(json);
     this.#showCopyFeedback(success ? 'Copied to clipboard!' : 'Copy failed');
   }
 
   /**
    * Show temporary feedback message for copy operation.
-   * Immediately displays the feedback toast with accessibility support.
    *
    * @private
    * @param {string} message - The message to display
    */
   #showCopyFeedback(message) {
-    // Create toast element with accessibility attributes
     const toast = document.createElement('div');
-    toast.className = 'copy-feedback show';
+    toast.className = 'diagnostics-copy-feedback show';
     toast.textContent = message;
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
 
-    // Find witness panel to position toast relative to it
-    const witnessPanel = document.getElementById('witness-section');
-    if (witnessPanel) {
-      witnessPanel.appendChild(toast);
-    } else {
-      document.body.appendChild(toast);
-    }
+    // Append to MC witnesses container or fallback to body
+    const container = this.#mcWitnessesContainer ?? document.body;
+    container.appendChild(toast);
 
-    // Remove after visible duration
     setTimeout(() => {
       toast.classList.remove('show');
-      // Remove element after fade-out transition completes
       toast.addEventListener('transitionend', () => toast.remove(), {
         once: true,
       });
     }, 2000);
+  }
+
+  // ========== Global Sensitivity Display Methods ==========
+
+  /**
+   * Display global expression sensitivity data in the UI.
+   * Shows how threshold changes affect the entire expression trigger rate.
+   *
+   * @private
+   */
+  #displayGlobalSensitivity() {
+    if (!this.#globalSensitivityContainer || !this.#globalSensitivityTables) {
+      return;
+    }
+
+    // Compute global sensitivity data
+    const sensitivityData = this.#computeGlobalSensitivityData();
+
+    if (!sensitivityData || sensitivityData.length === 0) {
+      this.#globalSensitivityContainer.hidden = true;
+      return;
+    }
+
+    // Clear previous content
+    this.#globalSensitivityTables.innerHTML = '';
+    this.#globalSensitivityContainer.hidden = false;
+
+    // Check for low confidence results
+    const lowConfidenceResults = sensitivityData.filter((result) => {
+      if (!result.grid || result.grid.length === 0) return false;
+      const originalIndex = result.grid.findIndex(
+        (pt) => Math.abs(pt.threshold - result.originalThreshold) < 0.001
+      );
+      if (originalIndex < 0) return false;
+      const baseline = result.grid[originalIndex];
+      const estimatedHits = baseline.triggerRate * baseline.sampleCount;
+      return estimatedHits < 5;
+    });
+
+    // Add warning if low confidence
+    if (lowConfidenceResults.length > 0) {
+      const warning = document.createElement('div');
+      warning.className = 'sensitivity-warning';
+      warning.innerHTML = `
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">
+          ${lowConfidenceResults.length === sensitivityData.length ? 'All' : 'Some'}
+          sensitivity analyses have fewer than 5 baseline expression hits.
+          Results may not be statistically meaningful.
+        </span>
+      `;
+      this.#globalSensitivityTables.appendChild(warning);
+    }
+
+    // Generate a table for each sensitivity result
+    for (const result of sensitivityData) {
+      const tableContainer = this.#createSensitivityTable(result);
+      this.#globalSensitivityTables.appendChild(tableContainer);
+    }
+  }
+
+  /**
+   * Create a sensitivity table for a single variable.
+   *
+   * @private
+   * @param {object} result - Sensitivity result with varPath, operator, originalThreshold, grid
+   * @returns {HTMLElement} The table container element
+   */
+  #createSensitivityTable(result) {
+    const { varPath, operator, originalThreshold, grid } = result;
+
+    if (!grid || grid.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'sensitivity-table-empty';
+      empty.textContent = `No data for ${varPath}`;
+      return empty;
+    }
+
+    const container = document.createElement('div');
+    container.className = 'sensitivity-table-container';
+
+    // Header
+    const header = document.createElement('h4');
+    header.className = 'sensitivity-table-header';
+    header.innerHTML = `<code>${varPath}</code> ${this.#escapeHtml(operator)} [threshold]`;
+    container.appendChild(header);
+
+    // Find original threshold index
+    const originalIndex = grid.findIndex(
+      (pt) => Math.abs(pt.threshold - originalThreshold) < 0.001
+    );
+
+    // Create table
+    const table = document.createElement('table');
+    table.className = 'results-table sensitivity-table';
+
+    // Table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Threshold</th>
+        <th>Trigger Rate</th>
+        <th>Change</th>
+        <th>Samples</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Table body
+    const tbody = document.createElement('tbody');
+    for (let i = 0; i < grid.length; i++) {
+      const point = grid[i];
+      const isOriginal = i === originalIndex;
+
+      // Calculate change from original
+      let changeStr = '—';
+      let changeClass = '';
+      if (originalIndex >= 0 && i !== originalIndex) {
+        const originalRate = grid[originalIndex].triggerRate;
+        if (originalRate > 0 && point.triggerRate > 0) {
+          const multiplier = point.triggerRate / originalRate;
+          if (multiplier > 1) {
+            const pctChange = (multiplier - 1) * 100;
+            changeStr = `+${pctChange.toFixed(0)}%`;
+            changeClass = 'change-positive';
+          } else if (multiplier < 1) {
+            const pctChange = (multiplier - 1) * 100;
+            changeStr = `${pctChange.toFixed(0)}%`;
+            changeClass = 'change-negative';
+          }
+        } else if (originalRate === 0 && point.triggerRate > 0) {
+          changeStr = '+∞';
+          changeClass = 'change-positive';
+        } else if (originalRate > 0 && point.triggerRate === 0) {
+          changeStr = '-100%';
+          changeClass = 'change-negative';
+        } else {
+          changeStr = '0%';
+        }
+      }
+
+      const row = document.createElement('tr');
+      row.className = isOriginal ? 'sensitivity-row-baseline' : '';
+      row.innerHTML = `
+        <td>${isOriginal ? '<strong>' : ''}${point.threshold.toFixed(2)}${isOriginal ? '</strong>' : ''}</td>
+        <td>${isOriginal ? '<strong>' : ''}${this.#formatPercentage(point.triggerRate)}${isOriginal ? '</strong>' : ''}</td>
+        <td class="${changeClass}">${isOriginal ? '<strong>baseline</strong>' : changeStr}</td>
+        <td>${point.sampleCount.toLocaleString()}</td>
+      `;
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    // Add actionable insight if applicable
+    const insight = this.#generateSensitivityInsight(grid, originalIndex);
+    if (insight) {
+      const insightDiv = document.createElement('div');
+      insightDiv.className = 'sensitivity-insight';
+      insightDiv.innerHTML = `<span class="insight-icon">💡</span> ${insight}`;
+      container.appendChild(insightDiv);
+    }
+
+    return container;
+  }
+
+  /**
+   * Generate an actionable insight based on sensitivity data.
+   *
+   * @private
+   * @param {Array} grid - Grid of threshold/rate data
+   * @param {number} originalIndex - Index of original threshold in grid
+   * @returns {string|null} Insight message or null
+   */
+  #generateSensitivityInsight(grid, originalIndex) {
+    if (originalIndex < 0 || !grid[originalIndex]) return null;
+
+    const originalRate = grid[originalIndex].triggerRate;
+    const originalThreshold = grid[originalIndex].threshold;
+
+    // If expression never triggers, find first threshold where it does
+    if (originalRate === 0) {
+      const betterOption = grid.find((pt) => pt.triggerRate > 0);
+      if (betterOption && betterOption.threshold !== originalThreshold) {
+        return `Adjusting threshold to <strong>${betterOption.threshold.toFixed(2)}</strong> would achieve ~${this.#formatPercentage(betterOption.triggerRate)} expression trigger rate.`;
+      }
+    }
+
+    // If expression rarely triggers, find threshold with much higher rate
+    if (originalRate > 0 && originalRate < 0.01) {
+      const betterOption = grid.find((pt) => pt.triggerRate >= originalRate * 5);
+      if (betterOption && betterOption.threshold !== originalThreshold) {
+        return `Adjusting threshold to <strong>${betterOption.threshold.toFixed(2)}</strong> would increase trigger rate to ~${this.#formatPercentage(betterOption.triggerRate)}.`;
+      }
+    }
+
+    return null;
+  }
+
+  // ========== Static Cross-Reference Methods ==========
+
+  /**
+   * Display static analysis cross-reference section.
+   * Compares gate conflicts and unreachable thresholds from static analysis
+   * with Monte Carlo observations.
+   *
+   * @private
+   */
+  #displayStaticCrossReference() {
+    if (!this.#staticCrossReferenceContainer) return;
+
+    // Get static analysis data
+    const gateConflicts = this.#currentResult?.gateConflicts || [];
+    const unreachableThresholds = this.#currentResult?.unreachableThresholds || [];
+
+    // Skip if no static analysis data
+    if (gateConflicts.length === 0 && unreachableThresholds.length === 0) {
+      this.#staticCrossReferenceContainer.hidden = true;
+      return;
+    }
+
+    // Show the container
+    this.#staticCrossReferenceContainer.hidden = false;
+    this.#staticCrossReferenceContent.innerHTML = '';
+
+    // Display gate conflicts table
+    if (gateConflicts.length > 0) {
+      const gateSection = this.#createGateConflictsTable(gateConflicts);
+      this.#staticCrossReferenceContent.appendChild(gateSection);
+    }
+
+    // Display unreachable thresholds table
+    if (unreachableThresholds.length > 0) {
+      const thresholdSection = this.#createUnreachableThresholdsTable(unreachableThresholds);
+      this.#staticCrossReferenceContent.appendChild(thresholdSection);
+    }
+
+    // Display summary
+    this.#displayCrossReferenceSummary(gateConflicts, unreachableThresholds);
+  }
+
+  /**
+   * Display conditional pass rates section showing emotion pass rates given mood constraints.
+   *
+   * @private
+   */
+  #displayConditionalPassRates() {
+    if (!this.#conditionalPassRatesContainer || !this.#conditionalPassRatesContent) {
+      return;
+    }
+
+    // Need selected expression, stored contexts, and blockers
+    if (!this.#selectedExpression || !this.#rawSimulationResult?.storedContexts) {
+      this.#conditionalPassRatesContainer.hidden = true;
+      return;
+    }
+
+    const storedContexts = this.#rawSimulationResult.storedContexts;
+    const blockers = this.#currentBlockers || [];
+    const prerequisites = this.#selectedExpression.prerequisites || [];
+
+    // Extract mood constraints from prerequisites
+    const moodConstraints = this.#extractMoodConstraintsForUI(prerequisites);
+
+    // Extract emotion conditions from blockers
+    const emotionConditions = this.#extractEmotionConditionsForUI(blockers);
+
+    // Skip if no mood constraints or emotion conditions
+    if (moodConstraints.length === 0 || emotionConditions.length === 0) {
+      this.#conditionalPassRatesContainer.hidden = true;
+      return;
+    }
+
+    // Filter contexts where all mood constraints pass
+    const filteredContexts = this.#filterContextsByMoodConstraintsUI(
+      storedContexts,
+      moodConstraints
+    );
+
+    // Skip if no contexts pass mood constraints
+    if (filteredContexts.length === 0) {
+      this.#conditionalPassRatesContainer.hidden = true;
+      return;
+    }
+
+    // Compute conditional pass rates
+    const conditionalRates = this.#computeConditionalPassRatesUI(
+      filteredContexts,
+      emotionConditions
+    );
+
+    // Build and display the UI
+    this.#conditionalPassRatesContainer.hidden = false;
+    this.#conditionalPassRatesContent.innerHTML = '';
+
+    // Add filter info
+    const filterInfo = document.createElement('div');
+    filterInfo.className = 'conditional-filter-info';
+    filterInfo.innerHTML = `<strong>${filteredContexts.length}</strong> contexts where all mood constraints pass (of ${storedContexts.length} total)`;
+    this.#conditionalPassRatesContent.appendChild(filterInfo);
+
+    // Add table
+    const table = this.#createConditionalPassRatesTable(conditionalRates);
+    this.#conditionalPassRatesContent.appendChild(table);
+  }
+
+  /**
+   * Extract mood constraints from prerequisites for UI display.
+   *
+   * @private
+   * @param {object[]} prerequisites - Expression prerequisites
+   * @returns {Array<{varPath: string, operator: string, threshold: number}>}
+   */
+  #extractMoodConstraintsForUI(prerequisites) {
+    const constraints = [];
+
+    for (const prereq of prerequisites) {
+      this.#extractMoodConstraintsFromLogicUI(prereq.logic, constraints);
+    }
+
+    return constraints;
+  }
+
+  /**
+   * Recursively extract mood constraints from JSON Logic.
+   *
+   * @private
+   * @param {object} logic - JSON Logic expression
+   * @param {Array} constraints - Accumulator for constraints
+   */
+  #extractMoodConstraintsFromLogicUI(logic, constraints) {
+    if (!logic || typeof logic !== 'object') return;
+
+    // Check comparison operators
+    const operators = ['>=', '<=', '>', '<', '=='];
+    for (const op of operators) {
+      if (logic[op]) {
+        const [left, right] = logic[op];
+        if (typeof left === 'object' && left.var) {
+          const varPath = left.var;
+          // Only mood axes, not emotions
+          if (varPath.startsWith('moodAxes.') && typeof right === 'number') {
+            constraints.push({ varPath, operator: op, threshold: right });
+          }
+        }
+      }
+    }
+
+    // Recurse into AND blocks (not OR, since OR alternatives aren't all required)
+    if (logic.and) {
+      for (const clause of logic.and) {
+        this.#extractMoodConstraintsFromLogicUI(clause, constraints);
+      }
+    }
+  }
+
+  /**
+   * Extract emotion conditions from blockers for UI display.
+   *
+   * @private
+   * @param {object[]} blockers - Blockers from simulation
+   * @returns {Array<{varPath: string, operator: string, threshold: number, display: string}>}
+   */
+  #extractEmotionConditionsForUI(blockers) {
+    const conditions = [];
+    const seen = new Set();
+
+    for (const blocker of blockers) {
+      const condition = blocker.condition || '';
+      // Parse conditions like "emotions.anger >= 0.4"
+      const match = condition.match(/^(emotions\.\w+)\s*(>=|<=|>|<|==)\s*([\d.]+)$/);
+      if (match) {
+        const [, varPath, operator, thresholdStr] = match;
+        const key = `${varPath}:${operator}:${thresholdStr}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          conditions.push({
+            varPath,
+            operator,
+            threshold: parseFloat(thresholdStr),
+            display: condition,
+          });
+        }
+      }
+    }
+
+    return conditions;
+  }
+
+  /**
+   * Filter stored contexts where all mood constraints pass.
+   *
+   * @private
+   * @param {object[]} storedContexts - Simulation contexts
+   * @param {Array} moodConstraints - Mood constraints to filter by
+   * @returns {object[]} Filtered contexts
+   */
+  #filterContextsByMoodConstraintsUI(storedContexts, moodConstraints) {
+    return storedContexts.filter((ctx) => {
+      return moodConstraints.every((constraint) => {
+        const value = this.#getNestedValueUI(ctx, constraint.varPath);
+        return this.#evaluateComparisonUI(value, constraint.operator, constraint.threshold);
+      });
+    });
+  }
+
+  /**
+   * Get nested value from an object using dot notation.
+   *
+   * @private
+   * @param {object} obj - Object to get value from
+   * @param {string} path - Dot-notation path (e.g., 'moodAxes.valence')
+   * @returns {*} Value at path or undefined
+   */
+  #getNestedValueUI(obj, path) {
+    const parts = path.split('.');
+    let current = obj;
+    for (const part of parts) {
+      if (current == null) return undefined;
+      current = current[part];
+    }
+    return current;
+  }
+
+  /**
+   * Evaluate a comparison operation.
+   *
+   * @private
+   * @param {number} value - Value to compare
+   * @param {string} operator - Comparison operator
+   * @param {number} threshold - Threshold to compare against
+   * @returns {boolean} Result of comparison
+   */
+  #evaluateComparisonUI(value, operator, threshold) {
+    if (value == null) return false;
+    switch (operator) {
+      case '>=': return value >= threshold;
+      case '<=': return value <= threshold;
+      case '>': return value > threshold;
+      case '<': return value < threshold;
+      case '==': return value === threshold;
+      default: return false;
+    }
+  }
+
+  /**
+   * Compute conditional pass rates for emotion conditions.
+   *
+   * @private
+   * @param {object[]} filteredContexts - Contexts where mood constraints pass
+   * @param {Array} emotionConditions - Emotion conditions to evaluate
+   * @returns {Array} Pass rate data for each condition
+   */
+  #computeConditionalPassRatesUI(filteredContexts, emotionConditions) {
+    const results = [];
+
+    for (const condition of emotionConditions) {
+      const passes = filteredContexts.filter((ctx) => {
+        const value = this.#getNestedValueUI(ctx, condition.varPath);
+        return this.#evaluateComparisonUI(value, condition.operator, condition.threshold);
+      }).length;
+
+      const rate = filteredContexts.length > 0 ? passes / filteredContexts.length : 0;
+      const ci = this.#calculateWilsonIntervalUI(passes, filteredContexts.length);
+
+      results.push({
+        condition: condition.display,
+        rate,
+        passes,
+        total: filteredContexts.length,
+        ciLow: ci.low,
+        ciHigh: ci.high,
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Calculate Wilson score confidence interval.
+   *
+   * @private
+   * @param {number} successes - Number of successes
+   * @param {number} total - Total number of trials
+   * @param {number} z - Z-score for confidence level (default: 1.96 for 95%)
+   * @returns {{low: number, high: number}} Confidence interval bounds
+   */
+  #calculateWilsonIntervalUI(successes, total, z = 1.96) {
+    if (total === 0) return { low: 0, high: 0 };
+
+    const p = successes / total;
+    const n = total;
+    const z2 = z * z;
+
+    const denominator = 1 + z2 / n;
+    const center = p + z2 / (2 * n);
+    const margin = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
+
+    return {
+      low: Math.max(0, (center - margin) / denominator),
+      high: Math.min(1, (center + margin) / denominator),
+    };
+  }
+
+  /**
+   * Create conditional pass rates table element.
+   *
+   * @private
+   * @param {Array} conditionalRates - Pass rate data
+   * @returns {HTMLTableElement} Table element
+   */
+  #createConditionalPassRatesTable(conditionalRates) {
+    const table = document.createElement('table');
+    table.className = 'conditional-pass-rates-table';
+
+    // Header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Condition</th>
+        <th>P(pass | mood)</th>
+        <th>Passes</th>
+        <th>CI (95%)</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    for (const item of conditionalRates) {
+      const row = document.createElement('tr');
+      const rateClass = this.#getConditionalRateClass(item.rate);
+      row.innerHTML = `
+        <td><code>${this.#escapeHtml(item.condition)}</code></td>
+        <td class="rate-cell ${rateClass}">${this.#formatPercentage(item.rate)}</td>
+        <td>${item.passes}/${item.total}</td>
+        <td>[${this.#formatPercentage(item.ciLow)}, ${this.#formatPercentage(item.ciHigh)}]</td>
+      `;
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+
+    return table;
+  }
+
+  /**
+   * Get CSS class for conditional rate value.
+   *
+   * @private
+   * @param {number} rate - Pass rate (0-1)
+   * @returns {string} CSS class name
+   */
+  #getConditionalRateClass(rate) {
+    if (rate < 0.2) return 'rate-low';
+    if (rate < 0.5) return 'rate-medium';
+    return 'rate-high';
+  }
+
+  /**
+   * Display last-mile decomposition section for decisive blockers.
+   *
+   * @private
+   */
+  #displayLastMileDecomposition() {
+    if (!this.#lastMileDecompositionContainer || !this.#lastMileDecompositionContent) {
+      return;
+    }
+
+    // Need stored contexts and blockers
+    if (!this.#rawSimulationResult?.storedContexts) {
+      this.#lastMileDecompositionContainer.hidden = true;
+      return;
+    }
+
+    const storedContexts = this.#rawSimulationResult.storedContexts;
+    const blockers = this.#currentBlockers || [];
+
+    // Find decisive blockers (high lastMileFailRate)
+    const decisiveBlockers = blockers.filter((b) => {
+      const lmRate = b.lastMileFailRate ?? 0;
+      return lmRate >= 0.15 && b.condition?.startsWith('emotions.');
+    });
+
+    if (decisiveBlockers.length === 0) {
+      this.#lastMileDecompositionContainer.hidden = true;
+      return;
+    }
+
+    // Show container and clear content
+    this.#lastMileDecompositionContainer.hidden = false;
+    this.#lastMileDecompositionContent.innerHTML = '';
+
+    // Create panel for each decisive blocker
+    for (const blocker of decisiveBlockers) {
+      const panel = this.#createDecompositionPanel(blocker, storedContexts, blockers);
+      if (panel) {
+        this.#lastMileDecompositionContent.appendChild(panel);
+      }
+    }
+
+    // Hide if no panels were created
+    if (this.#lastMileDecompositionContent.children.length === 0) {
+      this.#lastMileDecompositionContainer.hidden = true;
+    }
+  }
+
+  /**
+   * Create decomposition panel for a decisive blocker.
+   *
+   * @private
+   * @param {object} blocker - Blocker data
+   * @param {object[]} storedContexts - Simulation contexts
+   * @param {object[]} allBlockers - All blockers
+   * @returns {HTMLElement|null} Panel element or null
+   */
+  #createDecompositionPanel(blocker, storedContexts, allBlockers) {
+    // Find last-mile contexts for this blocker
+    const lastMileContexts = this.#findLastMileContextsForUI(
+      blocker,
+      storedContexts,
+      allBlockers
+    );
+
+    if (lastMileContexts.length < 5) {
+      // Not enough data for meaningful decomposition
+      return null;
+    }
+
+    // Extract emotion name from condition
+    const emotionMatch = blocker.condition?.match(/emotions\.(\w+)/);
+    if (!emotionMatch) return null;
+    const emotionName = emotionMatch[1];
+
+    // Get emotion values from last-mile contexts
+    const emotionValues = lastMileContexts
+      .map((ctx) => ctx.emotions?.[emotionName] ?? 0)
+      .filter((v) => typeof v === 'number');
+
+    if (emotionValues.length === 0) return null;
+
+    // Compute distribution stats
+    const stats = this.#computeDistributionStatsUI(emotionValues);
+
+    // Try to get prototype weights and compute axis contributions
+    const weights = this.#getPrototypeWeightsForUI(emotionName);
+    let axisContributions = null;
+    let dominantSuppressor = null;
+
+    if (weights && Object.keys(weights).length > 0) {
+      axisContributions = this.#computeAxisContributionsUI(lastMileContexts, weights);
+      dominantSuppressor = this.#findDominantSuppressorUI(axisContributions);
+    }
+
+    // Build panel
+    const panel = document.createElement('div');
+    panel.className = 'decomposition-panel';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'decomposition-panel-header';
+    header.innerHTML = `
+      <span class="decomposition-panel-title">${this.#escapeHtml(blocker.condition)}</span>
+      <span class="decomposition-context-count">${lastMileContexts.length} last-mile states</span>
+    `;
+    panel.appendChild(header);
+
+    // Distribution stats
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'distribution-stats';
+    statsDiv.innerHTML = `
+      <div class="stat-item">
+        <div class="stat-label">Min</div>
+        <div class="stat-value">${stats.min.toFixed(3)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Median</div>
+        <div class="stat-value">${stats.median.toFixed(3)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">P90</div>
+        <div class="stat-value">${stats.p90.toFixed(3)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Max</div>
+        <div class="stat-value">${stats.max.toFixed(3)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Mean</div>
+        <div class="stat-value">${stats.mean.toFixed(3)}</div>
+      </div>
+    `;
+    panel.appendChild(statsDiv);
+
+    // Axis contributions table (if available)
+    if (axisContributions) {
+      const table = this.#createAxisContributionsTable(axisContributions);
+      panel.appendChild(table);
+    }
+
+    // Dominant suppressor callout
+    if (dominantSuppressor) {
+      const suppressorDiv = document.createElement('div');
+      suppressorDiv.className = 'dominant-suppressor';
+      suppressorDiv.innerHTML = `
+        <span class="suppressor-icon">🔻</span>
+        <span class="suppressor-text">
+          Dominant Suppressor: <span class="suppressor-axis">${this.#escapeHtml(dominantSuppressor.axis)}</span>
+          (mean contribution: <span class="suppressor-contribution">${dominantSuppressor.contribution.toFixed(3)}</span>)
+        </span>
+      `;
+      panel.appendChild(suppressorDiv);
+    }
+
+    return panel;
+  }
+
+  /**
+   * Find last-mile contexts where all blockers pass except the target.
+   *
+   * @private
+   * @param {object} targetBlocker - Target blocker
+   * @param {object[]} storedContexts - Simulation contexts
+   * @param {object[]} allBlockers - All blockers
+   * @returns {object[]} Last-mile contexts
+   */
+  #findLastMileContextsForUI(targetBlocker, storedContexts, allBlockers) {
+    // Parse target condition
+    const targetCondition = this.#parseBlockerConditionUI(targetBlocker.condition);
+    if (!targetCondition) return [];
+
+    // Parse all other blocker conditions
+    const otherConditions = allBlockers
+      .filter((b) => b !== targetBlocker)
+      .map((b) => this.#parseBlockerConditionUI(b.condition))
+      .filter(Boolean);
+
+    // Find contexts where target fails but all others pass
+    return storedContexts.filter((ctx) => {
+      // Target must fail
+      const targetValue = this.#getNestedValueUI(ctx, targetCondition.varPath);
+      const targetPasses = this.#evaluateComparisonUI(
+        targetValue,
+        targetCondition.operator,
+        targetCondition.threshold
+      );
+      if (targetPasses) return false;
+
+      // All others must pass
+      return otherConditions.every((cond) => {
+        const value = this.#getNestedValueUI(ctx, cond.varPath);
+        return this.#evaluateComparisonUI(value, cond.operator, cond.threshold);
+      });
+    });
+  }
+
+  /**
+   * Parse blocker condition string into structured format.
+   *
+   * @private
+   * @param {string} condition - Condition string (e.g., "emotions.anger >= 0.4")
+   * @returns {{varPath: string, operator: string, threshold: number}|null}
+   */
+  #parseBlockerConditionUI(condition) {
+    if (!condition) return null;
+    const match = condition.match(/^(\w+\.\w+)\s*(>=|<=|>|<|==)\s*([\d.]+)$/);
+    if (!match) return null;
+    return {
+      varPath: match[1],
+      operator: match[2],
+      threshold: parseFloat(match[3]),
+    };
+  }
+
+  /**
+   * Compute distribution statistics for an array of values.
+   *
+   * @private
+   * @param {number[]} values - Array of numeric values
+   * @returns {{min: number, max: number, median: number, p90: number, mean: number}}
+   */
+  #computeDistributionStatsUI(values) {
+    if (values.length === 0) {
+      return { min: 0, max: 0, median: 0, p90: 0, mean: 0 };
+    }
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const n = sorted.length;
+
+    return {
+      min: sorted[0],
+      max: sorted[n - 1],
+      median: sorted[Math.floor(n / 2)],
+      p90: sorted[Math.floor(n * 0.9)],
+      mean: values.reduce((a, b) => a + b, 0) / n,
+    };
+  }
+
+  /**
+   * Get prototype weights for an emotion.
+   *
+   * @private
+   * @param {string} emotionName - Name of the emotion
+   * @returns {object|null} Weights object or null
+   */
+  #getPrototypeWeightsForUI(emotionName) {
+    // Try to get weights from the prototype constraint analyzer if available
+    // This is a simplified version - in a full implementation, we'd inject the analyzer
+    // For now, return null and the UI will skip axis contributions
+    return null;
+  }
+
+  /**
+   * Compute per-axis contributions for last-mile contexts.
+   *
+   * @private
+   * @param {object[]} contexts - Last-mile contexts
+   * @param {object} weights - Prototype weights
+   * @returns {object} Axis contributions
+   */
+  #computeAxisContributionsUI(contexts, weights) {
+    const contributions = {};
+
+    for (const [axis, weight] of Object.entries(weights)) {
+      const axisContribs = contexts.map((ctx) => {
+        const axisValue = ctx.moodAxes?.[axis] ?? 0;
+        // Normalize: mood axes are typically [-100, 100], normalize to [-1, 1]
+        const normalized = axisValue / 100;
+        return normalized * weight;
+      });
+
+      const meanContribution =
+        axisContribs.reduce((a, b) => a + b, 0) / axisContribs.length;
+      const meanAxisValue =
+        contexts
+          .map((ctx) => ctx.moodAxes?.[axis] ?? 0)
+          .reduce((a, b) => a + b, 0) / contexts.length;
+
+      contributions[axis] = {
+        weight,
+        meanAxisValue,
+        meanContribution,
+      };
+    }
+
+    return contributions;
+  }
+
+  /**
+   * Find the dominant suppressor axis (most negative contribution).
+   *
+   * @private
+   * @param {object} axisContributions - Axis contributions
+   * @returns {{axis: string, contribution: number}|null}
+   */
+  #findDominantSuppressorUI(axisContributions) {
+    let minContribution = 0;
+    let dominantAxis = null;
+
+    for (const [axis, data] of Object.entries(axisContributions)) {
+      if (data.meanContribution < minContribution) {
+        minContribution = data.meanContribution;
+        dominantAxis = axis;
+      }
+    }
+
+    if (!dominantAxis) return null;
+
+    return {
+      axis: dominantAxis,
+      contribution: minContribution,
+    };
+  }
+
+  /**
+   * Create axis contributions table.
+   *
+   * @private
+   * @param {object} axisContributions - Axis contributions
+   * @returns {HTMLTableElement} Table element
+   */
+  #createAxisContributionsTable(axisContributions) {
+    const table = document.createElement('table');
+    table.className = 'axis-contributions-table';
+
+    // Header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Axis</th>
+        <th>Weight</th>
+        <th>Mean Value</th>
+        <th>Mean Contribution</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Body - sort by contribution (most negative first)
+    const tbody = document.createElement('tbody');
+    const entries = Object.entries(axisContributions).sort(
+      (a, b) => a[1].meanContribution - b[1].meanContribution
+    );
+
+    for (const [axis, data] of entries) {
+      const row = document.createElement('tr');
+      const contribClass =
+        data.meanContribution >= 0 ? 'contribution-positive' : 'contribution-negative';
+      const sign = data.meanContribution >= 0 ? '+' : '';
+      row.innerHTML = `
+        <td><code>${this.#escapeHtml(axis)}</code></td>
+        <td>${data.weight >= 0 ? '+' : ''}${data.weight.toFixed(2)}</td>
+        <td>${data.meanAxisValue.toFixed(1)}</td>
+        <td class="${contribClass}">${sign}${data.meanContribution.toFixed(3)}</td>
+      `;
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+
+    return table;
+  }
+
+  /**
+   * Create gate conflicts cross-reference table.
+   *
+   * @private
+   * @param {object[]} gateConflicts - Gate conflicts from static analysis
+   * @returns {HTMLElement} Container with gate conflicts table
+   */
+  #createGateConflictsTable(gateConflicts) {
+    const container = document.createElement('div');
+    container.className = 'cross-reference-table-container';
+
+    const heading = document.createElement('h4');
+    heading.textContent = 'Gate Conflicts';
+    container.appendChild(heading);
+
+    const table = document.createElement('table');
+    table.className = 'results-table cross-reference-table';
+
+    // Header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Axis</th>
+        <th>Conflict</th>
+        <th>Static Result</th>
+        <th>MC Confirmation</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    for (const conflict of gateConflicts) {
+      const row = document.createElement('tr');
+      const axis = conflict.axis || 'unknown';
+      const conflictDesc = this.#formatGateConflict(conflict);
+      const mcConfirmation = this.#checkMcAxisConfirmation(axis);
+
+      row.innerHTML = `
+        <td>${this.#escapeHtml(axis)}</td>
+        <td>${this.#escapeHtml(conflictDesc)}</td>
+        <td class="static-impossible">❌ Impossible</td>
+        <td class="mc-confirmation">${mcConfirmation}</td>
+      `;
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    return container;
+  }
+
+  /**
+   * Create unreachable thresholds cross-reference table.
+   *
+   * @private
+   * @param {object[]} unreachableThresholds - Unreachable thresholds from static analysis
+   * @returns {HTMLElement} Container with unreachable thresholds table
+   */
+  #createUnreachableThresholdsTable(unreachableThresholds) {
+    const container = document.createElement('div');
+    container.className = 'cross-reference-table-container';
+
+    const heading = document.createElement('h4');
+    heading.textContent = 'Unreachable Thresholds';
+    container.appendChild(heading);
+
+    const table = document.createElement('table');
+    table.className = 'results-table cross-reference-table';
+
+    // Header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Prototype</th>
+        <th>Required</th>
+        <th>Max Possible</th>
+        <th>Gap</th>
+        <th>MC Confirmation</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    for (const issue of unreachableThresholds) {
+      const row = document.createElement('tr');
+      const prototypeId = issue.prototypeId || 'unknown';
+      const threshold = typeof issue.threshold === 'number' ? this.#formatNumber(issue.threshold) : '?';
+      const maxPossible = typeof issue.maxPossible === 'number' ? this.#formatNumber(issue.maxPossible) : '?';
+      const gap = typeof issue.threshold === 'number' && typeof issue.maxPossible === 'number'
+        ? `+${this.#formatNumber(issue.threshold - issue.maxPossible)}`
+        : '?';
+      const mcConfirmation = this.#checkMcEmotionConfirmation(prototypeId);
+
+      row.innerHTML = `
+        <td>${this.#escapeHtml(prototypeId)}</td>
+        <td>${threshold}</td>
+        <td>${maxPossible}</td>
+        <td class="gap-value">${gap}</td>
+        <td class="mc-confirmation">${mcConfirmation}</td>
+      `;
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    return container;
+  }
+
+  /**
+   * Format a gate conflict for display.
+   *
+   * @private
+   * @param {object} conflict - Gate conflict info
+   * @returns {string} Human-readable conflict description
+   */
+  #formatGateConflict(conflict) {
+    if (conflict.description) {
+      return conflict.description;
+    }
+
+    const requiredMin = conflict.requiredMin;
+    const requiredMax = conflict.requiredMax;
+
+    if (typeof requiredMin === 'number' && typeof requiredMax === 'number') {
+      if (requiredMin > requiredMax) {
+        return `Requires ≥${this.#formatNumber(requiredMin)} AND ≤${this.#formatNumber(requiredMax)}`;
+      }
+    }
+
+    return 'Conflicting constraints';
+  }
+
+  /**
+   * Check if MC results confirm a static analysis finding for an axis.
+   *
+   * @private
+   * @param {string} axis - Axis name to check
+   * @returns {string} HTML string with confirmation status
+   */
+  #checkMcAxisConfirmation(axis) {
+    const blockers = this.#currentBlockers;
+
+    if (!blockers || blockers.length === 0) {
+      return '<span class="mc-no-data">— No MC data</span>';
+    }
+
+    // Check if any blocker references this axis
+    for (const blocker of blockers) {
+      const varPath = blocker.hierarchicalBreakdown?.variablePath || '';
+      if (varPath.includes(axis) || varPath.includes(`moodAxes.${axis}`)) {
+        const failRate = blocker.hierarchicalBreakdown?.failureRate;
+        if (typeof failRate === 'number') {
+          return `<span class="mc-confirmed">✅ Fails ${this.#formatPercentage(failRate)}</span>`;
+        }
+        return '<span class="mc-confirmed">✅ Confirmed</span>';
+      }
+    }
+
+    return '<span class="mc-not-observed">— Not observed</span>';
+  }
+
+  /**
+   * Check if MC results confirm a static analysis finding for an emotion/prototype.
+   *
+   * @private
+   * @param {string} prototypeId - Emotion or sexual prototype ID
+   * @returns {string} HTML string with confirmation status
+   */
+  #checkMcEmotionConfirmation(prototypeId) {
+    const blockers = this.#currentBlockers;
+
+    if (!blockers || blockers.length === 0) {
+      return '<span class="mc-no-data">— No MC data</span>';
+    }
+
+    // Check if any blocker references this emotion/prototype
+    for (const blocker of blockers) {
+      const varPath = blocker.hierarchicalBreakdown?.variablePath || '';
+      if (varPath.includes(`emotions.${prototypeId}`) || varPath.includes(`sexual.${prototypeId}`)) {
+        const failRate = blocker.hierarchicalBreakdown?.failureRate;
+        if (typeof failRate === 'number') {
+          return `<span class="mc-confirmed">✅ Fails ${this.#formatPercentage(failRate)}</span>`;
+        }
+        return '<span class="mc-confirmed">✅ Confirmed</span>';
+      }
+    }
+
+    return '<span class="mc-not-observed">— Not observed</span>';
+  }
+
+  /**
+   * Display cross-reference summary.
+   *
+   * @private
+   * @param {object[]} gateConflicts - Gate conflicts from static analysis
+   * @param {object[]} unreachableThresholds - Unreachable thresholds from static analysis
+   */
+  #displayCrossReferenceSummary(gateConflicts, unreachableThresholds) {
+    if (!this.#crossReferenceSummary) return;
+
+    const totalStaticIssues = gateConflicts.length + unreachableThresholds.length;
+    const hasMcBlockers = this.#currentBlockers && this.#currentBlockers.length > 0;
+
+    let summaryHtml = '';
+
+    if (totalStaticIssues > 0 && hasMcBlockers) {
+      summaryHtml = `
+        <div class="cross-reference-summary-confirmed">
+          ✅ <strong>Confirmed</strong>: Static analysis issues are corroborated by Monte Carlo simulation.
+        </div>
+      `;
+    } else if (totalStaticIssues > 0 && !hasMcBlockers) {
+      summaryHtml = `
+        <div class="cross-reference-summary-discrepancy">
+          ⚠️ <strong>Discrepancy</strong>: Static analysis found issues but MC shows no blockers. May indicate path-sensitivity.
+        </div>
+      `;
+    } else {
+      summaryHtml = `
+        <div class="cross-reference-summary-agreement">
+          ✅ <strong>Agreement</strong>: Both analyses agree on the expression state.
+        </div>
+      `;
+    }
+
+    this.#crossReferenceSummary.innerHTML = summaryHtml;
   }
 
   // ========== Path-Sensitive Analysis Methods ==========
@@ -1960,6 +3831,495 @@ class ExpressionDiagnosticsController {
         this.#knifeEdgeTbody.appendChild(row);
       }
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Prototype Fit Analysis Display Methods
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Display all prototype fit analysis sections: prototype fit, implied prototype, gap detection.
+   *
+   * @private
+   */
+  #displayPrototypeFitAnalysis() {
+    // Require service and data
+    if (!this.#prototypeFitRankingService) {
+      this.#hidePrototypeFitSections();
+      return;
+    }
+
+    if (!this.#selectedExpression || !this.#rawSimulationResult?.storedContexts) {
+      this.#hidePrototypeFitSections();
+      return;
+    }
+
+    const prerequisites = this.#selectedExpression.prerequisites || [];
+    const storedContexts = this.#rawSimulationResult.storedContexts;
+
+    try {
+      // Perform all three analyses
+      const fitResults = this.#prototypeFitRankingService.analyzeAllPrototypeFit(
+        prerequisites,
+        storedContexts
+      );
+      const impliedPrototype = this.#prototypeFitRankingService.computeImpliedPrototype(
+        prerequisites,
+        storedContexts
+      );
+      const gapDetection = this.#prototypeFitRankingService.detectPrototypeGaps(
+        prerequisites,
+        storedContexts
+      );
+
+      // Display each section
+      // analyzeAllPrototypeFit returns { leaderboard, currentPrototype, bestAlternative, improvementFactor }
+      this.#displayPrototypeFitTable(fitResults?.leaderboard ?? []);
+      this.#displayImpliedPrototype(impliedPrototype);
+      this.#displayGapDetection(gapDetection);
+    } catch (err) {
+      this.#logger.error('Failed to display prototype fit analysis:', err);
+      this.#hidePrototypeFitSections();
+    }
+  }
+
+  /**
+   * Hide all prototype fit analysis sections.
+   *
+   * @private
+   */
+  #hidePrototypeFitSections() {
+    if (this.#prototypeFitAnalysisContainer) {
+      this.#prototypeFitAnalysisContainer.hidden = true;
+    }
+    if (this.#impliedPrototypeContainer) {
+      this.#impliedPrototypeContainer.hidden = true;
+    }
+    if (this.#gapDetectionContainer) {
+      this.#gapDetectionContainer.hidden = true;
+    }
+  }
+
+  /**
+   * Display the prototype fit analysis table.
+   *
+   * @private
+   * @param {Array<object>} fitResults - Array of prototype fit results
+   */
+  #displayPrototypeFitTable(fitResults) {
+    if (!this.#prototypeFitAnalysisContainer || !this.#prototypeFitTbody) {
+      return;
+    }
+
+    // Defensive: ensure fitResults is an array
+    if (!Array.isArray(fitResults) || fitResults.length === 0) {
+      this.#prototypeFitAnalysisContainer.hidden = true;
+      return;
+    }
+
+    this.#prototypeFitAnalysisContainer.hidden = false;
+    this.#prototypeFitTbody.innerHTML = '';
+
+    // Display top 10 results
+    const topResults = fitResults.slice(0, 10);
+
+    for (const result of topResults) {
+      const row = document.createElement('tr');
+
+      // Color coding for composite score
+      const scoreClass = this.#getScoreColorClass(result.compositeScore);
+
+      // Gate pass rate
+      const gatePassPercent = (result.gatePassRate * 100).toFixed(1);
+
+      // P(I >= threshold)
+      const intensityPercent = result.intensityDistribution?.pAboveThreshold
+        ? (result.intensityDistribution.pAboveThreshold * 100).toFixed(1)
+        : '-';
+
+      // Conflict indicator
+      const conflictClass = result.conflictScore > 0.3 ? 'conflict-high' : '';
+      const conflictPercent = (result.conflictScore * 100).toFixed(0);
+
+      // Composite score
+      const compositePercent = (result.compositeScore * 100).toFixed(1);
+
+      row.innerHTML = `
+        <td class="rank-cell">${result.rank}</td>
+        <td class="prototype-name">${this.#escapeHtml(result.prototypeId)}</td>
+        <td>${gatePassPercent}%</td>
+        <td>${intensityPercent}%</td>
+        <td class="${conflictClass}">${conflictPercent}%</td>
+        <td class="${scoreClass}">${compositePercent}%</td>
+      `;
+      this.#prototypeFitTbody.appendChild(row);
+    }
+
+    // Display details for top 3
+    this.#displayPrototypeFitDetails(topResults.slice(0, 3));
+
+    // Display suggestion if best fit is poor
+    this.#displayPrototypeFitSuggestionIfNeeded(topResults);
+  }
+
+  /**
+   * Display detailed breakdown for top prototypes.
+   *
+   * @private
+   * @param {Array<object>} topResults - Top prototype results
+   */
+  #displayPrototypeFitDetails(topResults) {
+    if (!this.#prototypeFitDetails) return;
+
+    this.#prototypeFitDetails.innerHTML = '';
+
+    for (const result of topResults) {
+      const detailCard = document.createElement('div');
+      detailCard.className = 'prototype-detail-card';
+
+      // Build intensity quantiles string
+      const dist = result.intensityDistribution || {};
+      const quantiles = `P50: ${(dist.p50 ?? 0).toFixed(2)} | P90: ${(dist.p90 ?? 0).toFixed(2)} | P95: ${(dist.p95 ?? 0).toFixed(2)}`;
+
+      // Build conflicts list
+      const conflictsList = result.conflictingAxes?.length > 0
+        ? result.conflictingAxes.map(c =>
+            `${c.axis} (w=${c.weight?.toFixed(2) || '?'}, dir=${c.direction || '?'})`
+          ).join(', ')
+        : 'None';
+
+      detailCard.innerHTML = `
+        <h4>#${result.rank} ${this.#escapeHtml(result.prototypeId)}</h4>
+        <div class="detail-row">
+          <span class="detail-label">Intensity Quantiles:</span>
+          <span class="detail-value">${quantiles}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Conflict Magnitude:</span>
+          <span class="detail-value">${(result.conflictMagnitude ?? 0).toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Conflicting Axes:</span>
+          <span class="detail-value conflicts-list">${conflictsList}</span>
+        </div>
+      `;
+      this.#prototypeFitDetails.appendChild(detailCard);
+    }
+  }
+
+  /**
+   * Display a suggestion if the best prototype fit is poor.
+   *
+   * @private
+   * @param {Array<object>} topResults - Top prototype results
+   */
+  #displayPrototypeFitSuggestionIfNeeded(topResults) {
+    if (!this.#prototypeFitSuggestion) return;
+
+    this.#prototypeFitSuggestion.innerHTML = '';
+
+    if (!topResults || topResults.length === 0) return;
+
+    const best = topResults[0];
+    // Suggest if composite score < 30% or P(I>=t) < 20%
+    const pAbove = best.intensityDistribution?.pAboveThreshold ?? 0;
+    if (best.compositeScore < 0.3 || pAbove < 0.2) {
+      this.#prototypeFitSuggestion.innerHTML = `
+        <div class="suggestion-warning">
+          <span class="suggestion-icon">💡</span>
+          <span class="suggestion-text">
+            Best matching prototype (<strong>${this.#escapeHtml(best.prototypeId)}</strong>)
+            has weak fit (${(best.compositeScore * 100).toFixed(0)}% composite,
+            ${(pAbove * 100).toFixed(0)}% intensity pass rate).
+            Consider reviewing the expression's prerequisites or creating a new prototype.
+          </span>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Display the implied prototype analysis.
+   *
+   * @private
+   * @param {object|null} impliedAnalysis - Implied prototype analysis result
+   */
+  #displayImpliedPrototype(impliedAnalysis) {
+    if (!this.#impliedPrototypeContainer) return;
+
+    if (!impliedAnalysis) {
+      this.#impliedPrototypeContainer.hidden = true;
+      return;
+    }
+
+    this.#impliedPrototypeContainer.hidden = false;
+
+    // Display target signature
+    this.#displayTargetSignature(impliedAnalysis.targetSignature);
+
+    // Display ranking tables
+    this.#displayImpliedRankings(
+      impliedAnalysis.bySimilarity,
+      impliedAnalysis.byGatePass,
+      impliedAnalysis.byCombined
+    );
+  }
+
+  /**
+   * Display the target signature table.
+   *
+   * @private
+   * @param {Map<string, {direction: number, importance: number}>} targetSignature - Target signature map
+   */
+  #displayTargetSignature(targetSignature) {
+    if (!this.#targetSignatureTbody) return;
+
+    this.#targetSignatureTbody.innerHTML = '';
+
+    if (!targetSignature || targetSignature.size === 0) return;
+
+    // Sort by importance descending
+    const entries = Array.from(targetSignature.entries())
+      .sort((a, b) => b[1].importance - a[1].importance);
+
+    for (const [axis, data] of entries) {
+      const row = document.createElement('tr');
+
+      const directionLabel = data.direction > 0 ? '↑ High' : data.direction < 0 ? '↓ Low' : '— Neutral';
+      const directionClass = data.direction > 0 ? 'direction-high' : data.direction < 0 ? 'direction-low' : '';
+      const importancePercent = (data.importance * 100).toFixed(0);
+
+      row.innerHTML = `
+        <td>${this.#escapeHtml(axis)}</td>
+        <td class="${directionClass}">${directionLabel}</td>
+        <td>${importancePercent}%</td>
+      `;
+      this.#targetSignatureTbody.appendChild(row);
+    }
+  }
+
+  /**
+   * Display implied prototype ranking tables.
+   *
+   * @private
+   * @param {Array} bySimilarity - Top 5 by similarity
+   * @param {Array} byGatePass - Top 5 by gate pass
+   * @param {Array} byCombined - Top 5 by combined score
+   */
+  #displayImpliedRankings(bySimilarity, byGatePass, byCombined) {
+    this.#populateImpliedRankingTable(this.#similarityRankingTbody, bySimilarity, 'similarity');
+    this.#populateImpliedRankingTable(this.#gatePassRankingTbody, byGatePass, 'gatePass');
+    this.#populateImpliedRankingTable(this.#combinedRankingTbody, byCombined, 'combined');
+  }
+
+  /**
+   * Populate an implied prototype ranking table.
+   *
+   * @private
+   * @param {HTMLElement|null} tbody - The tbody element
+   * @param {Array} rankings - Array of ranking results
+   * @param {string} primaryMetric - 'similarity' | 'gatePass' | 'combined'
+   */
+  #populateImpliedRankingTable(tbody, rankings, primaryMetric) {
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!rankings || rankings.length === 0) return;
+
+    for (let i = 0; i < rankings.length; i++) {
+      const result = rankings[i];
+      const row = document.createElement('tr');
+
+      const similarity = ((result.cosineSimilarity ?? 0) * 100).toFixed(0);
+      const gatePass = ((result.gatePassRate ?? 0) * 100).toFixed(0);
+      const combined = ((result.combinedScore ?? 0) * 100).toFixed(0);
+
+      // Highlight the primary metric
+      const simClass = primaryMetric === 'similarity' ? 'primary-metric' : '';
+      const gateClass = primaryMetric === 'gatePass' ? 'primary-metric' : '';
+      const combClass = primaryMetric === 'combined' ? 'primary-metric' : '';
+
+      row.innerHTML = `
+        <td class="rank-cell">${i + 1}</td>
+        <td class="prototype-name">${this.#escapeHtml(result.prototypeId)}</td>
+        <td class="${simClass}">${similarity}%</td>
+        <td class="${gateClass}">${gatePass}%</td>
+        <td class="${combClass}">${combined}%</td>
+      `;
+      tbody.appendChild(row);
+    }
+  }
+
+  /**
+   * Display gap detection results.
+   *
+   * @private
+   * @param {object|null} gapResult - Gap detection result
+   */
+  #displayGapDetection(gapResult) {
+    if (!this.#gapDetectionContainer) return;
+
+    if (!gapResult) {
+      this.#gapDetectionContainer.hidden = true;
+      return;
+    }
+
+    this.#gapDetectionContainer.hidden = false;
+
+    // Display gap status indicator
+    this.#displayGapStatus(gapResult);
+
+    // Display nearest prototypes table
+    this.#displayNearestPrototypes(gapResult.kNearestNeighbors);
+
+    // Display suggested prototype if gap detected
+    this.#displaySuggestedPrototype(gapResult);
+  }
+
+  /**
+   * Display gap detection status indicator.
+   *
+   * @private
+   * @param {object} gapResult - Gap detection result
+   */
+  #displayGapStatus(gapResult) {
+    if (!this.#gapStatus) return;
+
+    const distance = (gapResult.nearestDistance ?? 0).toFixed(2);
+
+    if (gapResult.gapDetected) {
+      this.#gapStatus.innerHTML = `
+        <div class="gap-status-warning">
+          <span class="gap-icon">⚠️</span>
+          <span class="gap-message">
+            <strong>Coverage Gap Detected</strong> -
+            Nearest prototype is ${distance} units away.
+            ${gapResult.coverageWarning || 'No existing prototype closely matches this expression\'s constraint pattern.'}
+          </span>
+        </div>
+      `;
+    } else {
+      this.#gapStatus.innerHTML = `
+        <div class="gap-status-ok">
+          <span class="gap-icon">✅</span>
+          <span class="gap-message">
+            <strong>Good Coverage</strong> -
+            Nearest prototype is ${distance} units away.
+            Existing prototypes adequately cover this expression's constraint pattern.
+          </span>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Display k-nearest prototypes table.
+   *
+   * @private
+   * @param {Array} neighbors - k-nearest neighbor results
+   */
+  #displayNearestPrototypes(neighbors) {
+    if (!this.#nearestPrototypesTbody) return;
+
+    this.#nearestPrototypesTbody.innerHTML = '';
+
+    if (!neighbors || neighbors.length === 0) return;
+
+    for (let i = 0; i < neighbors.length; i++) {
+      const neighbor = neighbors[i];
+      const row = document.createElement('tr');
+
+      const distance = (neighbor.combinedDistance ?? 0).toFixed(3);
+      const weightDist = (neighbor.weightDistance ?? 0).toFixed(3);
+      const gateDist = (neighbor.gateDistance ?? 0).toFixed(3);
+
+      // Color code distance
+      const distanceClass = this.#getDistanceColorClass(neighbor.combinedDistance ?? 0);
+
+      row.innerHTML = `
+        <td class="rank-cell">${i + 1}</td>
+        <td class="prototype-name">${this.#escapeHtml(neighbor.prototypeId)}</td>
+        <td class="${distanceClass}">${distance}</td>
+        <td>${weightDist}</td>
+        <td>${gateDist}</td>
+      `;
+      this.#nearestPrototypesTbody.appendChild(row);
+    }
+  }
+
+  /**
+   * Display suggested prototype if gap is detected.
+   *
+   * @private
+   * @param {object} gapResult - Gap detection result
+   */
+  #displaySuggestedPrototype(gapResult) {
+    if (!this.#suggestedPrototypeSection || !this.#suggestedPrototypeContent) {
+      return;
+    }
+
+    if (!gapResult.gapDetected || !gapResult.suggestedPrototype) {
+      this.#suggestedPrototypeSection.hidden = true;
+      return;
+    }
+
+    this.#suggestedPrototypeSection.hidden = false;
+
+    const suggested = gapResult.suggestedPrototype;
+
+    // Build weights display
+    const weightsHtml = Object.entries(suggested.weights || {})
+      .map(([axis, weight]) => `<span class="suggested-weight">${axis}: ${weight.toFixed(2)}</span>`)
+      .join(' ');
+
+    // Build gates display
+    const gatesHtml = (suggested.gates || [])
+      .map(gate => `<span class="suggested-gate">${this.#escapeHtml(gate)}</span>`)
+      .join(' ');
+
+    this.#suggestedPrototypeContent.innerHTML = `
+      <div class="suggested-prototype-card">
+        <div class="suggested-section">
+          <h5>Suggested Weights</h5>
+          <div class="suggested-weights">${weightsHtml || 'None'}</div>
+        </div>
+        <div class="suggested-section">
+          <h5>Suggested Gates</h5>
+          <div class="suggested-gates">${gatesHtml || 'None'}</div>
+        </div>
+        <div class="suggested-section">
+          <h5>Rationale</h5>
+          <p class="suggested-rationale">${this.#escapeHtml(suggested.rationale || 'Distance-weighted average of nearest prototypes.')}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Get CSS class for composite score color coding.
+   *
+   * @private
+   * @param {number} score - Composite score 0-1
+   * @returns {string} CSS class
+   */
+  #getScoreColorClass(score) {
+    if (score >= 0.7) return 'score-high';
+    if (score >= 0.4) return 'score-medium';
+    return 'score-low';
+  }
+
+  /**
+   * Get CSS class for distance color coding.
+   *
+   * @private
+   * @param {number} distance - Distance value
+   * @returns {string} CSS class
+   */
+  #getDistanceColorClass(distance) {
+    if (distance <= 0.3) return 'distance-close';
+    if (distance <= 0.5) return 'distance-medium';
+    return 'distance-far';
   }
 
   /**

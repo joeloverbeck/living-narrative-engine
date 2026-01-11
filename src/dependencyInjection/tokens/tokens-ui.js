@@ -62,4 +62,6 @@ export const uiTokens = freeze({
   DeathConditionMonitor: 'DeathConditionMonitor',
   MultiHitSimulator: 'MultiHitSimulator',
   PromptPreviewModal: 'PromptPreviewModal',
+  MonteCarloReportGenerator: 'MonteCarloReportGenerator',
+  MonteCarloReportModal: 'MonteCarloReportModal',
 });

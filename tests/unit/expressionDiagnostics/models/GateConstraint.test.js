@@ -147,9 +147,29 @@ describe('GateConstraint Model', () => {
       expect(constraint.axis).toBe('agency_control');
     });
 
+    it('should handle multiple underscores in axis names', () => {
+      const constraint = GateConstraint.parse('baseline_libido_mod >= 0');
+      expect(constraint.axis).toBe('baseline_libido_mod');
+    });
+
     it('should handle integer values', () => {
       const constraint = GateConstraint.parse('threat <= 0');
       expect(constraint.value).toBe(0);
+    });
+
+    it('should handle decimals without a leading zero', () => {
+      const constraint = GateConstraint.parse('valence >= .5');
+      expect(constraint.value).toBe(0.5);
+    });
+
+    it('should handle large values', () => {
+      const constraint = GateConstraint.parse('score >= 999999');
+      expect(constraint.value).toBe(999999);
+    });
+
+    it('should handle very small decimals', () => {
+      const constraint = GateConstraint.parse('precision >= 0.0001');
+      expect(constraint.value).toBe(0.0001);
     });
 
     it('should preserve original string', () => {

@@ -1746,14 +1746,15 @@ describe('FailureExplainer', () => {
         );
       });
 
-      it('should detect rarely_decisive when lastMileFailRate < 0.01', () => {
+      it('should detect rarely_decisive when lastMileFailRate < 0.01 (single clause)', () => {
+        // With a single clause having very low LM rate, it's rarely decisive
         const clauseFailures = [
           {
             clauseDescription: 'test',
             failureRate: 0.5,
             averageViolation: 0.1,
             clauseIndex: 0,
-            lastMileFailRate: 0.005,
+            lastMileFailRate: 0.005, // Below 5% significance threshold
           },
         ];
 
@@ -1766,29 +1767,129 @@ describe('FailureExplainer', () => {
           false
         );
         expect(result[0].advancedAnalysis.lastMileAnalysis.insight).toContain(
-          'other clauses fail first'
+          'rarely blocks alone'
         );
       });
 
-      it('should detect moderate status otherwise', () => {
+      it('should detect moderate status for clause with lower relative last-mile rate', () => {
+        // With multiple clauses, a clause with lower relative LM rate is moderate
+        const clauseFailures = [
+          {
+            clauseDescription: 'high-lm-clause',
+            failureRate: 0.8,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.7, // Highest LM rate - will be decisive
+          },
+          {
+            clauseDescription: 'moderate-clause',
+            failureRate: 0.5,
+            averageViolation: 0.1,
+            clauseIndex: 1,
+            lastMileFailRate: 0.4, // Between 50-80% of max (0.7) - moderate
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // Find the moderate clause in results
+        const moderateResult = result.find(
+          (r) => r.clauseDescription === 'moderate-clause'
+        );
+        expect(moderateResult.advancedAnalysis.lastMileAnalysis.status).toBe(
+          'moderate'
+        );
+        expect(moderateResult.advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
+          false
+        );
+      });
+
+      it('should detect decisive status for single clause with significant impact', () => {
+        // With a single clause having significant LM rate (>= 5%), it's decisive
         const clauseFailures = [
           {
             clauseDescription: 'test',
             failureRate: 0.5,
             averageViolation: 0.1,
             clauseIndex: 0,
-            lastMileFailRate: 0.4, // ratio = 0.8, not > 1.5
+            lastMileFailRate: 0.4, // >= 5% significance threshold, only clause
           },
         ];
 
         const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
 
         expect(result[0].advancedAnalysis.lastMileAnalysis.status).toBe(
-          'moderate'
+          'decisive_blocker'
         );
         expect(result[0].advancedAnalysis.lastMileAnalysis.isDecisive).toBe(
-          false
+          true
         );
+      });
+
+      it('should use relative ranking to identify primary blocker among multiple clauses', () => {
+        // Simulate the bug case: 3 clauses with different LM rates
+        // Previously all would show "Other clauses fail first" due to impossible ratio > 1.5 threshold
+        const clauseFailures = [
+          {
+            clauseDescription: 'AND of 5 conditions',
+            failureRate: 0.9264,
+            averageViolation: 0.1,
+            clauseIndex: 0,
+            lastMileFailRate: 0.7924, // Highest - should be decisive
+            nearMissRate: 0.15, // High near-miss rate for "TUNE THIS FIRST"
+            ceilingGap: -0.1, // No ceiling effect
+            maxObserved: 0.9,
+            thresholdValue: 0.8,
+          },
+          {
+            clauseDescription: 'AND of 4 conditions',
+            failureRate: 0.6858,
+            averageViolation: 0.1,
+            clauseIndex: 1,
+            lastMileFailRate: 0.1322, // Low relative - should be lower_priority
+          },
+          {
+            clauseDescription: 'OR of 2 conditions',
+            failureRate: 0.1036,
+            averageViolation: 0.1,
+            clauseIndex: 2,
+            lastMileFailRate: 0.0818, // Also low relative - should be lower_priority
+          },
+        ];
+
+        const result = explainer.analyzeHierarchicalBlockers(clauseFailures);
+
+        // First clause (highest LM rate) should be decisive
+        const clause1 = result.find(
+          (r) => r.clauseDescription === 'AND of 5 conditions'
+        );
+        expect(clause1.advancedAnalysis.lastMileAnalysis.status).toBe(
+          'decisive_blocker'
+        );
+        expect(clause1.advancedAnalysis.lastMileAnalysis.isDecisive).toBe(true);
+        expect(clause1.advancedAnalysis.recommendation.message).toContain(
+          'TUNE THIS FIRST'
+        );
+
+        // Second clause (much lower LM rate) should be lower priority
+        const clause2 = result.find(
+          (r) => r.clauseDescription === 'AND of 4 conditions'
+        );
+        expect(clause2.advancedAnalysis.lastMileAnalysis.isDecisive).toBe(false);
+
+        // Third clause (also low LM rate) should be lower priority
+        const clause3 = result.find(
+          (r) => r.clauseDescription === 'OR of 2 conditions'
+        );
+        expect(clause3.advancedAnalysis.lastMileAnalysis.isDecisive).toBe(false);
+
+        // Verify NOT all clauses have the same "other clauses first" message
+        const allSameMessage = result.every(
+          (r) =>
+            r.advancedAnalysis.recommendation.message ===
+            result[0].advancedAnalysis.recommendation.message
+        );
+        expect(allSameMessage).toBe(false);
       });
     });
 
@@ -1880,7 +1981,7 @@ describe('FailureExplainer', () => {
             failureRate: 0.5,
             averageViolation: 0.1,
             clauseIndex: 0,
-            lastMileFailRate: 0.005,
+            lastMileFailRate: 0.005, // Very low LM rate
             nearMissRate: 0.05,
           },
         ];
@@ -1891,8 +1992,9 @@ describe('FailureExplainer', () => {
           'lower_priority'
         );
         expect(result[0].advancedAnalysis.recommendation.priority).toBe('low');
+        // Updated to match new message format
         expect(result[0].advancedAnalysis.recommendation.message).toContain(
-          'tune those instead'
+          'focus on other clauses'
         );
       });
     });

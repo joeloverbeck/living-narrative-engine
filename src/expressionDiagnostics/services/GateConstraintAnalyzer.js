@@ -226,13 +226,17 @@ class GateConstraintAnalyzer {
       }
     }
 
-    // Recurse into nested logic
-    if (logic.and || logic.or) {
-      const clauses = logic.and || logic.or;
-      for (const clause of clauses) {
+    // Recurse into nested logic - but ONLY into AND blocks
+    // OR blocks represent alternatives where only ONE needs to pass,
+    // so we can't assume all their floor constraints are simultaneously required.
+    // This prevents false positive gate conflicts from OR alternatives.
+    if (logic.and) {
+      for (const clause of logic.and) {
         this.#extractConstraintsFromLogic(clause, floorConstraints, ceilingConstraints);
       }
     }
+    // NOTE: We deliberately skip logic.or blocks here to avoid false positives.
+    // Prototypes inside OR blocks are not "required" - only one alternative needs to pass.
   }
 
   /**
